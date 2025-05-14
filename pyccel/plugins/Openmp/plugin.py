@@ -14,70 +14,111 @@ from pyccel.codegen.printing.pycode import PythonCodePrinter
 errors = Errors()
 
 class Openmp(Plugin):
-    _default_version = 4.5
-    _versions = {
-        4.5: {
-            'SyntaxParser': openmp_4_5.SyntaxParser,
-            'SemanticParser': openmp_4_5.SemanticParser,
-            'CCodePrinter': openmp_4_5.CCodePrinter,
-            'FCodePrinter': openmp_4_5.FCodePrinter,
-            'PythonCodePrinter': openmp_4_5.PythonCodePrinter
-        },
-        5.0: {
-            'SyntaxParser': openmp_5_0.SyntaxParser,
-            'SemanticParser': openmp_5_0.SemanticParser,
-            'CCodePrinter': openmp_5_0.CCodePrinter,
-            'FCodePrinter': openmp_5_0.FCodePrinter,
-            'PythonCodePrinter': openmp_5_0.PythonCodePrinter
-        }
+    """
+    Provides functionality for integrating OpenMP-specific features into parsers within Pyccel.
+
+    Attributes
+    ----------
+    DEFAULT_VERSION : float
+        The default OpenMP version to use if no specific version is requested.
+    VERSION_MODULES : dict
+        A mapping of OpenMP versions to their corresponding implementation modules.
+    PARSER_TYPES : list
+        A list of parser classes that the OpenMP plugin supports.
+    _options : dict
+        Configuration options passed to the OpenMP plugin.
+    _loaded_versions : list
+        A list containing the OpenMP versions currently loaded.
+    """
+    __slots__ = ("_options", "_loaded_versions")
+    DEFAULT_VERSION = 4.5
+
+    VERSION_MODULES = {
+        4.5: openmp_4_5,
+        5.0: openmp_5_0
     }
 
+    PARSER_TYPES = [SyntaxParser, SemanticParser, CCodePrinter, FCodePrinter, PythonCodePrinter]
+
     def __init__(self):
-        self._loaded = False
         self._options = {}
-        self._pyccel_parsers = [SyntaxParser, SemanticParser, CCodePrinter, FCodePrinter, PythonCodePrinter]
+        self._loaded_versions = []
 
     def handle_loading(self, options):
+        """Handle the loading and unloading openmp versions."""
         self._options.clear()
         self._options.update(options)
         if self._options.get('clear', False):
-            omp_version = list(self._versions.values())[0]
-            for omp_parser in omp_version:
-                for parser in self._pyccel_parsers:
-                    if parser.__name__ == omp_parser:
-                        ex = omp_version[omp_parser]
-                        if hasattr(ex, 'setup'):
-                            parser.__init__ = getattr(ex, 'setup')(self._options, parser.__init__)
-                        for name, method in inspect.getmembers(ex, predicate=inspect.isfunction):
-                            original_method = ex.helper_check_config(method, self._options, None)
-                            if original_method:
-                                setattr(parser, name, original_method)
-                            else:
-                                delattr(parser, name)
-            self._loaded = False
+            self._unload_patches()
             return
-        if not self._options.get('omp_version', None):
-            self._options['omp_version'] = float(os.environ.get('PYCCEL_OMP_VERSION', self._default_version))
-        if self._options['omp_version'] not in self._versions:
+
+        version = self._resolve_version()
+        if 'openmp' not in self._options.get('accelerators', []) or version in self._loaded_versions:
+            return
+        self._loaded_versions.append(version)
+        self._apply_patches(version)
+
+    def _resolve_version(self):
+        """Determine which OpenMP version to use based on options or environment"""
+        requested_version = self._options.get('omp_version', None)
+
+        if not requested_version:
+            env_version = os.environ.get('PYCCEL_OMP_VERSION', None)
+            requested_version = float(env_version) if env_version else self.DEFAULT_VERSION
+            self._options['omp_version'] = requested_version
+
+        if requested_version not in self.VERSION_MODULES:
             errors.report(
-                f"OPENMP {self._options['omp_version']} is not supported. defaulting to OPENMP {self._default_version} instead.",
+                f"OPENMP {requested_version} is not supported. Defaulting to OPENMP {self.DEFAULT_VERSION}.",
                 severity='warning')
-            self._options['omp_version'] = self._default_version
-        if self._loaded or 'openmp' not in self._options['accelerators']:
+            self._options['omp_version'] = self.DEFAULT_VERSION
+            return self.DEFAULT_VERSION
+
+        return requested_version
+
+    def _apply_patches(self, version):
+        """Apply patches from the specified version module to parser classes"""
+        module = self.VERSION_MODULES[version]
+
+        for parser_cls in self.PARSER_TYPES:
+            parser_name = parser_cls.__name__
+
+            impl = getattr(module, parser_name, None)
+            if not impl:
+                continue
+
+            if hasattr(impl, 'setup'):
+                parser_cls.__init__ = getattr(impl, 'setup')(self._options, parser_cls.__init__)
+
+            for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
+                original_method = getattr(parser_cls, name, None)
+                decorated_method = impl.helper_check_config(method, self._options, original_method)
+                setattr(parser_cls, name, decorated_method)
+
+    def _unload_patches(self):
+        """Remove patches applied to parser classes"""
+        if not self._loaded_versions:
             return
-        self._loaded = True
-        for omp_version in self._versions:
-            for omp_parser in self._versions[omp_version]:
-                for parser in self._pyccel_parsers:
-                    if parser.__name__ == omp_parser:
-                        ex = self._versions[omp_version][omp_parser]
-                        if hasattr(ex, 'setup'):
-                            parser.__init__ = getattr(ex, 'setup')(self._options, parser.__init__)
-                        for name, method in inspect.getmembers(ex, predicate=inspect.isfunction):
-                            original_method = getattr(parser, name, None)
-                            decorated_method = ex.helper_check_config(method, self._options, original_method)
-                            setattr(parser, name, decorated_method)
+        version = self._loaded_versions[0]
+        module = self.VERSION_MODULES[version]
+
+        for parser_cls in self.PARSER_TYPES:
+            parser_name = parser_cls.__name__
+            impl = getattr(module, parser_name, None)
+            if not impl:
+                continue
+            if hasattr(impl, 'setup'):
+                parser_cls.__init__ = getattr(impl, 'setup')(self._options, parser_cls.__init__)
+            #remove/restore all methods from the implementation
+            for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
+                original_method = impl.helper_check_config(method, self._options, None)
+                if original_method:
+                    setattr(parser_cls, name, original_method)
+                else:
+                    delattr(parser_cls, name)
+        self._loaded_versions = []
 
     @property
-    def loaded(self):
-        return self._loaded
+    def loaded_versions(self):
+        """Return loaded openmp versions"""
+        return self._loaded_versions

@@ -6,11 +6,6 @@ import ast
 import re
 from os.path import join, dirname
 import functools
-
-
-from scipy.optimize import direct
-from sympy import false
-from sympy.codegen.cnodes import static
 from textx.metamodel import metamodel_from_file
 from textx import metamodel_for_language
 
@@ -27,7 +22,7 @@ from pyccel.ast.core import EmptyNode
 errors = Errors()
 from pyccel.errors.messages import *
 
-class Commons:
+class ConfigMixin:
     """
     Common utilities and methods for handling OpenMP syntax and configurations.
     """
@@ -55,9 +50,10 @@ class Commons:
             Wrapped function that adheres to the configuration.
             Or original method if clear is passed in the options.
         """
-        if options.get('clear', None):
+        if options.get('clear', False):
             return cls._method_registry[func.__name__]
-        cls._method_registry[func.__name__] = method
+        if not func.__name__ in cls._method_registry:
+            cls._method_registry[func.__name__] = method
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if cls._version != options.get('omp_version', None) or not 'openmp' in options.get('accelerators'):
@@ -69,32 +65,44 @@ class Commons:
             return func(*args, **kwargs, cls=cls, method=method)
         return wrapper
 
-class SyntaxParser(Commons):
+class SyntaxParser(ConfigMixin):
     """Openmp 4.5 syntax parser"""
     _version = 4.5
-    _method_registry = {}
     @classmethod
     def setup(cls, options, method=None):
+        """
+        Setup method for configuring the SyntaxParser Class.
+        Creates a metamodel from the grammar.
+
+        Parameters
+        ----------
+        options : dict
+            Configuration options.
+        method : callable, optional
+            An other setup method from a previous plugin if existing.
+
+        Returns
+        -------
+        callable
+            A wrapped setup method that adheres to the configuration and initializes
+            the parsing environment.
+        """
         if options.get('clear', False):
             return cls._method_registry[method.__name__]
-        cls._method_registry[method.__name__] = method
-
+        if not method.__name__ in cls._method_registry:
+            cls._method_registry[method.__name__] = method
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "grammar/openmp.tx")
         omp_classes = [OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList]
         cls._omp_metamodel = metamodel_from_file(grammar, classes=omp_classes)
-
         # object processors: are registered for particular classes (grammar rules)
         # and are called when the objects of the given class is instantiated.
         # The rules OMP_X_Y are used to insert the version of the syntax used
-
         textx_mm = metamodel_for_language('textx')
         grammar_model = textx_mm.grammar_model_from_file(grammar)
-
         obj_processors = {r.name: (lambda r: lambda _: r.name.replace('_PARENT', '').lower())(r)
                           for r in grammar_model.rules if r.name.endswith('_PARENT')}
-
         obj_processors.update({
             'OMP_4_5': lambda _: 4.5,
             'OMP_5_0': lambda _: 5.0,
@@ -140,7 +148,6 @@ class SyntaxParser(Commons):
                 directive = OmpDirective.from_tx_directive(model.statement, cls._version)
                 directive.set_current_ast(expr)
                 return instance._visit(directive)
-
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
                 return None
@@ -149,6 +156,7 @@ class SyntaxParser(Commons):
 
     @staticmethod
     def _visit(instance, stmt, cls=None, method=None):
+        """Visit a statement and determine if it should be skipped."""
         if instance._skip_stmts_count:
             instance._skip_stmts_count -= 1
             return EmptyNode()
@@ -184,7 +192,6 @@ class SyntaxParser(Commons):
             self._skip_stmts_count = len(body) + 1
             body = CodeBlock(body=body)
             return OmpConstruct(start=directive, end=end, body=body)
-
         return directive
 
     @staticmethod
@@ -234,8 +241,9 @@ class SyntaxParser(Commons):
         end = OmpEndDirective.from_directive(expr, clauses=clauses)
         return end
 
-    @staticmethod
-    def _visit_OmpScalarExpr(self, expr, cls=None, method=None):
+    @classmethod
+    def _helper_parse_expr(cls, expr):
+        """Parses an expression and returns the equivalent node."""
         fst = extend_tree(expr.value)
         if (
                 not isinstance(fst, ast.Module)
@@ -249,86 +257,37 @@ class SyntaxParser(Commons):
                 column=expr.position[0],
                 severity="fatal",
             )
-        fst = fst.body[0].value
+        return fst.body[0].value
+
+    @staticmethod
+    def _visit_OmpScalarExpr(self, expr, cls=None, method=None):
+        fst = cls._helper_parse_expr(expr)
         return OmpScalarExpr.from_omp_expr(expr, value=self._visit(fst))
 
     @staticmethod
     def _visit_OmpIntegerExpr(self, expr, cls=None, method=None):
-        fst = extend_tree(expr.value)
-        if (
-                not isinstance(fst, ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], ast.Expr)
-        ):
-            errors.report(
-                "Invalid expression",
-                symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
-                severity="fatal",
-            )
-        fst = fst.body[0].value
+        fst = cls._helper_parse_expr(expr)
         return OmpIntegerExpr.from_omp_expr(expr, value=self._visit(fst))
 
     @staticmethod
     def _visit_OmpConstantPositiveInteger(self, expr, cls=None, method=None):
-        fst = extend_tree(expr.value)
-        if (
-                not isinstance(fst, ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], ast.Expr)
-        ):
-            errors.report(
-                "Invalid expression",
-                symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
-                severity="fatal",
-            )
-        fst = fst.body[0].value
+        fst = cls._helper_parse_expr(expr)
         return OmpConstantPositiveInteger.from_omp_expr(expr, value=self._visit(fst))
 
     @staticmethod
     def _visit_OmpList(self, expr, cls=None, method=None):
-        fst = extend_tree(expr.value)
-        if (
-                not isinstance(fst, ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], ast.Expr)
-        ):
-            errors.report(
-                "Invalid expression",
-                symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
-                severity="fatal",
-            )
-        fst = fst.body[0].value
+        fst = cls._helper_parse_expr(expr)
         return OmpList.from_omp_expr(expr, value=self._visit(fst))
 
     @staticmethod
     def _visit_OmpExpr(self, expr, cls=None, method=None):
-        fst = extend_tree(expr.value)
-        if (
-                not isinstance(fst, ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], ast.Expr)
-        ):
-            errors.report(
-                "Invalid expression",
-                symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
-                severity="fatal",
-            )
-        fst = fst.body[0].value
+        fst = cls._helper_parse_expr(expr)
         return OmpExpr.from_omp_expr(expr, value=self._visit(fst))
 
 
-class SemanticParser(Commons):
+class SemanticParser(ConfigMixin):
     """Openmp 4.5 semantic parser"""
     _version = 4.5
-    _method_registry = {}
     @staticmethod
     def _visit_OmpDirective(self, expr, cls=None, method=None):
         if hasattr(self, f"_visit_{expr.name.replace(' ', '_')}_directive"):
@@ -428,9 +387,9 @@ class SemanticParser(Commons):
         return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
 
 
-class CCodePrinter(Commons):
+class CCodePrinter(ConfigMixin):
+    """Openmp 4.5 C code printer parser"""
     _version = 4.5
-    _method_registry = {}
     @staticmethod
     def _print_OmpConstruct(self, expr, cls=None, method=None):
         body = self._print(expr.body)
@@ -450,9 +409,10 @@ class CCodePrinter(Commons):
         else:
             return f"#pragma omp {expr.raw}\n"
 
-class FCodePrinter(Commons):
+
+class FCodePrinter(ConfigMixin):
+    """Openmp 4.5 fortran code printer parser"""
     _version = 4.5
-    _method_registry = {}
     @classmethod
     def _helper_delay_clauses_printing(cls, start, end, clauses):
         """Transfer clauses of directive to an OmpEndDirective for printing"""
@@ -533,9 +493,9 @@ class FCodePrinter(Commons):
         return ""
 
 
-class PythonCodePrinter(Commons):
+class PythonCodePrinter(ConfigMixin):
+    """Openmp 4.5 python code printer parser"""
     _version = 4.5
-    _method_registry = {}
     @staticmethod
     def _print_OmpConstruct(self, expr, cls=None, method=None):
         body = self._print(expr.body)

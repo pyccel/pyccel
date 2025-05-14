@@ -437,7 +437,6 @@ class OmpExpr(OmpAnnotatedComment):
     _attribute_nodes = ()
 
     def __init__ (self, value=None, throw_away=None, parent=None, omp_version=None, raw=None, position=None, line=None, VERSION=None, DEPRECATED=None):
-        # self._value = kwargs.pop("value", None)
         self._value = value
         super().__init__(parent=parent, omp_version=omp_version, raw=raw, position=position, line=line, VERSION=VERSION, DEPRECATED=DEPRECATED)
 
