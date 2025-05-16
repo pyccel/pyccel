@@ -842,15 +842,12 @@ class FCodePrinter(CodePrinter):
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
 
-        # ... TODO add other elements
-        private_funcs = [f.name for f in expr.funcs if f.is_private]
-        private = private_funcs
-        if private:
-            private = ','.join(self._print(i) for i in private)
-            private = 'private :: {}\n'.format(private)
-        else:
-            private = ''
         # ...
+        public_decs = ''.join(f'public :: {n}\n' for n in chain(
+                                      (c.name for c in expr.classes),
+                                      (i.name for i in expr.interfaces if not i.is_inline),
+                                      (f.name for f in expr.funcs if not f.is_private and not f.is_inline),
+                                      (v.name for v in expr.variables if not v.is_private)))
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -875,20 +872,23 @@ class FCodePrinter(CodePrinter):
         body = '\n'.join(func_strings)
         # ...
 
+        # Don't print contains or private for gFTL extensions
+        private = 'private\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
 
-        parts = ['module {}\n'.format(name),
+        parts = [f'module {name}\n',
                  imports,
                  implicit_none,
+                 public_decs,
                  private,
                  decs,
                  interfaces,
                  contains,
                  body,
-                 'end module {}\n'.format(name)]
+                 f'end module {name}\n']
 
         self.exit_scope()
 

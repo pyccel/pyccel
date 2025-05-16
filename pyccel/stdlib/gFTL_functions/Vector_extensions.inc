@@ -1,8 +1,11 @@
 #include <vector/header.inc>
+#define __IDENTITY(x) x
+
+public :: __IDENTITY(Vector)_min
+public :: __IDENTITY(Vector)_max
 
 contains
 
-#define __IDENTITY(x) x
 #define __guard __vector_guard
 #include "parameters/T/copy_vector_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
