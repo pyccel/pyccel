@@ -520,10 +520,10 @@ class PyccelBinaryOperator(PyccelOperator):
             other = [a for a in args if isinstance(a.dtype, FixedSizeNumericType)]
             assert len(other) == 0
             shape = None
+        elif any(isinstance(a.class_type, NumpyNDArrayType) for a in (arg1, arg2)):
+            shape = broadcast(arg1.shape, arg2.shape)
         else:
-            s = broadcast(arg1.shape, arg2.shape)
-
-            shape = s
+            shape = None
         return shape
 
 #==============================================================================

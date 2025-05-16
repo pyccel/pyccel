@@ -293,9 +293,9 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    dtype_registry = {CNativeInt()    : 'int',
-                      VoidType() : 'void',
+    dtype_registry = {VoidType() : 'void',
                       CharType() : 'char',
+                      (PrimitiveIntegerType(),None) : 'int',
                       (PrimitiveComplexType(),8) : 'double complex',
                       (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',
@@ -356,7 +356,7 @@ class CCodePrinter(CodePrinter):
                     + 0.5*(i.source == 'STC_Extensions/Managed_memory'),
                  # Additionally sort by the source file
                  str(i.source),
-                 # Finally sort by type name for reproducability
+                 # Finally sort by type name for reproducibility
                  next(iter(i.target)).local_alias))
 
         non_stc_imports = [i for i in imports if i not in stc_imports]
@@ -1182,10 +1182,24 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'!strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} == {rhs_code}'
+        elif isinstance(lhs.class_type, HomogeneousListType):
+            if lhs.class_type is rhs.class_type:
+                c_type = self.get_c_type(lhs.class_type)
+                lhs_code = self._print(ObjectAddress(lhs))
+                rhs_code = self._print(ObjectAddress(rhs))
+                return f'{c_type}_eq({lhs_code}, {rhs_code})'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                        symbol = expr, severity = 'error')
+                return ''
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelNe(self, expr):
         lhs, rhs = expr.args
@@ -1193,10 +1207,14 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} != {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])

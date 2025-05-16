@@ -2415,6 +2415,48 @@ class SemanticParser(BasicParser):
 
         return target, iterable
 
+    def env_var_to_pyccel(self, env_var, *, name = None):
+        """
+        Convert an environment variable to a Pyccel AST node.
+
+        Convert an environment variable (i.e. a variable deduced from the
+        context where epyccel was called) into a Pyccel AST node as though
+        the object had been declared explicitly in the code.
+
+        Parameters
+        ----------
+        env_var : object
+            The environment variable.
+        name : str, optional
+            The name that was used to identify the variable.
+
+        Returns
+        -------
+        PyccelAstNode
+            The usable Pyccel AST node.
+        """
+        if env_var in original_type_to_pyccel_type:
+            return VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
+        elif type(env_var) in original_type_to_pyccel_type:
+            return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
+        elif env_var is typing.Final:
+            return PyccelFunctionDef('Final', TypingFinal)
+        elif isinstance(env_var, ModuleType):
+            mod_name = env_var.__name__
+            if recognised_source(mod_name):
+                pyccel_stage.set_stage('syntactic')
+                import_node = Import(AsName(mod_name, name))
+                pyccel_stage.set_stage('semantic')
+                self._additional_exprs[-1].append(self._visit(import_node))
+                return self.scope.find(name)
+            else:
+                errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
+                        severity='error', symbol = self.current_ast_node)
+
+        errors.report(PYCCEL_RESTRICTION_TODO,
+                severity='error', symbol = self.current_ast_node)
+        return None
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -2996,29 +3038,7 @@ class SemanticParser(BasicParser):
                 return GenericType()
 
         if var is None and name in self._context_dict:
-            env_var = self._context_dict[name]
-            if env_var in original_type_to_pyccel_type:
-                var = VariableTypeAnnotation(original_type_to_pyccel_type[env_var])
-            elif sys.version_info >= (3, 10) and isinstance(env_var, UnionType): # pylint:disable=possibly-used-before-assignment
-                python_types = typing.get_args(env_var)
-                if all(t in original_type_to_pyccel_type for t in python_types):
-                    var = UnionTypeAnnotation(*[VariableTypeAnnotation(original_type_to_pyccel_type[t]) for t in python_types])
-                else:
-                    errors.report(f"Unrecognised type {env_var} found in global scope.",
-                            severity='error', symbol = self.current_ast_node)
-            elif type(env_var) in original_type_to_pyccel_type:
-                var = convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
-            elif isinstance(env_var, ModuleType):
-                mod_name = env_var.__name__
-                if recognised_source(mod_name):
-                    pyccel_stage.set_stage('syntactic')
-                    import_node = Import(AsName(mod_name, name))
-                    pyccel_stage.set_stage('semantic')
-                    self._additional_exprs[-1].append(self._visit(import_node))
-                    var = self.scope.find(name)
-                else:
-                    errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
-                            severity='error', symbol = self.current_ast_node)
+            var = self.env_var_to_pyccel(self._context_dict[name], name = name)
 
         if var is None:
             if name == '_':
