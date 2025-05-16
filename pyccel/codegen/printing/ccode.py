@@ -1076,7 +1076,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(self._print(d) for d in decls)
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = [i for i in chain(expr.module.imports, self._additional_imports.values()) if not i.ignore]
         imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
@@ -3038,7 +3038,7 @@ class CCodePrinter(CodePrinter):
         variables = self.scope.variables.values()
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
-        imports = [*expr.imports, *self._additional_imports.values()]
+        imports = [i for i in chain(expr.imports, self._additional_imports.values()) if not i.ignore]
         imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
