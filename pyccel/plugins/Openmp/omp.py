@@ -1,17 +1,18 @@
 import re
-from ast   import AST
+from ast import AST
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.errors.errors import Errors
 
 errors = Errors()
 
+
 class OmpAst(AST):
     """New AST node representing an OPENMP syntax"""
 
     def __init__(self, lineno, col_offset):
         super().__init__()
-        self.lineno     = lineno
+        self.lineno = lineno
         self.col_offset = col_offset
 
 
@@ -30,7 +31,8 @@ class OmpNode(PyccelAstNode):
     """
 
     _attribute_nodes = ()
-    def __init__ (self, raw, position, **kwargs):
+
+    def __init__(self, raw, position, **kwargs):
         super().__init__()
         self._raw = raw
         self._position = position
@@ -49,7 +51,6 @@ class OmpNode(PyccelAstNode):
         """
         return self._raw
 
-
     def get_fixed_state(self):
         """Returns the attributes of an openmp object that do not change throughout the life of the object"""
         return {
@@ -57,6 +58,7 @@ class OmpNode(PyccelAstNode):
             # 'line': self.line,
             'raw': self.raw,
         }
+
 
 class OmpConstruct(OmpNode):
     """
@@ -123,8 +125,7 @@ class OmpDirective(OmpNode):
     _attribute_nodes = ("_clauses",)
 
     def __init__(self, name, clauses, is_construct, raw,
-                     position, **kwargs):
-
+                 position, **kwargs):
         self._name = name
         self._is_construct = is_construct
         self._clauses = clauses
@@ -149,8 +150,8 @@ class OmpDirective(OmpNode):
         d_fixed = super().get_fixed_state()
         return {
             **d_fixed,
-            'name' : self.name,
-            'is_construct' : self.is_construct,
+            'name': self.name,
+            'is_construct': self.is_construct,
         }
 
     def has_clause(self, clause_name):
@@ -177,7 +178,8 @@ class OmpClause(OmpNode):
     """
 
     _attribute_nodes = ("_omp_exprs",)
-    def __init__ (self, name, omp_exprs, raw, position, **kwargs):
+
+    def __init__(self, name, omp_exprs, raw, position, **kwargs):
         self._omp_exprs = omp_exprs
         self._name = name
         super().__init__(raw, position, **kwargs)
@@ -196,7 +198,7 @@ class OmpClause(OmpNode):
         """Returns the attributes of an openmp clause that do not change throughout the life of the object"""
         d_fixed = super().get_fixed_state()
         return {
-            'name' : self.name,
+            'name': self.name,
             **d_fixed,
         }
 
@@ -213,7 +215,7 @@ class OmpExpr(OmpNode):
 
     _attribute_nodes = ()
 
-    def __init__ (self, value, raw, position,**kwargs):
+    def __init__(self, value, raw, position, **kwargs):
         self._value = value
         super().__init__(raw, position, **kwargs)
 
@@ -243,6 +245,7 @@ class OmpIntegerExpr(OmpExpr):
 
 class OmpList(OmpExpr):
     """Represents a list"""
+
     @property
     def value(self):
         """Returns the expression, or the tweaked raw that should represent a python expression"""
@@ -283,7 +286,8 @@ class OmpTxNode(OmpNode):
 
     _attribute_nodes = ()
 
-    def __init__ (self, tx_obj, comment, lineno=None, column=None, omp_version=None, version=None, deprecated=None, **kwargs):
+    def __init__(self, tx_obj, comment, lineno=None, column=None, omp_version=None, version=None, deprecated=None,
+                 **kwargs):
         self._omp_version = omp_version
         self._parent = tx_obj.parent
 
@@ -320,6 +324,7 @@ class OmpTxNode(OmpNode):
                 symbol=self,
                 severity="warning",
             )
+
     @property
     def version(self):
         """Returns the version of the OpenMP object's syntax used."""
@@ -354,8 +359,9 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
     """
 
     _attribute_nodes = ("_clauses",)
+
     def __init__(self, tx_directive, comment, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name:getattr(tx_directive, attr_name) for attr_name in tx_directive._tx_attrs}
+        d_attrs = {attr_name: getattr(tx_directive, attr_name) for attr_name in tx_directive._tx_attrs}
         is_construct = d_attrs.get('is_construct')
         if is_construct is None:
             is_construct = False
@@ -370,7 +376,9 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
         clauses = [c.clause if hasattr(c, 'clause') else c for c in clauses]
         clauses = [OmpTxClause(c, comment, lineno=lineno, column=column) for c in clauses]
 
-        super().__init__(tx_obj=tx_directive, comment=comment, lineno=lineno, column=column, name=name, clauses=clauses, is_construct=is_construct, omp_version=d_attrs.get('omp_version'), version=version, deprecated=d_attrs.get('DEPRECATED'), **kwargs)
+        super().__init__(tx_obj=tx_directive, comment=comment, lineno=lineno, column=column, name=name, clauses=clauses,
+                         is_construct=is_construct, omp_version=d_attrs.get('omp_version'), version=version,
+                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
         self._raw = re.sub(r"#\s*\$\s*omp\s*(end)?", "", comment)
 
         # Invalid clauses are syntactically correct omp clauses, captured within the current directive, but are invalid
@@ -401,16 +409,21 @@ class OmpTxClause(OmpTxNode, OmpClause):
     """
 
     _attribute_nodes = ("_omp_exprs",)
+
     def __init__(self, tx_clause, comment, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name:getattr(tx_clause, attr_name) for attr_name in tx_clause._tx_attrs}
+        d_attrs = {attr_name: getattr(tx_clause, attr_name) for attr_name in tx_clause._tx_attrs}
         omp_exprs = getattr(tx_clause, 'omp_exprs', tuple())
         if not isinstance(omp_exprs, tuple):
             omp_exprs = (omp_exprs,) if omp_exprs else tuple()
-        omp_exprs = tuple(globals().get(ex.__class__.__name__)(ex, comment, lineno=lineno, column=column) for ex in omp_exprs)
+        omp_exprs = tuple(
+            globals().get(ex.__class__.__name__)(ex, comment, lineno=lineno, column=column) for ex in omp_exprs)
         allowed_parents = d_attrs.get('allowed_parents', tuple())
-        allowed_parents = [set(attr.allowed_parents) for attr in [*d_attrs.values(), *omp_exprs] if hasattr(attr, 'allowed_parents')] + ([set(allowed_parents)] if len(allowed_parents) else [])
+        allowed_parents = [set(attr.allowed_parents) for attr in [*d_attrs.values(), *omp_exprs] if
+                           hasattr(attr, 'allowed_parents')] + ([set(allowed_parents)] if len(allowed_parents) else [])
         allowed_parents = set.intersection(*allowed_parents) if len(allowed_parents) > 0 else None
-        super().__init__(tx_obj=tx_clause, comment=comment, lineno=lineno, column=column, name=d_attrs.get('name'), omp_exprs=omp_exprs, omp_version=d_attrs.get('omp_version') ,version=d_attrs.get('VERSION'), deprecated=d_attrs.get('DEPRECATED'), **kwargs)
+        super().__init__(tx_obj=tx_clause, comment=comment, lineno=lineno, column=column, name=d_attrs.get('name'),
+                         omp_exprs=omp_exprs, omp_version=d_attrs.get('omp_version'), version=d_attrs.get('VERSION'),
+                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
         if hasattr(self.parent, 'clause'):
             self._parent = self.parent.parent
 
@@ -437,28 +450,35 @@ class OmpTxExpr(OmpTxNode, OmpExpr):
     _attribute_nodes = ()
 
     def __init__(self, tx_obj, comment, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name:getattr(tx_obj, attr_name) for attr_name in tx_obj._tx_attrs}
-        super().__init__(tx_obj=tx_obj, comment=comment, lineno=lineno, column=column, value=d_attrs.get('value'), omp_version=d_attrs.get('omp_version'), version=d_attrs.get('VERSION'), deprecated=d_attrs.get('DEPRECATED'), **kwargs)
+        d_attrs = {attr_name: getattr(tx_obj, attr_name) for attr_name in tx_obj._tx_attrs}
+        super().__init__(tx_obj=tx_obj, comment=comment, lineno=lineno, column=column, value=d_attrs.get('value'),
+                         omp_version=d_attrs.get('omp_version'), version=d_attrs.get('VERSION'),
+                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
 
 
-class OmpTxScalarExpr(OmpTxExpr , OmpScalarExpr):
+class OmpTxScalarExpr(OmpTxExpr, OmpScalarExpr):
     """Represents a Scalar"""
+
     def __init__(self, tx_expr, comment, **kwargs):
         super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)
 
 
 class OmpTxConstantPositiveInteger(OmpTxExpr, OmpConstantPositiveInteger):
     """Represents a constant positive integer"""
+
     def __init__(self, tx_expr, comment, **kwargs):
         super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)
 
+
 class OmpTxIntegerExpr(OmpTxExpr, OmpIntegerExpr):
     """Represents an integer"""
+
     def __init__(self, tx_expr, comment, **kwargs):
         super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)
 
 
 class OmpTxList(OmpTxExpr, OmpList):
     """Represents a list"""
+
     def __init__(self, tx_expr, comment, **kwargs):
         super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)

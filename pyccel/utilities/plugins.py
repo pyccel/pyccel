@@ -9,8 +9,10 @@ from pyccel.utilities.metaclasses import Singleton
 
 errors = Errors()
 
+
 class Plugin(ABC):
     """Abstract base class for Pyccel plugins."""
+
     @abstractmethod
     def handle_loading(self, options):
         """Handle loading plugin with provided options"""
@@ -26,6 +28,7 @@ class Plugins(metaclass=Singleton):
     """Manager for Pyccel plugins"""
 
     __slots__ = ("_plugins",)
+
     def __init__(self, plugins_dir=None):
         self._plugins = {}
         self._load_plugins(plugins_dir)

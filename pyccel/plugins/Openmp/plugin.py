@@ -13,6 +13,7 @@ from pyccel.utilities.plugins import Plugin
 
 errors = Errors()
 
+
 class Openmp(Plugin):
     """
     Provides functionality for integrating OpenMP-specific features into parsers within Pyccel.
@@ -109,7 +110,7 @@ class Openmp(Plugin):
                 continue
             if hasattr(impl, 'setup'):
                 parser_cls.__init__ = getattr(impl, 'setup')(self._options, parser_cls.__init__)
-            #remove/restore all methods from the implementation
+            # remove/restore all methods from the implementation
             for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
                 original_method = impl.helper_check_config(method, self._options, None)
                 if original_method:

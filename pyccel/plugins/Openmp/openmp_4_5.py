@@ -24,12 +24,14 @@ from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstant
 
 errors = Errors()
 
+
 class ConfigMixin:
     """
     Common utilities and methods for handling OpenMP syntax and configurations.
     """
     _version = None
     _method_registry = {}
+
     @classmethod
     def helper_check_config(cls, func, options, method):
 
@@ -56,6 +58,7 @@ class ConfigMixin:
             return cls._method_registry[func.__name__]
         if not func.__name__ in cls._method_registry:
             cls._method_registry[func.__name__] = method
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if cls._version != options.get('omp_version', None) or not 'openmp' in options.get('accelerators'):
@@ -65,11 +68,14 @@ class ConfigMixin:
                     return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=args[-1],
                                          severity='error')
             return func(*args, **kwargs, cls=cls, method=method)
+
         return wrapper
+
 
 class SyntaxParser(ConfigMixin):
     """Openmp 4.5 syntax parser"""
     _version = 4.5
+
     @classmethod
     def setup(cls, options, method=None):
         """
@@ -112,6 +118,7 @@ class SyntaxParser(ConfigMixin):
             'OMP_VERSION': lambda _: cls._version,
         })
         cls._omp_metamodel.register_obj_processors(obj_processors)
+
         @functools.wraps(method)
         def setup(instance, *args, **kwargs):
             if cls._version != options.get('omp_version', None) or not 'openmp' in options.get('accelerators'):
@@ -119,6 +126,7 @@ class SyntaxParser(ConfigMixin):
                 return
             instance._skip_stmts_count = 0
             method(instance, *args, **kwargs)
+
         return setup
 
     @classmethod
@@ -164,7 +172,9 @@ class SyntaxParser(ConfigMixin):
             from textx.exceptions import TextXError
             try:
                 model = cls._omp_metamodel.model_from_str(line)
-                directive = OmpTxEndDirective(model.statement, line, lineno=expr.lineno, column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(model.statement, line, lineno=expr.lineno, column=expr.col_offset)
+                directive = OmpTxEndDirective(model.statement, line, lineno=expr.lineno,
+                                              column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(
+                    model.statement, line, lineno=expr.lineno, column=expr.col_offset)
                 directive.set_current_ast(expr)
                 return instance._visit(directive)
             except TextXError as e:
@@ -197,7 +207,7 @@ class SyntaxParser(ConfigMixin):
                     container = el[el.index(instance._context[-2]) + 1:].copy()
                     break
             for line in container:
-                expr =  instance._visit(line)
+                expr = instance._visit(line)
                 if isinstance(expr, OmpEndDirective) and stmt.name == expr.name:
                     end = expr
                     break
@@ -288,6 +298,7 @@ class SyntaxParser(ConfigMixin):
 class SemanticParser(ConfigMixin):
     """Openmp 4.5 semantic parser"""
     _version = 4.5
+
     @staticmethod
     def _visit_OmpDirective(instance, expr, cls=None, method=None):
         if hasattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive"):
@@ -390,6 +401,7 @@ class SemanticParser(ConfigMixin):
 class CCodePrinter(ConfigMixin):
     """Openmp 4.5 C code printer parser"""
     _version = 4.5
+
     @staticmethod
     def _print_OmpConstruct(instance, expr, cls=None, method=None):
         body = instance._print(expr.body)
@@ -413,6 +425,7 @@ class CCodePrinter(ConfigMixin):
 class FCodePrinter(ConfigMixin):
     """Openmp 4.5 fortran code printer parser"""
     _version = 4.5
+
     @classmethod
     def _helper_delay_clauses_printing(cls, start, end, clauses):
         """Transfer clauses of directive to an OmpEndDirective for printing"""
@@ -496,6 +509,7 @@ class FCodePrinter(ConfigMixin):
 class PythonCodePrinter(ConfigMixin):
     """Openmp 4.5 python code printer parser"""
     _version = 4.5
+
     @staticmethod
     def _print_OmpConstruct(instance, expr, cls=None, method=None):
         body = instance._print(expr.body)
