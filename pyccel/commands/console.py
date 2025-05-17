@@ -289,7 +289,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        accelerators    = accelerators,
                        folder          = args.output,
                        compiler_export_file = compiler_export_file,
-                       conda_warnings = args.conda_warnings)
+                       conda_warnings = args.conda_warnings,
+                       omp_version     = args.omp_version,)
     except PyccelError:
         sys.exit(1)
     finally:

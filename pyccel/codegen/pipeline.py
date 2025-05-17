@@ -24,7 +24,6 @@ from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
-
 from pyccel.utilities.plugins import Plugins
 
 from .compiling.basic     import CompileObj
@@ -121,10 +120,9 @@ def execute_pyccel(fname, *,
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
     """
+    start = time.time()
     plugins = Plugins()
     plugins.handle_loading({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
-
-    start = time.time()
     timers = {}
     if fname.endswith('.pyh'):
         syntax_only = True

@@ -18,7 +18,8 @@ from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
+from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList, \
+    OmpTxDirective, OmpTxEndDirective
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 
 errors = Errors()
@@ -95,8 +96,7 @@ class SyntaxParser(ConfigMixin):
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "grammar/openmp.tx")
-        omp_classes = [OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList]
-        cls._omp_metamodel = metamodel_from_file(grammar, classes=omp_classes)
+        cls._omp_metamodel = metamodel_from_file(grammar)
         # object processors: are registered for particular classes (grammar rules)
         # and are called when the objects of the given class is instantiated.
         # The rules OMP_X_Y are used to insert the version of the syntax used
@@ -109,7 +109,7 @@ class SyntaxParser(ConfigMixin):
             'OMP_5_0': lambda _: 5.0,
             'OMP_5_1': lambda _: 5.1,
             'TRUE': lambda _: True,
-            'OMP_VERSION': lambda _: 4.5,
+            'OMP_VERSION': lambda _: cls._version,
         })
         cls._omp_metamodel.register_obj_processors(obj_processors)
         @functools.wraps(method)
@@ -164,8 +164,7 @@ class SyntaxParser(ConfigMixin):
             from textx.exceptions import TextXError
             try:
                 model = cls._omp_metamodel.model_from_str(line)
-                model.raw = line
-                directive = OmpDirective.from_tx_directive(model.statement, cls._version)
+                directive = OmpTxEndDirective(model.statement, line, lineno=expr.lineno, column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(model.statement, line, lineno=expr.lineno, column=expr.col_offset)
                 directive.set_current_ast(expr)
                 return instance._visit(directive)
             except TextXError as e:
@@ -184,11 +183,11 @@ class SyntaxParser(ConfigMixin):
             return method(instance, stmt)
 
     @staticmethod
-    def _visit_OmpDirective(instance, stmt, cls=None, method=None):
+    def _visit_OmpTxDirective(instance, stmt, cls=None, method=None):
         if hasattr(instance, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
             return getattr(instance, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
         clauses = tuple(instance._visit(clause) for clause in stmt.clauses)
-        directive = OmpDirective.from_directive(stmt, clauses=clauses)
+        directive = OmpDirective(clauses=clauses, **stmt.get_fixed_state())
         if stmt.is_construct:
             body = []
             end = None
@@ -229,7 +228,7 @@ class SyntaxParser(ConfigMixin):
                 loop = instance._visit(el[loop_pos])
                 break
         clauses = tuple(instance._visit(clause) for clause in stmt.clauses)
-        directive = OmpDirective.from_directive(stmt, clauses=clauses)
+        directive = OmpDirective(clauses=clauses, **stmt.get_fixed_state())
         instance._skip_stmts_count = 1
         body = CodeBlock(body=[loop])
         return OmpConstruct(start=directive, end=None, body=body)
@@ -251,41 +250,39 @@ class SyntaxParser(ConfigMixin):
         return instance._visit_for_directive(expr)
 
     @staticmethod
-    def _visit_OmpClause(instance, expr, cls=None, method=None):
+    def _visit_OmpTxClause(instance, expr, cls=None, method=None):
         omp_exprs = tuple(instance._visit(e) for e in expr.omp_exprs)
-        return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
+        return OmpClause(omp_exprs=omp_exprs, **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
+    def _visit_OmpTxEndDirective(instance, expr, cls=None, method=None):
         clauses = [instance._visit(clause) for clause in expr.clauses]
-        end = OmpEndDirective.from_directive(expr, clauses=clauses)
-        return end
-
+        return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpScalarExpr(instance, expr, cls=None, method=None):
+    def _visit_OmpTxScalarExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpScalarExpr.from_omp_expr(expr, value=instance._visit(fst))
+        return OmpScalarExpr(value=instance._visit(fst), **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpIntegerExpr(instance, expr, cls=None, method=None):
+    def _visit_OmpTxIntegerExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpIntegerExpr.from_omp_expr(expr, value=instance._visit(fst))
+        return OmpIntegerExpr(value=instance._visit(fst), **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpConstantPositiveInteger(instance, expr, cls=None, method=None):
+    def _visit_OmpTxConstantPositiveInteger(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpConstantPositiveInteger.from_omp_expr(expr, value=instance._visit(fst))
+        return OmpConstantPositiveInteger(value=instance._visit(fst), **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpList(instance, expr, cls=None, method=None):
+    def _visit_OmpTxList(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpList.from_omp_expr(expr, value=instance._visit(fst))
+        return OmpList(value=instance._visit(fst), **expr.get_fixed_state())
 
     @staticmethod
-    def _visit_OmpExpr(instance, expr, cls=None, method=None):
+    def _visit_OmpTxExpr(instance, expr, cls=None, method=None):
         fst = cls._helper_parse_expr(expr)
-        return OmpExpr.from_omp_expr(expr, value=instance._visit(fst))
+        return OmpExpr(value=instance._visit(fst), **expr.get_fixed_state())
 
 
 class SemanticParser(ConfigMixin):
@@ -296,7 +293,7 @@ class SemanticParser(ConfigMixin):
         if hasattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive"):
             return getattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive")(expr)
         clauses = tuple(instance._visit(clause) for clause in expr.clauses)
-        directive = OmpDirective.from_directive(expr, clauses=clauses)
+        directive = OmpDirective(clauses=clauses, **expr.get_fixed_state())
         return directive
 
     @staticmethod
@@ -334,7 +331,7 @@ class SemanticParser(ConfigMixin):
     @staticmethod
     def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
         clauses = [instance._visit(clause) for clause in expr.clauses]
-        return OmpEndDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent)
+        return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
     @staticmethod
     def _visit_OmpScalarExpr(instance, expr, cls=None, method=None):
@@ -350,7 +347,7 @@ class SemanticParser(ConfigMixin):
                 column=expr.position[0],
                 severity="fatal",
             )
-        return OmpScalarExpr.from_omp_expr(expr, value=value)
+        return OmpScalarExpr(value=value, **expr.get_fixed_state())
 
     @staticmethod
     def _visit_OmpIntegerExpr(instance, expr, cls=None, method=None):
@@ -363,12 +360,12 @@ class SemanticParser(ConfigMixin):
                 column=expr.position[0],
                 severity="fatal",
             )
-        return OmpIntegerExpr.from_omp_expr(expr, value=value)
+        return OmpIntegerExpr(value=value, **expr.get_fixed_state())
 
     @staticmethod
     def _visit_OmpConstantPositiveInteger(instance, expr, cls=None, method=None):
         value = instance._visit(expr.value)
-        return OmpConstantPositiveInteger.from_omp_expr(expr, value=value)
+        return OmpConstantPositiveInteger(value=value, **expr.get_fixed_state())
 
     @staticmethod
     def _visit_OmpList(instance, expr, cls=None, method=None):
@@ -382,12 +379,12 @@ class SemanticParser(ConfigMixin):
                     column=expr.position[0],
                     severity="fatal",
                 )
-        return OmpList.from_omp_expr(expr, value=items)
+        return OmpList(value=items, **expr.get_fixed_state())
 
     @staticmethod
     def _visit_OmpClause(instance, expr, cls=None, method=None):
         omp_exprs = tuple(instance._visit(e) for e in expr.omp_exprs)
-        return OmpClause.from_clause(expr, omp_exprs=omp_exprs)
+        return OmpClause(omp_exprs=omp_exprs, **expr.get_fixed_state())
 
 
 class CCodePrinter(ConfigMixin):
@@ -407,7 +404,7 @@ class CCodePrinter(ConfigMixin):
 
     @staticmethod
     def _print_OmpEndDirective(instance, expr, cls=None, method=None):
-        if expr.parent.start.is_construct:
+        if expr.current_user_node.start.is_construct:
             return ""
         else:
             return f"#pragma omp {expr.raw}\n"
