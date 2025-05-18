@@ -21,7 +21,7 @@ runs:
     - name: Install clang and flang
       if: steps.cache-llvm-restore.outputs.cache-hit != 'true'
       run: |
-        apt-get install -y clang flang
+        sudo apt-get install -y clang flang
       shell: bash
 
     - name: Install LaPack
