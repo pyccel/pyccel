@@ -13,6 +13,10 @@ module pyc_tools_f90
 
   implicit none
 
+  public :: complex_comparison
+
+  private
+
   interface complex_comparison
     module procedure complex_comparison_4
     module procedure complex_comparison_8
