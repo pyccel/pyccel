@@ -24,14 +24,6 @@ runs:
         apt-get install -y clang flang
       shell: bash
 
-    - name: Save LLVM Cache
-      id: cache-llvm-save
-      uses: actions/cache/save@v3
-      with:
-        path: |
-          /usr/lib/llvm/
-        key: ${{ steps.cache-llvm-restore.outputs.cache-primary-key }}
-
     - name: Install LaPack
       run:
         sudo apt-get install libblas-dev liblapack-dev
