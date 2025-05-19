@@ -1,12 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import numpy as np
-from pyccel.decorators import template
 from pyccel.decorators import types
 
 T : type = 'int | float'
 R : type = 'int | float'
 O : type = 'bool | complex'
 S : type = 'int | float'
+
+Y = TypeVar('Y', int, float)
+Z = TypeVar('Z', int, float)
+K : type = int
+G = TypeVar('G', int, float)
+J = TypeVar('J', int, int)
 
 def gen_1(a : float) -> float:
     return a * 10
@@ -32,37 +38,28 @@ def gen_7(x : T, y : T, z : R):
 def multi_heads_1(x : int, y : 'int | float'):
     return x + y
 
-@template('z', types=['int', 'float'])
-def tmplt_1(x : 'z', y : 'z'):
+def tmplt_1(x : Z, y : Z):
     return x + y
 
-@template('z', types=['int', 'float'])
-@template('y', types=['int', 'float'])
-def multi_tmplt_1(x : 'z', y : 'z', z : 'y'):
+def multi_tmplt_1(x : Z, y : Z, z : Y):
     return x + y + z
 
-@template('z', types=['int', 'float'])
-def tmplt_head_1(x : 'z', y : 'z'):
+def tmplt_head_1(x : Z, y : Z):
     return x + y
 
-@template('O', types=['int', 'float'])
-def local_override_1(x : 'O', y : 'O'):
+def local_override_1(x : 'Z', y : 'Z'):
     return x + y
 
-@template('z', types=['int', 'float'])
-def tmplt_tmplt_1(x : 'z', y : 'z', z : R):
+def tmplt_tmplt_1(x : Z, y : Z, z : R):
     return x + y + z
 
 def array_elem1(x : 'int64 [:] | float64[:]'):
     return x[0]
 
-@template('k', types='int')
-@template('g', types=['int', 'float'])
-def multi_tmplt_2(y : 'k', z : 'g'):
+def multi_tmplt_2(y : K, z : G):
     return y + z
 
-@template('g', types=['int', 'int'])
-def dup_types_1(a : 'g'):
+def dup_types_1(a : J):
     return a
 
 def dup_types_2(a : 'int | int'):
