@@ -541,12 +541,13 @@ class SemanticParser(BasicParser):
             storage_name = next((n for n, imp in self.scope.find_all('imports').items()
                                 if imp.source == source), None)
         imp = self.scope.find(source, 'imports')
+        found_from_import_name = False
         if imp is None:
             imp = self.scope.find(storage_name, 'imports')
+            found_from_import_name = True
 
         if imp is not None:
-            imp_source = imp.source
-            if imp_source == source:
+            if found_from_import_name or imp.source == source:
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
@@ -3232,14 +3233,14 @@ class SemanticParser(BasicParser):
                     syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
                     if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(func, func.name))
+                        self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
                     if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(var, var.name))
+                        self.insert_import(first.name, AsName(var, var.name), _get_name(lhs))
                     return var
                 else:
                     # If object is something else (eg. dict)
