@@ -17,7 +17,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList, \
-    OmpTxDirective, OmpTxEndDirective
+    OmpTxDirective, OmpTxEndDirective, OmpTxNode
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 
 errors = Errors()
@@ -139,8 +139,6 @@ class SyntaxParser(ConfigMixin):
             errors.report(
                 "Invalid expression",
                 symbol=expr,
-                line=expr.line,
-                column=expr.position[0],
                 severity="fatal",
             )
         return fst.body[0].value
@@ -173,7 +171,6 @@ class SyntaxParser(ConfigMixin):
                 directive = OmpTxEndDirective(model.statement, line, lineno=expr.lineno,
                                               column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(
                     model.statement, line, lineno=expr.lineno, column=expr.col_offset)
-                directive.set_current_ast(expr)
                 return instance._visit(directive)
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
@@ -188,7 +185,10 @@ class SyntaxParser(ConfigMixin):
             instance._skip_stmts_count -= 1
             return EmptyNode()
         else:
-            return method(instance, stmt)
+            res = method(instance, stmt)
+            if isinstance(stmt, OmpTxNode):
+                res.set_current_ast(stmt.python_ast)
+            return res
 
     @staticmethod
     def _visit_OmpTxDirective(instance, stmt, cls=None, method=None):
@@ -339,6 +339,12 @@ class SemanticParser(ConfigMixin):
 
     @staticmethod
     def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
+        if not isinstance(expr.current_user_node, OmpConstruct):
+            errors.report(
+                f"End directive `{expr.name}` doesn't belong to any openmp construct",
+                symbol=expr,
+                severity="fatal",
+            )
         clauses = [instance._visit(clause) for clause in expr.clauses]
         return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
@@ -352,8 +358,6 @@ class SemanticParser(ConfigMixin):
             errors.report(
                 "expression needs to be a scalar expression",
                 symbol=instance,
-                line=expr.line,
-                column=expr.position[0],
                 severity="fatal",
             )
         return OmpScalarExpr(value=value, **expr.get_fixed_state())
@@ -365,8 +369,6 @@ class SemanticParser(ConfigMixin):
             errors.report(
                 "expression must be an integer expression",
                 symbol=instance,
-                line=expr.line,
-                column=expr.position[0],
                 severity="fatal",
             )
         return OmpIntegerExpr(value=value, **expr.get_fixed_state())
@@ -384,8 +386,6 @@ class SemanticParser(ConfigMixin):
                 errors.report(
                     "omp list must be a list of variables",
                     symbol=expr,
-                    line=expr.line,
-                    column=expr.position[0],
                     severity="fatal",
                 )
         return OmpList(value=items, **expr.get_fixed_state())

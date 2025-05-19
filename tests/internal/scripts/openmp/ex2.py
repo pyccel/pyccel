@@ -15,5 +15,4 @@ if __name__ == '__main__':
     #$ omp for
     for i in range(1, n):
         b[i] = (a[i] + a[i-1]) / 2.0
-    #$ omp end for
     #$ omp end parallel
