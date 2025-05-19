@@ -25,8 +25,8 @@ gfort_info = {'exec' : 'gfortran',
               'mpi': {
                   },
               'openmp': {
-                  'flags'   : ('-fopenmp',),
-                  'libs'    : ('gomp',),
+                  'flags' : ('-fopenmp',),
+                  'libs'  : ('gomp',),
                   },
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
@@ -99,8 +99,8 @@ gcc_info = {'exec' : 'gcc',
             'mpi': {
                 },
             'openmp': {
-                'flags'     : ('-fopenmp',),
-                'libs'      : ('gomp',),
+                'flags' : ('-fopenmp',),
+                'libs'  : ('gomp',),
                 },
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),

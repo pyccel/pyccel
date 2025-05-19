@@ -12,7 +12,6 @@ from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.utilities.stage import PyccelStage
-from pyccel.utilities.plugins import Plugins
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
@@ -23,7 +22,6 @@ printer_registry    = {
                       }
 
 pyccel_stage = PyccelStage()
-extensions = Plugins()
 
 class Codegen:
     """

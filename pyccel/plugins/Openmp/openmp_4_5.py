@@ -53,7 +53,7 @@ class ConfigMixin:
             Or original method if clear is passed in the options.
         """
         if options.get('clear', False):
-            return cls._method_registry[func.__name__]
+            return cls._method_registry.get(func.__name__)
         if not func.__name__ in cls._method_registry:
             cls._method_registry[func.__name__] = method
 

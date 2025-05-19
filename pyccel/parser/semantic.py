@@ -2842,6 +2842,7 @@ class SemanticParser(BasicParser):
         ls = []
         self._additional_exprs.append([])
         for b in expr.body:
+
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])

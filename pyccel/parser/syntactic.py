@@ -1429,7 +1429,6 @@ class SyntaxParser(BasicParser):
         if len(exprs) == 1:
             return exprs[0]
         else:
-            #causes errors in omp
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):

@@ -116,7 +116,7 @@ class Openmp(Plugin):
                 original_method = impl.helper_check_config(method, self._options, None)
                 if original_method:
                     setattr(parser_cls, name, original_method)
-                else:
+                elif hasattr(parser_cls, name):
                     delattr(parser_cls, name)
         self._loaded_versions = []
 
