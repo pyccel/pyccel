@@ -1,5 +1,42 @@
 # Pyccel OpenMP usage
 
+Pyccel offers limited support for **OpenMP 4.5** and **OpenMP 5.0** standards.
+
+## Version Configuration
+
+### Command Line Interface
+Specify the OpenMP version during compilation using the `--omp-version` flag:
+
+```bash
+--omp-version=4.5
+# or
+--omp-version=5.0
+```
+
+### epyccel Integration
+When using epyccel, configure OpenMP through the accelerators parameter:
+
+```python
+accelerators=['openmp']
+```
+
+### Environment Variable
+Set a default OpenMP version system-wide:
+
+```bash
+export PYCCEL_OMP_VERSION=5.0
+```
+
+## Version Compatibility
+
+Pyccel automatically validates OpenMP syntax compatibility with your selected version:
+
+- **Deprecated syntax**: Generates warnings when using features deprecated in the target version
+- **Version mismatches**: Warns when attempting to use features introduced in newer versions than selected
+
+This ensures the code remains compatible with the chosen OpenMP standard.
+
+
 ## Using the Runtime Library Routines
 
 OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the `pyccel.stdlib`:
@@ -41,7 +78,7 @@ hello from thread number: 3
 
 ### Supported Routines
 
-From the many routines defined in the [OpenMP 5.1 Standard](https://www.openmp.org/spec-html/5.1/openmp.html), Pyccel currently supports:
+From the many routines defined in the OpenMP Standards, Pyccel currently supports:
 
 -   All thread team routines except ``` omp\_get\_supported\_active\_levels ```
 -   All thread affinity routines except ``` omp\_set\_affinity\_format ```, ``` omp\_get\_affinity\_format ```, ``` omp\_display\_affinity ```, ``` omp\_capture\_affinity ```
@@ -54,9 +91,8 @@ From the many routines defined in the [OpenMP 5.1 Standard](https://www.openmp.o
 
 Pyccel uses the same clauses as OpenMP, you can refer to the references below for more information on how to use them:
 
-[*OpenMP 5.1 API Specification (pdf)*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)\
-[*OpenMP 5.1 API Specification (html)*](https://www.openmp.org/spec-html/5.1/openmp.html)
-[*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
+[*OpenMP 4.5 API Specification (pdf)*](https://www.openmp.org/wp-content/uploads/openmp-4.5.pdf)\
+[*OpenMP 5.0 API Specification (pdf)*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5.0.pdf)
 
 Other references:
 
@@ -834,11 +870,3 @@ The output of this program is :
 ❯ ./omp_test
 result: 49995000
 ```
-
-## Supported Constructs
-
-All constructs in the OpenMP 5.1 standard are supported except:
--   `scope`
--   `workshare`
--   `scan`
--   `interop`
