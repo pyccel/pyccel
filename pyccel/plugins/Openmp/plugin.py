@@ -1,3 +1,4 @@
+"""Classes that handles loading the Openmp Plugin"""
 import inspect
 import os
 

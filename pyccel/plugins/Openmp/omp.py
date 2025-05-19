@@ -1,3 +1,5 @@
+"""Classes and methods that handle supported Openmp objects"""
+
 import re
 from ast import AST
 
@@ -161,7 +163,6 @@ class OmpDirective(OmpNode):
 
 class OmpEndDirective(OmpDirective):
     """Represents an OpenMP End Directive."""
-    pass
 
 
 class OmpClause(OmpNode):

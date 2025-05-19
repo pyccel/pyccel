@@ -1,3 +1,5 @@
+"""Contains OpenMp 5.0 parser classes"""
+
 from . import openmp_4_5
 
 

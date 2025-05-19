@@ -1,7 +1,5 @@
 # pylint: disable=protected-access, missing-function-docstring
-"""
-Module containing the grammar rules for the OpenMP 4.5 specification,
-"""
+"""Contains OpenMp 4.5 parser classes"""
 import ast
 import functools
 import re
@@ -430,7 +428,7 @@ class FCodePrinter(ConfigMixin):
     def _helper_delay_clauses_printing(cls, start, end, clauses):
         """Transfer clauses of directive to an OmpEndDirective for printing"""
         clauses = tuple(c for c in start.clauses if c.name in clauses)
-        if len(clauses) or end:
+        if clauses or end:
             if end:
                 end = f"!$omp end {end.name} {' '.join(c.raw for c in end.clauses + clauses)}"
             else:

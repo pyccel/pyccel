@@ -1,4 +1,4 @@
-import importlib.util
+"""Classes that handles plugins functionality"""
 import importlib.util
 import inspect
 import os
@@ -16,7 +16,6 @@ class Plugin(ABC):
     @abstractmethod
     def handle_loading(self, options):
         """Handle loading plugin with provided options"""
-        pass
 
     @property
     def name(self):
@@ -55,7 +54,7 @@ class Plugins(metaclass=Singleton):
                 plugin = self._load_plugin_from_folder(plugins_dir, folder)
                 if plugin:
                     self._plugins[plugin.name] = plugin
-            except Exception as e:
+            except (ImportError, FileNotFoundError, ValueError) as e:
                 errors.report(
                     f"Error loading plugin '{folder}': {str(e)}",
                     severity='warning')
@@ -78,7 +77,7 @@ class Plugins(metaclass=Singleton):
 
         # find plugin class in the module
         plugin_class = None
-        for name, obj in inspect.getmembers(module):
+        for _, obj in inspect.getmembers(module):
             if (inspect.isclass(obj) and
                     issubclass(obj, Plugin) and
                     obj.__module__ == module.__name__ and
@@ -96,7 +95,9 @@ class Plugins(metaclass=Singleton):
         for plugin_name, plugin in self._plugins.items():
             try:
                 plugin.handle_loading(options)
-            except Exception as e:
+            # Catching all exceptions because plugin loading may fail in unpredictable ways
+            except Exception as e: # pylint: disable=broad-exception-caught
+                plugin.handle_loading({'clear':True})
                 errors.report(
                     f"Error in plugin '{plugin_name}' during loading: {str(e)}",
                     severity='warning')
