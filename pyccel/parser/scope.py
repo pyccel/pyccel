@@ -277,14 +277,22 @@ class Scope(object):
             return None
 
     def find_all(self, category):
-        """ Find and return all objects from the specified category
-        in the scope.
+        """
+        Find and return all objects from the specified category in the scope.
 
-        Parameter
-        ---------
+        Find and return all objects from the specified category in the scope.
+
+        Parameters
+        ----------
         category : str
             The type of object we are searching for.
-            This must be one of the strings in Scope.categories
+            This must be one of the strings in Scope.categories.
+
+        Returns
+        -------
+        dict
+            A dictionary containing all the objects of the specified category
+            found in the scope.
         """
         if self.parent_scope:
             result = self.parent_scope.find_all(category)
