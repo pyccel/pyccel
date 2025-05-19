@@ -2737,10 +2737,19 @@ class SemanticParser(BasicParser):
                 import_free  = free_func()
                 program_body.insert2body(import_free)
 
+            imports = list(container['imports'].values())
+            for i in self.scope.imports['imports'].values():
+                target = []
+                for t in i.target:
+                    local_t = self.scope.find(t.name)
+                    if local_t and program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,)):
+                        target.append(t)
+                if target:
+                    imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
             program = Program(prog_name,
                             self.get_variables(prog_scope),
                             program_body,
-                            container['imports'].values(),
+                            imports,
                             scope=prog_scope)
 
             mod.program = program
