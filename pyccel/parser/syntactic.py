@@ -321,7 +321,7 @@ class SyntaxParser(BasicParser):
         str
             The new name of the variable.
         """
-        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+        if all(isinstance(n, PythonTuple) for n in possible_names) and \
                 len(set(len(n) for n in possible_names)) == 1:
             # If all possible names are iterables of the same length then find a name
             # for each element and link them to an element describing this variable

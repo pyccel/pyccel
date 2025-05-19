@@ -1987,7 +1987,7 @@ class Return(PyccelAstNode):
         self._stmt = stmt
 
         self._n_returns = 0 if isinstance(expr, Nil) else \
-                1 if not isinstance(expr, (PythonTuple, PythonList)) else \
+                1 if not isinstance(expr, PythonTuple) else \
                 len(expr)
 
         super().__init__()
