@@ -159,6 +159,7 @@ All notable changes to this project will be documented in this file.
 -   #2295 : Fix wrapper handling of constant array arguments.
 -   #2097 : Fix printing of an empty list.
 -   #2235 : Fix negative numbers in slice indices when translating to C.
+-   #2144 : Fix accidental imports due to modules making their contents public by default.
 
 ### Changed
 
