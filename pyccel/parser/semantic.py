@@ -3589,7 +3589,7 @@ class SemanticParser(BasicParser):
                     recognised_mod = recognised_source(mod_name)
                 elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
                     # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                    mod_name = str(env_var).split(' of ')[-1].split(' object ')[0]
+                    mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
                     while mod_name and not recognised_source(mod_name):
                         mod_name = mod_name.rsplit('.', 1)[0]
 
