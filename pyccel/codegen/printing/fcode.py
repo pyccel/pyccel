@@ -978,19 +978,23 @@ class FCodePrinter(CodePrinter):
             old_name = i.name
             new_name = i.local_alias
             if old_name != new_name:
-                target = f'{new_name} => {old_name}'
-                line = f'{prefix} {target}'
+                target = '{target} => {name}'.format(target=new_name,
+                                                     name=old_name)
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=target)
 
             elif isinstance(new_name, DottedName):
                 target = '_'.join(self._print(j) for j in new_name.name)
-                line = f'{prefix} {target}'
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=target)
 
             elif isinstance(new_name, str):
-                line = f'{prefix} {new_name}'
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=new_name)
 
             else:
                 raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '
-                                f'given {type(i)}')
+                                'given {}'.format(type(i)))
 
             code = (code + '\n' + line) if code else line
 
