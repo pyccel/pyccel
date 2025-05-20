@@ -3611,6 +3611,24 @@ class SemanticParser(BasicParser):
 
         args = self._handle_function_args(expr.args)
 
+        if isinstance(func, PyccelFunctionDef) and func.cls_name is TypingTypeVar:
+            new_args = [args[0]]
+            for a in args[1:]:
+                a_val = a.value
+                if isinstance(a_val, LiteralString):
+                    pyccel_stage.set_stage('syntactic')
+                    try:
+                        syntactic_a = types_meta.model_from_str(a_val.python_value)
+                    except TextXSyntaxError as e:
+                        errors.report(f"Invalid annotation. {e.message}",
+                                symbol = self.current_ast_node, severity='fatal')
+                    annot = syntactic_a.expr
+                    pyccel_stage.set_stage('semantic')
+                    new_args.append(FunctionCallArgument(self._visit(annot)))
+                else:
+                    new_args.append(a)
+            args = new_args
+
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
