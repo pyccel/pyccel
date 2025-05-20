@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import template
+from typing import TypeVar
 
 T : type = 'int | float'
 R : type = 'int | float'
@@ -27,18 +27,16 @@ def gen_6(x : S, y : S):
 def gen_7(x : T, y : T, z : R):
     return x + y + z
 
+Z = TypeVar('Z', int, float)
+O = TypeVar('O', int, float)
 
-
-@template('Z', types=['int', 'real'])
-def tmplt_head_1(x : 'Z', y : 'Z'):
+def tmplt_head_1(x : Z, y : Z):
     return x + y
 
-@template('O', types=['int', 'real'])
-def local_override_1(x : 'O', y : 'O'):
+def local_override_1(x : O, y : O):
     return x + y
 
-@template('Z', types=['int', 'real'])
-def tmplt_tmplt_1(x : 'Z', y : 'Z', z : R):
+def tmplt_tmplt_1(x : Z, y : Z, z : R):
     return x + y + z
 
 def tst_gen_1():

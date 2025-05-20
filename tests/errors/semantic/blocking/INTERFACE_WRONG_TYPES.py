@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import template
+from typing import TypeVar
 
-@template('a', types=['int', 'real'])
-@template('b', types=['int', 'real'])
-def multi_tmplt_1(x : 'a', y : 'a', z : 'b'):
+a = TypeVar('a', int, float)
+a = TypeVar('b', int, float)
+
+def multi_tmplt_1(x : a, y : a, z : b):
     """Tests Interfaces"""
     return x + y + z
 

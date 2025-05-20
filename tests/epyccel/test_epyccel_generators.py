@@ -1,10 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import pytest
 import numpy as np
 from numpy.random import randint
 
 from pyccel import epyccel
-from pyccel.decorators import template
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
@@ -282,7 +282,8 @@ def test_sum_with_two_variables(language):
     )
 )
 def test_min_max_values(language):
-    @template('T', ['int16', 'int32', 'int64', 'float32', 'float64'])
+    T = TypeVar('T', 'int16', 'int32', 'int64', 'float32', 'float64')
+
     def f(a : 'T[:]'):
         min_val = min(ai for ai in a)
         max_val = max(ai for ai in a)
