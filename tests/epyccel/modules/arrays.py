@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import numpy as np
 
-from pyccel.decorators import template, stack_array, allow_negative_index
+from pyccel.decorators import stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
 a_1d_f = np.array([1 << i for i in range(21)], dtype=int, order="F")

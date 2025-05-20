@@ -41,7 +41,7 @@ C = TypeVar('C', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'flo
 CT = TypeVar('CT', 'complex', 'complex64', 'complex128')
 CNT = TypeVar('CNT', 'complex64', 'complex128') # complex numpy types
 T = TypeVar('T', 'int','float', 'complex', 'int32', 'float32', 'float64', 'complex64', 'complex128')
-S = TypeVar('S', int, 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
+S = TypeVar('S', int, 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64')
 
 def randint(*args, **kwargs):
     if 'dtype' in kwargs:

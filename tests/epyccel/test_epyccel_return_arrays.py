@@ -8,7 +8,6 @@ from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, m
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from pyccel import epyccel
-from pyccel.decorators import template
 
 T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
 NumType = TypeVar('NumType', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')

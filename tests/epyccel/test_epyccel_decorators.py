@@ -4,7 +4,7 @@ from typing import TypeVar
 import pytest
 import numpy as np
 from pyccel import epyccel
-from pyccel.decorators import private, inline, template
+from pyccel.decorators import private, inline
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
