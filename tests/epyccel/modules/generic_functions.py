@@ -3,7 +3,6 @@ from typing import TypeVar
 
 T : type = 'int | float'
 R : type = 'int | float'
-O : type = 'float | complex'
 S : type = 'int | float | complex'
 
 def gen_1(a : 'float'):
