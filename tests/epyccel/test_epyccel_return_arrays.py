@@ -781,7 +781,7 @@ def test_copy_f_to_f(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_f_to_c(language):
-    def copy_f_to_c(b : FloatArrays):
+    def copy_f_to_c(b : FArrays):
         from numpy import array
         a = array(b, order='C')
         return a
