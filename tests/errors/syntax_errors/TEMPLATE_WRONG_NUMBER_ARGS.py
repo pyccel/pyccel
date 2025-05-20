@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import template
+from typing import TypeVar
+
+O = TypeVar('
 
 @template(name='O', types=['int', 'real'], test='int') # pylint: disable=unexpected-keyword-arg
 def tmplt_1(x : 'O', y : 'O'):

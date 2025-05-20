@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import pytest
 from pyccel import epyccel
-from pyccel.decorators import template
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -704,7 +704,8 @@ def test_set_iter_prod(language):
     assert isinstance(python_result, type(pyccel_result))
 
 def test_set_const_arg(language):
-    @template('T', ['int', 'float', 'complex'])
+    T = TypeVar('T', int, float, complex)
+
     def set_arg(arg : 'const set[T]', my_sum : 'T'):
         for ai in arg:
             my_sum += ai

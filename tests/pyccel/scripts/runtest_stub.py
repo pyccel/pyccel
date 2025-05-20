@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from typing import Final
-from pyccel.decorators import template
+from typing import Final, TypeVar
 
 def f(a : int, b : 'float[:]'):
     return (a, b[0])
@@ -11,12 +10,14 @@ def g():
 def h(arg : Final[list[int]]):
     print(arg[0])
 
-@template('T', [int, float, complex])
-def k(a : 'T'):
+T = TypeVar('T', int, float, complex)
+
+def k(a : T):
     return (a, 2*a, 3*a)
 
-@template('T', ['const int', 'const float', 'const complex'])
-def l(a : 'T'):
+S = TypeVar('S', 'const int', 'const float', 'const complex')
+
+def l(a : 'S'):
     tup = (a, 2*a, 3*a)
     for i in range(3):
         print(tup[i])
