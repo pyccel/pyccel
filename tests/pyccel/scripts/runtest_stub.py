@@ -15,7 +15,7 @@ T = TypeVar('T', int, float, complex)
 def k(a : T):
     return (a, 2*a, 3*a)
 
-S = TypeVar('S', 'const int', 'const float', 'const complex')
+S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
 
 def l(a : 'S'):
     tup = (a, 2*a, 3*a)

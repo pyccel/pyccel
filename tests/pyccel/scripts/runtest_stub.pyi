@@ -1,6 +1,5 @@
-from typing import Final
+from typing import TypeVar, Final
 from typing import overload
-from typing import TypeVar
 from numpy import float64
 
 
