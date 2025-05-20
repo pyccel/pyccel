@@ -3248,8 +3248,6 @@ class SemanticParser(BasicParser):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
-                    if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(var, var.name), _get_name(lhs))
                     return var
                 else:
                     # If object is something else (eg. dict)
