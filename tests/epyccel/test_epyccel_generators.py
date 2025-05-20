@@ -282,9 +282,9 @@ def test_sum_with_two_variables(language):
     )
 )
 def test_min_max_values(language):
-    T = TypeVar('T', 'int16', 'int32', 'int64', 'float32', 'float64')
+    T = TypeVar('T', 'int16[:]', 'int32[:]', 'int64[:]', 'float32[:]', 'float64[:]')
 
-    def f(a : 'T[:]'):
+    def f(a : T):
         min_val = min(ai for ai in a)
         max_val = max(ai for ai in a)
         return min_val, max_val

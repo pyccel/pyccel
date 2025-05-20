@@ -879,7 +879,7 @@ def test_list_str(stc_language):
 def test_list_const_arg(language):
     T = TypeVar('T', int, float, complex)
 
-    def list_arg(arg : 'const list[T]', my_sum : 'T'):
+    def list_arg(arg : Final[list[T]], my_sum : T):
         for ai in arg:
             my_sum += ai
         return my_sum

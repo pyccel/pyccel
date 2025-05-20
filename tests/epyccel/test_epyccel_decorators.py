@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-from typing import TypeVar
+from typing import TypeVar, Final
 import pytest
 import numpy as np
 from pyccel import epyccel
@@ -289,9 +289,9 @@ def test_multi_level_inhomogeneous_tuple_in_inline(language):
     assert f() == g()
 
 def test_indexed_template(language):
-    T = TypeVar('T', 'const float', 'const complex')
+    T = TypeVar('T', 'float[:]', 'complex[:]')
 
-    def my_sum(v: 'T[:]'):
+    def my_sum(v: Final[T]):
         return v.sum()
 
     pyccel_sum = epyccel(my_sum, language=language)

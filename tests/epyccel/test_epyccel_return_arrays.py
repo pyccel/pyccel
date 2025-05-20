@@ -12,7 +12,7 @@ from pyccel import epyccel
 T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
 NumType = TypeVar('NumType', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
 FArrays = TypeVar('FArrays', 'float[:,:,:](order=F)', 'float[:,:](order=F)')
-CArrays = TypeVar('FArrays', 'float[:,:,:](order=C)', 'float[:,:](order=C)')
+CArrays = TypeVar('CArrays', 'float[:,:,:](order=C)', 'float[:,:](order=C)')
 
 def test_single_return(language):
     def return_array(a : 'T', b : 'T'):

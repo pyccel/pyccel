@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
+from typing import TypeVar, Final
 import pytest
 from pyccel import epyccel
 
@@ -706,7 +706,7 @@ def test_set_iter_prod(language):
 def test_set_const_arg(language):
     T = TypeVar('T', int, float, complex)
 
-    def set_arg(arg : 'const set[T]', my_sum : 'T'):
+    def set_arg(arg : Final[set[T]], my_sum : T):
         for ai in arg:
             my_sum += ai
         return my_sum
