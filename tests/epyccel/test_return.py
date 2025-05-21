@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, reimported
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 from pyccel import epyccel
 
@@ -75,7 +75,6 @@ def test_scalare_multi_return_stmts(language):
 
 def test_create_arr(language):
     def create_arr(i : int):
-        import numpy as np
         _ = np.ones(i)
         return True
     epyc_create_arr = epyccel(create_arr, language=language, fflags="-Werror -Wunused-variable")
@@ -83,7 +82,6 @@ def test_create_arr(language):
 
 def test_return_arr_element(language):
     def return_arr_element(i : int):
-        import numpy as np
         a = np.ones(i)
         return a[0]
     epyc_return_arr_element = epyccel(return_arr_element, language=language, fflags="-Werror -Wunused-variable")
@@ -91,7 +89,6 @@ def test_return_arr_element(language):
 
 def test_create_multi_arrs(language):
     def create_multi_arrs(i : int):
-        import numpy as np
         _ = np.ones(i)
         _ = np.zeros(i)
         _ = np.zeros(i)
@@ -101,7 +98,6 @@ def test_create_multi_arrs(language):
 
 def test_expr_arrs_elements(language):
     def expr_arrs_elements(i : int):
-        import numpy as np
         a = np.ones(i)
         b = np.zeros(i)
         return a[i - 1]+b[i - 1]
@@ -110,7 +106,6 @@ def test_expr_arrs_elements(language):
 
 def test_complex_expr(language):
     def complex_expr(i : int):
-        import numpy as np
         a = np.ones(i)
         return ((4 + 5)/(6 - 3) * a[0])%(9 - a[1])
     epyc_complex_expr = epyccel(complex_expr, language=language, fflags="-Werror -Wunused-variable")
@@ -118,7 +113,6 @@ def test_complex_expr(language):
 
 def test_multi_allocs(language):
     def multi_allocs(i :int):
-        import numpy as np
         a = np.ones(i)
         b = np.ones(i)
         c = np.ones(i)
@@ -168,15 +162,12 @@ def test_return_None(language):
 
 def test_arg_arr_element_op(language):
     def return_mult_arr_arg_element(i: 'int', arg:'float[:]'):
-        import numpy as np
         a = np.ones(i)
         return a[0] * arg[0]
     def return_add_arr_arg_element(i: 'int', arg:'float[:]'):
-        import numpy as np
         a = np.ones(i)
         return a[0] + arg[0]
     def return_op_arr_arg_element(i: 'int', arg:'float[:]'):
-        import numpy as np
         a = np.ones(i)
         return ((a[2] + arg[0]) * arg[2] - 2) / 4 * 2
 

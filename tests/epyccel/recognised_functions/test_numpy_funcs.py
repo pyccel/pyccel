@@ -2202,7 +2202,6 @@ def test_array_new_dtype(language):
 )
 def test_rand_basic(language):
     def create_val():
-        from numpy.random import rand # pylint: disable=reimported
         return rand()
 
     f1 = epyccel(create_val, language = language)
@@ -2223,30 +2222,25 @@ def test_rand_basic(language):
 )
 def test_rand_args(language):
     def create_array_size_1d(n : 'int'):
-        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n)
         return shape(a)[0]
 
     def create_array_size_2d(n : 'int', m : 'int'):
-        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n,m)
         return shape(a)[0], shape(a)[1]
 
     def create_array_size_3d(n : 'int', m : 'int', p : 'int'):
-        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n,m,p)
         return shape(a)[0], shape(a)[1], shape(a)[2]
 
     def create_array_vals_1d():
-        from numpy.random import rand # pylint: disable=reimported
         a = rand(4)
         return a[0], a[1], a[2], a[3]
 
     def create_array_vals_2d():
-        from numpy.random import rand # pylint: disable=reimported
         a = rand(2,2)
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -2287,7 +2281,6 @@ def test_rand_args(language):
 )
 def test_rand_expr(language):
     def create_val():
-        from numpy.random import rand # pylint: disable=reimported
         x = 2*rand()
         return x
 
@@ -2301,7 +2294,6 @@ def test_rand_expr(language):
 @pytest.mark.xfail(reason="a is not allocated")
 def test_rand_expr_array(language):
     def create_array_vals_2d():
-        from numpy.random import rand # pylint: disable=reimported
         a = rand(2,2)*0.5 + 3
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -2323,16 +2315,13 @@ def test_rand_expr_array(language):
 )
 def test_randint_basic(language):
     def create_rand():
-        from numpy.random import randint # pylint: disable=reimported
-        return randint(-10, 10)
+        return np.random.randint(-10, 10)
 
     def create_val(high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
-        return randint(high)
+        return np.random.randint(high)
 
     def create_val_low(low : 'int', high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
-        return randint(low, high)
+        return np.random.randint(low, high)
 
     f0 = epyccel(create_rand, language = language)
     y = [f0() for i in range(10)]
@@ -2366,13 +2355,11 @@ def test_randint_basic(language):
 )
 def test_randint_expr(language):
     def create_val(high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
-        x = 2*randint(high)
+        x = 2*np.random.randint(high)
         return x
 
     def create_val_low(low : 'int', high : 'int'):
-        from numpy.random import randint # pylint: disable=reimported
-        x = 2*randint(low, high)
+        x = 2*np.random.randint(low, high)
         return x
 
     f1 = epyccel(create_val, language = language)
