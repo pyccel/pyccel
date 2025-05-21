@@ -1,4 +1,4 @@
-from typing import TypeVar, Final
+from typing import Final, TypeVar
 from typing import overload
 from numpy import float64
 
