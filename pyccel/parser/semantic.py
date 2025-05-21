@@ -9,7 +9,7 @@ See the developer docs for more details
 
 from itertools import chain, product
 import os
-from types import ModuleType
+from types import ModuleType, BuiltinFunctionType
 import sys
 import typing
 import warnings
@@ -538,14 +538,16 @@ class SemanticParser(BasicParser):
         """
         source = _get_name(name)
         if storage_name is None:
-            storage_name = source
+            storage_name = next((n for n, imp in self.scope.find_all('imports').items()
+                                if imp.source == source), None)
         imp = self.scope.find(source, 'imports')
+        found_from_import_name = False
         if imp is None:
             imp = self.scope.find(storage_name, 'imports')
+            found_from_import_name = True
 
         if imp is not None:
-            imp_source = imp.source
-            if imp_source == source:
+            if found_from_import_name or imp.source == source:
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
@@ -553,7 +555,10 @@ class SemanticParser(BasicParser):
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
         else:
-            container = self.scope.imports
+            current_scope = self.scope
+            while current_scope.is_loop:
+                current_scope = current_scope.parent_scope
+            container = current_scope.imports
             container['imports'][storage_name] = Import(source, target, True)
 
 
@@ -3251,6 +3256,8 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
+                    if first.__module__.startswith('pyccel.'):
+                        self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -3577,6 +3584,25 @@ class SemanticParser(BasicParser):
                 func = builtin_functions_dict.get(env_var.__name__, None)
                 if func is not None:
                     func = PyccelFunctionDef(env_var.__name__, func)
+                mod_name = env_var.__module__
+                if mod_name:
+                    recognised_mod = recognised_source(mod_name)
+                elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
+                    # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
+                    mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
+                    while mod_name and not recognised_source(mod_name):
+                        mod_name = mod_name.rsplit('.', 1)[0]
+
+                    recognised_mod = len(mod_name) != 0
+                else:
+                    recognised_mod = False
+
+                if func is None and recognised_mod:
+                    pyccel_stage.set_stage('syntactic')
+                    import_node = Import(mod_name, name)
+                    pyccel_stage.set_stage('semantic')
+                    self._additional_exprs[-1].append(self._visit(import_node))
+                    func = self.scope.find(name)
 
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,

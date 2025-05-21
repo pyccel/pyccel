@@ -2720,10 +2720,10 @@ DtypePrecisionToCastFunction.update({
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 
-numpy_linalg_mod = Module('linalg', (),
+numpy_linalg_mod = Module('numpy.linalg', (),
     [PyccelFunctionDef('norm', NumpyNorm)])
 
-numpy_random_mod = Module('random', (),
+numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
      PyccelFunctionDef('random' , NumpyRand),
      PyccelFunctionDef('randint', NumpyRandint)])
