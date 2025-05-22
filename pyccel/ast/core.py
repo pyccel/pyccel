@@ -3516,6 +3516,12 @@ class ClassDef(ScopedAstNode):
 
     @property
     def hide(self):
+        """
+        Indicate whether the class should be hidden.
+
+        Indicate whether the class should be hidden. A hidden class does
+        not appear in the printed code.
+        """
         return self.is_iterable or self.is_with_construct
 
     @property
