@@ -8,16 +8,6 @@ runs:
         sudo apt-get update
       shell: bash
 
-    - name: Restore cached LLVM
-      id: cache-llvm-restore
-      uses: actions/cache/restore@v3
-      with:
-        path: |
-          /usr/lib/llvm/
-        key: ${{ runner.os }}-llvm-16
-        restore-keys: |
-          ${{ runner.os }}-llvm-
-
     - name: Install clang and flang
       if: steps.cache-llvm-restore.outputs.cache-hit != 'true'
       run: |
@@ -33,6 +23,7 @@ runs:
       run:
         sudo apt-get install libblas-dev liblapack-dev
       shell: bash
+
     - name: Install Valgrind
       run:
         sudo apt-get install valgrind
