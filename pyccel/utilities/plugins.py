@@ -97,7 +97,7 @@ class Plugins(metaclass=Singleton):
                 plugin.handle_loading(options)
             # Catching all exceptions because plugin loading may fail in unpredictable ways
             except Exception as e: # pylint: disable=broad-exception-caught
-                plugin.handle_loading({'clear':True})
+                # plugin.handle_loading({'clear':True})
                 errors.report(
                     f"Error in plugin '{plugin_name}' during loading: {str(e)}",
                     severity='warning')
