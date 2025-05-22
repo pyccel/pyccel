@@ -9,7 +9,7 @@ See the developer docs for more details
 
 from itertools import chain, product
 import os
-from types import ModuleType
+from types import ModuleType, BuiltinFunctionType
 import sys
 import typing
 import warnings
@@ -121,7 +121,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -538,14 +538,16 @@ class SemanticParser(BasicParser):
         """
         source = _get_name(name)
         if storage_name is None:
-            storage_name = source
+            storage_name = next((n for n, imp in self.scope.find_all('imports').items()
+                                if imp.source == source), None)
         imp = self.scope.find(source, 'imports')
+        found_from_import_name = False
         if imp is None:
             imp = self.scope.find(storage_name, 'imports')
+            found_from_import_name = True
 
         if imp is not None:
-            imp_source = imp.source
-            if imp_source == source:
+            if found_from_import_name or imp.source == source:
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
@@ -553,7 +555,10 @@ class SemanticParser(BasicParser):
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               severity='fatal')
         else:
-            container = self.scope.imports
+            current_scope = self.scope
+            while current_scope.is_loop:
+                current_scope = current_scope.parent_scope
+            container = current_scope.imports
             container['imports'][storage_name] = Import(source, target, True)
 
 
@@ -2210,31 +2215,27 @@ class SemanticParser(BasicParser):
 
         if not any(isinstance(a, Slice) for a in args):
             if isinstance(base, PyccelFunctionDef):
-                dtype_cls = base.cls_name
+                dtype_cls = base.cls_name.static_type()
             else:
                 raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
             if (len(args) == 2 and args[1] is LiteralEllipsis()) or \
-                    (len(args) == 1 and dtype_cls is not PythonTupleFunction):
+                    (len(args) == 1 and dtype_cls is not TupleType):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
-                if dtype_cls in type_container:
-                    class_type = type_container[dtype_cls]
-                else:
-                    raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
-                            severity='fatal', symbol=expr)
+                class_type = HomogeneousTupleType if dtype_cls is TupleType else dtype_cls
                 type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
                                     for u in internal_datatypes.type_list]
                 return UnionTypeAnnotation(*type_annotations)
-            elif len(args) == 2 and dtype_cls is PythonDictFunction:
+            elif len(args) == 2 and dtype_cls is DictType:
                 syntactic_key_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
                 key_types = self._visit(syntactic_key_annotation)
                 val_types = self._visit(syntactic_val_annotation)
-                type_annotations = [VariableTypeAnnotation(DictType(k.class_type, v.class_type)) \
+                type_annotations = [VariableTypeAnnotation(dtype_cls(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
-            elif dtype_cls is PythonTupleFunction:
+            elif dtype_cls is TupleType:
                 syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
                 types = [self._visit(a).type_list for a in syntactic_annotations]
                 internal_datatypes = list(product(*types))
@@ -2441,6 +2442,14 @@ class SemanticParser(BasicParser):
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
             return PyccelFunctionDef('Final', TypingFinal)
+        elif isinstance(env_var, typing.GenericAlias):
+            class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
+            return VariableTypeAnnotation(class_type(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
+        elif isinstance(env_var, typing.TypeVar):
+            constraints = [self.env_var_to_pyccel(c) for c in env_var.__constraints__]
+            return TypingTypeVar(env_var.__name__, *constraints,
+                                covariant = env_var.__covariant__,
+                                contravariant = env_var.__contravariant__)
         elif isinstance(env_var, ModuleType):
             mod_name = env_var.__name__
             if recognised_source(mod_name):
@@ -2452,6 +2461,16 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
                         severity='error', symbol = self.current_ast_node)
+        elif isinstance(env_var, (typing.ForwardRef, str)):
+            pyccel_stage.set_stage('syntactic')
+            try:
+                annotation = types_meta.model_from_str(getattr(env_var, '__forward_arg__', env_var))
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
+            annot = annotation.expr
+            pyccel_stage.set_stage('semantic')
+            return self._visit(annot)
 
         errors.report(PYCCEL_RESTRICTION_TODO,
                 severity='error', symbol = self.current_ast_node)
@@ -3064,6 +3083,7 @@ class SemanticParser(BasicParser):
 
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
+        assert not isinstance(types, TypingTypeVar)
 
         if len(types.type_list) == 0:
             errors.report(MISSING_TYPE_ANNOTATIONS,
@@ -3138,7 +3158,7 @@ class SemanticParser(BasicParser):
                         elem = self._visit(syntactic_elem)
                         self.scope.insert_symbolic_alias(IndexedElement(v, i), elem[0])
             else:
-                errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
+                errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecognised type annotation',
                         severity='fatal', symbol=expr)
 
         # An annotated variable must have a type
@@ -3170,7 +3190,7 @@ class SemanticParser(BasicParser):
             if order and order != visited_dtype.class_type.order:
                 visited_dtype = VariableTypeAnnotation(visited_dtype.class_type.swap_order())
             return UnionTypeAnnotation(visited_dtype)
-        elif isinstance(visited_dtype, UnionTypeAnnotation):
+        elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
@@ -3236,6 +3256,8 @@ class SemanticParser(BasicParser):
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
                     pyccel_stage.set_stage('semantic')
+                    if first.__module__.startswith('pyccel.'):
+                        self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -3562,6 +3584,25 @@ class SemanticParser(BasicParser):
                 func = builtin_functions_dict.get(env_var.__name__, None)
                 if func is not None:
                     func = PyccelFunctionDef(env_var.__name__, func)
+                mod_name = env_var.__module__
+                if mod_name:
+                    recognised_mod = recognised_source(mod_name)
+                elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
+                    # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
+                    mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
+                    while mod_name and not recognised_source(mod_name):
+                        mod_name = mod_name.rsplit('.', 1)[0]
+
+                    recognised_mod = len(mod_name) != 0
+                else:
+                    recognised_mod = False
+
+                if func is None and recognised_mod:
+                    pyccel_stage.set_stage('syntactic')
+                    import_node = Import(mod_name, name)
+                    pyccel_stage.set_stage('semantic')
+                    self._additional_exprs[-1].append(self._visit(import_node))
+                    func = self.scope.find(name)
 
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
@@ -3833,6 +3874,10 @@ class SemanticParser(BasicParser):
                 return rhs
             else:
                 raise NotImplementedError("Cannot assign result of a function without a return")
+
+        elif isinstance(rhs, TypingTypeVar):
+            self.scope.insert_symbolic_alias(lhs, rhs)
+            return EmptyNode()
 
         else:
             d_var  = self._infer_type(rhs)
@@ -4679,7 +4724,8 @@ class SemanticParser(BasicParser):
             templates.update(decorators['template']['template_dict'])
 
         for t,v in templates.items():
-            templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
+            if not isinstance(v, TypingTypeVar):
+                templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
 
         def unpack(ann):
             if isinstance(ann, UnionTypeAnnotation):
@@ -4694,6 +4740,12 @@ class SemanticParser(BasicParser):
                 if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
         used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
+        for n in used_type_names:
+            t = self.scope.find(n, 'symbolic_aliases')
+            if t is None and n in self._context_dict:
+                t = self.env_var_to_pyccel(self._context_dict[n])
+            if isinstance(t, TypingTypeVar):
+                templates[n] = t
 
         # Create new temporary templates for the arguments with a Union data type.
         tmp_templates = {}
@@ -4703,11 +4755,10 @@ class SemanticParser(BasicParser):
             if isinstance(annot, UnionTypeAnnotation):
                 annotation = [aa for a in annot for aa in unpack(a)]
             elif isinstance(annot, SyntacticTypeAnnotation):
-                elem = annot.dtype
-                if isinstance(elem, IndexedElement):
-                    elem = [elem.base] + [a.dtype for a in elem.indices if isinstance(a, SyntacticTypeAnnotation)]
+                if isinstance(annot.dtype, PyccelSymbol):
+                    elem = [annot.dtype]
                 else:
-                    elem = [elem]
+                    elem = annot.dtype.get_attribute_nodes(PyccelSymbol)
                 if all(e not in templates for e in elem):
                     annotation = unpack(self._visit(annot))
                 else:
@@ -4762,8 +4813,6 @@ class SemanticParser(BasicParser):
             assert len(arguments) == len(expr.arguments)
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
-            for n in template_names:
-                self.scope.symbolic_aliases.pop(n)
 
             if function_call_args is not None:
                 is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)

@@ -2748,9 +2748,7 @@ class FCodePrinter(CodePrinter):
 
 
 
-        options = ', '.join(i for i in expr.options)
-
-        sig = 'type, {0}'.format(options)
+        sig = 'type'
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
