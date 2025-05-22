@@ -3116,9 +3116,6 @@ class ClassDef(ScopedAstNode):
     methods : iterable
         Class methods.
 
-    options : list, tuple
-        A list of options ('public', 'private', 'abstract').
-
     imports : list, tuple
         A list of required imports.
 
@@ -3154,7 +3151,7 @@ class ClassDef(ScopedAstNode):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
-    __slots__ = ('_name','_attributes','_methods','_options', '_class_type',
+    __slots__ = ('_name','_attributes','_methods', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
@@ -3163,7 +3160,6 @@ class ClassDef(ScopedAstNode):
         name,
         attributes=(),
         methods=(),
-        options=('public',),
         imports=(),
         superclasses=(),
         interfaces=(),
@@ -3189,11 +3185,6 @@ class ClassDef(ScopedAstNode):
 
         if not iterable(methods):
             raise TypeError('methods must be an iterable')
-
-        # options
-
-        if not iterable(options):
-            raise TypeError('options must be an iterable')
 
         # imports
 
@@ -3252,7 +3243,6 @@ class ClassDef(ScopedAstNode):
         self._name = name
         self._attributes = attributes
         self._methods = methods
-        self._options = options
         self._imports = imports
         self._superclasses  = superclasses
         self._interfaces = interfaces
@@ -3292,10 +3282,6 @@ class ClassDef(ScopedAstNode):
     @property
     def methods(self):
         return self._methods
-
-    @property
-    def options(self):
-        return self._options
 
     @property
     def imports(self):
@@ -3530,10 +3516,7 @@ class ClassDef(ScopedAstNode):
 
     @property
     def hide(self):
-        if 'hide' in self.options:
-            return True
-        else:
-            return self.is_iterable or self.is_with_construct
+        return self.is_iterable or self.is_with_construct
 
     @property
     def is_unused(self):
