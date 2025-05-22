@@ -17,9 +17,10 @@ runs:
       run: clang -fopenmp -dM -E - < /dev/null | grep -i openmp
       shell: bash
 
-    - name: Install MPI
+    - name: Install MPI and OpenMP
       run: |
         sudo apt-get install -y libopenmpi-dev openmpi-bin
+        sudo apt-get install -y libomp-dev libomp5
       shell: bash
 
     - name: Install LaPack
