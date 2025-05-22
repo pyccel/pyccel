@@ -1,7 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import pytest
 from pyccel import epyccel
 from pyccel.decorators import template
+
+pytestmark = pytest.mark.skipif(
+    os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'LLVM',
+    reason='flang: not yet implemented: support for polymorphic types.'
+)
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
