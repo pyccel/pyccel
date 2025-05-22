@@ -24,6 +24,11 @@ runs:
         sudo apt-get install -y clang flang
       shell: bash
 
+    - name: Install MPI
+      run: |
+        sudo apt-get install -y libopenmpi-dev openmpi-bin
+      shell: bash
+
     - name: Install LaPack
       run:
         sudo apt-get install libblas-dev liblapack-dev
