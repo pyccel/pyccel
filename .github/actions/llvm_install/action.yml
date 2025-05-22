@@ -9,9 +9,12 @@ runs:
       shell: bash
 
     - name: Install clang and flang
-      if: steps.cache-llvm-restore.outputs.cache-hit != 'true'
       run: |
         sudo apt-get install -y clang flang
+      shell: bash
+
+    - name: Check OpenMP support in clang
+      run: clang -fopenmp -dM -E - < /dev/null | grep -i openmp
       shell: bash
 
     - name: Install MPI
