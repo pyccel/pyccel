@@ -8,9 +8,13 @@ runs:
         sudo apt-get update
       shell: bash
 
+    # https://github.com/flang-compiler/flang/wiki/Building-Flang
     - name: Install clang and flang
       run: |
         sudo apt-get install -y clang flang
+        which flang-new
+        sudo ln -sf /usr/bin/flang-new /usr/local/bin/flang
+        flang --version
       shell: bash
 
     - name: Install MPI and OpenMP
