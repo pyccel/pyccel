@@ -31,64 +31,76 @@ class Plugins(metaclass=Singleton):
     def __init__(self, plugins_dir=None):
         self._plugins = {}
         self._load_plugins(plugins_dir)
+    try:
+        def _load_plugins(self, plugins_dir=None):
+            """Discover and load all plugins from the plugins directory"""
+            if plugins_dir is None:
+                current_dir = os.path.dirname(__file__)
+                plugins_dir = os.path.abspath(os.path.join(current_dir, "..", "plugins"))
 
-    def _load_plugins(self, plugins_dir=None):
-        """Discover and load all plugins from the plugins directory"""
-        if plugins_dir is None:
-            current_dir = os.path.dirname(__file__)
-            plugins_dir = os.path.abspath(os.path.join(current_dir, "..", "plugins"))
+            if not os.path.isdir(plugins_dir):
+                error_msg = f"Plugin directory not found: {plugins_dir}"
+                raise FileNotFoundError(error_msg)
+                #errors.report(
+                #    f"Plugin directory not found: {plugins_dir}.",
+                #    severity='warning')
+                #return
 
-        if not os.path.isdir(plugins_dir):
-            errors.report(
-                f"Plugin directory not found: {plugins_dir}.",
-                severity='warning')
-            return
+            plugin_folders = [
+                d for d in os.listdir(plugins_dir)
+                if os.path.isdir(os.path.join(plugins_dir, d)) and not d.startswith('_')
+            ]
 
-        plugin_folders = [
-            d for d in os.listdir(plugins_dir)
-            if os.path.isdir(os.path.join(plugins_dir, d)) and not d.startswith('_')
-        ]
-
-        for folder in plugin_folders:
-            try:
-                plugin = self._load_plugin_from_folder(plugins_dir, folder)
-                if plugin:
-                    self._plugins[plugin.name] = plugin
-            except (ImportError, FileNotFoundError, ValueError) as e:
-                errors.report(
-                    f"Error loading plugin '{folder}': {str(e)}",
-                    severity='warning')
+            for folder in plugin_folders:
+                try:
+                    plugin = self._load_plugin_from_folder(plugins_dir, folder)
+                    if plugin:
+                        self._plugins[plugin.name] = plugin
+                except Exception as e:
+                    error_msg = f"Error loading plugin '{folder}'"
+                    raise RuntimeError(error_msg) from e
+                    #errors.report(
+                    #    f"Error loading plugin '{folder}': {str(e)}",
+                    #    severity='warning')
+    except Exception as e:
+        error_msg = f"_load_plugins failed: {str(e)}"
+        raise RuntimeError(error_msg) from e
+        
 
     def _load_plugin_from_folder(self, plugins_dir, folder):
         """Load a single plugin from the specified folder"""
-        plugin_path = os.path.join(plugins_dir, folder, "plugin.py")
+        try:
+            plugin_path = os.path.join(plugins_dir, folder, "plugin.py")
 
-        if not os.path.exists(plugin_path):
-            raise FileNotFoundError(f"Plugin file not found at {plugin_path}")
+            if not os.path.exists(plugin_path):
+                raise FileNotFoundError(f"Plugin file not found at {plugin_path}")
 
-        # import the module
-        module_name = f"{folder}_pyccel_plugin"
-        spec = importlib.util.spec_from_file_location(module_name, plugin_path)
-        if spec is None or spec.loader is None:
-            raise ImportError(f"Cannot load plugin: {plugin_path}")
+            # import the module
+            module_name = f"{folder}_pyccel_plugin"
+            spec = importlib.util.spec_from_file_location(module_name, plugin_path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Cannot load plugin: {plugin_path}")
 
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
 
-        # find plugin class in the module
-        plugin_class = None
-        for _, obj in inspect.getmembers(module):
-            if (inspect.isclass(obj) and
-                    issubclass(obj, Plugin) and
-                    obj.__module__ == module.__name__ and
-                    obj is not Plugin):
-                plugin_class = obj
-                break
+            # find plugin class in the module
+            plugin_class = None
+            for _, obj in inspect.getmembers(module):
+                if (inspect.isclass(obj) and
+                        issubclass(obj, Plugin) and
+                        obj.__module__ == module.__name__ and
+                        obj is not Plugin):
+                    plugin_class = obj
+                    break
 
-        if plugin_class is None:
-            raise ValueError(f"No valid plugin class found in {plugin_path}")
+            if plugin_class is None:
+                raise ValueError(f"No valid plugin class found in {plugin_path}")
 
-        return plugin_class()
+            return plugin_class()
+        except Exception as e:
+            error_msg = f"_load_plugin_from_folder failed for folder '{folder}'"
+            raise RuntimeError(error_msg) from e
 
     def handle_loading(self, options):
         """Load all available plugins with the provided options"""
@@ -98,9 +110,11 @@ class Plugins(metaclass=Singleton):
             # Catching all exceptions because plugin loading may fail in unpredictable ways
             except Exception as e: # pylint: disable=broad-exception-caught
                 # plugin.handle_loading({'clear':True})
-                errors.report(
-                    f"Error in plugin '{plugin_name}' during loading: {str(e)}",
-                    severity='warning')
+                error_msg = f"Error in plugin '{plugin_name}' during loading"
+                raise RuntimeError(error_msg) from e
+                #errors.report(
+                #    f"Error in plugin '{plugin_name}' during loading: {str(e)}",
+                #    severity='warning')
 
     def get_plugin(self, name):
         """Get a plugin by name"""
