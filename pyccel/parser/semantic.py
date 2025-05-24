@@ -685,6 +685,7 @@ class SemanticParser(BasicParser):
         if self.current_function_name:
             func_name = self.current_function_name.name[-1] if isinstance(self.current_function_name, DottedName) else self.current_function_name
             current_func = self.scope.find(func_name, 'functions')
+            assert current_func == self._current_function[-1]
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
@@ -5154,7 +5155,7 @@ class SemanticParser(BasicParser):
             del_method = cls.get_method('__del__', expr)
 
         # Add destructors to __del__ method
-        self._current_function_name.append(del_method.name)
+        self.enter_function(del_method)
         attribute = []
         for attr in cls.attributes:
             if not attr.on_stack:
@@ -5171,7 +5172,7 @@ class SemanticParser(BasicParser):
         condition = If(IfSection(PyccelNot(deallocater),
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
-        self._current_function_name.pop()
+        self.exit_function()
 
         return EmptyNode()
 

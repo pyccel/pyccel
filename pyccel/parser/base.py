@@ -151,6 +151,7 @@ class BasicParser(object):
         # represent the scope of a function
         self._scope = Scope()
         self._current_function_name = []
+        self._current_function = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -234,6 +235,17 @@ class BasicParser(object):
         """Name of current function, if any."""
         return self._current_function_name[-1] if self._current_function_name else None
 
+    def enter_function(self, func):
+        """Name of current function, if any."""
+        assert isinstance(func, FunctionDef)
+        self._current_function_name.append(func.name)
+
+    def exit_function(self):
+        """Name of current function, if any."""
+        func_name = self._current_function_name.pop()
+        if self._current_function and self._current_function[-1].name == func_name:
+            self._current_function.pop()
+
     @property
     def syntax_done(self):
         return self._syntax_done
@@ -288,7 +300,10 @@ class BasicParser(object):
             if func.pyccel_staging == 'syntactic':
                 container[self.scope.get_expected_name(func.name)] = func
             else:
-                container[func.name] = func
+                name = func.name
+                container[name] = func
+                if self._current_function_name and name == self._current_function_name[-1]:
+                    self._current_function.append(func)
         else:
             raise TypeError('Expected a Function definition')
 
@@ -333,7 +348,7 @@ class BasicParser(object):
         """
 
         self._scope = self._scope.parent_scope
-        self._current_function_name.pop()
+        self.exit_function()
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop
