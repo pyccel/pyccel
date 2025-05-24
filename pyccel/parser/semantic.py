@@ -3164,7 +3164,7 @@ class SemanticParser(BasicParser):
         if var is not None:
             new_var = possible_args[0]
             if len(possible_args) != 1 or new_var.class_type != var.class_type:
-                errors.report(f"Variable was declared as the result of the function {self.current_function} but is now declared with a different type",
+                errors.report(f"Variable was declared as the result of the function {self.current_function_name} but is now declared with a different type",
                         symbol=expr, severity='error')
             # Remove variable from scope as AnnotatedPyccelSymbol is always inserted into scope
             self.scope.remove_variable(var)
@@ -4614,7 +4614,7 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        func = self.scope.find(f_name, 'functions')
+        func = self._current_function[-1]
 
         original_name = self.scope.get_python_name(f_name)
         if original_name.startswith('__i') and ('__'+original_name[3:]) in magic_method_map.values():
@@ -4707,8 +4707,10 @@ class SemanticParser(BasicParser):
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
+        insertion_scope = self.scope
         if cls_name:
             bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
+            insertion_scope = bound_class.scope
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
         if len(not_used) >= 1:
@@ -4848,7 +4850,7 @@ class SemanticParser(BasicParser):
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
             recursive_func_obj = FunctionDef(name, arguments, [], results, scope = scope)
-            self.insert_function(recursive_func_obj)
+            self.insert_function(recursive_func_obj, insertion_scope)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append(set())
@@ -4896,7 +4898,7 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_     = self.scope.functions.pop(name)
+            func_ = insertion_scope.functions.pop(name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
@@ -5012,17 +5014,17 @@ class SemanticParser(BasicParser):
 
         if len(new_semantic_funcs) == 1 and not is_interface:
             new_semantic_funcs = new_semantic_funcs[0]
-            self.insert_function(new_semantic_funcs)
+            self.insert_function(new_semantic_funcs, insertion_scope)
         else:
             for f in new_semantic_funcs:
-                self.insert_function(f)
+                self.insert_function(f, insertion_scope)
 
             new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
             if expr.python_ast:
                 new_semantic_funcs.set_current_ast(expr.python_ast)
             if cls_name:
                 bound_class.update_interface(expr, new_semantic_funcs)
-            self.insert_function(new_semantic_funcs)
+            self.insert_function(new_semantic_funcs, insertion_scope)
 
         return EmptyNode()
 
@@ -5082,7 +5084,7 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
-        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+        cls_scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
@@ -5093,14 +5095,14 @@ class SemanticParser(BasicParser):
                         severity='error', symbol=a)
             else:
                 v = a[0]
-                scope.insert_variable(v)
+                cls_scope.insert_variable(v)
                 attributes.append(v)
 
         self.exit_class_scope()
 
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
-        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=cls_scope,
                 docstring = docstring, class_type = dtype)
         self.scope.insert_class(cls)
 
@@ -5116,11 +5118,11 @@ class SemanticParser(BasicParser):
             scope.insert_variable(argument.var)
             init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
             self.exit_function_scope()
-            self.insert_function(init_func)
+            self.insert_function(init_func, cls_scope)
             cls.add_new_method(init_func)
         else:
             self._visit(syntactic_init_func)
-            init_func = self.scope.functions.pop('__init__')
+            init_func = cls_scope.functions.pop('__init__')
 
         if isinstance(init_func, Interface):
             errors.report("Pyccel does not support interface constructor", symbol=init_func,
@@ -5147,7 +5149,7 @@ class SemanticParser(BasicParser):
             scope.insert_variable(argument.var)
             del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
             self.exit_function_scope()
-            self.insert_function(del_method)
+            self.insert_function(del_method, cls_scope)
             cls.add_new_method(del_method)
         else:
             del_method = cls.get_method('__del__', expr)

@@ -280,7 +280,7 @@ class BasicParser(object):
     def blocking(self):
         return self._blocking
 
-    def insert_function(self, func):
+    def insert_function(self, func, scope = None):
         """
         Insert a function into the current scope.
 
@@ -296,7 +296,8 @@ class BasicParser(object):
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.scope.functions
+            scope = scope or self.scope
+            container = scope.functions
             if func.pyccel_staging == 'syntactic':
                 container[self.scope.get_expected_name(func.name)] = func
             else:
