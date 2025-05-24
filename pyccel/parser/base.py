@@ -150,7 +150,7 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function_name = None
+        self._current_function_name = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -232,12 +232,7 @@ class BasicParser(object):
     @property
     def current_function_name(self):
         """Name of current function, if any."""
-        return self._current_function_name
-
-    @current_function_name.setter
-    def current_function_name(self, new_name):
-        """Name of current function, if any."""
-        self._current_function_name = new_name
+        return self._current_function_name[-1] if self._current_function_name else None
 
     @property
     def syntax_done(self):
@@ -329,9 +324,7 @@ class BasicParser(object):
         child = self.scope.new_child_scope(name, **kwargs)
 
         self._scope = child
-        if self._current_function_name:
-            name = DottedName(self._current_function_name, name)
-        self._current_function_name = name
+        self._current_function_name.append(name)
 
         return child
 
@@ -340,16 +333,7 @@ class BasicParser(object):
         """
 
         self._scope = self._scope.parent_scope
-        if isinstance(self._current_function_name, DottedName):
-
-            name = self._current_function_name.name[:-1]
-            if len(name)>1:
-                name = DottedName(*name)
-            else:
-                name = name[0]
-        else:
-            name = None
-        self._current_function_name = name
+        self._current_function_name.pop()
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop

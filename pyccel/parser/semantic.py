@@ -1369,7 +1369,7 @@ class SemanticParser(BasicParser):
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope            = self._scope
-        old_current_function = self.current_function_name
+        old_current_function = self._current_function_name
         names = []
         sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
         while sc.parent_scope is not None:
@@ -1377,10 +1377,7 @@ class SemanticParser(BasicParser):
             if not sc.name is None:
                 names.append(sc.name)
         names.reverse()
-        if names:
-            self.current_function_name = DottedName(*names) if len(names)>1 else names[0]
-        else:
-            self.current_function_name = None
+        self._current_function_name = names
 
         while names:
             sc = sc.sons_scopes[names[0]]
@@ -1399,7 +1396,7 @@ class SemanticParser(BasicParser):
 
         # Go back to the original Scope
         self._scope = old_scope
-        self.current_function_name = old_current_function
+        self._current_function_name = old_current_function
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
@@ -5157,7 +5154,7 @@ class SemanticParser(BasicParser):
             del_method = cls.get_method('__del__', expr)
 
         # Add destructors to __del__ method
-        self.current_function_name = del_method.name
+        self._current_function_name.append(del_method.name)
         attribute = []
         for attr in cls.attributes:
             if not attr.on_stack:
@@ -5174,7 +5171,7 @@ class SemanticParser(BasicParser):
         condition = If(IfSection(PyccelNot(deallocater),
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
-        self.current_function_name = None
+        self._current_function_name.pop()
 
         return EmptyNode()
 
