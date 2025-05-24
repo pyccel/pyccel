@@ -836,7 +836,9 @@ class SyntaxParser(BasicParser):
 
         headers = self.scope.find(name, 'headers')
 
-        scope = self.create_new_function_scope(name)
+        scope = self.create_new_function_scope(name,
+                used_symbols = {stmt.name: name},
+                original_symbols = {name: stmt.name})
 
         arguments    = self._visit(stmt.args)
 
