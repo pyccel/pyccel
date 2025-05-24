@@ -629,7 +629,7 @@ class SemanticParser(BasicParser):
         if all(r.expr is None for r in expr.get_attribute_nodes(Return)):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
-                    if isinstance(i.lhs.class_type, CustomDataType) and self._current_function != '__del__':
+                    if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
@@ -666,7 +666,7 @@ class SemanticParser(BasicParser):
         assert not isinstance(exceptions, Variable)
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
-                if isinstance(i.lhs.class_type, CustomDataType) and self._current_function != '__del__':
+                if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
                     continue
             if i in exceptions:
                 continue
@@ -674,7 +674,7 @@ class SemanticParser(BasicParser):
         targets = {t[0]:t[1] for target_list in self._pointer_targets[-1].values() for t in target_list}
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
-                if isinstance(i.lhs.class_type, CustomDataType) and self._current_function != '__del__':
+                if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
                     continue
             if i in exceptions:
                 continue
@@ -682,8 +682,8 @@ class SemanticParser(BasicParser):
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
                         severity='error', symbol=targets[i])
 
-        if self._current_function:
-            func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
+        if self.current_function_name:
+            func_name = self.current_function_name.name[-1] if isinstance(self.current_function_name, DottedName) else self.current_function_name
             current_func = self.scope.find(func_name, 'functions')
             arg_vars = {a.var:a for a in current_func.arguments}
 
@@ -1270,7 +1270,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            if self._current_function == func.name:
+            if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
@@ -1292,7 +1292,7 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
 
-            new_expr = FunctionCall(func, args, self._current_function)
+            new_expr = FunctionCall(func, args, self.current_function_name)
             for a, f_a in zip(new_expr.args, func_args):
                 if f_a.persistent_target:
                     assert is_method
@@ -1369,7 +1369,7 @@ class SemanticParser(BasicParser):
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope            = self._scope
-        old_current_function = self._current_function
+        old_current_function = self.current_function_name
         names = []
         sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
         while sc.parent_scope is not None:
@@ -1378,9 +1378,9 @@ class SemanticParser(BasicParser):
                 names.append(sc.name)
         names.reverse()
         if names:
-            self._current_function = DottedName(*names) if len(names)>1 else names[0]
+            self.current_function_name = DottedName(*names) if len(names)>1 else names[0]
         else:
-            self._current_function = None
+            self.current_function_name = None
 
         while names:
             sc = sc.sons_scopes[names[0]]
@@ -1399,7 +1399,7 @@ class SemanticParser(BasicParser):
 
         # Go back to the original Scope
         self._scope = old_scope
-        self._current_function = old_current_function
+        self.current_function_name = old_current_function
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
@@ -3290,7 +3290,7 @@ class SemanticParser(BasicParser):
                 args = [lhs] + list(args)
                 args = [self._visit(i) for i in args]
                 args = macro.apply(args)
-                return FunctionCall(master, args, self._current_function)
+                return FunctionCall(master, args, self.current_function_name)
 
             method = cls_base.get_method(rhs_name, expr)
 
@@ -3338,7 +3338,7 @@ class SemanticParser(BasicParser):
                 return macro.master
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([visited_lhs])
-                return FunctionCall(macro.master, args, self._current_function)
+                return FunctionCall(macro.master, args, self.current_function_name)
 
         # did something go wrong?
         return errors.report(f'Attribute {rhs_name} not found',
@@ -3803,7 +3803,7 @@ class SemanticParser(BasicParser):
                 new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master.funcdef, FunctionDef):
-                    func_call = FunctionCall(master.funcdef, args, self._current_function)
+                    func_call = FunctionCall(master.funcdef, args, self.current_function_name)
                     if new_expressions:
                         return CodeBlock([*new_expressions, func_call])
                     else:
@@ -4614,7 +4614,7 @@ class SemanticParser(BasicParser):
     def _visit_Return(self, expr):
 
         results     = expr.expr
-        f_name      = self._current_function
+        f_name      = self.current_function_name
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
@@ -5157,7 +5157,7 @@ class SemanticParser(BasicParser):
             del_method = cls.get_method('__del__', expr)
 
         # Add destructors to __del__ method
-        self._current_function = del_method.name
+        self.current_function_name = del_method.name
         attribute = []
         for attr in cls.attributes:
             if not attr.on_stack:
@@ -5174,7 +5174,7 @@ class SemanticParser(BasicParser):
         condition = If(IfSection(PyccelNot(deallocater),
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
-        self._current_function = None
+        self.current_function_name = None
 
         return EmptyNode()
 
@@ -5502,7 +5502,7 @@ class SemanticParser(BasicParser):
         return Assert(test)
 
     def _visit_FunctionDefResult(self, expr):
-        f_name      = self._current_function
+        f_name      = self.current_function_name
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 

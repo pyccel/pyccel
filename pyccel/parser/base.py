@@ -150,7 +150,7 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function = None
+        self._current_function_name = None
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -230,9 +230,14 @@ class BasicParser(object):
         return self._metavars
 
     @property
-    def current_function(self):
+    def current_function_name(self):
         """Name of current function, if any."""
-        return self._current_function
+        return self._current_function_name
+
+    @current_function_name.setter
+    def current_function_name(self, new_name):
+        """Name of current function, if any."""
+        self._current_function_name = new_name
 
     @property
     def syntax_done(self):
@@ -310,7 +315,7 @@ class BasicParser(object):
 
         Before returning control to the caller, the current scope (stored in
         self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
+        name is stored in self._current_function_name.
 
         Parameters
         ----------
@@ -324,9 +329,9 @@ class BasicParser(object):
         child = self.scope.new_child_scope(name, **kwargs)
 
         self._scope = child
-        if self._current_function:
-            name = DottedName(self._current_function, name)
-        self._current_function = name
+        if self._current_function_name:
+            name = DottedName(self._current_function_name, name)
+        self._current_function_name = name
 
         return child
 
@@ -335,16 +340,16 @@ class BasicParser(object):
         """
 
         self._scope = self._scope.parent_scope
-        if isinstance(self._current_function, DottedName):
+        if isinstance(self._current_function_name, DottedName):
 
-            name = self._current_function.name[:-1]
+            name = self._current_function_name.name[:-1]
             if len(name)>1:
                 name = DottedName(*name)
             else:
                 name = name[0]
         else:
             name = None
-        self._current_function = name
+        self._current_function_name = name
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop
@@ -368,7 +373,7 @@ class BasicParser(object):
 
         Before returning control to the caller, the current scope (stored in
         self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
+        name is stored in self._current_function_name.
 
         Parameters
         ----------
