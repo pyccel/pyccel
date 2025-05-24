@@ -4687,14 +4687,14 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules or inside other functions.",
                     symbol=expr, severity='error')
 
+        name = expr.scope.get_expected_name(expr.name)
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            self.scope.functions.pop(self.scope.get_expected_name(expr.name), None)
+            self.scope.functions.pop(name, None)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr                    = expr.syntactic_node
 
-        name               = self.scope.get_expected_name(expr.name)
         decorators         = expr.decorators
         new_semantic_funcs = []
         sub_funcs          = []
@@ -5100,11 +5100,13 @@ class SemanticParser(BasicParser):
                 scope.insert_variable(v)
                 attributes.append(v)
 
+        self.exit_class_scope()
+
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
                 docstring = docstring, class_type = dtype)
-        self.scope.parent_scope.insert_class(cls)
+        self.scope.insert_class(cls)
 
         methods = expr.methods
         for method in methods:
@@ -5173,8 +5175,6 @@ class SemanticParser(BasicParser):
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
         self._current_function = None
-
-        self.exit_class_scope()
 
         return EmptyNode()
 
