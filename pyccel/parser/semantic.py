@@ -5147,6 +5147,8 @@ class SemanticParser(BasicParser):
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
             scope.insert_variable(argument.var)
+            scope.insert_symbol('__del__')
+            cls_scope.insert_symbol('__del__')
             del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method, cls_scope)
