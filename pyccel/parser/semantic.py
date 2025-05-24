@@ -683,9 +683,7 @@ class SemanticParser(BasicParser):
                         severity='error', symbol=targets[i])
 
         if self.current_function_name:
-            func_name = self.current_function_name.name[-1] if isinstance(self.current_function_name, DottedName) else self.current_function_name
-            current_func = self.scope.find(func_name, 'functions')
-            assert current_func == self._current_function[-1]
+            current_func = self._current_function[-1]
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
