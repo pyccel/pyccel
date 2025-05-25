@@ -7,7 +7,7 @@
 """
 
 from pyccel.ast.bind_c    import BindCVariable
-from pyccel.ast.core      import ClassDef
+from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
@@ -871,10 +871,13 @@ class Scope(object):
         name : str
             The suggested name for the new function.
         """
+        assert isinstance(o, FunctionDef)
         newname = self.get_new_name(name)
         python_name = self._original_symbol.pop(o.name)
+        assert python_name == o.scope.python_names.pop(o.name)
         o.rename(newname)
         self._original_symbol[newname] = python_name
+        o.scope.python_names[newname] = python_name
 
     def collect_tuple_element(self, tuple_elem):
         """
