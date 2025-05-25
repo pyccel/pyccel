@@ -4800,9 +4800,13 @@ class SemanticParser(BasicParser):
             if is_interface:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
 
+            original_symbols = expr.scope.python_names.copy()
+            original_symbols[name] = expr.name
+            insertion_scope.python_names[name] = expr.name
+
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
-                    original_symbols = expr.scope.python_names.copy(),
+                    original_symbols = original_symbols,
                     symbolic_aliases = expr.scope.symbolic_aliases)
 
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
