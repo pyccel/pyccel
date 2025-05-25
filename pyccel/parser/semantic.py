@@ -1130,7 +1130,7 @@ class SemanticParser(BasicParser):
             a = self._visit(arg)
             val = a.value
             if isinstance(val, FunctionDef) and not isinstance(val, PyccelFunctionDef) and not val.is_semantic:
-                semantic_func = self._annotate_the_called_function_def(val)
+                semantic_func = self._annotate_the_called_function_def(val, ())
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
             if isinstance(val, StarredArguments):
@@ -1346,7 +1346,7 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, old_func, function_call_args=None):
+    def _annotate_the_called_function_def(self, old_func, function_call_args):
         """
         Annotate the called FunctionDef.
 
@@ -1357,7 +1357,7 @@ class SemanticParser(BasicParser):
         old_func : FunctionDef|Interface
            The function that needs to be annotated.
 
-        function_call_args : list[FunctionCallArgument], optional
+        function_call_args : list[FunctionCallArgument]
            The list of the call arguments.
 
         Returns
@@ -1384,7 +1384,10 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
-        self._visit_FunctionDef(old_func, function_call_args=function_call_args)
+        if old_func.is_inline:
+            self._visit_FunctionDef(old_func, function_call_args = function_call_args)
+        else:
+            self._visit_FunctionDef(old_func)
         new_name = self.scope.get_expected_name(old_func.name)
         # Retrieve the annotated function
         func = self.scope.find(new_name, 'functions')
@@ -3292,10 +3295,7 @@ class SemanticParser(BasicParser):
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             if not method.is_semantic:
-                if not method.is_inline:
-                    method = self._annotate_the_called_function_def(method)
-                else:
-                    method = self._annotate_the_called_function_def(method, function_call_args=args)
+                method = self._annotate_the_called_function_def(method, args)
 
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
@@ -3313,11 +3313,8 @@ class SemanticParser(BasicParser):
             else:
                 method = cls_base.get_method(rhs_name, expr)
                 if not method.is_semantic:
-                    if not method.is_inline:
-                        method = self._annotate_the_called_function_def(method)
-                    else:
-                        method = self._annotate_the_called_function_def(method,
-                                    function_call_args=(FunctionCallArgument(visited_lhs),))
+                    method = self._annotate_the_called_function_def(method,
+                                (FunctionCallArgument(visited_lhs),))
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
@@ -3488,17 +3485,14 @@ class SemanticParser(BasicParser):
             args      = self._sort_function_call_args(func_args, args)
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
             if not func.is_semantic:
-                if not is_inline:
-                    func = self._annotate_the_called_function_def(func)
-                else:
-                    func = self._annotate_the_called_function_def(func, function_call_args=args)
+                func = self._annotate_the_called_function_def(func, args)
             elif is_inline and isinstance(func, Interface):
                 is_compatible = False
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
                     is_compatible |= fl
                 if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, function_call_args=args)
+                    func = self._annotate_the_called_function_def(func, args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
