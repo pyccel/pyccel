@@ -1365,22 +1365,25 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
+        name = old_func.name
+        cls_base_syntactic = old_func.get_direct_user_nodes(lambda p: isinstance(p, ClassDef))
+        if cls_base_syntactic:
+            cls_name = cls_base_syntactic[0].name
+            cls_base = self.scope.find(cls_name, 'classes')
+            cls_scope = cls_base.scope
+            key = 'classes'
+            search_name = cls_name
+        else:
+            key = 'functions'
+            search_name = old_func.name
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
-        old_scope            = self._scope
-        old_current_function = self._current_function_name
-        names = []
-        sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
-        while sc.parent_scope is not None:
+        old_scope = self._scope
+        old_current_function = self._current_function
+        old_current_function_name = self._current_function_name
+        sc = self.scope
+        while search_name not in getattr(sc, key):
             sc = sc.parent_scope
-            if not sc.name is None:
-                names.append(sc.name)
-        names.reverse()
-        self._current_function_name = names
-
-        while names:
-            sc = sc.sons_scopes[names[0]]
-            names = names[1:]
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
@@ -1388,9 +1391,15 @@ class SemanticParser(BasicParser):
             self._visit_FunctionDef(old_func, function_call_args = function_call_args)
         else:
             self._visit_FunctionDef(old_func)
-        new_name = self.scope.get_expected_name(old_func.name)
+
         # Retrieve the annotated function
-        func = self.scope.find(new_name, 'functions')
+        if cls_base_syntactic:
+            new_name = cls_scope.get_expected_name(old_func.name)
+            func = cls_scope.find(new_name, 'functions')
+        else:
+            new_name = self.scope.get_expected_name(old_func.name)
+            func = self.scope.find(new_name, 'functions')
+        assert func is not None
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
             mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
@@ -1398,7 +1407,8 @@ class SemanticParser(BasicParser):
 
         # Go back to the original Scope
         self._scope = old_scope
-        self._current_function_name = old_current_function
+        self._current_function_name = old_current_function_name
+        self._current_function = old_current_function
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
