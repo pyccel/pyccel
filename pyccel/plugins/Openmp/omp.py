@@ -231,17 +231,14 @@ class OmpExpr(OmpNode):
 
 class OmpScalarExpr(OmpExpr):
     """Represents a Scalar"""
-    pass
 
 
 class OmpConstantPositiveInteger(OmpExpr):
     """Represents a constant positive integer"""
-    pass
 
 
 class OmpIntegerExpr(OmpExpr):
     """Represents an integer"""
-    pass
 
 
 class OmpList(OmpExpr):
@@ -396,7 +393,6 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
 
 class OmpTxEndDirective(OmpTxDirective):
     """Represents an OpenMP End Directive."""
-    pass
 
 
 class OmpTxClause(OmpTxNode, OmpClause):

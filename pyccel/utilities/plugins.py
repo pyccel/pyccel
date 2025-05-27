@@ -31,6 +31,7 @@ class Plugins(metaclass=Singleton):
     def __init__(self, plugins_dir=None):
         self._plugins = {}
         self._load_plugins(plugins_dir)
+
     def _load_plugins(self, plugins_dir=None):
         """Discover and load all plugins from the plugins directory"""
         if plugins_dir is None:
@@ -95,7 +96,7 @@ class Plugins(metaclass=Singleton):
             try:
                 plugin.handle_loading(options)
             # Catching all exceptions because plugin loading may fail in unpredictable ways
-            except Exception as e: # pylint: disable=broad-exception-caught
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 # plugin.handle_loading({'clear':True})
                 errors.report(
                     f"Error in plugin '{plugin_name}' during loading: {str(e)}",
