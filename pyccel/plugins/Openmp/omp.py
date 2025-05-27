@@ -102,12 +102,6 @@ class OmpConstruct(OmpNode):
         """Returns the end directive that marks the end of the construct"""
         return self._end
 
-    @property
-    def name(self):
-        """Returns the name of the construct"""
-        return self._start.name
-
-
 class OmpDirective(OmpNode):
     """
     Represents an OpenMP Directive.
@@ -155,10 +149,6 @@ class OmpDirective(OmpNode):
             'name': self.name,
             'is_construct': self.is_construct,
         }
-
-    def has_clause(self, clause_name):
-        """checks if the directive has a clause with the name clause_name"""
-        return any(c.name == clause_name for c in self.clauses)
 
 
 class OmpEndDirective(OmpDirective):
@@ -222,11 +212,9 @@ class OmpExpr(OmpNode):
 
     @property
     def value(self):
-        """Returns the expression, or the tweaked raw that should represent a python expression"""
+        """Returns the value of the expression"""
         if self._value:
             return self._value
-        else:
-            return self.raw
 
 
 class OmpScalarExpr(OmpExpr):
@@ -304,8 +292,6 @@ class OmpTxNode(OmpNode):
         raw = comment[position[0]:position[1]]
 
         self._version = version or 0.0
-        if isinstance(version, list):
-            self._version = max(version)
         self._deprecated = deprecated or float("inf")
         super().__init__(raw=raw, position=position, **kwargs)
         if lineno is not None and column is not None:
