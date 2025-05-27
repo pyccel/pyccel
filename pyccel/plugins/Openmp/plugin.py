@@ -50,9 +50,9 @@ class Openmp(Plugin):
         """Handle the loading and unloading openmp versions."""
         self._options.clear()
         self._options.update(options)
-        # if self._options.get('clear', False):
-        #     self._unload_patches()
-        #     return
+        if self._options.get('clear', False):
+            self._unload_patches()
+            return
 
         version = self._resolve_version()
         if 'openmp' not in self._options.get('accelerators', []) or version in self._loaded_versions:
@@ -93,13 +93,9 @@ class Openmp(Plugin):
                 parser_cls.__init__ = getattr(impl, 'setup')(self._options, parser_cls.__init__)
 
             for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
-                try:
-                    original_method = getattr(parser_cls, name, None)
-                    decorated_method = impl.helper_check_config(method, self._options, original_method)
-                    setattr(parser_cls, name, decorated_method)
-                except Exception as e:
-                    error_msg = f"Failed to set method {name} on {parser_name}"
-                    raise RuntimeError(error_msg) from e
+                original_method = getattr(parser_cls, name, None)
+                decorated_method = impl.helper_check_config(method, self._options, original_method)
+                setattr(parser_cls, name, decorated_method)
 
     def _unload_patches(self):
         """Remove patches applied to parser classes"""
