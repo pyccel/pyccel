@@ -13,8 +13,8 @@ Specify the OpenMP version during compilation using the `--omp-version` flag:
 --omp-version=5.0
 ```
 
-### epyccel Integration
-When using epyccel, configure OpenMP through the accelerators parameter:
+### Epyccel Integration
+When using Epyccel, configure OpenMP through the accelerators' parameter:
 
 ```python
 accelerators=['openmp']
