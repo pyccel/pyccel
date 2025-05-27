@@ -59,6 +59,7 @@ class ConfigMixin:
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """method wrapper to check configuration"""
             if cls._version != options.get('omp_version') or not 'openmp' in options.get('accelerators', []):
                 if method:
                     return method(*args, **kwargs)
@@ -119,6 +120,7 @@ class SyntaxParser(ConfigMixin):
 
         @functools.wraps(method)
         def setup(instance, *args, **kwargs):
+            """setup method wrapper to check configuration"""
             if cls._version != options.get('omp_version') or not 'openmp' in options.get('accelerators', []):
                 method(instance, *args, **kwargs)
                 return

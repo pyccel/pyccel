@@ -1,5 +1,4 @@
 """Classes and methods that handle supported Openmp objects"""
-
 import re
 from ast import AST
 
@@ -149,6 +148,7 @@ class OmpDirective(OmpNode):
         return self._is_construct
 
     def get_fixed_state(self):
+        """Returns the attributes of an openmp directive that do not change throughout the life of the directive"""
         d_fixed = super().get_fixed_state()
         return {
             **d_fixed,
