@@ -1,4 +1,4 @@
-# pylint: disable=protected-access, missing-function-docstring
+# pylint: disable=protected-access
 """Contains OpenMp 4.5 parser classes"""
 import ast
 import functools
