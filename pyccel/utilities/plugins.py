@@ -3,6 +3,8 @@ import importlib.util
 import inspect
 import os
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Callable
 
 from pyccel.errors.errors import Errors
 from pyccel.utilities.metaclasses import Singleton
@@ -10,17 +12,92 @@ from pyccel.utilities.metaclasses import Singleton
 errors = Errors()
 
 
+@dataclass
+class PatchInfo:
+    """Store information about a single patch"""
+    original_method: Optional[Callable]
+    patched_method: Callable
+    version: float
+    method_name: str
+
+    def __post_init__(self):
+        if self.original_method is None:
+            self.is_new_method = True
+        else:
+            self.is_new_method = False
+
+
+@dataclass
+class ClassPatchRegistry:
+    """Registry for all patches applied to a single class"""
+    target_class: type
+    patches: Dict[str, List[PatchInfo]] = field(default_factory=dict)
+
+    def register_patch(self, method_name, patch_info):
+        """register a patch for a method"""
+        if method_name not in self.patches:
+            self.patches[method_name] = []
+        self.patches[method_name].append(patch_info)
+
+    def unregister_patch(self, method_name, patch_info):
+        """unregister a patch for a method"""
+        self.patches[method_name] = [pa for pa in self.patches[method_name] if pa is not patch_info]
+
+    def get_original_method(self, method_name):
+        """Get the original method before any patches were applied"""
+        if method_name not in self.patches:
+            return None
+        return self.patches[method_name][0].original_method
+
+
 class Plugin(ABC):
     """Abstract base class for Pyccel plugins."""
+
+    def __init__(self):
+        self._patch_registries = []
+        self._setup_patch_registries()
+        assert all(isinstance(reg, ClassPatchRegistry) for reg in self._patch_registries)
 
     @abstractmethod
     def handle_loading(self, options):
         """Handle loading plugin with provided options"""
 
+    @abstractmethod
+    def _setup_patch_registries(self):
+        """Setup patch registries - override in subclasses to define patchable classes"""
+
     @property
     def name(self):
         """Return the plugin name, defaults to class name"""
         return self.__class__.__name__
+
+    def get_patched_classes(self):
+        """Return list of classes that have been patched by this plugin"""
+        patched_classes = []
+        for registry in self._patch_registries:
+            patched_classes.append(registry.target_class)
+        return patched_classes
+
+    def _get_registry_for_class(self, target_class):
+        """Get the registry for a specific class"""
+        for registry in self._patch_registries:
+            if registry.target_class == target_class:
+                return registry
+        return None
+
+    def get_patched_methods(self, target_class):
+        """Return list of method names patched in the given class"""
+        registry = self._get_registry_for_class(target_class)
+        if not registry:
+            return []
+        return list(registry.patches.keys())
+
+    def get_original_method(self, target_class, method_name):
+        """Return the original method before patching (for testing)"""
+        registry = self._get_registry_for_class(target_class)
+        if not registry:
+            return None
+        return registry.get_original_method(method_name)
 
 
 class Plugins(metaclass=Singleton):

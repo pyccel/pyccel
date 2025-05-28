@@ -107,7 +107,10 @@ class SyntaxParser(ConfigMixin):
         # The rules OMP_X_Y are used to insert the version of the syntax used
         textx_mm = metamodel_for_language('textx')
         grammar_model = textx_mm.grammar_model_from_file(grammar)
-        obj_processors = {r.name: (lambda r=r: r.name.replace('_PARENT', '').lower())
+        def make_parent_processor(rule):
+            """returns a processor that handles allowed parent directives"""
+            return lambda _ : rule.name.replace('_PARENT', '').lower()
+        obj_processors = {r.name: make_parent_processor(r)
                           for r in grammar_model.rules if r.name.endswith('_PARENT')}
         obj_processors.update({
             'OMP_4_5': lambda _: 4.5,
