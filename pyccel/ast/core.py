@@ -3366,6 +3366,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
+        assert method.name in self.scope.python_names
         method.set_current_user_node(self)
         self._methods += (method,)
 
