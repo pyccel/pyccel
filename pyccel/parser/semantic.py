@@ -706,17 +706,11 @@ class SemanticParser(BasicParser):
         """
         assert not isinstance(exceptions, Variable)
         for i in self._allocs[-1]:
-            if isinstance(i, DottedVariable):
-                if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
-                    continue
             if i in exceptions:
                 continue
             self._pointer_targets[-1].pop(i, None)
         targets = {t[0]:t[1] for target_list in self._pointer_targets[-1].values() for t in target_list}
         for i in self._allocs[-1]:
-            if isinstance(i, DottedVariable):
-                if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
-                    continue
             if i in exceptions:
                 continue
             if i in targets:
@@ -5231,8 +5225,6 @@ class SemanticParser(BasicParser):
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
         del_name = self._current_function_name.pop()
-        if self._current_function and self._current_function[-1].name == del_name:
-            self._current_function.pop()
 
         return EmptyNode()
 
