@@ -486,7 +486,8 @@ class CToPythonWrapper(Wrapper):
                     check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
-                            [PyErr_SetString(PyTypeError, CStrStr(LiteralString(f"Unexpected type for argument {interface_args[0].name}"))),
+                            [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
+                                arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
             else:
                 check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
