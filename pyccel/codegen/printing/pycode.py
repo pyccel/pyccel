@@ -232,8 +232,8 @@ class PythonCodePrinter(CodePrinter):
             The code which describes the function signature.
         """
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
-        self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
         if interface:
+            self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
         else:
             overload = ''
