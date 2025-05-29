@@ -2377,6 +2377,10 @@ class CCodePrinter(CodePrinter):
             else:
                 cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
 
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
+            self.add_import(c_imports['math'])
+            template = f'floor('+template+')'
+
         v = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
 
         init_value = template.format(
