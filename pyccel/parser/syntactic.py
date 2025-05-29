@@ -456,7 +456,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint)):
+        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
