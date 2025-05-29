@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 import sys
+from typing import TypeVar
 import pytest
 from numpy.random import rand, randn, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
@@ -5456,7 +5457,8 @@ def test_numpy_linspace_scalar(language):
         for i in range(len(x)):
             result[i] = x[i]
 
-    def test_linspace_int(start : int, end : int, step : int, endpoint : bool):
+    FI = TypeVar('FI', float, int)
+    def test_linspace_int(start : FI, end : FI, step : int, endpoint : bool):
         return np.linspace(start, end, step, endpoint, dtype=np.int32)
 
     integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
@@ -5511,6 +5513,9 @@ def test_numpy_linspace_scalar(language):
 
     assert np.allclose(epyccel_func_int(-393, 5, 7, False), test_linspace_int(-393, 5, 7, False))
     assert matching_types(epyccel_func_int(-393, 5, 7, False), test_linspace_int(-393, 5, 7, False))
+
+    assert np.allclose(epyccel_func_int(-393.0, 5.0, 7, False), test_linspace_int(-393.0, 5.0, 7, False))
+    assert matching_types(epyccel_func_int(-393.0, 5.0, 7, False), test_linspace_int(-393.0, 5.0, 7, False))
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
