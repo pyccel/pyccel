@@ -2746,7 +2746,7 @@ class FCodePrinter(CodePrinter):
                 methods += f'generic, public :: {i.name} => {names}\n'
                 methods += f'procedure :: {names}\n'
 
-
+        self.exit_scope()
 
         sig = 'type'
         if not(base is None):
@@ -2766,8 +2766,6 @@ class FCodePrinter(CodePrinter):
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
-
-        self.exit_scope()
 
         return decs, methods
 
