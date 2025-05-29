@@ -489,7 +489,7 @@ class CToPythonWrapper(Wrapper):
                             [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
                                 arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
-            else:
+            elif not orig_funcs[0].arguments[i].has_default:
                 check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
                 err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
                 if_sec = IfSection(PyccelNot(check_func_call), err_body)
