@@ -1057,20 +1057,25 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
-        if len(returns) == 0 or all(r.expr is Nil() for r in returns):
-            results = FunctionDefResult(Nil())
-        else:
-            results = self._get_unique_name([r.expr for r in returns],
-                                        valid_names = self.scope.local_used_symbols.keys(),
-                                        forbidden_names = argument_names,
-                                        suggestion = 'result')
-
-            if result_annotation:
-                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
-
+        if result_annotation:
+            results = self.scope.get_new_name('result', is_temp = True)
+            results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
             results = FunctionDefResult(results, annotation = result_annotation)
+        else:
+            returns = body.get_attribute_nodes(Return,
+                        excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
+            if len(returns) == 0 or all(r.expr is Nil() for r in returns):
+                results = FunctionDefResult(Nil())
+            else:
+                results = self._get_unique_name([r.expr for r in returns],
+                                            valid_names = self.scope.local_used_symbols.keys(),
+                                            forbidden_names = argument_names,
+                                            suggestion = 'result')
+
+                if result_annotation:
+                    results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
+
+                results = FunctionDefResult(results, annotation = result_annotation)
 
         results.set_current_ast(stmt)
 
