@@ -3351,6 +3351,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(attr, Variable):
             raise TypeError("Attributes must be Variables")
+        assert attr not in self._attributes
         attr.set_current_user_node(self)
         self._attributes += (attr,)
 
