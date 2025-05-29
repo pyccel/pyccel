@@ -2701,7 +2701,6 @@ class SemanticParser(BasicParser):
                         func_defs = []
                         for v in headers:
                             scope = self.create_new_function_scope(name)
-                            scope.insert_symbol(name)
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
                                 shape = None, is_const = t.is_const, is_optional = False,
@@ -5123,7 +5122,6 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
-            scope.insert_symbol('__init__')
             cls_scope.insert_symbol('__init__')
             scope.insert_variable(argument.var)
             init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
@@ -5157,7 +5155,6 @@ class SemanticParser(BasicParser):
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
             scope.insert_variable(argument.var)
-            scope.insert_symbol('__del__')
             cls_scope.insert_symbol('__del__')
             del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
             self.exit_function_scope()

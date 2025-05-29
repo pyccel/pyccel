@@ -338,6 +338,7 @@ class BasicParser(object):
 
         """
         child = self.scope.new_child_scope(name, **kwargs)
+        child.insert_symbol(name)
 
         self._scope = child
         self._current_function_name.append(name)
