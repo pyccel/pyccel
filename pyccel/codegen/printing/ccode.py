@@ -773,7 +773,6 @@ class CCodePrinter(CodePrinter):
             class_scope = classDef.scope
             for method in classDef.methods:
                 if not method.is_inline:
-                    name = method.name
                     class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
             for interface in classDef.interfaces:
                 for func in interface.functions:

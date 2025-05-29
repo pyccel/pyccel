@@ -1395,7 +1395,6 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
-        name = old_func.name
         cls_base_syntactic = old_func.get_direct_user_nodes(lambda p: isinstance(p, ClassDef))
         if cls_base_syntactic:
             cls_name = cls_base_syntactic[0].name
