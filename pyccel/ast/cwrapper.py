@@ -56,6 +56,7 @@ __all__ = (
     'PyModule',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
+    'PyArgumentError',
     'PyBuildValueNode',
     'PyCapsule_New',
     'PyCapsule_Import',
