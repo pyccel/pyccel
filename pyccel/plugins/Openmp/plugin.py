@@ -1,22 +1,27 @@
 """Classes that handles loading the Openmp Plugin"""
 import inspect
 import os
-from dataclasses import dataclass
+from types import MethodType
+from typing import Dict, List
+from dataclasses import dataclass, field
 
-from pyccel.codegen.printing.ccode import CCodePrinter
-from pyccel.codegen.printing.fcode import FCodePrinter
-from pyccel.codegen.printing.pycode import PythonCodePrinter
 from pyccel.errors.errors import Errors
-from pyccel.parser.semantic import SemanticParser
-from pyccel.parser.syntactic import SyntaxParser
 from pyccel.plugins.Openmp import openmp_4_5
 from pyccel.plugins.Openmp import openmp_5_0
-from pyccel.utilities.plugins import Plugin, ClassPatchRegistry, PatchInfo
+from pyccel.utilities.plugins import Plugin, PatchRegistry, PatchInfo
 
 errors = Errors()
 
 @dataclass
-class OmpClassPatchRegistry(ClassPatchRegistry):
+class OmpPatchInfo(PatchInfo):
+    """Store information about a single patch"""
+    version: float
+
+@dataclass
+class OmpPatchRegistry(PatchRegistry):
+    patches: Dict[str, List[OmpPatchInfo]] = field(default_factory=dict)
+    loaded_versions: List[float] = field(default_factory=list)
+    """Registry for all patches applied to a single class"""
     def get_patches_for_version(self, version):
         """Get all patches for a specific version"""
         version_patches = {}
@@ -36,6 +41,7 @@ class OmpClassPatchRegistry(ClassPatchRegistry):
             ]
             if not self.patches[method_name]:
                 del self.patches[method_name]
+        self.loaded_versions.remove(version)
 
 
 class Openmp(Plugin):
@@ -55,7 +61,7 @@ class Openmp(Plugin):
     _loaded_versions : list
         A list containing the OpenMP versions currently loaded.
     """
-    __slots__ = ("_options", "_loaded_versions")
+    __slots__ = ("_options",)
     DEFAULT_VERSION = 4.5
 
     VERSION_MODULES = {
@@ -65,32 +71,33 @@ class Openmp(Plugin):
 
     def __init__(self):
         self._options = {}
-        self._loaded_versions = []
+        self._patch_registries = []
         super().__init__()
 
-    def _setup_patch_registries(self):
-        """Setup OpenMP-specific patch registries"""
-        self._patch_registries = [
-            OmpClassPatchRegistry(SyntaxParser),
-            OmpClassPatchRegistry(SemanticParser),
-            OmpClassPatchRegistry(CCodePrinter),
-            OmpClassPatchRegistry(FCodePrinter),
-            OmpClassPatchRegistry(PythonCodePrinter)
-        ]
-
-    def handle_loading(self, options):
-        """Handle the loading and unloading openmp versions."""
+    def set_options(self, options):
         self._options.clear()
         self._options.update(options)
-        if self._options.get('clear', False):
-            self._unload_all_patches()
-            return
 
-        version = self._resolve_version()
-        if 'openmp' not in self._options.get('accelerators', []) or version in self._loaded_versions:
-            return
-        self._loaded_versions.append(version)
-        self._apply_patches(version)
+    def register(self, instances, refresh=False):
+        """Register the provided instances with the OpenMP plugin"""
+        self._patch_registries += [OmpPatchRegistry(instance) for instance in instances
+                                   if not any(reg.target is instance for reg in self._patch_registries)]
+        if refresh:
+            version = self._resolve_version()
+            if 'openmp' not in self._options.get('accelerators', []):
+                return
+            for reg in self._patch_registries:
+                if version in reg.loaded_versions:
+                    continue
+                self._apply_patches(version, reg)
+                reg.loaded_versions.append(version)
+
+    def unregister(self, instances):
+        """Unregister the provided instances"""
+        targets = [reg for reg in self._patch_registries if reg.target in instances]
+        for reg in targets:
+            self._unload_patches(reg)
+        self._patch_registries = [reg for reg in self._patch_registries if reg not in targets]
 
     def _resolve_version(self):
         """Determine which OpenMP version to use based on options or environment"""
@@ -110,71 +117,48 @@ class Openmp(Plugin):
 
         return requested_version
 
-    def _apply_patches(self, version):
+    def _apply_patches(self, version, registry):
         """Apply patches from the specified version module to parser classes"""
         module = self.VERSION_MODULES[version]
+        parser = registry.target
+        parser_name = parser.__class__.__name__
+        impl = getattr(module, parser_name, None)
 
-        for registry in self._patch_registries:
-            parser_cls = registry.target_class
-            parser_name = parser_cls.__name__
-            impl = getattr(module, parser_name, None)
-            if not impl:
-                continue
-
-            if hasattr(impl, 'setup'):
-                original_init = parser_cls.__init__
-                patched_init = getattr(impl, 'setup')(self._options, original_init)
-                setattr(parser_cls, '__init__', patched_init)
-
-                patch_info = PatchInfo(
-                    original_method=original_init,
-                    patched_method=patched_init,
-                    version=version,
-                    method_name='__init__'
-                )
-                registry.register_patch('__init__', patch_info)
-
-            for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
-                original_method = getattr(parser_cls, name, None)
-                decorated_method = impl.helper_check_config(method, self._options, original_method)
-                setattr(parser_cls, name, decorated_method)
-
-                patch_info = PatchInfo(
-                    original_method=original_method,
-                    patched_method=decorated_method,
-                    version=version,
-                    method_name=name
-                )
-                registry.register_patch(name, patch_info)
-
-    def _unload_patches_for_version(self, version: float):
-        """Unload patches for a specific version"""
-        if version not in self._loaded_versions:
+        if not impl:
             return
+        if hasattr(impl, 'setup'):
+            impl.setup(self._options, parser)
 
-        for registry in self._patch_registries:
-            parser_cls = registry.target_class
+        for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
+            original_method = getattr(parser, name, None)
+            decorated_method = impl.helper_check_config(method, self._options, original_method)
+            setattr(parser, name,MethodType(decorated_method, parser))
+
+            patch_info = OmpPatchInfo(
+                original_method=original_method,
+                patched_method=decorated_method,
+                version=version,
+                method_name=name
+            )
+            registry.register_patch(name, patch_info)
+
+    def _unload_patches(self, registry, version=None):
+        """Unload patches for a specific version"""
+        parser = registry.target
+        if version:
+            if version not in registry.loaded_versions:
+                return
             version_patches = registry.get_patches_for_version(version)
+        else:
+            version_patches = registry.patches
 
-            for method_name, patch_info in version_patches.items():
-                if patch_info.is_new_method:
-                    if hasattr(parser_cls, method_name):
-                        delattr(parser_cls, method_name)
-                else:
-                    original = patch_info.original_method
-                    if original:
-                        setattr(parser_cls, method_name, original)
+        for method_name, patch_info in version_patches.items():
+            if patch_info.is_new_method:
+                if hasattr(parser, method_name):
+                    delattr(parser, method_name)
+            else:
+                original = patch_info.original_method
+                if original:
+                    setattr(parser, method_name, MethodType(original, parser))
 
-            registry.unregister_patches_for_version(version)
-
-        self._loaded_versions.remove(version)
-
-    def _unload_all_patches(self):
-        """Unload all patches and restore original methods"""
-        for version in self._loaded_versions:
-            self._unload_patches_for_version(version)
-
-    @property
-    def loaded_versions(self):
-        """Return loaded openmp versions"""
-        return self._loaded_versions
+        registry.unregister_patches_for_version(version)

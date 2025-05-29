@@ -26,12 +26,14 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
+from pyccel.utilities.plugins import Plugins
 
 #==============================================================================
 
 errors = Errors()
 error_mode = ErrorsMode()
 
+plugins = Plugins()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -165,6 +167,8 @@ class BasicParser(object):
         # TODO ERROR must be passed to the Parser __init__ as argument
 
         self._blocking = error_mode.value == 'developer'
+
+        plugins.register((self,), refresh=True)
 
     @property
     def scope(self):

@@ -122,7 +122,7 @@ def execute_pyccel(fname, *,
     """
     start = time.time()
     plugins = Plugins()
-    plugins.handle_loading({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
+    plugins.set_options({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
     timers = {}
     if fname.endswith('.pyh'):
         syntax_only = True

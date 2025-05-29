@@ -4,7 +4,7 @@ import inspect
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Any
 
 from pyccel.errors.errors import Errors
 from pyccel.utilities.metaclasses import Singleton
@@ -17,7 +17,6 @@ class PatchInfo:
     """Store information about a single patch"""
     original_method: Optional[Callable]
     patched_method: Callable
-    version: float
     method_name: str
 
     def __post_init__(self):
@@ -28,9 +27,9 @@ class PatchInfo:
 
 
 @dataclass
-class ClassPatchRegistry:
+class PatchRegistry:
     """Registry for all patches applied to a single class"""
-    target_class: type
+    target: Any
     patches: Dict[str, List[PatchInfo]] = field(default_factory=dict)
 
     def register_patch(self, method_name, patch_info):
@@ -55,46 +54,42 @@ class Plugin(ABC):
 
     def __init__(self):
         self._patch_registries = []
-        self._setup_patch_registries()
-        assert all(isinstance(reg, ClassPatchRegistry) for reg in self._patch_registries)
+        assert all(isinstance(reg, PatchRegistry) for reg in self._patch_registries)
 
     @abstractmethod
-    def handle_loading(self, options):
+    def register(self, instances, refresh=False):
         """Handle loading plugin with provided options"""
 
     @abstractmethod
-    def _setup_patch_registries(self):
-        """Setup patch registries - override in subclasses to define patchable classes"""
+    def unregister(self, instances):
+        """Handle loading plugin with provided options"""
+
+    @abstractmethod
+    def set_options(self, options):
+        """Handle loading plugin with provided options"""
 
     @property
     def name(self):
         """Return the plugin name, defaults to class name"""
         return self.__class__.__name__
 
-    def get_patched_classes(self):
-        """Return list of classes that have been patched by this plugin"""
-        patched_classes = []
-        for registry in self._patch_registries:
-            patched_classes.append(registry.target_class)
-        return patched_classes
-
-    def _get_registry_for_class(self, target_class):
+    def _get_registry_for(self, target):
         """Get the registry for a specific class"""
         for registry in self._patch_registries:
-            if registry.target_class == target_class:
+            if registry.target is target:
                 return registry
         return None
 
-    def get_patched_methods(self, target_class):
+    def get_patched_methods(self, target):
         """Return list of method names patched in the given class"""
-        registry = self._get_registry_for_class(target_class)
+        registry = self._get_registry_for(target)
         if not registry:
             return []
         return list(registry.patches.keys())
 
-    def get_original_method(self, target_class, method_name):
+    def get_original_method(self, target, method_name):
         """Return the original method before patching (for testing)"""
-        registry = self._get_registry_for_class(target_class)
+        registry = self._get_registry_for(target)
         if not registry:
             return None
         return registry.get_original_method(method_name)
@@ -103,13 +98,23 @@ class Plugin(ABC):
 class Plugins(metaclass=Singleton):
     """Manager for Pyccel plugins"""
 
-    __slots__ = ("_plugins",)
+    __slots__ = ("_plugins", "_options")
 
     def __init__(self, plugins_dir=None):
         self._plugins = {}
-        self._load_plugins(plugins_dir)
+        self.load_plugins(plugins_dir)
+        self._options = {}
 
-    def _load_plugins(self, plugins_dir=None):
+    def set_options(self, options, refresh=False):
+        assert isinstance(options, dict)
+        self._options = options
+        plugins = self.get_all_plugins()
+        for plugin in plugins:
+            plugin.set_options(options)
+            if refresh:
+                plugin.register((), refresh)
+
+    def load_plugins(self, plugins_dir=None):
         """Discover and load all plugins from the plugins directory"""
         if plugins_dir is None:
             current_dir = os.path.dirname(__file__)
@@ -167,17 +172,26 @@ class Plugins(metaclass=Singleton):
 
         return plugin_class()
 
-    def handle_loading(self, options):
-        """Load all available plugins with the provided options"""
-        for plugin_name, plugin in self._plugins.items():
+    def register(self, instances, refresh=False, plugins = ()):
+        """Register the given instances """
+        if not plugins:
+            plugins = self.get_all_plugins()
+        for plugin in plugins:
             try:
-                plugin.handle_loading(options)
+                plugin.register(instances, refresh=refresh)
             # Catching all exceptions because plugin loading may fail in unpredictable ways
             except Exception as e:  # pylint: disable=broad-exception-caught
                 # plugin.handle_loading({'clear':True})
                 errors.report(
-                    f"Error in plugin '{plugin_name}' during loading: {str(e)}",
+                    f"Error in plugin '{plugin.name}' during loading: {str(e)}",
                     severity='warning')
+                raise e
+
+    def unregister(self, instances, plugins = ()):
+        if not plugins:
+            plugins = self.get_all_plugins()
+        for plugin in plugins:
+            plugin.unregister(instances)
 
     def get_plugin(self, name):
         """Get a plugin by name"""

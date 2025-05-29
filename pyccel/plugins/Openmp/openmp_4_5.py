@@ -74,9 +74,10 @@ class ConfigMixin:
 class SyntaxParser(ConfigMixin):
     """Openmp 4.5 syntax parser"""
     _version = 4.5
+    _omp_metamodel = None
 
     @classmethod
-    def setup(cls, options, method=None):
+    def setup(cls, options, parser):
         """
         Setup method for configuring the SyntaxParser Class.
         Creates a metamodel from the grammar.
@@ -94,43 +95,31 @@ class SyntaxParser(ConfigMixin):
             A wrapped setup method that adheres to the configuration and initializes
             the parsing environment.
         """
-        if options.get('clear', False):
-            return cls._method_registry[method.__name__]
-        if not method.__name__ in cls._method_registry:
-            cls._method_registry[method.__name__] = method
-        this_folder = dirname(__file__)
-        # Get metamodel from language description
-        grammar = join(this_folder, "grammar/openmp.tx")
-        cls._omp_metamodel = metamodel_from_file(grammar)
-        # object processors: are registered for particular classes (grammar rules)
-        # and are called when the objects of the given class is instantiated.
-        # The rules OMP_X_Y are used to insert the version of the syntax used
-        textx_mm = metamodel_for_language('textx')
-        grammar_model = textx_mm.grammar_model_from_file(grammar)
-        def make_parent_processor(rule):
-            """returns a processor that handles allowed parent directives"""
-            return lambda _ : rule.name.replace('_PARENT', '').lower()
-        obj_processors = {r.name: make_parent_processor(r)
-                          for r in grammar_model.rules if r.name.endswith('_PARENT')}
-        obj_processors.update({
-            'OMP_4_5': lambda _: 4.5,
-            'OMP_5_0': lambda _: 5.0,
-            'OMP_5_1': lambda _: 5.1,
-            'TRUE': lambda _: True,
-            'OMP_VERSION': lambda _: cls._version,
-        })
-        cls._omp_metamodel.register_obj_processors(obj_processors)
+        if not cls._omp_metamodel:
+            this_folder = dirname(__file__)
+            # Get metamodel from language description
+            grammar = join(this_folder, "grammar/openmp.tx")
+            cls._omp_metamodel = metamodel_from_file(grammar)
+            # object processors: are registered for particular classes (grammar rules)
+            # and are called when the objects of the given class is instantiated.
+            # The rules OMP_X_Y are used to insert the version of the syntax used
+            textx_mm = metamodel_for_language('textx')
+            grammar_model = textx_mm.grammar_model_from_file(grammar)
+            def make_parent_processor(rule):
+                """returns a processor that handles allowed parent directives"""
+                return lambda _ : rule.name.replace('_PARENT', '').lower()
+            obj_processors = {r.name: make_parent_processor(r)
+                              for r in grammar_model.rules if r.name.endswith('_PARENT')}
+            obj_processors.update({
+                'OMP_4_5': lambda _: 4.5,
+                'OMP_5_0': lambda _: 5.0,
+                'OMP_5_1': lambda _: 5.1,
+                'TRUE': lambda _: True,
+                'OMP_VERSION': lambda _: cls._version,
+            })
+            cls._omp_metamodel.register_obj_processors(obj_processors)
 
-        @functools.wraps(method)
-        def setup(instance, *args, **kwargs):
-            """setup method wrapper to check configuration"""
-            if cls._version != options.get('omp_version') or not 'openmp' in options.get('accelerators', []):
-                method(instance, *args, **kwargs)
-                return
-            instance._skip_stmts_count = 0
-            method(instance, *args, **kwargs)
-
-        return setup
+        parser._skip_stmts_count = 0
 
     @classmethod
     def _helper_parse_expr(cls, expr):
@@ -181,7 +170,7 @@ class SyntaxParser(ConfigMixin):
                 errors.report(e.message, severity="fatal", symbol=expr)
                 return None
         else:
-            return method(instance, line, expr)
+            return method(line, expr)
 
     @staticmethod
     def _visit(instance, stmt, method, cls=None):
@@ -190,7 +179,7 @@ class SyntaxParser(ConfigMixin):
             instance._skip_stmts_count -= 1
             return EmptyNode()
         else:
-            res = method(instance, stmt)
+            res = method(stmt)
             if isinstance(stmt, OmpTxNode):
                 res.set_current_ast(stmt.python_ast)
             return res

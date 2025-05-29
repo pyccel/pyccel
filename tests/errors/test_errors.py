@@ -36,7 +36,7 @@ def test_syntax_blockers(f):
     errors = Errors()
     errors.reset()
     plugins = Plugins()
-    plugins.handle_loading({'accelerators': ['openmp']})
+    plugins.set_options({'accelerators': ['openmp']})
 
     pyccel = Parser(f)
 
@@ -44,7 +44,6 @@ def test_syntax_blockers(f):
         ast = pyccel.parse()
 
     assert errors.has_blockers()
-    plugins.handle_loading({'clear':True})
 
 @pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
 def test_syntax_errors(f):
