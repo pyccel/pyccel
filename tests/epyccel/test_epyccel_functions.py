@@ -376,9 +376,11 @@ def test_wrong_argument_type(language):
     def f(integer_arg : int):
         return integer_arg + 1
     epyc_f = epyccel(f, language=language)
+    test_arg = 3.5
     with pytest.raises(TypeError) as err:
-        epyc_f(3.5)
+        epyc_f(test_arg)
     assert 'integer_arg' in str(err.value)
+    assert str(type(test_arg)) in str(err.value)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -391,9 +393,11 @@ def test_wrong_known_argument_type_in_interface(language):
     def f(a : T, integer_arg : int):
         return a + 1
     epyc_f = epyccel(f, language=language)
+    test_arg = 4.5
     with pytest.raises(TypeError) as err:
-        epyc_f(3.5, 4.5)
+        epyc_f(3.5, test_arg)
     assert 'integer_arg' in str(err.value)
+    assert str(type(test_arg)) in str(err.value)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -406,9 +410,11 @@ def test_wrong_unknown_argument_type_in_interface(language):
     def f(templated_arg : T, b : int):
         return templated_arg + 1
     epyc_f = epyccel(f, language=language)
+    test_arg = 3.5+1j
     with pytest.raises(TypeError) as err:
-        epyc_f(3.5+1j, 4.5)
+        epyc_f(test_arg, 4.5)
     assert 'templated_arg' in str(err.value)
+    assert str(type(test_arg)) in str(err.value)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
