@@ -3368,7 +3368,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
-        assert pyccel_stage != "semantic" or method.name in self.scope.python_names
+        assert method.pyccel_staging != "semantic" or method.name in self.scope.python_names
         method.set_current_user_node(self)
         self._methods += (method,)
 
