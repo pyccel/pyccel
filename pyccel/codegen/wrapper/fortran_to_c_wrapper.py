@@ -404,7 +404,7 @@ class FortranToCWrapper(Wrapper):
 
         c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
                         scope.get_new_name(), is_argument = True,
-                        shape = (LiteralInteger(2),))
+                        shape = (LiteralInteger(rank+1),))
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(1)), shape_var)
