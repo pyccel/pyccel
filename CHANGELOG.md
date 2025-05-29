@@ -163,6 +163,7 @@ All notable changes to this project will be documented in this file.
 -   #2097 : Fix printing of an empty list.
 -   #2235 : Fix negative numbers in slice indices when translating to C.
 -   #2144 : Fix accidental imports due to modules making their contents public by default.
+-   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
 
 ### Changed
 
