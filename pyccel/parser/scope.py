@@ -904,6 +904,11 @@ class Scope(object):
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base, DottedVariable):
+            cls_scope = tuple_elem.base.lhs.cls_base.scope
+            if cls_scope is not self:
+                return cls_scope.collect_tuple_element(tuple_elem)
+
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
                 and not isinstance(tuple_elem.base, PyccelFunction):
             if isinstance(tuple_elem.base, DottedVariable):
