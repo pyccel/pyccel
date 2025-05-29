@@ -1411,20 +1411,31 @@ class SemanticParser(BasicParser):
             cls_name = cls_base_syntactic[0].name
             cls_base = self.scope.find(cls_name, 'classes')
             cls_scope = cls_base.scope
-            search_name = cls_name
+            new_scope = cls_scope
         else:
-            search_name = old_func.name
+            func_scope = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
+            new_scope = func_scope
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope = self._scope
         old_current_function = self._current_function
         old_current_function_name = self._current_function_name
-        sc = self.scope
-        while search_name not in sc.local_used_symbols:
-            sc = sc.parent_scope
+
+        # Walk up scope to root to find names of relevant scopes
+        scope_names = []
+        while new_scope.parent_scope is not None:
+            new_scope = new_scope.parent_scope
+            if not new_scope.name is None:
+                scope_names.append(new_scope.name)
+        scope_names.reverse()
+
+        # Use scope_names to find semantic scopes
+        while scope_names:
+            new_scope = new_scope.sons_scopes[scope_names[0]]
+            scope_names = scope_names[1:]
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
-        self._scope = sc
+        self._scope = new_scope
         if old_func.is_inline:
             self._visit_FunctionDef(old_func, function_call_args = function_call_args)
         else:
