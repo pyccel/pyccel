@@ -4727,13 +4727,14 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules or inside other functions.",
                     symbol=expr, severity='error')
 
-        name = expr.scope.get_expected_name(expr.name)
         existing_semantic_funcs = []
         if not expr.is_semantic:
+            name = expr.scope.get_expected_name(expr.name)
             self.scope.functions.pop(name, None)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
-            expr                    = expr.syntactic_node
+            expr = expr.syntactic_node
+            name = expr.scope.get_expected_name(expr.name)
 
         decorators         = expr.decorators
         new_semantic_funcs = []
@@ -4863,7 +4864,7 @@ class SemanticParser(BasicParser):
                 if not is_compatible:
                     self.exit_function_scope()
                     # remove the new created scope and the function name
-                    self.scope.sons_scopes.pop(name)
+                    self.scope.sons_scopes.pop(expr.name)
                     if is_interface:
                         self.scope.remove_symbol(name)
                     continue
