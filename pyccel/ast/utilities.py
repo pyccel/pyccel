@@ -288,14 +288,13 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
     """
-    if expr.rank==0:
+    if expr.rank==0 or -pos > expr.rank:
         return expr
-    elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.rank:
-            return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
+
+    if expr.shape and expr.shape[pos] == 1:
+        index_var = LiteralInteger(0)
+
+    if isinstance(expr, (Variable, ObjectAddress)):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
@@ -304,9 +303,6 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, NumpyTranspose):
         if expr.rank==0 or -pos>expr.rank:
             return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
 
         # Add index at the required position
         if expr.rank<2:
@@ -343,21 +339,15 @@ def insert_index(expr, pos, index_var):
             return expr
 
         # Add index at the required position
-        if base.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            assert indices[pos].start is None
-            index_var = LiteralInteger(0)
-
-        else:
-            # Calculate new index to preserve slice behaviour
-            if indices[pos].step is not None:
-                index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
-            if indices[pos].start is not None:
-                if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
-                    index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
-                                          index_var, simplify=True)
-                else:
-                    index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
+        # Calculate new index to preserve slice behaviour
+        if indices[pos].step is not None:
+            index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
+        if indices[pos].start is not None:
+            if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
+                index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
+                                      index_var, simplify=True)
+            else:
+                index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
         # Update index
         indices[pos] = index_var
@@ -702,6 +692,8 @@ def insert_fors(blocks, indices, scope, level = 0):
         body = [bi for b in body for bi in b]
 
     if blocks.length == 1:
+        for b in body:
+            b.substitute(indices[level], LiteralInteger(0))
         return body
     else:
         body = CodeBlock(body, unravelled = True)
