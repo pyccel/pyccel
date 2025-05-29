@@ -288,14 +288,13 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
     """
+    if expr.rank==0 or -pos > expr.rank:
+        return expr
+
     if expr.shape and expr.shape[pos] == 1:
         index_var = LiteralInteger(0)
 
-    if expr.rank==0:
-        return expr
-    elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.rank:
-            return expr
+    if isinstance(expr, (Variable, ObjectAddress)):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
