@@ -2172,8 +2172,10 @@ class FunctionDef(ScopedAstNode):
 
         # Outside of semantic stage, if the scope is provided then the original name
         # of the function should be retrievable from the semantic name using scope.python_names
-        assert pyccel_stage == "syntactic" or scope is None or \
+        assert pyccel_stage != "semantic" or scope is None or \
                 name in scope.python_names
+        assert pyccel_stage != "semantic" or scope is None or \
+                scope.name == scope.python_names[name]
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -3366,7 +3368,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
-        assert method.name in self.scope.python_names
+        assert pyccel_stage != "semantic" or method.name in self.scope.python_names
         method.set_current_user_node(self)
         self._methods += (method,)
 
