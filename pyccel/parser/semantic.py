@@ -1401,10 +1401,8 @@ class SemanticParser(BasicParser):
             cls_name = cls_base_syntactic[0].name
             cls_base = self.scope.find(cls_name, 'classes')
             cls_scope = cls_base.scope
-            key = 'classes'
             search_name = cls_name
         else:
-            key = 'functions'
             search_name = old_func.name
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
@@ -1412,7 +1410,7 @@ class SemanticParser(BasicParser):
         old_current_function = self._current_function
         old_current_function_name = self._current_function_name
         sc = self.scope
-        while search_name not in getattr(sc, key):
+        while search_name not in sc.local_used_symbols:
             sc = sc.parent_scope
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
