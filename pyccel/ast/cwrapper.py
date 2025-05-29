@@ -1050,6 +1050,8 @@ class PyArgumentError(PyccelAstNode):
     _attribute_nodes = ('_args',)
 
     def __init__(self, error_type, error_msg : str, **kwargs):
+        assert isinstance(error_type, Variable)
+        assert isinstance(error_msg, str)
         args = []
         # Find all expressions of the style '{type(var_name)}' in the error message
         type_indicators = re.findall(r'{type\([a-zA-Z0-9_]+\)}', error_msg)
