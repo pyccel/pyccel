@@ -607,3 +607,8 @@ class CWrapperCodePrinter(CCodePrinter):
             return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
         else:
             return f'PyList_Clear({list_code})'
+
+    def _print_PyArgumentError(self, expr):
+        args = ', '.join([f'"{self._print(expr.error_msg)}"'] + \
+                         [f'PyObject_Str((PyObject*)Py_TYPE({self._print(a)}))' for a in expr.args])
+        return f'PyErr_SetObject({self._print(expr.error_type)}, PyUnicode_FromFormat({args}));\n'

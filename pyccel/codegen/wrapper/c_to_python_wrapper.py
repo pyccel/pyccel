@@ -37,7 +37,7 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObject_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear
+from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear, PyArgumentError
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
@@ -391,8 +391,9 @@ class CToPythonWrapper(Wrapper):
 
         if raise_error and not isinstance(arg.class_type, NumpyNDArrayType):
             # No error code required for arrays as the error is raised inside pyarray_check
-            message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
-            python_error = PyErr_SetString(PyTypeError, CStrStr(message))
+            python_error = PyArgumentError(PyTypeError,
+                                f"Expected an argument of type {arg.class_type} for argument {arg.name}. Received {{type(arg)}}",
+                                arg = py_obj)
             error_code = (python_error,)
 
         return type_check_condition, error_code
