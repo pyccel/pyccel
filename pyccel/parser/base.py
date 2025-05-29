@@ -106,6 +106,8 @@ def get_filename_from_import(module_name, input_folder_name):
     elif filename_pyi.exists():
         return str(filename_pyi.absolute())
     elif filename_pyh.exists():
+        warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
+                "Please use a .pyi file instead.", FutureWarning)
         return str(filename_pyh.absolute())
     else:
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
