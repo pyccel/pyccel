@@ -2365,33 +2365,29 @@ class CCodePrinter(CodePrinter):
         return self._handle_numpy_functional(expr, PyccelAdd, convert_to_literal(0, expr.class_type))
 
     def _print_NumpyLinspace(self, expr):
-        template = '({start} + {index}*{step})'
+        start = self._print(expr.start)
+        step  = self._print(expr.step)
+        stop = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
+        index = self._print(expr.ind)
+
+        init_value = f'({start} + {index}*{step})'
+        endpoint_code = ''
         if not isinstance(expr.endpoint, LiteralFalse):
-            template = '({start} + {index}*{step})'
             lhs_source = expr.get_user_nodes(Assign)[0].lhs
             lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
             lhs = self._print(lhs_source)
 
             if isinstance(expr.endpoint, LiteralTrue):
-                cond_template = lhs + ' = {stop}'
+                endpoint_code = f'{lhs} = {stop}'
             else:
-                cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
+                cond = self._print(expr.endpoint)
+                endpoint_code = f'{lhs} = {cond} ? {stop} : {lhs}'
 
-        v = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
+            self.add_import(c_imports['math'])
+            init_value = f'floor({init_value})'
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(expr.ind),
-        )
-        if isinstance(expr.endpoint, LiteralFalse):
-            code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + ';\n' + cond_template.format(stop = v)
-        else:
-            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
-
-        return code
+        return ';\n'.join((init_value, endpoint_code))
 
     def _print_Interface(self, expr):
         return ""
