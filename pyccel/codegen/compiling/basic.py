@@ -7,7 +7,8 @@
 """
 Module handling classes for compiler information relevant to a given object
 """
-import os
+from itertools import chain
+from pathlib import Path
 import sys
 from filelock import FileLock
 
@@ -70,15 +71,16 @@ class CompileObj:
                  has_target_file = True,
                  prog_target  = None):
 
-        self._file = os.path.join(folder, file_name)
+        folder = Path(folder)
         self._folder = folder
+        self._file = folder / file_name
 
-        self._module_name = os.path.splitext(file_name)[0]
-        rel_mod_name = os.path.join(folder, self._module_name)
-        self._module_target = rel_mod_name+'.o'
+        self._module_name = Path(file_name).stem
+        rel_mod_name = folder / self._module_name
+        self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
-            self._prog_target = os.path.join(folder, prog_target)
+            self._prog_target = folder / prog_target
         else:
             self._prog_target = rel_mod_name
         if sys.platform == "win32":
@@ -87,11 +89,13 @@ class CompileObj:
         self._prog_target   = self._prog_target
         self._module_target = self._module_target
 
-        self._lock_target  = FileLock(self.module_target+'.lock')
-        self._lock_source  = FileLock(self.source+'.lock')
+        self._lock_target  = FileLock(str(self.module_target.with_suffix(
+                                            self.module_target.suffix + '.lock')))
+        self._lock_source  = FileLock(str(self.source.with_suffix(
+                                            self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._includes     = set([folder, *includes])
+        self._includes     = set(chain([folder], (Path(i) for i in includes)))
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
@@ -114,22 +118,25 @@ class CompileObj:
         folder : str
             The new folder where the source file can be found.
         """
+        folder = Path(folder)
         self._includes.remove(self._folder)
         self._includes.add(folder)
 
-        self._file = os.path.join(folder, os.path.basename(self._file))
-        self._lock_source  = FileLock(self.source+'.lock')
+        self._file = folder / self._file.name
+        self._lock_source  = FileLock(self.source.with_suffix(
+                                        self.source.suffix+'.lock'))
         self._folder = folder
         self._includes.add(self._folder)
 
-        rel_mod_name = os.path.join(folder, self._module_name)
-        self._module_target = rel_mod_name+'.o'
+        rel_mod_name = folder / self._module_name
+        self._module_target = rel_mod_name.with_suffix('.o')
 
         self._prog_target = rel_mod_name
         if sys.platform == "win32":
             self._prog_target += '.exe'
 
-        self._lock_target         = FileLock(self.module_target+'.lock')
+        self._lock_target = FileLock(self.module_target.with_suffix(
+                                        self.module_target.suffix+'.lock'))
 
     @property
     def source(self):
