@@ -8,7 +8,7 @@
 Module containing the Parser object
 """
 
-import os
+from pathlib import Path
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -37,6 +37,7 @@ class Parser(object):
 
     def __init__(self, filename, context_dict = None, **kwargs):
 
+        filename = Path(filename)
         self._filename = filename
         self._kwargs   = kwargs
 
@@ -54,7 +55,9 @@ class Parser(object):
 
         self._context_dict = context_dict
 
-        self._input_folder = os.path.dirname(filename)
+        self._input_folder = filename.parent
+        if filename.suffix == '.pyi' and self._input_folder.name.startswith('__pyccel__'):
+            self._input_folder = self._input_folder.parent
 
     @property
     def semantic_parser(self):

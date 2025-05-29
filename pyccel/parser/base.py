@@ -241,7 +241,7 @@ class BasicParser(object):
         """Returns True if we are treating a header file."""
 
         if self.filename:
-            return self.filename.split(""".""")[-1] == 'pyh'
+            return self.filename.suffix in ('.pyi', '.pyh')
         else:
             return False
 
