@@ -178,6 +178,8 @@ class SyntaxParser(BasicParser):
 
     def create_new_function_scope(self, name, **kwargs):
         """
+        Create a new Scope object for a Python function.
+
         Create a new Scope object for a Python function with the given name,
         and attach any decorators' information to the scope. The new scope is
         a child of the current one, and can be accessed from the dictionary of
@@ -192,9 +194,13 @@ class SyntaxParser(BasicParser):
         name : str
             Function's name, used as a key to retrieve the new scope.
 
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
+        **kwargs : dict
+            Keyword arguments passed through to the new scope.
 
+        Returns
+        -------
+        Scope
+            The new scope for the function.
         """
         child = self.scope.new_child_scope(name, **kwargs)
 

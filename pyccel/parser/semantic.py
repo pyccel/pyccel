@@ -357,6 +357,8 @@ class SemanticParser(BasicParser):
 
     def create_new_function_scope(self, syntactic_name, semantic_name, **kwargs):
         """
+        Create a new Scope object for a Python function.
+
         Create a new Scope object for a Python function with the given name,
         and attach any decorators' information to the scope. The new scope is
         a child of the current one, and can be accessed from the dictionary of
@@ -368,12 +370,21 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        name : str
-            Function's name, used as a key to retrieve the new scope.
+        syntactic_name : str
+            Function's original name in the translated code, used as a key to
+            retrieve the new scope.
 
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
+        semantic_name : str
+            The new name of the function by which it will be known in the target
+            language.
 
+        **kwargs : dict
+            Keyword arguments passed through to the new scope.
+
+        Returns
+        -------
+        Scope
+            The new scope for the function.
         """
         child = self.scope.new_child_scope(syntactic_name, **kwargs)
         child.local_used_symbols[syntactic_name] = semantic_name
