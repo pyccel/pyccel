@@ -355,6 +355,36 @@ class SemanticParser(BasicParser):
     #              Utility functions for scope handling
     #================================================================
 
+    def create_new_function_scope(self, syntactic_name, semantic_name, **kwargs):
+        """
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function_name.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        decorators : dict
+            Decorators attached to FunctionDef object at syntactic stage.
+
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+        child.local_used_symbols[syntactic_name] = semantic_name
+        child.python_names[semantic_name] = syntactic_name
+
+
+        self._scope = child
+        self._current_function_name.append(name)
+
+        return child
+
     def get_class_prefix(self, name):
         """
         Search for the class prefix of a dotted name in the current scope.

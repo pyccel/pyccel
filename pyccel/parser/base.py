@@ -317,34 +317,6 @@ class BasicParser(object):
         else:
             raise TypeError('Expected a symbolic_function')
 
-    def create_new_function_scope(self, name, **kwargs):
-        """
-        Create a new Scope object for a Python function with the given name,
-        and attach any decorators' information to the scope. The new scope is
-        a child of the current one, and can be accessed from the dictionary of
-        its children using the function name as key.
-
-        Before returning control to the caller, the current scope (stored in
-        self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function_name.
-
-        Parameters
-        ----------
-        name : str
-            Function's name, used as a key to retrieve the new scope.
-
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
-
-        """
-        child = self.scope.new_child_scope(name, **kwargs)
-        child.insert_symbol(name)
-
-        self._scope = child
-        self._current_function_name.append(name)
-
-        return child
-
     def exit_function_scope(self):
         """ Exit the function scope and return to the encasing scope
         """
