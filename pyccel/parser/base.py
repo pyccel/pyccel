@@ -232,7 +232,12 @@ class BasicParser(object):
 
     @property
     def current_function_name(self):
-        """Name of current function, if any."""
+        """
+        The name of the function currently being visited.
+
+        The name of the function currently being visited or None if we are not in
+        a function.
+        """
         return self._current_function_name[-1] if self._current_function_name else None
 
     @property
