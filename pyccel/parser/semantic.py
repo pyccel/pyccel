@@ -5123,6 +5123,8 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
+            scope.insert_symbol('__init__')
+            cls_scope.insert_symbol('__init__')
             scope.insert_variable(argument.var)
             init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
             self.exit_function_scope()
