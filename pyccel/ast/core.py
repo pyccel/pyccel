@@ -2170,6 +2170,11 @@ class FunctionDef(ScopedAstNode):
         docstring=None,
         scope=None):
 
+        # Outside of semantic stage, if the scope is provided then the original name
+        # of the function should be retrievable from the semantic name using scope.python_names
+        assert pyccel_stage == "syntactic" or scope is None or \
+                name in scope.python_names
+
         if isinstance(name, str):
             name = PyccelSymbol(name)
         elif isinstance(name, (tuple, list)):
