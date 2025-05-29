@@ -235,17 +235,6 @@ class BasicParser(object):
         """Name of current function, if any."""
         return self._current_function_name[-1] if self._current_function_name else None
 
-    def enter_function(self, func):
-        """Name of current function, if any."""
-        assert isinstance(func, FunctionDef)
-        self._current_function_name.append(func.name)
-
-    def exit_function(self):
-        """Name of current function, if any."""
-        func_name = self._current_function_name.pop()
-        if self._current_function and self._current_function[-1].name == func_name:
-            self._current_function.pop()
-
     @property
     def syntax_done(self):
         return self._syntax_done
@@ -282,15 +271,21 @@ class BasicParser(object):
 
     def insert_function(self, func, scope = None):
         """
-        Insert a function into the current scope.
+        Insert a function into the current scope or a specified scope.
 
-        Insert a function into the current scope under the final name by which it
-        will be known in the generated code.
+        Insert a function into a scope under the final name by which it
+        will be known in the generated code. The scope is the current
+        scope unless another scope is provided. This is notably the
+        case when dealing with class methods which are not inserted into
+        the enclosing scope.
 
         Parameters
         ----------
         func : FunctionDef | SympyFunction | Interface | FunctionAddress
             The function to be inserted into the scope.
+
+        scope : Scope, optional
+            The scope where the function should be inserted.
         """
 
         if isinstance(func, SympyFunction):
@@ -318,11 +313,16 @@ class BasicParser(object):
             raise TypeError('Expected a symbolic_function')
 
     def exit_function_scope(self):
-        """ Exit the function scope and return to the encasing scope
+        """
+        Exit the function scope and return to the enclosing scope.
+
+        Exit the function scope and return to the enclosing scope.
         """
 
         self._scope = self._scope.parent_scope
-        self.exit_function()
+        func_name = self._current_function_name.pop()
+        if self._current_function and self._current_function[-1].name == func_name:
+            self._current_function.pop()
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop

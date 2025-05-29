@@ -5201,7 +5201,7 @@ class SemanticParser(BasicParser):
             del_method = cls.get_method('__del__', expr)
 
         # Add destructors to __del__ method
-        self.enter_function(del_method)
+        self._current_function_name.append(del_method.name)
         attribute = []
         for attr in cls.attributes:
             if not attr.on_stack:
@@ -5218,7 +5218,9 @@ class SemanticParser(BasicParser):
         condition = If(IfSection(PyccelNot(deallocater),
                         [del_method.body]+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
-        self.exit_function()
+        del_name = self._current_function_name.pop()
+        if self._current_function and self._current_function[-1].name == del_name:
+            self._current_function.pop()
 
         return EmptyNode()
 
