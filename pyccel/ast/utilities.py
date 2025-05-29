@@ -702,6 +702,8 @@ def insert_fors(blocks, indices, scope, level = 0):
         body = [bi for b in body for bi in b]
 
     if blocks.length == 1:
+        for b in body:
+            b.substitute(indices[level], LiteralInteger(0))
         return body
     else:
         body = CodeBlock(body, unravelled = True)
