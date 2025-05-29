@@ -375,13 +375,13 @@ class SemanticParser(BasicParser):
             Decorators attached to FunctionDef object at syntactic stage.
 
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(syntactic_name, **kwargs)
         child.local_used_symbols[syntactic_name] = semantic_name
         child.python_names[semantic_name] = syntactic_name
 
 
         self._scope = child
-        self._current_function_name.append(name)
+        self._current_function_name.append(semantic_name)
 
         return child
 
@@ -2644,9 +2644,10 @@ class SemanticParser(BasicParser):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
-            init_func_name = self.scope.get_new_name(name_suffix+'__init')
+            syntactic_init_func_name = name_suffix+'__init'
+            init_func_name = self.scope.get_new_name(syntactic_init_func_name)
             # Ensure that the function is correctly defined within the namespaces
-            init_scope = self.create_new_function_scope(init_func_name)
+            init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
             for b in init_func_body:
                 if isinstance(b, ScopedAstNode):
                     b.scope.update_parent_scope(init_scope, is_loop = True)
@@ -2685,7 +2686,8 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
 
         if init_func:
-            free_func_name = self.scope.get_new_name(name_suffix+'__free')
+            syntactic_free_func_name = name_suffix+'__free'
+            free_func_name = self.scope.get_new_name(syntactic_free_func_name)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
@@ -2703,7 +2705,7 @@ class SemanticParser(BasicParser):
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
-                scope = self.create_new_function_scope(free_func_name)
+                scope = self.create_new_function_scope(syntactic_free_func_name, free_func_name)
                 free_func = FunctionDef(free_func_name, [], [free_func_body],
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
@@ -2730,7 +2732,7 @@ class SemanticParser(BasicParser):
                     if F is None:
                         func_defs = []
                         for v in headers:
-                            scope = self.create_new_function_scope(name)
+                            scope = self.create_new_function_scope(name, v.name)
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
                                 shape = None, is_const = t.is_const, is_optional = False,
@@ -3160,7 +3162,7 @@ class SemanticParser(BasicParser):
         for t in types.type_list:
             if isinstance(t, FunctionTypeAnnotation):
                 args = t.args
-                scope = self.create_new_function_scope(name)
+                scope = self.create_new_function_scope(name, name)
                 if t.result.var:
                     results = FunctionDefResult(t.result.var.clone(t.result.var.name, is_argument = False),
                                     annotation=t.result.annotation)
@@ -4829,13 +4831,11 @@ class SemanticParser(BasicParser):
             if is_interface:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
 
-            original_symbols = expr.scope.python_names.copy()
-            original_symbols[name] = expr.name
             insertion_scope.python_names[name] = expr.name
 
-            scope = self.create_new_function_scope(name, decorators = decorators,
+            scope = self.create_new_function_scope(expr.name, name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
-                    original_symbols = original_symbols,
+                    original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
 
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
@@ -5150,11 +5150,10 @@ class SemanticParser(BasicParser):
         syntactic_init_func = next((method for method in methods if method.name == '__init__'), None)
         if syntactic_init_func is None:
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
-            self.scope.insert_symbol('__init__')
-            scope = self.create_new_function_scope('__init__')
-            cls_scope.insert_symbol('__init__')
+            init_name = cls_scope.get_new_name('__init__')
+            scope = self.create_new_function_scope('__init__', init_name)
             scope.insert_variable(argument.var)
-            init_func = FunctionDef('__init__', [argument], (), cls_name=cls.name, scope=scope)
+            init_func = FunctionDef(init_name, [argument], (), cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(init_func, cls_scope)
             cls.add_new_method(init_func)
@@ -5182,11 +5181,10 @@ class SemanticParser(BasicParser):
         syntactic_del_func = next((method for method in methods if method.name == '__del__'), None)
         if syntactic_del_func is None:
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
-            self.scope.insert_symbol('__del__')
-            scope = self.create_new_function_scope('__del__')
+            del_name = cls_scope.get_new_name('__del__')
+            scope = self.create_new_function_scope('__del__', del_name)
             scope.insert_variable(argument.var)
-            cls_scope.insert_symbol('__del__')
-            del_method = FunctionDef('__del__', [argument], [Pass()], scope=scope)
+            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method, cls_scope)
             cls.add_new_method(del_method)
