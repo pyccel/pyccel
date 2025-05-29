@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 import sys
+from typing import TypeVar
 import pytest
 from numpy.random import rand, randn, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
@@ -5431,24 +5432,19 @@ def test_numpy_linspace_scalar(language):
 
     @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
     def get_linspace(start : 'T', steps : int, num : int):
-        from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)
         return b
 
     def test_linspace(start : 'complex64', end : 'complex64'):
-        from numpy import linspace
         x = linspace(start, end, 5)
         return x[0], x[1], x[2], x[3], x[4]
 
     def test_linspace2(start : 'complex128', end : 'complex128'):
-        from numpy import linspace
         x = linspace(start, end, 5)
         return x[0], x[1], x[2], x[3], x[4]
 
     def test_linspace_type(start : 'int', end : 'int', result : 'int64[:]'):
-        from numpy import linspace
-        import numpy as np
         x = linspace(start + 4, end, 15, dtype=np.int64)
         ret = 1
         for i in range(len(x)):
@@ -5457,10 +5453,13 @@ def test_numpy_linspace_scalar(language):
         return ret, x[int(len(x) / 2)]
 
     def test_linspace_type2(start : 'int', end : 'int', result : 'complex128[:]'):
-        from numpy import linspace
         x = linspace(start, end * 2, 15, dtype='complex128')
         for i in range(len(x)):
             result[i] = x[i]
+
+    FI = TypeVar('FI', float, int)
+    def test_linspace_int(start : FI, end : FI, step : int, endpoint : bool):
+        return np.linspace(start, end, step, endpoint, dtype=np.int32)
 
     integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5476,6 +5475,7 @@ def test_numpy_linspace_scalar(language):
     epyccel_func = epyccel(get_linspace, language=language)
     epyccel_func_type = epyccel(test_linspace_type, language=language)
     epyccel_func_type2 = epyccel(test_linspace_type2, language=language)
+    epyccel_func_int = epyccel(test_linspace_int, language=language)
 
     x = linspace(0 + 4, 10, 15, dtype=np.int64)
     ret, ele = epyccel_func_type(0, 10, x)
@@ -5510,6 +5510,12 @@ def test_numpy_linspace_scalar(language):
     x = randint(100, 200)
     assert np.allclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL*10, atol=ATOL*10)
     assert matching_types(epyccel_func(fl64, x, 100)[0], get_linspace(fl64, x, 100)[0])
+
+    assert np.allclose(epyccel_func_int(-393, 5, 7, False), test_linspace_int(-393, 5, 7, False))
+    assert matching_types(epyccel_func_int(-393, 5, 7, False), test_linspace_int(-393, 5, 7, False))
+
+    assert np.allclose(epyccel_func_int(-393.0, 5.0, 7, False), test_linspace_int(-393.0, 5.0, 7, False))
+    assert matching_types(epyccel_func_int(-393.0, 5.0, 7, False), test_linspace_int(-393.0, 5.0, 7, False))
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
