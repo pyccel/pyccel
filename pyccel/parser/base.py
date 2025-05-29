@@ -102,7 +102,7 @@ def get_filename_from_import(module_name, input_folder_name):
         if stashed_file.stat().st_mtime <= filename_py.stat().st_mtime:
             errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
                     symbol=module_name, severity='fatal')
-        return str(filename_py.absolute())
+        return str(stashed_file.absolute())
     elif filename_pyi.exists():
         return str(filename_pyi.absolute())
     elif filename_pyh.exists():
