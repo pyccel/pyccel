@@ -9,6 +9,7 @@ Module containing aspects of a parser which are in common over all stages.
 """
 
 import importlib
+import os
 import pathlib
 import re
 
@@ -95,7 +96,8 @@ def get_filename_from_import(module_name, input_folder_name):
     filename_pyi = filename_stem.with_suffix('.pyi')
     filename_pyh = filename_stem.with_suffix('.pyh')
     if filename_py.exists():
-        stashed_file = filename_stem.parent / '__pyccel__' / filename_pyi.name
+        pyccel_wk_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+        stashed_file = filename_stem.parent / pyccel_wk_folder / filename_pyi.name
         if not stashed_file.exists():
             errors.report("Imported files must be pyccelised before they can be used.",
                     symbol=module_name, severity='fatal')
