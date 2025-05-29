@@ -96,12 +96,23 @@ def get_filename_from_import(module_name, input_folder_name):
     filename_pyi = filename_stem.with_suffix('.pyi')
     filename_pyh = filename_stem.with_suffix('.pyh')
     if filename_py.exists():
+        # Input folder may be different to current folder when translating to Python
+        if input_folder_name != os.getcwd():
+            wk_dir = pathlib.Path(os.getcwd())
+            wk_dir_parts = wk_dir.parts
+            parse_dir_parts = pathlib.Path(input_folder_name).parts
+            i = next((i for i,f in enumerate(wk_dir_parts) if f not in parse_dir_parts), None)
+            if i is not None:
+                try:
+                    filename_stem = wk_dir.parents[-i-1].joinpath(*filename_stem.parts[i:])
+                except IndexError:
+                    filename_stem = wk_dir.joinpath(*filename_stem.parts[i:])
         pyccel_wk_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
         stashed_file = filename_stem.parent / pyccel_wk_folder / filename_pyi.name
         if not stashed_file.exists():
             errors.report("Imported files must be pyccelised before they can be used.",
                     symbol=module_name, severity='fatal')
-        if stashed_file.stat().st_mtime <= filename_py.stat().st_mtime:
+        if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
             errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
                     symbol=module_name, severity='fatal')
         return str(stashed_file.absolute())
