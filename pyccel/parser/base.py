@@ -9,7 +9,6 @@ Module containing aspects of a parser which are in common over all stages.
 """
 
 import importlib
-import os
 import pathlib
 import re
 
