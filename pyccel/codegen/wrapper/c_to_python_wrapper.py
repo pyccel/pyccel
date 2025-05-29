@@ -487,6 +487,11 @@ class CToPythonWrapper(Wrapper):
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
                             [PyErr_SetString(PyTypeError, CStrStr(LiteralString(f"Unexpected type for argument {interface_args[0].name}"))),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
+            else:
+                check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
+                err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
+                if_sec = IfSection(PyccelNot(check_func_call), err_body)
+                body.append(If(if_sec))
 
             # Update the step to ensure unique indices for each argument
             step *= n_possible_types
@@ -1390,6 +1395,8 @@ class CToPythonWrapper(Wrapper):
             if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
                                 [Return(wrapped_func(*python_arg_objs))]))
             functions.append(wrapped_func)
+        if_sections.append(IfSection(PyccelEq(type_indicator, PyccelUnarySub(LiteralInteger(1))),
+                    [Return(self._error_exit_code)]))
         if_sections.append(IfSection(LiteralTrue(),
                     [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
                      Return(self._error_exit_code)]))
