@@ -4714,7 +4714,7 @@ class SemanticParser(BasicParser):
         if cls_name:
             bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
 
-        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
+        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
