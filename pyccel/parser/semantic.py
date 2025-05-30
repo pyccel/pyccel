@@ -5012,7 +5012,6 @@ class SemanticParser(BasicParser):
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
             # to the body of the function
-            body.insert2body(*self._garbage_collector(body))
 
             results = self._visit(results)
             if isinstance(results, EmptyNode):
@@ -5024,6 +5023,7 @@ class SemanticParser(BasicParser):
                 results_vars = self.scope.collect_all_tuple_elements(results.var)
 
             self._check_pointer_targets(results_vars)
+            body.insert2body(*self._garbage_collector(body))
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
