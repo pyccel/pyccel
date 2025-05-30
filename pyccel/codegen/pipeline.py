@@ -30,6 +30,8 @@ from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
+pyccel_root = Path(__file__).parent.parent
+
 __all__ = ['execute_pyccel']
 
 #==============================================================================
@@ -345,9 +347,9 @@ def execute_pyccel(fname, *,
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
         dep_fname = Path(parser.filename)
-        assert dep_fname.suffix == '.pyi'
+        assert dep_fname.suffix in ('.pyi', '.pyh')
         mod_folder = dep_fname.parent
-        mod_base = os.path.basename(parser.filename)
+        mod_base = dep_fname.name
 
         # Stop conditions
         if parser.metavars.get('module_name', None) == 'omp_lib':

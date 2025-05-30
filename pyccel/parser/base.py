@@ -92,10 +92,15 @@ def get_filename_from_import(module_name, input_folder_name):
     else:
         filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
 
+    pyccel_folder = pathlib.Path(__file__).parent.parent
     filename_py = filename_stem.with_suffix('.py')
     filename_pyi = filename_stem.with_suffix('.pyi')
     filename_pyh = filename_stem.with_suffix('.pyh')
-    if filename_py.exists():
+    if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
+        return str(filename_pyi.absolute())
+    elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
+        return str(filename_pyh.absolute())
+    elif filename_py.exists():
         # Input folder may be different to current folder when translating to Python
         if input_folder_name != os.getcwd():
             wk_dir = pathlib.Path(os.getcwd())
