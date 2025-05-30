@@ -1173,7 +1173,7 @@ class SemanticParser(BasicParser):
         init_func.body.insert2body(deallocater_assign, back=False)
 
         del_method = next((method for method in methods if method.name == '__del__'), None)
-        if syntactic_del_func is None:
+        if del_method is None:
             argument = FunctionDefArgument(Variable(class_type, 'self', cls_base = expr), bound_argument = True)
             del_name = cls_scope.get_new_name('__del__')
             scope = self.create_new_function_scope('__del__', del_name)
