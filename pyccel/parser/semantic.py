@@ -390,7 +390,6 @@ class SemanticParser(BasicParser):
         child.local_used_symbols[syntactic_name] = semantic_name
         child.python_names[semantic_name] = syntactic_name
 
-
         self._scope = child
         self._current_function_name.append(semantic_name)
 
