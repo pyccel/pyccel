@@ -150,7 +150,8 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function = None
+        self._current_function_name = []
+        self._current_function = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -230,9 +231,14 @@ class BasicParser(object):
         return self._metavars
 
     @property
-    def current_function(self):
-        """Name of current function, if any."""
-        return self._current_function
+    def current_function_name(self):
+        """
+        The name of the function currently being visited.
+
+        The name of the function currently being visited or None if we are not in
+        a function.
+        """
+        return self._current_function_name[-1] if self._current_function_name else None
 
     @property
     def syntax_done(self):
@@ -268,27 +274,37 @@ class BasicParser(object):
     def blocking(self):
         return self._blocking
 
-    def insert_function(self, func):
+    def insert_function(self, func, scope = None):
         """
-        Insert a function into the current scope.
+        Insert a function into the current scope or a specified scope.
 
-        Insert a function into the current scope under the final name by which it
-        will be known in the generated code.
+        Insert a function into a scope under the final name by which it
+        will be known in the generated code. The scope is the current
+        scope unless another scope is provided. This is notably the
+        case when dealing with class methods which are not inserted into
+        the enclosing scope.
 
         Parameters
         ----------
         func : FunctionDef | SympyFunction | Interface | FunctionAddress
             The function to be inserted into the scope.
+
+        scope : Scope, optional
+            The scope where the function should be inserted.
         """
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.scope.functions
+            scope = scope or self.scope
+            container = scope.functions
             if func.pyccel_staging == 'syntactic':
                 container[self.scope.get_expected_name(func.name)] = func
             else:
-                container[func.name] = func
+                name = func.name
+                container[name] = func
+                if self._current_function_name and name == self._current_function_name[-1]:
+                    self._current_function.append(func)
         else:
             raise TypeError('Expected a Function definition')
 
@@ -301,50 +317,17 @@ class BasicParser(object):
         else:
             raise TypeError('Expected a symbolic_function')
 
-    def create_new_function_scope(self, name, **kwargs):
-        """
-        Create a new Scope object for a Python function with the given name,
-        and attach any decorators' information to the scope. The new scope is
-        a child of the current one, and can be accessed from the dictionary of
-        its children using the function name as key.
-
-        Before returning control to the caller, the current scope (stored in
-        self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
-
-        Parameters
-        ----------
-        name : str
-            Function's name, used as a key to retrieve the new scope.
-
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
-
-        """
-        child = self.scope.new_child_scope(name, **kwargs)
-
-        self._scope = child
-        if self._current_function:
-            name = DottedName(self._current_function, name)
-        self._current_function = name
-
-        return child
-
     def exit_function_scope(self):
-        """ Exit the function scope and return to the encasing scope
+        """
+        Exit the function scope and return to the enclosing scope.
+
+        Exit the function scope and return to the enclosing scope.
         """
 
         self._scope = self._scope.parent_scope
-        if isinstance(self._current_function, DottedName):
-
-            name = self._current_function.name[:-1]
-            if len(name)>1:
-                name = DottedName(*name)
-            else:
-                name = name[0]
-        else:
-            name = None
-        self._current_function = name
+        func_name = self._current_function_name.pop()
+        if self._current_function and self._current_function[-1].name == func_name:
+            self._current_function.pop()
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop
@@ -368,7 +351,7 @@ class BasicParser(object):
 
         Before returning control to the caller, the current scope (stored in
         self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
+        name is stored in self._current_function_name.
 
         Parameters
         ----------
