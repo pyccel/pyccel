@@ -1420,12 +1420,10 @@ class SemanticParser(BasicParser):
             new_scope = new_scope.parent_scope
             if not new_scope.name is None:
                 scope_names.append(new_scope.name)
-        scope_names.reverse()
 
         # Use scope_names to find semantic scopes
-        while scope_names:
-            new_scope = new_scope.sons_scopes[scope_names[0]]
-            scope_names = scope_names[1:]
+        for n in scope_names[::-1]:
+            new_scope = new_scope.sons_scopes[n]
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = new_scope
