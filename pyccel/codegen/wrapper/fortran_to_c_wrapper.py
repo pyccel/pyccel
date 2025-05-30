@@ -191,7 +191,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private:
+        if expr.is_private or expr.is_inline:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
