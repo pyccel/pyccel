@@ -4729,10 +4729,22 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules or inside other functions.",
                     symbol=expr, severity='error')
 
+        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
+        cls_name = current_class[0].name if current_class else None
+        insertion_scope = self.scope
+        if cls_name:
+            bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
+            insertion_scope = bound_class.scope
+
         existing_semantic_funcs = []
         if not expr.is_semantic:
             name = expr.scope.get_expected_name(expr.name)
-            self.scope.functions.pop(name, None)
+            func = insertion_scope.functions.get(name, None)
+            if func:
+                if func.is_semantic:
+                    return
+                else:
+                    insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr = expr.syntactic_node
@@ -4751,13 +4763,6 @@ class SemanticParser(BasicParser):
         if function_call_args is not None:
             assert is_inline
             found_func = False
-
-        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
-        cls_name = current_class[0].name if current_class else None
-        insertion_scope = self.scope
-        if cls_name:
-            bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
-            insertion_scope = bound_class.scope
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
         if len(not_used) >= 1:
