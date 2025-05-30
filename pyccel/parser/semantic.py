@@ -703,6 +703,7 @@ class SemanticParser(BasicParser):
             A list of objects in `_allocs` which are to be ignored (variables appearing
             in a return statement).
         """
+        assert len(self._allocs) == len(self._pointer_targets)
         assert not isinstance(exceptions, Variable)
         for i in self._allocs[-1]:
             if i in exceptions:
@@ -5009,10 +5010,6 @@ class SemanticParser(BasicParser):
             for i in sub_funcs:
                 self._visit(i)
 
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the body of the function
-
             results = self._visit(results)
             if isinstance(results, EmptyNode):
                 results = FunctionDefResult(Nil())
@@ -5023,6 +5020,10 @@ class SemanticParser(BasicParser):
                 results_vars = self.scope.collect_all_tuple_elements(results.var)
 
             self._check_pointer_targets(results_vars)
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
             body.insert2body(*self._garbage_collector(body))
 
             # Determine local and global variables
