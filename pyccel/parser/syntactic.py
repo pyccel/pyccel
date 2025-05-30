@@ -1155,7 +1155,26 @@ class SyntaxParser(BasicParser):
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
+
+        init_method = next((m for m in methods if m.name == '__init__'), None)
+        if init_method is None:
+            init_name = PyccelSymbol('__init__')
+            self.scope.insert_symbol(init_name)
+            annot = self._treat_type_annotation(stmt, LiteralString(name))
+            init_scope = self.create_new_function_scope(init_name,
+                    used_symbols = {init_name: init_name},
+                    original_symbols = {init_name: init_name})
+            self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
+                                           annotation=annot,
+                                           kwonly=False,
+                                           bound_argument = True)
+            self_arg.set_current_ast(stmt)
+            self.scope.insert_symbol(self_arg.var)
+            self.exit_function_scope()
+            methods.append(FunctionDef(init_name, (self_arg,), CodeBlock(()), FunctionDefResult(Nil()), scope=init_scope))
+
         self.exit_class_scope()
+
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
                         docstring = docstring)
