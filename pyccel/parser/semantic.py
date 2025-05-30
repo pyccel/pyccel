@@ -2666,6 +2666,10 @@ class SemanticParser(BasicParser):
         for c in expr.classes:
             self._visit(c)
 
+        # Visit all __init__ methods only once everything is inserted into scope
+        for c in expr.classes:
+            self._visit(c.get_method('__init__'))
+
         init_func_body += self._visit(expr.init_func).body
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
