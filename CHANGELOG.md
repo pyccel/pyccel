@@ -162,6 +162,7 @@ All notable changes to this project will be documented in this file.
 -   #2144 : Fix accidental imports due to modules making their contents public by default.
 -   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
 -   #2125 : Fix missing type check for argument of known type in a function with arguments whose type can be one of several types.
+-   #2042 : Fix missing index in loop unravelling for loop of length 1.
 -   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
 
 ### Changed
