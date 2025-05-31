@@ -2999,6 +2999,12 @@ class SemanticParser(BasicParser):
                     # This leads to printing errors
                     errors.report("Inhomogeneous tuples are not yet supported as arguments",
                             severity='error', symbol=expr)
+                if isinstance(dtype, CustomDataType) and not bound_argument:
+                    cls = self.scope.find(str(dtype), 'classes')
+                    if cls:
+                        init_method = cls.get_method('__init__', expr)
+                        if not init_method.is_semantic:
+                            self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
