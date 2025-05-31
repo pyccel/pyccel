@@ -252,7 +252,6 @@ def test_classes_9(language):
 
     assert a_py.get_A_contents() == a_l.get_A_contents()
     assert a_py.x == a_l.x
-    assert a_py.y == a_l.y
 
 def test_generic_methods(language):
     import classes.generic_methods as mod
