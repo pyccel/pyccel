@@ -12,6 +12,7 @@ import importlib
 import os
 import pathlib
 import re
+import warnings
 
 #==============================================================================
 from pyccel.version import __version__
