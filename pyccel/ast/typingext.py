@@ -134,8 +134,6 @@ class TypingOverload(TypedAstNode):
     """
     __slots__ = ()
     _attribute_nodes = ()
-    def __init__(self):
-        super().__init__()
 
 #==============================================================================
 
