@@ -4689,7 +4689,9 @@ class SemanticParser(BasicParser):
 
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            self.scope.functions.pop(self.scope.get_expected_name(expr.name), None)
+            popped_func = self.scope.functions.pop(self.scope.get_expected_name(expr.name), None)
+            if isinstance(popped_func, Interface):
+                existing_semantic_funcs = [*popped_func.functions]
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr                    = expr.syntactic_node
@@ -4998,7 +5000,7 @@ class SemanticParser(BasicParser):
 
             if cls_name:
                 # update the class methods
-                if not is_interface:
+                if not is_interface and 'overload' not in decorators:
                     bound_class.update_method(expr, func)
 
             new_semantic_funcs += [func]
@@ -5014,7 +5016,7 @@ class SemanticParser(BasicParser):
         if existing_semantic_funcs:
             new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
-        if len(new_semantic_funcs) == 1 and not is_interface:
+        if len(new_semantic_funcs) == 1 and not is_interface and 'overload' not in decorators:
             new_semantic_funcs = new_semantic_funcs[0]
             self.insert_function(new_semantic_funcs)
         else:
