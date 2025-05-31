@@ -126,7 +126,16 @@ class TypingTypeVar(TypedAstNode):
 
 #==============================================================================
 class TypingOverload(TypedAstNode):
+    """
+    Class representing a call to the typing.overload construct.
+
+    Class representing a call to the typing.overload construct. This object
+    will never be constructed. It exists to recognise the import.
+    """
     __slots__ = ()
+    _attribute_nodes = ()
+    def __init__(self):
+        super().__init__()
 
 #==============================================================================
 
