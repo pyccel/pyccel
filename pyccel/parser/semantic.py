@@ -1150,8 +1150,8 @@ class SemanticParser(BasicParser):
         to the init method to act as a guard in the class to tell if the destructor has
         been called.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         expr : ClassDef
             The class that implicit __init__ and __del__ methods should be created for.
         """
