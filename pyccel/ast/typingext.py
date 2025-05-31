@@ -13,6 +13,7 @@ from .datatypes import TypeAlias
 
 __all__ = (
     'TypingFinal',
+    'TypingOverload',
     'TypingTypeAlias',
     'TypingTypeVar',
     'typing_mod'
