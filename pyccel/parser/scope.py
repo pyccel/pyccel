@@ -7,7 +7,7 @@
 """
 
 from pyccel.ast.bind_c    import BindCVariable
-from pyccel.ast.core      import ClassDef
+from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
@@ -871,10 +871,13 @@ class Scope(object):
         name : str
             The suggested name for the new function.
         """
+        assert isinstance(o, FunctionDef)
         newname = self.get_new_name(name)
         python_name = self._original_symbol.pop(o.name)
+        assert python_name == o.scope.python_names.pop(o.name)
         o.rename(newname)
         self._original_symbol[newname] = python_name
+        o.scope.python_names[newname] = python_name
 
     def collect_tuple_element(self, tuple_elem):
         """
@@ -901,6 +904,11 @@ class Scope(object):
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base, DottedVariable):
+            cls_scope = tuple_elem.base.lhs.cls_base.scope
+            if cls_scope is not self:
+                return cls_scope.collect_tuple_element(tuple_elem)
+
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
                 and not isinstance(tuple_elem.base, PyccelFunction):
             if isinstance(tuple_elem.base, DottedVariable):
