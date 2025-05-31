@@ -485,6 +485,15 @@ def test_class_property_name_conflict(language):
 
     assert a_py.x == a_l.x
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Attribute renamed. See #1705"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_class_globals_visitation_order(language):
     import classes.class_globals_visitation_order as mod
     modnew = epyccel(mod, language = language)
