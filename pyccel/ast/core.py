@@ -3398,9 +3398,9 @@ class ClassDef(ScopedAstNode):
             The interface that will replace the syntactic_interface.
         """
         assert isinstance(semantic_interface, Interface)
-        assert syntactic_interface in self._methods
         assert semantic_interface.is_semantic
-        syntactic_interface.remove_user_node(self)
+        if syntactic_interface in self._methods:
+            syntactic_interface.remove_user_node(self)
         semantic_interface.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
         self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)

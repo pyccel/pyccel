@@ -2707,6 +2707,7 @@ class SemanticParser(BasicParser):
             # it will add the necessary Deallocate nodes
             # to the ast
             program_body.insert2body(*self._garbage_collector(program_body))
+            self._pointer_targets.pop()
 
             self.scope = mod_scope
 
@@ -3428,10 +3429,18 @@ class SemanticParser(BasicParser):
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             if not method.is_semantic:
                 method = self._annotate_the_called_function_def(method, args)
+            elif method.is_inline and isinstance(method, Interface):
+                is_compatible = False
+                for f in method.functions:
+                    fl = self._check_argument_compatibility(args, f.arguments, method, f.is_elemental, raise_error=False)
+                    is_compatible |= fl
+                if not is_compatible:
+                    method = self._annotate_the_called_function_def(method, args)
 
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
+
             return self._handle_function(expr, method, args, is_method = True)
 
         # look for a class attribute / property
