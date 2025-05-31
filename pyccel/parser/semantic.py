@@ -1370,6 +1370,17 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
+            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
+            if not func.is_semantic:
+                func = self._annotate_the_called_function_def(func, args)
+            elif is_inline and isinstance(func, Interface):
+                is_compatible = False
+                for f in func.functions:
+                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
+                    is_compatible |= fl
+                if not is_compatible:
+                    func = self._annotate_the_called_function_def(func, args)
+
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
@@ -3427,16 +3438,6 @@ class SemanticParser(BasicParser):
             method = cls_base.get_method(rhs_name, expr)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
-            if not method.is_semantic:
-                method = self._annotate_the_called_function_def(method, args)
-            elif method.is_inline and isinstance(method, Interface):
-                is_compatible = False
-                for f in method.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, method, f.is_elemental, raise_error=False)
-                    is_compatible |= fl
-                if not is_compatible:
-                    method = self._annotate_the_called_function_def(method, args)
-
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
@@ -3453,9 +3454,6 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 method = cls_base.get_method(rhs_name, expr)
-                if not method.is_semantic:
-                    method = self._annotate_the_called_function_def(method,
-                                (FunctionCallArgument(visited_lhs),))
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
@@ -3624,16 +3622,6 @@ class SemanticParser(BasicParser):
                             annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-            if not func.is_semantic:
-                func = self._annotate_the_called_function_def(func, args)
-            elif is_inline and isinstance(func, Interface):
-                is_compatible = False
-                for f in func.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
-                    is_compatible |= fl
-                if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3682,8 +3670,6 @@ class SemanticParser(BasicParser):
                                     is_augassign = False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
-            if not method.is_semantic:
-                method = self._annotate_the_called_function_def(method, args)
 
             self._check_argument_compatibility(args, method.arguments,
                             method, method.is_elemental)
