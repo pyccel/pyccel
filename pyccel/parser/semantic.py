@@ -3561,7 +3561,7 @@ class SemanticParser(BasicParser):
         contains_method = container_base.get_method('__contains__',
                         raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
-            return contains_method(container, element)
+            return self._handle_function(expr, contains_method, [FunctionCallArgument(container), FunctionCallArgument(element)])
         else:
             raise errors.report(f"In operator is not yet implemented for type {container_type}",
                     severity='fatal', symbol=expr)
