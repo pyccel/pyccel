@@ -267,7 +267,13 @@ class BasicParser(object):
 
     @property
     def is_header_file(self):
-        """Returns True if we are treating a header file."""
+        """
+        Indicate if the file being translated is a header file.
+
+        Indicate if the file being translated is a header file.
+        A file is a header file if it does not include the implementation of the
+        methods. This is the case for .pyi files.
+        """
 
         if self.filename:
             return self.filename.suffix in ('.pyi', '.pyh')
