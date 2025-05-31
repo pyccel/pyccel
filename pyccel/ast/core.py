@@ -2950,7 +2950,6 @@ class Interface(PyccelAstNode):
             return call_arg.class_type == func_arg.class_type \
                     and (call_arg.rank == func_arg.rank)
 
-
         j = -1
         for i in fs_args:
             j += 1
@@ -3420,7 +3419,10 @@ class ClassDef(ScopedAstNode):
         syntactic_interface.remove_user_node(self)
         semantic_interface.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
-        self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
+        self._interfaces = tuple(m for m in self._interfaces \
+                                 if m is not syntactic_interface and \
+                                    m.name!=semantic_interface.name) \
+                            + (semantic_interface,)
 
     def get_method(self, name, raise_error_from = None):
         """
