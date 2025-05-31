@@ -484,3 +484,11 @@ def test_class_property_name_conflict(language):
     a_l.translate(4.5)
 
     assert a_py.x == a_l.x
+
+def test_class_globals_visitation_order(language):
+    import classes.class_globals_visitation_order as mod
+    modnew = epyccel(mod, language = language)
+    a_py = mod.A()
+    a_l = modnew.A()
+
+    assert a_py.x == a_l.x
