@@ -4837,7 +4837,7 @@ class SemanticParser(BasicParser):
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-        is_interface = n_templates > 1
+        is_interface = n_templates > 1 or 'overload' in decorators
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
             if function_call_args is not None and found_func:
@@ -5048,7 +5048,7 @@ class SemanticParser(BasicParser):
 
             if cls_name:
                 # update the class methods
-                if not is_interface and 'overload' not in decorators:
+                if not is_interface:
                     bound_class.update_method(expr, func)
 
             new_semantic_funcs += [func]
@@ -5064,7 +5064,7 @@ class SemanticParser(BasicParser):
         if existing_semantic_funcs:
             new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
-        if len(new_semantic_funcs) == 1 and not is_interface and 'overload' not in decorators:
+        if len(new_semantic_funcs) == 1 and not is_interface:
             new_semantic_funcs = new_semantic_funcs[0]
             self.insert_function(new_semantic_funcs, insertion_scope)
         else:
