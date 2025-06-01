@@ -62,7 +62,7 @@ class ConfigMixin:
             """method wrapper to check configuration"""
             if cls._version != options.get('omp_version') or not 'openmp' in options.get('accelerators', []):
                 if method:
-                    return method(*args, **kwargs)
+                    return method(*args[1:], **kwargs)
                 else:
                     return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=args[-1],
                                          severity='error')
