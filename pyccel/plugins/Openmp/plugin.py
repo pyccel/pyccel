@@ -54,12 +54,8 @@ class Openmp(Plugin):
         The default OpenMP version to use if no specific version is requested.
     VERSION_MODULES : dict
         A mapping of OpenMP versions to their corresponding implementation modules.
-    PARSER_TYPES : list
-        A list of parser classes that the OpenMP plugin supports.
     _options : dict
         Configuration options passed to the OpenMP plugin.
-    _loaded_versions : list
-        A list containing the OpenMP versions currently loaded.
     """
     __slots__ = ("_options",)
     DEFAULT_VERSION = 4.5
@@ -75,6 +71,7 @@ class Openmp(Plugin):
         super().__init__()
 
     def set_options(self, options):
+        assert isinstance(options, dict)
         self._options.clear()
         self._options.update(options)
 
@@ -152,13 +149,14 @@ class Openmp(Plugin):
         else:
             version_patches = registry.patches
 
-        for method_name, patch_info in version_patches.items():
-            if patch_info.is_new_method:
-                if hasattr(parser, method_name):
-                    delattr(parser, method_name)
-            else:
-                original = patch_info.original_method
-                if original:
-                    setattr(parser, method_name, MethodType(original, parser))
-
-        registry.unregister_patches_for_version(version)
+        for method_name, info in version_patches.items():
+            for patch_info in info:
+                if patch_info.is_new_method:
+                    if hasattr(parser, method_name):
+                        delattr(parser, method_name)
+                else:
+                    original = patch_info.original_method
+                    if original:
+                        setattr(parser, method_name, original)
+        if version:
+            registry.unregister_patches_for_version(version)

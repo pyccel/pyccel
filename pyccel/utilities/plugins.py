@@ -73,23 +73,27 @@ class Plugin(ABC):
         """Return the plugin name, defaults to class name"""
         return self.__class__.__name__
 
-    def _get_registry_for(self, target):
+    def get_registry_for(self, target):
         """Get the registry for a specific class"""
-        for registry in self._patch_registries:
-            if registry.target is target:
-                return registry
-        return None
+        return next((registry for registry in self._patch_registries if registry.target is target), None)
+
+    def is_registered(self, target):
+        return any(registry.target is target for registry in self._patch_registries)
+
+    def get_all_targets(self):
+        """Get all objects targeted by the plugin"""
+        return list(set(reg.target for reg in self._patch_registries))
 
     def get_patched_methods(self, target):
         """Return list of method names patched in the given class"""
-        registry = self._get_registry_for(target)
+        registry = self.get_registry_for(target)
         if not registry:
             return []
         return list(registry.patches.keys())
 
     def get_original_method(self, target, method_name):
         """Return the original method before patching (for testing)"""
-        registry = self._get_registry_for(target)
+        registry = self.get_registry_for(target)
         if not registry:
             return None
         return registry.get_original_method(method_name)
@@ -101,14 +105,14 @@ class Plugins(metaclass=Singleton):
     __slots__ = ("_plugins", "_options")
 
     def __init__(self, plugins_dir=None):
-        self._plugins = {}
-        self.load_plugins(plugins_dir)
+        self._plugins = []
         self._options = {}
+        self.load_plugins(plugins_dir)
 
     def set_options(self, options, refresh=False):
         assert isinstance(options, dict)
         self._options = options
-        plugins = self.get_all_plugins()
+        plugins = self._plugins
         for plugin in plugins:
             plugin.set_options(options)
             if refresh:
@@ -116,6 +120,7 @@ class Plugins(metaclass=Singleton):
 
     def load_plugins(self, plugins_dir=None):
         """Discover and load all plugins from the plugins directory"""
+        self.unload_plugins()
         if plugins_dir is None:
             current_dir = os.path.dirname(__file__)
             plugins_dir = os.path.abspath(os.path.join(current_dir, "..", "plugins"))
@@ -135,7 +140,7 @@ class Plugins(metaclass=Singleton):
             try:
                 plugin = self._load_plugin_from_folder(plugins_dir, folder)
                 if plugin:
-                    self._plugins[plugin.name] = plugin
+                    self._plugins.append(plugin)
             except (ImportError, FileNotFoundError, ValueError) as e:
                 errors.report(
                     f"Error loading plugin '{folder}': {str(e)}",
@@ -172,10 +177,15 @@ class Plugins(metaclass=Singleton):
 
         return plugin_class()
 
+    def unload_plugins(self):
+        for plugin in self._plugins:
+            self.unregister(plugin.get_all_targets(), (plugin,))
+        self._plugins = []
+
     def register(self, instances, refresh=False, plugins = ()):
         """Register the given instances """
         if not plugins:
-            plugins = self.get_all_plugins()
+            plugins = self._plugins
         for plugin in plugins:
             try:
                 plugin.register(instances, refresh=refresh)
@@ -189,14 +199,17 @@ class Plugins(metaclass=Singleton):
 
     def unregister(self, instances, plugins = ()):
         if not plugins:
-            plugins = self.get_all_plugins()
+            plugins = self._plugins
         for plugin in plugins:
             plugin.unregister(instances)
 
     def get_plugin(self, name):
         """Get a plugin by name"""
-        return self._plugins.get(name, None)
+        return next((p for p in self._plugins if p.name == name), None)
 
-    def get_all_plugins(self):
-        """Get all loaded plugins"""
-        return list(self._plugins.values())
+    def get_plugins(self):
+        return self._plugins
+
+    def set_plugins(self, plugins):
+        self.unload_plugins()
+        self._plugins = plugins
