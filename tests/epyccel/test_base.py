@@ -173,6 +173,13 @@ def test_use_optional(language):
     test.compare_epyccel()
     test.compare_epyccel(6)
 
+def test_check_optional(language):
+    test = epyccel_test(base.check_optional, lang=language)
+    test.compare_epyccel()
+    test.compare_epyccel(6)
+    test.compare_epyccel(4)
+    test.compare_epyccel(1)
+
 def test_none_equality(language):
     test = epyccel_test(base.none_equality, lang=language)
     test.compare_epyccel()

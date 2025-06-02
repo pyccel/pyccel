@@ -186,6 +186,12 @@ def use_optional(a : int = None):
         b += a
     return b
 
+def check_optional(a : int = None):
+    b = 3
+    if a and a<5 and a>2:
+        b += a
+    return b
+
 def none_equality(a : int = None):
     return a == None, a != None #pylint: disable=singleton-comparison
 
