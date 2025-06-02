@@ -1,6 +1,32 @@
+"""
+Pyccel header for OpenACC.
+ OpenACC directives and Constructs are handled by the parser (see openacc.tx) and are parts of the Pyccel language.
+ We only list here what can not be described in the openacc grammar.
 
+ TODO - devicetype is for the moment an integer. => need to add precision
+      - change * to h_void* and d_void* in 
+         + acc_map_data
+         + acc_unmap_data  
+         + acc_deviceptr
+         + acc_hostptr
+         + acc_memcpy_to_device
+         + acc_memcpy_to_device_async
+         + acc_memcpy_from_device
+         + acc_memcpy_from_device_async
+         + acc_memcpy_device
+         + acc_memcpy_device_async
+         + 
+      - data movement routines (do we really need them?)
+from typing import Any
+"""
+#$ header metavar module_name='openacc'
+#$ header metavar module_version='2.5'
+#$ header metavar save=True
+#$ header metavar external=False
 
-
+# ............................................................
+#            Runtime Library Routines for Fortran
+# ............................................................
 def acc_get_num_devices(anon_0 : 'int') -> 'int':
     ...
 
