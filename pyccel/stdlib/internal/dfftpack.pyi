@@ -1,3 +1,10 @@
+"""
+Pyccel header for DFTTPACK.
+"""
+#$ header metavar ignore_at_import=True
+#$ header metavar module_version='1.0'
+#$ header metavar save=True
+#$ header metavar external=True
 from numpy import float64, complex128
 
 
