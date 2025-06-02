@@ -347,7 +347,7 @@ def execute_pyccel(fname, *,
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
         dep_fname = Path(parser.filename)
-        assert dep_fname.suffix in ('.pyi', '.pyh')
+        assert dep_fname.suffix in ('.pyi', '.pyh') or pyccel_root in dep_fname.parents
         mod_folder = dep_fname.parent
         mod_base = dep_fname.name
 

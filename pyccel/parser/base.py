@@ -114,6 +114,8 @@ def get_filename_from_import(module_name, input_folder_name):
         return str(filename_pyi.absolute())
     elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
         return str(filename_pyh.absolute())
+    elif filename_py.exists() and pyccel_folder in filename_py.parents:
+        return str(filename_py.absolute())
     elif filename_py.exists():
         # Input folder may be different to current folder when translating to Python
         if input_folder_name != os.getcwd():
