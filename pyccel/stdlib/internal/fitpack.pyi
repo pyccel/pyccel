@@ -1,3 +1,10 @@
+"""
+Pyccel header for FITPACK.
+"""
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${FITPACK_LIBRARIES}'
+#$ header metavar save=True
+#$ header metavar external=True
 from numpy import int64, float64
 
 
