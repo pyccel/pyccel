@@ -2829,45 +2829,11 @@ class SemanticParser(BasicParser):
         if self.is_header_file:
             # ARA : issue-999
             is_external = self.metavars.get('external', False)
-            for name, headers in self.scope.headers.items():
-                if all(isinstance(v, FunctionHeader) and \
-                        not isinstance(v, MethodHeader) for v in headers):
-                    F = self.scope.find(name, 'functions')
-                    if F is None:
-                        func_defs = []
-                        for v in headers:
-                            scope = self.create_new_function_scope(name, v.name)
-                            types = [self._visit(d).type_list[0] for d in v.dtypes]
-                            args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
-                                shape = None, is_const = t.is_const, is_optional = False,
-                                cls_base = t.class_type,
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
-
-                            if v.results:
-                                name = self.scope.get_new_name('result')
-                                pyccel_stage.set_stage('syntactic')
-                                syntactic_result = FunctionDefResult(AnnotatedPyccelSymbol(name, v.results), annotation = v.results)
-                                pyccel_stage.set_stage('semantic')
-                                results = self._visit(syntactic_result)
-                            else:
-                                results = FunctionDefResult(Nil())
-
-                            args = [FunctionDefArgument(a) for a in args]
-                            self.exit_function_scope()
-                            func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True,
-                                scope = scope))
-
-                        if len(func_defs) == 1:
-                            F = func_defs[0]
-                            funcs.append(F)
-                        else:
-                            F = Interface(name, func_defs)
-                            interfaces.append(F)
-                        self.insert_function(F)
-                    else:
-                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                symbol=name,
-                                severity='fatal')
+            for f in funcs:
+                f.is_external = True
+            for c in classes:
+                for m in c.methods:
+                    m.is_external = True
 
         for v in variables:
             if v.rank > 0 and not v.is_alias:

@@ -2418,6 +2418,12 @@ class FunctionDef(ScopedAstNode):
         from a f77 module """
         return self._is_external
 
+    @is_external.setter
+    def is_external(self, is_external):
+        """
+        """
+        self._is_external = is_external
+
     @property
     def is_imported(self):
         """
