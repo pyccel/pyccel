@@ -315,7 +315,7 @@ class CToPythonWrapper(Wrapper):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             type_check_condition = PyObject_TypeCheck(py_obj, python_cls_base.type_object)
         elif isinstance(dtype, StringType):
-            type_check_condition = PyUnicode_Check(py_obj)
+            type_check_condition = PyccelNe(PyUnicode_Check(py_obj), LiteralInteger(0))
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
