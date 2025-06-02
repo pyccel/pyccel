@@ -1,6 +1,19 @@
+"""
+Pyccel header for OpenMP.
+OpenMP directives and Constructs are handled by the parser (see openmp.tx) and are parts of the Pyccel language.
+We only list here what can not be described in the openmp grammar.
+"""
+#$ header metavar module_name = 'omp_lib'
+#$ header metavar module_version = '4.5'
+#$ header metavar save=True
+#$ header metavar no_target=True
+#$ header metavar external=False
 from numpy import int32
 
 
+# ............................................................
+#            Runtime Library Routines for Fortran
+# ............................................................
 
 def omp_set_num_threads(anon_0 : 'int32') -> None:
     ...
