@@ -426,11 +426,8 @@ class FCodePrinter(ConfigMixin):
             return getattr(instance, f"_print_{expr.start.name.replace(' ', '_')}_construct")(expr)
         body = instance._print(expr.body)
         start = instance._print(expr.start)
-        if expr.end:
-            end = instance._print(expr.end)
-            return f"{start}\n{body}\n{end}\n"
-        else:
-            return f"{start}\n{body}\n"
+        end = instance._print(expr.end)
+        return f"{start}\n{body}\n{end}\n"
 
     @staticmethod
     def _print_for_construct(instance, expr, cls=None, method=None):
@@ -447,10 +444,7 @@ class FCodePrinter(ConfigMixin):
     def _print_single_construct(instance, expr, cls=None, method=None):
         start, end = cls._helper_delay_clauses_printing(expr.start, expr.end, ['nowait', 'copyprivate'])
         body = instance._print(expr.body)
-        if end:
-            return f"{start}\n{body}\n{end}\n"
-        else:
-            return f"{start}\n{body}\n"
+        return f"{start}\n{body}\n{end}\n"
 
     @staticmethod
     def _print_simd_construct(instance, expr, cls=None, method=None):
@@ -470,8 +464,6 @@ class FCodePrinter(ConfigMixin):
 
     @staticmethod
     def _print_OmpDirective(instance, expr, cls=None, method=None):
-        if hasattr(instance, f"_print_{expr.name.replace(' ', '_')}_directive"):
-            return getattr(instance, f"_print_{expr.name.replace(' ', '_')}_directive")(expr)
         return f"!$omp {expr.raw}\n"
 
     @staticmethod
