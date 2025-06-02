@@ -59,6 +59,7 @@ from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, 
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
+from pyccel.ast.operators     import PyccelNe
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -365,7 +366,7 @@ class CToPythonWrapper(Wrapper):
                         + PYCCEL_RESTRICTION_TODO, symbol=arg, severity='fatal')
 
             # Check if the object is a set
-            type_check = check_funcs[arg.class_type.name](py_obj)
+            type_check = PyccelNe(check_funcs[arg.class_type.name](py_obj), LiteralInteger(0))
 
             # If the set is an object check that the elements have the right type
             for_scope = self.scope.create_new_loop_scope()
