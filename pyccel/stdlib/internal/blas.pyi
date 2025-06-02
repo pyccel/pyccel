@@ -1,6 +1,17 @@
+"""
+Pyccel header for BLAS.
+"""
+#$ header metavar module_version='3.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar save=True
+#$ header metavar libraries='blas'
+#$ header metavar external=True
 from numpy import float32, int32, float64
 
 
+# .......................................
+#             LEVEL-1
+# .......................................
 
 def srotg(anon_0 : 'float32', anon_1 : 'float32', anon_2 : 'float32', anon_3 : 'float32') -> None:
     ...
@@ -79,7 +90,11 @@ def snrm2(anon_0 : 'int32', anon_1 : 'float32[:]', anon_2 : 'int32') -> 'float32
 
 def dnrm2(anon_0 : 'int32', anon_1 : 'float64[:]', anon_2 : 'int32') -> 'float64':
     ...
+# .......................................
 
+# .......................................
+#             LEVEL-2
+# .......................................
 def sgemv(anon_0 : 'str', anon_1 : 'int32', anon_2 : 'int32', anon_3 : 'float32', anon_4 : 'float32[:,:](order=F)', anon_5 : 'int32', anon_6 : 'float32[:]', anon_7 : 'int32', anon_8 : 'float32', anon_9 : 'float32[:]', anon_10 : 'int32') -> None:
     ...
 
@@ -175,7 +190,11 @@ def sspr2(anon_0 : 'str', anon_1 : 'int32', anon_2 : 'float32', anon_3 : 'float3
 
 def dspr2(anon_0 : 'str', anon_1 : 'int32', anon_2 : 'float64', anon_3 : 'float64[:]', anon_4 : 'int32', anon_5 : 'float64[:]', anon_6 : 'int32', anon_7 : 'float64[:]', anon_8 : 'int32') -> None:
     ...
+# .......................................
 
+# .......................................
+#             LEVEL-3
+# .......................................
 def sgemm(anon_0 : 'str', anon_1 : 'str', anon_2 : 'int32', anon_3 : 'int32', anon_4 : 'int32', anon_5 : 'float32', anon_6 : 'float32[:,:](order=F)', anon_7 : 'int32', anon_8 : 'float32[:,:](order=F)', anon_9 : 'int32', anon_10 : 'float32', anon_11 : 'float32[:,:](order=F)', anon_12 : 'int32') -> None:
     ...
 
@@ -211,4 +230,3 @@ def strsm(anon_0 : 'str', anon_1 : 'str', anon_2 : 'str', anon_3 : 'str', anon_4
 
 def dtrsm(anon_0 : 'str', anon_1 : 'str', anon_2 : 'str', anon_3 : 'str', anon_4 : 'int32', anon_5 : 'int32', anon_6 : 'float64', anon_7 : 'float64[:,:](order=F)', anon_8 : 'int32', anon_9 : 'float64[:,:](order=F)', anon_10 : 'int32') -> None:
     ...
-
