@@ -36,7 +36,7 @@ from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, P
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import Lambda, PythonMap
+from pyccel.ast.builtins import Lambda, PythonMap, PythonBool
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
@@ -4573,9 +4573,16 @@ class SemanticParser(BasicParser):
         elif sympy_cond == sp_True():
             cond = LiteralTrue()
 
+        if cond.dtype is not PythonNativeBool():
+            cond = PythonBool(cond)
+            cond.set_current_ast(cond.python_ast or expr.python_ast)
+
         body = self._visit(expr.body)
 
-        def treat_condition(cond):
+        if_block = expr.get_direct_user_nodes(lambda u: isinstance(u, If))[0]
+        is_last_block = expr is if_block.blocks[-1]
+
+        def treat_condition(cond, body):
             is_not_conds = cond.get_attribute_nodes(PyccelIsNot)
             non_conditional_list = [c for c in is_not_conds if c.args[1] is Nil()]
             for non_conditional in non_conditional_list:
@@ -4588,16 +4595,21 @@ class SemanticParser(BasicParser):
                         remaining_cond.set_current_ast(cond.python_ast)
                         cond_var = self.scope.get_temporary_variable(PythonNativeBool(),
                                                                      self.scope.get_new_name('condition'))
-                        present_assign = [Assign(cond_var, treat_condition(remaining_cond))]
-                        self._additional_exprs[-1].append(If(IfSection(non_conditional, present_assign),
+                        treated_remaining_cond, body = treat_condition(remaining_cond, body)
+                        if is_last_block:
+                            body = [If(IfSection(treated_remaining_cond, body))]
+                            cond = non_conditional
+                        else:
+                            self._additional_exprs[-1].append(If(IfSection(non_conditional, [Assign(cond_var, treated_remaining_cond)]),
                                         IfSection(LiteralTrue(), [Assign(cond_var, LiteralFalse())])))
-                        return cond_var
+                            cond = cond_var
+                        return cond, body
                     else:
                         errors.report("Cannot evaluate condition. Checking if a variable is present must be done before using the variable",
                                       severity='error', symbol=cond)
-            return cond
+            return cond, body
 
-        return IfSection(treat_condition(cond), body)
+        return IfSection(*treat_condition(cond, body))
 
     def _visit_If(self, expr):
         args = []
