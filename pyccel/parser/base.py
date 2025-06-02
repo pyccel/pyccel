@@ -90,9 +90,16 @@ def get_filename_from_import(module_name, input_folder_name):
     elif in_project:
         filename_stem = input_folder.joinpath(*module_name.split('.')).with_suffix('.py')
         if not filename_stem.exists():
-            try:
-                package = importlib.import_module(module_name)
-            except ImportError:
+            module_name_parts = module_name.split('.')
+            package = None
+            for i in range(len(module_name_parts)):
+                try:
+                    package = importlib.import_module('.'.join(module_name_parts[:len(module_name_parts)-i]))
+                    break
+                except ImportError:
+                    print('.'.join(module_name_parts[:len(module_name_parts)-i]))
+                    pass
+            if package is None:
                 errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                                 severity='fatal')
             filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
