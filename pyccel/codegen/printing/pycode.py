@@ -416,8 +416,16 @@ class PythonCodePrinter(CodePrinter):
             code = ''
             for i, (b, arg_types) in enumerate(bodies.items()):
                 code += '    if ' if i == 0 else '    elif '
-                checks = [' and '.join(f'isinstance({a}, {self._print(t)})' for a,t in zip(arg_names, a_t)) \
-                        for a_t in arg_types]
+                checks = []
+                for a_t in arg_types:
+                    check_option = []
+                    for a,t in zip(arg_names, a_t):
+                        check_option.append(f'isinstance({a}, {self._print(t)})')
+                        if isinstance(t, NumpyNDArrayType):
+                            check_option.append(f'{a}.ndim == {t.rank}')
+                            if t.rank > 1:
+                                check_option.append(f"{a}.flags['{a.order}_CONTIGUOUS']")
+                    checks.append(' and '.join(check_option))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
                 else:
