@@ -30,7 +30,9 @@ OmpDirective:
     | name='atomic' (_tx_clauses=memory_order_clause ',')? _tx_clauses=atomic_clause (',' _tx_clauses=memory_order_clause)?
     | name='atomic' (_tx_clauses=memory_order_clause)?
     | name='flush' ('('_tx_clauses=OmpTxList')')?
-    | 'end' name=DirectivesNames _tx_clauses*=AllOmpClauses is_end_directive=TRUE
+    | name=/declare\s+target/
+    | 'end' name=/declare\s+target/ is_end_directive=TRUE
+    | 'end' name=DirectivesNames _tx_clauses*=AllOmpClauses is_end_directive=TRUE is_construct=TRUE
 ;
 
 ////////////////////////////////////////////////////
@@ -425,7 +427,7 @@ QuotedString: quote=QUOTE contents=/[^'"]*/ quote=QUOTE;
 QUOTE: '"' | "'";
 DirectivesNames: 'parallel' | 'for' | 'sections' | 'section' | 'single' | 'simd' | 'taskloop' | 'taskyeild' | 'task' | 'target'
 | 'teams' | 'distribute' | 'master' | 'critical' | 'barrier' | 'taskwait' | 'taskgroup' | 'ordered' | 'cancel'
-| 'threadprivate' | 'metadirective';
+| 'threadprivate' | 'metadirective' | /declare\s+target/;
 ////////////////////////////////////////////////////
 //              Omp Versions
 ////////////////////////////////////////////////////
