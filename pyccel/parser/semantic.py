@@ -115,6 +115,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow, PyccelOr
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv, PyccelIn, PyccelOperator
+from pyccel.ast.operators import PyccelAnd
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -4574,7 +4575,29 @@ class SemanticParser(BasicParser):
 
         body = self._visit(expr.body)
 
-        return IfSection(cond, body)
+        def treat_condition(cond):
+            is_not_conds = cond.get_attribute_nodes(PyccelIsNot)
+            non_conditional_list = [c for c in is_not_conds if c.args[1] is Nil()]
+            for non_conditional in non_conditional_list:
+                v = non_conditional.args[0]
+                var_use = v.get_direct_user_nodes(lambda u: cond.is_user_of(u))
+                if len(var_use) > 1:
+                    if isinstance(cond, PyccelAnd) and non_conditional in cond.args:
+                        remaining_cond = PyccelAnd(*[a for a in cond.args if a is not non_conditional]) \
+                                if len(cond.args) > 2 else next(a for a in cond.args if a is not non_conditional)
+                        remaining_cond.set_current_ast(cond.python_ast)
+                        cond_var = self.scope.get_temporary_variable(PythonNativeBool(),
+                                                                     self.scope.get_new_name('condition'))
+                        present_assign = [Assign(cond_var, treat_condition(remaining_cond))]
+                        self._additional_exprs[-1].append(If(IfSection(non_conditional, present_assign),
+                                        IfSection(LiteralTrue(), [Assign(cond_var, LiteralFalse())])))
+                        return cond_var
+                    else:
+                        errors.report("Cannot evaluate condition. Checking if a variable is present must be done before using the variable",
+                                      severity='error', symbol=cond)
+            return cond
+
+        return IfSection(treat_condition(cond), body)
 
     def _visit_If(self, expr):
         args = []
