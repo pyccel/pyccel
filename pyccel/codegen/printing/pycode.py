@@ -396,7 +396,6 @@ class PythonCodePrinter(CodePrinter):
         return '{base}[{indices}]'.format(base=base, indices=indices)
 
     def _print_Interface(self, expr):
-        # TODO: Improve. See #885
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
@@ -405,12 +404,30 @@ class PythonCodePrinter(CodePrinter):
             func_def_code.append(self._print(func))
 
         # Split functions after declaration to ignore type declaration differences
-        bodies = [c.split(':\n',1)[1] for c in func_def_code]
-        # Verify that generated function bodies are identical
-        if len(set(bodies)) > 1:
-            warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
+        bodies = {}
+        for f,c in zip(expr.functions, func_def_code):
+            b = c.split(':\n',1)[1]
+            bodies.setdefault(b, []).append([a.var.class_type for a in f.arguments])
 
-        return func_def_code[0]
+        if len(bodies) == 1:
+            return func_def_code[0]
+        else:
+            arg_names = [a.var.name for a in expr.functions[0].arguments]
+            code = ''
+            for i, (b, arg_types) in enumerate(bodies.items()):
+                code += '    if ' if i == 0 else '    elif '
+                checks = [' and '.join(f'isinstance({a}, {self._print(t)})' for a,t in zip(arg_names, a_t)) \
+                        for a_t in arg_types]
+                if len(checks) > 1:
+                    code += ' or '.join(f'({c})' for c in checks)
+                else:
+                    code += checks[0]
+                code += ':\n'
+                code += self._indent_codestring(b)
+
+            header = func_def_code[0].split(':\n',1)[0]
+
+            return f'{header}:\n{code}'
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
