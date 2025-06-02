@@ -70,3 +70,4 @@ def p(a : 'complex') -> 'complex':
 
 def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
     ...
+
