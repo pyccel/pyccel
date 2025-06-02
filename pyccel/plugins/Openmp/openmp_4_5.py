@@ -28,7 +28,6 @@ class ConfigMixin:
     Common utilities and methods for handling OpenMP syntax and configurations.
     """
     _version = None
-    _method_registry = {}
 
     @classmethod
     def helper_check_config(cls, func, options, method):
@@ -52,10 +51,6 @@ class ConfigMixin:
             Wrapped function that adheres to the configuration.
             Or original method if clear is passed in the options.
         """
-        if options.get('clear', False):
-            return cls._method_registry.get(func.__name__)
-        if not func.__name__ in cls._method_registry:
-            cls._method_registry[func.__name__] = method
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -168,7 +163,6 @@ class SyntaxParser(ConfigMixin):
                 return instance._visit(directive)
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
-                return None
         else:
             return method(line, expr)
 
@@ -281,11 +275,6 @@ class SyntaxParser(ConfigMixin):
         fst = cls._helper_parse_expr(expr)
         return OmpList(value=instance._visit(fst), **expr.get_fixed_state())
 
-    @staticmethod
-    def _visit_OmpTxExpr(instance, expr, cls=None, method=None):
-        fst = cls._helper_parse_expr(expr)
-        return OmpExpr(value=instance._visit(fst), **expr.get_fixed_state())
-
 
 class SemanticParser(ConfigMixin):
     """Openmp 4.5 semantic parser"""
@@ -293,8 +282,6 @@ class SemanticParser(ConfigMixin):
 
     @staticmethod
     def _visit_OmpDirective(instance, expr, cls=None, method=None):
-        if hasattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive"):
-            return getattr(instance, f"_visit_{expr.name.replace(' ', '_')}_directive")(expr)
         clauses = tuple(instance._visit(clause) for clause in expr.clauses)
         directive = OmpDirective(clauses=clauses, **expr.get_fixed_state())
         return directive
@@ -333,7 +320,7 @@ class SemanticParser(ConfigMixin):
 
     @staticmethod
     def _visit_OmpEndDirective(instance, expr, cls=None, method=None):
-        if not isinstance(expr.current_user_node, OmpConstruct):
+        if not isinstance(expr.current_user_node, OmpConstruct) and expr.is_construct:
             errors.report(
                 f"End directive `{expr.name}` doesn't belong to any openmp construct",
                 symbol=expr,
@@ -408,10 +395,10 @@ class CCodePrinter(ConfigMixin):
 
     @staticmethod
     def _print_OmpEndDirective(instance, expr, cls=None, method=None):
-        if expr.current_user_node.start.is_construct:
+        if isinstance(expr.current_user_node, OmpConstruct):
             return ""
         else:
-            return f"#pragma omp {expr.raw}\n"
+            return f"#pragma omp end {expr.raw}\n"
 
 
 class FCodePrinter(ConfigMixin):
@@ -496,7 +483,6 @@ class FCodePrinter(ConfigMixin):
     @staticmethod
     def _print_end_section_directive(instance, expr, cls=None, method=None):
         return ""
-
 
 class PythonCodePrinter(ConfigMixin):
     """Openmp 4.5 python code printer parser"""
