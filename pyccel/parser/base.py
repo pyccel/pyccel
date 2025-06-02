@@ -97,7 +97,6 @@ def get_filename_from_import(module_name, input_folder_name):
                     package = importlib.import_module('.'.join(module_name_parts[:len(module_name_parts)-i]))
                     break
                 except ImportError:
-                    print('.'.join(module_name_parts[:len(module_name_parts)-i]))
                     pass
             if package is None:
                 errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
