@@ -4135,8 +4135,8 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
-            cond = PythonBool(cond)
+        assert pyccel_stage == 'syntactic' or cond.dtype is PythonNativeBool()
+
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
         elif isinstance(body, CodeBlock):
@@ -4209,6 +4209,11 @@ class If(PyccelAstNode):
     def __str__(self):
         blocks = ','.join(str(b) for b in self.blocks)
         return f"If({blocks})"
+
+    def set_current_ast(self, ast_node):
+        for b in self.blocks:
+            b.set_current_ast(ast_node)
+        super().set_current_ast(ast_node)
 
 class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)
