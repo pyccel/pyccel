@@ -1574,17 +1574,6 @@ def test_full_dtype(language):
     assert isclose(f_real_complex128(val_float), create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip("full handles types in __new__ so it "
-                "cannot be used in a translated interface in python"),
-            pytest.mark.python]
-        ),
-    )
-)
-
 def test_full_dtype_auto(language):
     @template(name='T', types=['int','float', 'complex', 'int32',
                                'float32', 'float64', 'complex64', 'complex128'])
@@ -3742,16 +3731,6 @@ def test_zeros_like_combined_args(language):
     assert isclose(f3_val(), create_zeros_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_like_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_numpy_real_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
@@ -3854,20 +3833,6 @@ def test_numpy_real_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert matching_types(f_complex64_output, test_complex64_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_real_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
@@ -3911,20 +3876,6 @@ def test_numpy_real_array_like_1d(language):
     assert epyccel_func(fl64) == get_real(fl64)
     assert epyccel_func(cmplx64) == get_real(cmplx64)
     assert epyccel_func(cmplx128) == get_real(cmplx128)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 
 def test_numpy_real_array_like_2d(language):
 
@@ -3971,16 +3922,6 @@ def test_numpy_real_array_like_2d(language):
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_numpy_imag_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
@@ -4083,17 +4024,6 @@ def test_numpy_imag_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert matching_types(f_complex64_output, test_complex64_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_imag_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
@@ -4137,17 +4067,6 @@ def test_numpy_imag_array_like_1d(language):
     assert epyccel_func(fl64) == get_imag(fl64)
     assert epyccel_func(cmplx64) == get_imag(cmplx64)
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 
 def test_numpy_imag_array_like_2d(language):
 
@@ -4375,11 +4294,7 @@ def test_numpy_mod_mixed_order(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -4491,11 +4406,7 @@ def test_numpy_prod_scalar(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -4574,11 +4485,7 @@ def test_numpy_prod_array_like_1d(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
