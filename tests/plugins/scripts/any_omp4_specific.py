@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 def omp_taskloop(n : 'int'):
     func_result = 0
     #$omp parallel num_threads(n)
