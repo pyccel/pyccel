@@ -324,7 +324,7 @@ class CToPythonWrapper(Wrapper):
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = FunctionDefResult(Variable(dtype, name = 'v')))
+                               results   = FunctionDefResult(Variable(PythonNativeBool(), name = 'v')))
 
             type_check_condition = func(py_obj)
         elif isinstance(arg.class_type, NumpyNDArrayType):
