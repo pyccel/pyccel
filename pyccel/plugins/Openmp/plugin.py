@@ -1,39 +1,35 @@
 """Classes that handles loading the Openmp Plugin"""
 import inspect
 import os
+from dataclasses import dataclass, field
 from types import MethodType
 from typing import Dict, List
-from dataclasses import dataclass, field
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED
 from pyccel.plugins.Openmp import openmp_4_5
 from pyccel.plugins.Openmp import openmp_5_0
 from pyccel.utilities.plugins import Plugin, PatchRegistry, PatchInfo
-from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED
 
 errors = Errors()
+
 
 @dataclass
 class OmpPatchInfo(PatchInfo):
     """Store information about a single patch"""
     version: float
 
+
 @dataclass
 class OmpPatchRegistry(PatchRegistry):
     patches: Dict[str, List[OmpPatchInfo]] = field(default_factory=dict)
     loaded_versions: List[float] = field(default_factory=list)
     """Registry for all patches applied to a single class"""
+
     def get_patches_for_version(self, version):
         """Get all patches for a specific version"""
-        version_patches = {}
-        for method_name, patch_list in self.patches.items():
-            version_patches[method_name] = []
-            for patch in patch_list:
-                if patch.version == version:
-                    version_patches[method_name].append(patch)
-                    break
-            if not version_patches[method_name]:
-                del version_patches[method_name]
+        version_patches = {method_name: [patch for patch in patch_list if patch.version == version] for
+                           method_name, patch_list in self.patches.items()}
         return version_patches
 
     def unregister_patches_for_version(self, version):
@@ -134,7 +130,7 @@ class Openmp(Plugin):
         for name, method in inspect.getmembers(impl, predicate=inspect.isfunction):
             original_method = getattr(parser, name, None)
             decorated_method = impl.helper_check_config(method, self._options, original_method)
-            setattr(parser, name,MethodType(decorated_method, parser))
+            setattr(parser, name, MethodType(decorated_method, parser))
 
             patch_info = OmpPatchInfo(
                 original_method=original_method,
@@ -147,8 +143,6 @@ class Openmp(Plugin):
     def _unload_patches(self, registry, version):
         """Unload patches for a specific version"""
         parser = registry.target
-        if version not in registry.loaded_versions:
-            return
         version_patches = registry.get_patches_for_version(version)
         for method_name, info in version_patches.items():
             for patch_info in info:

@@ -373,7 +373,7 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
                 f"invalid clause `{invalid_clauses[0].name}` for `{name}` directive",
                 symbol=self,
                 column=self._position[0],
-                severity="fatal",
+                severity="error",
             )
 
 
@@ -416,7 +416,7 @@ class OmpTxClause(OmpTxNode, OmpClause):
                 errors.report(
                     f"invalid syntax `{self.name}` clause for `{self.parent.name}` directive",
                     symbol=self,
-                    severity="fatal",
+                    severity="error",
                 )
 
 

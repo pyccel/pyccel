@@ -64,10 +64,6 @@ class Plugin(ABC):
         """Return the plugin name, defaults to class name"""
         return self.__class__.__name__
 
-    def get_registry_for(self, target):
-        """Get the registry for a specific class"""
-        return next((registry for registry in self._patch_registries if registry.target is target), None)
-
     def is_registered(self, target):
         return any(registry.target is target for registry in self._patch_registries)
 
