@@ -4673,12 +4673,18 @@ class SemanticParser(BasicParser):
         is_last_block = expr is if_block.blocks[-1]
 
         def treat_condition(cond, body):
+            """
+            Run through the condition of the If to try to extract `if a is not None`
+            conditions. These must be done in their own line in low-level languages.
+            """
             is_not_conds = cond.get_attribute_nodes(PyccelIsNot)
             non_conditional_list = [c for c in is_not_conds if c.args[1] is Nil()]
             for non_conditional in non_conditional_list:
                 v = non_conditional.args[0]
                 var_use = v.get_direct_user_nodes(cond.is_user_of)
+                # If variable is only used in `a is not None` the condition is ok
                 if len(var_use) > 1:
+                    # If `a is not None` is in an `and` we can split this into valid conditions
                     if isinstance(cond, PyccelAnd) and non_conditional in cond.args:
                         remaining_cond = PyccelAnd(*[a for a in cond.args if a is not non_conditional]) \
                                 if len(cond.args) > 2 else next(a for a in cond.args if a is not non_conditional)
@@ -4687,9 +4693,11 @@ class SemanticParser(BasicParser):
                                                                      self.scope.get_new_name('condition'))
                         treated_remaining_cond, body = treat_condition(remaining_cond, body)
                         if is_last_block:
+                            # if in the last block create an if in the current if
                             body = [If(IfSection(treated_remaining_cond, body))]
                             cond = non_conditional
                         else:
+                            # Otherwise evaluate the condition before the if block
                             self._additional_exprs[-1].append(If(IfSection(non_conditional, [Assign(cond_var, treated_remaining_cond)]),
                                         IfSection(LiteralTrue(), [Assign(cond_var, LiteralFalse())])))
                             cond = cond_var
