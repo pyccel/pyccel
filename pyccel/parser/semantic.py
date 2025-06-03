@@ -3391,7 +3391,12 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_PyccelOperator(self, expr):
-        args     = [self._visit(a) for a in expr.args]
+        args = [self._visit(a) for a in expr.args]
+        return self._create_PyccelOperator(expr, args)
+
+    def _visit_PyccelBooleanOperator(self, expr):
+        args = [self._visit(a) for a in expr.args]
+        args = [a if a.dtype is PythonNativeBool() else PythonBool(a) for a in args]
         return self._create_PyccelOperator(expr, args)
 
     def _visit_PyccelAdd(self, expr):
