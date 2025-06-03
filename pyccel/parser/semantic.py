@@ -4587,7 +4587,7 @@ class SemanticParser(BasicParser):
             non_conditional_list = [c for c in is_not_conds if c.args[1] is Nil()]
             for non_conditional in non_conditional_list:
                 v = non_conditional.args[0]
-                var_use = v.get_direct_user_nodes(lambda u: cond.is_user_of(u))
+                var_use = v.get_direct_user_nodes(cond.is_user_of)
                 if len(var_use) > 1:
                     if isinstance(cond, PyccelAnd) and non_conditional in cond.args:
                         remaining_cond = PyccelAnd(*[a for a in cond.args if a is not non_conditional]) \
