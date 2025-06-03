@@ -18,6 +18,11 @@ on:
       pr_repo:
         required: false
         type: string
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -32,6 +37,7 @@ jobs:
 
     runs-on: ubuntu-latest
     name: Documentation Format
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +57,7 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup check run"
+        if: github.event_name != 'pull_request'
         id: token
         run: |
           pip install jwt requests
@@ -101,6 +108,6 @@ jobs:
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run:
           python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }}

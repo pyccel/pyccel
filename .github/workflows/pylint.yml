@@ -18,6 +18,11 @@ on:
       pr_repo:
         required: false
         type: string
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -30,6 +35,7 @@ jobs:
   Linter:
     runs-on: ubuntu-latest
     name: Python best practices
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +49,7 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup"
+        if: github.event_name != 'pull_request'
         id: token
         run: |
           pip install jwt requests
@@ -70,6 +77,6 @@ jobs:
           python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run:
           python ci_tools/complete_check_run.py ${{ steps.pylint.outcome }}
