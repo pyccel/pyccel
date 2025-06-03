@@ -3,7 +3,7 @@ from typing import TypeVar
 
 Z1 = TypeVar('Z1', int, float)
 Z2 = TypeVar('Z2', int, float)
-NIT_1D = TypeVar('NIT', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]')
+NIT_1D = TypeVar('NIT_1D', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]')
 IT_1D = TypeVar('IT_1D', 'int[:]', 'int32[:]', 'int64[:]')
 FT_1D = TypeVar('FT_1D', 'float[:]', 'float32[:]')
 CT_1D = TypeVar('CT_1D', 'complex[:]', 'complex64[:]')
