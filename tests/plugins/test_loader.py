@@ -1,11 +1,17 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
+from unittest.mock import patch
+
 import pytest
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED, PLUGIN_DIRECTORY_NOT_FOUND
 from pyccel.parser.syntactic import SyntaxParser
+from pyccel.plugins.Openmp.plugin import Openmp
 from pyccel.utilities.plugins import Plugins
 
+errors = Errors()
+errors.reset()
 plugins = Plugins()
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -26,6 +32,18 @@ def get_funcs(obj):
 
 
 @pytest.mark.external
+@patch('pyccel.plugins.Openmp.plugin.errors.report')
+@patch('pyccel.utilities.plugins.os.path.isdir')
+def test_load(mock_isdir, mock_report):
+    errors.reset()
+    mock_isdir.return_value = False
+    plugins.load_plugins('some_dir')
+    mock_report.assert_called_with(
+        PLUGIN_DIRECTORY_NOT_FOUND.format('some_dir'),
+        severity='warning')
+
+
+@pytest.mark.external
 def test_unload():
     plugins.unload_plugins()
     assert plugins.get_plugins() == []
@@ -38,6 +56,34 @@ def test_register():
     parser = SyntaxParser(file)
     for plugin in plugins.get_plugins():
         assert plugin.is_registered(parser)
+
+
+@pytest.mark.external
+@patch('pyccel.plugins.Openmp.plugin.errors.report')
+def test_openmp_resolve_version(mock_report):
+    errors.reset()
+    file = os.path.join(path_dir, 'any_omp4_specific.py')
+    ver = 5.1
+    plugins.set_options({'accelerators': ['openmp'], 'omp_version': ver})
+    SyntaxParser(file)
+    mock_report.assert_called_with(
+        OMP_VERSION_NOT_SUPPORTED.format(ver, Openmp.DEFAULT_VERSION),
+        severity='warning')
+
+
+@pytest.mark.external
+def test_openmp_no_implementation():
+    class NoImp:
+        def no_imp_method(self):
+            pass
+
+    plugins.load_plugins()
+    plugins.set_options({'accelerators': ['openmp']})
+    ins = NoImp()
+    reference_methods = get_funcs(ins)
+    plugins.register((ins,), refresh=True)
+    modified_methods = get_funcs(ins)
+    assert reference_methods == modified_methods
 
 
 @pytest.mark.external
@@ -64,8 +110,6 @@ def test_openmp_register_unregister():
 
 @pytest.mark.external
 def test_openmp_register_refresh():
-    errors = Errors()
-    errors.reset()
     plugins.load_plugins()
     file = os.path.join(path_dir, 'omp5_specific.py')
     plugins.set_options({'accelerators': ['openmp']})
@@ -76,25 +120,25 @@ def test_openmp_register_refresh():
     # refresh is needed to patch with openmp 5.0
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
     parser._syntax_done = False
-    ast = parser.parse()
+    parser.parse()
     assert errors.has_warnings() == True
     errors.reset()
 
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0}, refresh=True)
     parser._syntax_done = False
-    ast = parser.parse()
+    parser.parse()
     assert errors.has_warnings() == False
     errors.reset()
 
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 4.5})
     parser._syntax_done = False
-    ast = parser.parse()
+    parser.parse()
     assert errors.has_warnings() == True
     errors.reset()
 
     # no refresh is needed since openmp 5.0 is already patched with
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
     parser._syntax_done = False
-    ast = parser.parse()
+    parser.parse()
     assert errors.has_warnings() == False
     errors.reset()
