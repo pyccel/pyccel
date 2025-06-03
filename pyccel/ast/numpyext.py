@@ -25,7 +25,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType, ContainerType
+from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -123,6 +123,9 @@ __all__ = (
     'NumpyIsInf',
     'NumpyIsFinite',
     'NumpyIsNan',
+    # Typing
+    'NumpyDtype',
+    'NumpyNDArray',
 )
 
 dtype_registry.update({
@@ -2725,6 +2728,23 @@ class NumpyIsFinite(NumpyUfuncUnary):
         return PythonNativeBool()
 
 #==============================================================================
+class NumpyDtype(PyccelFunction):
+    _dtype = SymbolicType()
+    name = 'dtype'
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("numpy.dtype not implemented")
+
+#==============================================================================
+class NumpyNDArray(PyccelFunction):
+    _dtype = SymbolicType()
+    _static_type = NumpyNDArrayType
+    name = 'ndarray'
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("numpy.ndarray not implemented")
+
+#==============================================================================
 
 DtypePrecisionToCastFunction.update({
     NumpyInt8Type()       : NumpyInt8,
@@ -2831,6 +2851,8 @@ numpy_funcs = {
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
     'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
+    'dtype' : PyccelFunctionDef('dtype', NumpyDtype),
+    'ndarray' : PyccelFunctionDef('ndarray', NumpyNDArray),
 }
 
 numpy_mod = Module('numpy',

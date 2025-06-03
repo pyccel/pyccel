@@ -23,6 +23,7 @@ from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
+from pyccel.ast.numpyext   import NumpyNDArray, NumpyDtype
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
@@ -413,19 +414,25 @@ class PythonCodePrinter(CodePrinter):
         if len(bodies) == 1:
             return func_def_code[0]
         else:
-            arg_names = [a.var.name for a in expr.functions[0].arguments]
+            arg_vars = [a.var for a in expr.functions[0].arguments]
             code = ''
             for i, (b, arg_types) in enumerate(bodies.items()):
                 code += '    if ' if i == 0 else '    elif '
                 checks = []
                 for a_t in arg_types:
                     check_option = []
-                    for a,t in zip(arg_names, a_t):
-                        check_option.append(f'isinstance({a}, {self._print(t)})')
+                    for a_v,t in zip(arg_vars, a_t):
+                        a = a_v.name
                         if isinstance(t, NumpyNDArrayType):
+                            ndarray = self._get_numpy_name(NumpyNDArray)
+                            dtype = self._get_numpy_name(NumpyDtype)
+                            check_option.append(f'isinstance({a}, {ndarray})')
+                            check_option.append(f'{a}.dtype is {dtype}({self._print(t.element_type)})')
                             check_option.append(f'{a}.ndim == {t.rank}')
                             if t.rank > 1:
-                                check_option.append(f"{a}.flags['{a.order}_CONTIGUOUS']")
+                                check_option.append(f"{a}.flags['{a_v.order}_CONTIGUOUS']")
+                        else:
+                            check_option.append(f'isinstance({a}, {self._print(t)})')
                     checks.append(' and '.join(check_option))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
