@@ -27,9 +27,17 @@ runs:
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew --version
       shell: bash
-  
+
+    - name: Add Homebrew to PATH
+      run: |
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        echo "PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH" >> $GITHUB_ENV
+        brew --version
+      shell: bash
+
     - name: Test Homebrew
       run: |
+        brew --version
         brew install hello
       shell: bash
 
