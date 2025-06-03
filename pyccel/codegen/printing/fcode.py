@@ -1639,9 +1639,14 @@ class FCodePrinter(CodePrinter):
 
         if expr.stop.dtype != expr.dtype:
             st = self._apply_cast(expr.dtype, expr.stop)
-            v = self._print(st)
+            stop = self._print(st)
         else:
-            v = self._print(expr.stop)
+            stop = self._print(expr.stop)
+
+        start = self._print(expr.start)
+        step  = self._print(expr.step)
+        end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+        endpoint_code = ''
 
         if not isinstance(expr.endpoint, LiteralFalse):
             lhs = expr.get_user_nodes(Assign)[0].lhs
@@ -1659,32 +1664,28 @@ class FCodePrinter(CodePrinter):
                                                  simplify = True)))
 
             if isinstance(expr.endpoint, LiteralTrue):
-                cond_template = lhs + ' = {stop}'
+                endpoint_code = lhs + f' = {stop}\n'
             else:
-                cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+                cond = self._print(expr.endpoint)
+                endpoint_code = lhs + f' = merge({stop}, {lhs}, ({cond}))\n'
+
         if expr.rank > 1:
-            template = '({start} + {index}*{step})'
             var = expr.ind
         else:
-            template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(var),
-            zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
-        )
+        index = self._print(var)
+        init_value = f'({start} + {index}*{step})'
 
-        if isinstance(expr.endpoint, LiteralFalse):
-            code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + '\n' + cond_template.format(stop=v)
-        else:
-            code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
+            kind = self.print_kind(expr)
+            init_value = f'floor({init_value}, kind = {kind})'
 
-        return code
+        if expr.rank == 1:
+            zero  = self._print(LiteralInteger(0))
+            init_value = f'[({init_value}, {index} = {zero},{end})]'
+
+        return '\n'.join((init_value, endpoint_code))
 
     def _print_NumpyNonZeroElement(self, expr):
 
@@ -2746,7 +2747,7 @@ class FCodePrinter(CodePrinter):
                 methods += f'generic, public :: {i.name} => {names}\n'
                 methods += f'procedure :: {names}\n'
 
-
+        self.exit_scope()
 
         sig = 'type'
         if not(base is None):
@@ -2766,8 +2767,6 @@ class FCodePrinter(CodePrinter):
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
-
-        self.exit_scope()
 
         return decs, methods
 

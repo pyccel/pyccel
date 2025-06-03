@@ -2170,6 +2170,13 @@ class FunctionDef(ScopedAstNode):
         docstring=None,
         scope=None):
 
+        # Outside of semantic stage, if the scope is provided then the original name
+        # of the function should be retrievable from the semantic name using scope.python_names
+        assert pyccel_stage != "semantic" or scope is None or \
+                name in scope.python_names
+        assert pyccel_stage != "semantic" or scope is None or \
+                scope.name == scope.python_names[name]
+
         if isinstance(name, str):
             name = PyccelSymbol(name)
         elif isinstance(name, (tuple, list)):
@@ -3211,32 +3218,6 @@ class ClassDef(ScopedAstNode):
         imports = set(imports)  # for unicity
         imports = tuple(imports)
 
-        # ...
-        # look if the class has the method __del__
-        # d_methods = {}
-        # for i in methods:
-        #    d_methods[str(i.name).replace('\'','')] = i
-        # if not ('__del__' in d_methods):
-        #    dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
-        #    this  = Variable(dtype(), 'self')
-
-            # constructs the __del__ method if not provided
-         #   args = []
-         #   for a in attributes:
-         #       if isinstance(a, Variable):
-         #           if a.allocatable:
-         #              args.append(a)
-
-         #   args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
-         #   body = [Del(a) for a in args]
-
-         #   free = FunctionDef('__del__', [this], [], \
-         #                      body, local_vars=[], global_vars=[], \
-         #                      cls_name='__UNDEFINED__', imports=[])
-
-         #  methods = list(methods) + [free]
-         # TODO move this somewhere else
-
         methods = tuple(methods)
 
         # ...
@@ -3344,6 +3325,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(attr, Variable):
             raise TypeError("Attributes must be Variables")
+        assert attr not in self._attributes
         attr.set_current_user_node(self)
         self._attributes += (attr,)
 
@@ -3361,6 +3343,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
+        assert method.pyccel_staging != "semantic" or method.name in self.scope.python_names
         method.set_current_user_node(self)
         self._methods += (method,)
 
@@ -3415,9 +3398,9 @@ class ClassDef(ScopedAstNode):
             The interface that will replace the syntactic_interface.
         """
         assert isinstance(semantic_interface, Interface)
-        assert syntactic_interface in self._methods
         assert semantic_interface.is_semantic
-        syntactic_interface.remove_user_node(self)
+        if syntactic_interface in self._methods:
+            syntactic_interface.remove_user_node(self)
         semantic_interface.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
         self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)

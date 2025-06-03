@@ -37,7 +37,7 @@ from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
 from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
 from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
 from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObject_GetIter, PySet_Clear
-from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear
+from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear, PyArgumentError
 from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
 from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
@@ -391,8 +391,9 @@ class CToPythonWrapper(Wrapper):
 
         if raise_error and not isinstance(arg.class_type, NumpyNDArrayType):
             # No error code required for arrays as the error is raised inside pyarray_check
-            message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
-            python_error = PyErr_SetString(PyTypeError, CStrStr(message))
+            python_error = PyArgumentError(PyTypeError,
+                                f"Expected an argument of type {arg.class_type} for argument {arg.name}. Received {{type(arg)}}",
+                                arg = py_obj)
             error_code = (python_error,)
 
         return type_check_condition, error_code
@@ -485,8 +486,14 @@ class CToPythonWrapper(Wrapper):
                     check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
-                            [PyErr_SetString(PyTypeError, CStrStr(LiteralString(f"Unexpected type for argument {interface_args[0].name}"))),
+                            [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
+                                arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
+            elif not orig_funcs[0].arguments[i].has_default:
+                check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
+                err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
+                if_sec = IfSection(PyccelNot(check_func_call), err_body)
+                body.append(If(if_sec))
 
             # Update the step to ensure unique indices for each argument
             step *= n_possible_types
@@ -1390,6 +1397,8 @@ class CToPythonWrapper(Wrapper):
             if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
                                 [Return(wrapped_func(*python_arg_objs))]))
             functions.append(wrapped_func)
+        if_sections.append(IfSection(PyccelEq(type_indicator, PyccelUnarySub(LiteralInteger(1))),
+                    [Return(self._error_exit_code)]))
         if_sections.append(IfSection(LiteralTrue(),
                     [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
                      Return(self._error_exit_code)]))
@@ -2024,7 +2033,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
-            else:
+            elif not f.is_inline:
                 wrapped_class.add_new_method(self._wrap(f))
 
         for i in expr.interfaces:

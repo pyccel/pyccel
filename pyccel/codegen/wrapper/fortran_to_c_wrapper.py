@@ -191,7 +191,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private:
+        if expr.is_private or expr.is_inline:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
@@ -404,7 +404,7 @@ class FortranToCWrapper(Wrapper):
 
         c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
                         scope.get_new_name(), is_argument = True,
-                        shape = (LiteralInteger(2),))
+                        shape = (LiteralInteger(rank+1),))
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(1)), shape_var)
@@ -680,7 +680,7 @@ class FortranToCWrapper(Wrapper):
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
-        interfaces = [self._wrap(i) for i in expr.interfaces]
+        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
 
         if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
             errors.report("Tuples cannot yet be exposed to Python.",
@@ -811,7 +811,7 @@ class FortranToCWrapper(Wrapper):
 
         # Allocatable is not returned so it must appear in local scope
         local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling)
+                            memory_handling = memory_handling, shape = None)
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):
