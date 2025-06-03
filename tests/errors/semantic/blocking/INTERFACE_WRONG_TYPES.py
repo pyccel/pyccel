@@ -2,7 +2,7 @@
 from typing import TypeVar
 
 a = TypeVar('a', int, float)
-a = TypeVar('b', int, float)
+b = TypeVar('b', int, float)
 
 def multi_tmplt_1(x : a, y : a, z : b):
     """Tests Interfaces"""
