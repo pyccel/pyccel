@@ -4194,6 +4194,7 @@ class If(PyccelAstNode):
         Parameters
         ----------
         ast_node : ast.AST
+            The Python AST node describing the original code and its location.
         """
         for b in self.blocks:
             b.set_current_ast(ast_node)
