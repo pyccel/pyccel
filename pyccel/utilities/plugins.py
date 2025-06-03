@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Callable, Any
 
 from pyccel.errors.errors import Errors
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.errors.messages import PLUGIN_DIRECTORY_NOT_FOUND
 
 errors = Errors()
 
@@ -37,16 +38,6 @@ class PatchRegistry:
         if method_name not in self.patches:
             self.patches[method_name] = []
         self.patches[method_name].append(patch_info)
-
-    def unregister_patch(self, method_name, patch_info):
-        """unregister a patch for a method"""
-        self.patches[method_name] = [pa for pa in self.patches[method_name] if pa is not patch_info]
-
-    def get_original_method(self, method_name):
-        """Get the original method before any patches were applied"""
-        if method_name not in self.patches:
-            return None
-        return self.patches[method_name][0].original_method
 
 
 class Plugin(ABC):
@@ -84,20 +75,6 @@ class Plugin(ABC):
         """Get all objects targeted by the plugin"""
         return list(set(reg.target for reg in self._patch_registries))
 
-    def get_patched_methods(self, target):
-        """Return list of method names patched in the given class"""
-        registry = self.get_registry_for(target)
-        if not registry:
-            return []
-        return list(registry.patches.keys())
-
-    def get_original_method(self, target, method_name):
-        """Return the original method before patching (for testing)"""
-        registry = self.get_registry_for(target)
-        if not registry:
-            return None
-        return registry.get_original_method(method_name)
-
 
 class Plugins(metaclass=Singleton):
     """Manager for Pyccel plugins"""
@@ -127,7 +104,7 @@ class Plugins(metaclass=Singleton):
 
         if not os.path.isdir(plugins_dir):
             errors.report(
-                f"Plugin directory not found: {plugins_dir}.",
+                PLUGIN_DIRECTORY_NOT_FOUND.format(plugins_dir),
                 severity='warning')
             return
 

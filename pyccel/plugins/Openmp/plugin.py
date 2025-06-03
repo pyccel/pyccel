@@ -9,6 +9,7 @@ from pyccel.errors.errors import Errors
 from pyccel.plugins.Openmp import openmp_4_5
 from pyccel.plugins.Openmp import openmp_5_0
 from pyccel.utilities.plugins import Plugin, PatchRegistry, PatchInfo
+from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED
 
 errors = Errors()
 
@@ -26,10 +27,13 @@ class OmpPatchRegistry(PatchRegistry):
         """Get all patches for a specific version"""
         version_patches = {}
         for method_name, patch_list in self.patches.items():
+            version_patches[method_name] = []
             for patch in patch_list:
                 if patch.version == version:
-                    version_patches[method_name] = patch
+                    version_patches[method_name].append(patch)
                     break
+            if not version_patches[method_name]:
+                del version_patches[method_name]
         return version_patches
 
     def unregister_patches_for_version(self, version):
@@ -93,7 +97,8 @@ class Openmp(Plugin):
         """Unregister the provided instances"""
         targets = [reg for reg in self._patch_registries if reg.target in instances]
         for reg in targets:
-            self._unload_patches(reg)
+            for ver in reg.loaded_versions:
+                self._unload_patches(reg, ver)
         self._patch_registries = [reg for reg in self._patch_registries if reg not in targets]
 
     def _resolve_version(self):
@@ -107,7 +112,7 @@ class Openmp(Plugin):
 
         if requested_version not in self.VERSION_MODULES:
             errors.report(
-                f"OPENMP {requested_version} is not supported. Defaulting to OPENMP {self.DEFAULT_VERSION}.",
+                OMP_VERSION_NOT_SUPPORTED.format(requested_version, self.DEFAULT_VERSION),
                 severity='warning')
             self._options['omp_version'] = self.DEFAULT_VERSION
             return self.DEFAULT_VERSION
@@ -139,16 +144,12 @@ class Openmp(Plugin):
             )
             registry.register_patch(name, patch_info)
 
-    def _unload_patches(self, registry, version=None):
+    def _unload_patches(self, registry, version):
         """Unload patches for a specific version"""
         parser = registry.target
-        if version:
-            if version not in registry.loaded_versions:
-                return
-            version_patches = registry.get_patches_for_version(version)
-        else:
-            version_patches = registry.patches
-
+        if version not in registry.loaded_versions:
+            return
+        version_patches = registry.get_patches_for_version(version)
         for method_name, info in version_patches.items():
             for patch_info in info:
                 if patch_info.is_new_method:
@@ -158,5 +159,4 @@ class Openmp(Plugin):
                     original = patch_info.original_method
                     if original:
                         setattr(parser, method_name, original)
-        if version:
-            registry.unregister_patches_for_version(version)
+        registry.unregister_patches_for_version(version)
