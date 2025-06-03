@@ -22,6 +22,7 @@ from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
+from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
@@ -570,26 +571,46 @@ class PythonCodePrinter(CodePrinter):
         return '{'+args+'}'
 
     def _print_PythonBool(self, expr):
-        return 'bool({})'.format(self._print(expr.arg))
+        arg = self._print(expr.arg)
+        if expr.rank:
+            return f'{arg}.astype(bool)'
+        else:
+            return f'bool({arg})'
 
     def _print_PythonInt(self, expr):
-        name = 'int'
-        if isinstance(expr.dtype, NumpyNumericType):
-            name = self._get_numpy_name(expr)
-        return '{}({})'.format(name, self._print(expr.arg))
+        arg = self._print(expr.arg)
+        if expr.rank:
+            name = self._get_numpy_name(DtypePrecisionToCastFunction[numpy_process_dtype(expr.dtype)])
+            return f'{arg}.astype({name})'
+        else:
+            name = 'int'
+            if isinstance(expr.dtype, NumpyNumericType):
+                name = self._get_numpy_name(expr)
+            return f'{name}({arg})'
 
     def _print_PythonFloat(self, expr):
-        name = 'float'
-        if isinstance(expr.dtype, NumpyNumericType):
-            name = self._get_numpy_name(expr)
-        return '{}({})'.format(name, self._print(expr.arg))
+        arg = self._print(expr.arg)
+        if expr.rank:
+            name = self._get_numpy_name(DtypePrecisionToCastFunction[numpy_process_dtype(expr.dtype)])
+            return f'{arg}.astype({name})'
+        else:
+            name = 'float'
+            if isinstance(expr.dtype, NumpyNumericType):
+                name = self._get_numpy_name(expr)
+            return f'{name}({arg})'
 
     def _print_PythonComplex(self, expr):
         name = self._aliases.get(type(expr), expr.name)
         if expr.is_cast:
-            return '{}({})'.format(name, self._print(expr.internal_var))
+            arg = self._print(expr.internal_var)
+            if expr.rank:
+                return f'{arg}.astype({name})'
+            else:
+                return f'{name}({arg})'
         else:
-            return '{}({}, {})'.format(name, self._print(expr.real), self._print(expr.imag))
+            real = self._print(expr.real)
+            imag = self._print(expr.imag)
+            return f'{name}({real}, {imag})'
 
     def _print_NumpyComplex(self, expr):
         if isinstance(expr.dtype, NumpyNumericType):
