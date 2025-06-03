@@ -3328,6 +3328,9 @@ class SemanticParser(BasicParser):
         self._in_annotation = False
         order = expr.order
 
+        if isinstance(visited_dtype, UnionTypeAnnotation) and len(visited_dtype.type_list) == 1:
+            visited_dtype = visited_dtype.type_list[0]
+
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
             class_type = dtype_cls.static_type()
