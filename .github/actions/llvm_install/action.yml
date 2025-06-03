@@ -8,9 +8,28 @@ runs:
         sudo apt-get update
       shell: bash
 
+    # https://docs.brew.sh/Homebrew-on-Linux
+    - name: Install brew requirements
+      run: |
+        sudo apt-get install build-essential procps curl file git
+      shell: bash
+    
+    - name: Install brew
+      run: |
+        test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+        test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+      shell: bash
+
+    - name: Test brew
+      run: |
+        brew install hello
+      shell: bash
+
     - name: Install clang and flang
       run: |
-        sudo apt-get install -y clang flang
+        brew install clang
+        brew install flang
       shell: bash
     
     - name: Create flang symlink
