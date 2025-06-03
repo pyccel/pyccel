@@ -2676,11 +2676,10 @@ class SemanticParser(BasicParser):
         if expr.program:
             self.scope.insert_symbols(expr.program.scope.all_used_symbols)
 
-        init_func_body += self._visit(expr.init_func).body
-
         for c in expr.classes:
             self._visit(c)
 
+        init_func_body += self._visit(expr.init_func).body
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
