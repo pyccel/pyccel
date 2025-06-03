@@ -7,6 +7,9 @@ from numpy.random import randint, uniform
 from pyccel import epyccel
 from modules        import arrays
 
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
+
 RTOL = 1e-12
 ATOL = 1e-16
 

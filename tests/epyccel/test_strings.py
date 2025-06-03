@@ -5,6 +5,9 @@ import pytest
 from modules import strings_module
 from pyccel import epyccel
 
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
+
 string_funcs = [getattr(strings_module,f) for f in strings_module.__all__ if inspect.isfunction(getattr(strings_module,f))]
 
 failing_tests = {
