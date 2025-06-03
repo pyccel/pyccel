@@ -18,7 +18,7 @@ runs:
     - name: Install brew
       run: |
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> $GITHUB_ENV
+        echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH" >> $GITHUB_ENV
         eval "$($(brew --prefix)/bin/brew shellenv)"
       shell: bash
 
