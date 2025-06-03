@@ -10,6 +10,9 @@ import numpy as np
 from pyccel.decorators import template
 from pyccel import epyccel
 
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
+
 min_int8 = iinfo('int8').min
 max_int8 = iinfo('int8').max
 
