@@ -15,20 +15,24 @@ runs:
 
     # https://docs.brew.sh/Homebrew-on-Linux
     # https://greenwebpage.com/community/how-to-install-and-use-homebrew-on-ubuntu-24-04/
-    - name: Install brew
+    - name: Install Homebrew
       run: |
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH" >> $GITHUB_ENV
-        eval "$($(brew --prefix)/bin/brew shellenv)"
       shell: bash
 
-    - name: Test brew
+    - name: Set up Homebrew
       run: |
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew --version
+      shell: bash
+  
+    - name: Test Homebrew
+      run: |
         brew install hello
       shell: bash
 
-    - name: Install clang and flang
+    - name: Install clang and flang with Homebrew
       run: |
         brew install clang
         brew install flang
