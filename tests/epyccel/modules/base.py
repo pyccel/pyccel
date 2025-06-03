@@ -188,7 +188,7 @@ def use_optional(a : int = None):
 
 def check_optional(a : int = None):
     b = 3
-    if a and a<5 and a>2:
+    if a and 2 < a <= 5:
         b += a
     return b
 
