@@ -414,25 +414,24 @@ class PythonCodePrinter(CodePrinter):
         if len(bodies) == 1:
             return func_def_code[0]
         else:
-            arg_vars = [a.var for a in expr.functions[0].arguments]
+            arg_names = [a.var.name for a in expr.functions[0].arguments]
             code = ''
             for i, (b, arg_types) in enumerate(bodies.items()):
                 code += '    if ' if i == 0 else '    elif '
                 checks = []
                 for a_t in arg_types:
                     check_option = []
-                    for a_v,t in zip(arg_vars, a_t):
-                        a = a_v.name
+                    for a,t in zip(arg_names, a_t):
                         if isinstance(t, NumpyNDArrayType):
                             ndarray = self._get_numpy_name(NumpyNDArray)
                             dtype = self._get_numpy_name(NumpyDtype)
                             check_option.append(f'isinstance({a}, {ndarray})')
                             check_option.append(f'{a}.dtype is {dtype}({self._print(t.element_type)})')
                             check_option.append(f'{a}.ndim == {t.rank}')
-                            if t.rank > 1:
-                                check_option.append(f"{a}.flags['{a_v.order}_CONTIGUOUS']")
+                            if t.order:
+                                check_option.append(f"{a}.flags['{t.order}_CONTIGUOUS']")
                         else:
-                            check_option.append(f'isinstance({a}, {self._print(t)})')
+                            check_option.append(f'isinstance({a}, {self._get_numpy_name(DtypePrecisionToCastFunction[t])})')
                     checks.append(' and '.join(check_option))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
@@ -961,7 +960,7 @@ class PythonCodePrinter(CodePrinter):
         return f"{name}({args})"
 
     def _print_NumpyAutoFill(self, expr):
-        func_name = self._aliases.get(type(expr), expr.name)
+        func_name = self._get_numpy_name(expr)
 
         dtype = self._print_dtype_argument(expr, expr.init_dtype)
         shape = self._print(expr.shape)
