@@ -41,12 +41,17 @@ runs:
         brew install hello
       shell: bash
 
-    - name: Install clang and flang with Homebrew
+    - name: Install flang with Homebrew
       run: |
-        brew install clang
         brew install flang
       shell: bash
     
+    - name: Install clang with apt-get
+      run: |
+        sudo apt-get install -y clang
+      shell: bash
+
+
     - name: Create flang symlink
       run: |
         which flang-new
