@@ -4,10 +4,8 @@ import pytest
 from pyccel import epyccel
 from pyccel.decorators import template
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'LLVM',
-    reason='flang: not yet implemented: support for polymorphic types.'
-)
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
