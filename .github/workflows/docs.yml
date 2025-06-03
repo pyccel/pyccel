@@ -40,12 +40,21 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**/*.py"]'
+          paths_ignore: '["pyccel/version.py"]'
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.base }}
           path: base
           submodules: true
       - uses: actions/checkout@v4
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         with:
           path: compare
           ref: ${{ env.COMMIT }}
@@ -65,6 +74,7 @@ jobs:
           python ../base/ci_tools/setup_check_run.py docs
           cd ..
       - name: Install python CI dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install docstr-coverage
@@ -72,8 +82,10 @@ jobs:
           python -m pip install defusedxml # All imported modules must be available for numpydoc
         shell: bash
       - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./compare/.github/actions/linux_install
       - name: Install python dependencies for pyccel and tests
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           cd compare
           pip3 install .[test]
@@ -81,6 +93,7 @@ jobs:
           cd ..
         shell: bash
       - name: Check doc coverage
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: doc_coverage
         run: |
           docstr-coverage --config=base/.docstr.yaml base/pyccel base/ci_tools 2>&1 | tee base_cov
@@ -89,6 +102,7 @@ jobs:
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
         shell: bash
       - name: Check doc format
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: doc_format
         run: |
           cd compare

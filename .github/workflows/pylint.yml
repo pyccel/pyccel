@@ -38,6 +38,13 @@ jobs:
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["**/*.py"]'
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
@@ -55,12 +62,14 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py pylint
       - name: Install python dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install pylint
           python -m pip install defusedxml
         shell: bash
       - name: Run Pylint
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
           if [ -z ${check_files} ]
@@ -71,6 +80,7 @@ jobs:
           fi
         shell: bash
       - name: Filter Pylint output
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pylint
         run: |
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
