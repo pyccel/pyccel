@@ -1181,6 +1181,7 @@ class PyccelAnd(PyccelBooleanOperator):
     def __init__(self, *args, simplify = False):
         if simplify:
             args = tuple(a for a in args if not isinstance(a, LiteralTrue))
+        args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelAnd) else [a]))
         super().__init__(*args)
 
 
@@ -1226,6 +1227,7 @@ class PyccelOr(PyccelBooleanOperator):
     def __init__(self, *args, simplify = False):
         if simplify:
             args = tuple(a for a in args if not isinstance(a, LiteralFalse))
+        args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelOr) else [a]))
         super().__init__(*args)
 
     def _handle_precedence(self, args):
