@@ -2034,7 +2034,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
-            else:
+            elif not f.is_inline:
                 wrapped_class.add_new_method(self._wrap(f))
 
         for i in expr.interfaces:
