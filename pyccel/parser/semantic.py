@@ -703,6 +703,7 @@ class SemanticParser(BasicParser):
             A list of objects in `_allocs` which are to be ignored (variables appearing
             in a return statement).
         """
+        assert len(self._allocs) == len(self._pointer_targets)
         assert not isinstance(exceptions, Variable)
         for i in self._allocs[-1]:
             if i in exceptions:
@@ -1139,6 +1140,72 @@ class SemanticParser(BasicParser):
 
             return PythonTuple(*([self.scope.collect_tuple_element(v) for v in val]*length))
 
+    def _create_class_destructor(self, expr):
+        """
+        Create the class destructor.
+
+        Create the class destructor. This is important to ensure that the data in the
+        class is correctly deallocated. If the class already has a destructor then the
+        deallocations are added to the existing destructor. Similarly a flag is added
+        to the init method to act as a guard in the class to tell if the destructor has
+        been called.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class that implicit __init__ and __del__ methods should be created for.
+        """
+        class_type = expr.class_type
+        methods = expr.methods
+        cls_scope = expr.scope
+
+        init_func = cls_scope.functions['__init__']
+
+        if isinstance(init_func, Interface):
+            errors.report("Pyccel does not support interface constructor", symbol=init_func,
+                severity='fatal')
+
+        # create a new attribute to check allocation
+        deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
+        deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+                                     class_type = PythonNativeBool(), is_private=True)
+        expr.add_new_attribute(deallocater)
+        deallocater_assign = Assign(deallocater, LiteralFalse())
+        init_func.body.insert2body(deallocater_assign, back=False)
+
+        del_method = next((method for method in methods if method.name == '__del__'), None)
+        if del_method is None:
+            argument = FunctionDefArgument(Variable(class_type, 'self', cls_base = expr), bound_argument = True)
+            del_name = cls_scope.get_new_name('__del__')
+            scope = self.create_new_function_scope('__del__', del_name)
+            scope.insert_variable(argument.var)
+            self.exit_function_scope()
+            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
+            self.insert_function(del_method, cls_scope)
+            expr.add_new_method(del_method)
+        else:
+            assert del_method.is_semantic
+
+        # Add destructors to __del__ method
+        self._current_function_name.append(del_method.name)
+        attribute = []
+        for attr in expr.attributes:
+            if not attr.on_stack:
+                attribute.append(attr)
+            elif isinstance(attr.class_type, CustomDataType) and not attr.is_alias:
+                attribute.append(attr)
+        if attribute:
+            # Create a new list that store local attributes
+            self._allocs.append(set())
+            self._pointer_targets.append({})
+            self._allocs[-1].update(attribute)
+            del_method.body.insert2body(*self._garbage_collector(del_method.body))
+            self._pointer_targets.pop()
+        condition = If(IfSection(PyccelNot(deallocater),
+                        [del_method.body]+[Assign(deallocater, LiteralTrue())]))
+        del_method.body = [condition]
+        self._current_function_name.pop()
+
     def _handle_function_args(self, arguments):
         """
         Get a list of all function arguments.
@@ -1303,6 +1370,17 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
+            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
+            if not func.is_semantic:
+                func = self._annotate_the_called_function_def(func, args)
+            elif is_inline and isinstance(func, Interface):
+                is_compatible = False
+                for f in func.functions:
+                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
+                    is_compatible |= fl
+                if not is_compatible:
+                    func = self._annotate_the_called_function_def(func, args)
+
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
@@ -1458,6 +1536,7 @@ class SemanticParser(BasicParser):
             func = func.clone(new_name, is_imported=True)
             func.set_current_user_node(mod)
             scope.imports['functions'][new_name] = func
+
         return func
 
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
@@ -1668,7 +1747,8 @@ class SemanticParser(BasicParser):
                 prefix = self.get_class_prefix(lhs)
                 class_def = prefix.cls_base
                 attr_name = lhs.name[-1]
-                attribute = class_def.scope.find(attr_name) if class_def else None
+                attribute = class_def.scope.variables.get(attr_name, None) \
+                            if class_def else None
                 if attribute:
                     var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
                 else:
@@ -2635,13 +2715,23 @@ class SemanticParser(BasicParser):
             # it will add the necessary Deallocate nodes
             # to the ast
             program_body.insert2body(*self._garbage_collector(program_body))
+            self._pointer_targets.pop()
 
             self.scope = mod_scope
 
-        for f in self.scope.functions.copy().values():
+        funcs_to_visit = list(self.scope.functions.values())
+        funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
+
+        for f in funcs_to_visit:
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
+
+        for c in self.scope.classes.values():
+            self._create_class_destructor(c)
+
+        for f in self.scope.functions.values():
+            assert f.is_semantic or f.is_inline
 
         variables = self.get_variables(self.scope)
         init_func = None
@@ -2910,6 +3000,12 @@ class SemanticParser(BasicParser):
                     # This leads to printing errors
                     errors.report("Inhomogeneous tuples are not yet supported as arguments",
                             severity='error', symbol=expr)
+                if isinstance(dtype, CustomDataType) and not bound_argument:
+                    cls = self.scope.find(str(dtype), 'classes')
+                    if cls:
+                        init_method = cls.get_method('__init__', expr)
+                        if not init_method.is_semantic:
+                            self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
@@ -3345,12 +3441,10 @@ class SemanticParser(BasicParser):
             method = cls_base.get_method(rhs_name, expr)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
-            if not method.is_semantic:
-                method = self._annotate_the_called_function_def(method, args)
-
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
+
             return self._handle_function(expr, method, args, is_method = True)
 
         # look for a class attribute / property
@@ -3363,9 +3457,6 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 method = cls_base.get_method(rhs_name, expr)
-                if not method.is_semantic:
-                    method = self._annotate_the_called_function_def(method,
-                                (FunctionCallArgument(visited_lhs),))
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
@@ -3473,7 +3564,7 @@ class SemanticParser(BasicParser):
         contains_method = container_base.get_method('__contains__',
                         raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
-            return contains_method(container, element)
+            return self._handle_function(expr, contains_method, [FunctionCallArgument(container), FunctionCallArgument(element)])
         else:
             raise errors.report(f"In operator is not yet implemented for type {container_type}",
                     severity='fatal', symbol=expr)
@@ -3534,16 +3625,6 @@ class SemanticParser(BasicParser):
                             annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-            if not func.is_semantic:
-                func = self._annotate_the_called_function_def(func, args)
-            elif is_inline and isinstance(func, Interface):
-                is_compatible = False
-                for f in func.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
-                    is_compatible |= fl
-                if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3557,6 +3638,9 @@ class SemanticParser(BasicParser):
             d_methods = cls.methods_as_dict
             method = d_methods.pop('__init__', None)
 
+            if not method.is_semantic:
+                method = self._annotate_the_called_function_def(method, args)
+
             if method is None:
 
                 # TODO improve case of class with the no __init__
@@ -3564,8 +3648,8 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
-            dtype = method.arguments[0].var.class_type
-            cls_def = method.arguments[0].var.cls_base
+            dtype = cls.class_type
+            cls_def = cls
             d_var = {'class_type' : dtype,
                     'memory_handling':'stack',
                     'shape' : None,
@@ -3592,6 +3676,7 @@ class SemanticParser(BasicParser):
                                     is_augassign = False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
+
             self._check_argument_compatibility(args, method.arguments,
                             method, method.is_elemental)
 
@@ -4729,10 +4814,22 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules or inside other functions.",
                     symbol=expr, severity='error')
 
+        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
+        cls_name = current_class[0].name if current_class else None
+        insertion_scope = self.scope
+        if cls_name:
+            bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
+            insertion_scope = bound_class.scope
+
         existing_semantic_funcs = []
         if not expr.is_semantic:
             name = expr.scope.get_expected_name(expr.name)
-            self.scope.functions.pop(name, None)
+            func = insertion_scope.functions.get(name, None)
+            if func:
+                if func.is_semantic:
+                    return EmptyNode()
+                else:
+                    insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr = expr.syntactic_node
@@ -4751,13 +4848,6 @@ class SemanticParser(BasicParser):
         if function_call_args is not None:
             assert is_inline
             found_func = False
-
-        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
-        cls_name = current_class[0].name if current_class else None
-        insertion_scope = self.scope
-        if cls_name:
-            bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
-            insertion_scope = bound_class.scope
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
         if len(not_used) >= 1:
@@ -4921,11 +5011,6 @@ class SemanticParser(BasicParser):
             for i in sub_funcs:
                 self._visit(i)
 
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the body of the function
-            body.insert2body(*self._garbage_collector(body))
-
             results = self._visit(results)
             if isinstance(results, EmptyNode):
                 results = FunctionDefResult(Nil())
@@ -4936,6 +5021,11 @@ class SemanticParser(BasicParser):
                 results_vars = self.scope.collect_all_tuple_elements(results.var)
 
             self._check_pointer_targets(results_vars)
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
+            body.insert2body(*self._garbage_collector(body))
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -5158,70 +5248,6 @@ class SemanticParser(BasicParser):
         methods = expr.methods
         for method in methods:
             cls.add_new_method(method)
-
-        syntactic_init_func = next((method for method in methods if method.name == '__init__'), None)
-        if syntactic_init_func is None:
-            argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
-            init_name = cls_scope.get_new_name('__init__')
-            scope = self.create_new_function_scope('__init__', init_name)
-            scope.insert_variable(argument.var)
-            init_func = FunctionDef(init_name, [argument], (), cls_name=cls.name, scope=scope)
-            self.exit_function_scope()
-            self.insert_function(init_func, cls_scope)
-            cls.add_new_method(init_func)
-        else:
-            self._visit(syntactic_init_func)
-            init_func = cls_scope.functions.pop('__init__')
-
-        if isinstance(init_func, Interface):
-            errors.report("Pyccel does not support interface constructor", symbol=init_func,
-                severity='fatal')
-
-        # create a new attribute to check allocation
-        deallocater_lhs = Variable(dtype, 'self', cls_base = cls, is_argument=True)
-        deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
-                                     class_type = PythonNativeBool(), is_private=True)
-        cls.add_new_attribute(deallocater)
-        deallocater_assign = Assign(deallocater, LiteralFalse())
-        init_func.body.insert2body(deallocater_assign, back=False)
-
-        syntactic_method = next((m for m in cls.methods if not m.is_semantic), None)
-        while syntactic_method:
-            self._visit(syntactic_method)
-            syntactic_method = next((m for m in cls.methods if not m.is_semantic), None)
-
-        syntactic_del_func = next((method for method in methods if method.name == '__del__'), None)
-        if syntactic_del_func is None:
-            argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
-            del_name = cls_scope.get_new_name('__del__')
-            scope = self.create_new_function_scope('__del__', del_name)
-            scope.insert_variable(argument.var)
-            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
-            self.exit_function_scope()
-            self.insert_function(del_method, cls_scope)
-            cls.add_new_method(del_method)
-        else:
-            del_method = cls.get_method('__del__', expr)
-
-        # Add destructors to __del__ method
-        self._current_function_name.append(del_method.name)
-        attribute = []
-        for attr in cls.attributes:
-            if not attr.on_stack:
-                attribute.append(attr)
-            elif isinstance(attr.class_type, CustomDataType) and not attr.is_alias:
-                attribute.append(attr)
-        if attribute:
-            # Create a new list that store local attributes
-            self._allocs.append(set())
-            self._pointer_targets.append({})
-            self._allocs[-1].update(attribute)
-            del_method.body.insert2body(*self._garbage_collector(del_method.body))
-            self._pointer_targets.pop()
-        condition = If(IfSection(PyccelNot(deallocater),
-                        [del_method.body]+[Assign(deallocater, LiteralTrue())]))
-        del_method.body = [condition]
-        del_name = self._current_function_name.pop()
 
         return EmptyNode()
 

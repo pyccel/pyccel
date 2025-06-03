@@ -1065,7 +1065,8 @@ class CCodePrinter(CodePrinter):
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
             classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
             for method in classDef.methods:
-                funcs += f"{self.function_signature(method)};\n"
+                if not method.is_inline:
+                    funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     funcs += f"{self.function_signature(func)};\n"
