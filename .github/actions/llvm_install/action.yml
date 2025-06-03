@@ -8,21 +8,23 @@ runs:
         sudo apt-get update
       shell: bash
 
-    # https://docs.brew.sh/Homebrew-on-Linux
     - name: Install brew requirements
       run: |
         sudo apt-get install build-essential procps curl file git
       shell: bash
-    
+
+    # https://docs.brew.sh/Homebrew-on-Linux
+    # https://greenwebpage.com/community/how-to-install-and-use-homebrew-on-ubuntu-24-04/
     - name: Install brew
       run: |
-        test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-        test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/ubuntu/.bashrc
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
       shell: bash
 
     - name: Test brew
       run: |
+        brew --version
         brew install hello
       shell: bash
 
