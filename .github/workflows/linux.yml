@@ -116,10 +116,6 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: Check
-        run: |
-          echo ${{ steps.duplicate_check.outputs.skipped_by }}
-          echo ${{ fromJSON(steps.duplicate_check.outputs.skipped_by).id }}
       - name: Collect pre-existing coverage information
         uses: actions/download-artifact@v4
         with:
