@@ -102,9 +102,12 @@ jobs:
         with:
           shell_cmd: 'bash -l -eo pipefail {0}'
       - name: "Post completed"
-        if: always() && github.event_name != 'push'
-        run: |
-          which python
-          python --version
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
+        run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
+        shell: bash -l -eo pipefail {0}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'
         shell: bash -l -eo pipefail {0}

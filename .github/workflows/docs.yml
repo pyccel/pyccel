@@ -124,6 +124,12 @@ jobs:
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
-        if: always() && github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
           python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }}
+        shell: bash -l {0}
+      - name: "Post completed"
+        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'
+        shell: bash -l {0}

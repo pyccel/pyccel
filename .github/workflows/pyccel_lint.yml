@@ -88,6 +88,10 @@ jobs:
           cat $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
-        if: always() && github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
         run:
           python ci_tools/complete_check_run.py ${{ steps.lint.outcome }}
+      - name: "Post completed"
+        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'

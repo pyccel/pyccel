@@ -125,6 +125,10 @@ jobs:
           retention-days: 3
           include-hidden-files: true
       - name: "Post completed"
-        if: always() && github.event_name != 'push'
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'
