@@ -60,6 +60,15 @@ runs:
         sudo apt-get install -y libomp-dev libomp5
       shell: bash
 
+    - name: Export libomp path
+      run: |
+        LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
+        LLVM_LIB_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
+        echo "LLVM version: $LLVM_VERSION"
+        echo "LLVM path: $LLVM_LIB_PATH"
+        echo "LD_LIBRARY_PATH=${LLVM_LIB_PATH}:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      shell: bash    
+
     - name: Install LaPack
       run:
         sudo apt-get install libblas-dev liblapack-dev
