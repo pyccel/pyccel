@@ -81,7 +81,7 @@ def test_openmp_no_implementation():
     plugins.set_options({'accelerators': ['openmp']})
     ins = NoImp()
     reference_methods = get_funcs(ins)
-    plugins.register((ins,), refresh=True)
+    plugins.register((ins,))
     modified_methods = get_funcs(ins)
     assert reference_methods == modified_methods
 

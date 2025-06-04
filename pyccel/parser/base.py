@@ -169,7 +169,7 @@ class BasicParser(object):
 
         self._blocking = error_mode.value == 'developer'
 
-        plugins.register((self,), refresh=True)
+        plugins.register((self,))
 
     @property
     def scope(self):

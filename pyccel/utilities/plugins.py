@@ -48,8 +48,12 @@ class Plugin(ABC):
         assert all(isinstance(reg, PatchRegistry) for reg in self._patch_registries)
 
     @abstractmethod
-    def register(self, instances, refresh=False):
+    def register(self, instances):
         """Handle loading plugin with provided options"""
+
+    @abstractmethod
+    def refresh(self):
+        """Refresh all registered targets"""
 
     @abstractmethod
     def unregister(self, instances):
@@ -89,7 +93,7 @@ class Plugins(metaclass=Singleton):
         for plugin in plugins:
             plugin.set_options(options)
             if refresh:
-                plugin.register((), refresh)
+                plugin.refresh()
 
     def load_plugins(self, plugins_dir=None):
         """Discover and load all plugins from the plugins directory"""
@@ -155,13 +159,13 @@ class Plugins(metaclass=Singleton):
             self.unregister(plugin.get_all_targets(), (plugin,))
         self._plugins = []
 
-    def register(self, instances, refresh=False, plugins = ()):
+    def register(self, instances, plugins = ()):
         """Register the given instances """
         if not plugins:
             plugins = self._plugins
         for plugin in plugins:
             try:
-                plugin.register(instances, refresh=refresh)
+                plugin.register(instances)
             # Catching all exceptions because plugin loading may fail in unpredictable ways
             except Exception as e:  # pylint: disable=broad-exception-caught
                 # plugin.handle_loading({'clear':True})

@@ -33,7 +33,7 @@ class CodePrinter:
         self._scope = None
         self._current_ast_node = None
         self._additional_imports = {}
-        plugins.register((self,), refresh=True)
+        plugins.register((self,))
 
     def doprint(self, expr):
         """

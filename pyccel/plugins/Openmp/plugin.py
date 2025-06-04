@@ -68,6 +68,7 @@ class Openmp(Plugin):
     def __init__(self):
         self._options = {}
         self._patch_registries = []
+        self._refresh = False
         super().__init__()
 
     def set_options(self, options):
@@ -75,19 +76,26 @@ class Openmp(Plugin):
         self._options.clear()
         self._options.update(options)
 
-    def register(self, instances, refresh=False):
+    def register(self, instances):
         """Register the provided instances with the OpenMP plugin"""
-        self._patch_registries += [OmpPatchRegistry(instance) for instance in instances
-                                   if not any(reg.target is instance for reg in self._patch_registries)]
-        if refresh:
-            version = self._resolve_version()
-            if 'openmp' not in self._options.get('accelerators', []):
-                return
-            for reg in self._patch_registries:
-                if version in reg.loaded_versions:
-                    continue
-                self._apply_patches(version, reg)
-                reg.loaded_versions.append(version)
+        new_patch_regs = [OmpPatchRegistry(instance) for instance in instances
+                            if not any(reg.target is instance for reg in self._patch_registries)]
+        self._patch_registries += new_patch_regs
+        if self._refresh:
+            new_patch_regs = self._patch_registries
+        version = self._resolve_version()
+        if 'openmp' not in self._options.get('accelerators', []):
+            return
+        for reg in new_patch_regs:
+            if version in reg.loaded_versions:
+                continue
+            self._apply_patches(version, reg)
+            reg.loaded_versions.append(version)
+
+    def refresh(self):
+        self._refresh = True
+        self.register(self.get_all_targets())
+        self._refresh = False
 
     def unregister(self, instances):
         """Unregister the provided instances"""
