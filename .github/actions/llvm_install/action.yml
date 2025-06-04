@@ -36,7 +36,7 @@ runs:
     - name: Add flang to LD_LIBRARY_PATH
       run: |
         echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
+      shell: bash
     
     - name: Install clang with apt-get
       run: |
