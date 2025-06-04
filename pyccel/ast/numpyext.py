@@ -2729,6 +2729,11 @@ class NumpyIsFinite(NumpyUfuncUnary):
 
 #==============================================================================
 class NumpyDtype(PyccelFunction):
+    """
+    A class representing a call to numpy.dtype.
+
+    This object is not currently aval
+    """
     _dtype = SymbolicType()
     name = 'dtype'
 
@@ -2738,13 +2743,18 @@ class NumpyDtype(PyccelFunction):
 
 #==============================================================================
 class NumpyNDArray(PyccelFunction):
+    """
+    A class representing np.ndarray.
+
+    A class representing np.ndarray. This object is useful for type
+    checks.
+    """
     _dtype = SymbolicType()
     _static_type = NumpyNDArrayType
     name = 'ndarray'
 
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError("numpy.ndarray not implemented")
-        super().__init__(*args)
+    def __new__(cls, *args, **kwargs):
+        return NumpyArray(*args, **kwargs)
 
 #==============================================================================
 
