@@ -45,6 +45,7 @@ jobs:
           skip_after_successful_duplicate: 'true'
           paths: '["**/*.py"]'
           paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '[]'
 
       - uses: actions/checkout@v4
         with:
