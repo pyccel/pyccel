@@ -17,7 +17,6 @@ from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticErro
 from pyccel.errors.errors   import ErrorsMode
 from pyccel.naming                 import name_clash_checkers
 from pyccel.parser.scope           import Scope
-from pyccel.utilities.plugins import Plugins
 
 error_mode = ErrorsMode()
 
@@ -35,8 +34,6 @@ def test_syntax_blockers(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
-    plugins = Plugins()
-    plugins.set_options({'accelerators': ['openmp']})
 
     pyccel = Parser(f)
 
