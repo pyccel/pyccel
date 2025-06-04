@@ -23,6 +23,7 @@ on:
       - opened
       - reopened
       - synchronize
+      - ready_for_review
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
