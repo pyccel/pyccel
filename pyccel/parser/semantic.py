@@ -3332,7 +3332,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
-            class_type = dtype_cls.static_type()
+            try:
+                class_type = dtype_cls.static_type()
+            except AttributeError:
+                errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
             return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if order and order != visited_dtype.class_type.order:
