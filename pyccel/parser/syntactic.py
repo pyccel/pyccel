@@ -175,6 +175,39 @@ class SyntaxParser(BasicParser):
 
         return ast
 
+    def create_new_function_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python function.
+
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function_name.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        **kwargs : dict
+            Keyword arguments passed through to the new scope.
+
+        Returns
+        -------
+        Scope
+            The new scope for the function.
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+
+        self._scope = child
+        self._current_function_name.append(name)
+
+        return child
+
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
@@ -309,7 +342,7 @@ class SyntaxParser(BasicParser):
         str
             The new name of the variable.
         """
-        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+        if all(isinstance(n, PythonTuple) for n in possible_names) and \
                 len(set(len(n) for n in possible_names)) == 1:
             # If all possible names are iterables of the same length then find a name
             # for each element and link them to an element describing this variable
@@ -824,7 +857,11 @@ class SyntaxParser(BasicParser):
 
         headers = self.scope.find(name, 'headers')
 
-        scope = self.create_new_function_scope(name)
+        new_name = self.scope.get_expected_name(name)
+
+        scope = self.create_new_function_scope(name,
+                used_symbols = {name: new_name},
+                original_symbols = {new_name: name})
 
         arguments    = self._visit(stmt.args)
 
@@ -1106,7 +1143,26 @@ class SyntaxParser(BasicParser):
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
+
+        init_method = next((m for m in methods if m.name == '__init__'), None)
+        if init_method is None:
+            init_name = PyccelSymbol('__init__')
+            self.scope.insert_symbol(init_name)
+            annot = self._treat_type_annotation(stmt, LiteralString(name))
+            init_scope = self.create_new_function_scope(init_name,
+                    used_symbols = {init_name: init_name},
+                    original_symbols = {init_name: init_name})
+            self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
+                                           annotation=annot,
+                                           kwonly=False,
+                                           bound_argument = True)
+            self_arg.set_current_ast(stmt)
+            self.scope.insert_symbol(self_arg.var)
+            self.exit_function_scope()
+            methods.append(FunctionDef(init_name, (self_arg,), CodeBlock(()), FunctionDefResult(Nil()), scope=init_scope))
+
         self.exit_class_scope()
+
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
                         docstring = docstring)

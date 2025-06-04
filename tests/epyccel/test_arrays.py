@@ -2194,7 +2194,6 @@ def test_array_kwargs_ones(language):
 #==============================================================================
 
 def test_constant_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
     f2 = epyccel( f1 , language = language)
@@ -2202,7 +2201,6 @@ def test_constant_negative_index(language):
 
 
 def test_almost_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
     f2 = epyccel( f1 , language = language)
@@ -2210,7 +2208,6 @@ def test_almost_negative_index(language):
 
 
 def test_var_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     idx = randint(-n,0)
     f1 = arrays.var_negative_index
@@ -2219,7 +2216,6 @@ def test_var_negative_index(language):
 
 
 def test_expr_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     idx1 = randint(-n,2*n)
     idx2 = randint(idx1,idx1+n+1)
@@ -2337,7 +2333,6 @@ def test_array_random_size(language):
 def test_array_variable_size(language):
     f1 = arrays.array_variable_size
     f2 = epyccel( f1 , language = language)
-    from numpy.random import randint
     n = randint(1, 10)
     m = randint(11,20)
     s1, s2 = f2(n,m)
@@ -3832,16 +3827,6 @@ def test_arrs_similar_shapes_1(language):
     check_array_equal(f1(), f2())
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Bad unravelling. See #2042"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Bad unravelling. See #2042"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
@@ -3853,16 +3838,6 @@ def test_arrs_uncertain_shape_1(language):
     f2 = epyccel(f1, language = language)
     check_array_equal(f1(), f2())
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Bad unravelling. See #2042"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Bad unravelling. See #2042"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)

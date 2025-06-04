@@ -86,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   #2192 : Add support for the floor division assignment operator.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
+-   #2132 : Add support for `typing.TypeVar` to replace `@template`.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
@@ -161,6 +162,13 @@ All notable changes to this project will be documented in this file.
 -   #2295 : Fix wrapper handling of constant array arguments.
 -   #2097 : Fix printing of an empty list.
 -   #2235 : Fix negative numbers in slice indices when translating to C.
+-   #2144 : Fix accidental imports due to modules making their contents public by default.
+-   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
+-   #2125 : Fix missing type check for argument of known type in a function with arguments whose type can be one of several types.
+-   #2042 : Fix missing index in loop unravelling for loop of length 1.
+-   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
+-   #1814 : Fix class method visitation order to correctly access the global scope from methods.
+-   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
 
 ### Changed
 
@@ -178,6 +186,7 @@ All notable changes to this project will be documented in this file.
 -   #2249 : Improve installation docs and recommend virtual environment.
 -   #2242 : Change format of compiler info files.
 -   #2302 : Print the deallocation in a 1 line if statement.
+-   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

@@ -842,15 +842,12 @@ class FCodePrinter(CodePrinter):
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
 
-        # ... TODO add other elements
-        private_funcs = [f.name for f in expr.funcs if f.is_private]
-        private = private_funcs
-        if private:
-            private = ','.join(self._print(i) for i in private)
-            private = 'private :: {}\n'.format(private)
-        else:
-            private = ''
         # ...
+        public_decs = ''.join(f'public :: {n}\n' for n in chain(
+                                      (c.name for c in expr.classes),
+                                      (i.name for i in expr.interfaces if not i.is_inline),
+                                      (f.name for f in expr.funcs if not f.is_private and not f.is_inline),
+                                      (v.name for v in expr.variables if not v.is_private)))
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -875,20 +872,23 @@ class FCodePrinter(CodePrinter):
         body = '\n'.join(func_strings)
         # ...
 
+        # Don't print contains or private for gFTL extensions
+        private = 'private\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
 
-        parts = ['module {}\n'.format(name),
+        parts = [f'module {name}\n',
                  imports,
                  implicit_none,
+                 public_decs,
                  private,
                  decs,
                  interfaces,
                  contains,
                  body,
-                 'end module {}\n'.format(name)]
+                 f'end module {name}\n']
 
         self.exit_scope()
 
@@ -1639,9 +1639,14 @@ class FCodePrinter(CodePrinter):
 
         if expr.stop.dtype != expr.dtype:
             st = self._apply_cast(expr.dtype, expr.stop)
-            v = self._print(st)
+            stop = self._print(st)
         else:
-            v = self._print(expr.stop)
+            stop = self._print(expr.stop)
+
+        start = self._print(expr.start)
+        step  = self._print(expr.step)
+        end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+        endpoint_code = ''
 
         if not isinstance(expr.endpoint, LiteralFalse):
             lhs = expr.get_user_nodes(Assign)[0].lhs
@@ -1659,32 +1664,28 @@ class FCodePrinter(CodePrinter):
                                                  simplify = True)))
 
             if isinstance(expr.endpoint, LiteralTrue):
-                cond_template = lhs + ' = {stop}'
+                endpoint_code = lhs + f' = {stop}\n'
             else:
-                cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+                cond = self._print(expr.endpoint)
+                endpoint_code = lhs + f' = merge({stop}, {lhs}, ({cond}))\n'
+
         if expr.rank > 1:
-            template = '({start} + {index}*{step})'
             var = expr.ind
         else:
-            template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(var),
-            zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
-        )
+        index = self._print(var)
+        init_value = f'({start} + {index}*{step})'
 
-        if isinstance(expr.endpoint, LiteralFalse):
-            code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + '\n' + cond_template.format(stop=v)
-        else:
-            code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
+            kind = self.print_kind(expr)
+            init_value = f'floor({init_value}, kind = {kind})'
 
-        return code
+        if expr.rank == 1:
+            zero  = self._print(LiteralInteger(0))
+            init_value = f'[({init_value}, {index} = {zero},{end})]'
+
+        return '\n'.join((init_value, endpoint_code))
 
     def _print_NumpyNonZeroElement(self, expr):
 
@@ -2746,11 +2747,9 @@ class FCodePrinter(CodePrinter):
                 methods += f'generic, public :: {i.name} => {names}\n'
                 methods += f'procedure :: {names}\n'
 
+        self.exit_scope()
 
-
-        options = ', '.join(i for i in expr.options)
-
-        sig = 'type, {0}'.format(options)
+        sig = 'type'
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
@@ -2768,8 +2767,6 @@ class FCodePrinter(CodePrinter):
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
-
-        self.exit_scope()
 
         return decs, methods
 

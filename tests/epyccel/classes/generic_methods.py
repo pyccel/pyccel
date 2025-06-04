@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from pyccel.decorators import template
+from typing import TypeVar
+
+T = TypeVar('T', int, float)
 
 class Point(object):
     def __init__(self : 'Point', x : float, y : float):
@@ -9,8 +11,7 @@ class Point(object):
     def __del__(self : 'Point'):
         pass
 
-    @template('T', [int, float])
-    def translate(self : 'Point', a : 'T', b : 'T'):
+    def translate(self : 'Point', a : T, b : T):
         self.x = self.x + a
         self.y = self.y + b
 

@@ -10,7 +10,7 @@ import inspect
 import importlib
 import re
 import sys
-from typing import TypeVar
+import typing
 import os
 
 from filelock import FileLock, Timeout
@@ -120,9 +120,10 @@ def get_source_code_and_context(func_or_class):
         # T will not be available from the closure vars or globals, we therefore
         # search for TypeVars, put their definition in the context_dict and use the
         # variable name (e.g. T) in the signature.
-        for p in sig.parameters.values():
-            annot = p.annotation
-            if isinstance(annot, TypeVar):
+        params = {p.annotation for p in sig.parameters.values()}
+        while params:
+            annot = params.pop()
+            if isinstance(annot, typing.TypeVar):
                 name = annot.__name__
                 if name in context_dict:
                     if context_dict[name] != annot:
@@ -131,6 +132,8 @@ def get_source_code_and_context(func_or_class):
                 else:
                     context_dict[name] = annot
                 method_prototype = method_prototype.replace(str(annot), name)
+            elif isinstance(annot, typing.GenericAlias) or getattr(annot, '__origin__', None) is typing.Final:
+                params.update(typing.get_args(annot))
 
         # Save the updated prototype
         lines[prototype_idx] = method_prototype
