@@ -2734,6 +2734,7 @@ class NumpyDtype(PyccelFunction):
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("numpy.dtype not implemented")
+        super().__init__(*args)
 
 #==============================================================================
 class NumpyNDArray(PyccelFunction):
@@ -2743,6 +2744,7 @@ class NumpyNDArray(PyccelFunction):
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("numpy.ndarray not implemented")
+        super().__init__(*args)
 
 #==============================================================================
 
