@@ -28,6 +28,7 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
 
 jobs:
   Spelling:
@@ -41,10 +42,10 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           submodules: true
-      - name: Set up Python ${{ inputs.python_version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: "Setup"
         if: github.event_name != 'pull_request'
         id: token
