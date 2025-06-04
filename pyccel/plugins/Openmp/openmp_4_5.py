@@ -324,7 +324,7 @@ class SemanticParser(ConfigMixin):
             errors.report(
                 f"End directive `{expr.name}` doesn't belong to any openmp construct",
                 symbol=expr,
-                severity="fatal",
+                severity="error",
             )
         clauses = [instance._visit(clause) for clause in expr.clauses]
         return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
