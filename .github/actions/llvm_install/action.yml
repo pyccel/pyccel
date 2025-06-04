@@ -8,21 +8,8 @@ runs:
         sudo apt-get update
       shell: bash
 
-    - name: Install brew requirements
-      run: |
-        sudo apt-get install build-essential procps curl file git
-      shell: bash
-
-    # https://docs.brew.sh/Homebrew-on-Linux
-    # https://greenwebpage.com/community/how-to-install-and-use-homebrew-on-ubuntu-24-04/
-    - name: Install Homebrew
-      run: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        echo >> /home/runner/.bashrc
-        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/runner/.bashrc
-      shell: bash
-
-    - name: Set up Homebrew
+    # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#homebrew-note
+    - name: Add Homebrew to PATH
       run: |
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew --version
