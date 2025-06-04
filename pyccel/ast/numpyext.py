@@ -2733,7 +2733,17 @@ class NumpyNDArray(PyccelFunction):
     A class representing np.ndarray.
 
     A class representing np.ndarray. This object is useful for type
-    checks.
+    checks. This class is not designed to be instantiated as
+    np.ndarray raises a warning when used in code, but as its
+    implementation is identical to np.array the __new__ method maps
+    to that class to the method is supported.
+
+    Parameters
+    ----------
+    *args : tuple
+        Positional arguments. See NumpyArray.
+    *kwargs : dict
+        Keyword arguments. See NumpyArray.
     """
     __slots__ = ()
     _dtype = SymbolicType()
@@ -2850,8 +2860,8 @@ numpy_funcs = {
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
     'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
-    'dtype' : PyccelFunctionDef('dtype', NumpyResultType),
-    'ndarray' : PyccelFunctionDef('ndarray', NumpyNDArray),
+    'dtype'     : PyccelFunctionDef('dtype', NumpyResultType),
+    'ndarray'   : PyccelFunctionDef('ndarray', NumpyNDArray),
 }
 
 numpy_mod = Module('numpy',
