@@ -36,7 +36,7 @@ env:
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
-    name: Best practices
+    name: Best practices (pyccel_lint, ${{ inputs.python_version || '3.11' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
