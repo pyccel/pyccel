@@ -52,12 +52,12 @@ jobs:
           do_not_skip: '[]'
 
       - uses: actions/checkout@v4
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         with:
           ref: ${{ inputs.base }}
           path: base
           submodules: true
       - uses: actions/checkout@v4
-        if: steps.duplicate_check.outputs.should_skip != 'true'
         with:
           path: compare
           ref: ${{ env.COMMIT }}
