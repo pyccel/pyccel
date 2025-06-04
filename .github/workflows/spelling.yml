@@ -77,10 +77,6 @@ jobs:
         with:
           config: ./.typos.toml
       - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
+        if: always() && github.event_name != 'pull_request'
         run:
           python ci_tools/complete_check_run.py ${{ steps.spelling.outcome }} ${{ steps.manual_spelling.outcome }}
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
-        run:
-          python ci_tools/complete_check_run.py 'success'
