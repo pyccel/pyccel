@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import os
 import pytest
 from pyccel import epyccel
 from pyccel.decorators import template
