@@ -110,6 +110,7 @@ __all__ = (
     'NumpySum',
     'NumpyOnes',
     'NumpyOnesLike',
+    'NumpyNDArray',
     'NumpyProduct',
     'NumpyRand',
     'NumpyRandint',
@@ -123,9 +124,6 @@ __all__ = (
     'NumpyIsInf',
     'NumpyIsFinite',
     'NumpyIsNan',
-    # Typing
-    'NumpyDtype',
-    'NumpyNDArray',
 )
 
 dtype_registry.update({
