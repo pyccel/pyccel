@@ -61,6 +61,7 @@ runs:
       run: |
         which flang-new
         flang-new --version
+        ldd $(which flang-new)
         sudo ln -sf /usr/bin/flang-new /usr/local/bin/flang
         which flang
         flang --version
