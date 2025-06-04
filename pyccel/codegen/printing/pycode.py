@@ -414,9 +414,33 @@ class PythonCodePrinter(CodePrinter):
         if len(bodies) == 1:
             return func_def_code[0]
         else:
+            bodies_to_print = {}
+            imports = {}
+            docstrings = set()
+            # Collect imports and docstrings from each sub-function
+            for b, arg_types in bodies.items():
+                lines = b.split('\n')
+                import_start = 0
+                if lines[0].strip() == '"""':
+                    docstr_end = next(i for i,l in enumerate(lines[1:],1) if l.strip() == '"""')
+                    docstr = '\n'.join(lines[:docstr_end+1])
+                    docstrings.add(docstr)
+                    import_start = docstr_end+1
+                import_end = next(i for i,l in enumerate(lines[import_start:], import_start) if not (l.strip().startswith('import ') or l.strip().startswith('from ')))
+                imports.update({l:None for l in lines[import_start:import_end]})
+                new_body = '\n'.join(lines[import_end:])
+                bodies_to_print[new_body] = arg_types
+
+            # Group imports together at top of function
+            imports_code = '\n'.join(imports.keys())
+            # Ensure docstring is printed in docstring position
+            assert len(docstrings) <= 1
+            docstr = docstrings.pop() if docstrings else ''
+
+            # Add tests to ensure the correct body is called
             arg_names = [a.var.name for a in expr.functions[0].arguments]
             code = ''
-            for i, (b, arg_types) in enumerate(bodies.items()):
+            for i, (b, arg_types) in enumerate(bodies_to_print.items()):
                 code += '    if ' if i == 0 else '    elif '
                 checks = []
                 for a_t in arg_types:
@@ -440,9 +464,9 @@ class PythonCodePrinter(CodePrinter):
                 code += ':\n'
                 code += self._indent_codestring(b)
 
-            header = func_def_code[0].split(':\n',1)[0]
+            header = func_def_code[0].split(':\n',1)[0] + ':'
 
-            return f'{header}:\n{code}'
+            return '\n'.join([l for l in (header, docstr, imports_code, code) if l != ''])
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
