@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import template
 
-@template(name = 'O', test=['int', 'real']) # pylint: disable=unexpected-keyword-arg
+@template(name = 'O', test=['int', 'float']) # pylint: disable=unexpected-keyword-arg
 def tmplt_1(x : 'O', y : 'O'):
     return x + y
 
