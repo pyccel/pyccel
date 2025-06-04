@@ -766,6 +766,9 @@ def test_isinstance_numpy(language):
 
 def test_isinstance_tuple(language):
     def isinstance_test(a : 'bool | int | float | complex'):
+        """
+        Testing a case which should generate radically different functions.
+        """
         return (isinstance(a, (bool, int)), isinstance(a, (bool, float)), isinstance(a, (int, complex)),
                 isinstance(a, (tuple, list)))
 
