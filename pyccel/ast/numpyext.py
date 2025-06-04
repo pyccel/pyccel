@@ -2740,7 +2740,7 @@ class NumpyNDArray(PyccelFunction):
     ----------
     *args : tuple
         Positional arguments. See NumpyArray.
-    *kwargs : dict
+    **kwargs : dict
         Keyword arguments. See NumpyArray.
     """
     __slots__ = ()
