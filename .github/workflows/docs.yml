@@ -37,7 +37,7 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: Documentation Format
+    name: Documentation Format (docs, ${{ env.PYTHON_VERSION }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
