@@ -121,7 +121,7 @@ jobs:
         with:
           name: coverage-artifact-${{ matrix.python_version }}
           path: .coverage
-          run-id: ${{ steps.duplicate_check.outputs.skipped_by.workflowId }}
+          run-id: ${{ steps.duplicate_check.outputs.skipped_by.id }}
           github-token: ${{ github.token }}
       - name: Save code coverage report
         uses: actions/upload-artifact@v4
