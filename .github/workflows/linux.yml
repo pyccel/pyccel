@@ -116,10 +116,13 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: Collect coverage information
-        if: steps.duplicate_check.outputs.should_skip == 'true'
-        run: |
-          python ci_tools/fetch_artifacts.py ${{ steps.duplicate_check.outputs.skipped_by.htmlUrl }}
+      - name: Collect pre-existing coverage information
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-artifact-${{ matrix.python_version }}
+          path: .coverage
+          run-id: ${{ steps.duplicate_check.outputs.skipped_by.workflowId }}
+          github-token: ${{ github.token }}
       - name: Save code coverage report
         uses: actions/upload-artifact@v4
         with:
