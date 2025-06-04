@@ -2734,12 +2734,13 @@ class NumpyDtype(PyccelFunction):
 
     This object is not currently aval
     """
+    __slots__ = ()
     _dtype = SymbolicType()
     name = 'dtype'
 
     def __init__(self, *args, **kwargs):
+        super().__init__()
         raise NotImplementedError("numpy.dtype not implemented")
-        super().__init__(*args)
 
 #==============================================================================
 class NumpyNDArray(PyccelFunction):
@@ -2749,6 +2750,7 @@ class NumpyNDArray(PyccelFunction):
     A class representing np.ndarray. This object is useful for type
     checks.
     """
+    __slots__ = ()
     _dtype = SymbolicType()
     _static_type = NumpyNDArrayType
     name = 'ndarray'
