@@ -1421,7 +1421,7 @@ PyUnicode_AsUTF8 = FunctionDef(name = 'PyUnicode_AsUTF8',
 # https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_Check
 PyUnicode_Check = FunctionDef(name = 'PyUnicode_Check',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
-                    results = FunctionDefResult(Variable(CharType(), 'out', memory_handling='alias')),
+                    results = FunctionDefResult(Variable(CNativeInt(), 'out')),
                     body = [])
 
 # https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_GetLength
