@@ -466,7 +466,7 @@ class PythonCodePrinter(CodePrinter):
         docstring = self._print(expr.docstring) if expr.docstring else ''
         docstring = self._indent_codestring(docstring)
 
-        body = ''.join([docstring, functions, interfaces, imports, body])
+        body = ''.join([docstring, imports, functions, interfaces, body])
 
         result_annotation = ("-> '" + self._print(expr.results.annotation) + "'") \
                                 if expr.results.annotation else ''
