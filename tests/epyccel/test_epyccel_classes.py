@@ -5,7 +5,7 @@ import modules.expose_classes as mod
 from pyccel import epyccel
 
 # Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
-pytestmark = pytest.mark.skip_llvm
+# pytestmark = pytest.mark.skip_llvm
 
 RTOL = 2e-14
 ATOL = 1e-15

@@ -4,7 +4,7 @@ from pyccel import epyccel
 from pyccel.decorators import template
 
 # Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
-pytestmark = pytest.mark.skip_llvm
+# pytestmark = pytest.mark.skip_llvm
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
