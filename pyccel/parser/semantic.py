@@ -2339,7 +2339,10 @@ class SemanticParser(BasicParser):
                 class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
-                dtype = numpy_process_dtype(dtype_cls.static_type())
+                try:
+                    dtype = numpy_process_dtype(dtype_cls.static_type())
+                except AttributeError:
+                    errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
                 class_type = NumpyNDArrayType(dtype, rank, order)
             return VariableTypeAnnotation(class_type)
 
