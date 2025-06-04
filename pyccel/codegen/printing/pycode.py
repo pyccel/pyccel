@@ -708,8 +708,14 @@ class PythonCodePrinter(CodePrinter):
         return '# {0} \n'.format(txt)
 
     def _print_CommentBlock(self, expr):
-        txt = '\n'.join(self._print(c) for c in expr.comments)
-        return '"""{0}"""\n'.format(txt)
+        comment_lines = [c.rstrip() for c in expr.comments]
+        if comment_lines[0] != '':
+            comment_lines.insert(0, '')
+            comment_lines[1] = comment_lines[1].lstrip()
+        if comment_lines[-1].strip() != '':
+            comment_lines.append('')
+        txt = '\n'.join(self._print(c) for c in comment_lines)
+        return f'"""{txt}"""\n'
 
     def _print_Assert(self, expr):
         condition = self._print(expr.test)
