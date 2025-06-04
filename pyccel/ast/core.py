@@ -4109,8 +4109,8 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
-            cond = PythonBool(cond)
+        assert pyccel_stage == 'syntactic' or cond.dtype is PythonNativeBool()
+
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
         elif isinstance(body, CodeBlock):
@@ -4174,15 +4174,31 @@ class If(PyccelAstNode):
 
     @property
     def blocks(self):
-        return self._blocks
+        """
+        The IfSection blocks inside this if.
 
-    @property
-    def bodies(self):
-        return [b.body for b in self._blocks]
+        The IfSection blocks inside this if.
+        """
+        return self._blocks
 
     def __str__(self):
         blocks = ','.join(str(b) for b in self.blocks)
         return f"If({blocks})"
+
+    def set_current_ast(self, ast_node):
+        """
+        Set the current AST.
+
+        See PyccelAstNode.set_current_ast for more details.
+
+        Parameters
+        ----------
+        ast_node : ast.AST
+            The Python AST node describing the original code and its location.
+        """
+        for b in self.blocks:
+            b.set_current_ast(ast_node)
+        super().set_current_ast(ast_node)
 
 class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)
