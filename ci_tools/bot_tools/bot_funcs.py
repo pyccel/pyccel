@@ -766,6 +766,44 @@ class Bot:
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
 
+    def get_diff(self, base_commit = None):
+        """
+        Get the diff between the base and the current commit.
+        Get the git description of the difference between the current
+        commit and the specified base commit. This output
+        shows how github organises the files tab and allows line
+        numbers do be calculated from git blob positions.
+        Parameters
+        ----------
+        base_commit : str, optional
+            The commit against which the current commit should be compared.
+            The default value is the base commit of the pull request.
+        Returns
+        -------
+        dict
+            A dictionary whose keys are files and whose values are lists of
+            lines which appear in the diff including code and blob headers.
+        """
+        if base_commit is None:
+            base_commit = self._base
+        assert bool(base_commit)
+        cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
+        print(' '.join(cmd))
+        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            out, _ = p.communicate()
+        diff = {f: None for f in out.strip().split('\n')}
+        for f in diff:
+            with subprocess.Popen(cmd + ['--', f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+                out, err = p.communicate()
+            if not err:
+                lines = out.split('\n')
+                n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
+                diff[f] = lines[n:]
+            else:
+                print(err)
+        return {f:l for f,l in diff.items() if l is not None}
+
+
     def accept_coverage_fix(self, comment_thread):
         """
         Leave a message on the pull request indicating that the coverage was fixed.
