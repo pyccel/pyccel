@@ -52,12 +52,22 @@ jobs:
     needs: Python_version_picker
 
     steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**/*.py", "tests/**/*.py"]'
+          paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '["push"]'
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           submodules: true
       - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
       - uses: conda-incubator/setup-miniconda@v2
         with:
@@ -65,6 +75,7 @@ jobs:
           auto-activate-base: true
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: Install python dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: openmpi
@@ -76,33 +87,39 @@ jobs:
           python ci_tools/setup_check_run.py anaconda_linux
         shell: bash -l {0}
       - name: Coverage install
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/coverage_install
         with:
           shell_cmd: "bash -l {0}"
       - name: Fortran/C tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
         with:
           shell_cmd: "bash -l {0}"
       - name: Python tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
         with:
           shell_cmd: "bash -l {0}"
       - name: Parallel tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
         with:
           shell_cmd: "bash -l {0}"
       - name: Collect coverage information
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
         with:
           shell_cmd: "bash -l {0}"
       - name: Save code coverage report
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-artifact
