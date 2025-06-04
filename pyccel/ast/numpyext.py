@@ -2728,21 +2728,6 @@ class NumpyIsFinite(NumpyUfuncUnary):
         return PythonNativeBool()
 
 #==============================================================================
-class NumpyDtype(PyccelFunction):
-    """
-    A class representing a call to numpy.dtype.
-
-    This object is not currently aval
-    """
-    __slots__ = ()
-    _dtype = SymbolicType()
-    name = 'dtype'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        raise NotImplementedError("numpy.dtype not implemented")
-
-#==============================================================================
 class NumpyNDArray(PyccelFunction):
     """
     A class representing np.ndarray.
@@ -2865,7 +2850,7 @@ numpy_funcs = {
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
     'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
-    'dtype' : PyccelFunctionDef('dtype', NumpyDtype),
+    'dtype' : PyccelFunctionDef('dtype', NumpyResultType),
     'ndarray' : PyccelFunctionDef('ndarray', NumpyNDArray),
 }
 

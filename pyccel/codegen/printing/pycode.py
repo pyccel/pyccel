@@ -23,7 +23,7 @@ from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
-from pyccel.ast.numpyext   import NumpyNDArray, NumpyDtype
+from pyccel.ast.numpyext   import NumpyNDArray
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
@@ -448,7 +448,7 @@ class PythonCodePrinter(CodePrinter):
                     for a,t in zip(arg_names, a_t):
                         if isinstance(t, NumpyNDArrayType):
                             ndarray = self._get_numpy_name(NumpyNDArray)
-                            dtype = self._get_numpy_name(NumpyDtype)
+                            dtype = self._get_numpy_name(NumpyResultType)
                             check_option.append(f'isinstance({a}, {ndarray})')
                             check_option.append(f'{a}.dtype is {dtype}({self._print(t.element_type)})')
                             check_option.append(f'{a}.ndim == {t.rank}')
