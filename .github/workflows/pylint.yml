@@ -36,7 +36,7 @@ env:
 jobs:
   Linter:
     runs-on: ubuntu-latest
-    name: Python best practices
+    name: Python best practices (pylint, ${{ inputs.python_version || '3.9' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
