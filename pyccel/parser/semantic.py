@@ -4916,7 +4916,7 @@ class SemanticParser(BasicParser):
             expr = expr.syntactic_node
             name = expr.scope.get_expected_name(expr.name)
 
-        decorators         = expr.decorators
+        decorators         = expr.decorators.copy()
         new_semantic_funcs = []
         sub_funcs          = []
         func_interfaces    = []
