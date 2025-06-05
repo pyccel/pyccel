@@ -240,7 +240,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             overload = ''
         if func.is_inline:
-            return overload + self._print(func)
+            if interface:
+                assert len(interface) == 1
+                return self._print(interface[0])
+            else:
+                return self._print(func)
         else:
             self.set_scope(func.scope)
             args = ', '.join(self._print(a) for a in func.arguments)
@@ -475,6 +479,10 @@ class PythonCodePrinter(CodePrinter):
             code = ast.unparse(expr.python_ast) + '\n'
             return code
 
+        in_header = self._in_header
+        if expr.is_inline:
+            self._in_header = False
+
         self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -511,6 +519,9 @@ class PythonCodePrinter(CodePrinter):
             code = '{header}\n{code}'.format(header=headers, code=code)
 
         self.exit_scope()
+
+        self._in_header = in_header
+
         return code
 
     def _print_PyccelFunctionDef(self, expr):
