@@ -240,11 +240,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             overload = ''
         if func.is_inline:
-            if interface:
-                assert len(interface) == 1
-                return self._print(interface[0])
-            else:
-                return self._print(func)
+            return overload + self._print(func)
         else:
             self.set_scope(func.scope)
             args = ', '.join(self._print(a) for a in func.arguments)
@@ -479,12 +475,17 @@ class PythonCodePrinter(CodePrinter):
             code = ast.unparse(expr.python_ast) + '\n'
             return code
 
+        interface = expr.get_direct_user_nodes(lambda x: isinstance(x, Interface))
+        if self._in_header and interface:
+            name = self._print(expr.scope.get_python_name(expr.name))
+        else:
+            name = self._print(expr.name)
+
         in_header = self._in_header
         if expr.is_inline:
             self._in_header = False
 
         self.set_scope(expr.scope)
-        name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces if not i.is_argument)
         functions  = [f for f in expr.functions if not any(f in i.functions for i in expr.interfaces)]
