@@ -787,16 +787,6 @@ def get_complex128(a : T):
     b = complex128(a)
     return b
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128, get_complex64])
 def test_numpy_complex_scalar(language, get_complex):
 
@@ -900,16 +890,6 @@ def get_complex64_arr_2d(arr : 'T[:,:]'):
     return len(s), s[0], s[1], a[0,0], a[0,1]
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_1d, get_complex64_arr_1d])
 def test_numpy_complex_array_like_1d(language, get_complex):
 
@@ -945,16 +925,6 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_2d, get_complex64_arr_2d])
 def test_numpy_complex_array_like_2d(language, get_complex):
 
