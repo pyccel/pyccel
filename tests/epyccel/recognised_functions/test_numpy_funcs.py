@@ -10,9 +10,6 @@ import numpy as np
 from pyccel.decorators import template
 from pyccel import epyccel
 
-# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
-# pytestmark = pytest.mark.skip_llvm
-
 min_int8 = iinfo('int8').min
 max_int8 = iinfo('int8').max
 
@@ -2445,6 +2442,8 @@ def test_sum_property(language):
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
+# Skip test if PYCCEL_DEFAULT_COMPILER=LLVM
+@pytest.mark.skip_llvm
 def test_sum_slice_in_if(language):
     def sum_call(x : 'int[:]'):
         from numpy import sum as np_sum

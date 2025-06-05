@@ -1,6 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 from pyccel import epyccel
+import pytest
+
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
 
 def test_single_return_var_assign(language):
     def single_return_var_assign():

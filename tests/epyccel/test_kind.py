@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import platform
 from pyccel import epyccel
+import pytest
 
 def test_or_boolean(language):
     def or_bool(a : 'bool', b : 'bool'):
@@ -28,6 +29,8 @@ def test_real_greater_bool(language):
     assert real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0)
     assert real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2)
 
+# Skip test if PYCCEL_DEFAULT_COMPILER=LLVM
+@pytest.mark.skip_llvm
 def test_input_output_matching_types(language):
     def add_real(a : 'float', b : 'float'):
         c = a+b
