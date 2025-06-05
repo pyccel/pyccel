@@ -3330,6 +3330,9 @@ class SemanticParser(BasicParser):
         self._in_annotation = False
         order = expr.order
 
+        if isinstance(visited_dtype, UnionTypeAnnotation) and len(visited_dtype.type_list) == 1:
+            visited_dtype = visited_dtype.type_list[0]
+
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
             try:
@@ -3619,6 +3622,24 @@ class SemanticParser(BasicParser):
                 func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
         args = self._handle_function_args(expr.args)
+
+        if isinstance(func, PyccelFunctionDef) and func.cls_name is TypingTypeVar:
+            new_args = [args[0]]
+            for a in args[1:]:
+                a_val = a.value
+                if isinstance(a_val, LiteralString):
+                    pyccel_stage.set_stage('syntactic')
+                    try:
+                        syntactic_a = types_meta.model_from_str(a_val.python_value)
+                    except TextXSyntaxError as e:
+                        errors.report(f"Invalid annotation. {e.message}",
+                                symbol = self.current_ast_node, severity='fatal')
+                    annot = syntactic_a.expr
+                    pyccel_stage.set_stage('semantic')
+                    new_args.append(FunctionCallArgument(self._visit(annot)))
+                else:
+                    new_args.append(a)
+            args = new_args
 
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
@@ -4768,10 +4789,10 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr):
         warnings.warn("Support for specifying types via headers will be removed in a " +
-                      "future version of Pyccel. Please use type hints. The @template " +
-                      "decorator can be used to specify multiple types. See the " +
-                      "documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                      "future version of Pyccel. Please use type hints. TypeVar from " +
+                      "Python's typing module can be used to specify multiple types. " +
+                      "See the documentation at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                       "for examples.", FutureWarning)
         # TODO should we return it and keep it in the AST?
         expr.clear_syntactic_user_nodes()
@@ -4781,9 +4802,10 @@ class SemanticParser(BasicParser):
 
     def _visit_Template(self, expr):
         warnings.warn("Support for specifying templates via headers will be removed in " +
-                      "a future version of Pyccel. Please use the @template decorator. " +
-                      "See the documentatiosn at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/templates.md " +
+                      "a future version of Pyccel. Please use type hints. TypeVar from " +
+                      "Python's typing module can be used to specify multiple types. " +
+                      "See the documentation at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                       "for examples.", FutureWarning)
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
