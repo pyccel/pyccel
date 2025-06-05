@@ -8,6 +8,9 @@ import os
 import pytest
 from pyccel.codegen.pipeline import execute_pyccel
 
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
+
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, os.path.join('scripts',foldername))
