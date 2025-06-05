@@ -4900,13 +4900,14 @@ class SemanticParser(BasicParser):
             name = expr.scope.get_expected_name(expr.name)
             func = insertion_scope.functions.get(name, None)
             if func:
-                if self.is_header_file:
-                    if isinstance(func, Interface):
-                        existing_semantic_funcs = [*func.functions]
+                if func.is_semantic:
+                    if self.is_header_file:
+                        if isinstance(func, Interface):
+                            existing_semantic_funcs = [*func.functions]
+                        else:
+                            existing_semantic_funcs = [func]
                     else:
-                        existing_semantic_funcs = [func]
-                elif func.is_semantic:
-                    return EmptyNode()
+                        return EmptyNode()
                 else:
                     insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
