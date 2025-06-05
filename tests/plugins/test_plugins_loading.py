@@ -142,3 +142,15 @@ def test_openmp_register_refresh():
     parser.parse()
     assert errors.has_warnings() == False
     errors.reset()
+
+
+@pytest.mark.external
+def test_openmp_same_version_refresh():
+    plugins.unload_plugins()
+    plugins.load_plugins()
+    file = os.path.join(path_dir, 'any_omp4_specific.py')
+    plugins.set_options({'accelerators': ['openmp']})
+    parser = SyntaxParser(file)
+    with patch.object(plugins.get_plugin('Openmp'), '_apply_patches') as mock_apply_patches:
+        plugins.set_options({'accelerators': ['openmp']}, refresh=True)
+        assert mock_apply_patches.call_count == 0
