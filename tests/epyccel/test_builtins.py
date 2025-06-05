@@ -707,16 +707,6 @@ def test_round_ndigits_bool(language):
     assert all(o == r for o, r in zip(f_output, round_ndigits_output))
     assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_native(language):
     def isinstance_test(a : 'bool | int | float | complex'):
         return isinstance(a, bool), isinstance(a, int), isinstance(a, float), isinstance(a, complex)
@@ -753,16 +743,6 @@ def test_isinstance_containers(language):
 
         assert f(2, 5) == f_epyc(2, 5)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_numpy(language):
     def isinstance_test(a : 'int32 | int64 | int | float32'):
         return isinstance(a, np.int32), isinstance(a, np.int64), isinstance(a, int), isinstance(a, np.float32)
@@ -773,18 +753,11 @@ def test_isinstance_numpy(language):
     assert f(4) == isinstance_test(4)
     assert f(np.float32(4)) == isinstance_test(np.float32(4))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_tuple(language):
     def isinstance_test(a : 'bool | int | float | complex'):
+        """
+        Testing a case which should generate radically different functions.
+        """
         return (isinstance(a, (bool, int)), isinstance(a, (bool, float)), isinstance(a, (int, complex)),
                 isinstance(a, (tuple, list)))
 
@@ -796,16 +769,6 @@ def test_isinstance_tuple(language):
     assert f(1+2j) == isinstance_test(6.5+8.3j)
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_union(language):
     def isinstance_test(a : bool | int | float | complex): #pylint: disable=unsupported-binary-operation
         return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex), #pylint: disable=unsupported-binary-operation
