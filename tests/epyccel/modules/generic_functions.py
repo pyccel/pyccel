@@ -29,15 +29,15 @@ def gen_7(x : T, y : T, z : R):
 
 
 
-@template('Z', types=['int', 'real'])
+@template('Z', types=['int', 'float'])
 def tmplt_head_1(x : 'Z', y : 'Z'):
     return x + y
 
-@template('O', types=['int', 'real'])
+@template('O', types=['int', 'float'])
 def local_override_1(x : 'O', y : 'O'):
     return x + y
 
-@template('Z', types=['int', 'real'])
+@template('Z', types=['int', 'float'])
 def tmplt_tmplt_1(x : 'Z', y : 'Z', z : R):
     return x + y + z
 
