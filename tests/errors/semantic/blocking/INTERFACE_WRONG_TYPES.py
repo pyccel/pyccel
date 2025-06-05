@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import template
 
-@template('a', types=['int', 'real'])
-@template('b', types=['int', 'real'])
+@template('a', types=['int', 'float'])
+@template('b', types=['int', 'float'])
 def multi_tmplt_1(x : 'a', y : 'a', z : 'b'):
     """Tests Interfaces"""
     return x + y + z
