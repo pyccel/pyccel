@@ -2730,11 +2730,11 @@ class NumpyNDArray(PyccelFunction):
     """
     A class representing np.ndarray.
 
-    A class representing np.ndarray. This object is useful for type
-    checks. This class is not designed to be instantiated as
+    A class representing np.ndarray. np.ndarray is useful for type
+    checks. NumpyNDArray is not designed to be instantiated as
     np.ndarray raises a warning when used in code, but as its
     implementation is identical to np.array the __new__ method maps
-    to that class to the method is supported.
+    to that class so the method is supported.
 
     Parameters
     ----------
