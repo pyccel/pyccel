@@ -4,11 +4,12 @@
 #
 #from expressions import ad, bd
 #xd = ad * bd
+from numpy import ones
 xi = 2
 
 from decorators_types import decr
 yi = decr(xi)
 
-from classes import Point
+from classes_2 import Point
 
-p = Point(0.0, 0.0)
+p = Point(ones(4))

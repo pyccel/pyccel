@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 @pytest.fixture(scope="module")
 def modnew(language):
@@ -73,9 +73,9 @@ def test_tmplt_head_1(modnew):
     x = modnew.tst_tmplt_head_1()
     assert np.array_equal(x, x_expected)
 
-def test_local_overide_1(modnew):
-    x_expected = mod.tst_local_overide_1()
-    x = modnew.tst_local_overide_1()
+def test_local_override_1(modnew):
+    x_expected = mod.tst_local_override_1()
+    x = modnew.tst_local_override_1()
     assert np.array_equal(x, x_expected)
 
 def test_tmplt_tmplt_1(modnew):

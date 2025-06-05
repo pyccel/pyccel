@@ -16,7 +16,7 @@ def f1(n):
     __f(x)
 
 # TODO not working yet, x is intent(inout)
-#      but it is not infered as inout
+#      but it is not inferred as inout
 ##$ header function f2(int [:])
 #def f2(x):
 #    __f(x)

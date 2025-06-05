@@ -1,15 +1,15 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Module describing the base code-wrapping class : Wrapper.
 """
 
 from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 __all__ = ["Wrapper"]
 
@@ -29,6 +29,7 @@ class Wrapper:
 
     def __init__(self):
         self._scope = None
+        self._current_ast_node = None
 
     @property
     def scope(self):
@@ -67,12 +68,12 @@ class Wrapper:
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             The expression that should be wrapped.
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST which describes the object that lets you
             access the expression.
         """
@@ -87,20 +88,35 @@ class Wrapper:
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             The expression that should be wrapped.
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST which describes the object that lets you
             access the expression.
         """
+        current_ast = self._current_ast_node
+        if getattr(expr,'python_ast', None) is not None:
+            self._current_ast_node = expr.python_ast
+
         classes = type(expr).mro()
         for cls in classes:
             wrap_method = '_wrap_' + cls.__name__
             if hasattr(self, wrap_method):
-                return getattr(self, wrap_method)(expr)
+                try:
+                    obj = getattr(self, wrap_method)(expr)
+                except (PyccelError, NotImplementedError) as err:
+                    raise err
+                except Exception as err: #pylint: disable=broad-exception-caught
+                    if ErrorsMode().value == 'user':
+                        errors.report(PYCCEL_INTERNAL_ERROR,
+                                symbol = self._current_ast_node, severity='fatal')
+                    else:
+                        raise err
+                self._current_ast_node = current_ast
+                return obj
 
         return self._wrap_not_supported(expr)
 

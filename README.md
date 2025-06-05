@@ -1,6 +1,6 @@
 # Pyccel : write Python code,  get Fortran speed
 
- [![devel_tests](https://github.com/pyccel/pyccel/actions/workflows/devel.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/devel.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991)
+ [![Linux unit tests](https://github.com/pyccel/pyccel/actions/workflows/linux.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/linux.yml) [![MacOSX unit tests](https://github.com/pyccel/pyccel/actions/workflows/macosx.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/macosx.yml) [![Windows unit tests](https://github.com/pyccel/pyccel/actions/workflows/windows.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/windows.yml) [![Anaconda-Linux](https://github.com/pyccel/pyccel/actions/workflows/anaconda_linux.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/anaconda_linux.yml) [![Anaconda-Windows](https://github.com/pyccel/pyccel/actions/workflows/anaconda_windows.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/anaconda_windows.yml) [![Intel unit tests](https://github.com/pyccel/pyccel/actions/workflows/intel.yml/badge.svg?branch=devel&event=push)](https://github.com/pyccel/pyccel/actions/workflows/intel.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991)
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -37,14 +37,14 @@ The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/
 
 Pyccel has a few system requirements to ensure that the system where it is installed is capable of compiling Fortran code.
 These requirements are detailed in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
-Once all requirements are satisfied, the simplest way to install Pyccel is using PyPI.
-Simply run:
-
+Once all requirements are satisfied, we recommend installing Pyccel into a Python virtual environment, which can be created with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment).
+Once the Python virtual environment is ready and activated, Pyccel can be easily installed using [pip](https://github.com/pypa/pip?tab=readme-ov-file#pip---the-python-package-installer), the Python package installer.
+The simple command
 ```sh
-python3 -m pip install --user pyccel
+pip install pyccel
 ```
-
-Alternative installation methods such as installing from source, or installing with a docker are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+will download the latest release of Pyccel from [PyPI](https://pypi.org/project/pyccel/), the Python package index.
+Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 
 ## Contributing
 
@@ -89,4 +89,5 @@ We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6h
 -   [Development Conventions](https://github.com/pyccel/pyccel/blob/devel/developer_docs/development_conventions.md)
 -   [Tips and Tricks](https://github.com/pyccel/pyccel/blob/devel/developer_docs/tips_and_tricks.md)
 -   [Scope](https://github.com/pyccel/pyccel/blob/devel/developer_docs/scope.md)
+-   [Type Inference](https://github.com/pyccel/pyccel/blob/devel/developer_docs/type_inference.md)
 -   [Array Ordering](https://github.com/pyccel/pyccel/blob/devel/developer_docs/order_docs.md)

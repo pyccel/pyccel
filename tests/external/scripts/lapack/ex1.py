@@ -37,10 +37,10 @@ def test_1():
     a[m+1,0:n-1] = -1.0
 
     a, ipiv, info = dgbtrf(a, ml, mu)
-#    assert(info == 0)
+#    assert info == 0
 
     b, info = dgbtrs(a, ml, mu, b, ipiv)
-#    assert(info == 0)
+#    assert info == 0
 
 def test_2():
     n = int32(3)
@@ -61,7 +61,7 @@ def test_2():
     a[2,2] = 0.0
 
     a, ipiv, info = dgetrf(a)
-#    assert(info == 0)
+#    assert info == 0
 
     #iwork = zeros(n, 'int')
     #lwork = 4 * n
@@ -71,7 +71,7 @@ def test_2():
     #anorm = 1.0
     #rcond = -1.0
     # [TODO] dgecon('I', n, a, lda, anorm, rcond, work, iwork, info)
-#    assert(info == 0)
+#    assert info == 0
 
 def test_3():
     n = int32(3)
@@ -92,14 +92,14 @@ def test_3():
     a[2,2] = 0.0
 
     a, ipiv, info = dgetrf(a)
-#    assert(info == 0)
+#    assert info == 0
 
     #lwork = 4 * n
     #work  = zeros(lwork)
 
     # Compute the inverse matrix.
     # [TODO] dgetri(n, a, lda, ipiv, work, lwork, info)
-#    assert(info == 0)
+#    assert info == 0
 
 def test_4():
     n = int32(3)
@@ -120,7 +120,7 @@ def test_4():
     a[2,2] = 0.0
 
     lu, ipiv, info = dgetrf(a)
-#    assert(info == 0)
+#    assert info == 0
 
     # Compute the inverse matrix.
     b = zeros((1,n))
@@ -130,7 +130,7 @@ def test_4():
 
     # Solve the linear system.
     x, info = dgetrs(a, ipiv, b, 'n')
-#    assert(info == 0)
+#    assert info == 0
 
 if __name__ == '__main__':
     test_1()

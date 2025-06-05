@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 import os
 import re
 
 import ast
+import warnings
+
+from textx.exceptions import TextXSyntaxError
 
 #==============================================================================
 
-from sympy.core import cache
-
-#==============================================================================
-
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import Module
+from pyccel.ast.core import Module, Program
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -43,38 +42,42 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
+from pyccel.ast.datatypes import TypeAlias
+
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, PyccelIn
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
-from pyccel.ast.builtins import PythonTuple, PythonList
+from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import MetaVariable
+from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
-from pyccel.ast.literals import Nil
+from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.variable  import DottedName
+from pyccel.ast.utilities import recognised_source
+from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
+
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation, VariableTypeAnnotation
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
-from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -129,24 +132,22 @@ class SyntaxParser(BasicParser):
         if os.path.isfile(inputs):
 
             self._filename = inputs
-            errors.set_target(self.filename, 'file')
+            errors.set_target(self.filename)
 
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
-            code = read_file(inputs)
+            with open(inputs, 'r', encoding="utf-8") as file:
+                code = file.read()
 
         self._code    = code
         self._context = []
-
-        self.load()
 
         tree                = extend_tree(code)
         self._fst           = tree
         self._in_lhs_assign = False
 
         self.parse()
-        self.dump()
 
     def parse(self):
         """
@@ -157,7 +158,7 @@ class SyntaxParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The Pyccel AST object.
         """
 
@@ -166,7 +167,6 @@ class SyntaxParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
-        errors.set_parser_stage('syntax')
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
@@ -176,20 +176,93 @@ class SyntaxParser(BasicParser):
 
         return ast
 
+    def create_new_function_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python function.
+
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function_name.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        **kwargs : dict
+            Keyword arguments passed through to the new scope.
+
+        Returns
+        -------
+        Scope
+            The new scope for the function.
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+
+        self._scope = child
+        self._current_function_name.append(name)
+
+        return child
+
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
     def _treat_comment_line(self, line, stmt):
+        """
+        Parse a comment line.
+
+        Parse a comment which fits in a single line. If the comment
+        begins with `#$` then it should contain a header recognised
+        by Pyccel and should be parsed using textx.
+
+        Parameters
+        ----------
+        line : str
+            The comment line.
+        stmt : ast.Ast
+            The comment object in the code. This is useful for raising
+            neat errors.
+
+        Returns
+        -------
+        pyccel.ast.basic.PyccelAstNode
+            The treated object as a Pyccel ast node.
+        """
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
                 expr = omp_parse(stmts=line)
+                try:
+                    expr = omp_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenMP header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('acc'):
-                expr = acc_parse(stmts=line)
+                try:
+                    expr = acc_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenACC header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('header'):
-                expr = hdr_parse(stmts=line)
-                if isinstance(expr, MetaVariable):
-
+                try:
+                    expr = hdr_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
+                if isinstance(expr, (MethodHeader, FunctionHeader)):
+                    self.scope.insert_header(expr)
+                    expr = EmptyNode()
+                elif isinstance(expr, AnnotatedPyccelSymbol):
+                    self.scope.insert_symbol(expr.name)
+                elif isinstance(expr, MetaVariable):
                     # a metavar will not appear in the semantic stage.
                     # but can be used to modify the ast
 
@@ -204,15 +277,162 @@ class SyntaxParser(BasicParser):
             txt = line[1:].lstrip()
             expr = Comment(txt)
 
-        expr.set_fst(stmt)
+        expr.set_current_ast(stmt)
         return expr
+
+    def _treat_type_annotation(self, stmt, annotation):
+        """
+        Treat an object passed as a type annotation.
+
+        Ensure that an object that was passed as a type annotation can be
+        recognised in the semantic stage by packing it into a SyntacticTypeAnnotation
+        in the correct way. Also check the syntax of any string type
+        annotations.
+
+        Parameters
+        ----------
+        stmt : ast.Ast
+            The ast node about which any errors should be raised.
+
+        annotation : pyccel.ast.basic.PyccelAstNode
+            A visited object which is describing a type annotation.
+
+        Returns
+        -------
+        SyntacticTypeAnnotation | UnionTypeAnnotation
+            The type annotation.
+        """
+        if isinstance(annotation, (tuple, list)):
+            return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return SyntacticTypeAnnotation(dtype=annotation)
+        elif isinstance(annotation, LiteralString):
+            try:
+                annotation = types_meta.model_from_str(annotation.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid header. {e.message}",
+                        symbol = stmt, column = e.col,
+                        severity='fatal')
+            annot = annotation.expr
+            if isinstance(stmt, PyccelAstNode):
+                annot.set_current_ast(stmt.python_ast)
+            else:
+                annot.set_current_ast(stmt)
+            return annot
+        elif annotation is Nil():
+            return None
+        elif isinstance(annotation, PyccelBitOr):
+            return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation.args])
+        else:
+            errors.report('Invalid type annotation',
+                        symbol = stmt, severity='error')
+            return EmptyNode()
+
+    def _get_unique_name(self, possible_names, valid_names, forbidden_names, suggestion):
+        """
+        Get a name for a variable amongst multiple possibilities.
+
+        Get a name for a variable. If the name is the only possibility it is
+        chosen. Otherwise a new name is constructed from the suggestions.
+        This function is usually used to find the name(s) of the result of a
+        FunctionDef.
+
+        Parameters
+        ----------
+        possible_names : iterable[PyccelSymbol | TypedAstNode]
+            The possible names found for the variable.
+        valid_names : iterable[PyccelSymbol]
+            The names found in the scope that can be used for this variable (this is
+            important to avoid accidentally using an imported variable).
+        forbidden_names : iterable[PyccelSymbol]
+            The names that should not be used.
+        suggestion : PyccelSymbol
+            The name that may be used instead.
+
+        Returns
+        -------
+        str
+            The new name of the variable.
+        """
+        if all(isinstance(n, PythonTuple) for n in possible_names) and \
+                len(set(len(n) for n in possible_names)) == 1:
+            # If all possible names are iterables of the same length then find a name
+            # for each element and link them to an element describing this variable
+            # via IndexedElement (these are tuple elements).
+            possible_names = list(zip(*[n.args for n in possible_names]))
+            unique_names = [self._get_unique_name(n, valid_names, forbidden_names, f'{suggestion}_{i}') \
+                            for i,n in enumerate(possible_names)]
+            temp_name = self.scope.get_new_name(suggestion, is_temp = True)
+            for i, n in enumerate(unique_names):
+                self.scope.insert_symbolic_alias(IndexedElement(temp_name, i), n)
+            return temp_name
+        else:
+            suggested_names = set(n for n in possible_names if isinstance(n, PyccelSymbol))
+            if len(suggested_names) == 1:
+                # If one name is suggested then return it unless it is forbidden
+                new_name = suggested_names.pop()
+                if new_name not in forbidden_names and new_name in valid_names:
+                    return new_name
+            return self.scope.get_new_name(suggestion, is_temp = True)
+
+    def insert_import(self, expr):
+        """
+        Insert an import into the scope.
+
+        Insert an import into the scope along with the targets that are
+        needed.
+
+        Parameters
+        ----------
+        expr : Import
+            The import to be inserted.
+        """
+
+        assert isinstance(expr, Import)
+        container = self.scope.imports['imports']
+
+        # if source is not specified, imported things are treated as sources
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = expr.source.name
+            else:
+                name   = str(expr.source)
+                source = name
+
+            if not recognised_source(source):
+                container[name] = []
+        else:
+            source = str(expr.source)
+            if not recognised_source(source):
+                if not source in container.keys():
+                    container[source] = []
+                container[source] += expr.target
 
     #====================================================
     #                 _visit functions
     #====================================================
 
     def _visit(self, stmt):
-        """Creates AST from FST."""
+        """
+        Build the AST from the AST parsed by Python.
+
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised.
+
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            AST object which is the syntactic equivalent of stmt.
+        """
 
         # TODO - add settings to Errors
         #      - line and column
@@ -222,9 +442,18 @@ class SyntaxParser(BasicParser):
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
             self._context.append(stmt)
-            result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
-                result.set_fst(stmt)
+            try:
+                result = getattr(self, syntax_method)(stmt)
+                if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
+                    result.set_current_ast(stmt)
+            except (PyccelError, NotImplementedError) as err:
+                raise err
+            except Exception as err: #pylint: disable=broad-exception-caught
+                if ErrorsMode().value == 'user':
+                    errors.report(PYCCEL_INTERNAL_ERROR,
+                            symbol = self._context[-1], severity='fatal')
+                else:
+                    raise err
             self._context.pop()
             return result
 
@@ -234,15 +463,29 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body          = [self._visit(v) for v in stmt.body]
+        body = [self._visit(v) for v in stmt.body]
+
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        programs  = [p for p in body if isinstance(p, Program)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import, Program))]
+
+        if len(programs) > 1:
+            errors.report("Multiple program blocks are not supported. Please group the code for the main.",
+                    symbol = programs[1],
+                    severity = 'error')
+        program = next(iter(programs), None)
 
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
         mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        name = AsName(mod_name, self.scope.get_new_name(mod_name))
+        name = self.scope.get_new_name(mod_name)
+        self.scope.python_names[name] = mod_name
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
+        return Module(name, [], functions, init_func = CodeBlock(body), scope = self.scope,
+                classes = classes, imports = imports, program = program)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -257,6 +500,9 @@ class SyntaxParser(BasicParser):
 
     def _visit_List(self, stmt):
         return PythonList(*self._treat_iterable(stmt.elts))
+
+    def _visit_Set(self, stmt):
+        return PythonSet(*self._treat_iterable(stmt.elts))
 
     def _visit_tuple(self, stmt):
         return tuple(self._treat_iterable(stmt))
@@ -277,8 +523,7 @@ class SyntaxParser(BasicParser):
             return old
 
     def _visit_Dict(self, stmt):
-        errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='error')
+        return PythonDict(self._visit(stmt.keys), self._visit(stmt.values))
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -286,24 +531,6 @@ class SyntaxParser(BasicParser):
     def _visit_str(self, stmt):
 
         return stmt
-
-    def _visit_Str(self, stmt):
-        val =  stmt.s
-        if isinstance(self._context[-2], ast.Expr):
-            return CommentBlock(val)
-        return LiteralString(val)
-
-    def _visit_Num(self, stmt):
-        val = stmt.n
-
-        if isinstance(val, int):
-            return LiteralInteger(val)
-        elif isinstance(val, float):
-            return LiteralFloat(val)
-        elif isinstance(val, complex):
-            return LiteralComplex(val.real, val.imag)
-        else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
     def _visit_Assign(self, stmt):
 
@@ -318,8 +545,6 @@ class SyntaxParser(BasicParser):
         rhs = self._visit(stmt.value)
 
         expr = Assign(lhs, rhs)
-
-        # we set the fst to keep track of needed information for errors
 
         return expr
 
@@ -337,11 +562,37 @@ class SyntaxParser(BasicParser):
             return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
             return AugAssign(lhs, '%', rhs)
+        elif isinstance(stmt.op, ast.BitOr):
+            return AugAssign(lhs, '|', rhs)
+        elif isinstance(stmt.op, ast.BitAnd):
+            return AugAssign(lhs, '&', rhs)
+        elif isinstance(stmt.op, ast.LShift):
+            return AugAssign(lhs, '<<', rhs)
+        elif isinstance(stmt.op, ast.RShift):
+            return AugAssign(lhs, '>>', rhs)
+        elif isinstance(stmt.op, ast.FloorDiv):
+            return AugAssign(lhs, '//', rhs)
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
 
+    def _visit_AnnAssign(self, stmt):
+        self._in_lhs_assign = True
+        lhs = self._visit(stmt.target)
+        self._in_lhs_assign = False
+
+        annotation = self._treat_type_annotation(stmt, self._visit(stmt.annotation))
+
+        annotated_lhs = AnnotatedPyccelSymbol(lhs, annotation=annotation)
+
+        if stmt.value is None:
+            return annotated_lhs
+        else:
+            rhs = self._visit(stmt.value)
+            return Assign(annotated_lhs, rhs)
+
     def _visit_arguments(self, stmt):
+        is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
@@ -351,26 +602,47 @@ class SyntaxParser(BasicParser):
         arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            positional_args        = [FunctionDefArgument(PyccelSymbol(a.arg),
-                                            annotation=self._visit(a.annotation))
-                                        for a in stmt.args[:n_expl]]
-            valued_arguments       = [FunctionDefArgument(PyccelSymbol(a.arg),
-                                            annotation=self._visit(a.annotation),
+
+            arguments = []
+            for a in stmt.args[:n_expl]:
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
+                                            annotation=annotation)
+                new_arg.set_current_ast(a)
+                arguments.append(new_arg)
+
+            for a,d in zip(stmt.args[n_expl:], stmt.defaults):
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
+                                            annotation=annotation,
                                             value = self._visit(d))
-                                        for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
-            arguments              = positional_args + valued_arguments
-            self.scope.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
+                new_arg.set_current_ast(a)
+                arguments.append(new_arg)
+
+        headers = self.scope.find(self._context[-2].name, 'headers') \
+                if isinstance(self._context[-2], ast.FunctionDef) else None
+
+        if is_class_method and not headers:
+            expected_self_arg = arguments[0]
+            if expected_self_arg.annotation is None:
+                class_name = self._context[-3].name
+                annotation = self._treat_type_annotation(class_name, PyccelSymbol(class_name))
+                arguments[0] = FunctionDefArgument(AnnotatedPyccelSymbol(expected_self_arg.name, annotation),
+                                            annotation=annotation,
+                                            value = expected_self_arg.value)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
-                annotation = self._visit(a.annotation)
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 val = self._visit(d) if d is not None else d
-                arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
                             value=val, kwonly=True)
+                arg.set_current_ast(a)
 
                 arguments.append(arg)
-                self.scope.insert_symbol(a.arg)
+
+        self.scope.insert_symbols(a.var for a in arguments)
 
         return arguments
 
@@ -395,24 +667,15 @@ class SyntaxParser(BasicParser):
             return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
-            return self._visit_Str(stmt)
+            if isinstance(self._context[-2], ast.Expr):
+                return CommentBlock(stmt.value)
+            return LiteralString(stmt.value)
+
+        elif stmt.value is Ellipsis:
+            return LiteralEllipsis()
 
         else:
-            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
-
-    def _visit_NameConstant(self, stmt):
-        if stmt.value is None:
-            return Nil()
-
-        elif stmt.value is True:
-            return LiteralTrue()
-
-        elif stmt.value is False:
-            return LiteralFalse()
-
-        else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
-
+            raise NotImplementedError(f'Constant type {type(stmt.value)} not recognised')
 
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
@@ -435,11 +698,11 @@ class SyntaxParser(BasicParser):
         for name in stmt.names:
             imp = self._visit(name)
             if isinstance(imp, AsName):
-                source = AsName(self._treat_import_source(imp.object, 0), imp.target)
+                source = AsName(self._treat_import_source(imp.object, 0), imp.local_alias)
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
-            import_line.set_fst(stmt)
+            import_line.set_current_ast(stmt)
             self.insert_import(import_line)
             expr.append(import_line)
 
@@ -557,42 +820,41 @@ class SyntaxParser(BasicParser):
                       severity='error')
 
     def _visit_Compare(self, stmt):
-        if len(stmt.ops)>1:
-            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
-                      symbol = stmt,
-                      severity='error')
-
         first = self._visit(stmt.left)
-        second = self._visit(stmt.comparators[0])
-        op = stmt.ops[0]
+        comparison = None
+        for comparators, op in zip(stmt.comparators, stmt.ops):
+            second = self._visit(comparators)
 
-        if isinstance(op, ast.Eq):
-            return PyccelEq(first, second)
-        if isinstance(op, ast.NotEq):
-            return PyccelNe(first, second)
-        if isinstance(op, ast.Lt):
-            return PyccelLt(first, second)
-        if isinstance(op, ast.Gt):
-            return PyccelGt(first, second)
-        if isinstance(op, ast.LtE):
-            return PyccelLe(first, second)
-        if isinstance(op, ast.GtE):
-            return PyccelGe(first, second)
-        if isinstance(op, ast.Is):
-            return PyccelIs(first, second)
-        if isinstance(op, ast.IsNot):
-            return PyccelIsNot(first, second)
+            if isinstance(op, ast.Eq):
+                expr = PyccelEq(first, second)
+            elif isinstance(op, ast.NotEq):
+                expr = PyccelNe(first, second)
+            elif isinstance(op, ast.Lt):
+                expr = PyccelLt(first, second)
+            elif isinstance(op, ast.Gt):
+                expr = PyccelGt(first, second)
+            elif isinstance(op, ast.LtE):
+                expr = PyccelLe(first, second)
+            elif isinstance(op, ast.GtE):
+                expr = PyccelGe(first, second)
+            elif isinstance(op, ast.Is):
+                expr = PyccelIs(first, second)
+            elif isinstance(op, ast.IsNot):
+                expr = PyccelIsNot(first, second)
+            elif isinstance(op, ast.In):
+                expr = PyccelIn(first, second)
+            else:
+                return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                              symbol = stmt,
+                              severity='error')
 
-        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      symbol = stmt,
-                      severity='error')
+            first = second
+            comparison = PyccelAnd(comparison, expr) if comparison else expr
+
+        return comparison
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if results is Nil():
-            results = []
-        elif not isinstance(results, (list, PythonTuple, PythonList)):
-            results = [results]
         return Return(results)
 
     def _visit_Pass(self, stmt):
@@ -604,53 +866,25 @@ class SyntaxParser(BasicParser):
 
         name = PyccelSymbol(self._visit(stmt.name))
         self.scope.insert_symbol(name)
-        name = name.replace("'", '')
 
-        scope = self.create_new_function_scope(name)
+        headers = self.scope.find(name, 'headers')
+
+        new_name = self.scope.get_expected_name(name)
+
+        scope = self.create_new_function_scope(name,
+                used_symbols = {name: new_name},
+                original_symbols = {new_name: name})
 
         arguments    = self._visit(stmt.args)
 
-        global_vars  = []
-        headers      = []
         template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
         is_inline    = False
-        imports      = []
-        doc_string   = None
-
-        def fill_types(ls):
-            container = []
-            for arg in ls:
-                if isinstance(arg, FunctionCallArgument):
-                    arg = arg.value
-
-                if isinstance(arg, PyccelSymbol):
-                    container.append(arg)
-                elif isinstance(arg, LiteralString):
-                    arg = str(arg)
-                    arg = arg.strip("'").strip('"')
-                    container.append(arg)
-                else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
-                    errors.report(msg,
-                                bounding_box = (stmt.lineno, stmt.col_offset),
-                                severity='error')
-            return container
+        docstring   = None
 
         decorators = {}
-
-        # add the decorator @types if the arguments are annotated
-        annotated_args = []
-        for a in arguments:
-            annotated_args.append(a.annotation)
-
-        if all(not isinstance(a, Nil) for a in annotated_args):
-            if stmt.returns:
-                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
-                annotated_args.append(returns)
-            decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
@@ -659,8 +893,8 @@ class SyntaxParser(BasicParser):
             else:
                 decorators[tmp_var] = [d]
 
-        if 'bypass' in decorators:
-            return EmptyNode()
+        if 'types' in decorators:
+            warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
 
         if 'stack_array' in decorators:
             decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
@@ -668,109 +902,6 @@ class SyntaxParser(BasicParser):
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b.value) for a in decorators['allow_negative_index'] for b in a.args)
-        template['template_dict'] = {}
-        # extract the templates
-        if 'template' in decorators:
-            for comb_types in decorators['template']:
-                cache.clear_cache()
-                types = []
-                if len(comb_types.args) != 2:
-                    msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='error')
-
-                for i in comb_types.args:
-                    if i.has_keyword and i.keyword not in ('name', 'types'):
-                        msg = 'Argument provided to the template decorator is not valid'
-                        errors.report(msg,
-                                        symbol = comb_types,
-                                        bounding_box = (stmt.lineno, stmt.col_offset),
-                                        severity='error')
-                if all(i.has_keyword for i in comb_types.args):
-                    tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
-                            comb_types.args[0].keyword == 'name' else\
-                            (comb_types.args[1].value, comb_types.args[0].value)
-                else:
-                    tp_name = comb_types.args[0].value
-                    ls = comb_types.args[1].value
-                try:
-                    tp_name = str(tp_name)
-                    ls = ls if isinstance(ls, PythonTuple) else list(ls)
-                except TypeError:
-                    msg = 'Argument provided to the template decorator is not valid'
-                    errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='fatal')
-
-                types = fill_types(ls)
-
-                txt  = '#$ header template ' + tp_name
-                txt += '(' + '|'.join(types) + ')'
-                if tp_name in template['template_dict']:
-                    msg = 'The template "{}" is duplicated'.format(tp_name)
-                    errors.report(msg,
-                                bounding_box = (stmt.lineno, stmt.col_offset),
-                                severity='warning')
-                # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][tp_name] = hdr_parse(stmts=txt)
-            # Make template decorator list accessible from decorators dict
-            template['decorator_list'] = decorators['template']
-            decorators['template'] = template
-
-        if not template['template_dict']:
-            decorators['template'] = None
-        # extract the types to construct a header
-        if 'types' in decorators:
-            for comb_types in decorators['types']:
-
-                cache.clear_cache()
-                results = []
-                ls = comb_types.args
-
-                if len(ls) > 0 and ls[-1].has_keyword:
-                    arg_name = ls[-1].keyword
-                    if not arg_name == 'results':
-                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
-                        errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='error')
-                    else:
-                        container = ls[-1].value
-                        container = container if isinstance(container, PythonTuple) else [container]
-                        results = fill_types(container)
-                    types = fill_types(ls[:-1])
-                else:
-                    types = fill_types(ls)
-
-                txt  = '#$ header ' + name
-                txt += '(' + ','.join(types) + ')'
-
-                if results:
-                    txt += ' results(' + ','.join(results) + ')'
-
-                header = hdr_parse(stmts=txt)
-                headers += [header]
-
-        body = stmt.body
-
-        if 'sympy' in decorators:
-            # TODO maybe we should run pylint here
-            stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_fst(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        else:
-            body = self._visit(body)
-        if len(body) > 0 and isinstance(body[0], CommentBlock):
-            doc_string = body[0]
-            doc_string.header = ''
-            body = body[1:]
 
         if 'pure' in decorators:
             is_pure = True
@@ -789,33 +920,196 @@ class SyntaxParser(BasicParser):
         if 'inline' in decorators:
             is_inline = True
 
+        template['template_dict'] = {}
+        # extract the templates
+        if 'template' in decorators:
+            for template_decorator in decorators['template']:
+                dec_args = template_decorator.args
+                if len(dec_args) != 2:
+                    msg = 'Number of Arguments provided to the template decorator is not valid'
+                    errors.report(msg, symbol = template_decorator,
+                                    severity='error')
+
+                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
+                    errors.report('Argument provided to the template decorator is not valid',
+                                    symbol = template_decorator, severity='error')
+
+                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
+                    type_name = dec_args[1].value.python_value
+                    type_descriptors = dec_args[0].value
+                else:
+                    type_name = dec_args[0].value.python_value
+                    type_descriptors = dec_args[1].value
+
+                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
+                    type_descriptors = PythonTuple(type_descriptors)
+
+                if type_name in template['template_dict']:
+                    errors.report(f'The template "{type_name}" is duplicated',
+                                symbol = template_decorator, severity='warning')
+
+                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
+
+                # Make templates decorator dict accessible from decorators dict
+                template['template_dict'][type_name] = possible_types
+
+            # Make template decorator list accessible from decorators dict
+            template['decorator_list'] = decorators['template']
+            decorators['template'] = template
+
+        argument_annotations = [a.annotation for a in arguments]
+        result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
+
+        #---------------------------------------------------------------------------------------------------------
+        #                   To remove when headers are deprecated
+        #---------------------------------------------------------------------------------------------------------
+        if headers:
+            warnings.warn("Support for specifying types via headers will be removed in a " +
+                          "future version of Pyccel. Please use type hints. The @template " +
+                          "decorator can be used to specify multiple types. See the " +
+                          "documentation at " +
+                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                          "for examples.", FutureWarning)
+            if any(a is not None for a in argument_annotations):
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                        symbol=stmt, severity='error')
+
+            for i, _ in enumerate(argument_annotations):
+                argument_annotations[i] = UnionTypeAnnotation()
+            if result_annotation is not None:
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                            symbol=stmt, severity='error')
+
+            n_results = 0
+
+            for head in headers:
+                if len(head.dtypes) != len(argument_annotations):
+                    errors.report(f"Wrong number of types in header for function {name}",
+                            severity='error', symbol=stmt)
+                else:
+                    for i,arg in enumerate(head.dtypes):
+                        argument_annotations[i].add_type(arg)
+                if head.results:
+                    if result_annotation is None:
+                        result_annotation = head.results
+                    else:
+                        if len(result_annotation) != len(head.results):
+                            errors.report("Different length results in headers.",
+                                    severity='error', symbol=stmt)
+                        else:
+                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
+                                                        for r,t in zip(head.results, result_annotation))
+                    n_results += 1
+
+            if n_results and n_results != len(headers):
+                errors.report("Results have only been provided for some of the headers. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
+                        severity='warning', symbol=stmt)
+
+        # extract the types to construct a header
+        if 'types' in decorators:
+            if any(a is not None for a in argument_annotations):
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                        symbol=stmt, severity='error')
+
+            for i, _ in enumerate(argument_annotations):
+                argument_annotations[i] = UnionTypeAnnotation()
+            n_results = 0
+
+            for types_decorator in decorators['types']:
+                type_args = types_decorator.args
+
+                args = [a for a in type_args if not a.has_keyword]
+                kwargs = [a for a in type_args if a.has_keyword]
+
+                if len(kwargs) > 1:
+                    errors.report('Too many keyword arguments passed to @types decorator',
+                                symbol = types_decorator,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='error')
+                elif kwargs:
+                    if kwargs[0].keyword != 'results':
+                        errors.report('Wrong keyword argument passed to @types decorator',
+                                    symbol = types_decorator,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
+                    annots = self._treat_type_annotation(kwargs[0], kwargs[0].value.args)
+                    if result_annotation is None:
+                        result_annotation = annots
+                    else:
+                        if len(result_annotation) != len(annots):
+                            errors.report("Different length results in headers.",
+                                    severity='error', symbol=stmt)
+                        else:
+                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
+                                                        for r,t in zip(annots, result_annotation))
+                    n_results += 1
+
+                if len(args) != len(argument_annotations):
+                    errors.report(f"Wrong number of types in header for function {name}",
+                            severity='error', symbol=stmt)
+                else:
+                    for i,arg in enumerate(args):
+                        argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
+
+            if n_results and n_results != len(decorators['types']):
+                errors.report("Results have only been provided for some of the types decorators. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
+                        severity='warning', symbol=stmt)
+
+        #---------------------------------------------------------------------------------------------------------
+        #                   End of : To remove when headers are deprecated
+        #---------------------------------------------------------------------------------------------------------
+
+        argument_names = {a.var.name for a in arguments}
+        # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
+        arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
+                           for a, annot in zip(arguments, argument_annotations)]
+
+        body = stmt.body
+
+        if 'sympy' in decorators:
+            # TODO maybe we should run pylint here
+            stmt.decorators.pop()
+            func = SympyFunction(name, arguments, [], [str(stmt)])
+            func.set_current_ast(stmt)
+            self.insert_function(func)
+            return EmptyNode()
+
+        else:
+            body = self._visit(body)
+
+        # Collect docstring
+        if len(body) > 0 and isinstance(body[0], CommentBlock):
+            docstring = body[0]
+            docstring.header = ''
+            body = body[1:]
+
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+
+        if classes:
+            errors.report("Classes in functions are not supported.",
+                    symbol=classes[0], severity='error')
+
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return,
-                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
-        assert all(len(i) == len(returns[0]) for i in returns)
-        if is_inline and len(returns)>1:
-            errors.report("Inline functions cannot have multiple return statements",
-                    symbol = stmt,
-                    severity = 'error')
-        results = []
-        result_counter = 1
+        returns = body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
+        if len(returns) == 0 or all(r.expr is Nil() for r in returns):
+            results = FunctionDefResult(Nil())
+        else:
+            results = self._get_unique_name([r.expr for r in returns],
+                                        valid_names = self.scope.local_used_symbols.keys(),
+                                        forbidden_names = argument_names,
+                                        suggestion = 'result')
 
-        local_symbols = self.scope.local_used_symbols
+            if result_annotation:
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
 
-        for r in zip(*returns):
-            r0 = r[0]
+            results = FunctionDefResult(results, annotation = result_annotation)
 
-            pyccel_symbol  = isinstance(r0, PyccelSymbol)
-            same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
-
-            if pyccel_symbol and same_results and name_available:
-                result_name = r0
-            else:
-                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
-
-            results.append(FunctionDefResult(result_name))
+        results.set_current_ast(stmt)
 
         self.exit_function_scope()
 
@@ -823,16 +1117,15 @@ class SyntaxParser(BasicParser):
         func = cls(
                name,
                arguments,
-               results,
                body,
-               global_vars=global_vars,
+               results,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
+               functions=functions,
                decorators=decorators,
-               headers=headers,
-               doc_string=doc_string,
+               docstring=docstring,
                scope=scope)
 
         return func
@@ -840,38 +1133,60 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        self.scope.insert_symbol(name)
         scope = self.create_new_class_scope(name)
         methods = []
+        attributes = []
+        docstring = None
         for i in stmt.body:
-            if isinstance(i, ast.FunctionDef):
-                methods.append(self._visit(i))
-            elif isinstance(i, ast.Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
-        for i in methods:
-            i.cls_name = name
-        attributes = [a.var for a in methods[0].arguments]
+            visited_i = self._visit(i)
+            if isinstance(visited_i, FunctionDef):
+                methods.append(visited_i)
+                visited_i.arguments[0].bound_argument = True
+            elif isinstance(visited_i, (Pass, Comment)):
+                continue
+            elif isinstance(visited_i, CodeBlock) and all(isinstance(x, Comment) for x in visited_i.body):
+                continue
+            elif isinstance(visited_i, AnnotatedPyccelSymbol):
+                attributes.append(visited_i)
+            elif isinstance(visited_i, CommentBlock):
+                docstring = visited_i
+            else:
+                errors.report(f"{type(visited_i)} not currently supported in classes",
+                        severity='error', symbol=visited_i)
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
-        self.exit_class_scope()
-        expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclasses=parent, scope=scope)
 
-        # we set the fst to keep track of needed information for errors
+        init_method = next((m for m in methods if m.name == '__init__'), None)
+        if init_method is None:
+            init_name = PyccelSymbol('__init__')
+            self.scope.insert_symbol(init_name)
+            annot = self._treat_type_annotation(stmt, LiteralString(name))
+            init_scope = self.create_new_function_scope(init_name,
+                    used_symbols = {init_name: init_name},
+                    original_symbols = {init_name: init_name})
+            self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
+                                           annotation=annot,
+                                           kwonly=False,
+                                           bound_argument = True)
+            self_arg.set_current_ast(stmt)
+            self.scope.insert_symbol(self_arg.var)
+            self.exit_function_scope()
+            methods.append(FunctionDef(init_name, (self_arg,), CodeBlock(()), FunctionDefResult(Nil()), scope=init_scope))
+
+        self.exit_class_scope()
+
+        expr = ClassDef(name=name, attributes=attributes,
+                        methods=methods, superclasses=parent, scope=scope,
+                        docstring = docstring)
 
         return expr
 
     def _visit_Subscript(self, stmt):
 
-        ch = stmt
-        args = []
-        while isinstance(ch, ast.Subscript):
-            val = self._visit(ch.slice)
-            if isinstance(val, (PythonTuple, list)):
-                args += val
-            else:
-                args.insert(0, val)
-            ch = ch.value
-        args = tuple(args)
-        var = self._visit(ch)
+        args = self._visit(stmt.slice)
+        if not isinstance(args, (PythonTuple, list)):
+            args = (args,)
+        var = self._visit(stmt.value)
         var = IndexedElement(var, *args)
         return var
 
@@ -891,24 +1206,29 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        if self._in_lhs_assign:
-            self.scope.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
-        return DottedName(val, attr)
+        dotted = DottedName(val, attr)
+        if self._in_lhs_assign:
+            self.scope.insert_symbol(dotted)
+        return dotted
 
 
     def _visit_Call(self, stmt):
 
         args = []
         if stmt.args:
-            args += [FunctionCallArgument(self._visit(a)) for a in stmt.args]
+            args += [FunctionCallArgument(self._visit(a), python_ast=a) for a in stmt.args]
         if stmt.keywords:
-            args += self._visit(stmt.keywords)
+            kwargs = self._visit(stmt.keywords)
+            for k, a in zip(kwargs, stmt.keywords):
+                k.set_current_ast(a)
+
+            args += kwargs
 
         if len(args) == 0:
             args = ()
 
-        if len(args) == 1 and isinstance(args[0].value, GeneratorComprehension):
+        if len(args) == 1 and isinstance(args[0].value, (GeneratorComprehension, FunctionalFor)):
             return args[0].value
 
         func = self._visit(stmt.func)
@@ -920,9 +1240,12 @@ class SyntaxParser(BasicParser):
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
+            for n in func.name:
+                if isinstance(n, PyccelAstNode):
+                    n.clear_syntactic_user_nodes()
             func = DottedName(*func.name[:-1], func_attr)
         else:
-            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
+            raise NotImplementedError(f' Unknown function type {type(func)}')
 
         return func
 
@@ -950,63 +1273,106 @@ class SyntaxParser(BasicParser):
     def _visit_comprehension(self, stmt):
 
         scope = self.create_new_loop_scope()
+        condition = None
 
         self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
         self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
 
+        if stmt.ifs:
+            cond = PyccelAnd(*[self._visit(if_cond)
+                                      for if_cond in stmt.ifs])
+            condition = If(IfSection(cond, CodeBlock([])))
+
         self.exit_loop_scope()
 
-        expr = For(iterator, iterable, [], scope=scope)
+        expr = (For(iterator, iterable, [], scope=scope), condition)
         return expr
 
     def _visit_ListComp(self, stmt):
+        """
+        Converts a list comprehension statement into a `FunctionalFor` AST object.
+
+        This method translates the list comprehension into an equivalent `FunctionalFor`
+        
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.functionalexpr.FunctionalFor
+            AST object which is the syntactic equivalent of the list comprehension.
+        """
+
+        def create_target_operations():
+            operations = {'list' : [], 'numpy_array' : []}
+            index = PyccelSymbol('_', is_temp=True)
+            args = [index]
+            target = IndexedElement(lhs, *args)
+            target = Assign(target, result)
+            assign1 = Assign(index, LiteralInteger(0))
+            assign1.set_current_ast(stmt)
+            operations['numpy_array'].append(assign1)
+            target.set_current_ast(stmt)
+            operations['numpy_array'].append(target)
+            assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
+            assign2.set_current_ast(stmt)
+            operations['numpy_array'].append(assign2)
+            operations['list'].append(DottedName(lhs, FunctionCall('append', [FunctionCallArgument(result)])))
+
+            return index, operations
+
 
         result = self._visit(stmt.elt)
+        output_type = None
+        comprehensions = list(self._visit(stmt.generators))
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
 
-        generators = list(self._visit(stmt.generators))
+        parent = self._context[-2]
+        if isinstance(parent, ast.Call):
+            output_type = self._visit(parent.func)
 
-        if not isinstance(self._context[-2],ast.Assign):
+        success = isinstance(self._context[-2],ast.Assign)
+        if not success and len(self._context) > 2:
+            success = isinstance(self._context[-3],ast.Assign) and isinstance(self._context[-2],ast.Call)
+
+        assignment = next((c for c in reversed(self._context) if isinstance(c, ast.Assign)), None)
+
+        if not success:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
             lhs = PyccelSymbol('_', is_temp=True)
         else:
-            lhs = self._visit(self._context[-2].targets)
+            lhs = self._visit(assignment.targets)
             if len(lhs)==1:
                 lhs = lhs[0]
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        index = PyccelSymbol('_', is_temp=True)
+        indices = [generator.target for generator in generators]
+        index, operations = create_target_operations()
 
-        args = [index]
-        target = IndexedElement(lhs, *args)
-        target = Assign(target, result)
-        assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_fst(stmt)
-        generators[-1].insert2body(assign2)
-
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
+        return FunctionalFor(generators, result, lhs,indices,index=index,
+                             conditions=conditions,
+                             target_type=output_type, operations=operations)
 
     def _visit_GeneratorExp(self, stmt):
+        conditions = []
+        generators = []
+        indices = []
+        condition = None
 
         result = self._visit(stmt.elt)
 
-        generators = self._visit(stmt.generators)
+        comprehensions = list(self._visit(stmt.generators))
+        generators = [c[0] for c in comprehensions]
+        conditions = [c[1] for c in comprehensions]
+
         parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
@@ -1028,21 +1394,36 @@ class SyntaxParser(BasicParser):
             body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
-        body.set_fst(parent)
-        indices = []
-        generators = list(generators)
-        while len(generators) > 0:
-            indices.append(generators[-1].target)
+        body.set_current_ast(parent)
+
+        for loop, condition in zip(generators, conditions):
+            if condition:
+                loop.insert2body(condition)
+
+        if generators[-1].body.body: # this is an If node
+            if_node = generators[-1].body.body[0]
+            if_node.blocks[0].body.insert2body(body)
+        else:
             generators[-1].insert2body(body)
-            body = generators.pop()
+
+        while len(generators) > 1:
+            indices.append(generators[-1].target)
+            outer_loop = generators.pop()
+            inserted_into = generators[-1]
+            if inserted_into.body.body:
+                inserted_into.body.body[0].blocks[0].body.insert2body(outer_loop)
+            else:
+                inserted_into.insert2body(outer_loop)
+        indices.append(generators[-1].target)
 
         indices = indices[::-1]
+
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices)
+            expr = FunctionalSum(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices)
+            expr = FunctionalMin(generators[0], result, lhs, indices, conditions=conditions)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices)
+            expr = FunctionalMax(generators[0], result, lhs, indices, conditions=conditions)
         else:
             expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,
@@ -1050,15 +1431,33 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
 
-        expr.set_fst(parent)
+        expr.set_current_ast(parent)
 
         return expr
 
     def _visit_If(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
+
+        if isinstance(test, PyccelEq) and test.args[0] == '__name__' and test.args[1] == '__main__' \
+                and isinstance(test.args[0], PyccelSymbol) and isinstance(test.args[1], LiteralString):
+            if len(orelse) != 0:
+                errors.report("Can't add an else condition to a program",
+                        symbol = stmt,
+                        severity = 'error')
+
+            scope = self.create_new_function_scope('__main__')
+            body = [self._visit(v) for v in stmt.body]
+            self.exit_function_scope()
+
+            imports = [i for i in body if isinstance(i, Import)]
+            body = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+
+            return Program('__main__', (), CodeBlock(body), imports=imports, scope = scope)
+        else:
+            body = self._visit(stmt.body)
+
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
             return If(IfSection(test, body), *orelse)
@@ -1129,6 +1528,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
+
         return With(domain, body)
 
     def _visit_Try(self, stmt):
@@ -1149,6 +1549,17 @@ class SyntaxParser(BasicParser):
 
     def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
+
+    def _visit_TypeAlias(self, stmt):
+        if stmt.type_params:
+            errors.report("Type parameters are not yet supported on a type alias expression.\n"+PYCCEL_RESTRICTION_TODO,
+                    severity='error', symbol=stmt)
+        self._in_lhs_assign = True
+        name = self._visit(stmt.name)
+        self._in_lhs_assign = False
+        rhs = self._treat_type_annotation(stmt.value, self._visit(stmt.value))
+        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(TypeAlias(), is_const = True))
+        return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
 
 #==============================================================================
 

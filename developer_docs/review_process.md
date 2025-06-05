@@ -1,8 +1,8 @@
 # Review Process
 
-The review process is the process through which a branch which solves an issue is merged into the master branch.
+The review process is the process through which a branch which solves an issue is merged into the `devel` branch.
 
-When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the master branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
+When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the `devel` branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
 
 Once the pull request is opened 9 tests should be triggered they are: 
 
@@ -10,9 +10,9 @@ Once the pull request is opened 9 tests should be triggered they are:
 -   **MacOS** : Runs the suite of tests on a macOS machine
 -   **Windows** : Runs the suite of tests on a windows machine
 -   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
--   **Python Linting** : Does the same job as Codacy for certain files which are too large for Codacy to handle.
+-   **Python Linting** : Runs Pylint on all Python files and reports any errors introduced by the pull request.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
--   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt))
+-   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt) and/or [.typos.toml](../.typos.toml))
 -   **Coverage Checker** : Checks that the code which has been added is used in at least one test. Occasionally this test is overenthusiastic, it may therefore be disabled if an issue is created to find the problem at a later date.
 -   **Doc Coverage** : Runs the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) static compiler to ensure that docstrings are present and correctly formatted. This means that they should respect NumPy's style guide as described [here](https://numpydoc.readthedocs.io/en/latest/format.html).
 
@@ -30,7 +30,7 @@ Finally once you think you have handled all the issues raised in a review please
 
 ### Needs Initial Review
 
-To request the first stage of the review process you should add the label `needs_inital_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
+To request the first stage of the review process you should add the label `needs_initial_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_initial_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
 
 -   Unclear comments/docstrings
 -   Missing/Incomplete tests
@@ -38,7 +38,7 @@ To request the first stage of the review process you should add the label `needs
 -   Lack of `__slots__`
 -   Unnecessary code duplication
 
-Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_inital_review` to `Ready_for_review`
+Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_initial_review` to `Ready_for_review`
 
 ### Ready for Review
 
@@ -52,4 +52,4 @@ Once the senior developer is happy with the branch they should accept the pull r
 
 Once the code has been accepted by both a junior and a senior developer it should be ready to merge. This flag therefore indicates that one of our developers with merge permissions can review the code. They will look for anything missed by the previous two reviews.
 
-Anyone can make silly mistakes so Pyccel aims to have all pull requests be reviewed by at least 2 developers before being merged to master.
+Anyone can make silly mistakes so Pyccel aims to have all pull requests be reviewed by at least 2 developers before being merged to `devel`.

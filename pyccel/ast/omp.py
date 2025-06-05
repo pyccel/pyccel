@@ -1,16 +1,16 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.
 We represent some types with the OmpAnnotatedComment type.
 These types are detailed on our documentation:
-https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
+https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md
 """
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 __all__ = ('OmpAnnotatedComment',
            'OMP_For_Loop',
@@ -30,7 +30,7 @@ __all__ = ('OmpAnnotatedComment',
            'OMP_Section_Construct',
            'Omp_End_Clause')
 
-class OmpAnnotatedComment(Basic):
+class OmpAnnotatedComment(PyccelAstNode):
 
     """Represents an OpenMP Annotated Comment in the code.
 
@@ -88,11 +88,6 @@ class OmpAnnotatedComment(Basic):
     def combined(self):
         """Used to store the combined construct of a directive."""
         return self._combined
-
-    def __getnewargs__(self):
-        """Used for Pickling self."""
-        args = (self.txt, self.combined)
-        return args
 
     def __str__(self):
         instructions = [self.name, self.combined, self.txt]

@@ -40,19 +40,20 @@ jobs:
     name: Unit tests
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup"
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py coverage
         shell: bash
       - name: Install Python dependencies
         run: |
@@ -73,6 +74,11 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: cobertura.xml
+      - name: Add remote
+        if: env.PR_REPO != 'pyccel/pyccel'
+        run: |
+          git remote add -f pyccel git@github.com:pyccel/pyccel.git
+        shell: bash
       - name: Collect diff information
         run: |
           git fetch

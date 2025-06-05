@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -14,8 +14,9 @@ import traceback as tb
 from collections import OrderedDict
 from os.path import basename
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.stage import PyccelStage
 
 # ...
 #ERROR = 'error'
@@ -56,6 +57,7 @@ _severity_registry = {'error': ERROR,
                       'fatal': FATAL,
                       'warning': WARNING}
 
+pyccel_stage = PyccelStage()
 
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
@@ -86,7 +88,7 @@ class ErrorInfo:
     Parameters
     ----------
     stage : str
-        The parser stage when the error occured.
+        The Pyccel stage when the error occurred.
 
     filename : str
         The file where the error was detected.
@@ -103,8 +105,9 @@ class ErrorInfo:
     severity : str, optional
         The severity of the error. This is one of : [warning/error/fatal].
 
-    symbol : pyccel.ast.basic.Basic, optional
-        The Basic object which caused the error to need to be raised.
+    symbol : str, optional
+        A string representation of the PyccelAstNode object which caused
+        the error to need to be raised.
         This object is printed in the error message.
 
     traceback : str, optional
@@ -161,17 +164,18 @@ class ErrorInfo:
                 info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            if self.traceback:
-                info['symbol'] = ' ({})'.format(repr(self.symbol))
-            else:
-                info['symbol'] = ' ({})'.format(self.symbol)
+            info['symbol'] = f' ({self.symbol})'
 
         return pattern.format(**info)
 
 
 class ErrorsMode(metaclass = Singleton):
-    """Developper or User mode.
-    pyccel command line will set it.
+    """
+    The mode for the error output.
+
+    The mode for the error output. This is either 'developer' or 'user'.
+    In developer mode the errors are more verbose and include a traceback
+    this helps developers debug errors.
     """
     def __init__(self):
         self._mode = 'user'
@@ -181,7 +185,17 @@ class ErrorsMode(metaclass = Singleton):
         return self._mode
 
     def set_mode(self, mode):
-        assert(mode in ['user', 'developer'])
+        """
+        Set the error mode.
+
+        Set the error mode to either 'developer' or 'user'.
+
+        Parameters
+        ----------
+        mode : str
+            The new error mode.
+        """
+        assert mode in ['user', 'developer']
         self._mode = mode
 
 
@@ -196,14 +210,9 @@ class Errors(metaclass = Singleton):
     def __init__(self):
         self.error_info_map = None
         self._target = None
-        self._parser_stage = None
         self._mode = ErrorsMode()
 
         self.initialize()
-
-    @property
-    def parser_stage(self):
-        return self._parser_stage
 
     @property
     def target(self):
@@ -214,36 +223,39 @@ class Errors(metaclass = Singleton):
         return self._mode.value
 
     def initialize(self):
+        """
+        Initialise the Errors singleton.
+
+        Initialise the Errors singleton. This function is necessary so
+        the singleton can be reinitialised using the `reset` function.
+        """
         self.error_info_map = OrderedDict()
 
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        self._target = None
 
     def reset(self):
+        """
+        Reset the Errors singleton.
+
+        Reset the Errors singleton. This removes any information about
+        previously generated errors or warnings. This method should be
+        called before starting a new translation.
+        """
         self.initialize()
 
-    def set_parser_stage(self, stage):
-        assert(stage in ['syntax', 'semantic', 'codegen'])
-        self._parser_stage = stage
+    def set_target(self, target):
+        """
+        Set the current translation target.
 
-    def set_target(self, target, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
-        self._target[kind] = target
+        Set the current translation target which describes the location
+        from which the error is being raised.
 
-    def unset_target(self, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
-        self._target[kind] = None
-
-    def reset_target(self):
-        """."""
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        Parameters
+        ----------
+        target : str
+            The name of the file being translated.
+        """
+        self._target = target
 
     def report(self,
                message,
@@ -258,8 +270,8 @@ class Errors(metaclass = Singleton):
         """
         Report an error.
 
-        Report message at the given line using the current error context.
-        stage: 'syntax', 'semantic' or 'codegen'.
+        Report message at the given line using the current error context
+        stage: 'syntactic', 'semantic' 'codegen', or 'cwrapper'.
 
         Parameters
         ----------
@@ -281,8 +293,8 @@ class Errors(metaclass = Singleton):
             Indicates the seriousness of the error. Should be one of: 'warning', 'error', 'fatal'.
             Default: 'error'.
 
-        symbol : pyccel.ast.Basic, optional
-            The Basic object which caused the error to need to be raised.
+        symbol : pyccel.ast.PyccelAstNode, optional
+            The PyccelAstNode object which caused the error to need to be raised.
             This object is printed in the error message.
 
         filename : str, optional
@@ -299,28 +311,32 @@ class Errors(metaclass = Singleton):
             return
 
         if filename is None:
-            filename = self.target['file']
+            filename = self.target
 
         # TODO improve. it is assumed here that tl and br have the same line
         if bounding_box:
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        fst = None
+        ast_node = None
 
         if symbol is not None:
             if isinstance(symbol, ast.AST):
-                fst = symbol
-                if sys.version_info < (3, 9):
-                    symbol = ast.dump(fst)
-                else:
-                    symbol = ast.unparse(fst) # pylint: disable=no-member
-            elif isinstance(symbol, Basic):
-                fst = symbol.fst
+                ast_node = symbol
+                symbol = ast.unparse(ast_node)
+            elif isinstance(symbol, PyccelAstNode):
+                ast_node = symbol.python_ast
 
-        if fst:
-            line   = getattr(fst, 'lineno', None)
-            column = getattr(fst, 'col_offset', None)
+            if self.mode == 'developer':
+                symbol = repr(symbol)
+            else:
+                symbol = str(symbol)
+
+        if ast_node:
+            if line is None:
+                line   = getattr(ast_node, 'lineno', None)
+            if column is None:
+                column = getattr(ast_node, 'col_offset', None)
 
         if self.mode == 'developer':
             if traceback:
@@ -330,7 +346,7 @@ class Errors(metaclass = Singleton):
         else:
             traceback = None
 
-        info = ErrorInfo(stage=self._parser_stage,
+        info = ErrorInfo(stage=pyccel_stage.current_stage,
                          filename=filename,
                          message=message,
                          line=line,
@@ -344,11 +360,11 @@ class Errors(metaclass = Singleton):
         self.add_error_info(info)
 
         if info.blocker:
-            if self._parser_stage == 'syntax':
+            if pyccel_stage == 'syntactic':
                 raise PyccelSyntaxError(message)
-            elif self._parser_stage == 'semantic':
+            elif pyccel_stage == 'semantic':
                 raise PyccelSemanticError(message)
-            elif self._parser_stage == 'codegen':
+            elif pyccel_stage == 'codegen':
                 raise PyccelCodegenError(message)
             else:
                 raise PyccelError(message)

@@ -113,6 +113,9 @@ def get_diff_as_json(filename):
                 current_file_deletions = []
             current_file_name = l.split(' ')[3][2:]
             i+=1
+        elif l.startswith('++') and '/dev/null' in l:
+            current_file_name = None
+            i += 1
         elif l.startswith('@@'):
             line_info = l.split('@@')[1].split()
             for info in line_info:

@@ -2,8 +2,9 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
-from modules        import loops
+from modules import loops
+
+from pyccel import epyccel
 
 #==============================================================================
 
@@ -115,7 +116,7 @@ def test_product_loop(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -148,6 +149,15 @@ def test_enumerate_on_1d_array_with_start(language):
 
     assert np.array_equal( f1(z, 5), f2(z, 5) )
     assert np.array_equal( f1(z,-2), f2(z,-2) )
+
+def test_enumerate_on_1d_array_with_tuple(language):
+
+    f1 = loops.enumerate_on_1d_array_with_tuple
+    f2 = epyccel(f1, language=language)
+
+    z = np.arange( 7 )
+
+    assert np.array_equal( f1(z), f2(z) )
 
 def test_zip_prod(language):
 
@@ -197,7 +207,7 @@ def test_breaks(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert( out1 == out2 )
+    assert  out1 == out2
 
 def test_continue(language):
     f1 = loops.fizzbuzz_sum_with_continue
@@ -210,7 +220,7 @@ def test_continue(language):
     out1 = f1(fizz, buzz, max_val)
     out2 = f2(fizz, buzz, max_val)
 
-    assert( out1 == out2 )
+    assert  out1 == out2
 
 def test_temp_array_in_loop(language):
     f1 = loops.temp_array_in_loop
@@ -229,15 +239,33 @@ def test_temp_array_in_loop(language):
     assert np.array_equal(c_py, c_ep)
     assert np.array_equal(d_py, d_ep)
 
+def test_less_than_100(language):
+    f1 = loops.less_than_100
+    f2 = epyccel( f1, language = language )
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    import os, glob
-#    dirname  = os.path.dirname( loops.__file__ )
-#    pattern  = os.path.join( dirname, '__epyccel__*' )
-#    filelist = glob.glob( pattern )
-#    for f in filelist:
-#        os.remove( f )
+    assert f1(10) == f2(10)
+    assert f1(101) == f2(101)
+
+def test_for_expression(language):
+    f1 = loops.for_expression
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists of lists not yet implemented in Fortran. See #2210"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="lists of lists not yet implemented in C. See #2210"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_for_lists_of_lists(language):
+    f1 = loops.for_lists_of_lists
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()

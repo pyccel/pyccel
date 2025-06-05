@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     master = np.int32(1)
     if rank == master:
-        msg = rank + 1000
+        msg = int(rank) + 1000
     else:
         msg = 0
 

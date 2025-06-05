@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -29,6 +29,9 @@ def test_f1(language):
     assert f() == f1()
     assert f(None) == f1(None)
     assert f(0) == f1(0)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f2(language):
@@ -44,6 +47,9 @@ def test_f2(language):
     assert np.isclose(f(), f2(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f2(None), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3)
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
@@ -58,6 +64,9 @@ def test_f3(language):
     assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f3(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f3(None), rtol=RTOL, atol=ATOL)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f4(language):
@@ -73,6 +82,9 @@ def test_f4(language):
     assert f() == f4()
     assert f(None) == f4(None)
     assert f(False) == f4(False)
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(3.5)
     # ...
 #------------------------------------------------------------------------------
 def test_f5(language):
@@ -90,13 +102,14 @@ def test_f5(language):
 def test_f6(language):
     import modules.Module_4 as mod
 
-    modnew = epyccel(mod, language = language)
+    modnew = epyccel(mod, language = language, verbose=True)
 
     # ...
     assert mod.call_optional_1() == modnew.call_optional_1()
     assert mod.call_optional_2(None) == modnew.call_optional_2(None)
     assert mod.call_optional_2(0) == modnew.call_optional_2(0)
     assert mod.call_optional_2() == modnew.call_optional_2()
+    assert mod.optional_func_call() == modnew.optional_func_call()
 #------------------------------------------------------------------------------
 def test_f7(Module_5):
     mod, modnew = Module_5
@@ -150,6 +163,10 @@ def test_optional_args_1d(language):
     # ...
     assert np.array_equal(x1, x2)
 
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(x1, 3)
+
 #------------------------------------------------------------------------------
 def test_optional_2d_F(language):
     def f13(x : 'int32[:,:](order=F)', y  : 'int32[:,:](order=F)' =  None):
@@ -166,6 +183,11 @@ def test_optional_2d_F(language):
 
     # ...
     assert np.array_equal(x1, x2)
+
+    if language != 'python':
+        with pytest.raises(TypeError):
+            f(x1, 3.5)
+
 #------------------------------------------------------------------------------
 
 def test_f14(language):

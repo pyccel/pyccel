@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
+
 import pytest
 
 from modules import base
@@ -129,13 +131,6 @@ def test_same_float(language):
     test = epyccel_test(base.isnot_same_float, lang=language)
     test.compare_epyccel( 22.2 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_same_string(language):
     test = epyccel_test(base.is_same_string, lang=language)
     test.compare_epyccel()
@@ -177,6 +172,13 @@ def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()
     test.compare_epyccel(6)
+
+def test_check_optional(language):
+    test = epyccel_test(base.check_optional, lang=language)
+    test.compare_epyccel()
+    test.compare_epyccel(6)
+    test.compare_epyccel(4)
+    test.compare_epyccel(1)
 
 def test_none_equality(language):
     test = epyccel_test(base.none_equality, lang=language)

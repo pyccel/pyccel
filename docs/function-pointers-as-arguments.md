@@ -1,6 +1,6 @@
 # Function-pointers as arguments
 
-Note: before reading this you should have read [Installation and Command Line Usage](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md#installation)
+Note: before reading this you should have read [Installation and Command Line Usage](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#installation)
 
 In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments, Pyccel needs the user to define the type of the passed function-pointers. This can be done by using the syntax `def function_name(func1_name : '(func1_return_type)(func1_arguments_types)', func2_name : '(func2_return_type)(func2_arguments_types)', ..., arg1, arg2, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
 
@@ -77,16 +77,6 @@ module boo
   !........................................
 
 end module boo
-```
-
-Here is the version using a function-header:
-
-```Python
-#$ header function high_int_int_1((int)(int), (int)(int), int)
-def high_int_int_1(function1, function2, a):
-    x = function1(a)
-    y = function2(a)
-    return x + y
 ```
 
 Here is the generated C code:
@@ -319,9 +309,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a)) deallocate(a)
 
 end program prog_prog_boo
 ```
@@ -424,9 +412,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a))  deallocate(a)
 
 end program prog_prog_boo
 ```
@@ -435,7 +421,7 @@ end program prog_prog_boo
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the tutorial directory;
+1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 

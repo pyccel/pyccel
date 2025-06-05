@@ -8,7 +8,7 @@ import modules.openmp as openmp
 
 from numpy import random
 from numpy import matmul
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 #==============================================================================
 
 
@@ -353,7 +353,7 @@ def test_omp_nowait(language):
     f1 = epyccel(openmp.omp_nowait, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(1000))
+    x = np.array(random.randint(20, size=(1000)), dtype=int)
     y = np.zeros((1000,), dtype=int)
     z = np.zeros((1000,))
     f1(x, y, z)
@@ -366,7 +366,7 @@ def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(5))
+    x = np.array(random.randint(20, size=(5)), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -375,7 +375,7 @@ def test_omp_arraysum_combined(language):
     f1 = epyccel(openmp.omp_arraysum_combined, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x = random.randint(20, size=(5))
+    x = np.array(random.randint(20, size=(5)), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -392,7 +392,7 @@ def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(2)
-    x = random.randint(20, size=(10))
+    x = np.array(random.randint(20, size=(10)), dtype=int)
 
     assert f1(x) == np.sum(x)
 
@@ -422,7 +422,7 @@ def test_omp_taskloop(language):
 
 @pytest.mark.parametrize( 'language', [
             pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Nested functions not handled for C !"),
+            pytest.mark.xfail(reason="Nested functions not handled for C !", run=False),
             pytest.mark.c]),
             pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -445,11 +445,11 @@ def test_omp_long_line(language):
     f1 = epyccel(openmp.omp_long_line, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    x1 = random.randint(20, size=(5))
-    x2 = random.randint(20, size=(5))
-    x3 = random.randint(20, size=(5))
-    x4 = random.randint(20, size=(5))
-    x5 = random.randint(20, size=(5))
+    x1 = np.array(random.randint(20, size=(5)), dtype=int)
+    x2 = np.array(random.randint(20, size=(5)), dtype=int)
+    x3 = np.array(random.randint(20, size=(5)), dtype=int)
+    x4 = np.array(random.randint(20, size=(5)), dtype=int)
+    x5 = np.array(random.randint(20, size=(5)), dtype=int)
 
     assert f1(x1,x2,x3,x4,x5) == np.sum(x1+x2+x3+x4+x5)
 
@@ -474,7 +474,8 @@ def test_omp_barrier(language):
 
 @pytest.mark.external
 def test_combined_for_simd(language):
-    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language)
+    # Intel compiler has a bug in debug mode
+    f1 = epyccel(openmp.combined_for_simd, fflags = '-Wall', accelerators=['openmp'], language=language, debug=False)
     f2 = openmp.combined_for_simd
     assert f1() == f2()
 

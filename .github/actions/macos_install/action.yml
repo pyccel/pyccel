@@ -7,9 +7,14 @@ runs:
       run: |
         brew install open-mpi
         brew install libomp
-        if [[ ! -f "/usr/local/bin/gfortran" ]]; then
-          gfort=$(ls /usr/local/bin/gfortran-* | tail -n 1)
-          ln -s ${gfort} /usr/local/bin/gfortran
+        GFORTRAN_HOME=$(which gfortran || true)
+        echo "GFORTRAN_HOME : $GFORTRAN_HOME"
+        if [[ ! -f "$GFORTRAN_HOME" ]]; then
+          gfort=$(find ${PATH//:/\/ } -name 'gfortran-*' -exec basename {} \; | sort | tail -n 1 || true)
+          echo "Found $gfort"
+          gfort_path=$(which ${gfort})
+          folder=$(dirname ${gfort_path})
+          ln -s ${gfort_path} ${folder}/gfortran
         fi
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash

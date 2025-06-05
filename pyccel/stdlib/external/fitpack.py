@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 
@@ -18,10 +18,10 @@ def bispev2(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, ierr):
 
     from numpy import empty
     lwrk = mx*(kx+1)+my*(ky+1)
-    wrk  = empty(lwrk)
+    work  = empty(lwrk)
     kwrk = mx+my
     iwrk = empty(kwrk,'int')
-    bispev(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, wrk, lwrk, iwrk, kwrk, ierr)
+    bispev(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, work, lwrk, iwrk, kwrk, ierr)
 
 
 

@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 # TODO - improve communicate method
@@ -135,7 +135,7 @@ class Cart(object):
         # ...
 
         # ... Neighbours
-        #     Search of my West and East neigbours
+        #     Search of my West and East neighbours
         mpi_cart_shift (self.comm_cart, 0, self.pads[0], self.neighbour[west], self.neighbour[east], ierr)
 
         #     Search of my South and North neighbours

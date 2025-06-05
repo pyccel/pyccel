@@ -9,12 +9,21 @@ on:
       ref:
         required: false
         type: string
+      base:
+        required: true
+        type: string
       check_run_id:
         required: false
         type: string
       pr_repo:
         required: false
         type: string
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -27,38 +36,59 @@ jobs:
   Linter:
     runs-on: ubuntu-latest
     name: Python best practices
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
-      - uses: actions/checkout@v3
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["**/*.py"]'
+          do_not_skip: '["push"]'
+
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python_version }}
       - name: "Setup"
+        if: github.event_name != 'pull_request'
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
-      - name: Check branch
-        run: |
-          git branch
-          git status
+          python ci_tools/setup_check_run.py pylint
       - name: Install python dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install pylint
+          python -m pip install defusedxml
         shell: bash
-      - name: Pylint
+      - name: Run Pylint
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
+          if [ -z ${check_files} ]
+          then
+            touch pylint_results.txt
+          else
+            python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
+          fi
+        shell: bash
+      - name: Filter Pylint output
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pylint
         run: |
-          echo $GITHUB_WORKFLOW_SHA
-          python -m pylint --rcfile=.pylintrc pyccel/parser/semantic.py | tee pylint_output.out || true
-          python ci_tools/parse_pylint_output.py pylint_output.out $GITHUB_STEP_SUMMARY
+          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run:
           python ci_tools/complete_check_run.py ${{ steps.pylint.outcome }}

@@ -15,7 +15,6 @@
 #    expr = expr.subs(sol[0].items())
 #    return expr
 #
-##$ header function  g(double, double)
 
 
 @sympy

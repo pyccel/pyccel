@@ -1,31 +1,50 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .core      import ClassDef, PyccelFunctionDef
-from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric)
-from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize, NumpyResultType)
 
-__all__ = ('BooleanClass',
-        'IntegerClass',
-        'RealClass',
-        'ComplexClass',
-        'StringClass',
-        'NumpyArrayClass',
-        'TupleClass',
-        'literal_classes',
-        'get_cls_base')
+from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, SetPop,
+                                                     SetDiscard, SetUpdate, SetUnion,
+                                                     SetIntersection, SetIntersectionUpdate,
+                                                     SetIsDisjoint)
+from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
+                                                     ListClear, ListExtend, ListRemove,
+                                                     ListCopy, ListSort, ListReverse)
+from pyccel.ast.builtin_methods.dict_methods import (DictPop, DictPopitem, DictGet, DictClear,DictCopy,
+                                                     DictSetDefault, DictItems, DictGetItem, DictKeys,
+                                                     DictValues)
+
+from .builtins   import PythonImag, PythonReal, PythonConjugate
+from .core       import ClassDef, PyccelFunctionDef
+from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
+                         PythonNativeComplex, StringType, TupleType, CustomDataType,
+                         HomogeneousListType, HomogeneousSetType, DictType, SymbolicType)
+from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
+                         NumpyImag, NumpyReal, NumpyTranspose,
+                         NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
+from .numpytypes import NumpyNumericType, NumpyNDArrayType
+
+__all__ = (
+    'BooleanClass',
+    'ComplexClass',
+    'DictClass',
+    'FloatClass',
+    'IntegerClass',
+    'ListClass',
+    'NumpyArrayClass',
+    'SetClass',
+    'StringClass',
+    'TupleClass',
+    'get_cls_base',
+    'literal_classes',
+)
 
 #=======================================================================================
 
-ComplexClass = ClassDef('complex',
+ComplexClass = ClassDef('complex', class_type = PythonNativeComplex(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
@@ -37,7 +56,7 @@ ComplexClass = ClassDef('complex',
 
 #=======================================================================================
 
-FloatClass = ClassDef('float',
+FloatClass = ClassDef('float', class_type = PythonNativeFloat(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -53,7 +72,7 @@ FloatClass = ClassDef('float',
 
 #=======================================================================================
 
-IntegerClass = ClassDef('integer',
+IntegerClass = ClassDef('integer', class_type = PythonNativeInt(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -71,12 +90,12 @@ IntegerClass = ClassDef('integer',
 
 #=======================================================================================
 
-BooleanClass = ClassDef('boolean',
+BooleanClass = ClassDef('boolean', class_type = PythonNativeBool(),
         superclasses=(IntegerClass,))
 
 #=======================================================================================
 
-StringClass = ClassDef('string',
+StringClass = ClassDef('string', class_type = StringType(),
         methods=[
                 #capitalize
                 #casefold
@@ -127,6 +146,58 @@ StringClass = ClassDef('string',
 
 #=======================================================================================
 
+ListClass = ClassDef('list',
+        methods=[
+            PyccelFunctionDef('append', func_class = ListAppend),
+            PyccelFunctionDef('clear', func_class = ListClear),
+            PyccelFunctionDef('copy', func_class = ListCopy),
+            PyccelFunctionDef('extend', func_class = ListExtend),
+            PyccelFunctionDef('insert', func_class = ListInsert),
+            PyccelFunctionDef('pop', func_class = ListPop),
+            PyccelFunctionDef('sort', func_class = ListSort),
+            PyccelFunctionDef('remove', func_class = ListRemove),
+            PyccelFunctionDef('reverse', func_class = ListReverse),
+        ])
+
+#=======================================================================================
+
+SetClass = ClassDef('set',
+        methods=[
+            PyccelFunctionDef('add', func_class = SetAdd ),
+            PyccelFunctionDef('clear', func_class = SetClear),
+            PyccelFunctionDef('copy', func_class = SetCopy),
+            PyccelFunctionDef('discard', func_class = SetDiscard),
+            PyccelFunctionDef('pop', func_class = SetPop),
+            PyccelFunctionDef('remove', func_class = SetDiscard),
+            PyccelFunctionDef('union', func_class = SetUnion),
+            PyccelFunctionDef('intersection', func_class = SetIntersection),
+            PyccelFunctionDef('intersection_update', func_class = SetIntersectionUpdate),
+            PyccelFunctionDef('isdisjoint', func_class = SetIsDisjoint),
+            PyccelFunctionDef('update', func_class = SetUpdate),
+            PyccelFunctionDef('__or__', func_class = SetUnion),
+            PyccelFunctionDef('__and__', func_class = SetIntersection),
+            PyccelFunctionDef('__iand__', func_class = SetIntersectionUpdate),
+            PyccelFunctionDef('__ior__', func_class = SetUpdate),
+        ])
+
+#=======================================================================================
+
+DictClass = ClassDef('dict',
+        methods=[
+            PyccelFunctionDef('copy', func_class = DictCopy),
+            PyccelFunctionDef('clear', func_class = DictClear),
+            PyccelFunctionDef('get', func_class = DictGet),
+            PyccelFunctionDef('items', func_class = DictItems),
+            PyccelFunctionDef('keys', func_class = DictKeys),
+            PyccelFunctionDef('pop', func_class = DictPop),
+            PyccelFunctionDef('popitem', func_class = DictPopitem),
+            PyccelFunctionDef('setdefault', func_class = DictSetDefault),
+            PyccelFunctionDef('values', func_class = DictValues),
+            PyccelFunctionDef('__getitem__', func_class = DictGetItem),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple',
         methods=[
             #index
@@ -161,37 +232,37 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
             PyccelFunctionDef('dtype', func_class = NumpyResultType,
                 decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )
 
 #=======================================================================================
 
+StackArrayClass = ClassDef('stack_array')
+
+#=======================================================================================
+
 literal_classes = {
-        NativeBool()    : BooleanClass,
-        NativeInteger() : IntegerClass,
-        NativeFloat()   : FloatClass,
-        NativeComplex() : ComplexClass,
-        NativeString()  : StringClass
+        PythonNativeBool()    : BooleanClass,
+        PythonNativeInt()     : IntegerClass,
+        PythonNativeFloat()   : FloatClass,
+        PythonNativeComplex() : ComplexClass,
+        StringType()          : StringClass
 }
 
 #=======================================================================================
 
-def get_cls_base(dtype, precision, rank):
+def get_cls_base(class_type):
     """
     Determine the base class of an object.
 
-    From the dtype and rank, determine the base class of an object.
+    From the type, determine the base class of an object.
 
     Parameters
     ----------
-    dtype : DataType
-        The data type of the object.
-
-    precision : int
-        The precision of the object.
-
-    rank : int
-        The rank of the object.
+    class_type : DataType
+        The Python type of the object.
 
     Returns
     -------
@@ -203,14 +274,20 @@ def get_cls_base(dtype, precision, rank):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if precision in (-1, 0, None) and rank == 0:
-        return literal_classes[dtype]
-    elif dtype in NativeNumeric:
+    if isinstance(class_type, (CustomDataType, SymbolicType)):
+        return None
+    elif class_type in literal_classes:
+        return literal_classes[class_type]
+    elif isinstance(class_type, (NumpyNumericType, NumpyNDArrayType)):
         return NumpyArrayClass
+    elif isinstance(class_type, TupleType):
+        return TupleClass
+    elif isinstance(class_type, HomogeneousListType):
+        return ListClass
+    elif isinstance(class_type, HomogeneousSetType):
+        return SetClass
+    elif isinstance(class_type, DictType):
+        return DictClass
     else:
-        type_name = f"{dtype}({precision})"
-        if rank:
-            dims = ','.join(':' for _ in range(rank))
-            type_name += f"[{dims}]"
-        raise NotImplementedError(f"No class definition found for type {type_name}")
+        raise NotImplementedError(f"No class definition found for type {class_type}")
 

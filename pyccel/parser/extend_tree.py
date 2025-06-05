@@ -1,12 +1,13 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
-"""Extended AST with CommentLine nodes
-======================================
+"""Extended AST with CommentLine and CommentMultiLine nodes
+===========================================================
 
 """
+from io import StringIO
 
 from numpy import array, logical_and, where
 from ast   import AST, If as IfNode, parse
@@ -24,12 +25,8 @@ class CommentLine(AST):
         self.lineno     = lineno
         self.col_offset = col_offset
 
-    def __reduce_ex__(self, i):
-        return (self.__class__, (self.s, self.lineno, self.col_offset))
-
 class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
-
 
 def get_comments(code):
     lines = code.split("\n")

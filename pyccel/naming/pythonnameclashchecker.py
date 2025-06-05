@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in Python
@@ -19,10 +19,25 @@ class PythonNameClashChecker(LanguageNameClashChecker):
     keywords = set()
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
         """
-        return any(name == k for k in self.keywords) or \
-               any(name == s for s in symbols)
+        Indicate whether the proposed name causes any clashes.
+
+        Indicate whether the proposed name causes any clashes by comparing it with the
+        reserved keywords and the symbols which are already defined in the scope.
+
+        Parameters
+        ----------
+        name : str
+            The proposed name.
+        symbols : set of str
+            The symbols already used in the scope.
+
+        Returns
+        -------
+        bool
+            True if the name clashes with an existing name. False otherwise.
+        """
+        return name in self.keywords or name in symbols
 
     def get_collisionless_name(self, name, symbols):
         """

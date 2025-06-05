@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -13,18 +13,21 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from pyccel.utilities.strings import create_incremented_string
 
+from .builtins  import PythonRange, PythonTuple, PythonMin, PythonMax
+
+from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import LiteralTrue, LiteralFalse
+from .mathext   import MathCeil
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Iterable
-from .builtins  import PythonRange, PythonTuple
-from .mathext   import MathCeil
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
-from .datatypes import NativeInteger
+from .operators import PyccelEq, PyccelNe, PyccelLt, PyccelLe, PyccelGt, PyccelGe
+from .operators import PyccelAnd, PyccelOr, PyccelNot
 from .variable  import Variable
 
-__all__ = ('sympy_to_pyccel',
-           'pyccel_to_sympy')
+__all__ = ('pyccel_to_sympy',
+           'sympy_to_pyccel')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
@@ -44,7 +47,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
     Returns
     -------
-    PyccelAstNode
+    TypedAstNode
         The Pyccel equivalent of the SymPy object `expr`.
     """
 
@@ -99,10 +102,18 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.ceiling):
         arg = sympy_to_pyccel(expr.args[0], symbol_map)
         # Only apply ceiling where appropriate
-        if arg.dtype is NativeInteger():
+        if getattr(arg.dtype, 'primitive_type', None) is PrimitiveIntegerType():
             return arg
         else:
             return MathCeil(arg)
+
+    elif isinstance(expr, sp.Min):
+        args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
+        return PythonMin(*args)
+
+    elif isinstance(expr, sp.Max):
+        args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
+        return PythonMax(*args)
 
     elif isinstance(expr, sp.Tuple):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
@@ -122,7 +133,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     Parameters
     ----------
-    expr : PyccelAstNode
+    expr : TypedAstNode
         The Pyccel node to be translated.
 
     symbol_map : dict
@@ -169,6 +180,42 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] + args[1]
 
+    elif isinstance(expr, PyccelEq):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Eq(args[0], args[1])
+
+    elif isinstance(expr, PyccelNe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Ne(args[0], args[1])
+
+    elif isinstance(expr, PyccelLe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] <= args[1]
+
+    elif isinstance(expr, PyccelLt):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] < args[1]
+
+    elif isinstance(expr, PyccelGe):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] >= args[1]
+
+    elif isinstance(expr, PyccelGt):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] > args[1]
+
+    elif isinstance(expr, PyccelAnd):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.And(*args)
+
+    elif isinstance(expr, PyccelOr):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return sp.Or(*args)
+
+    elif isinstance(expr, PyccelNot):
+        arg = pyccel_to_sympy(expr.args[0], symbol_map, used_names)
+        return sp.Not(arg)
+
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] ** args[1]
@@ -178,6 +225,14 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, MathCeil):
         return sp.ceiling(pyccel_to_sympy(expr.args[0], symbol_map, used_names))
+
+    elif isinstance(expr, PythonMin):
+        args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
+        return sp.Min(*args)
+
+    elif isinstance(expr, PythonMax):
+        args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]
+        return sp.Max(*args)
 
     elif expr in symbol_map.values():
         return list(symbol_map.keys())[list(symbol_map.values()).index(expr)]
@@ -194,9 +249,6 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         symbol_map[sym] = expr
         return sym
 
-    elif isinstance(expr, Iterable):
-        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
-
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)
         stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
@@ -206,6 +258,12 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PythonTuple):
         args = [pyccel_to_sympy(a, symbol_map, used_names) for a in expr]
         return sp.Tuple(*args)
+
+    elif isinstance(expr, LiteralTrue):
+        return sp.logic.boolalg.BooleanTrue()
+
+    elif isinstance(expr, LiteralFalse):
+        return sp.logic.boolalg.BooleanFalse()
 
     elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
         # Already translated

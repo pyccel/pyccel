@@ -70,7 +70,7 @@
 #$ header function mpi_ssend (*, int32, int32, int32, int32, int32, int32)
 #$ header function mpi_bsend (*, int32, int32, int32, int32, int32, int32)
 #$ header function mpi_buffer_attach(*, int32, int32)
-#$ header function mpi_buffer_dettach(*, int32, int32)
+#$ header function mpi_buffer_detach(*, int32, int32)
 
 #$ header function mpi_irecv (*, int32, int32, int32, int32, int32, int32, int32)
 #$ header function mpi_isend (*, int32, int32, int32, int32, int32, int32, int32)

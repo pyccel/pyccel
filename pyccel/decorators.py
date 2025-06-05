@@ -1,20 +1,18 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
 This module contains all the provided decorator methods.
 """
-
-#TODO use pycode and call exec after that in lambdify
+import warnings
 
 __all__ = (
     'allow_negative_index',
     'bypass',
     'elemental',
     'inline',
-    'lambdify',
     'private',
     'pure',
     'stack_array',
@@ -23,16 +21,6 @@ __all__ = (
     'types',
 )
 
-def lambdify(f):
-
-    args = f.__code__.co_varnames
-    from sympy import symbols
-    args = symbols(args)
-    expr = f(*args)
-    def wrapper(*vals):
-        return  expr.subs(zip(args,vals)).doit()
-
-    return wrapper
 
 def sympy(f):
     return f
@@ -40,15 +28,59 @@ def sympy(f):
 def bypass(f):
     return f
 
-def types(*args,**kw):
+def types(*args, results = None):
+    """
+    Specify the types passed to the function.
+
+    Specify the types passed to the function.
+
+    Parameters
+    ----------
+    *args : tuple of str or types
+        The types of the arguments of the function.
+
+    results : str or type, optional
+        The return type of the function.
+
+    Returns
+    -------
+    decorator
+        The identity decorator which will not modify the function.
+    """
+    warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
     def identity(f):
         return f
     return identity
 
 def template(name, types=()):
-    """template decorator."""
+    """
+    Template decorator.
+
+    Decorator to replace with TypeVar.
+
+    Parameters
+    ----------
+    name : str
+        The name.
+    types : iterable
+        The constraints.
+
+    Returns
+    -------
+    func
+        Fake decorator.
+    """
     def identity(f):
         return f
+    warnings.warn("The @template decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
     return identity
 
 def pure(f):

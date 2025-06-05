@@ -1,18 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-#$ header class Point(public)
-#$ header method __init__(Point, double, double)
-#$ header method __del__(Point)
-#$ header method translate(Point, double, double)
 
 class Point(object):
-    def __init__(self, x, y):
+    def __init__(self : 'Point', x : float, y : float):
         self.x = x
         self.y = y
 
-    def __del__(self):
+    def __del__(self : 'Point'):
         pass
 
-    def translate(self, a, b):
+    def translate(self : 'Point', a : float, b : float):
         self.x = self.x + a
         self.y = self.y + b
 

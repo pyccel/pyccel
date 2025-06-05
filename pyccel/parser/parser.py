@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 """
@@ -17,8 +17,25 @@ from pyccel.parser.semantic  import SemanticParser
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
 class Parser(object):
+    """
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
 
-    def __init__(self, filename, **kwargs):
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being translated.
+
+    context_dict : dict, optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
+
+    **kwargs : dict
+        Any keyword arguments for BasicParser.
+    """
+
+    def __init__(self, filename, context_dict = None, **kwargs):
 
         self._filename = filename
         self._kwargs   = kwargs
@@ -34,6 +51,8 @@ class Parser(object):
         self._syntax_parser   = None
         self._semantic_parser = None
         self._compile_obj     = None
+
+        self._context_dict = context_dict
 
         self._input_folder = os.path.dirname(filename)
 
@@ -147,6 +166,22 @@ class Parser(object):
         return parser.ast
 
     def annotate(self, **settings):
+        """
+        Annotate the AST collected from the syntactic stage.
+
+        Use the semantic parser to annotate the AST collected from
+        the syntactic stage.
+
+        Parameters
+        ----------
+        **settings : dict
+            Additional keyword arguments for BasicParser.
+
+        Returns
+        -------
+        SemanticParser
+            The semantic parser that was used to annotate the AST.
+        """
 
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
@@ -158,8 +193,9 @@ class Parser(object):
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
-                                d_parsers=self.d_parsers,
-                                parents=self.parents,
+                                d_parsers = self.d_parsers,
+                                parents = self.parents,
+                                context_dict = self._context_dict,
                                 **settings)
         self._semantic_parser = parser
 
@@ -181,24 +217,26 @@ class Parser(object):
         self._sons.append(son)
 
     def parse_sons(self, d_parsers_by_filename, verbose=False):
-        """Recursive algorithm for syntax analysis on a given file and its
+        """
+        Parse the files on which this file is dependent.
+
+        Recursive algorithm for syntax analysis on a given file and its
         dependencies.
         This function always terminates with an dict that contains parsers
         for all involved files.
 
-         Parameters
-         ----------
-         d_parsers_by_filename : dict
-          A dictionary of parsed sons.
+        Parameters
+        ----------
+        d_parsers_by_filename : dict
+            A dictionary of parsed sons.
 
-        verbose: bool
-          Determine the verbosity.
+        verbose : bool, default=False
+            Set the verbosity.
 
-         Results
-         -------
-         d_parsers: dict
-          The updated dictionary of parsed sons.
-
+        Returns
+        -------
+        dict
+            The updated dictionary of parsed sons.
         """
 
         imports     = self.imports
@@ -207,7 +245,7 @@ class Parser(object):
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename in not_treated:
             if verbose:
-                print ('>>> treating :: {}'.format(filename))
+                print ('>>> treating :: ', filename)
 
             # get the absolute path corresponding to source
             if filename in d_parsers_by_filename:
@@ -228,25 +266,33 @@ class Parser(object):
 
         return d_parsers
 
-    def _annotate_sons(self, **settings):
+    def _annotate_sons(self, verbose = False):
+        """
+        Annotate any dependencies of the file currently being parsed.
 
-        verbose = settings.pop('verbose', False)
+        Annotate any dependencies of the file currently being parsed.
+
+        Parameters
+        ----------
+        verbose : bool, default=False
+            Indicates if the treatment should be run in verbose mode.
+        """
 
         # we first treat sons that have no imports
 
         for p in self.sons:
             if not p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
+                    print ('>>> treating :: ', p.filename)
+                p.annotate()
 
         # finally we treat the remaining sons recursively
 
         for p in self.sons:
             if p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
+                    print ('>>> treating :: ', p.filename)
+                p.annotate()
 
 #==============================================================================
 

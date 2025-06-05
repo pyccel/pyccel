@@ -100,25 +100,6 @@ In Pyccel's C code, we aim to replicate NumPy's indexing/printing and memory lay
 ### Ordering in C code
 
 Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike NumPy, Pyccel's strides use 'number of elements' instead of 'number of bytes' as a unit)
-While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
-
-Example:  
-  To translate the following:
-  
-  ```python
-    a = np.array([[1, 2, 3], [4, 5, 6]], order=?)
-  ```  
-  `order_c` creation  
-   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create `order_c ndarray`  
-   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to `ndarray`  
-
-  `order_f` creation  
-   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create temporary `order_c ndarray`  
-   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to temporary `ndarray`  
-   &nbsp;&nbsp;&nbsp;&nbsp;3. allocate/create `order_f ndarray`  
-   &nbsp;&nbsp;&nbsp;&nbsp;4. copy temporary `ndarray` elements to final `order_f ndarray` using `strides` and `shape`, this will create a column-major version of the temporary `order_c ndarray`  
-
-One dimensional arrays require no order, since order would not change how they behave.
 
 ### Indexing in C code
 
@@ -138,7 +119,7 @@ for (int row = 0; row < array.rows; ++i)
 {
   for (int column = 0; column < array.columns; ++j)
   {
-    GET_ELEMENT(array, int32, row, column) = ...;
+    (*cspan_at(&x, row, column)) = ...;
   }
 }
 ```
@@ -150,161 +131,8 @@ for (int column = 0; column < array.columns; ++i)
 {
   for (int row = 0; row < array.rows; ++j)
   {
-    GET_ELEMENT(array, int32, row, column) = ...;
+    (*cspan_at(&x, row, column)) = ...;
   }
-}
-```
-
-### `order_c` array creation example
-
-To create an `order_c ndarray`, we simply copy the flattened data to our `ndarray`'s data placeholder that changes depending on the type.
-
-If the data is composed of scalars only (ex: `np.array([1, 2, 3])`), an `array_dummy` is created, before copying it to our destination `ndarray`.
-
-Example:
-
-```python
-if __name__ == "__main__":
-  import numpy as np
-  a = np.array([[1, 2, 3], [4, 5, 6]])
-```
-
-Would translate to:
-
-```c
-int main()
-{
-    t_ndarray a = {.shape = NULL};
-    a = array_create(2, (int64_t[]){INT64_C(2), INT64_C(3)}, nd_int64, false, order_c);
-    int64_t array_dummy[] = {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4), INT64_C(5), INT64_C(6)}; // Creation of an array_dummy containing the scalars, notice the data is flattened
-    memcpy(a.nd_int64, array_dummy, 6 * a.type_size); // Copying from array_dummy to our ndarray 'a'
-    free_array(a);
-    return 0;
-}
-```
-
-If the data is composed of at least one variable array (like `c` in the example below), we would use a series of copy operations to our `ndarray`.
-
-Example:
-
-```python
-if __name__ == "__main__":
-  import numpy as np
-  a = np.array([1, 2, 3])
-  b = np.array([4, 5, 6])
-  c = np.array([a, [7, 8, 9], b])
-```
-
-Would translate to this:
-
-```c
-int main()
-{
-    t_ndarray a = {.shape = NULL};
-    t_ndarray b = {.shape = NULL};
-    t_ndarray c = {.shape = NULL};
-    a = array_create(1, (int64_t[]){INT64_C(3)}, nd_int64, false, order_c);
-    int64_t array_dummy[] = {INT64_C(1), INT64_C(2), INT64_C(3)};
-    memcpy(a.nd_int64, array_dummy, 3 * a.type_size);
-    b = array_create(1, (int64_t[]){INT64_C(3)}, nd_int64, false, order_c);
-    int64_t array_dummy_0001[] = {INT64_C(4), INT64_C(5), INT64_C(6)};
-    memcpy(b.nd_int64, array_dummy_0001, 3 * b.type_size);
-
-    // 'c' ndarray creation starts here, 'c' is [a, [7, 8, 9], b]
-
-    c = array_create(2, (int64_t[]){INT64_C(3), INT64_C(3)}, nd_int64, false, order_c); // Allocating 'c' ndarray
-    uint32_t offset = 0; // Initializing offset, used later to avoid overwritting data when executing multiple copy operations
-    array_copy_data(&c, a, offset); // Copying the first element of 'c', 'offset' is 0 since it's our first copy operation
-    offset += a.length; // Incrementing offset for upcoming copy operation
-    int64_t array_dummy_0002[] = {INT64_C(7), INT64_C(8), INT64_C(9)}; // Creating an array_dummy with 'c''s second element's scalars ([7, 8, 9])
-    memcpy(c.nd_int64 + offset, array_dummy_0002, 3 * c.type_size); // 'offset' is also with 'memcpy'
-    offset += 3; // incrementing 'offset', preparing for final copy
-    array_copy_data(&c, b, offset); // Copying the third element to 'c' ndarray
-    free_array(a);
-    free_array(b);
-    free_array(c);
-    return 0;
-}
-```
-
-### `order_f` array creation example
-
-For `order_f`, the process is similar to `order_c`, but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an `order_f ndarray`, and copy from the `temp_ndarray` to the destination `order_f ndarray` -- using `strides` and `shape` -- to get the correct column-major memory layout.
-
-Example:
-
-```python
-if __name__ == "__main__":
-  import numpy as np
-  a = np.array([[1, 2, 3], [4, 5, 6]], order="F")
-  print(a[0][0]) # output ==> 1
-```
-
-Would be translated to this:
-
-```c
-int main()
-{
-    t_ndarray a = {.shape = NULL};
-    a = array_create(2, (int64_t[]){INT64_C(2), INT64_C(3)}, nd_int64, false, order_f); // Allocating the required ndarray
-    t_ndarray temp_array = {.shape = NULL};
-    temp_array = array_create(2, (int64_t[]){INT64_C(2), INT64_C(3)}, nd_int64, false, order_c); // Allocating an order_c temp_array
-    int64_t array_dummy[] = {INT64_C(1), INT64_C(2), INT64_C(3), INT64_C(4), INT64_C(5), INT64_C(6)}; // array_dummy with our flattened data
-    memcpy(temp_array.nd_int64, array_dummy, 6 * temp_array.type_size); // Copying our array_dummy to our temp ndarray
-    array_copy_data(&a, temp_array, 0); // Copying into a column-major memory layout
-    free_array(temp_array); // Freeing the temp_array right after we were done with it
-    printf("%ld\n", GET_ELEMENT(a, nd_int64, (int64_t)0, (int64_t)0)); // output ==> 1
-    free_array(a);
-    return 0;
-}
-```
-
-If the data is composed of at least one variable array, the process would still be somewhat the same as an `order_c ndarray` creation:
-   The `order_f ndarray` is not populated from the get go, instead, we create an `order_c temp_array` (following `order_c ndarray` creation steps) containing all the data, then we do a 'copy into a column-major memory layout' operation to our `order_f ndarray`.
-
-Example:
-
-```python
-if __name__ == "__main__":
-  import numpy as np
-  a = np.array([1, 2, 3])
-  b = np.array([4, 5, 6])
-  f = np.array([a, [7, 8, 9], b], order="F")
-```
-
-Would be translated to (focus on `f` `ndarray` creation):
-
-```c
-int main()
-{
-    t_ndarray a = {.shape = NULL};
-    t_ndarray b = {.shape = NULL};
-    t_ndarray c = {.shape = NULL};
-    a = array_create(1, (int64_t[]){3}, nd_int64, false, order_c);
-    int64_t array_dummy[] = {INT64_C(1), INT64_C(2), INT64_C(3)};
-    memcpy(a.nd_int64, array_dummy, 3 * a.type_size);
-    b = array_create(1, (int64_t[]){INT64_C(3)}, nd_int64, false, order_c);
-    int64_t array_dummy_0001[] = {INT64_C(4), INT64_C(5), INT64_C(6)};
-    memcpy(b.nd_int64, array_dummy_0001, 3 * b.type_size);
-
-    // 'f' ndarray creation
-
-    f = array_create(2, (int64_t[]){INT64_C(3), INT64_C(3)}, nd_int64, false, order_f); // Allocating the required ndarray (order_f)
-    t_ndarray temp_array = {.shape = NULL};
-    temp_array = array_create(2, (int64_t[]){INT64_C(3), INT64_C(3)}, nd_int64, false, order_c); // Allocating a temp_array (order_c)
-    uint32_t offset = 0;
-    array_copy_data(&temp_array, a, offset); // Copying the first element to temp_array
-    offset += a.length;
-    int64_t array_dummy_0002[] = {INT64_C(7), INT64_C(8), INT64_C(9)};
-    memcpy(temp_array.nd_int64 + offset, array_dummy_0002, 3 * temp_array.type_size); // Copying the second element to temp_array
-    offset += 3;
-    array_copy_data(&temp_array, b, offset); // Copying the third element to temp_array
-    array_copy_data(&f, temp_array, 0); // Copying our temp_array into a column-major memory layout (order_f)
-    free_array(temp_array); // freeing the temp_array
-    free_array(a);
-    free_array(b);
-    free_array(c);
-    return 0;
 }
 ```
 
@@ -393,8 +221,8 @@ for i in range(2):
 
 is translated to the following efficient indexing:
 ```fortran
-do i = 0_i64, 1_i64, 1_i64
-  do j = 0_i64, 2_i64, 1_i64
+do i = 0_i64, 1_i64
+  do j = 0_i64, 2_i64
     a(j, i) = i * 3_i64 + j
   end do
 end do
@@ -435,13 +263,13 @@ This will be translated to:
     write(stdout, '(A I0 A I0 A)', advance="no") '(' , size(f_array, &
           1_i64, i64) , ', ' , size(f_array, 2_i64, i64) , ')'
     write(stdout, '()', advance="yes")
-    do row = 0_i64, size(c_array, 2_i64, i64) - 1_i64, 1_i64
-      do col = 0_i64, size(c_array, 1_i64, i64) - 1_i64, 1_i64
+    do row = 0_i64, size(c_array, 2_i64, i64) - 1_i64
+      do col = 0_i64, size(c_array, 1_i64, i64) - 1_i64
         c_array(col, row) = ...
       end do
     end do
-    do col = 0_i64, size(f_array, 2_i64, i64) - 1_i64, 1_i64
-      do row = 0_i64, size(f_array, 1_i64, i64) - 1_i64, 1_i64
+    do col = 0_i64, size(f_array, 2_i64, i64) - 1_i64
+      do row = 0_i64, size(f_array, 1_i64, i64) - 1_i64
         f_array(row, col) = ...
       end do
     end do

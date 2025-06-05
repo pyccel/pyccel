@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 
 
@@ -8,6 +8,7 @@
 	that do not have any parameters.
 """
 
+MISSING_TYPE_ANNOTATIONS = 'Missing type annotation. Pyccel needs arguments to be annotated with types to know which types are required in the translated code. See https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations for information on how to specify the type information.'
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
@@ -20,25 +21,23 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
                               "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
 
 INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Variable has already been defined with type '{}'. Type '{}' in assignment is incompatible"
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Object has already been defined with type '{}'. Type '{}' in assignment is incompatible"
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
 INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
 STACK_ARRAY_UNKNOWN_SHAPE = 'Cannot create stack array from a shape which is unknown at function entry'
 STACK_ARRAY_SHAPE_UNPURE_FUNC = 'Cannot create stack array from a shape created with an impure function'
-INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)'
-INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)"
+INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/devel/docs/type_annotations.md for details)'
+INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/devel/docs/type_annotations.md for details)"
 UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"
-UNSUPPORTED_POINTER_RETURN_VALUE = "returning a pointer is not implemented yet."
-UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
+UNSUPPORTED_POINTER_RETURN_VALUE = "A pointer can only be returned from a function if it points at one of the arguments."
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
 INVALID_TUPLE_INDEX_TYPE = 'Invalid tuple index type'
 TUPLE_INDEX_OUT_OF_RANGE = 'Tuple index out of range'
-ITERABLE_EXPECTED = 'Iterable expected'
 INVALID_SLICE_INDEX = 'Slice index must be an integer or None'
 CANNOT_INFER_LAMBDA_TYPE = 'Cannot infer type of lambda'
 CANNOT_INFER_ITEM_TYPE = 'Cannot infer iterable item type'
@@ -76,7 +75,7 @@ INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
 INCOMPATIBLE_TYPEVAR_TO_FUNC = 'TypeError: ufunc "{}" not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule \'safe\''
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
 WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
-INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
+INDEXED_TUPLE = 'Inhomogeneous tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
 UNUSED_DECORATORS = 'Decorator(s) not used'
@@ -104,12 +103,15 @@ PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def sta
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless they are optional arguments and None is the default value'
 PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX = 'Pyccel has encountered syntax that it does not recognise'
-PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language"
+PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language."
 PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison statement'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list comprehension. This is because there are occasions where the upper bound is smaller than the lower bound for variable {}'
 PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
+PYCCEL_RESTRICTION_INHOMOG_SET = 'Inhomogeneous Sets are not supported by Pyccel'
+
+PYCCEL_INTERNAL_ERROR = '[INTERNAL ERROR] Pyccel has raised an internal error. Please check that your code executes correctly without raising any errors in Python. If this is the case then please create an issue at https://github.com/pyccel/pyccel/issues and include the traceback generated when running pyccel with the --developer-mode flag (or epyccel with developer_mode=True). If possible please provide a small example of your problem.'
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
@@ -118,7 +120,6 @@ FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = 'Elemental functions are defined as scalar o
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
-PYCCEL_MISSING_HEADER = 'Cannot find associated header'
 MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 FOUND_DUPLICATED_IMPORT = 'Duplicated import '
@@ -143,7 +144,7 @@ INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyh`, but fou
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
-ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Containers (arrays, lists, etc) which own their data cannot become views on other containers'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
 ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
@@ -153,7 +154,7 @@ INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
-ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtime'
+ARRAY_REALLOCATION = '{class_type} redefinition may cause memory reallocation at runtime'
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
 TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'

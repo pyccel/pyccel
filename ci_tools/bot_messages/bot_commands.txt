@@ -5,6 +5,5 @@ This bot reacts to all comments which begin with `/bot`. This phrase can be foll
 - `mark as ready` : Runs the PR tests. If they pass then it adds the appropriate review flag and requests reviews. This command should be used when the PR is first ready for review, or when a review has been answered.
 - `commands` : Shows this list detailing all the commands which are understood.
 - `trust user X` : Tells the bot that a new user X is trusted to run workflows (prevents misuse of GitHub actions for mining etc). This command can only be used by a trusted reviewer.
-- `accept coverage` : Tells the bot that the coverage errors have been investigated and cannot be fixed in this PR.
 
 Beware: if you have never contributed to this repository and you are not a member of the Pyccel organisation, the bot will ignore all requests to run tests until permitted by a trusted reviewer.

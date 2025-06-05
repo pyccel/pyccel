@@ -1,4 +1,4 @@
-name: Pickled-installation
+name: Installation
 
 on:
   workflow_dispatch:
@@ -18,6 +18,8 @@ on:
       pr_repo:
         required: false
         type: string
+  push:
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -27,40 +29,88 @@ env:
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
-  Pickled-installation:
+  Python_version_picker:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    outputs:
+      python_version: ${{ steps.set-matrix.outputs.python_version }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - if: github.event_name == 'push'
+      run: |
+        echo "version=3.9" >> $GITHUB_ENV
+        echo "editable=['-e', ' ']" >> $GITHUB_ENV
+      shell: bash
+    - id: dispatch-matrix
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
+        echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
+      shell: bash
+    - id: set-matrix
+      run: |
+        echo "python_version=$version" >> $GITHUB_OUTPUT
+        echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
+      shell: bash
+
+  Installation:
     runs-on: ubuntu-latest
     name: Deploy tests
+    needs: Python_version_picker
+
+    strategy:
+      matrix: ${{fromJson(needs.Python_version_picker.outputs.matrix)}}
 
     steps:
-      - run: |
-          echo "${{ inputs.python-version }}"
-      - uses: actions/checkout@v3
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**"]'
+          paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '["push"]'
+
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
-      - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
+          submodules: true
+      - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: "Setup"
+        if: github.event_name != 'push'
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py installation
       - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
-        id: pickle
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: installation
         run: |
           python -m pip install --upgrade pip
-          echo "python -m pip install ${{ inputs.editable_string }} ."
-          python -m pip install ${{ inputs.editable_string }} .
+          echo "python -m pip install ${{ matrix.editable_string }} ."
+          python -m pip install ${{ matrix.editable_string }} .
         shell: bash
-      - name: Check for existence of pickled files
-        id: pickle_check
-        uses: ./.github/actions/check_for_pickled
+      - name: Check for STC installation
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: stc_check
+        uses: ./.github/actions/check_for_stc
+        with:
+          not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True'}}"
+      - name: Check for gFTL installation
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: gFTL_check
+        uses: ./.github/actions/check_for_gftl
+        with:
+          not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True' }}"
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'push'
         run: |
-          python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} --reasons "Installation failed." "Pickled files were not found in installaion."
-          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }}
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
+          python ci_tools/complete_check_run.py ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}

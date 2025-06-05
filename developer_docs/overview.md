@@ -9,7 +9,7 @@ Pyccel's development is split into 4 main stages:
 -   [Syntactic Stage](#Syntactic-stage) (for more details see [syntactic stage](syntactic_stage.md))
 -   [Semantic Stage](#Semantic-stage) (for more details see [semantic stage](semantic_stage.md))
 -   [Code Generation Stage](#Code-generation-stage) (for more details see [codegen stage](codegen_stage.md))
--   [Wrapping Stage](#Wrapping-stage) (for more details see [wrapping stage](wrapping_stage.md))
+-   [Wrapping Stage](#Wrapping-stage) (for more details see [wrapping stage](wrapper_stage.md))
 -   [Compilation Stage](#Compilation-stage)
 
 ### Syntactic Stage
@@ -26,7 +26,7 @@ The role of this stage has decreased significantly since we moved from [redbaron
 
 This is the most important stage in Pyccel. It is here that all the information about types is calculated. This stage strives to be **language-agnostic**; this means for example, that additional variables required to handle problems appearing in one specific language should not be created here.
 
-When adding functions to this stage the aim is often to create a `PyccelAstNode` (see [ast/basic.py](../pyccel/ast/basic.py)) and correctly define all of its parameters. This information is sometimes readily available (e.g. the type of a `PyccelAdd` can be derived from the type of the variables passed to it), but sometimes the information must be collected from elsewhere (e.g. when creating a `Variable` from a `PyccelSymbol`, which is roughly equivalent to a string). In this case information is needed from a `Scope` instance which is stored in the `scope`.
+When adding functions to this stage the aim is often to create a `TypedAstNode` (see [ast/basic.py](../pyccel/ast/basic.py)) and correctly define all of its parameters. This information is sometimes readily available (e.g. the type of a `PyccelAdd` can be derived from the type of the variables passed to it), but sometimes the information must be collected from elsewhere (e.g. when creating a `Variable` from a `PyccelSymbol`, which is roughly equivalent to a string). In this case information is needed from a `Scope` instance which is stored in the `scope`.
 
 In computer science, the _scope_ is the area of a program where an item (e.g. variable, function, etc.) is recognised. For example a variable defined in a function will not be recognised outside of that function, therefore the function defines its scope.
 
@@ -53,24 +53,24 @@ In the syntactic, semantic, and code generation stages a similar strategy is use
 #### Example
 Suppose we want to generate the code for an object of the class `NumpyTanh`, first we collect the inheritance tree of `NumpyTanh`. This gives us:
 ```python
-('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelInternalFunction', 'PyccelAstNode', 'Basic')
+('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelFunction', 'TypedAstNode', 'PyccelAstNode')
 ```
 Therefore the print functions which are acceptable for visiting this object are:
 
 -   `_print_NumpyTanh` 
 -   `_print_NumpyUfuncUnary` 
 -   `_print_NumpyUfuncBase` 
--   `_print_PyccelInternalFunction` 
+-   `_print_PyccelFunction` 
+-   `_print_TypedAstNode` 
 -   `_print_PyccelAstNode` 
--   `_print_Basic` 
 
 We run through these possible functions choosing the one which is the most specialised. If none of these methods exist, then an error is raised.
 
-In the case of `NumpyTanh` the function which will be selected is `_print_NumpyUfuncBase` when translating to C or Fortran, and `_print_PyccelInternalFunction` when translating to Python.
+In the case of `NumpyTanh` the function which will be selected is `_print_NumpyUfuncBase` when translating to C or Fortran, and `_print_PyccelFunction` when translating to Python.
 
 ### AST
 
-The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.Basic](../pyccel/ast/basic.py).
+The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.PyccelAstNode](../pyccel/ast/basic.py).
 These classes are found in the [ast](../pyccel/ast) folder.
 The objects in the Abstract Syntax Tree (AST) are described in several files.
 There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions.
@@ -83,6 +83,8 @@ Pyccel tries to fail cleanly and raise readable errors for users. This is manage
 2.  The `report` method of the class must be called (see docstring for details)
 
 If the error prevents further translation (e.g. the type of an object is now unknown) then the severity should be indicated as `'fatal'`.
+
+This error handling can make it easier to debug developments. Pyccel therefore includes a developer mode which ensures that all errors include a traceback.
 
 ## Getting Help
 

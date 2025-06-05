@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Superclass for handling name clash problems.
@@ -18,6 +18,10 @@ class LanguageNameClashChecker(metaclass = Singleton):
     a variety of reasons which vary from language to language.
     """
     keywords = None
+
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the Singleton can detect a signature
+        super().__init__()
 
     def _get_collisionless_name(self, name, symbols):
         """
@@ -38,9 +42,9 @@ class LanguageNameClashChecker(metaclass = Singleton):
         str
             A new name which is collision free.
         """
-        coll_symbols = self.keywords.copy()
-        coll_symbols.update(s.lower() for s in symbols)
-        if self.has_clash(name, coll_symbols): #pylint: disable=no-member
+        if self.has_clash(name, symbols): #pylint: disable=no-member
+            coll_symbols = self.keywords.copy()
+            coll_symbols.update(symbols)
             counter = 1
             name, counter = create_incremented_string(coll_symbols,
                     prefix = name, counter = counter, name_clash_checker = self)

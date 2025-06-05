@@ -3,8 +3,8 @@
 
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
-from pyccel.decorators import private, inline
+from pyccel import epyccel
+from pyccel.decorators import private, inline, template
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -146,3 +146,186 @@ def test_nested_inline_call(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_inline_return(language):
+    def f():
+        @inline
+        def tmp():
+            a = 1
+            return a
+
+        b = tmp()
+        c = tmp()
+        d = tmp() + 3
+        e = tmp() * 4
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_multiple_results(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            return a*2, a-5
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_literal_return(language):
+    def f():
+        @inline
+        def tmp():
+            return 2
+
+        b = tmp()
+        c = tmp()
+        d = tmp() + 3
+        e = tmp() * 4
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_array_return(language):
+    def f():
+        @inline
+        def tmp():
+            return np.ones(2, dtype=int)
+
+        b = tmp()
+        c = np.sum(tmp())
+        return b,c
+
+    g = epyccel(f, language=language)
+
+    out_pyth = f()
+    out_pycc = g()
+    assert np.array_equal(out_pyth[0], out_pycc[0])
+    assert out_pyth[1] == out_pycc[1]
+
+def test_inline_multiple_return(language):
+    def f():
+        @inline
+        def tmp():
+            a = 1
+            b = 4
+            return a, b
+
+        b,c = tmp()
+        d,e = tmp()
+        return b,c,d,e
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_homogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_inhomogeneous_tuple_result(language):
+    def f():
+        @inline
+        def get_2_vals(a : int):
+            b : tuple[int,int] = (a*2, a-5)
+            return b
+
+        get_2_vals(5)
+        x = get_2_vals(7)
+        y0,y1 = get_2_vals(3)
+        return x, y0, y1
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inhomogeneous_tuple_in_inline(language):
+    def f():
+        @inline
+        def tmp():
+            a = (1, False)
+            return a[0] + 2
+
+        b = tmp()
+        return b
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_multi_level_inhomogeneous_tuple_in_inline(language):
+    def f():
+        @inline
+        def tmp():
+            a = ((1, False), 3.0)
+            return a[0][0] + 2
+
+        b = tmp()
+        return b
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_indexed_template(language):
+    @template(name='T', types=['const float', 'const complex'])
+    def my_sum(v: 'T[:]'):
+        return v.sum()
+
+    pyccel_sum = epyccel(my_sum, language=language)
+
+    x = np.ones(4, dtype=float)
+
+    python_fl = my_sum(x)
+    pyccel_fl = pyccel_sum(x)
+
+    assert python_fl == pyccel_fl
+    assert isinstance(python_fl, type(pyccel_fl))
+
+    y = np.full(4, 1 + 3j)
+
+    python_cmplx = my_sum(y)
+    pyccel_cmplx = pyccel_sum(y)
+
+    assert python_cmplx == pyccel_cmplx
+    assert isinstance(python_cmplx, type(pyccel_cmplx))
+
+@pytest.mark.parametrize("language", (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="lists not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+        )
+)
+def test_allow_negative_index_list(language):
+    def allow_negative_index_annotation():
+        a = [1,2,3,4]
+        return a[-1], a[-2], a[-3], a[0]
+
+    epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
+
+    assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
+    assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
+

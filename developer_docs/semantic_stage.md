@@ -31,18 +31,19 @@ Each of these `_visit_X` functions should internally call the `_visit` function 
 
 Variables and objects which can be saved in variables (e.g. literals and arrays), are  characterised by their type.
 The type indicates all the information that allows the object to be declared in a low-level language.
-The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
+The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](./ast_nodes.md#Typed-AST-Node).
 The characteristics are:
 -   **data type** : boolean/integer/float/complex/class type/etc
 -   **precision** : The number of bytes required to store an object of this data type
 -   **rank** : The number of dimensions of the array (0 for a scalar)
--   **shape** : The number of elements in each dimension of the array (`()` for a scalar)
+-   **shape** : The number of elements in each dimension of the array (`None` for a scalar)
 -   **order** : The order in which the data is stored in memory. See [order docs](order_docs.md) for more details.
+-   **class type** : The type of the object as reported in Python.
 
 The type of the different objects is determined in 2 different places.
 
 `Variable` objects are created in the `SemanticParser._visit_Assign` function.
-Their type is determined from the type of the right hand side, which should be a `PyccelAstNode`.
+Their type is determined from the type of the right hand side, which should be a `TypedAstNode`.
 The function `SemanticParser._infer_type` infers the type from the right hand side object and returns a dictionary describing the different characteristics.
 This dictionary is passed to the function `SemanticParser._assign_lhs_variable` which should always be used to create variables as it runs various checks including the validity of the type (e.g checking if the datatype has changed).
 In addition to the above characteristics `Variable` objects also have a few additional characteristics such as the `memory_location` which are also determined in the `SemanticParser._infer_type` function.
@@ -110,7 +111,8 @@ Built-in functions do not need importing.
 Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
 These functions are handled one of two ways.
-If there is special treatment which requires functions from the `SemanticParser` then a `_visit_X` function should be created.
+If there is special treatment which requires functions from the `SemanticParser` (e.g. handling inhomogeneous tuples or adding new imports) then a `_build_X` function should be created.
+Differently than the `_visit_X` functions, a `_build_X` function does not take an object of type `X` as argument, but rather a `FunctionCall` to the class `X` and the visited `FunctionCallArgument` objects. In other words it does not visit `X`, but rather the call `X()`. If `X` represents a method of a class then `_build_X` takes a `DottedName` instead of a `FunctionCall`.
 The `SemanticParser._visit_FunctionCall` function will call this visitation function internally if it exists.
 Otherwise the object will be created in the `SemanticParser._handle_function` function and its type will be determined by its constructor.
 
@@ -126,7 +128,7 @@ These are then placed into the `Scope.imports` dictionary so they can be recogni
 The case of modules supported by Pyccel is somewhat simpler.
 In this case there should be an associated file `pyccel/ast/moduleext.py` (e.g. `numpyext.py`, `itertoolsext.py`) containing all the AST nodes related to this module.
 The file should also contain a [`pyccel.ast.core.Module`](../pyccel/ast/core.py), listing all the objects which are in the file.
-The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registery`](../pyccel/ast/utilities.py) dictionary.
+The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registry`](../pyccel/ast/utilities.py) dictionary.
 
 ## Low-level Objects
 
@@ -142,6 +144,8 @@ In this case it is important to use the scope to avoid name collisions.
 These variables that are created should be tagged as `is_temp = True`.
 This allows Pyccel to differentiate between variables which appear in the code and should be preserved at all costs, and variables which are created by Pyccel and may be omitted if it leads to cleaner code.
 
+### Saving additional objects
+
 Additional objects can often appear in awkward places where they cannot be easily returned as a `CodeBlock`.
 This is the case for example if the object is needed to properly define something inside the right hand side of an `Assign`.
 As the right hand side of an Assign cannot be a `CodeBlock` the additional expressions must be collected outside the usual flow.
@@ -153,14 +157,22 @@ In order to avoid problems arising from forgetfulness we try to add additional o
 For example, allocation occurs in the function `SemanticParser._assign_lhs_variable`.
 Variable declarations are created in the printer when needed from the scope variables (this allows each language to place the declarations in the most appropriate location).
 
+### Garbage collection
+
+The semantic stage takes care of collecting all objects which may need deallocating when they go out of scope. This includes all objects allocated on the heap and pointers (which may contain additional heap data, such as shape information, and should be set to `nullptr` when out of scope). If there is nothing to do to deallocate an object then this can be handled in the printer for the associated language. In order to indicate that an object will need to be deallocated it is added to `SemanticParser._allocs`. This object is a list of sets. Each element of the list represents a different scope. The current scope is the last element of the list. When a scope ends this list is used to create the necessary `Deallocate` nodes and the last element is removed from the list. This is done by calling `SemanticParser._garbage_collector`. The list of sets therefore describes a hierarchy of nested scopes in which each element represents a scope which is contained in the one before (e.g. a function scope which is contained inside a module scope).
+
+### Pointers
+
+Pointers are also handled in the semantic stage. They are allowed in a local context but cannot (currently) be returned from a function. This makes it easier to prevent misuse. This restriction is lifted slightly for classes however. Classes can store pointers. It is therefore important to ensure that these pointers never become dangling pointers (pointers to objects that no longer exist). To manage this, pointers and their targets are added to `SemanticParser._pointer_targets`. This object is a list of dictionaries. As for `SemanticParser._allocs`, each element of the list represents a different scope. The dictionaries keys are pointers and the values are lists of 2-tuples. The first element of the tuple is the target while the second element is the AST object where the pointer and the tuple were associated (this object is useful for creating clear error messages). This dictionary is examined in `SemanticParser._check_pointer_targets`. This function is called from `SemanticParser._garbage_collector` when the end of a scope is reached and in `_visit_Return`.
+
 ## Object Tree
 
-All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
+All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 This super-class stores information about how the various objects are related.
 This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the node is used by the argument), `is_user_of` (which indicates if the node uses the argument), and `substitute` (which allows all occurrences of an object in the node to be replaced by a different object).
-See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
+See [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
 
-The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
+The tree is constructed in `PyccelAstNode.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
 Nevertheless the object tree should be considered in two situations.
 
 Firstly, if the object is constructed and AST objects are then added to it (e.g. the member function `pyccel.ast.core.CodeBlock.insert2body` used for the garbage collector).
@@ -176,7 +188,7 @@ However if this were done there would be multiple user nodes from both the seman
 For example, if we need to have access to the containing function we could do `expr.get_user_nodes(FunctionDef)`.
 We expect that this only returns semantic objects if `expr` is a result of the semantic stage.
 However if objects such as `pyccel.ast.core.Continue` are returned as is, then we would get access to both the syntactic and the semantic versions of the containing function without any way to distinguish between the two.
-To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
+To avoid this it is important to call the `pyccel.ast.basic.PyccelAstNode.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
 ```python
 def _visit_Continue(self, expr):
     expr.clear_user_nodes()

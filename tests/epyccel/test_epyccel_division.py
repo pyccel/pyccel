@@ -2,7 +2,7 @@
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -183,6 +183,19 @@ def test_call_fdiv_i_i_i(language):
     assert (f(x, -y, z) == fdiv_i_i_i(x, -y, z))
     assert (f(-x, -y, z) == fdiv_i_i_i(-x, -y, z))
     assert isinstance(f(x, y, z), type(fdiv_i_i_i(x, y, z)))
+
+def test_call_fdiv_b_b(language):
+    def fdiv_b_b(x : 'bool', y : 'bool'):
+        return x // y
+
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_b_b, language=language, fflags=fflags)
+    assert (f(True, True) == fdiv_b_b(True, True))
+    assert (f(False, True) == fdiv_b_b(False, True))
+    assert isinstance(f(True, True), type(fdiv_b_b(True, True)))
+
+
 
 def test_call_fdiv_i_r(language):
     def fdiv_i_r(x : int, y : 'float'):

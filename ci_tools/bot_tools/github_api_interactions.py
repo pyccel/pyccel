@@ -34,8 +34,14 @@ def get_authorization():
     # Create JWT
     reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers)
 
-    token  = reply.json()["token"]
-    expiry = reply.json()["expires_at"]
+    print(reply.text)
+
+    json_reply = reply.json()
+
+    print(json_reply)
+
+    token  = json_reply["token"]
+    expiry = json_reply["expires_at"]
 
     with open(os.environ["GITHUB_ENV"], "r", encoding='utf-8') as f:
         output = f.read()
@@ -63,11 +69,15 @@ class GitHubAPIInteractions:
         repo = os.environ["GITHUB_REPOSITORY"]
         self._org, self._repo = repo.split('/')
         if "installation_token" in os.environ:
+            self._authenticated = True
             self._install_token = os.environ["installation_token"]
             self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
-        else:
+        elif "PEM" in os.environ:
+            self._authenticated = True
             self._install_token, expiry = get_authorization()
             self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
+        else:
+            self._authenticated = False
 
     def _post_request(self, method, url, json=None, **kwargs):
         """
@@ -162,6 +172,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
@@ -198,6 +209,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         json = {"name": name,
                 "head_sha": commit,
@@ -232,6 +244,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully updated.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         run = self._post_request("PATCH", url, json)
         print(run.text)
@@ -260,6 +273,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully rerequested.
         """
+        assert self._authenticated
         print("Rerequesting : ", run_id)
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}/rerequest"
         run = self._post_request("POST", url)
@@ -297,6 +311,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         print("create_run:", url)
         json = {"name": name,
@@ -350,6 +365,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the workflow was not successfully started.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
                 "inputs": inputs}
@@ -378,7 +394,15 @@ class GitHubAPIInteractions:
             A dictionary containing the comments.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def get_review_comments(self, pr_id):
         """
@@ -439,6 +463,7 @@ class GitHubAPIInteractions:
         requests.Response
             The response collected from the request.
         """
+        assert self._authenticated
         if reply_to:
             suffix = f"/{reply_to}/replies"
             issue_type = 'pulls'
@@ -448,6 +473,27 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/{issue_type}/{pr_id}/comments{suffix}"
         print(url)
         return self._post_request("POST", url, json={"body":comment})
+
+    def modify_comment(self, comment_url, new_body):
+        """
+        Modify an existing comment.
+
+        Modify an existing comment by replacing the body with the new text.
+
+        Parameters
+        ----------
+        comment_url : str
+            The url of the comment to be modified.
+        new_body : str
+            The new body of the comment.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+        """
+        assert self._authenticated
+        return self._post_request("PATCH", comment_url, json={"body":new_body})
 
     def create_review(self, pr_id, commit, comment, status, comments = ()):
         """
@@ -484,6 +530,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the review was not successfully posted.
         """
+        assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
         print(review)
@@ -513,7 +560,8 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the result.
         """
-        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
+        assert self._authenticated
+        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/memberships/{user}'
         return self._post_request("GET", url).json()
 
     def get_prs(self, state='open'):
@@ -560,9 +608,9 @@ class GitHubAPIInteractions:
 
     def get_pr_events(self, pr_id):
         """
-        Get a list of all events which occured on this pull request.
+        Get a list of all events which occurred on this pull request.
 
-        Use the API to get a list of all events which occured on this pull
+        Use the API to get a list of all events which occurred on this pull
         request as described here:
         https://docs.github.com/en/rest/issues/events?apiVersion=2022-11-28#list-issue-events
 
@@ -652,7 +700,7 @@ class GitHubAPIInteractions:
 
     def get_events(self, pr_id, page = 1):
         """
-        Get a timeline of events which occured on a given pull request.
+        Get a timeline of events which occurred on a given pull request.
 
         Use the API to get a list of events on a pull request as described
         here:
@@ -763,15 +811,100 @@ class GitHubAPIInteractions:
         reviewers : iterable
             A list of individual reviewers to be requested.
         """
+        assert self._authenticated
         assert request_team or reviewers
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
         review_requests = {}
         if request_team:
-            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+            review_requests['team_reviewers'] = ['pyccel-dev']
         if reviewers:
             review_requests['reviewers'] = list(reviewers)
 
         self._post_request("POST", url, review_requests)
+
+    def wait_for_runs(self, commit_sha, run_names, max_time=15*60, wait_time=15):
+        """
+        Wait for the specified workflow runs associated with the commit.
+
+        Use the API to find workflow runs associated with a commit as described here:
+        https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository
+
+        If the workflows are not finished then wait before trying again. Keep trying until the
+        timeout is reached.
+
+        Parameters
+        ----------
+        commit_sha : str
+            The SHA of the commit for which the workflows are run.
+
+        run_names : tuple[str,...]
+            The names of the workflows which should finish before this method terminates.
+
+        max_time : int, default=15*60
+            The maximum number of seconds which should be spent in this method.
+
+        wait_time : int, default=15
+            The time in seconds that the method should wait for before rechecking the workflow
+            results.
+
+        Returns
+        -------
+        bool
+            True if all workflows succeeded, False otherwise.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs"
+        completed = False
+        # Run for 15 mins maximum
+        timeout = time.time() + max_time
+
+        request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
+        workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
+        completed = all(j['status'] == 'completed' for j in workflow_runs)
+
+        print(commit_sha)
+        print(workflow_runs)
+        print([j['name'] for j in workflow_runs])
+        print([j['status'] for j in workflow_runs])
+        print([j['conclusion'] for j in workflow_runs])
+
+        while not completed and time.time() < timeout:
+            time.sleep(15)
+            request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
+            workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
+            completed = all(j['status'] == 'completed' for j in workflow_runs)
+            print(workflow_runs)
+            print([j['name'] for j in workflow_runs])
+            print([j['status'] for j in workflow_runs])
+            print([j['conclusion'] for j in workflow_runs])
+
+        assert completed
+
+        success = all(j['conclusion'] == 'success' for j in workflow_runs)
+
+        return success
+
+    def has_valid_artifacts(self, run_id):
+        """
+        Check if all the artifacts associated with a run id are valid (i.e. not expired).
+
+        Check if all the artifacts associated with a run id are valid (i.e. not expired).
+        This is done by collecting all artifacts associated with a run id using the GitHub
+        API as described here:
+        <https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-workflow-run-artifacts>
+
+        Parameters
+        ----------
+        run_id : int
+            The id of the run to be investigated.
+
+        Returns
+        -------
+        bool
+            True if all artifacts are valid. False otherwise.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs/{run_id}/artifacts"
+        artifacts = self._post_request("GET", url).json()['artifacts']
+        return all(not a['expired'] for a in artifacts)
 
     def get_headers(self):
         """
@@ -786,10 +919,14 @@ class GitHubAPIInteractions:
         dict
             The header which should be used in requests.
         """
-        if self._install_token_exp < time.struct_time(time.gmtime()):
-            self._install_token, expiry = get_authorization()
-            self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
+        if self._authenticated:
+            if self._install_token_exp < time.struct_time(time.gmtime()):
+                self._install_token, expiry = get_authorization()
+                self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
-        return {"Accept": "application/vnd.github+json",
-                 "Authorization": f"Bearer {self._install_token}",
-                 "X-GitHub-Api-Version": "2022-11-28"}
+            return {"Accept": "application/vnd.github+json",
+                     "Authorization": f"Bearer {self._install_token}",
+                     "X-GitHub-Api-Version": "2022-11-28"}
+        else:
+            return {"Accept": "application/vnd.github+json",
+                     "X-GitHub-Api-Version": "2022-11-28"}

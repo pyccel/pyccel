@@ -1,7 +1,7 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 The Python interpreter has a number of built-in functions and types that are
@@ -14,63 +14,82 @@ from pyccel.errors.errors import PyccelError
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode
-from .datatypes import (NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeString, str_dtype,
-                        NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, max_precision, Slice
+from .basic     import PyccelAstNode, TypedAstNode
+from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from .datatypes import GenericType, PythonNativeComplex, CharType
+from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
+from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
+from .datatypes import HomogeneousListType, HomogeneousContainerType
+from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
+from .datatypes import DictType, VoidType, TypeAlias, StringType
+from .datatypes import original_type_to_pyccel_type
+from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
-from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement
+from .variable  import IndexedElement, Variable
 
 pyccel_stage = PyccelStage()
 
 __all__ = (
     'Lambda',
     'PythonAbs',
-    'PythonComplexProperty',
-    'PythonReal',
-    'PythonImag',
-    'PythonConjugate',
     'PythonBool',
     'PythonComplex',
+    'PythonComplexProperty',
+    'PythonConjugate',
+    'PythonDict',
+    'PythonDictFunction',
     'PythonEnumerate',
     'PythonFloat',
+    'PythonImag',
     'PythonInt',
-    'PythonTuple',
+    'PythonIsInstance',
     'PythonLen',
     'PythonList',
+    'PythonListFunction',
     'PythonMap',
-    'PythonPrint',
-    'PythonRange',
-    'PythonSum',
-    'PythonType',
-    'PythonZip',
     'PythonMax',
     'PythonMin',
-    'python_builtin_datatype'
+    'PythonPrint',
+    'PythonRange',
+    'PythonReal',
+    'PythonRound',
+    'PythonSet',
+    'PythonSetFunction',
+    'PythonStr',
+    'PythonSum',
+    'PythonTuple',
+    'PythonTupleFunction',
+    'PythonType',
+    'PythonZip',
+    'VariableIterator',
+    'builtin_functions_dict',
 )
 
 #==============================================================================
-class PythonComplexProperty(PyccelInternalFunction):
-    """Represents a call to the .real or .imag property
+class PythonComplexProperty(PyccelFunction):
+    """
+    Represents a call to the .real or .imag property.
+
+    Represents a call to a property of a complex number. The relevant properties
+    are the `.real` and `.imag` properties.
 
     e.g:
-    > a = 1+2j
-    > a.real
+    >>> a = 1+2j
+    >>> a.real
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The object which the property is called from.
     """
     __slots__ = ()
-    _dtype = NativeFloat()
-    _precision = -1
-    _rank  = 0
     _shape = None
-    _order = None
+    _class_type = PythonNativeFloat()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -82,52 +101,61 @@ class PythonComplexProperty(PyccelInternalFunction):
 
 #==============================================================================
 class PythonReal(PythonComplexProperty):
-    """Represents a call to the .real property
+    """
+    Represents a call to the .real property.
 
     e.g:
-    > a = 1+2j
-    > a.real
+    >>> a = 1+2j
+    >>> a.real
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The object which the property is called from.
     """
     __slots__ = ()
     name = 'real'
     def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
+        if isinstance(arg.dtype, PythonNativeBool):
             return PythonInt(arg)
-        elif not isinstance(arg.dtype, NativeComplex):
+        elif not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             return arg
         else:
             return super().__new__(cls)
 
     def __str__(self):
-        return 'Real({0})'.format(str(self.internal_var))
+        return f'Real({self.internal_var})'
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
-    """Represents a call to the .imag property
+    """
+    Represents a call to the .imag property.
 
+    Represents a call to the .imag property of an object with a complex type.
     e.g:
-    > a = 1+2j
-    > a.imag
+    >>> a = 1+2j
+    >>> a.imag
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The object on which the property is called.
     """
     __slots__ = ()
     name = 'imag'
     def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
-            return get_default_literal_value(arg.dtype)
+        if not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
+            return convert_to_literal(0, dtype = arg.dtype)
         else:
             return super().__new__(cls)
 
     def __str__(self):
-        return 'Imag({0})'.format(str(self.internal_var))
+        return f'Imag({self.internal_var})'
 
 #==============================================================================
-class PythonConjugate(PyccelInternalFunction):
+class PythonConjugate(PyccelFunction):
     """
     Represents a call to the .conjugate() function.
 
@@ -135,28 +163,25 @@ class PythonConjugate(PyccelInternalFunction):
     the builtin types int, float, complex. The conjugate function is
     called from Python as follows:
 
-    > a = 1+2j
-    > a.conjugate()
+    >>> a = 1+2j
+    >>> a.conjugate()
     1-2j
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The variable/expression which was passed to the
         conjugate function.
     """
     __slots__ = ()
-    _dtype = NativeComplex()
-    _precision = -1
-    _rank  = 0
     _shape = None
-    _order = None
+    _class_type = PythonNativeComplex()
     name = 'conjugate'
 
     def __new__(cls, arg):
-        if arg.dtype is NativeBool():
+        if arg.dtype is PythonNativeBool():
             return PythonInt(arg)
-        elif arg.dtype is not NativeComplex():
+        elif not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             return arg
         else:
             return super().__new__(cls)
@@ -170,20 +195,26 @@ class PythonConjugate(PyccelInternalFunction):
         return self._args[0]
 
     def __str__(self):
-        return 'Conjugate({0})'.format(str(self.internal_var))
+        return f'Conjugate({self.internal_var})'
 
 #==============================================================================
-class PythonBool(PyccelAstNode):
-    """ Represents a call to Python's native bool() function.
+class PythonBool(PyccelFunction):
     """
-    __slots__ = ('_arg',)
+    Represents a call to Python's native `bool()` function.
+
+    Represents a call to Python's native `bool()` function which casts an
+    argument to a boolean.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ()
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
-    _rank  = 0
+    _static_type = PythonNativeBool()
     _shape = None
-    _order = None
-    _attribute_nodes = ('_arg',)
+    _class_type = PythonNativeBool()
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
@@ -193,29 +224,40 @@ class PythonBool(PyccelAstNode):
         else:
             return super().__new__(cls)
 
-    def __init__(self, arg):
-        self._arg = arg
-        super().__init__()
-
     @property
     def arg(self):
-        return self._arg
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
 
     def __str__(self):
-        return 'Bool({})'.format(str(self.arg))
+        return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(PyccelAstNode):
-    """ Represents a call to Python's native complex() function.
+class PythonComplex(PyccelFunction):
+    """
+    Represents a call to Python's native `complex()` function.
+
+    Represents a call to Python's native `complex()` function which casts an
+    argument to a complex number.
+
+    Parameters
+    ----------
+    arg0 : TypedAstNode
+        The first argument passed to the function (either a real or a complex).
+
+    arg1 : TypedAstNode, default=0
+        The second argument passed to the function (the imaginary part).
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
 
-    _dtype = NativeComplex()
-    _precision = -1
-    _rank  = 0
+    _static_type = PythonNativeComplex()
     _shape = None
-    _order = None
+    _class_type = PythonNativeComplex()
     _real_cast = PythonReal
     _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
@@ -240,20 +282,19 @@ class PythonComplex(PyccelAstNode):
             else:
                 imag_part += arg1.python_value
 
-            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+            return LiteralComplex(real_part, imag_part, dtype = cls._static_type)
 
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
 
-        if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
+        if isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and isinstance(arg1.dtype.primitive_type, PrimitiveComplexType):
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = arg0.dtype is NativeComplex() and \
-                        isinstance(arg1, Literal) and arg1.python_value == 0
+        self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
             self._real_part = self._real_cast(arg0)
@@ -263,12 +304,12 @@ class PythonComplex(PyccelAstNode):
         else:
             self._internal_var = None
 
-            if arg0.dtype is NativeComplex() and \
+            if isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
                 self._real_part = self._real_cast(arg0)
                 self._imag_part = PyccelAdd(self._imag_cast(arg0), arg1)
-            elif arg1.dtype is NativeComplex():
+            elif isinstance(arg1.dtype.primitive_type, PrimitiveComplexType):
                 if isinstance(arg0, Literal) and arg0.python_value == 0:
                     # second arg is complex. First arg is 0
                     self._real_part = PyccelUnarySub(self._imag_cast(arg1))
@@ -299,34 +340,54 @@ class PythonComplex(PyccelAstNode):
 
     @property
     def internal_var(self):
-        """ When the complex call is a cast, returns the variable being cast """
-        assert(self._is_cast)
+        """
+        When the complex call is a cast, returns the variable being cast.
+
+        When the complex call is a cast, returns the variable being cast.
+        This property should only be used when handling a cast.
+        """
+        assert self._is_cast
         return self._internal_var
 
     def __str__(self):
-        return "complex({}, {})".format(str(self.real), str(self.imag))
+        return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
-class PythonEnumerate(Basic):
-
+class PythonEnumerate(Iterable):
     """
-    Represents the enumerate stmt
+    Represents a call to Python's native `enumerate()` function.
 
+    Represents a call to Python's native `enumerate()` function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+
+    start : TypedAstNode
+        The start value of the enumeration index.
     """
     __slots__ = ('_element','_start')
-    _attribute_nodes = ('_element','_start')
+    _attribute_nodes = Iterable._attribute_nodes + ('_element','_start')
     name = 'enumerate'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, arg, start = None):
         if pyccel_stage != "syntactic" and \
-                not isinstance(arg, PyccelAstNode):
+                not isinstance(arg, TypedAstNode):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
         self._start   = start or LiteralInteger(0)
-        super().__init__()
+        super().__init__(int(self.start != 0))
 
     @property
     def element(self):
+        """
+        Get the object which is being enumerated.
+
+        Get the object which is being enumerated.
+        """
         return self._element
 
     @property
@@ -335,148 +396,247 @@ class PythonEnumerate(Basic):
         """
         return self._start
 
-    def __getitem__(self, index):
-        return [PyccelAdd(index, self.start, simplify=True),
-                self.element[index]]
-
-    @property
-    def length(self):
-        """ Return the length of the enumerated object
+    def get_python_iterable_item(self):
         """
-        return PythonLen(self.element)
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns two objects that could be elements of the enumerate.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
+        return [index, self.element[index]]
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the enumerate targets.
+
+        Get objects that should be assigned to variables to use the enumerate targets.
+        If the start of the enumerate is 0 then the only object that needs to be assigned
+        is the element of the variable, however if the indexing is offset compared to
+        the variable then both the index and the variable need to be created.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
+        if index.is_temp:
+            return [PyccelAdd(index, self.start, simplify=True),
+                    self.element[index]]
+        else:
+            return [self.element[index]]
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Get a range that can be used to iterate over the enumerate iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
+        return PythonRange(PythonLen(self.element))
 
 #==============================================================================
-class PythonFloat(PyccelAstNode):
-    """ Represents a call to Python's native float() function.
+class PythonFloat(PyccelFunction):
     """
-    __slots__ = ('_arg')
+    Represents a call to Python's native `float()` function.
+
+    Represents a call to Python's native `float()` function which casts an
+    argument to a floating point number.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ()
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
-    _rank  = 0
+    _static_type = PythonNativeFloat()
     _shape = None
-    _order = None
-    _attribute_nodes = ('_arg',)
+    _class_type = PythonNativeFloat()
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
+        if isinstance(arg, LiteralFloat) and arg.dtype is cls._static_type:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
-            return LiteralFloat(arg.python_value, precision = cls._precision)
+            return LiteralFloat(arg.python_value, dtype = cls._static_type)
         return super().__new__(cls)
 
     def __init__(self, arg):
-        self._arg = arg
-        super().__init__()
+        super().__init__(arg)
 
     @property
     def arg(self):
-        return self._arg
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
 
     def __str__(self):
-        return 'float({0})'.format(str(self.arg))
+        return f'float({self.arg})'
 
-#==============================================================================
-class PythonInt(PyccelAstNode):
-    """ Represents a call to Python's native int() function.
+# ===========================================================================
+class PythonRound(PyccelFunction):
     """
+    Class representing a call to Python's native round() function.
 
-    __slots__ = ('_arg')
-    name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
+    Class representing a call to Python's native round() function
+    which rounds a float or integer to a given number of decimals.
+
+    Parameters
+    ----------
+    number : TypedAstNode
+        The number to be rounded.
+    ndigits : TypedAstNode, optional
+        The number of digits to round to.
+    """
+    __slots__ = ('_class_type',)
+    name = 'round'
+    _rank = 0
     _shape = None
     _order = None
-    _attribute_nodes  = ('_arg',)
+
+    def __init__(self, number, ndigits = None):
+        if ndigits is None or number.class_type.primitive_type is PrimitiveBooleanType():
+            self._class_type = PythonNativeInt()
+        else:
+            self._class_type = number.class_type
+        super().__init__(number, ndigits)
+
+    @property
+    def arg(self):
+        """
+        The number to be rounded.
+
+        The number to be rounded.
+        """
+        return self._args[0]
+
+    @property
+    def ndigits(self):
+        """
+        The number of digits to which the argument is rounded.
+
+        The number of digits to which the argument is rounded.
+        """
+        return self._args[1]
+
+#==============================================================================
+class PythonInt(PyccelFunction):
+    """
+    Represents a call to Python's native `int()` function.
+
+    Represents a call to Python's native `int()` function which casts an
+    argument to an integer.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+
+    __slots__ = ()
+    name = 'int'
+    _static_type = PythonNativeInt()
+    _shape = None
+    _class_type = PythonNativeInt()
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.python_value, precision = cls._precision)
+            return LiteralInteger(arg.python_value, dtype = cls._static_type)
         else:
             return super().__new__(cls)
 
     def __init__(self, arg):
-        self._arg = arg
-        super().__init__()
+        super().__init__(arg)
 
     @property
     def arg(self):
-        return self._arg
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
 
 #==============================================================================
-class PythonTuple(PyccelAstNode):
-    """ Represents a call to Python's native tuple() function.
+class PythonTuple(TypedAstNode):
     """
-    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
-            '_dtype','_precision','_rank','_shape','_order')
-    _iterable        = True
+    Class representing a call to Python's native (,) function which creates tuples.
+
+    Class representing a call to Python's native (,) function
+    which initialises a literal tuple.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the tuple function.
+    prefer_inhomogeneous : bool, default=False
+        A boolean that can be used to ensure that the tuple is stocked as an
+        inhomogeneous object even if it could be homogeneous.
+    """
+    __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
+    _iterable = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args):
+    def __init__(self, *args, prefer_inhomogeneous = False):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
-            self._dtype = NativeGeneric()
-            self._precision = 0
-            self._rank  = 0
-            self._shape = None
-            self._order = None
+            self._class_type = HomogeneousTupleType(GenericType())
+            self._shape = (LiteralInteger(0),)
             self._is_homogeneous = False
             return
-        arg0 = args[0]
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
-                             arg0.dtype == a.dtype and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
-        self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
+
+        # Get possible types of elements
+        element_types = [a.class_type for a in args]
+        # Create a set of types using the same key for compatible types
+        unique_element_types = {((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) \
+                                 else d) : d for d in element_types}
+
+        self._shape = (LiteralInteger(len(args)),)
+
+        if any(isinstance(d, SymbolicType) for d in unique_element_types):
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._is_homogeneous = False
+            return
+
+        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
+                            not isinstance(a.class_type, HomogeneousTupleType) for a in args)
+
+        is_homogeneous = (not prefer_inhomogeneous) and len(unique_element_types) == 1 and \
+                        not isinstance(args[0].class_type, InhomogeneousTupleType)
+        if is_homogeneous and args[0].rank > 0:
+            shapes = [tuple(None if isinstance(s, PyccelArrayShapeElement) else s for s in a.shape)
+                        for a in args]
+            if len(set(shapes)) > 1:
+                is_homogeneous = False
+            elif not contains_pointers:
+                self._shape += args[0].shape
+
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
-            integers  = [a for a in args if a.dtype is NativeInteger()]
-            floats    = [a for a in args if a.dtype is NativeFloat()]
-            complexes = [a for a in args if a.dtype is NativeComplex()]
-            bools     = [a for a in args if a.dtype is NativeBool()]
-            strs      = [a for a in args if a.dtype is NativeString()]
-            if strs:
-                self._dtype = NativeString()
-                self._precision = 0
-                self._rank  = 0
-                self._shape = None
+            if contains_pointers:
+                self._class_type = InhomogeneousTupleType(*element_types)
             else:
-                if complexes:
-                    self._dtype     = NativeComplex()
-                    self._precision = max_precision(complexes)
-                elif floats:
-                    self._dtype     = NativeFloat()
-                    self._precision = max_precision(floats)
-                elif integers:
-                    self._dtype     = NativeInteger()
-                    self._precision = max_precision(integers)
-                elif bools:
-                    self._dtype     = NativeBool()
-                    self._precision  = max_precision(bools)
-                else:
-                    raise TypeError('cannot determine the type of {}'.format(self))
-
-
-                inner_shape = [() if a.rank == 0 else a.shape for a in args]
-                self._rank = max(a.rank for a in args) + 1
-                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-                self._rank  = len(self._shape)
+                self._class_type = HomogeneousTupleType(unique_element_types.popitem()[1])
 
         else:
-            self._rank      = max(a.rank for a in args) + 1
-            self._dtype     = NativeGeneric()
-            self._precision = 0
-            if self._rank == 1:
-                self._shape     = (LiteralInteger(len(args)), )
-            else:
-                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
 
-        self._order = None if self._rank < 2 else 'C'
+        assert self._class_type.shape_is_compatible(self._shape)
 
     def __getitem__(self,i):
         def is_int(a):
@@ -500,10 +660,7 @@ class PythonTuple(PyccelAstNode):
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:
-            raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
-
-    def __add__(self,other):
-        return PythonTuple(*(self._args + other._args))
+            raise NotImplementedError(f"Can't index PythonTuple with type {type(i)}")
 
     def __iter__(self):
         return self._args.__iter__()
@@ -512,75 +669,450 @@ class PythonTuple(PyccelAstNode):
         return len(self._args)
 
     def __str__(self):
-        return '({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'({args})'
 
     def __repr__(self):
-        return 'PythonTuple({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'PythonTuple({args})'
 
     @property
     def is_homogeneous(self):
+        """
+        Indicates whether the tuple is homogeneous or inhomogeneous.
+
+        Indicates whether all elements of the tuple have the same dtype,
+        rank, etc (homogenous) or if these values can vary (inhomogeneous).
+        """
         return self._is_homogeneous
 
     @property
-    def inconsistent_shape(self):
-        return self._inconsistent_shape
-
-    @property
     def args(self):
-        """ Arguments of the tuple
+        """
+        Arguments of the tuple.
+
+        The arguments that were used to initialise the tuple.
         """
         return self._args
 
-    @property
-    def allows_negative_indexes(self):
-        """ Indicates whether variables used to
-        index this Variable can be negative
-        """
-        return False
+class PythonTupleFunction(TypedAstNode):
+    """
+    Class representing a call to the `tuple` function.
+
+    Class representing a call to the `tuple` function. This is
+    different to the `(,)` syntax as it only takes one argument
+    and unpacks any variables.
+
+    This class should not be used to create an instance, it is
+    simply a place-holder to indicate the class to the semantic parser.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+    _static_type = TupleType
 
 #==============================================================================
-class PythonLen(PyccelInternalFunction):
-
+class PythonLen(PyccelFunction):
     """
-    Represents a 'len' expression in the code.
-    """
+    Represents a `len` expression in the code.
 
+    Represents a call to the function `len` which calculates the length
+    (aka the first element of the shape) of an object. This can usually
+    be calculated in the generated code, but in an inhomogeneous object
+    the integer value of the shape must be returned.
+
+    If the shape is unknown and cannot be determined at compile time then
+    the first element of the shape is a `PyccelArrayShapeElement` which
+    can be used to generate the equivalent C code using the `STC` library.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument whose length is being examined.
+    """
     __slots__ = ()
-    name      = 'len'
-    _dtype     = NativeInteger()
-    _precision = -1
-    _rank      = 0
-    _shape     = None
-    _order     = None
+
+    def __new__(cls, arg):
+        if isinstance(arg, LiteralString):
+            return LiteralInteger(len(arg.python_value))
+        elif isinstance(arg.class_type, StringType):
+            return super().__new__(cls)
+        else:
+            return arg.shape[0]
 
     def __init__(self, arg):
         super().__init__(arg)
 
-    @property
-    def arg(self):
-        return self._args[0]
+#==============================================================================
+class PythonList(TypedAstNode):
+    """
+    Class representing a call to Python's `[,]` function.
+
+    Class representing a call to Python's `[,]` function which generates
+    a literal Python list.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNodes
+        The arguments passed to the operator.
+
+    See Also
+    --------
+    FunctionalFor
+        The `[]` function when it describes a comprehension.
+    """
+    __slots__ = ('_args', '_shape', '_class_type')
+    _attribute_nodes = ('_args',)
+
+    def __init__(self, *args):
+        self._args = args
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        elif len(args) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = HomogeneousListType(GenericType())
+            return
+        arg0 = args[0]
+        is_homogeneous = arg0.class_type is not GenericType() and \
+                         all(a.class_type is not GenericType() and \
+                             arg0.class_type == a.class_type for a in args[1:])
+        if is_homogeneous:
+            dtype = arg0.class_type
+
+            self._shape = (LiteralInteger(len(args)), )
+
+        else:
+            raise TypeError("Can't create an inhomogeneous list")
+
+        self._class_type = HomogeneousListType(dtype)
+
+    def __iter__(self):
+        return self._args.__iter__()
 
     def __str__(self):
-        return 'len({})'.format(str(self.arg))
+        args = ', '.join(str(a) for a in self)
+        return f'[{args}]'
 
-#==============================================================================
-class PythonList(PythonTuple):
-    """ Represents a call to Python's native list() function.
+    def __repr__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'PythonList({args})'
+
+    def __len__(self):
+        return len(self._args)
+
+    @property
+    def args(self):
+        """
+        Arguments of the list.
+
+        The arguments that were used to initialise the list.
+        """
+        return self._args
+
+    @property
+    def is_homogeneous(self):
+        """
+        Indicates whether the list is homogeneous or inhomogeneous.
+
+        Indicates whether all elements of the list have the same dtype,
+        rank, etc (homogenous) or if these values can vary (inhomogeneous). Lists
+        are always homogeneous.
+        """
+        return True
+
+
+class PythonListFunction(PyccelFunction):
     """
-    __slots__ = ()
+    Class representing a call to the `list` function.
+
+    Class representing a call to the `list` function. This is
+    different to the `[,]' syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+    name = 'list'
+    __slots__ = ('_class_type', '_shape')
+    _attribute_nodes = ()
+    _static_type = HomogeneousListType
+
+    def __new__(cls, arg = None):
+        if arg is None:
+            return PythonList()
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonList(*arg)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+
+        The object being copied to create a new list instance.
+        """
+        return self._args[0]
+
 
 #==============================================================================
-class PythonMap(Basic):
-    """ Represents the map stmt
+class PythonSet(TypedAstNode):
+    """
+    Class representing a call to Python's `{,}` function.
+
+    Class representing a call to Python's `{,}` function which generates
+    a literal Python Set.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNodes
+        The arguments passed to the operator.
+    """
+    __slots__ = ('_args','_class_type','_shape')
+    _attribute_nodes = ('_args',)
+
+    def __init__(self, *args):
+        self._args = args
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        elif len(args) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = HomogeneousSetType(GenericType())
+            return
+
+        arg0 = args[0]
+        is_homogeneous = arg0.class_type is not GenericType() and \
+                         all(a.class_type is not GenericType() and \
+                             arg0.class_type == a.class_type for a in args[1:])
+        if is_homogeneous:
+            elem_type = arg0.class_type
+            self._shape = (LiteralInteger(len(args)), )
+            if elem_type.rank > 0:
+                raise TypeError("Pyccel can't hash non-scalar types")
+        else:
+            raise TypeError("Can't create an inhomogeneous set")
+
+        self._class_type = HomogeneousSetType(elem_type)
+
+    def __iter__(self):
+        return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
+
+    @property
+    def args(self):
+        """
+        Arguments of the set.
+
+        The arguments that were used to initialise the set.
+        """
+        return self._args
+
+    @property
+    def is_homogeneous(self):
+        """
+        Indicates whether the set is homogeneous or inhomogeneous.
+
+        Indicates whether all elements of the Set have the same dtype, precision,
+        rank, etc (homogenous) or if these values can vary (inhomogeneous). sets
+        are always homogeneous.
+        """
+        return True
+
+    def __str__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'{{{args}}}'
+
+    def __repr__(self):
+        args = ', '.join(str(a) for a in self)
+        return f'PythonSet({args})'
+
+
+class PythonSetFunction(PyccelFunction):
+    """
+    Class representing a call to the `set` function.
+
+    Class representing a call to the `set` function. This is
+    different to the `{,}` syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    copied_obj : TypedAstNode
+        The argument passed to the function call.
+    """
+    __slots__ = ('_shape', '_class_type')
+    name = 'set'
+    _static_type = HomogeneousSetType
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+#==============================================================================
+class PythonDict(PyccelFunction):
+    """
+    Class representing a call to Python's `{}` function.
+
+    Class representing a call to Python's `{}` function which generates a
+    literal Python dict. This operator does not handle `**a` expressions.
+
+    Parameters
+    ----------
+    keys : iterable[TypedAstNode]
+        The keys of the new dictionary.
+    values : iterable[TypedAstNode]
+        The values of the new dictionary.
+    """
+    __slots__ = ('_keys', '_values', '_shape', '_class_type')
+    _attribute_nodes = ('_keys', '_values')
+    _rank = 1
+
+    def __init__(self, keys, values):
+        self._keys = keys
+        self._values = values
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        elif len(keys) != len(values):
+            raise TypeError("Unpacking values in a dictionary is not yet supported.")
+        elif len(keys) == 0:
+            self._shape = (LiteralInteger(0),)
+            self._class_type = DictType(GenericType(), GenericType())
+            return
+
+        key0 = keys[0]
+        val0 = values[0]
+        homogeneous_keys = all(k.class_type is not GenericType() for k in keys) and \
+                           all(key0.class_type == k.class_type for k in keys[1:])
+        homogeneous_vals = all(v.class_type is not GenericType() for v in values) and \
+                           all(val0.class_type == v.class_type for v in values[1:])
+
+        if homogeneous_keys and homogeneous_vals:
+            self._class_type = DictType(key0.class_type, val0.class_type)
+
+            self._shape = (LiteralInteger(len(keys)), )
+        else:
+            raise TypeError("Can't create an inhomogeneous dict")
+
+    def __iter__(self):
+        return zip(self._keys, self._values)
+
+    def __str__(self):
+        args = ', '.join(f'{k}: {v}' for k,v in self)
+        return f'{{{args}}}'
+
+    def __repr__(self):
+        args = ', '.join(f'{repr(k)}: {repr(v)}' for k,v in self)
+        return f'PythonDict({args})'
+
+    def __len__(self):
+        return len(self._keys)
+
+    @property
+    def keys(self):
+        """
+        The keys of the new dictionary.
+
+        The keys of the new dictionary.
+        """
+        return self._keys
+
+    @property
+    def values(self):
+        """
+        The values of the new dictionary.
+
+        The values of the new dictionary.
+        """
+        return self._values
+
+#==============================================================================
+class PythonDictFunction(PyccelFunction):
+    """
+    Class representing a call to the `dict` function.
+
+    Class representing a call to the `dict` function. This is
+    different to the `{}` syntax as it is either a cast function or it
+    uses arguments to create the dictionary. In the case of a cast function
+    an instance of PythonDict is returned to express this concept. In the
+    case of a copy this class stores the description of the copy operator.
+
+    Parameters
+    ----------
+    *args : TypedAstNode
+        The arguments passed to the function call. If args are provided
+        then only one argument should be provided. This object is copied
+        unless it is a temporary PythonDict in which case it is returned
+        directly.
+    **kwargs : dict[TypedAstNode]
+        The keyword arguments passed to the function call. If kwargs are
+        provided then no args should be provided and a PythonDict object
+        will be created.
+    """
+    __slots__ = ('_shape', '_class_type')
+    name = 'dict'
+    _static_type = DictType
+
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            keys = [LiteralString(k) for k in kwargs]
+            values = list(kwargs.values())
+            return PythonDict(keys, values)
+        elif len(args) != 1:
+            raise NotImplementedError("Unrecognised dict calling convention")
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, copied_obj):
+        self._class_type = copied_obj.class_type
+        self._shape = copied_obj.shape
+        super().__init__(copied_obj)
+
+    @property
+    def copied_obj(self):
+        """
+        The object being copied.
+
+        The object being copied to create a new dict instance.
+        """
+        return self._args[0]
+
+#==============================================================================
+class PythonMap(Iterable):
+    """
+    Class representing a call to Python's builtin map function.
+
+    Class representing a call to Python's builtin map function.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function to be applied to the elements.
+
+    func_args : TypedAstNode
+        The arguments to which the function will be applied.
     """
     __slots__ = ('_func','_func_args')
-    _attribute_nodes = ('_func','_func_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_func','_func_args')
     name = 'map'
+    _class_type = SymbolicType()
+    _shape = ()
 
     def __init__(self, func, func_args):
         self._func = func
         self._func_args = func_args
-        super().__init__()
+        super().__init__(1)
 
     @property
     def func(self):
@@ -594,31 +1126,62 @@ class PythonMap(Basic):
         """
         return self._func_args
 
-    def __getitem__(self, index):
-        return self.func, IndexedElement(self.func_args, index)
-
-    @property
-    def length(self):
-        """ Return the length of the resulting object
+    def get_python_iterable_item(self):
         """
-        return PythonLen(self.func_args)
+        Get the item of the iterable that will be saved to the loop targets.
+
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        idx = self._indices[0] if len(self._indices)==1 else self._indices
+        return [self.func(IndexedElement(self.func_args, idx))]
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the map iterable.
+
+        Get a range that can be used to iterate over the map iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the map iterable.
+        """
+        return PythonRange(PythonLen(self.func_args))
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the map target.
+
+        Get objects that should be assigned to variables to use the map targets.
+        This is the function calling the element of the variable that is found
+        at the index.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
 
 #==============================================================================
-class PythonPrint(Basic):
+class PythonPrint(PyccelAstNode):
+    """
+    Represents a call to the print function in the code.
 
-    """Represents a print function in the code.
+    Represents a call to the built-in Python function `print` in the code.
 
-    expr : PyccelAstNode
-        The expression to print
-    file: String (Optional)
-        Select 'stdout' (default) or 'stderr' to print to
-    Examples
-
-    >>> from pyccel.ast.internals import symbols
-    >>> from pyccel.ast.core import Print
-    >>> n,m = symbols('n,m')
-    >>> Print(('results', n,m))
-    Print((results, n, m))
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The expression to print.
+    file : str, default='stdout'
+        One of [stdout,stderr].
     """
     __slots__ = ('_expr', '_file')
     _attribute_nodes = ('_expr',)
@@ -633,6 +1196,11 @@ class PythonPrint(Basic):
 
     @property
     def expr(self):
+        """
+        The expression that should be printed.
+
+        The expression that should be printed.
+        """
         return self._expr
 
     @property
@@ -642,23 +1210,25 @@ class PythonPrint(Basic):
         return self._file
 
 #==============================================================================
-class PythonRange(Basic):
-
+class PythonRange(Iterable):
     """
-    Represents a range.
+    Class representing a range.
 
-    Examples
+    Class representing a call to the built-in Python function `range`. This function
+    is parametrised by an interval (described by a start element and a stop element)
+    and a step. The step describes the number of elements between subsequent elements
+    in the range.
 
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Range
-    >>> from pyccel.ast.internals import PyccelSymbol
-    >>> s = Variable('int', 's')
-    >>> e = PyccelSymbol('e')
-    >>> Range(s, e, 1)
-    Range(0, n, 1)
+    Parameters
+    ----------
+    *args : tuple of TypedAstNodes
+        The arguments passed to the range.
+        If one argument is passed then it represents the end of the interval.
+        If two arguments are passed then they represent the start and end of the interval.
+        If three arguments are passed then they represent the start, end and step of the interval.
     """
     __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start', '_stop', '_step')
+    _attribute_nodes = Iterable._attribute_nodes + ('_start', '_stop', '_step')
     name = 'range'
 
     def __init__(self, *args):
@@ -679,33 +1249,95 @@ class PythonRange(Basic):
             self._step  = args[2]
         else:
             raise ValueError('Range has at most 3 arguments')
+        assert self._stop is not None
 
-        super().__init__()
+        super().__init__(0)
 
     @property
     def start(self):
+        """
+        Get the start of the interval.
+
+        Get the start of the interval which the range iterates over.
+        """
         return self._start
 
     @property
     def stop(self):
+        """
+        Get the end of the interval.
+
+        Get the end of the interval which the range iterates over. The
+        interval does not include this value.
+        """
         return self._stop
 
     @property
     def step(self):
+        """
+        Get the step between subsequent elements in the range.
+
+        Get the step between subsequent elements in the range.
+        """
         return self._step
 
-    def __getitem__(self, index):
-        return index
+    def get_range(self):
+        """
+        Get this range.
 
+        Get this range. This method is used to allow this class to be handled
+        like other iterables which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        PythonRange
+            This object.
+        """
+        return self
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the range indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self._indices
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the range.
+
+        This method is used to allow this class to be handled like other iterables
+        which can be converted to PythonRange objects.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            An empty list.
+        """
+        return []
 
 #==============================================================================
-class PythonZip(PyccelInternalFunction):
-
+class PythonZip(Iterable):
     """
-    Represents a zip stmt.
+    Represents a call to Python `zip` for code generation.
 
+    Represents a call to Python's built-in function `zip`.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
     """
-    __slots__ = ('_length',)
+    __slots__ = ('_length', '_class_type','_args')
+    _attribute_nodes = Iterable._attribute_nodes + ('_args', '_length')
     name = 'zip'
 
     def __init__(self, *args):
@@ -713,7 +1345,7 @@ class PythonZip(PyccelInternalFunction):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        super().__init__(*args)
+        self._args = args
         if pyccel_stage == 'syntactic':
             self._length = None
             return
@@ -722,126 +1354,209 @@ class PythonZip(PyccelInternalFunction):
             if lengths:
                 self._length = min(lengths)
             else:
-                self._length = self.args[0].shape[0]
+                self._length = PythonMin(*[PythonLen(a) for a in self.args])
+            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+        super().__init__(1)
 
     @property
-    def length(self):
-        """ Length of the shortest zip argument
+    def args(self):
         """
-        return self._length
+        The arguments passed to the function.
 
-    def __getitem__(self, index):
+        Tuple containing all the arguments passed to the function call.
+        """
+        return self._args
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the zip indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        index = self._indices[0]
         return [a[index] for a in self.args]
 
-#==============================================================================
-class PythonAbs(PyccelInternalFunction):
-    """Represents a call to  python abs for code generation.
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the zip targets.
 
-    arg : Variable
+        Get objects that should be assigned to variables to use the zip targets.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the zip iterable.
+
+        Get a range that can be used to iterate over the zip iterable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the zip iterable.
+        """
+        return PythonRange(self._length)
+
+#==============================================================================
+class PythonAbs(PyccelFunction):
     """
-    __slots__ = ('_dtype','_precision','_rank','_shape','_order')
+    Represents a call to Python `abs` for code generation.
+
+    Represents a call to Python's built-in function `abs`.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ('_shape','_class_type')
     name = 'abs'
     def __init__(self, x):
         self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = -1
-        self._order     = x.order
+        self._class_type = PythonNativeInt() if x.dtype is PythonNativeInt() else PythonNativeFloat()
         super().__init__(x)
 
     @property
     def arg(self):
+        """
+        The argument passed to the abs function.
+
+        The argument passed to the abs function.
+        """
         return self._args[0]
 
 #==============================================================================
-class PythonSum(PyccelInternalFunction):
-    """Represents a call to  python sum for code generation.
-
-    arg : list , tuple , PythonTuple, List, Variable
+class PythonSum(PyccelFunction):
     """
-    __slots__ = ('_dtype','_precision')
+    Represents a call to Python `sum` for code generation.
+
+    Represents a call to Python's built-in function `sum`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ('_class_type',)
     name   = 'sum'
-    _rank  = 0
     _shape = None
-    _order = None
 
     def __init__(self, arg):
-        if not isinstance(arg, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
-        self._dtype = arg.dtype
-        self._precision = -1
+        if not isinstance(arg, TypedAstNode):
+            raise TypeError(f'Unknown type of {type(arg)}.' )
+        if isinstance(arg.class_type, HomogeneousContainerType):
+            self._class_type = arg.class_type.element_type
+        else:
+            self._class_type = sum(arg.class_type, start=GenericType())
         super().__init__(arg)
 
     @property
     def arg(self):
+        """
+        The argument passed to the sum function.
+
+        The argument passed to the sum function.
+        """
         return self._args[0]
 
 #==============================================================================
-class PythonMax(PyccelInternalFunction):
-    """Represents a call to  python max for code generation.
-
-    arg : list , tuple , PythonTuple, List
+class PythonMax(PyccelFunction):
     """
-    __slots__ = ('_dtype','_precision')
-    name   = 'max'
-    _rank  = 0
-    _shape = None
-    _order = None
+    Represents a call to Python's built-in `max` function.
 
-    def __init__(self, *x):
-        if len(x)==1:
-            x = x[0]
-
-        if isinstance(x, (list, tuple)):
-            x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError('Unknown type of  %s.' % type(x))
-        if not x.is_homogeneous:
-            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
-                             "types ({}). Please cast arguments to the desired dtype".format(types))
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        super().__init__(x)
-
-
-#==============================================================================
-class PythonMin(PyccelInternalFunction):
-    """Represents a call to  python min for code generation.
-
-    arg : list , tuple , PythonTuple, List, Variable
-    """
-    __slots__ = ('_dtype','_precision')
-    name   = 'min'
-    _rank  = 0
-    _shape = None
-    _order = None
-    def __init__(self, *x):
-        if len(x)==1:
-            x = x[0]
-
-        if isinstance(x, (list, tuple)):
-            x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError('Unknown type of  %s.' % type(x))
-        if not x.is_homogeneous:
-            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
-            raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
-                              "types ({}). Please cast arguments to the desired dtype".format(types))
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        super().__init__(x)
-
-#==============================================================================
-class Lambda(Basic):
-    """Represents a call to python lambda for temporary functions
+    Represents a call to Python's built-in `max` function.
 
     Parameters
-    ==========
+    ----------
+    *x : list, tuple, PythonTuple, PythonList
+        The arguments passed to the function.
+    """
+    __slots__ = ('_class_type',)
+    name   = 'max'
+    _shape = None
+
+    def __init__(self, *x):
+        if len(x)==1:
+            x = x[0]
+
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
+            raise TypeError(f'Unknown type of {type(x)}.' )
+
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
+            types = ', '.join(str(xi.dtype) for xi in x)
+            raise TypeError("Cannot determine final dtype of 'max' call with arguments of different "
+                             f"types ({types}). Please cast arguments to the desired dtype")
+        if isinstance(x.class_type, HomogeneousContainerType):
+            self._class_type = x.class_type.element_type
+        else:
+            self._class_type = sum(x.class_type, start=GenericType())
+        super().__init__(x)
+
+
+#==============================================================================
+class PythonMin(PyccelFunction):
+    """
+    Represents a call to Python's built-in `min` function.
+
+    Represents a call to Python's built-in `min` function.
+
+    Parameters
+    ----------
+    *x : list, tuple, PythonTuple, PythonList
+        The arguments passed to the function.
+    """
+    __slots__ = ('_class_type',)
+    name   = 'min'
+    _shape = None
+
+    def __init__(self, *x):
+        if len(x)==1:
+            x = x[0]
+
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not (isinstance(x, (PythonTuple, PythonList))
+                  or (isinstance(x, Variable) and isinstance(x.class_type, HomogeneousContainerType))):
+            raise TypeError(f'Unknown type of {type(x)}.' )
+
+        if isinstance(x, (PythonTuple, PythonList)) and not x.is_homogeneous:
+            types = ', '.join(str(xi.dtype) for xi in x)
+            raise TypeError("Cannot determine final dtype of 'min' call with arguments of different "
+                              f"types ({types}). Please cast arguments to the desired dtype")
+        if isinstance(x.class_type, HomogeneousContainerType):
+            self._class_type = x.class_type.element_type
+        else:
+            self._class_type = sum(x.class_type, start=GenericType())
+        super().__init__(x)
+
+#==============================================================================
+class Lambda(PyccelAstNode):
+    """
+    Represents a call to Python's lambda for temporary functions.
+
+    Represents a call to Python's built-in function `lambda` for temporary functions.
+
+    Parameters
+    ----------
     variables : tuple of symbols
-                The arguments to the lambda expression
-    expr      : PyccelAstNode
-                The expression carried out when the lambda function is called
+        The arguments to the lambda expression.
+    expr : TypedAstNode
+        The expression carried out when the lambda function is called.
     """
     __slots__ = ('_variables', '_expr')
     _attribute_nodes = ('_variables', '_expr')
@@ -868,15 +1583,14 @@ class Lambda(Basic):
         """ Returns the expression with the arguments replaced with
         the calling arguments
         """
-        assert(len(args) == len(self.variables))
+        assert len(args) == len(self.variables)
         return self.expr.subs(self.variables, args)
 
     def __str__(self):
-        return "{args} -> {expr}".format(args=self.variables,
-                expr = self.expr)
+        return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
-class PythonType(Basic):
+class PythonType(PyccelFunction):
     """
     Represents a call to the Python builtin `type` function.
 
@@ -889,32 +1603,22 @@ class PythonType(Basic):
 
     Parameters
     ==========
-    obj : PyccelAstNode
+    obj : TypedAstNode
           The object whose type we wish to investigate.
     """
-    __slots__ = ('_dtype','_precision','_obj')
+    __slots__ = ('_type','_obj')
     _attribute_nodes = ('_obj',)
+    _class_type = SymbolicType()
+    _shape = None
+    _static_type = TypeAlias()
 
     def __init__(self, obj):
-        if not isinstance (obj, PyccelAstNode):
-            raise PyccelError("Python's type function is not implemented for {} object".format(type(obj)))
-        self._dtype = obj.dtype
-        self._precision = obj.precision
+        if not isinstance (obj, TypedAstNode):
+            raise TypeError(f"Python's type function is not implemented for {type(obj)} object")
+        self._type = obj.class_type
         self._obj = obj
 
         super().__init__()
-
-    @property
-    def dtype(self):
-        """ Returns the dtype of this type
-        """
-        return self._dtype
-
-    @property
-    def precision(self):
-        """ Returns the precision of this type
-        """
-        return self._precision
 
     @property
     def arg(self):
@@ -931,55 +1635,170 @@ class PythonType(Basic):
         printed by Python to describe this type. This string can
         then be easily printed in each language.
         """
-        prec = self.precision
-        dtype = str(self.dtype)
-        if prec in (None, -1):
-            return LiteralString(f"<class '{dtype}'>")
-
-        precision = prec * (16 if self.dtype is NativeComplex() else 8)
-        if self._obj.rank > 0:
-            return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
-        else:
-            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
+        return LiteralString(f"<class '{self._type}'>")
 
 #==============================================================================
-python_builtin_datatypes_dict = {
-    'bool'   : PythonBool,
-    'float'  : PythonFloat,
-    'int'    : PythonInt,
-    'complex': PythonComplex
+class VariableIterator(Iterable):
+    """
+    Represents a call to Python's `iter` function on a variable.
+
+    Represents a call to Python's `iter` function on a variable. This is
+    useful for for loops as this function is called implicitly.
+
+    Parameters
+    ----------
+    var : Variable
+        The Variable that is iterated over.
+    """
+    __slots__ = ('_var',)
+    _attribute_nodes = Iterable._attribute_nodes + ('_var',)
+
+    def __init__(self, var):
+        assert isinstance(var, TypedAstNode)
+        assert var.class_type is not VoidType()
+        assert var.rank > 0
+        self._var = var
+        super().__init__(1)
+
+    @property
+    def variable(self):
+        """
+        The variable being iterated over.
+
+        The variable being iterated over.
+        """
+        return self._var
+
+    def get_range(self):
+        """
+        Get a range that can be used to iterate over the variable.
+
+        Get a range that can be used to iterate over the variable.
+
+        Returns
+        -------
+        PythonRange
+            A range that can be used to iterate over the enumerate iterable.
+        """
+        return PythonRange(self.variable.shape[0])
+
+    def get_python_iterable_item(self):
+        """
+        Get the item of the iterable that will be saved to the loop targets.
+
+        Returns an element of the variable indexed with the iterators
+        previously provided via the set_loop_counters method
+        (useful to determine the dtype etc of the loop iterator).
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return [self._var[self._indices[0]]]
+
+    def get_assign_targets(self):
+        """
+        Get objects that should be assigned to variables to use the variable iterator targets.
+
+        Returns an element of the variable indexed with the iterators
+        previously provided via the set_loop_counters method.
+
+        Returns
+        -------
+        list[TypedAstNode]
+            A list of objects that should be assigned to variables.
+        """
+        return self.get_python_iterable_item()
+
+#==============================================================================
+class PythonIsInstance(PyccelFunction):
+    """
+    Represents a call to Python's `isinstance` function.
+
+    Represents a call to Python's `isinstance` function which checks if an
+    object has a specified type. This class exists to find a definition of
+    `isinstance` in builtin_functions_dict but it should not be instantiated.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose type should be checked.
+    class_or_tuple : TypedAstNode
+        A class or a tuple of classes describing the acceptable types for
+        the object.
+    """
+    __slots__ = ()
+    def __init__(self, obj, class_or_tuple):
+        super().__init__(obj, class_or_tuple)
+
+#==============================================================================
+class PythonStr(PyccelFunction):
+    """
+    Represents a call to Python's `str` function.
+
+    Represents a call to Python's `str` function which describes a string
+    cast.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument that is cast to a string.
+    """
+    __slots__ = ('_shape',)
+    _static_type = StringType()
+    _class_type = StringType()
+    name = 'str'
+
+    def __new__(cls, arg):
+        if isinstance(arg, LiteralString):
+            return arg
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg):
+        if not isinstance(arg.class_type, (StringType, CharType)):
+            raise NotImplementedError("Support for casting non-character types to strings is not yet available")
+        self._shape = (None,)
+        super().__init__(arg)
+
+#==============================================================================
+
+DtypePrecisionToCastFunction = {
+        PythonNativeBool()    : PythonBool,
+        PythonNativeInt()     : PythonInt,
+        PythonNativeFloat()   : PythonFloat,
+        PythonNativeComplex() : PythonComplex,
 }
 
-def python_builtin_datatype(name):
-    """
-    Given a symbol name, return the corresponding datatype.
-
-    name: str
-        Datatype as written in Python.
-
-    """
-    if not isinstance(name, str):
-        raise TypeError('name must be a string')
-
-    if name in python_builtin_datatypes_dict:
-        return python_builtin_datatypes_dict[name]
-
-    return None
+#==============================================================================
 
 builtin_functions_dict = {
-    'abs'      : PythonAbs,
-    'range'    : PythonRange,
-    'zip'      : PythonZip,
-    'enumerate': PythonEnumerate,
-    'int'      : PythonInt,
-    'float'    : PythonFloat,
-    'complex'  : PythonComplex,
-    'bool'     : PythonBool,
-    'sum'      : PythonSum,
-    'len'      : PythonLen,
-    'max'      : PythonMax,
-    'min'      : PythonMin,
-    'not'      : PyccelNot,
-    'map'      : PythonMap,
-    'type'     : PythonType,
+    'abs'        : PythonAbs,
+    'bool'       : PythonBool,
+    'complex'    : PythonComplex,
+    'dict'       : PythonDictFunction,
+    'enumerate'  : PythonEnumerate,
+    'float'      : PythonFloat,
+    'int'        : PythonInt,
+    'isinstance' : PythonIsInstance,
+    'len'        : PythonLen,
+    'list'       : PythonListFunction,
+    'map'        : PythonMap,
+    'max'        : PythonMax,
+    'min'        : PythonMin,
+    'not'        : PyccelNot,
+    'range'      : PythonRange,
+    'round'      : PythonRound,
+    'set'        : PythonSetFunction,
+    'str'        : PythonStr,
+    'sum'        : PythonSum,
+    'tuple'      : PythonTupleFunction,
+    'type'       : PythonType,
+    'zip'        : PythonZip,
 }
+
+original_type_to_pyccel_type[list] = PythonListFunction
+original_type_to_pyccel_type[set] = PythonSetFunction
+original_type_to_pyccel_type[dict] = PythonDictFunction
+original_type_to_pyccel_type[tuple] = PythonTupleFunction

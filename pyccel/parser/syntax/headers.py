@@ -1,24 +1,27 @@
 # coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 """
+import warnings
 from os.path import join, dirname
 
-from textx.metamodel import metamodel_from_file
+from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
-from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
+from pyccel.ast.headers   import MetaVariable, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
-from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralEllipsis, Nil
+from pyccel.ast.internals import PyccelSymbol, Slice
+from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.typingext import TypingFinal
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
@@ -27,136 +30,175 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 class Header(object):
-    """Class for Header syntax."""
-    def __init__(self, **kwargs):
-        """
-        Constructor for Header.
+    """
+    Class describing a Header in the grammar.
 
-        """
-        self.statements = kwargs.pop('statements', [])
+    Class describing a Header in the grammar. To be deprecated. See #1487.
 
-class FuncType(BasicStmt):
-    """Base class representing a  FunctionType in the grammar."""
-    def __init__(self, **kwargs):
-        self.decs = kwargs.pop('decs')
-        self.results = kwargs.pop('results')
+    Parameters
+    ----------
+    statements : iterable
+        A list of header statements.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, statements = (), **kwargs):
+        self.statements = statements
+        super().__init__(**kwargs)
 
+class TrailerSubscriptList(BasicStmt):
+    """
+    Class representing subscripts that appear trailing a type in the grammar.
+
+    Class representing subscripts that appear trailing a type in the grammar
+    in the form: `[arg1,arg2,arg3]` or `[arg1,arg2,arg3](order=c)`
+
+    Parameters
+    ----------
+    args : iterable
+        The arguments that appear in the subscript.
+    order : str
+        The order specified in brackets.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, args, order, **kwargs):
+        self.args = args
+        self.order = order.capitalize() or None
+        super().__init__(**kwargs)
+
+class Type(BasicStmt):
+    """
+    Class representing a type in the grammar.
+
+    Class representing a type in the grammar.
+
+    Parameters
+    ----------
+    dtype : str
+        The description of the base datatype.
+    trailer : TrailerSubscriptList, optional
+        The subscript that may appear trailing a type definition to augment its
+        description.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, dtype, trailer=None, **kwargs):
+        self.dtype = dtype
+        self.trailer = trailer
         super().__init__(**kwargs)
 
     @property
     def expr(self):
-        decs = []
-        if self.decs:
-            decs = [i.expr for i in self.decs]
+        """
+        Get the Pyccel object equivalent to this grammar object.
 
-        results = []
-        if self.results:
-            results = [i.expr for i in self.results]
+        Get the Pyccel object equivalent to this grammar object.
+        """
+        dtype = PyccelSymbol(self.dtype)
+        order = None
+        if self.trailer:
+            args = [self.handle_trailer_arg(a) for a in self.trailer.args]
+            dtype = IndexedElement(dtype, *args)
+            order = self.trailer.order
+        return SyntacticTypeAnnotation(dtype, order)
 
-        d_var = {}
-        d_var['decs'] = decs
-        d_var['results'] = results
-        d_var['is_func'] = True
+    def handle_trailer_arg(self, s):
+        """
+        Get the Pyccel object equivalent to the argument in the trailing object.
 
-        return d_var
+        Get the Pyccel object equivalent to the argument in the trailing object.
 
-class TemplateStmt(BasicStmt):
-    """Base class representing a  template in the grammar."""
-    def __init__(self, **kwargs):
-        self.dtypes  = kwargs.pop('dtypes')
-        self.name   = kwargs.pop('name')
-        BasicStmt.__init__(self)
+        Parameters
+        ----------
+        s : str
+            The argument in the trailing section.
+
+        Returns
+        -------
+        PyccelAstNode
+            The Pyccel object being described.
+        """
+        if isinstance(s, Type):
+            return s.expr
+        elif s == ':':
+            return Slice(None, None)
+        elif s == '...':
+            return LiteralEllipsis()
+        else:
+            raise NotImplementedError(f"Unrecognised type trailer argument : {s}")
+
+class FuncType(BasicStmt):
+    """
+    Class representing a FunctionType in the grammar.
+
+    Class representing a FunctionType in the grammar. A FunctionType is the type
+    of an argument which describes a function.
+
+    Parameters
+    ----------
+    args : iterable of UnionTypeStmt, optional
+        A list of UnionTypeStmts describing the types of the function arguments.
+    results : TypeHeader, optional
+        A TypeHeader describing the type of the function result.
+        (This is not a UnionTypeStmt as there cannot be multiple types for a
+        given result).
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, args, results, **kwargs):
+        self.args = args
+        self.results = results
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Get the Pyccel object equivalent to this grammar object.
+
+        Get the Pyccel object equivalent to this grammar object.
+        """
+        args = [a.expr for a in self.args]
+        results = self.results.expr if self.results else Nil()
+
+        return FunctionTypeAnnotation(args, results)
+
+class TemplateStmt(BasicStmt):
+    """
+    Base class representing a template in the grammar.
+
+    Base class representing a template in the grammar.
+    To be removed when header support is deprecated.
+
+    Parameters
+    ----------
+    name : str
+        The name of the template type symbol.
+    dtypes : list of str
+        A list of the types that the template describes.
+    **kwargs : dict
+        The textx arguments.
+    """
+    def __init__(self, *, name, dtypes, **kwargs):
+        self.dtypes = dtypes
+        self.name   = name
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Get the Pyccel equivalent of this object.
+
+        Get the Pyccel equivalent of this object.
+        """
         if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
             msg = 'Functions in a template are not supported yet'
             errors.report(msg,
                         severity='error')
             return EmptyNode()
 
-        possible_dtypes = {tuple(t.expr.items())  for t in self.dtypes}
-        dtypes = tuple(dict(d_type) for d_type in possible_dtypes)
+        dtypes = {t.expr  for t in self.dtypes}
         return Template(self.name, dtypes)
-
-class ListType(BasicStmt):
-    """Base class representing a  ListType in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a TypeHeader.
-
-        dtype: list of str
-        """
-        self.dtype = kwargs.pop('dtype')
-
-        super(ListType, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        dtypes = [str(i.expr['datatype']) for i in self.dtype]
-        precisions = [i.expr['precision'] for i in self.dtype]
-        if not (all(dtypes[0]==i for i in dtypes)):
-            raise TypeError('all element of the TypeList must have the same type')
-
-        d_var = {}
-        d_var['datatype'] = str(dtypes[0])
-        d_var['rank'] = len(dtypes)
-        d_var['memory_handling'] = 'alias' if len(dtypes) > 0 else 'stack'
-        d_var['precision'] = max(precisions)
-        d_var['order'] = 'C'
-        d_var['is_func'] = False
-        d_var['is_const'] = False
-        if not(d_var['precision']):
-            if d_var['datatype'] in ['double','float','complex','int']:
-                d_var['precision'] = default_precision[d_var['datatype']]
-        return d_var
-
-class Type(BasicStmt):
-    """Base class representing a header type in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Type.
-
-        dtype: str
-            variable type
-        """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
-
-        super(Type, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        dtype = self.dtype
-        precision = self.prec
-        if dtype in dtype_registry.keys():
-            dtype,precision = dtype_registry[dtype]
-        trailer = self.trailer
-        order = 'C'
-
-        if trailer:
-            if trailer.order:
-                order = str(trailer.order)
-            trailer = [str(i) for i in trailer.args]
-        else:
-            trailer = []
-        d_var={}
-        d_var['datatype']=dtype
-        d_var['rank'] = len(trailer)
-        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
-        d_var['precision']  = precision
-        d_var['is_func'] = False
-        d_var['is_const'] = False
-        if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
-                d_var['precision'] = default_precision[dtype]
-
-        if d_var['rank']>1:
-            d_var['order'] = order
-        return d_var
 
 class ShapedID(BasicStmt):
     """class representing a ShapedID in the grammar.
@@ -185,169 +227,195 @@ class ShapedID(BasicStmt):
 
         return d_var
 
-class TypeHeader(BasicStmt):
-    pass
-
 class StringStmt(BasicStmt):
-    def __init__(self, **kwargs):
-        self.arg = kwargs.pop('arg')
+    """
+    Class describing a string in a macro.
+
+    Class describing a string in a macro.
+    To be removed when macro support is deprecated.
+
+    Parameters
+    ----------
+    arg : str
+        The string.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, arg, **kwargs):
+        self.arg = arg
+        super().__init__(**kwargs)
     @property
     def expr(self):
         return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
-    def __init__(self, **kwargs):
-        """
-        Constructor for a TypeHeader.
+    """
+    Class describing a union of possible types.
 
-        dtype: list fo str
-        """
-        self.dtypes = kwargs.pop('dtypes')
-        self.const = kwargs.pop('const')
+    A class object describing a union of possible types described in a type descriptor.
+    These types are either VariableTypes or FuncTypes.
 
-        super(UnionTypeStmt, self).__init__(**kwargs)
+    Parameters
+    ----------
+    dtypes : list of VariableHeader | FuncHeader
+        A list of the possible types described.
+    const : bool
+        A boolean indicating if the generated object will be constant or
+        modifiable.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, dtypes, const = False, **kwargs):
+        self.dtypes = list(dtypes)
+        self.const = const
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Get the Pyccel equivalent of this object.
+
+        Get the Pyccel equivalent of this object.
+        To be removed when header support is deprecated.
+        """
         dtypes = [i.expr for i in self.dtypes]
         if self.const:
-            for d_type in dtypes:
-                d_type["is_const"] = True
+            dtypes = [TypingFinal(d) for d in dtypes]
         if len(dtypes)==1:
             return dtypes[0]
-        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
-            msg = 'Functions in a uniontype are not supported yet'
-            errors.report(msg,
-                        severity='error')
-            return EmptyNode()
 
-        possible_dtypes = {tuple(t.items())  for t in dtypes}
-        dtypes = [dict(d_type) for d_type in possible_dtypes]
-        return UnionType(dtypes)
+        return UnionTypeAnnotation(*dtypes)
 
 class HeaderResults(BasicStmt):
-    """Base class representing a HeaderResults in the grammar."""
+    """
+    Base class representing a HeaderResults in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a HeaderResults.
+    Base class representing a HeaderResults in the grammar.
+    To be removed when header support is deprecated.
 
-        decs: list of TypeHeader
-        """
-        self.decs = kwargs.pop('decs')
+    Parameters
+    ----------
+    decs : list of VariableHeader | FuncHeader
+        List of TypeHeaders defining the return type(s).
+    **kwargs : dict
+        TextX keyword arguments.
+    """
 
-        super(HeaderResults, self).__init__(**kwargs)
+    def __init__(self, decs, **kwargs):
+        self.decs = decs
+
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
-        decs = [i.expr for i in self.decs]
-        return decs
+        """
+        Get the Pyccel equivalent of this object.
+
+        Get the Pyccel equivalent of this object.
+        """
+        return self.decs.expr
 
 
 class VariableHeaderStmt(BasicStmt):
-    """Base class representing a header statement in the grammar."""
+    """
+    Base class representing a header statement in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a VariableHeader statement.
-        In the case of builtin datatypes, we export a Variable
+    Base class representing a header statement in the grammar.
+    To be removed when header support is deprecated.
 
-        name: str
-            variable name
-        dec: list, tuple
-            list of argument types
-        """
-        self.name = kwargs.pop('name')
-        self.dec  = kwargs.pop('dec')
+    Parameters
+    ----------
+    name : str
+        Variable name.
+    dec : list, tuple
+        List of argument types.
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+
+    def __init__(self, name, dec, **kwargs):
+        self.name = name
+        self.dec  = dec
 
         super(VariableHeaderStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Convert a VariableHeaderStmt generated by TextX to a Pyccel AST object.
+
+        Convert a VariableHeaderStmt generated by TextX to a Pyccel AST object.
+        """
+        warnings.warn("Support for specifying types via headers will be removed in " +
+                      "a future version of Pyccel. This annotation may be unnecessary " +
+                      "in your code. If you find it is necessary please open a discussion " +
+                      "at https://github.com/pyccel/pyccel/discussions so we do not " +
+                      "remove support until an alternative is in place.", FutureWarning)
         dtype = self.dec.expr
 
-        return VariableHeader(self.name, dtype)
+        return AnnotatedPyccelSymbol(self.name, annotation=dtype)
 
 class FunctionHeaderStmt(BasicStmt):
-    """Base class representing a function header statement in the grammar."""
+    """
+    Base class representing a function header statement in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a FunctionHeader statement
+    Base class representing a function header statement in the grammar.
+    To be removed when header support is deprecated.
 
-        name: str
-            function name
-        kind: str
-            one among {function, method}
-        decs: list, tuple
-            list of argument types
-        results: list, tuple
-            list of output types
-        """
-        self.name = kwargs.pop('name')
-        self.kind = kwargs.pop('kind', None)
-        self.static = kwargs.pop('static', None)
-        self.decs = kwargs.pop('decs')
-        self.results = kwargs.pop('results', None)
+    Parameters
+    ----------
+    name : str
+        Function name.
+    decs : list, tuple
+        List of argument types.
+    kind : str
+        One among {function, method}.
+    static : bool
+        Indicates if the function is a static function.
+    results : list, tuple
+        List of output types.
+    **kwargs : dict
+        Arguments defined by textx.
+    """
 
-        super(FunctionHeaderStmt, self).__init__(**kwargs)
+    def __init__(self, name, decs, kind=None, static = None, results=None, **kwargs):
+        self.name = name
+        self.kind = kind
+        self.static = static
+        self.decs = decs
+        self.results = results
+
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
-        # TODO: do we need dtypes and results to be attributs of the class?
-        dtypes = []
-        for dec in self.decs:
-            if isinstance(dec,UnionTypeStmt):
-                dtypes += [dec.expr]
+        """
+        Get the Pyccel equivalent of this object.
+
+        Get the Pyccel equivalent of this object.
+        """
+        dtypes = [d.expr for d in self.decs]
 
         if self.kind is None:
             kind = 'function'
         else:
             kind = str(self.kind)
 
-        is_static = False
-        if self.static == 'static':
-            is_static = True
+        is_static = self.static
 
-        results = []
+        results = Nil()
         if self.results:
             results = self.results.expr
 
         if kind == 'method':
-            dtype = dtypes[0]
-            if isinstance(dtype, UnionType):
-                cls_instance = dtype.args[0]['datatype']
-            else:
-                cls_instance = dtype['datatype']
-            dtypes = dtypes[1:] # remove the attribut
-            return MethodHeader((cls_instance, self.name), dtypes, [] )
+            return MethodHeader(self.name, dtypes,
+                                  results=results,
+                                  is_static=is_static)
         else:
             return FunctionHeader(self.name,
                                   dtypes,
                                   results=results,
                                   is_static=is_static)
-
-class ClassHeaderStmt(BasicStmt):
-    """Base class representing a class header statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Header statement
-
-        name: str
-            class name
-        options: list, tuple
-            list of class options
-        """
-        self.name    = kwargs.pop('name')
-        self.options = kwargs.pop('options')
-
-        super(ClassHeaderStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        options = [str(i) for i in self.options]
-        return ClassHeader(self.name, options)
 
 
 class MetavarHeaderStmt(BasicStmt):
@@ -541,27 +609,36 @@ class FunctionMacroStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-hdr_classes = [Header, TypeHeader,
-               Type, ListType, UnionTypeStmt, FuncType,
+type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
+hdr_classes = [Header,
                ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,
-               ClassHeaderStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
                MacroStmt,
                MacroArg,
                MacroList,
-               FunctionMacroStmt,StringStmt]
+               FunctionMacroStmt, StringStmt]
 
 this_folder = dirname(__file__)
 
 # Get meta-model from language description
-grammar = join(this_folder, '../grammar/headers.tx')
+types_grammar = join(this_folder, '../grammar/types.tx')
+header_grammar = join(this_folder, '../grammar/headers.tx')
 
-meta = metamodel_from_file(grammar, classes=hdr_classes)
+types_meta = metamodel_from_file(types_grammar, classes=type_classes)
+register_language("types", metamodel=types_meta)
+
+with open(header_grammar, 'r', encoding="utf-8") as f:
+    grammar = f.read()
+with open(types_grammar, 'r', encoding="utf-8") as f:
+    grammar += f.read()
+
+meta = metamodel_from_str(grammar, classes=hdr_classes+type_classes)
+register_language("headers", metamodel=meta)
 
 def parse(filename=None, stmts=None):
     """ Parse header pragmas
@@ -607,7 +684,6 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
     print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
