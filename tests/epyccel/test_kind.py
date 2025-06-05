@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import platform
-from pyccel import epyccel
 import pytest
+from pyccel import epyccel
 
 def test_or_boolean(language):
     def or_bool(a : 'bool', b : 'bool'):
