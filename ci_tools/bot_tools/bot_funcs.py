@@ -109,17 +109,17 @@ class Bot:
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._source_repo = None
-        self._GAI = GitHubAPIInteractions()
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
         else:
             self._pr_id = int(pr_id)
         print("PR ID =", self._pr_id)
         if self._pr_id != 0:
-            self._pr_details = self._GAI.get_pr_details(pr_id)
-            print(self._pr_details)
+            GAI = GitHubAPIInteractions(self._repo)
+            self._pr_details = GAI.get_pr_details(pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
+        self._GAI = GitHubAPIInteractions(self._source_repo)
         if commit:
             self._ref = commit
             if '/' in self._ref:
@@ -388,7 +388,7 @@ class Bot:
             test = "installation"
             inputs["editable_string"] = "-e"
         print("Post workflow")
-        self._GAI.run_workflow(f'{test}.yml', inputs)
+        self._GAI.run_workflow(f'{test}.yml', self._pr_details["head"]["ref"], inputs)
 
     def mark_as_draft(self):
         """
