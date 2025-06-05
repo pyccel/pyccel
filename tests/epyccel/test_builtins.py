@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
+from typing import TypeVar
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
 import numpy as np
 
 from pyccel import epyccel
-from pyccel.decorators import template
 
 ATOL = 1e-15
 RTOL = 2e-14
@@ -17,6 +17,9 @@ max_int = iinfo(np.int32).max
 
 min_float = finfo(float).min
 max_float = finfo(float).max
+
+T = TypeVar('T', int, float)
+T2 = TypeVar('T2', int, float, complex)
 
 def test_abs_i(language):
     def f1(x : 'int'):
@@ -111,8 +114,7 @@ def test_min_2_args_f(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_3_args(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -150,8 +152,7 @@ def test_min_in_min(language):
     assert epyc_f(*int_args) == f(*int_args)
 
 def test_min_list(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -163,8 +164,7 @@ def test_min_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_tuple(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min((x, y, z))
 
     epyc_f = epyccel(f, language=language)
@@ -176,8 +176,7 @@ def test_min_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_list_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = [x, y, z]
         return min(w)
 
@@ -190,8 +189,7 @@ def test_min_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_tuple_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = (x, y, z)
         return min(w)
 
@@ -204,8 +202,7 @@ def test_min_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return min((x, y))+3, min(x, y)+4
 
     epyc_f = epyccel(f, language=language)
@@ -257,8 +254,7 @@ def test_max_2_args_f(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_3_args(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -270,8 +266,7 @@ def test_max_3_args(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_list(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -283,8 +278,7 @@ def test_max_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_tuple(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max((x, y, z))
 
     epyc_f = epyccel(f, language=language)
@@ -296,8 +290,7 @@ def test_max_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_list_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = [x, y, z]
         return max(w)
 
@@ -310,8 +303,7 @@ def test_max_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_tuple_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = (x, y, z)
         return max(w)
 
@@ -324,8 +316,7 @@ def test_max_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return max((x, y))+3, max(x, y)+4
 
     epyc_f = epyccel(f, language=language)
@@ -366,8 +357,7 @@ def test_max_temp_var_second_arg(language):
     )
 )
 def test_sum_matching_types(language):
-    @template('T',['int','float','complex'])
-    def f(x : 'T', y : 'T'):
+    def f(x : T2, y : T2):
         return sum([x, y])
 
     epyc_f = epyccel(f, language=language)
@@ -391,8 +381,7 @@ def test_sum_matching_types(language):
     )
 )
 def test_sum_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return sum((x, y))+3
 
     epyc_f = epyccel(f, language=language)
