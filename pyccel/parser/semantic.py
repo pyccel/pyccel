@@ -4900,7 +4900,12 @@ class SemanticParser(BasicParser):
             name = expr.scope.get_expected_name(expr.name)
             func = insertion_scope.functions.get(name, None)
             if func:
-                if func.is_semantic and not self.is_header_file:
+                if self.is_header_file:
+                    if isinstance(func, Interface):
+                        existing_semantic_funcs = [*func.functions]
+                    else:
+                        existing_semantic_funcs = [func]
+                elif func.is_semantic:
                     return EmptyNode()
                 else:
                     insertion_scope.functions.pop(name)
@@ -4923,7 +4928,7 @@ class SemanticParser(BasicParser):
             assert is_inline
             found_func = False
 
-        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
+        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
