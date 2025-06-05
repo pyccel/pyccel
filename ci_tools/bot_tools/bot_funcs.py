@@ -50,6 +50,8 @@ tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling', 'intel')
 
+pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
+
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 
 senior_reviewer = ['yguclu', 'EmilyBourne']
@@ -473,7 +475,7 @@ class Bot:
             return False
 
         if self.is_user_trusted(user):
-            states = self.run_tests(pr_test_keys)
+            states = self.run_tests(pr_test_keys_to_trigger)
 
             if 'failure' in states:
                 self.draft_due_to_failure()
