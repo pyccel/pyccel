@@ -22,6 +22,7 @@ class OmpPatchInfo(PatchInfo):
 
 @dataclass
 class OmpPatchRegistry(PatchRegistry):
+    """Registry for all omp patches applied to a single class"""
     patches: Dict[str, List[OmpPatchInfo]] = field(default_factory=dict)
     loaded_versions: List[float] = field(default_factory=list)
     """Registry for all patches applied to a single class"""

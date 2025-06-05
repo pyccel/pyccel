@@ -213,8 +213,7 @@ class OmpExpr(OmpNode):
     @property
     def value(self):
         """Returns the value of the expression"""
-        if self._value:
-            return self._value
+        return self._value
 
 
 class OmpScalarExpr(OmpExpr):

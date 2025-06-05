@@ -9,7 +9,6 @@ import modules.openmp as openmp
 from numpy import random
 from numpy import matmul
 from pyccel import epyccel
-from pyccel.utilities.plugins import Plugins
 #==============================================================================
 
 

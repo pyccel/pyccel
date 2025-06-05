@@ -69,6 +69,7 @@ class Plugin(ABC):
         return self.__class__.__name__
 
     def is_registered(self, target):
+        """Check if a target is registered with this plugin"""
         return any(registry.target is target for registry in self._patch_registries)
 
     def get_all_targets(self):
@@ -87,6 +88,7 @@ class Plugins(metaclass=Singleton):
         self.load_plugins(plugins_dir)
 
     def set_options(self, options, refresh=False):
+        """Set options for all plugins"""
         assert isinstance(options, dict)
         self._options = options
         plugins = self._plugins
@@ -155,6 +157,7 @@ class Plugins(metaclass=Singleton):
         return plugin_class()
 
     def unload_plugins(self):
+        """unload all plugins and unregister all their targets"""
         for plugin in self._plugins:
             self.unregister(plugin.get_all_targets(), (plugin,))
         self._plugins = []
@@ -175,6 +178,7 @@ class Plugins(metaclass=Singleton):
                 raise e
 
     def unregister(self, instances, plugins = ()):
+        """Unregister the given instances from the given plugins"""
         if not plugins:
             plugins = self._plugins
         for plugin in plugins:
@@ -185,8 +189,10 @@ class Plugins(metaclass=Singleton):
         return next((p for p in self._plugins if p.name == name), None)
 
     def get_plugins(self):
+        """Get all plugins"""
         return self._plugins
 
     def set_plugins(self, plugins):
+        """Set plugins instances"""
         self.unload_plugins()
         self._plugins = plugins

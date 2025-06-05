@@ -16,7 +16,7 @@ from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList, \
+from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpList, \
     OmpTxDirective, OmpTxEndDirective, OmpTxNode
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 
@@ -163,8 +163,7 @@ class SyntaxParser(ConfigMixin):
                 return instance._visit(directive)
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
-        else:
-            return method(line, expr)
+        return method(line, expr)
 
     @staticmethod
     def _visit(instance, stmt, method, cls=None):

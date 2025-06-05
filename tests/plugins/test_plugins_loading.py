@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import os
 from unittest.mock import patch
 
@@ -114,33 +114,33 @@ def test_openmp_register_refresh():
     file = os.path.join(path_dir, 'omp5_specific.py')
     plugins.set_options({'accelerators': ['openmp']})
     parser = SyntaxParser(file)
-    assert errors.has_warnings() == True
+    assert errors.has_warnings()
     errors.reset()
 
     # refresh is needed to patch with openmp 5.0
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
     parser._syntax_done = False
     parser.parse()
-    assert errors.has_warnings() == True
+    assert errors.has_warnings()
     errors.reset()
 
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0}, refresh=True)
     parser._syntax_done = False
     parser.parse()
-    assert errors.has_warnings() == False
+    assert not errors.has_warnings()
     errors.reset()
 
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 4.5})
     parser._syntax_done = False
     parser.parse()
-    assert errors.has_warnings() == True
+    assert errors.has_warnings()
     errors.reset()
 
     # no refresh is needed since openmp 5.0 is already patched with
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
     parser._syntax_done = False
     parser.parse()
-    assert errors.has_warnings() == False
+    assert not errors.has_warnings()
     errors.reset()
 
 
@@ -151,6 +151,7 @@ def test_openmp_same_version_refresh():
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     plugins.set_options({'accelerators': ['openmp']})
     parser = SyntaxParser(file)
+    parser.parse()
     with patch.object(plugins.get_plugin('Openmp'), '_apply_patches') as mock_apply_patches:
         plugins.set_options({'accelerators': ['openmp']}, refresh=True)
         assert mock_apply_patches.call_count == 0

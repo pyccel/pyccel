@@ -8,5 +8,5 @@ def declare_target(data : 'float[:]', n : 'int'):
     #$ omp target map(to: data) map(from: result)
     for i in range(n):
         x = i % 3
-        result[i] = data[i] * lookup_table[i]
+        result[i] = data[i] * lookup_table[x]
     #$ omp end target
