@@ -59,6 +59,7 @@ from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, 
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
+from pyccel.ast.operators     import PyccelNe
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -314,7 +315,7 @@ class CToPythonWrapper(Wrapper):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             type_check_condition = PyObject_TypeCheck(py_obj, python_cls_base.type_object)
         elif isinstance(dtype, StringType):
-            type_check_condition = PyUnicode_Check(py_obj)
+            type_check_condition = PyccelNe(PyUnicode_Check(py_obj), LiteralInteger(0))
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
@@ -324,7 +325,7 @@ class CToPythonWrapper(Wrapper):
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = FunctionDefResult(Variable(dtype, name = 'v')))
+                               results   = FunctionDefResult(Variable(PythonNativeBool(), name = 'v')))
 
             type_check_condition = func(py_obj)
         elif isinstance(arg.class_type, NumpyNDArrayType):
@@ -365,7 +366,7 @@ class CToPythonWrapper(Wrapper):
                         + PYCCEL_RESTRICTION_TODO, symbol=arg, severity='fatal')
 
             # Check if the object is a set
-            type_check = check_funcs[arg.class_type.name](py_obj)
+            type_check = PyccelNe(check_funcs[arg.class_type.name](py_obj), LiteralInteger(0))
 
             # If the set is an object check that the elements have the right type
             for_scope = self.scope.create_new_loop_scope()
@@ -2033,7 +2034,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
-            else:
+            elif not f.is_inline:
                 wrapped_class.add_new_method(self._wrap(f))
 
         for i in expr.interfaces:

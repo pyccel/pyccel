@@ -191,7 +191,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private:
+        if expr.is_private or expr.is_inline:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
@@ -680,7 +680,7 @@ class FortranToCWrapper(Wrapper):
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
-        interfaces = [self._wrap(i) for i in expr.interfaces]
+        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
 
         if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
             errors.report("Tuples cannot yet be exposed to Python.",

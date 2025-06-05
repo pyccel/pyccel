@@ -62,6 +62,15 @@ jobs:
       matrix: ${{fromJson(needs.Python_version_picker.outputs.matrix)}}
 
     steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**"]'
+          paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '["push"]'
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
@@ -78,8 +87,10 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py installation
       - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: installation
         run: |
           python -m pip install --upgrade pip
@@ -87,17 +98,23 @@ jobs:
           python -m pip install ${{ matrix.editable_string }} .
         shell: bash
       - name: Check for STC installation
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: stc_check
         uses: ./.github/actions/check_for_stc
         with:
           not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True'}}"
       - name: Check for gFTL installation
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: gFTL_check
         uses: ./.github/actions/check_for_gftl
         with:
           not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True' }}"
       - name: "Post completed"
-        if: always() && github.event_name != 'push'
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python ci_tools/basic_json_check_output.py --statuses ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
           python ci_tools/complete_check_run.py ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'

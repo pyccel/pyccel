@@ -1,5 +1,4 @@
-from typing import Final
-from pyccel.decorators import template
+from typing import Final, TypeVar
 from numpy import float64
 from typing import overload
 

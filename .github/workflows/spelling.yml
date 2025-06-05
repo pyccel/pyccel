@@ -15,6 +15,12 @@ on:
       pr_repo:
         required: false
         type: string
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -22,11 +28,13 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
 
 jobs:
   Spelling:
     runs-on: ubuntu-latest
-    name: Documentation spellcheck
+    name: Documentation spellcheck (spelling, ${{ inputs.python_version || '3.12' }})
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
       - uses: actions/checkout@v4
@@ -34,11 +42,12 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           submodules: true
-      - name: Set up Python ${{ inputs.python_version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: "Setup"
+        if: github.event_name != 'pull_request'
         id: token
         run: |
           pip install jwt requests
@@ -68,6 +77,6 @@ jobs:
         with:
           config: ./.typos.toml
       - name: "Post completed"
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run:
           python ci_tools/complete_check_run.py ${{ steps.spelling.outcome }} ${{ steps.manual_spelling.outcome }}
