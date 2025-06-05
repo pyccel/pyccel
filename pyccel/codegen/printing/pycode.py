@@ -15,7 +15,7 @@ from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, 
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.core       import Interface, FunctionDefArgument
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
-from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType
+from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals  import PyccelSymbol
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
@@ -405,9 +405,11 @@ class PythonCodePrinter(CodePrinter):
                 func.rename(expr.name)
             func_def_code.append(self._print(func))
 
-        # Split functions after declaration to ignore type declaration differences
-        bodies = {}
+        # Find all the arguments which lead to the same code snippet.
+        # In Python the code is often the same for arguments of different types
+        bodies : dict[str, list[list[PyccelType]]] = {}
         for f,c in zip(expr.functions, func_def_code):
+            # Split functions after declaration to ignore type declaration differences
             b = c.split(':\n',1)[1]
             bodies.setdefault(b, []).append([a.var.class_type for a in f.arguments])
 
