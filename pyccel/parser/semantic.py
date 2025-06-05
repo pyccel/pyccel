@@ -4911,6 +4911,7 @@ class SemanticParser(BasicParser):
                     insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
+            expr.invalidate_node()
             expr = expr.syntactic_node
             name = expr.scope.get_expected_name(expr.name)
 
