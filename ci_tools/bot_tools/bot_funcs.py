@@ -115,7 +115,8 @@ class Bot:
             self._pr_id = int(pr_id)
         print("PR ID =", self._pr_id)
         if self._pr_id != 0:
-            self._pr_details = self._GAI.get_pr_details(pr_id)
+            GAI = GitHubAPIInteractions(self._repo)
+            self._pr_details = GAI.get_pr_details(pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
         self._GAI = GitHubAPIInteractions(self._source_repo)
