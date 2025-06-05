@@ -116,8 +116,14 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
+      - name: Collect pre-existing coverage information
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-artifact-${{ matrix.python_version }}
+          path: .coverage
+          run-id: ${{ fromJSON(steps.duplicate_check.outputs.skipped_by).id }}
+          github-token: ${{ github.token }}
       - name: Save code coverage report
-        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-artifact-${{ matrix.python_version }}
@@ -125,6 +131,10 @@ jobs:
           retention-days: 3
           include-hidden-files: true
       - name: "Post completed"
-        if: always() && github.event_name != 'push'
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'

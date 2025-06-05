@@ -2339,7 +2339,10 @@ class SemanticParser(BasicParser):
                 class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
-                dtype = numpy_process_dtype(dtype_cls.static_type())
+                try:
+                    dtype = numpy_process_dtype(dtype_cls.static_type())
+                except AttributeError:
+                    errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
                 class_type = NumpyNDArrayType(dtype, rank, order)
             return VariableTypeAnnotation(class_type)
 
@@ -3198,9 +3201,7 @@ class SemanticParser(BasicParser):
 
         if var is None and self._in_annotation:
             var = numpy_funcs.get(name, None)
-            if name == 'real':
-                var = numpy_funcs['float']
-            elif name == '*':
+            if name == '*':
                 return GenericType()
 
         if var is None and name in self._context_dict:
@@ -3331,7 +3332,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
-            class_type = dtype_cls.static_type()
+            try:
+                class_type = dtype_cls.static_type()
+            except AttributeError:
+                errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
             return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if order and order != visited_dtype.class_type.order:
