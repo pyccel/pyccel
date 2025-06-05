@@ -802,7 +802,7 @@ class PythonCodePrinter(CodePrinter):
                 # or the original name from the import
                 target = [AsName(i.object, import_target_swap[source].get(i.local_alias,i.local_alias)) for i in target]
 
-            target = list(set(target))
+            target = list(dict.fromkeys(target))
             if source in pyccel_builtin_import_registry:
                 self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
                                         for t in target if not isinstance(t.object, VariableTypeAnnotation) and \

@@ -1,12 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import numpy as np
-from pyccel.decorators import inline, template
+from pyccel.decorators import inline
 
 pi = 3.14159
 
+T = TypeVar('T', int, float)
+
+S = TypeVar('S', 'int8[:]','int8[:,:]','int8[:,:,:]','int8[:,:,:,:]','int8[:,:,:,:,:]','int8[:,:,:,:,:,:]',
+                 'int16[:]','int16[:,:]','int16[:,:,:]','int16[:,:,:,:]','int16[:,:,:,:,:]','int16[:,:,:,:,:,:]',
+                 'int32[:]','int32[:,:]','int32[:,:,:]','int32[:,:,:,:]','int32[:,:,:,:,:]','int32[:,:,:,:,:,:]',
+                 'int64[:]','int64[:,:]','int64[:,:,:]','int64[:,:,:,:]','int64[:,:,:,:,:]','int64[:,:,:,:,:,:]',
+                 'float32[:]','float32[:,:]','float32[:,:,:]','float32[:,:,:,:]','float32[:,:,:,:,:]','float32[:,:,:,:,:,:]',
+                 'float64[:]','float64[:,:]','float64[:,:,:]','float64[:,:,:,:]','float64[:,:,:,:,:]','float64[:,:,:,:,:,:]')
+
 @inline
-@template(name='T', types=['int', 'float'])
-def add(a:'T',b:'T'):
+def add(a : T, b : T):
     return a+b
 
 @inline
@@ -41,13 +50,7 @@ def positron_charge():
     return -not_inline()
 
 @inline
-@template(name='T',types=['int8[:]','int8[:,:]','int8[:,:,:]','int8[:,:,:,:]','int8[:,:,:,:,:]','int8[:,:,:,:,:,:]',\
-                           'int16[:]','int16[:,:]','int16[:,:,:]','int16[:,:,:,:]','int16[:,:,:,:,:]','int16[:,:,:,:,:,:]',\
-                           'int32[:]','int32[:,:]','int32[:,:,:]','int32[:,:,:,:]','int32[:,:,:,:,:]','int32[:,:,:,:,:,:]',\
-                           'int64[:]','int64[:,:]','int64[:,:,:]','int64[:,:,:,:]','int64[:,:,:,:,:]','int64[:,:,:,:,:,:]',\
-                           'float32[:]','float32[:,:]','float32[:,:,:]','float32[:,:,:,:]','float32[:,:,:,:,:]','float32[:,:,:,:,:,:]',\
-                           'float64[:]','float64[:,:]','float64[:,:,:]','float64[:,:,:,:]','float64[:,:,:,:,:]','float64[:,:,:,:,:,:]'])
-def add2(a : 'T', b : 'T', c:'T'):
+def add2(a : S, b : S, c : S):
     c[...] = a+b
 
 if __name__ == '__main__':

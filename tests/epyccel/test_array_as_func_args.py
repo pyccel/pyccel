@@ -3,18 +3,19 @@ This test file is made for testing the functionality of passing numpy arrays
 in the function arguments.
 """
 # pylint: disable=missing-function-docstring
+from typing import TypeVar
 import numpy as np
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
-from pyccel.decorators import template
 
 int_types = ['int8', 'int16', 'int32', 'int64']
 float_types = ['float32', 'float64']
+complex_types = ['complex64', 'complex128']
 
 def test_array_int_1d_scalar_add(language):
-    @template('T', ['int8', 'int16', 'int32', 'int64'])
-    def array_int_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
+    T = TypeVar('T', 'int8', 'int16', 'int32', 'int64')
+    def array_int_1d_scalar_add(x : 'T[:]', a : T, x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_int_1d_scalar_add
@@ -32,8 +33,8 @@ def test_array_int_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_add(language):
-    @template('T', ['float32', 'float'])
-    def array_float_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
+    T = TypeVar('T', 'float32', 'float')
+    def array_float_1d_scalar_add(x : 'T[:]', a : T, x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_float_1d_scalar_add
@@ -51,8 +52,8 @@ def test_array_float_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_complex_1d_scalar_add(language):
-    @template('T', ['complex64', 'complex128'])
-    def array_complex_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
+    T = TypeVar('T', 'complex64', 'complex128')
+    def array_complex_1d_scalar_add(x : 'T[:]', a : T, x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_complex_1d_scalar_add
@@ -72,8 +73,8 @@ def test_array_complex_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_int_2d_scalar_add(language):
-    @template('T', ['int8', 'int16', 'int32', 'int64'])
-    def array_int_2d_scalar_add( x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
+    T = TypeVar('T', 'int8', 'int16', 'int32', 'int64')
+    def array_int_2d_scalar_add( x : 'T[:,:]', a : T, d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
@@ -93,8 +94,8 @@ def test_array_int_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_float_2d_scalar_add(language):
-    @template('T', ['float32', 'float'])
-    def array_float_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
+    T = TypeVar('T', 'float32', 'float')
+    def array_float_2d_scalar_add(x : 'T[:,:]', a : T, d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
@@ -114,8 +115,8 @@ def test_array_float_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_complex_2d_scalar_add(language):
-    @template('T', ['complex64', 'complex128'])
-    def array_complex_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
+    T = TypeVar('T', 'complex64', 'complex128')
+    def array_complex_2d_scalar_add(x : 'T[:,:]', a : T, d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
