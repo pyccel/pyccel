@@ -1170,11 +1170,11 @@ class CCodePrinter(CodePrinter):
         return '0'
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = [f'(self._print(a)})' if isinstance(a, PyccelOperator) else self._print(a) for a in expr.args]
         return ' && '.join(a for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = [f'(self._print(a)})' if isinstance(a, PyccelOperator) else self._print(a) for a in expr.args]
         return ' || '.join(a for a in args)
 
     def _print_PyccelEq(self, expr):
