@@ -62,13 +62,18 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
 
     Returns
     -------
-    str
-        Absolute path of the given module_name.
+    filename : pathlib.Path
+        Absolute path to the Python file being imported.
+    stashed_filename : pathlib.Path
+        Absolute path to the .pyi version of the Python file being imported.
+        If none exists then the absolute path to the Python file being imported.
 
     Raises
     ------
     PyccelError
         Error raised when the module_name cannot be found.
+        Error raised when the file imports a file that has not been translated.
+        Error raised when the file imports a file that has been changed since its last translation.
     """
 
     if (isinstance(module_name, AsName)):
@@ -113,10 +118,10 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     # Look for .pyi or .pyh files in pyccel
     # Header files take priority in case .py files exist so files can run in Python
     if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
-        abs_pyi_fname = str(filename_pyi.absolute())
+        abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
     elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
-        abs_pyh_fname = str(filename_pyh.absolute())
+        abs_pyh_fname = filename_pyh.absolute()
         return abs_pyh_fname, abs_pyh_fname
     # Look for Python files which should have been translated once
     elif filename_py.exists():
@@ -129,15 +134,15 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
         if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
             errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
                     symbol=module_name, severity='fatal')
-        return str(filename_py.absolute()), stashed_file.absolute().resolve()
+        return filename_py.absolute(), str(stashed_file.absolute().resolve())
     # Look for user-defined .pyi of .pyh files
     elif filename_pyi.exists():
-        abs_pyi_fname = str(filename_pyi.absolute())
+        abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
     elif filename_pyh.exists():
         warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
                 "Please use a .pyi file instead.", FutureWarning)
-        abs_pyh_fname = str(filename_pyh.absolute())
+        abs_pyh_fname = filename_pyh.absolute()
         return abs_pyh_fname, abs_pyh_fname
     else:
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
