@@ -133,7 +133,7 @@ class CompileObj:
 
         self._prog_target = rel_mod_name
         if sys.platform == "win32":
-            self._prog_target += '.exe'
+            self._prog_target.with_suffix('.exe')
 
         self._lock_target = FileLock(self.module_target.with_suffix(
                                         self.module_target.suffix+'.lock'))
