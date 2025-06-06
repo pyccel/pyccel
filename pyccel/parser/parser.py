@@ -255,6 +255,8 @@ class Parser(object):
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:
+            filename = str(filename)
+
             if verbose:
                 print ('>>> treating :: ', filename)
 
@@ -273,7 +275,7 @@ class Parser(object):
         # link self to its sons
         for source in imports:
             filename,_ = source_to_filename[source]
-            son = d_parsers_by_filename[filename]
+            son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
             d_parsers[source] = son
