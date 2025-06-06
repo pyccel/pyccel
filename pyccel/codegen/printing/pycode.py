@@ -234,25 +234,33 @@ class PythonCodePrinter(CodePrinter):
             The code which describes the function signature.
         """
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
+        if func.is_inline:
+            if interface:
+                assert len(interface) == 1
+                interf = interface[0]
+                if func is interf.functions[0]:
+                    return self._print(interf)
+                else:
+                    return ''
+            else:
+                return self._print(func)
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
         else:
             overload = ''
-        if func.is_inline:
-            return overload + self._print(func)
+
+        self.set_scope(func.scope)
+        args = ', '.join(self._print(a) for a in func.arguments)
+        result = func.results
+        body = '...'
+        if result:
+            res = f' -> {self._get_type_annotation(result.var)}'
         else:
-            self.set_scope(func.scope)
-            args = ', '.join(self._print(a) for a in func.arguments)
-            result = func.results
-            body = '...'
-            if result:
-                res = f' -> {self._get_type_annotation(result.var)}'
-            else:
-                res = ' -> None'
-            name = self.scope.get_python_name(interface[0].name if interface else func.name)
-            self.exit_scope()
-            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
+            res = ' -> None'
+        name = self.scope.get_python_name(interface[0].name if interface else func.name)
+        self.exit_scope()
+        return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
 
     def _handle_decorators(self, decorators):
         """
