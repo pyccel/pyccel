@@ -361,7 +361,7 @@ def execute_pyccel(fname, *,
                 deps[mod_base] = CompileObj(mod_base,
                                     folder          = mod_folder,
                                     libs            = compile_libs,
-                                    has_target_file = parser.metavars.get('no_target',False))
+                                    has_target_file = not parser.metavars.get('no_target',False))
 
         # Proceed recursively
         for son in parser.sons:
