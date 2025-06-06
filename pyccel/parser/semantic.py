@@ -5152,9 +5152,9 @@ class SemanticParser(BasicParser):
                                                                  if isinstance(a, DottedVariable) else [a])]
 
             # ... computing inout arguments
-            # for a in arguments:
-            #     if a.var not in all_assigned and expr.name not in ('__del__', '__init__'):
-            #         a.make_const()
+            for a in arguments:
+                if a.var not in all_assigned and expr.name not in ('__del__', '__init__'):
+                    a.make_const()
             # ...
             # Raise an error if one of the return arguments is an alias.
             pointer_targets = self._pointer_targets.pop()
