@@ -123,6 +123,10 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
         abs_pyh_fname = filename_pyh.absolute()
         return abs_pyh_fname, abs_pyh_fname
+    elif filename_py.exists() and pyccel_folder in filename_pyh.parents:
+        # External files are pure Python
+        abs_py_fname = filename_py.absolute()
+        return abs_py_fname, abs_py_fname
     # Look for Python files which should have been translated once
     elif filename_py.exists():
         rel_path = os.path.relpath(filename_py.parent, input_folder_name)
