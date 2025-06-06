@@ -11,15 +11,18 @@ __all__ = ["Complexity"]
 
 # ...
 class Complexity(object):
-    """Abstract class for complexity computation."""
+    """
+    Abstract class for complexity computation.
+
+    Abstract class for complexity computation.
+
+    Parameters
+    ----------
+    filename_or_text : str
+        Name of the file containing the abstract grammar or input code to
+        parse as a string.
+    """
     def __init__(self, filename_or_text):
-        """Constructor for the Complexity class.
-
-        filename_or_text: str
-            name of the file containing the abstract grammar or input code to
-            parse as a string.
-        """
-
         pyccel = Parser(filename_or_text, os.getcwd())
         self._ast = pyccel.parse()
         settings = {}
