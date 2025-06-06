@@ -302,8 +302,8 @@ def execute_pyccel(fname, *,
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
-    compile_libs.extend(son.metavars['libraries'] for son in parser.sons \
-                        if son.metavars.get('ignore_at_import',False))
+    compile_libs.extend(l for son in parser.sons if son.metavars.get('ignore_at_import',False) \
+                        for l in parser.metavars.get('libraries', '').split(',') if l)
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
@@ -356,7 +356,7 @@ def execute_pyccel(fname, *,
         if parser.compile_obj:
             deps[mod_base] = parser.compile_obj
         elif mod_base not in deps:
-            compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
+            compile_libs = parser.metavars.get('libraries', '').split(',')
             if not parser.metavars.get('ignore_at_import',False):
                 deps[mod_base] = CompileObj(mod_base,
                                     folder          = mod_folder,
