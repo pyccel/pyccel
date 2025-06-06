@@ -34,7 +34,7 @@ def test_codegen(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, os.getcwd())
     ast = pyccel.parse()
 
     # Assert syntactic success

@@ -19,7 +19,7 @@ def test_syntax(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, os.getcwd())
     pyccel.parse()
 
     # Assert syntactic success

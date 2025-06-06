@@ -31,7 +31,7 @@ def get_files_from_folder(foldername):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f)
+#    pyccel = Parser(f, os.getcwd())
 #
 #    ast = pyccel.parse()
 #
@@ -45,7 +45,7 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, os.getcwd())
     pyccel.parse()
 
     settings = {}
@@ -61,7 +61,7 @@ def test_semantic_warnings(f):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f)
+#    pyccel = Parser(f, os.getcwd())
 #    ast = pyccel.parse()
 #
 #    settings = {}
