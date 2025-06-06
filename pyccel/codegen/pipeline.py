@@ -355,12 +355,12 @@ def execute_pyccel(fname, *,
             deps[mod_base] = parser.compile_obj
         elif mod_base not in deps:
             compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
-            no_target = parser.metavars.get('no_target',False) or \
-                    parser.metavars.get('ignore_at_import',False)
-            deps[mod_base] = CompileObj(mod_base,
-                                folder          = mod_folder,
-                                libs            = compile_libs,
-                                has_target_file = not no_target)
+            assert not parser.metavars.get('ignore_at_import',False) or len(compile_libs) == 0
+            if not parser.metavars.get('ignore_at_import',False):
+                deps[mod_base] = CompileObj(mod_base,
+                                    folder          = mod_folder,
+                                    libs            = compile_libs,
+                                    has_target_file = parser.metavars.get('no_target',False))
 
         # Proceed recursively
         for son in parser.sons:
