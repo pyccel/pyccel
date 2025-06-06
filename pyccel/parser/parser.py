@@ -35,7 +35,7 @@ class Parser(object):
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, context_dict = None, **kwargs):
+    def __init__(self, filename, context_dict = None, original_filename = None, **kwargs):
 
         filename = Path(filename)
         self._filename = filename
@@ -55,9 +55,12 @@ class Parser(object):
 
         self._context_dict = context_dict
 
-        self._input_folder = filename.parent
-        if filename.suffix == '.pyi' and self._input_folder.name.startswith('__pyccel__'):
-            self._input_folder = self._input_folder.parent
+        self._original_filename = Path(original_filename or filename)
+
+        self._input_folder = self._original_filename.parent
+        self._wk_folder = Path(filename).parent
+        if filename.suffix == '.pyi' and self._wk_folder.name.startswith('__pyccel__'):
+            self._wk_folder = self._wk_folder.parent
 
     @property
     def semantic_parser(self):
@@ -243,10 +246,10 @@ class Parser(object):
         """
 
         imports     = self.imports
-        source_to_filename = {i: get_filename_from_import(i, self._input_folder) for i in imports}
+        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._wk_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
-        for filename in not_treated:
+        for filename, stashed_filename in not_treated:
             if verbose:
                 print ('>>> treating :: ', filename)
 
@@ -254,14 +257,14 @@ class Parser(object):
             if filename in d_parsers_by_filename:
                 q = d_parsers_by_filename[filename]
             else:
-                q = Parser(filename)
+                q = Parser(stashed_filename, original_filename = filename)
             q.parse(d_parsers_by_filename=d_parsers_by_filename)
             d_parsers_by_filename[filename] = q
 
         d_parsers = {}
         # link self to its sons
         for source in imports:
-            filename = source_to_filename[source]
+            filename,_ = source_to_filename[source]
             son = d_parsers_by_filename[filename]
             son.append_parent(self)
             self.append_son(son)
