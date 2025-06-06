@@ -1171,13 +1171,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelAnd(self, expr):
         args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
-                                        not isinstance(arg, PyccelAssociativeParenthesis) \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
                     else self._print(a) for a in expr.args]
         return ' && '.join(a for a in args)
 
     def _print_PyccelOr(self, expr):
         args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
-                                        not isinstance(arg, PyccelAssociativeParenthesis) \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
                     else self._print(a) for a in expr.args]
         return ' || '.join(a for a in args)
 
