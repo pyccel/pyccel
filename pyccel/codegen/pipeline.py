@@ -215,7 +215,7 @@ def execute_pyccel(fname, *,
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, context_dict = context_dict)
+        parser = Parser(pymod_filepath, folder, context_dict = context_dict)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)

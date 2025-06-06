@@ -27,15 +27,22 @@ class Parser(object):
     filename : str
         The name of the file being translated.
 
+    wk_folder : str
+        The output folder for the generated file.
+
     context_dict : dict, optional
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
+
+    original_filename : str, optional
+        The name of the original Python file. This won't match the filename if the filename is a
+        stashed .pyi file.
 
     **kwargs : dict
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, context_dict = None, original_filename = None, **kwargs):
+    def __init__(self, filename, wk_folder, context_dict = None, original_filename = None, **kwargs):
 
         filename = Path(filename)
         self._filename = filename
@@ -58,9 +65,7 @@ class Parser(object):
         self._original_filename = Path(original_filename or filename)
 
         self._input_folder = self._original_filename.parent
-        self._wk_folder = Path(filename).parent
-        if filename.suffix == '.pyi' and self._wk_folder.name.startswith('__pyccel__'):
-            self._wk_folder = self._wk_folder.parent
+        self._wk_folder = wk_folder
 
     @property
     def semantic_parser(self):
@@ -257,7 +262,10 @@ class Parser(object):
             if filename in d_parsers_by_filename:
                 q = d_parsers_by_filename[filename]
             else:
-                q = Parser(stashed_filename, original_filename = filename)
+                q_wk_folder = stashed_filename.parent
+                if stashed_filename.suffix == '.pyi' and q_wk_folder.name.startswith('__pyccel__'):
+                    q_wk_folder = q_wk_folder.parent
+                q = Parser(stashed_filename, q_wk_folder, original_filename = filename)
             q.parse(d_parsers_by_filename=d_parsers_by_filename)
             d_parsers_by_filename[filename] = q
 
