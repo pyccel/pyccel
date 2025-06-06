@@ -60,6 +60,10 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     input_folder_name : str
         Relative path of the folder which should be searched for the module_name.
 
+    wk_folder_name : str
+        The name of the folder where the output of the translation of the module
+        from which we are searching was printed.
+
     Returns
     -------
     filename : pathlib.Path
