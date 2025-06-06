@@ -143,7 +143,7 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
             errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
                     symbol=module_name, severity='fatal')
         return filename_py.absolute(), stashed_file.absolute().resolve()
-    # Look for user-defined .pyi of .pyh files
+    # Look for user-defined .pyi or .pyh files
     elif filename_pyi.exists():
         abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
