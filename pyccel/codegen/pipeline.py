@@ -356,7 +356,7 @@ def execute_pyccel(fname, *,
         if parser.compile_obj:
             deps[mod_base] = parser.compile_obj
         elif mod_base not in deps:
-            compile_libs = parser.metavars.get('libraries', '').split(',')
+            compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
             if not parser.metavars.get('ignore_at_import',False):
                 deps[mod_base] = CompileObj(mod_base,
                                     folder          = mod_folder,
