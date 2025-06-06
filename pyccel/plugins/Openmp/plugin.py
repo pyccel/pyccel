@@ -11,8 +11,13 @@ from pyccel.plugins.Openmp import openmp_4_5
 from pyccel.plugins.Openmp import openmp_5_0
 from pyccel.utilities.plugins import Plugin, PatchRegistry, PatchInfo
 
-errors = Errors()
+__all__ = (
+    "OmpPatchInfo",
+    "OmpPatchRegistry",
+    "Openmp",
+)
 
+errors = Errors()
 
 @dataclass
 class OmpPatchInfo(PatchInfo):

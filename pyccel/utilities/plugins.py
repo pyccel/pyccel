@@ -10,6 +10,13 @@ from pyccel.errors.errors import Errors
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.errors.messages import PLUGIN_DIRECTORY_NOT_FOUND
 
+__all__ = (
+    "PatchInfo",
+    "PatchRegistry",
+    "Plugin",
+    "Plugins",
+)
+
 errors = Errors()
 
 
