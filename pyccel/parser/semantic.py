@@ -4902,10 +4902,9 @@ class SemanticParser(BasicParser):
             if func:
                 if func.is_semantic:
                     if self.is_header_file:
-                        if isinstance(func, Interface):
-                            existing_semantic_funcs = [*func.functions]
-                        else:
-                            existing_semantic_funcs = [func]
+                        # Only Interfaces should be revisited in a header file
+                        assert isinstance(func, Interface)
+                        existing_semantic_funcs = [*func.functions]
                     else:
                         return EmptyNode()
                 else:
