@@ -303,7 +303,7 @@ def execute_pyccel(fname, *,
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
     compile_libs.extend(l for son in parser.sons if son.metavars.get('ignore_at_import',False) \
-                        for l in parser.metavars.get('libraries', '').split(',') if l)
+                        for l in son.metavars.get('libraries', '').split(',') if l)
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
