@@ -5504,37 +5504,13 @@ class SemanticParser(BasicParser):
 
         f_name = expr.master
         header = self.get_headers(f_name)
-        if not header:
-            func = self.scope.find(f_name, 'functions')
-            if func is None:
-                errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                    symbol=f_name,severity='error',
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
-        else:
-            interfaces = []
-            for hd in header:
-                for i,_ in enumerate(hd.dtypes):
-                    self.scope.insert_symbol(f'arg_{i}')
-                pyccel_stage.set_stage('syntactic')
-                syntactic_args = [AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg) \
-                        for i, arg in enumerate(hd.dtypes)]
-                pyccel_stage.set_stage('semantic')
-                arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
-
-                if hd.results:
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
-                            for i, arg in enumerate(hd.results)]
-                    pyccel_stage.set_stage('semantic')
-                    results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
-                else:
-                    results = FunctionDefResult(Nil())
-
-                interfaces.append(FunctionDef(f_name, arguments, [], results))
-
-            # TODO -> Said: must handle interface
-
-            func = interfaces[0]
+        func = self.scope.find(f_name, 'functions')
+        if func is None:
+            errors.report(MACRO_MISSING_HEADER_OR_FUNC,
+                symbol=f_name,severity='error',
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+        if not func.is_semantic:
+            func = self._annotate_the_called_function_def(func, expr.master_arguments)
 
         name = expr.name
         args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
