@@ -12,6 +12,7 @@ from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
+from pyccel.ast.typingext import TypingTypeVar
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
@@ -780,6 +781,26 @@ class Scope(object):
         imports = list(self._imports['imports'].keys())
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
+
+    def collect_all_type_vars(self):
+        """
+        Collect all TypeVar objects which are available in this scope.
+
+        Collect all TypeVar objects which are available in this scope. This includes
+        TypeVars declared in parent scopes.
+
+        Returns
+        -------
+        list[TypeVar]
+            A list of TypeVars in the scope.
+        """
+        type_vars = {n:t for n,t in self.symbolic_aliases.items() if isinstance(t, TypingTypeVar)}
+        if self.parent_scope:
+            parent_type_vars = self.parent_scope.collect_all_type_vars()
+            parent_type_vars.update(type_vars)
+            return parent_type_vars
+        else:
+            return type_vars
 
     def update_parent_scope(self, new_parent, is_loop, name = None):
         """ Change the parent scope
