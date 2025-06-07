@@ -4950,7 +4950,8 @@ class SemanticParser(BasicParser):
         n_type_var_combinations = len(possible_combinations)
 
         argument_combinations = []
-        for p in possible_combinations:
+        type_var_indices = []
+        for i,p in enumerate(possible_combinations):
             scope = self.create_new_function_scope(expr.name, '_', decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
@@ -4959,6 +4960,7 @@ class SemanticParser(BasicParser):
                 self.scope.insert_symbolic_alias(n, dtype)
             args = list(product(*[self._visit(a) for a in expr.arguments]))
             argument_combinations.extend(args)
+            type_var_indices.extend([i]*len(args))
             self.exit_function_scope()
 
         # this for the case of a function without arguments => no headers
@@ -4966,12 +4968,12 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = len(argument_combinations) > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-        for tmpl_idx, arguments in enumerate(argument_combinations):
+        for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if function_call_args is not None and found_func:
                 break
 
             if is_interface:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
+                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
             insertion_scope.python_names[name] = expr.name
 
@@ -4981,6 +4983,9 @@ class SemanticParser(BasicParser):
                     symbolic_aliases = expr.scope.symbolic_aliases)
 
             self.scope.decorators.update(decorators)
+
+            for n, dtype in zip(used_type_vars, possible_combinations[type_var_idx]):
+                self.scope.insert_symbolic_alias(n, dtype)
 
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
