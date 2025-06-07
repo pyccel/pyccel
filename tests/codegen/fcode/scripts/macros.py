@@ -73,7 +73,7 @@ k2d1(3,5)
 # ... macros with results
 a1 = zeros(4, 'int')
 b1 = zeros(4, 'int')
-b1 = __h(a1) #pylint:disable=undefined-variable
+b1 = __f(a1) #pylint:disable=undefined-variable
 # ...
 
 print('hello world')
