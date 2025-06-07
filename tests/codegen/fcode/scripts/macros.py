@@ -21,7 +21,7 @@ def f2(x : 'int[:]'):
 #           2d case
 # .....................................
 #$ header macro __f2d(x) := f2d(x.shape, x)
-def f2d(nm : 'tuple[int, int]', a : 'int[:,:]'):
+def f2d(nm : 'tuple[int, ...]', a : 'int[:,:]'):
     for i in range(0, nm[0]):
         for j in range(0, nm[1]):
             a[i,j] = i*j
