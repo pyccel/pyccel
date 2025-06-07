@@ -10,7 +10,6 @@ from pyccel.ast.bind_c    import BindCVariable
 from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
-from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
@@ -460,37 +459,6 @@ class Scope(object):
             name = name.name[-1]
 
         self._locals['macros'][name] = macro
-
-    def insert_template(self, expr):
-        """append the scope's templates with the given template"""
-        self._locals['templates'][expr.name] = expr
-
-    def insert_header(self, expr):
-        """
-        Add a header to the current scope.
-
-        Add a header describing a function, method or class to
-        the current scope.
-
-        Parameters
-        ----------
-        expr : pyccel.ast.Header
-            The header description.
-
-        Raises
-        ------
-        TypeError
-            Raised if the header type is unknown.
-        """
-        if isinstance(expr, (FunctionHeader, MethodHeader, FunctionHeaderStmt)):
-            if expr.name in self.headers:
-                self.headers[expr.name].append(expr)
-            else:
-                self.headers[expr.name] = [expr]
-        else:
-            msg = 'header of type{0} is not supported'
-            msg = msg.format(str(type(expr)))
-            raise TypeError(msg)
 
     def insert_symbol(self, symbol):
         """

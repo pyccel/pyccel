@@ -55,7 +55,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
+from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
