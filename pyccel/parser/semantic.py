@@ -3170,11 +3170,13 @@ class SemanticParser(BasicParser):
         var = self.scope.find(expr.name, 'variables', local_only = True)
         if var is not None and not any(isinstance(n, FunctionDefResult) for n in var.get_all_user_nodes()):
             errors.report("Variable has been declared multiple times",
-                    symbol=expr, severity='error')
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='error')
 
         if expr.annotation is None:
             errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=expr, severity='fatal')
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='fatal')
 
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
@@ -3182,7 +3184,8 @@ class SemanticParser(BasicParser):
 
         if len(types.type_list) == 0:
             errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=expr, severity='fatal')
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='fatal')
 
         python_name = expr.name
         # Get the collisionless name from the scope
