@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import zeros
 
 # .....................................
@@ -15,11 +15,9 @@ def f1(n):
     x = zeros(n, 'int')
     __f(x)
 
-# TODO not working yet, x is intent(inout)
-#      but it is not inferred as inout
 #$ header function f2(int [:])
 def f2(x):
-    __f(x)
+    __f(x) # pylint: disable=undefined-variable
 # .....................................
 
 # .....................................
