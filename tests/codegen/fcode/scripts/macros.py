@@ -4,48 +4,39 @@ from numpy import zeros
 # .....................................
 #           1d case
 # .....................................
-#$ header function f(int, int [:])
 #$ header macro __f(x) := f(x.shape, x)
-def f(n, a):
+def f(n : int, a : 'int[:]'):
     for i in range(0, n):
         a[i] = i
 
-#$ header function f1(int)
-def f1(n):
+def f1(n : int):
     x = zeros(n, 'int')
     __f(x)
 
-#$ header function f2(int [:])
-def f2(x):
+def f2(x : 'int[:]'):
     __f(x) # pylint: disable=undefined-variable
 # .....................................
 
 # .....................................
 #           2d case
 # .....................................
-#$ header function f2d(int [:], int [:,:])
 #$ header macro __f2d(x) := f2d(x.shape, x)
-def f2d(nm, a):
+def f2d(nm : 'tuple[int, int]', a : 'int[:,:]'):
     for i in range(0, nm[0]):
         for j in range(0, nm[1]):
             a[i,j] = i*j
 
-# TODO not working yet
-#      gfortran error: ‘nm’ must be ALLOCATABLE
-##$ header function f2d1(int, int)
-#def f2d1(n,m):
-#    x = zeros((n, m), 'int')
-#    __f2d(x)
+def f2d1(n : int, m : int):
+    x = zeros((n, m), 'int')
+    __f2d(x)
 
-#$ header function k2d(int, int, int [:,:])
 #$ header macro __k2d(x) := k2d(x.shape[0], x.shape[1], x)
-def k2d(n, m, a):
+def k2d(n : int, m : int, a : 'int[:,:]'):
     for i in range(0, n):
         for j in range(0, m):
             a[i,j] = i*j
 
-#$ header function k2d1(int, int)
-def k2d1(n, m):
+def k2d1(n : int, m : int):
     x = zeros((n, m), 'int')
     __k2d(x)
 
@@ -54,10 +45,9 @@ def k2d1(n, m):
 # .....................................
 #       macros with results
 # .....................................
-#$ header function h(int, int [:], int [:])
 #$ header macro (y), __h(x) := h(x.shape, x, y)
 
-def h(n, a, b):
+def h(n : int, a : 'int[:]', b : 'int[:]'):
     b[:] = a[:]
 # .....................................
 

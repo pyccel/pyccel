@@ -2,8 +2,7 @@
 from numpy import zeros
 from numpy import shape
 
-#$ header function matmat(double [:,:], double [:,:], double [:,:])
-def matmat(a,b,c):
+def matmat(a : 'float[:,:]', b : 'float[:,:]', c : 'float[:,:]'):
     n, m = shape(a)
     m, p = shape(b)
 
