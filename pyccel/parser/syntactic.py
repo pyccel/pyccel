@@ -257,10 +257,7 @@ class SyntaxParser(BasicParser):
                     errors.report(f"Invalid header. {e.message}",
                             symbol = stmt, column = e.col,
                               severity='fatal')
-                if isinstance(expr, (MethodHeader, FunctionHeader)):
-                    self.scope.insert_header(expr)
-                    expr = EmptyNode()
-                elif isinstance(expr, AnnotatedPyccelSymbol):
+                if isinstance(expr, AnnotatedPyccelSymbol):
                     self.scope.insert_symbol(expr.name)
                 elif isinstance(expr, MetaVariable):
                     # a metavar will not appear in the semantic stage.
