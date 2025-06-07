@@ -2828,13 +2828,12 @@ class SemanticParser(BasicParser):
         # FunctionDef etc ...
 
         if self.is_header_file:
-            # ARA : issue-999
-            is_external = self.metavars.get('external', False)
-            for f in funcs:
-                f.is_external = True
-            for c in classes:
-                for m in c.methods:
-                    m.is_external = True
+            if self.metavars.get('external', False):
+                for f in funcs:
+                    f.is_external = True
+                for c in classes:
+                    for m in c.methods:
+                        m.is_external = True
 
         for v in variables:
             if v.rank > 0 and not v.is_alias:
