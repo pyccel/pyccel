@@ -1372,15 +1372,10 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-            if not func.is_semantic:
+            if is_inline:
+                return self._visit_InlineFunctionDef(func, args, expr)
+            elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
-            elif is_inline and isinstance(func, Interface):
-                is_compatible = False
-                for f in func.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
-                    is_compatible |= fl
-                if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, args)
 
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
@@ -1478,6 +1473,7 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
+        assert not old_func.is_inline
         cls_base_syntactic = old_func.get_direct_user_nodes(lambda p: isinstance(p, ClassDef))
         if cls_base_syntactic:
             cls_name = cls_base_syntactic[0].name
@@ -1507,9 +1503,9 @@ class SemanticParser(BasicParser):
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = new_scope
         if old_func.is_inline:
-            self._visit_FunctionDef(old_func, function_call_args = function_call_args)
+            self._visit_InlineFunctionDef(old_func, function_call_args = function_call_args)
         else:
-            self._visit_FunctionDef(old_func)
+            self._visit(old_func)
 
         # Retrieve the annotated function
         if cls_base_syntactic:
@@ -4844,9 +4840,12 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
 
             a = self._visit(syntactic_assign)
-            assigns.append(a)
-            if isinstance(a, ConstructorCall):
-                a.cls_variable.is_temp = False
+            if a.lhs != a.rhs:
+                assigns.append(a)
+                if isinstance(a, ConstructorCall):
+                    a.cls_variable.is_temp = False
+            else:
+                a.invalidate_node()
 
         results = self._visit(return_var)
 
@@ -4863,16 +4862,11 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr, function_call_args=None):
+    def _visit_FunctionDef(self, expr):
         """
-        Annotate the FunctionDef if necessary.
+        Semantically analyse the FunctionDef.
 
-        The FunctionDef is only annotated if the flag annotate is set to True.
-        In the case of an inlined function, we always annotate the function partially,
-        depending on the function call if it is an interface, otherwise we annotate it
-        if the function_call argument are compatible with the FunctionDef arguments.
-        In the case of non inlined function, we only pass through this method
-        twice, the first time we do nothing and the second time we annotate all of functions.
+        Analyse the FunctionDef adding all necessary semantic information.
 
         Parameter
         ---------
@@ -4880,12 +4874,9 @@ class SemanticParser(BasicParser):
            The node that needs to be annotated.
            If we provide an Interface, this means that the function has been annotated partially,
            and we need to continue annotating the needed ones.
-
-        function_call_args : list[FunctionCallArgument], optional
-            The list of call arguments, needed only in the case of an inlined function.
         """
         if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
-            errors.report("Functions can only be declared in modules or inside other functions.",
+            errors.report("Functions can only be declared in modules, classes or inside other functions.",
                     symbol=expr, severity='error')
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
@@ -4918,10 +4909,6 @@ class SemanticParser(BasicParser):
         is_elemental       = expr.is_elemental
         is_private         = expr.is_private
         is_inline          = expr.is_inline
-
-        if function_call_args is not None:
-            assert is_inline
-            found_func = False
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
         if len(not_used) >= 1:
@@ -5001,9 +4988,6 @@ class SemanticParser(BasicParser):
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
-            if function_call_args is not None and found_func:
-                break
-
             if is_interface:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
 
@@ -5024,19 +5008,6 @@ class SemanticParser(BasicParser):
             assert len(arguments) == len(expr.arguments)
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
-
-            if function_call_args is not None:
-                is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
-                if not is_compatible:
-                    self.exit_function_scope()
-                    # remove the new created scope and the function name
-                    self.scope.sons_scopes.pop(expr.name)
-                    if is_interface:
-                        self.scope.remove_symbol(name)
-                    continue
-                #In the case of an Interface we set found_func to True so that we don't continue
-                #searching for the other functions
-                found_func = True
 
             for a in arguments:
                 a_var = a.var
@@ -5216,12 +5187,6 @@ class SemanticParser(BasicParser):
             if expr.python_ast:
                 func.set_current_ast(expr.python_ast)
 
-        if function_call_args is not None and len(new_semantic_funcs) == 0:
-            for args in annotated_args[:-1]:
-                #raise errors if we do not find any compatible function def
-                self._check_argument_compatibility(function_call_args, args, expr, is_elemental, error_type='error')
-            self._check_argument_compatibility(function_call_args, annotated_args[-1], expr, is_elemental, error_type='fatal')
-
         if existing_semantic_funcs:
             new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
@@ -5240,6 +5205,83 @@ class SemanticParser(BasicParser):
             self.insert_function(new_semantic_funcs, insertion_scope)
 
         return EmptyNode()
+
+    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+        """
+        Visit an inline function definition to add the code to the calling scope.
+
+        Visit an inline function definition to add the code to the calling scope.
+        The code is inlined at this stage.
+
+        Parameters
+        ----------
+        expr : InlineFunctionDef
+            The inline function definition being called.
+        function_call_args : list[FunctionDefArgument]
+            The semantic arguments passed to the function.
+        function_call : FunctionCall
+            The syntactic function call being expanded to a function definition.
+        """
+        assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        scope = self.create_new_loop_scope()
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+        # TODO: optional arguments
+        # TODO: keyword arguments
+        assert len(function_call_args) == len(expr.arguments)
+        # Build the syntactic body
+        syntactic_body = expr.body
+        # Swap in the function call arguments to replace the variables representing
+        # the arguments of the inlined function
+        func_args = [a.var for a in expr.arguments]
+        call_args = [a.var for a in function_call_args]
+        syntactic_body.substitute(func_args, call_args)
+        res_vars = ()
+        if expr.results:
+            # Swap in the result of the function to replace the variable representing
+            # the result of the inlined function
+            res_var = expr.results.var
+            if isinstance(res_var, AnnotatedPyccelSymbol):
+                res_var = res_var.name
+            syntactic_body.substitute(res_var, syntactic_lhs)
+            res_vars = (res_var,)
+
+        to_replace = []
+        local_var = []
+
+        # Ensure local variables will be recognised
+        for v in expr.scope.local_used_symbols:
+            if v not in chain(func_args, (expr.name,), res_vars):
+                if self.scope.find(v):
+                    new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                    to_replace.append(v)
+                    local_var.append(new_v)
+                else:
+                    self.scope.insert_symbol(v)
+
+        syntactic_body.substitute(to_replace, local_var)
+
+        body = self._visit(syntactic_body)
+
+        # Remove return expressions
+        returns = body.get_attribute_nodes(Return)
+        new_assigns = [r.stmt if r.stmt else EmptyNode() for r in returns]
+        body.substitute(returns, new_assigns)
+
+        # Swap the arguments back to the original version to preserve the syntactic
+        # inline function definition.
+        syntactic_body.substitute(call_args, func_args)
+        if expr.results:
+            syntactic_body.substitute(syntactic_lhs, res_var)
+        syntactic_body.substitute(local_var, to_replace)
+        self.exit_loop_scope()
+        if assign:
+            return body
+        else:
+            self._additional_exprs[-1].append(body)
+            return self._visit(syntactic_lhs)
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
