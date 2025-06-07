@@ -302,15 +302,45 @@ def execute_pyccel(fname, *,
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
-    compile_libs.extend(l for son in parser.sons if son.metavars.get('ignore_at_import',False) \
-                        for l in son.metavars.get('libraries', '').split(',') if l)
+
+    deps = dict()
+    # ...
+    # Determine all .o files and all folders needed by executable
+    def get_module_dependencies(parser, deps):
+        filename = parser.filename
+        mod_folder = os.path.join(os.path.dirname(filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
+        mod_base = os.path.basename(filename)
+
+        # Stop conditions
+        if parser.metavars.get('module_name', None) == 'omp_lib':
+            return
+
+        if parser.compile_obj:
+            deps[filename] = parser.compile_obj
+        elif filename not in deps:
+            dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
+            if not parser.metavars.get('ignore_at_import',False):
+                deps[filename] = CompileObj(mod_base,
+                                    folder          = mod_folder,
+                                    libs            = dep_compile_libs,
+                                    has_target_file = not parser.metavars.get('no_target',False))
+            else:
+                compile_libs.extend(dep_compile_libs)
+
+        # Proceed recursively
+        for son in parser.sons:
+            get_module_dependencies(son, deps)
+
+    for son in parser.sons:
+        get_module_dependencies(son, deps)
+
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,
             libs         = compile_libs,
             libdirs      = libdirs,
-            dependencies = modules,
+            dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj
 
@@ -341,35 +371,6 @@ def execute_pyccel(fname, *,
         if show_timings:
             print_timers(start, timers)
         return
-
-    deps = dict()
-    # ...
-    # Determine all .o files and all folders needed by executable
-    def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
-        mod_base = os.path.basename(parser.filename)
-
-        # Stop conditions
-        if parser.metavars.get('module_name', None) == 'omp_lib':
-            return
-
-        if parser.compile_obj:
-            deps[mod_base] = parser.compile_obj
-        elif mod_base not in deps:
-            compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
-            if not parser.metavars.get('ignore_at_import',False):
-                deps[mod_base] = CompileObj(mod_base,
-                                    folder          = mod_folder,
-                                    libs            = compile_libs,
-                                    has_target_file = not parser.metavars.get('no_target',False))
-
-        # Proceed recursively
-        for son in parser.sons:
-            get_module_dependencies(son, deps)
-
-    for son in parser.sons:
-        get_module_dependencies(son, deps)
-    mod_obj.add_dependencies(*deps.values())
 
     start_compile_target_language = time.time()
     # Compile code to modules
