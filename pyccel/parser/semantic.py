@@ -4839,7 +4839,7 @@ class SemanticParser(BasicParser):
 
         return_objs = func.results
         return_var = return_objs.var
-        if isinstance(return_var, AnnotatedPyccelSymbol):
+        if isinstance(return_var, (AnnotatedPyccelSymbol, Variable)):
             return_var = return_var.name
         if return_var == '_':
             return EmptyNode()
