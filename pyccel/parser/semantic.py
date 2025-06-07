@@ -5232,8 +5232,12 @@ class SemanticParser(BasicParser):
         scope = self.create_new_loop_scope()
         if assign:
             syntactic_lhs = assign[-1].lhs
+            if isinstance(syntactic_lhs, PythonTuple):
+                lhs = self.scope.get_new_name()
+            else:
+                lhs = syntactic_lhs
         else:
-            syntactic_lhs = self.scope.get_new_name()
+            lhs = self.scope.get_new_name()
         # Build the syntactic body
         to_replace = []
         local_var = []
@@ -5248,7 +5252,7 @@ class SemanticParser(BasicParser):
             if isinstance(res_var, AnnotatedPyccelSymbol):
                 res_var = res_var.name
             to_replace.append(res_var)
-            local_var.append(syntactic_lhs)
+            local_var.append(lhs)
             res_vars = (res_var,)
 
         func_args = [a.var for a in expr.arguments]
@@ -5290,10 +5294,25 @@ class SemanticParser(BasicParser):
         self.exit_loop_scope()
         self._current_function.pop()
         if assign:
+            if isinstance(syntactic_lhs, PythonTuple):
+                def replace_tuples(syntactic_lhs, semantic_lhs):
+                    for i, l in enumerate(syntactic_lhs):
+                        elem = scope.collect_tuple_element(self._visit(semantic_lhs)[i])
+                        if isinstance(l, PythonTuple):
+                            replace_tuples(l, elem)
+                        else:
+                            if scope.find(l):
+                                body.substitute(elem, self._visit(l))
+                            else:
+                                new_elem = elem.clone(scope.get_expected_name(l))
+                                body.substitute(elem, new_elem)
+                                scope.remove_variable(elem)
+                                scope.insert_variable(new_elem, l)
+                replace_tuples(syntactic_lhs, lhs)
             return body
         else:
             self._additional_exprs[-1].append(body)
-            return self._visit(syntactic_lhs)
+            return self._visit(lhs)
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
