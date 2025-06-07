@@ -28,6 +28,61 @@ def sympy(f):
 def bypass(f):
     return f
 
+def types(*args, results = None):
+    """
+    Specify the types passed to the function.
+
+    Specify the types passed to the function.
+
+    Parameters
+    ----------
+    *args : tuple of str or types
+        The types of the arguments of the function.
+
+    results : str or type, optional
+        The return type of the function.
+
+    Returns
+    -------
+    decorator
+        The identity decorator which will not modify the function.
+    """
+    warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
+    def identity(f):
+        return f
+    return identity
+
+def template(name, types=()):
+    """
+    Template decorator.
+
+    Decorator to replace with TypeVar.
+
+    Parameters
+    ----------
+    name : str
+        The name.
+    types : iterable
+        The constraints.
+
+    Returns
+    -------
+    func
+        Fake decorator.
+    """
+    def identity(f):
+        return f
+    warnings.warn("The @template decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
+    return identity
+
 def pure(f):
     return f
 
