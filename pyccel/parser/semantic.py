@@ -2731,7 +2731,8 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        for c in self.scope.classes.values():
+        classes = self.scope.classes.values()
+        for c in classes:
             self._create_class_destructor(c)
 
         for f in self.scope.functions.values():
@@ -2845,7 +2846,7 @@ class SemanticParser(BasicParser):
                     init_func = init_func,
                     free_func = free_func,
                     interfaces=interfaces,
-                    classes=self.scope.classes.values(),
+                    classes=classes,
                     imports=self.scope.imports['imports'].values(),
                     scope=self.scope)
 
