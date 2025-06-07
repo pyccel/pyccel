@@ -6,6 +6,8 @@
 """
 Module exposing the dfftpack library functions to pyccel (see https://www.netlib.org/fftpack/)
 """
+import numpy as np
+from pyccel.decorators import inline
 
 #$ header metavar print=True
 
@@ -18,45 +20,44 @@ from pyccel.stdlib.internal.dfftpack import zfftf
 from pyccel.stdlib.internal.dfftpack import zfftb
 
 
-
-#$ header function fft(double[:]|complex[:], complex[:], int)
-def fft(x, y, n):
-    from numpy import empty
-    w = empty(4*n+15)
+@inline
+def fft(x : 'float[:]|complex[:]', n : int = None):
+    if n is None:
+        n = x.size
+    w = np.empty(4*n+15)
+    y = np.empty(x.shape, dtype=complex)
     y[:] = x[:]
-    zffti(n,w)
-    zfftf(n,y,w)
+    zffti(np.int32(n),w)
+    zfftf(np.int32(n),y,w)
+    return y
 
-#$ header function ifft(double[:]|complex[:], complex[:], int)
-def ifft(x, y, n):
-    from numpy import empty
-    w = empty(4*n+15)
+@inline
+def ifft(x : 'float[:]|complex[:]', n : int = None):
+    if n is None:
+        n = x.size
+    w = np.empty(4*n+15)
+    y = np.empty(x.shape, dtype=complex)
     y[:] = x[:]
-    zffti(n, w)
-    zfftb(n, x, w)
+    zffti(np.int32(n), w)
+    zfftb(np.int32(n), y, w)
+    return y
 
-#$ header function rfft(double[:], double[:], int)
-def rfft(x, y, n):
-    from numpy import empty
-    w = empty(2*n+15)
-    y[:] = x[:]
-    dffti(n,w)
-    dfftf(n,y,w)
+@inline
+def rfft(x : 'float[:]', n : int = None):
+    if n is None:
+        n = x.size
+    w = np.empty(2*n+15)
+    y = np.array(x)
+    dffti(np.int32(n),w)
+    dfftf(np.int32(n),y,w)
+    return y
 
-#$ header function irfft(double[:], double[:], int)
-def irfft(x, y, n):
-    from numpy import empty
-    w = empty(2*n+15)
-    y[:] = x[:]
-    dffti(n,w)
-    dfftb(n,y,w)
-
-
-
-#$ header macro (y), fft (x, n=x.count) := fft (x, y, n)
-#$ header macro (y), ifft(x, n=x.count) := ifft(x, y, n)
-
-#$ header macro (y), rfft (x,n=x.count) := rfft (x, y, n)
-#$ header macro (y), irfft(x,n=x.count) := irfft(x, y, n)
-
-
+@inline
+def irfft(x : 'float[:]', n : int = None):
+    if n is None:
+        n = x.size
+    w = np.empty(2*n+15)
+    y = np.array(x)
+    dffti(np.int32(n),w)
+    dfftb(np.int32(n),y,w)
+    return y
