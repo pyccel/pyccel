@@ -26,6 +26,7 @@ from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
+from pyccel.ast.typingext  import TypingTypeVar
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -297,6 +298,12 @@ class PythonCodePrinter(CodePrinter):
                 else:
                     dec += f'@{name}\n'
         return dec
+
+    def _get_type_var_declarations(self):
+        type_vars_in_scope = {n:t for n,t in self.scope.symbolic_aliases.items() \
+                            if isinstance(t, TypingTypeVar)}
+        type_var_constraints = [", ".join(self._print(ti) for ti in t.type_list) for t in type_vars_in_scope.values()]
+        return ''.join(f'{n} = TypeVar({n}, {t})\n' for n,t in zip(type_vars_in_scope, type_var_constraints))
 
     #----------------------------------------------------------------------
 
@@ -1254,6 +1261,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
+
+        type_var_declarations = self._get_type_var_declarations()
+
         # Print interface functions (one function with multiple decorators describes the problem)
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
@@ -1280,7 +1290,7 @@ class PythonCodePrinter(CodePrinter):
 
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
 
-        body = ''.join((interfaces, funcs, classes, init_body))
+        body = '\n'.join((type_var_declarations, interfaces, funcs, classes, init_body))
 
         if expr.program:
             expr.program.remove_import(expr.name)
@@ -1300,6 +1310,10 @@ class PythonCodePrinter(CodePrinter):
         self._in_header = True
         mod = expr.module
         variables = mod.variables
+
+        self.set_scope(mod.scope)
+        type_var_declarations = self._get_type_var_declarations()
+
         var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
                             for v in variables if not v.is_temp)
         funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
@@ -1319,8 +1333,10 @@ class PythonCodePrinter(CodePrinter):
         imports  = ''.join(self._print(i) for i in mod.imports)
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
 
+        self.exit_scope()
+
         self._in_header = False
-        return '\n'.join((imports, var_decl, classes, funcs))
+        return '\n'.join((imports, type_var_declarations, var_decl, classes, funcs))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
