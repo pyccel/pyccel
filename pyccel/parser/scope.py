@@ -608,6 +608,29 @@ class Scope(object):
         """
         return self._used_symbols
 
+    def symbol_in_use(self, name):
+        """
+        Determine if a name is already in use in this scope.
+
+        Determine if a name is already in use in this scope.
+
+        Parameters
+        ----------
+        name : PyccelSymbol
+            The name we are searching for.
+
+        Returns
+        -------
+        bool
+            True if the name has already been inserted into this scope, False otherwise.
+        """
+        if name in self._used_symbols:
+            return True
+        elif self.parent_scope:
+            return self.parent_scope.symbol_in_use(name)
+        else:
+            return False
+
     def get_new_incremented_symbol(self, prefix, counter):
         """
         Create a new name by adding a numbered suffix to the provided prefix.

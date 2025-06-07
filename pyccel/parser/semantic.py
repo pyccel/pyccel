@@ -5257,7 +5257,7 @@ class SemanticParser(BasicParser):
         # Ensure local variables will be recognised
         for v in expr.scope.local_used_symbols:
             if v != expr.name:
-                if self.scope.find(v) or v == syntactic_lhs and v not in res_vars:
+                if self.scope.symbol_in_use(v):
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
                     if v not in func_args:
                         to_replace.append(v)
