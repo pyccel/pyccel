@@ -480,26 +480,3 @@ def parse(filename=None, stmts=None):
     else:
         return stmts
 
-#=========================================================================================================
-#=========================================================================================================
-#=========================================================================================================
-if __name__ == '__main__':
-    print(parse(stmts='#$ header variable x :: int'))
-    print(parse(stmts='#$ header variable x float [:, :]'))
-    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
-    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-    print(parse(stmts="#$ header metavar module_name='mpi'"))
-    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
-    print(parse(stmts='#$ header function _f(int, int [:])'))
-    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
-    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
-    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
-    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
-    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
-    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
-    print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
-    print(parse(stmts='#$ header function _f(int, int [:,:])'))
