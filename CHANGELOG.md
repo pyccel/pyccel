@@ -227,6 +227,7 @@ All notable changes to this project will be documented in this file.
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1487 : Remove support for `#$ header` syntax.
+-   #1487 : Remove support for `@types` decorator.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
