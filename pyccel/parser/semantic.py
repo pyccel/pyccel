@@ -4832,6 +4832,8 @@ class SemanticParser(BasicParser):
 
         return_objs = func.results
         return_var = getattr(return_objs.var, 'name', return_objs.var)
+        if return_var == '_':
+            return EmptyNode()
         assigns     = []
         if return_var != results:
             # Create a syntactic object to visit
@@ -4840,7 +4842,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
 
             a = self._visit(syntactic_assign)
-            if a.lhs != a.rhs:
+            if not isinstance(a, Assign) or a.lhs != a.rhs:
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
@@ -5222,7 +5224,8 @@ class SemanticParser(BasicParser):
         function_call : FunctionCall
             The syntactic function call being expanded to a function definition.
         """
-        assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
+        self._current_function.append(expr)
         scope = self.create_new_loop_scope()
         if assign:
             syntactic_lhs = assign[-1].lhs
@@ -5235,33 +5238,39 @@ class SemanticParser(BasicParser):
         syntactic_body = expr.body
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
-        func_args = [a.var for a in expr.arguments]
-        call_args = [a.var for a in function_call_args]
-        syntactic_body.substitute(func_args, call_args)
         res_vars = ()
         if expr.results:
             # Swap in the result of the function to replace the variable representing
             # the result of the inlined function
             res_var = expr.results.var
+            expr.substitute(res_var, syntactic_lhs, invalidate = False)
             if isinstance(res_var, AnnotatedPyccelSymbol):
                 res_var = res_var.name
-            syntactic_body.substitute(res_var, syntactic_lhs)
+            expr.substitute(res_var, syntactic_lhs, invalidate = False)
             res_vars = (res_var,)
+
+        func_args = [getattr(a.var, 'name', a.var) for a in expr.arguments]
 
         to_replace = []
         local_var = []
 
         # Ensure local variables will be recognised
         for v in expr.scope.local_used_symbols:
-            if v not in chain(func_args, (expr.name,), res_vars):
+            if v not in chain((expr.name,), res_vars):
                 if self.scope.find(v):
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
-                    to_replace.append(v)
-                    local_var.append(new_v)
+                    if v not in func_args:
+                        to_replace.append(v)
+                        local_var.append(new_v)
                 else:
                     self.scope.insert_symbol(v)
 
-        syntactic_body.substitute(to_replace, local_var)
+        # Map local call arguments to function arguments
+        call_args = [a.value for a in function_call_args]
+        for func_a, call_a in zip(func_args, call_args):
+            scope.variables[scope.get_expected_name(func_a)] = call_a
+
+        syntactic_body.substitute(to_replace, local_var, invalidate = False)
 
         body = self._visit(syntactic_body)
 
@@ -5272,11 +5281,11 @@ class SemanticParser(BasicParser):
 
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
-        syntactic_body.substitute(call_args, func_args)
         if expr.results:
-            syntactic_body.substitute(syntactic_lhs, res_var)
+            expr.substitute(syntactic_lhs, res_var)
         syntactic_body.substitute(local_var, to_replace)
         self.exit_loop_scope()
+        self._current_function.pop()
         if assign:
             return body
         else:
