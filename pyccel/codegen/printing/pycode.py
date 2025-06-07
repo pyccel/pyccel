@@ -925,8 +925,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             code = f'{lhs_code} = {rhs_code}\n'
 
-        if isinstance(lhs, IndexedElement) and isinstance(lhs.base.class_type, HomogeneousTupleType) \
-                and isinstance(lhs.base.shape[0], LiteralInteger):
+        if isinstance(lhs, IndexedElement) and isinstance(lhs.base.class_type, HomogeneousTupleType):
             assert len(lhs.indices) == 1
             idx = lhs.indices[0]
             self._tuple_assigns.append(code)
