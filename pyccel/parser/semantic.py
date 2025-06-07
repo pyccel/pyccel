@@ -4927,13 +4927,24 @@ class SemanticParser(BasicParser):
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        available_type_vars = self.scope.collect_all_type_vars()
+        available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
+        available_type_vars.update(self.scope.collect_all_type_vars())
         used_type_vars = {}
         for a in expr.arguments:
             used_objs = a.annotation.get_attribute_nodes(PyccelSymbol)
             for o in used_objs:
                 if o in available_type_vars:
                     used_type_vars[o] = available_type_vars[o]
+
+        for o, t in used_type_vars.items():
+            if isinstance(t, typing.TypeVar):
+                pyccel_type_var = self.env_var_to_pyccel(t)
+                used_type_vars[o] = pyccel_type_var
+                global_scope = self.scope
+                while global_scope.parent_scope:
+                    global_scope = global_scope.parent_scope
+                global_scope.insert_symbol(o)
+                global_scope.insert_symbolic_alias(o, pyccel_type_var)
 
         possible_combinations = list(product(*[t.type_list for t in used_type_vars.values()]))
         n_type_var_combinations = len(possible_combinations)
@@ -4944,8 +4955,8 @@ class SemanticParser(BasicParser):
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
-            for name, dtype in zip(used_type_vars, p):
-                self.scope.insert_symbolic_alias(name, dtype)
+            for n, dtype in zip(used_type_vars, p):
+                self.scope.insert_symbolic_alias(n, dtype)
             args = list(product(*[self._visit(a) for a in expr.arguments]))
             argument_combinations.extend(args)
             self.exit_function_scope()
