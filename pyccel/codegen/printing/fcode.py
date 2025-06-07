@@ -2760,9 +2760,9 @@ class FCodePrinter(CodePrinter):
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
-        cls_methods = [i.clone('{0}'.format(i.name)) for i in expr.methods]
+        cls_methods = [i.clone(i.name) for i in expr.methods if not i.is_inline]
         for i in expr.interfaces:
-            cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
+            cls_methods +=  [j.clone(j.name) for j in i.functions if not j.is_inline]
 
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
