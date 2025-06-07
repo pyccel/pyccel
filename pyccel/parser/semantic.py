@@ -603,21 +603,6 @@ class SemanticParser(BasicParser):
             container['imports'][storage_name] = Import(source, target, True)
 
 
-    def get_headers(self, name):
-        """ Get all headers in the scope which reference the
-        requested name
-        """
-        container = self.scope
-        headers = []
-        while container:
-            if name in container.headers:
-                if isinstance(container.headers[name], list):
-                    headers += container.headers[name]
-                else:
-                    headers.append(container.headers[name])
-            container = container.parent_scope
-        return headers
-
     def create_tuple_of_inhomogeneous_elements(self, tuple_var):
         """
         Create a tuple of variables from a variable representing an inhomogeneous object.
@@ -2996,13 +2981,6 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
-            # ----- If block to handle VariableHeader. To be removed when headers are deprecated. ---
-            elif isinstance(line, list) and isinstance(line[0], Variable):
-                self.scope.insert_variable(line[0])
-                if len(line) != 1:
-                    errors.report(f"Variable {line[0]} cannot have multiple types",
-                            severity='error', symbol=line[0])
-            # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
         self._additional_exprs.pop()
@@ -4754,31 +4732,6 @@ class SemanticParser(BasicParser):
             value_false = self._visit(expr.value_false)
             return IfTernaryOperator(cond, value_true, value_false)
 
-    def _visit_FunctionHeader(self, expr):
-        warnings.warn("Support for specifying types via headers will be removed in a " +
-                      "future version of Pyccel. Please use type hints. TypeVar from " +
-                      "Python's typing module can be used to specify multiple types. " +
-                      "See the documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                      "for examples.", FutureWarning)
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
-        return expr
-
-    def _visit_Template(self, expr):
-        warnings.warn("Support for specifying templates via headers will be removed in " +
-                      "a future version of Pyccel. Please use type hints. TypeVar from " +
-                      "Python's typing module can be used to specify multiple types. " +
-                      "See the documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                      "for examples.", FutureWarning)
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_template(expr)
-        return expr
-
     def _visit_Return(self, expr):
 
         results     = expr.expr
@@ -5503,7 +5456,6 @@ class SemanticParser(BasicParser):
         # we change here the master name to its FunctionDef
 
         f_name = expr.master
-        header = self.get_headers(f_name)
         func = self.scope.find(f_name, 'functions')
         if func is None:
             errors.report(MACRO_MISSING_HEADER_OR_FUNC,
@@ -5542,11 +5494,7 @@ class SemanticParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_TODO,
                           bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                           severity='fatal')
-        header = self.get_headers(master)
-        if header is None:
-            var = self.get_variable(master)
-        else:
-            var = self.get_variable(master)
+        var = self.get_variable(master)
 
                 # TODO -> Said: must handle interface
 
