@@ -83,7 +83,7 @@ from pyccel.ast.datatypes import original_type_to_pyccel_type
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.functionalexpr import MaxLimit, MinLimit
 
-from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
+from pyccel.ast.headers import Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement

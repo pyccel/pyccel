@@ -11,8 +11,7 @@ from os.path import join, dirname
 from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
-from pyccel.ast.headers   import MetaVariable, InterfaceHeader
+from pyccel.ast.headers   import MetaVariable
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName

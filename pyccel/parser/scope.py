@@ -14,8 +14,6 @@ from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
-from pyccel.parser.syntax.headers import FunctionHeaderStmt
-
 from pyccel.errors.errors import Errors
 
 from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
