@@ -472,6 +472,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
+            self.add_import(Import('pyccel.decorators', [AsName(FunctionDef('inline', (), ()), 'inline')]))
             code = ast.unparse(expr.python_ast) + '\n'
             return code
 
