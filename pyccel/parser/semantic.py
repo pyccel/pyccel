@@ -4831,9 +4831,12 @@ class SemanticParser(BasicParser):
                         severity='fatal', symbol=expr)
 
         return_objs = func.results
-        return_var = getattr(return_objs.var, 'name', return_objs.var)
+        return_var = return_objs.var
+        if isinstance(return_var, AnnotatedPyccelSymbol):
+            return_var = return_var.name
         if return_var == '_':
             return EmptyNode()
+
         assigns     = []
         if return_var != results:
             # Create a syntactic object to visit
@@ -5231,11 +5234,10 @@ class SemanticParser(BasicParser):
             syntactic_lhs = assign[-1].lhs
         else:
             syntactic_lhs = self.scope.get_new_name()
-        # TODO: optional arguments
-        # TODO: keyword arguments
-        assert len(function_call_args) == len(expr.arguments)
         # Build the syntactic body
-        syntactic_body = expr.body
+        to_replace = []
+        local_var = []
+
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
         res_vars = ()
@@ -5243,21 +5245,19 @@ class SemanticParser(BasicParser):
             # Swap in the result of the function to replace the variable representing
             # the result of the inlined function
             res_var = expr.results.var
-            expr.substitute(res_var, syntactic_lhs, invalidate = False)
             if isinstance(res_var, AnnotatedPyccelSymbol):
                 res_var = res_var.name
-            expr.substitute(res_var, syntactic_lhs, invalidate = False)
+            to_replace.append(res_var)
+            local_var.append(syntactic_lhs)
             res_vars = (res_var,)
 
-        func_args = [getattr(a.var, 'name', a.var) for a in expr.arguments]
-
-        to_replace = []
-        local_var = []
+        func_args = [a.var for a in expr.arguments]
+        func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
 
         # Ensure local variables will be recognised
         for v in expr.scope.local_used_symbols:
-            if v not in chain((expr.name,), res_vars):
-                if self.scope.find(v):
+            if v != expr.name:
+                if self.scope.find(v) or v == syntactic_lhs and v not in res_vars:
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
                     if v not in func_args:
                         to_replace.append(v)
@@ -5266,13 +5266,18 @@ class SemanticParser(BasicParser):
                     self.scope.insert_symbol(v)
 
         # Map local call arguments to function arguments
-        call_args = [a.value for a in function_call_args]
-        for func_a, call_a in zip(func_args, call_args):
+        positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
+        for func_a, call_a in zip(func_args, positional_call_args):
             scope.variables[scope.get_expected_name(func_a)] = call_a
 
-        syntactic_body.substitute(to_replace, local_var, invalidate = False)
+        nargs = len(positional_call_args)
+        kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
+        for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
+            scope.variables[scope.get_expected_name(func_a_name)] = kw_call_args.get(func_a_name, func_a.default_call_arg.value)
 
-        body = self._visit(syntactic_body)
+        expr.substitute(to_replace, local_var, invalidate = False)
+
+        body = self._visit(expr.body)
 
         # Remove return expressions
         returns = body.get_attribute_nodes(Return)
@@ -5281,9 +5286,7 @@ class SemanticParser(BasicParser):
 
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
-        if expr.results:
-            expr.substitute(syntactic_lhs, res_var)
-        syntactic_body.substitute(local_var, to_replace)
+        expr.substitute(local_var, to_replace)
         self.exit_loop_scope()
         self._current_function.pop()
         if assign:
