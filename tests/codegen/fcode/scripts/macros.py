@@ -19,9 +19,8 @@ def f1(n):
 #      but it is not inferred as inout
 #$ header function f2(int [:])
 def f2(x):
-   __f(x)
+    __f(x)
 # .....................................
-
 
 # .....................................
 #           2d case
