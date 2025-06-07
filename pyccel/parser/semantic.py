@@ -2585,7 +2585,14 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('syntactic')
                 import_node = Import(AsName(mod_name, name))
                 pyccel_stage.set_stage('semantic')
+                # Insert import at global scope
+                current_scope = self.scope
+                scope = current_scope
+                while scope.parent_scope:
+                    scope = scope.parent_scope
+                self.scope = scope
                 self._additional_exprs[-1].append(self._visit(import_node))
+                self.scope = current_scope
                 return self.scope.find(name)
             else:
                 errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
