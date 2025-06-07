@@ -389,12 +389,11 @@ class Scope(object):
                 Default : var.name.
         """
         if name is None:
-            name = self._original_symbol[var.name]
-
-        self._used_symbols.pop(name)
+            name = self.get_python_name(var.name)
 
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
+            self._used_symbols.pop(name)
         elif self.parent_scope:
             self.parent_scope.remove_variable(var, name)
         else:
