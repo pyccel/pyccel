@@ -3957,7 +3957,8 @@ class SemanticParser(BasicParser):
             elif expr.lhs.is_temp:
                 return rhs
             else:
-                raise NotImplementedError("Cannot assign result of a function without a return")
+                errors.report("Cannot assign result of a function without a return",
+                        severity='fatal', symbol=expr)
 
             if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):
                 temp = self.scope.get_new_name()
