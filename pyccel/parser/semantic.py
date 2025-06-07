@@ -5303,10 +5303,19 @@ class SemanticParser(BasicParser):
         if assign:
             if isinstance(syntactic_lhs, PythonTuple):
                 def replace_tuples(syntactic_lhs, semantic_lhs):
+                    """
+                    Replace inhomogeneous tuple returns with the underlying variables
+                    from the lhs of the assign.
+                    """
                     for i, l in enumerate(syntactic_lhs):
                         elem = scope.collect_tuple_element(self._visit(semantic_lhs)[i])
                         if isinstance(l, PythonTuple):
                             replace_tuples(l, elem)
+                        elif isinstance(elem, IndexedElement):
+                            pyccel_stage.set_stage('syntactic')
+                            syntactic_assign = Assign(l, elem, python_ast=function_call.python_ast)
+                            pyccel_stage.set_stage('semantic')
+                            body.insert2body(self._visit(syntactic_assign))
                         else:
                             if scope.find(l):
                                 body.substitute(elem, self._visit(l))
