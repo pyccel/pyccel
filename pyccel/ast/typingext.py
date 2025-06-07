@@ -9,7 +9,7 @@
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
-from .datatypes import TypeAlias
+from .datatypes import TypeAlias, GenericType
 
 __all__ = (
     'TypingFinal',
@@ -137,8 +137,21 @@ class TypingOverload(TypedAstNode):
     _attribute_nodes = ()
 
 #==============================================================================
+class TypingAny(TypedAstNode):
+    """
+    Class representing a call to the typing.Any construct.
+
+    Class representing a call to the typing.Any construct. This object
+    will never be constructed. It exists to recognise the import.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+    _static_type = GenericType()
+
+#==============================================================================
 
 typing_funcs = {
+        'Any': PyccelFunctionDef('Any', TypingAny),
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),
