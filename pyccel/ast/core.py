@@ -2237,11 +2237,6 @@ class FunctionDef(ScopedAstNode):
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for header')
 
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-        else:
-            is_external = is_external and is_header and ( len(results) == 1 )
-
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
