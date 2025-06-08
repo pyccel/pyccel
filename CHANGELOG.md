@@ -85,6 +85,7 @@ All notable changes to this project will be documented in this file.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
 -   Generate stub files to allow double compilation to potentially be bypassed.
+-   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -224,6 +225,7 @@ All notable changes to this project will be documented in this file.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1487 : Remove support for `@template` decorator.
 -   #1812 : Stop allowing multiple main blocks inside a module.
+-   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
