@@ -3,6 +3,7 @@
 
 import os
 import pytest
+from typing import TypeVar
 
 import numpy as np
 import sympy as sp
@@ -22,6 +23,7 @@ path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
 files = [f for f in files if f.endswith(".py")]
+T = TypeVar('T', 'float[:]', 'float[:,:]')
 
 @pytest.mark.parametrize( "f", files )
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
@@ -61,9 +63,9 @@ def test_lambdify(language):
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
         assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
-        pyc_x = pyc_lambdify(expr_x, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
+        pyc_x = pyc_lambdify(expr_x, {x : 'T', y : 'T'}, context_dict = {'T': T},
                     language = language)
-        pyc_y = pyc_lambdify(expr_y, {x : 'T', y : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']},
+        pyc_y = pyc_lambdify(expr_y, {x : 'T', y : 'T'}, context_dict = {'T': T},
                     language = language)
 
         assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
