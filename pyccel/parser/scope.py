@@ -70,7 +70,7 @@ class Scope(object):
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_aliases',
-            'macros','templates','headers','decorators',
+            'macros','headers','decorators',
             'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
@@ -189,12 +189,6 @@ class Scope(object):
         """A dictionary of user defined headers which may
         be applied to functions in this scope"""
         return self._locals['headers']
-
-    @property
-    def templates(self):
-        """A dictionary of user defined templates which may
-        be applied to functions in this scope"""
-        return self._locals['templates']
 
     @property
     def decorators(self):
@@ -469,10 +463,6 @@ class Scope(object):
             name = name.name[-1]
 
         self._locals['macros'][name] = macro
-
-    def insert_template(self, expr):
-        """append the scope's templates with the given template"""
-        self._locals['templates'][expr.name] = expr
 
     def insert_header(self, expr):
         """

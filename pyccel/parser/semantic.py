@@ -4800,18 +4800,6 @@ class SemanticParser(BasicParser):
         self.scope.insert_header(expr)
         return expr
 
-    def _visit_Template(self, expr):
-        warnings.warn("Support for specifying templates via headers will be removed in " +
-                      "a future version of Pyccel. Please use type hints. TypeVar from " +
-                      "Python's typing module can be used to specify multiple types. " +
-                      "See the documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                      "for examples.", FutureWarning)
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_template(expr)
-        return expr
-
     def _visit_Return(self, expr):
 
         results     = expr.expr

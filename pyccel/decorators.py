@@ -17,7 +17,6 @@ __all__ = (
     'pure',
     'stack_array',
     'sympy',
-    'template',
     'types',
 )
 

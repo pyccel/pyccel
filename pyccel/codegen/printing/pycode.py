@@ -290,17 +290,13 @@ class PythonCodePrinter(CodePrinter):
             if name in pyccel_decorators:
                 self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[name], name)]))
             # TODO - All decorators must be stored in a list
-            if name == 'template':
-                f = list(f['template_dict'].items())
-            elif not isinstance(f, list):
+            if not isinstance(f, list):
                 f = [f]
             for func in f:
                 if isinstance(func, FunctionCall):
                     args = ', '.join(self._print(a) for a in func.args)
                 elif func == name:
                     args = ''
-                elif name == 'template':
-                    args = f"'{func[0]}', (" + ', '.join(f"'{self._print(t)}'" for t in func[1].type_list) + ')'
                 else:
                     args = ', '.join(self._print(LiteralString(a)) for a in func)
 
