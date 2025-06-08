@@ -13,12 +13,13 @@ from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, P
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.core       import Interface, FunctionDefArgument
+from pyccel.ast.core       import Interface, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
+from pyccel.ast.datatypes  import FixedSizeNumericType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals  import PyccelSymbol
-from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
@@ -206,14 +207,25 @@ class PythonCodePrinter(CodePrinter):
         if isinstance(obj, FunctionDefArgument):
             is_temp_union_name = isinstance(obj.annotation, SyntacticTypeAnnotation) and \
                                  isinstance(obj.annotation.dtype, PyccelSymbol)
-            if obj.annotation and not is_temp_union_name:
+            if obj.annotation and not is_temp_union_name and not self._in_header:
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
                 return self._get_type_annotation(obj.var)
+        elif isinstance(obj, FunctionDefResult):
+            if obj.var is Nil():
+                return ''
+            else:
+                return self._get_type_annotation(obj.var)
         elif isinstance(obj, Variable):
             type_annotation = self._print(obj.class_type)
+            if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
+                type_annotation = f'Final[{type_annotation}]'
             return f"'{type_annotation}'"
+        elif isinstance(obj, FunctionAddress):
+            args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)
+            res = self._get_type_annotation(obj.results).strip("'")
+            return f"'({res})({args})'"
         else:
             raise NotImplementedError(f"Unexpected object of type {type(obj)}")
 
