@@ -311,6 +311,7 @@ class PythonCodePrinter(CodePrinter):
         type_vars_in_scope = {n:t for n,t in self.scope.symbolic_aliases.items() \
                             if isinstance(t, TypingTypeVar)}
         type_var_constraints = [", ".join(self._print(ti) for ti in t.type_list) for t in type_vars_in_scope.values()]
+        self.add_import(Import('typing', [AsName(TypingTypeVar, 'TypeVar')]))
         return ''.join(f'{n} = TypeVar({n}, {t})\n' for n,t in zip(type_vars_in_scope, type_var_constraints))
 
     #----------------------------------------------------------------------
