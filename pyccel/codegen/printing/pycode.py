@@ -27,7 +27,7 @@ from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
-from pyccel.ast.typingext  import TypingTypeVar
+from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -220,6 +220,7 @@ class PythonCodePrinter(CodePrinter):
         elif isinstance(obj, Variable):
             type_annotation = self._print(obj.class_type)
             if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
+                self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
                 type_annotation = f'Final[{type_annotation}]'
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
@@ -310,9 +311,9 @@ class PythonCodePrinter(CodePrinter):
     def _get_type_var_declarations(self):
         type_vars_in_scope = {n:t for n,t in self.scope.symbolic_aliases.items() \
                             if isinstance(t, TypingTypeVar)}
-        type_var_constraints = [", ".join(self._print(ti) for ti in t.type_list) for t in type_vars_in_scope.values()]
+        type_var_constraints = [", ".join(f"'{self._print(ti)}'" for ti in t.type_list) for t in type_vars_in_scope.values()]
         self.add_import(Import('typing', [AsName(TypingTypeVar, 'TypeVar')]))
-        return ''.join(f'{n} = TypeVar({n}, {t})\n' for n,t in zip(type_vars_in_scope, type_var_constraints))
+        return ''.join(f"{n} = TypeVar('{n}', {t})\n" for n,t in zip(type_vars_in_scope, type_var_constraints))
 
     #----------------------------------------------------------------------
 
@@ -1528,12 +1529,14 @@ class PythonCodePrinter(CodePrinter):
     def _print_VariableTypeAnnotation(self, expr):
         dtype = self._print(expr.class_type)
         if expr.is_const:
-            dtype = f'const {dtype}'
+            self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
+            dtype = f'Final[{dtype}]'
         return dtype
 
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
-        return f'const {annotation}'
+        self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
+        return f'Final[{annotation}]'
 
     def _print_NumpyNDArrayType(self, expr):
         dims = ','.join(':'*expr.container_rank)
