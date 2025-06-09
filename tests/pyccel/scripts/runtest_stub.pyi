@@ -1,9 +1,9 @@
 from typing import Final, TypeVar
-from typing import overload
+from typing import Final, TypeVar, overload
 from numpy import float64
 
-T = TypeVar(T, int, float, complex)
-S = TypeVar(S, const int, const float, const complex)
+T = TypeVar('T', 'int', 'float', 'complex')
+S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
 
 
 class A:
