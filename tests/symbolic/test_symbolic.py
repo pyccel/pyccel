@@ -2,9 +2,9 @@
 # coding: utf-8
 
 import os
-import pytest
 from typing import TypeVar
 
+import pytest
 import numpy as np
 import sympy as sp
 
