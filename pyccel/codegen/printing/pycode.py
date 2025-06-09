@@ -309,6 +309,16 @@ class PythonCodePrinter(CodePrinter):
         return dec
 
     def _get_type_var_declarations(self):
+        """
+        Print the TypeVar declarations.
+
+        Print the TypeVar declarations that exist in the current scope.
+
+        Returns
+        -------
+        str
+            A string containing the code which declares the TypeVar objects.
+        """
         type_vars_in_scope = {n:t for n,t in self.scope.symbolic_aliases.items() \
                             if isinstance(t, TypingTypeVar)}
         type_var_constraints = [", ".join(f"'{self._print(ti)}'" for ti in t.type_list) for t in type_vars_in_scope.values()]
