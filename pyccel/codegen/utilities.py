@@ -408,13 +408,13 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
         The parser whose dependencies should be appended.
     compile_libs : list[str], optional
         The libraries (-lX) that should be used for the compilation.
-        This arguments is used internally but should not be provided
+        This argument is used internally but should not be provided
         from an external call to this function.
     deps : dict[str, CompileObj], optional
         A dictionary describing the modules on which this code depends.
         The key is the name of the file containing the module. The value
         is the CompileObj describing the .o file.
-        This arguments is used internally but should not be provided
+        This argument is used internally but should not be provided
         from an external call to this function.
 
     Returns
