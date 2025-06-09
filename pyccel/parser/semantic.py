@@ -4935,7 +4935,6 @@ class SemanticParser(BasicParser):
                 global_scope.insert_symbolic_alias(o, pyccel_type_var)
 
         possible_combinations = list(product(*[t.type_list for t in used_type_vars.values()]))
-        n_type_var_combinations = len(possible_combinations)
 
         argument_combinations = []
         type_var_indices = []
