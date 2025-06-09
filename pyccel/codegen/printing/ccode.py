@@ -63,7 +63,7 @@ from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
@@ -1170,12 +1170,16 @@ class CCodePrinter(CodePrinter):
         return '0'
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' && '.join(a for a in args)
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
+        return ' && '.join(args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' || '.join(a for a in args)
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
+        return ' || '.join(args)
 
     def _print_PyccelEq(self, expr):
         lhs, rhs = expr.args
@@ -1238,8 +1242,11 @@ class CCodePrinter(CodePrinter):
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
-        a = self._print(expr.args[0])
-        return '!{}'.format(a)
+        arg = expr.args[0]
+        a = self._print(arg)
+        if isinstance(arg, PyccelOperator) and not isinstance(arg, PyccelAssociativeParenthesis):
+            a = f'({a})'
+        return f'!{a}'
 
     def _print_PyccelIn(self, expr):
         container_type = expr.container.class_type
@@ -2592,14 +2599,20 @@ class CCodePrinter(CodePrinter):
         return ' ^ '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelBitOr(self, expr):
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
         if expr.dtype is PythonNativeBool():
-            return ' || '.join(self._print(a) for a in expr.args)
-        return ' | '.join(self._print(a) for a in expr.args)
+            return ' || '.join(args)
+        return ' | '.join(args)
 
     def _print_PyccelBitAnd(self, expr):
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
         if expr.dtype is PythonNativeBool():
-            return ' && '.join(self._print(a) for a in expr.args)
-        return ' & '.join(self._print(a) for a in expr.args)
+            return ' && '.join(args)
+        return ' & '.join(args)
 
     def _print_PyccelInvert(self, expr):
         return '~{}'.format(self._print(expr.args[0]))

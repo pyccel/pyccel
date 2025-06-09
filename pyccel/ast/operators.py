@@ -384,6 +384,16 @@ class PyccelNot(PyccelUnaryOperator):
     _precedence = 6
     _class_type = PythonNativeBool()
 
+    def __new__(cls, arg):
+        if isinstance(arg, PyccelEq):
+            arg1, arg2 = arg.args
+            return PyccelNe(arg1, arg2)
+        elif isinstance(arg, PyccelNe):
+            arg1, arg2 = arg.args
+            return PyccelEq(arg1, arg2)
+        else:
+            return super().__new__(cls)
+
     def _set_type(self):
         """
         Set the type of the result of the operator.
