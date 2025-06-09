@@ -437,7 +437,7 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
     else:
         # Stop conditions
         if parser.metavars.get('module_name', None) == 'omp_lib':
-            return
+            return compile_libs, deps
 
         if parser.compile_obj:
             deps[filename] = parser.compile_obj
