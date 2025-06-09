@@ -5236,7 +5236,7 @@ class SemanticParser(BasicParser):
         """
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
-        scope = self.create_new_loop_scope()
+        #scope = self.create_new_loop_scope()
         if assign:
             syntactic_lhs = assign[-1].lhs
             if isinstance(syntactic_lhs, PythonTuple):
@@ -5278,13 +5278,21 @@ class SemanticParser(BasicParser):
 
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
+        non_var_local_vars = []
         for func_a, call_a in zip(func_args, positional_call_args):
-            scope.variables[scope.get_expected_name(func_a)] = call_a
+            func_a_name = self.scope.get_expected_name(func_a)
+            self.scope.variables[func_a_name] = call_a
+            if not isinstance(call_a, Variable):
+                non_var_local_vars.append((func_a_name, call_a))
 
         nargs = len(positional_call_args)
         kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
-            scope.variables[scope.get_expected_name(func_a_name)] = kw_call_args.get(func_a_name, func_a.default_call_arg.value)
+            func_a_target_name = self.scope.get_expected_name(func_a_name)
+            val = kw_call_args.get(func_a_name, func_a.default_call_arg.value)
+            self.scope.variables[func_a_target_name] = val
+            if not isinstance(val, Variable):
+                non_var_local_vars.append((func_a_target_name, val))
 
         expr.substitute(to_replace, local_var, invalidate = False)
 
@@ -5298,8 +5306,12 @@ class SemanticParser(BasicParser):
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
         expr.substitute(local_var, to_replace)
-        self.exit_loop_scope()
+        #self.exit_loop_scope()
         self._current_function.pop()
+
+        for func_a_name, val in non_var_local_vars:
+            self.scope.remove_variable(val, func_a_name)
+
         if assign:
             if isinstance(syntactic_lhs, PythonTuple):
                 def replace_tuples(syntactic_lhs, semantic_lhs):
@@ -5308,7 +5320,7 @@ class SemanticParser(BasicParser):
                     from the lhs of the assign.
                     """
                     for i, l in enumerate(syntactic_lhs):
-                        elem = scope.collect_tuple_element(self._visit(semantic_lhs)[i])
+                        elem = self.scope.collect_tuple_element(self._visit(semantic_lhs)[i])
                         if isinstance(l, PythonTuple):
                             replace_tuples(l, elem)
                         elif isinstance(elem, IndexedElement):
@@ -5317,13 +5329,13 @@ class SemanticParser(BasicParser):
                             pyccel_stage.set_stage('semantic')
                             body.insert2body(self._visit(syntactic_assign))
                         else:
-                            if scope.find(l):
+                            if self.scope.find(l):
                                 body.substitute(elem, self._visit(l))
                             else:
-                                new_elem = elem.clone(scope.get_expected_name(l))
+                                new_elem = elem.clone(self.scope.get_expected_name(l))
                                 body.substitute(elem, new_elem)
-                                scope.remove_variable(elem)
-                                scope.insert_variable(new_elem, l)
+                                self.scope.remove_variable(elem)
+                                self.scope.insert_variable(new_elem, l)
                 replace_tuples(syntactic_lhs, lhs)
             return body
         else:
