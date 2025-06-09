@@ -2601,7 +2601,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
+        out_args = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
         class_arg = next((a for a in arguments if a.bound_argument), None)
