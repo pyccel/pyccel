@@ -319,11 +319,11 @@ def execute_pyccel(fname, *,
             deps[filename] = parser.compile_obj
         elif filename not in deps:
             dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
-            if not parser.metavars.get('ignore_at_import',False):
+            if not parser.metavars.get('ignore_at_import', False):
                 deps[filename] = CompileObj(mod_base,
                                     folder          = mod_folder,
                                     libs            = dep_compile_libs,
-                                    has_target_file = not parser.metavars.get('no_target',False))
+                                    has_target_file = not parser.metavars.get('no_target', False))
             else:
                 compile_libs.extend(dep_compile_libs)
 
