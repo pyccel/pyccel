@@ -170,6 +170,7 @@ All notable changes to this project will be documented in this file.
 -   #1814 : Fix class method visitation order to correctly access the global scope from methods.
 -   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
 -   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
 -   Fix casting of arrays in Python translation.
 -   #2167 : Stop modifying variables to add `Final` annotation.
 

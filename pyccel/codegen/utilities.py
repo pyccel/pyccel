@@ -321,6 +321,7 @@ def recompile_object(compile_obj,
                 language=language,
                 verbose=verbose)
 
+#==============================================================================
 def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
     """
     Manage dependencies of the code to be compiled.
@@ -393,3 +394,65 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                              verbose  = verbose)
             mod_obj.add_dependencies(d)
 
+#==============================================================================
+def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None):
+    """
+    Get the module (.o files) and compilation dependencies.
+
+    Determine all additional .o files, include folders and libraries required
+    to generate the shared library or executable.
+
+    Parameters
+    ----------
+    parser : Parser
+        The parser whose dependencies should be appended.
+    compile_libs : list[str], optional
+        The libraries (-lX) that should be used for the compilation.
+        This argument is used internally but should not be provided
+        from an external call to this function.
+    deps : dict[str, CompileObj], optional
+        A dictionary describing the modules on which this code depends.
+        The key is the name of the file containing the module. The value
+        is the CompileObj describing the .o file.
+        This argument is used internally but should not be provided
+        from an external call to this function.
+
+    Returns
+    -------
+    compile_libs : list[str], optional
+        The libraries (-lX) that should be used for the compilation.
+    deps : dict[str, CompileObj], optional
+        A dictionary describing the modules on which this code depends.
+        The key is the name of the file containing the module. The value
+        is the CompileObj describing the .o file.
+    """
+    filename = parser.filename
+    mod_folder = os.path.join(os.path.dirname(filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
+    mod_base = os.path.basename(filename)
+
+    if compile_libs is None:
+        assert deps is None
+        compile_libs = []
+        deps = {}
+    else:
+        # Stop conditions
+        if parser.metavars.get('module_name', None) == 'omp_lib':
+            return compile_libs, deps
+
+        if parser.compile_obj:
+            deps[filename] = parser.compile_obj
+        elif filename not in deps:
+            dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
+            if not parser.metavars.get('ignore_at_import', False):
+                deps[filename] = CompileObj(mod_base,
+                                    folder          = mod_folder,
+                                    libs            = dep_compile_libs,
+                                    has_target_file = not parser.metavars.get('no_target', False))
+            else:
+                compile_libs.extend(dep_compile_libs)
+
+    # Proceed recursively
+    for son in parser.sons:
+        get_module_and_compile_dependencies(son, compile_libs, deps)
+
+    return compile_libs, deps
