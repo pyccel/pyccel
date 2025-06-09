@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: [devel, main]
+    branches: [devel, main, ebourne_pickle_docs]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
