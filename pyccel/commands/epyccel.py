@@ -10,7 +10,7 @@ import inspect
 import importlib
 import re
 import sys
-from typing import TypeVar
+import typing
 import os
 
 from filelock import FileLock, Timeout
@@ -120,9 +120,10 @@ def get_source_code_and_context(func_or_class):
         # T will not be available from the closure vars or globals, we therefore
         # search for TypeVars, put their definition in the context_dict and use the
         # variable name (e.g. T) in the signature.
-        for p in sig.parameters.values():
-            annot = p.annotation
-            if isinstance(annot, TypeVar):
+        params = {p.annotation for p in sig.parameters.values()}
+        while params:
+            annot = params.pop()
+            if isinstance(annot, typing.TypeVar):
                 name = annot.__name__
                 if name in context_dict:
                     if context_dict[name] != annot:
@@ -131,6 +132,8 @@ def get_source_code_and_context(func_or_class):
                 else:
                     context_dict[name] = annot
                 method_prototype = method_prototype.replace(str(annot), name)
+            elif isinstance(annot, typing.GenericAlias) or getattr(annot, '__origin__', None) is typing.Final:
+                params.update(typing.get_args(annot))
 
         # Save the updated prototype
         lines[prototype_idx] = method_prototype
@@ -201,6 +204,7 @@ def epyccel_seq(function_class_or_module, *,
                 libs          = (),
                 folder        = None,
                 conda_warnings= 'basic',
+                context_dict  = None,
                 comm          = None,
                 root          = None,
                 bcast         = None):
@@ -248,6 +252,12 @@ def epyccel_seq(function_class_or_module, *,
         Output folder for the compiled code.
     conda_warnings : {off, basic, verbose}
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict[str, obj], optional
+        A dictionary containing any Python objects from the calling scope which should
+        be made available to the translated code. By default any objects that are used
+        in the body of the function are made available, as well as any global objects.
+        If the argument is provided then these objects will be treated as additional
+        to the default arguments.
 
     Returns
     -------
@@ -282,12 +292,12 @@ def epyccel_seq(function_class_or_module, *,
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
-    # Define variable for context information
-    context_dict = None
-
     # ... get the module source code
     if isinstance(function_class_or_module, (FunctionType, type)):
-        code, context_dict = get_source_code_and_context(function_class_or_module)
+        code, collected_context_dict = get_source_code_and_context(function_class_or_module)
+        if context_dict:
+            collected_context_dict.update(context_dict)
+        context_dict = collected_context_dict
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 

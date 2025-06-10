@@ -25,6 +25,7 @@ from .datatypes     import StringType
 from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
 from .numpyext      import get_shape_of_multi_level_container
@@ -287,14 +288,13 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
     """
-    if expr.rank==0:
+    if expr.rank==0 or -pos > expr.rank:
         return expr
-    elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.rank:
-            return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
+
+    if expr.shape and expr.shape[pos] == 1:
+        index_var = LiteralInteger(0)
+
+    if isinstance(expr, (Variable, ObjectAddress)):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
@@ -303,9 +303,6 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, NumpyTranspose):
         if expr.rank==0 or -pos>expr.rank:
             return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
 
         # Add index at the required position
         if expr.rank<2:
@@ -342,16 +339,14 @@ def insert_index(expr, pos, index_var):
             return expr
 
         # Add index at the required position
-        if base.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            assert indices[pos].start is None
-            index_var = LiteralInteger(0)
-
-        else:
-            # Calculate new index to preserve slice behaviour
-            if indices[pos].step is not None:
-                index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
-            if indices[pos].start is not None:
+        # Calculate new index to preserve slice behaviour
+        if indices[pos].step is not None:
+            index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
+        if indices[pos].start is not None:
+            if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
+                index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
+                                      index_var, simplify=True)
+            else:
                 index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
         # Update index
@@ -420,7 +415,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))
@@ -697,6 +692,8 @@ def insert_fors(blocks, indices, scope, level = 0):
         body = [bi for b in body for bi in b]
 
     if blocks.length == 1:
+        for b in body:
+            b.substitute(indices[level], LiteralInteger(0))
         return body
     else:
         body = CodeBlock(body, unravelled = True)
@@ -842,4 +839,26 @@ def is_literal_integer(expr):
     return isinstance(expr, (int, LiteralInteger)) or \
         isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
 
+#==============================================================================
+def get_managed_memory_object(maybe_managed_var):
+    """
+    Get the variable responsible for managing the memory of the object passed as argument.
 
+    Get the variable responsible for managing the memory of the object passed as argument.
+    This may be the variable itself or a different variable of type MemoryHandlerType.
+
+    Parameters
+    ----------
+    maybe_managed_var : Variable
+        The variable whose management we are interested in.
+
+    Returns
+    -------
+    Variable
+        The variable responsible for managing the memory of the object.
+    """
+    managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+    if managed_mem:
+        return managed_mem[0].mem_var
+    else:
+        return maybe_managed_var

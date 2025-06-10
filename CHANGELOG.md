@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1695 : Add C and Fortran support for list method `reverse()`.
 -   #2256 : Add C and Fortran support for list method `clear()`.
 -   #2259 : Add C and Fortran support for list method `insert()`.
+-   #2298 : Add support for `list.__eq__`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -81,11 +82,15 @@ All notable changes to this project will be documented in this file.
 -   #2194 : Add support for strings as arguments.
 -   #2192 : Add support for the floor division assignment operator.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
+-   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
+-   #2132 : Add support for `typing.TypeVar` to replace `@template`.
 -   Generate stub files to allow double compilation to potentially be bypassed.
+-   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
+-   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
 -   \[DEVELOPER\] Added a spell checker for the code itself.
@@ -152,6 +157,20 @@ All notable changes to this project will be documented in this file.
 -   #2274 : Do not pass include flags to linker (they are useless).
 -   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
 -   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
+-   #2097 : Fix printing of an empty list.
+-   #2235 : Fix negative numbers in slice indices when translating to C.
+-   #2144 : Fix accidental imports due to modules making their contents public by default.
+-   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
+-   #2125 : Fix missing type check for argument of known type in a function with arguments whose type can be one of several types.
+-   #2042 : Fix missing index in loop unravelling for loop of length 1.
+-   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
+-   #1814 : Fix class method visitation order to correctly access the global scope from methods.
+-   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
+-   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
+-   Fix casting of arrays in Python translation.
+-   #2167 : Stop modifying variables to add `Final` annotation.
 
 ### Changed
 
@@ -168,6 +187,9 @@ All notable changes to this project will be documented in this file.
 -   #2234 : Print all constant C variables with `const` specifier.
 -   #2249 : Improve installation docs and recommend virtual environment.
 -   #2242 : Change format of compiler info files.
+-   #2302 : Print the deallocation in a 1 line if statement.
+-   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -199,12 +221,15 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
 
 ### Deprecated
 
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
+-   #1487 : Remove support for `@template` decorator.
 -   #1812 : Stop allowing multiple main blocks inside a module.
+-   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.

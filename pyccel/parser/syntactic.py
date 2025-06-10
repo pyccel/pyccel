@@ -176,6 +176,39 @@ class SyntaxParser(BasicParser):
 
         return ast
 
+    def create_new_function_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python function.
+
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function_name.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        **kwargs : dict
+            Keyword arguments passed through to the new scope.
+
+        Returns
+        -------
+        Scope
+            The new scope for the function.
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+
+        self._scope = child
+        self._current_function_name.append(name)
+
+        return child
+
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
@@ -321,7 +354,7 @@ class SyntaxParser(BasicParser):
         str
             The new name of the variable.
         """
-        if all(isinstance(n, (PythonTuple, PythonList)) for n in possible_names) and \
+        if all(isinstance(n, PythonTuple) for n in possible_names) and \
                 len(set(len(n) for n in possible_names)) == 1:
             # If all possible names are iterables of the same length then find a name
             # for each element and link them to an element describing this variable
@@ -456,7 +489,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint)):
+        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
@@ -836,11 +869,14 @@ class SyntaxParser(BasicParser):
 
         headers = self.scope.find(name, 'headers')
 
-        scope = self.create_new_function_scope(name)
+        new_name = self.scope.get_expected_name(name)
+
+        scope = self.create_new_function_scope(name,
+                used_symbols = {name: new_name},
+                original_symbols = {new_name: name})
 
         arguments    = self._visit(stmt.args)
 
-        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -857,7 +893,11 @@ class SyntaxParser(BasicParser):
                 decorators[tmp_var] = [d]
 
         if 'types' in decorators:
-            warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
+            warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
 
         if 'stack_array' in decorators:
             decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
@@ -883,42 +923,6 @@ class SyntaxParser(BasicParser):
         if 'inline' in decorators:
             is_inline = True
 
-        template['template_dict'] = {}
-        # extract the templates
-        if 'template' in decorators:
-            for template_decorator in decorators['template']:
-                dec_args = template_decorator.args
-                if len(dec_args) != 2:
-                    msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg, symbol = template_decorator,
-                                    severity='error')
-
-                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
-                    errors.report('Argument provided to the template decorator is not valid',
-                                    symbol = template_decorator, severity='error')
-
-                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
-                    type_name = dec_args[1].value.python_value
-                    type_descriptors = dec_args[0].value
-                else:
-                    type_name = dec_args[0].value.python_value
-                    type_descriptors = dec_args[1].value
-
-                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
-                    type_descriptors = PythonTuple(type_descriptors)
-
-                if type_name in template['template_dict']:
-                    errors.report(f'The template "{type_name}" is duplicated',
-                                symbol = template_decorator, severity='warning')
-
-                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
-
-                # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][type_name] = possible_types
-
-            # Make template decorator list accessible from decorators dict
-            template['decorator_list'] = decorators['template']
-            decorators['template'] = template
 
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
@@ -927,11 +931,10 @@ class SyntaxParser(BasicParser):
         #                   To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
         if headers:
-            warnings.warn("Support for specifying types via headers will be removed in a " +
-                          "future version of Pyccel. Please use type hints. The @template " +
-                          "decorator can be used to specify multiple types. See the " +
-                          "documentation at " +
-                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+            warnings.warn("Support for specifying types via headers will be removed in version 2.0 of Pyccel. " +
+                          "Please use type hints. TypeVar from Python's typing module can " +
+                          "be used to specify multiple types. See the documentation at " +
+                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                           "for examples.", FutureWarning)
             if any(a is not None for a in argument_annotations):
                 errors.report("Type annotations and type specification via headers should not be mixed",
@@ -1060,7 +1063,12 @@ class SyntaxParser(BasicParser):
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
-            results = FunctionDefResult(Nil())
+            if result_annotation:
+                results = self.scope.get_new_name('result', is_temp = True)
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
+                results = FunctionDefResult(results, annotation = result_annotation)
+            else:
+                results = FunctionDefResult(Nil())
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
@@ -1118,7 +1126,26 @@ class SyntaxParser(BasicParser):
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
+
+        init_method = next((m for m in methods if m.name == '__init__'), None)
+        if init_method is None:
+            init_name = PyccelSymbol('__init__')
+            self.scope.insert_symbol(init_name)
+            annot = self._treat_type_annotation(stmt, LiteralString(name))
+            init_scope = self.create_new_function_scope(init_name,
+                    used_symbols = {init_name: init_name},
+                    original_symbols = {init_name: init_name})
+            self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
+                                           annotation=annot,
+                                           kwonly=False,
+                                           bound_argument = True)
+            self_arg.set_current_ast(stmt)
+            self.scope.insert_symbol(self_arg.var)
+            self.exit_function_scope()
+            methods.append(FunctionDef(init_name, (self_arg,), CodeBlock(()), FunctionDefResult(Nil()), scope=init_scope))
+
         self.exit_class_scope()
+
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
                         docstring = docstring)

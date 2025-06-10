@@ -90,9 +90,7 @@ module tmp
     implicit none
 
     if (initialised) then
-      if (allocated(x)) then
-        deallocate(x)
-      end if
+      if (allocated(x)) deallocate(x)
       initialised = .False._b4
     end if
 
@@ -319,9 +317,7 @@ is translated to the following Fortran code:
       Out_0001 = x + 3_i64
       return
     end if
-    if (allocated(Out_0001)) then
-      deallocate(Out_0001)
-    end if
+    if (allocated(Out_0001)) deallocate(Out_0001)
 
   end subroutine f
 ```
@@ -607,8 +603,7 @@ These functions are handled via multiple functions in the wrapper:
 
 The following Python code:
 ```python
-@template('T', [int, float])
-def f(x : 'T'):
+def f(x : int | float):
     return x + 2
 ```
 

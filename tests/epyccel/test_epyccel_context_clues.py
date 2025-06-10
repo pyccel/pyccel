@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring
 import sys
-from typing import TypeVar
+from typing import TypeVar, Final
 import numpy as np
 import pytest
 from pyccel import epyccel
@@ -75,6 +75,20 @@ def test_bad_type_var_context(language):
     with pytest.raises(PyccelError):
         epyccel(f, language=language)
 
+def test_type_var_context(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : T, b : T) -> T:
+        return 2*a + b
+
+    epyc_f = epyccel(f, language=language)
+    v = epyc_f(1.0, 1.0)
+    assert v == f(1.0, 1.0)
+    assert isinstance(v, float)
+    v = epyc_f(1, 1)
+    assert v == f(1, 1)
+    assert isinstance(v, int)
+
 def test_class_context(language):
     T = int
     T2 = float
@@ -108,3 +122,106 @@ def test_numpy_cast_context(language):
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
+def test_container_type_alias_context_1(language):
+    T = list[int]
+
+    def f(a : Final[T]):
+        return a[0]
+
+    b = [4,5,6]
+    epyc_f = epyccel(f, language=language)
+    assert f(b) == epyc_f(b)
+    assert isinstance(f(b), type(epyc_f(b)))
+
+def test_container_type_alias_context_2(language):
+    T = Final[list[int]]
+
+    def f(a : T):
+        return a[0]
+
+    a = [3,2,1]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_1(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : Final[list[T]]) -> T:
+        return a[0]
+
+    a = [3,2,1]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = [3.5,2.5,1.5]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+@pytest.mark.skip(reason="Bad interface. See #2306")
+def test_type_var_container_2(language):
+    T = TypeVar('T', list[int], set[int])
+
+    def f(a : Final[T]) -> int:
+        my_sum = 0
+        for ai in a:
+            my_sum += ai
+        return my_sum
+
+    a = [3,2,1, 6, 19]
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = {1, 4, 10, 22, 5}
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_3(language):
+    T = TypeVar('T', 'int[:]', 'float[:]')
+
+    def f(a : T):
+        my_sum = 0.0
+        for ai in a:
+            my_sum += ai
+        return my_sum
+
+    a = np.arange(5)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = np.arange(5) + 0.5
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+def test_type_var_container_4(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : tuple[T, ...]) -> T:
+        return a[0]
+
+    a = (3,2,1)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+    a = (3.5,2.5,1.5)
+    epyc_f = epyccel(f, language=language)
+    assert f(a) == epyc_f(a)
+    assert isinstance(f(a), type(epyc_f(a)))
+
+def test_local_type_var_in_str(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : 'T'):
+        return a + 3.0
+
+    epyc_f = epyccel(f, language=language, context_dict={'T': T})
+    assert f(1) == epyc_f(1)
+    assert f(2.5) == epyc_f(2.5)

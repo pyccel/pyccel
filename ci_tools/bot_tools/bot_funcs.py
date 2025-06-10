@@ -19,8 +19,8 @@ default_python_versions = {
         'linux_pyccel-test_cmd': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
-        'installation': '3.9',
-        'editable_installation': '3.9',
+        'check_install': '3.9',
+        'editable_check_install': '3.9',
         'pyccel_lint': '3.11',
         'pylint': '3.9',
         'spelling': '3.12',
@@ -37,8 +37,8 @@ test_names = {
         'linux_pyccel-test_cmd': "Unit tests on Linux with pyccel-test command",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
-        'installation': "Test file generation during source installation",
-        'editable_installation': "Test file generation during editable source installation",
+        'check_install': "Test file generation during source installation",
+        'editable_check_install': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -50,7 +50,9 @@ test_dependencies = {'coverage':['linux']}
 tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'linux_pyccel-test_cmd', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'pyccel_lint', 'spelling')
+                'pyccel_lint', 'spelling', 'intel')
+
+pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 
@@ -109,17 +111,17 @@ class Bot:
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._source_repo = None
-        self._GAI = GitHubAPIInteractions()
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
         else:
             self._pr_id = int(pr_id)
         print("PR ID =", self._pr_id)
         if self._pr_id != 0:
-            self._pr_details = self._GAI.get_pr_details(pr_id)
-            print(self._pr_details)
+            GAI = GitHubAPIInteractions(self._repo)
+            self._pr_details = GAI.get_pr_details(pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
+        self._GAI = GitHubAPIInteractions(self._source_repo)
         if commit:
             self._ref = commit
             if '/' in self._ref:
@@ -301,18 +303,6 @@ class Bot:
             print(already_triggered)
             states = []
 
-            if not force_run:
-                # Get a list of all commits on this branch
-                cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
-                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                    out, err = p.communicate()
-                    print(err)
-                    assert p.returncode == 0
-
-                commit_log = [o.split(' ')[0] for o in out.split('\n')]
-                idx = next((i for i,c in enumerate(commit_log) if c ==self._base), len(commit_log))
-                commit_log = commit_log[:idx+1]
-
             for t in tests:
                 pv = python_version or default_python_versions[t]
                 key = (t, pv)
@@ -325,8 +315,6 @@ class Bot:
                         states.append(check_runs[key]['conclusion'])
                         continue
                 name = f"{test_names[t]} ({t}, {pv})"
-                if not force_run and not self.is_test_required(commit_log, name, t, states):
-                    continue
                 states.append('queued')
                 if key not in already_programmed:
                     posted = self._GAI.prepare_run(self._ref, name)
@@ -398,82 +386,11 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_installation":
-            test = "installation"
+        elif test == "editable_check_install":
+            test = "check_install"
             inputs["editable_string"] = "-e"
         print("Post workflow")
-        self._GAI.run_workflow(f'{test}.yml', inputs)
-
-    def is_test_required(self, commit_log, name, key, state):
-        """
-        Check if a costly test is required.
-
-        Check amongst previous commits. If no Python files have been changed since a
-        commit where the check was run then post the result of the previous check.
-        Otherwise indicate that the test should be run.
-
-        Parameters
-        ----------
-        commit_log : list of str
-            A list of all commits on this branch.
-
-        name : str
-            The name of the test we want to run.
-
-        key : str
-            The key which identifies the test.
-
-        state : list of str
-            A list to which the state should be appended if found.
-
-        Returns
-        -------
-        bool
-            True if the test should be run, False otherwise.
-        """
-        print("Checking : ", name, key)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) #pylint: disable=unnecessary-lambda-assignment
-                                                    and f.endswith('.py') and f != 'pyccel/version.py'
-                                                    for f in diff)
-        elif key in ('pylint',):
-            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('pyccel_lint','docs'):
-            has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' #pylint: disable=unnecessary-lambda-assignment
-                                                    for f in diff)
-        elif key in ('spelling',):
-            has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('installation', 'wheel', 'editable_installation'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
-                                                    and f != 'pyccel/version.py') or f == 'pyproject.toml'
-                                                    or f.startswith('install_scripts/')
-                                                    for f in diff)
-        elif key in ('coverage',):
-            has_relevant_change = lambda diff: True #pylint: disable=unnecessary-lambda-assignment
-        else:
-            raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
-
-        for c in commit_log:
-            diff = self.get_diff(c)
-            print("Diff found : ", diff)
-            if has_relevant_change(diff):
-                print("Contains relevant change : ", c)
-                return True
-            else:
-                check_runs = self.get_check_runs(c)
-                print(c,':', check_runs)
-                try:
-                    previous_state = next(cr for cr in check_runs if cr['name'] == name)
-                except StopIteration:
-                    continue
-                conclusion = previous_state['conclusion']
-                if conclusion in ('failure', 'success'):
-                    if key == 'coverage' and conclusion == 'failure':
-                        return True
-                    self._GAI.create_run_from_old(self._ref, name, previous_state)
-                    state.append(conclusion)
-                    return False
-        return True
+        self._GAI.run_workflow(f'{test}.yml', self._pr_details["head"]["ref"], inputs)
 
     def mark_as_draft(self):
         """
@@ -560,7 +477,7 @@ class Bot:
             return False
 
         if self.is_user_trusted(user):
-            states = self.run_tests(pr_test_keys)
+            states = self.run_tests(pr_test_keys_to_trigger)
 
             if 'failure' in states:
                 self.draft_due_to_failure()
@@ -856,18 +773,15 @@ class Bot:
     def get_diff(self, base_commit = None):
         """
         Get the diff between the base and the current commit.
-
         Get the git description of the difference between the current
         commit and the specified base commit. This output
         shows how github organises the files tab and allows line
         numbers do be calculated from git blob positions.
-
         Parameters
         ----------
         base_commit : str, optional
             The commit against which the current commit should be compared.
             The default value is the base commit of the pull request.
-
         Returns
         -------
         dict
@@ -892,6 +806,7 @@ class Bot:
             else:
                 print(err)
         return {f:l for f,l in diff.items() if l is not None}
+
 
     def accept_coverage_fix(self, comment_thread):
         """

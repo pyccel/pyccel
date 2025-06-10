@@ -2,19 +2,21 @@
 from cmath import nanj, infj, pi
 import os
 import sys
+from typing import TypeVar
 
 import pytest
 from numpy.random import rand, uniform
 from numpy import isclose
 
 from pyccel import epyccel
-from pyccel.decorators import template
 
 RTOL = sys.float_info.epsilon*1000
 ATOL = sys.float_info.epsilon*100
 
 max_float = 3.40282e5        # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
+
+T = TypeVar('T', float, complex)
 
 def test_sqrt_call(language):
     def sqrt_call(x : complex):
@@ -272,8 +274,7 @@ def test_tanh_phrase(language):
 )
 @pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Nan not correctly passed to intel function')
 def test_isfinite_call(language): # isfinite
-    @template('T', [float, complex])
-    def isfinite_call(x : 'T'):
+    def isfinite_call(x : T):
         from cmath import isfinite
         return isfinite(x)
 
@@ -302,8 +303,7 @@ def test_isfinite_call(language): # isfinite
     )
 )
 def test_isinf_call(language): # isinf
-    @template('T', [float, complex])
-    def isinf_call(x : 'T'):
+    def isinf_call(x : T):
         from cmath import isinf
         return isinf(x)
 
@@ -336,8 +336,7 @@ def test_isinf_call(language): # isinf
     )
 )
 def test_isnan_call(language): # isnan
-    @template('T', [complex, float])
-    def isnan_call(x : 'T'):
+    def isnan_call(x : T):
         from cmath import isnan
         return isnan(x)
 
@@ -453,8 +452,7 @@ def test_atanh_phrase(language):
     )
 )
 def test_phase_call(language):
-    @template('T', [float, complex])
-    def phase_call(x : 'T'):
+    def phase_call(x : T):
         from cmath import phase
         return phase(x)
 

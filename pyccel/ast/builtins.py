@@ -22,6 +22,7 @@ from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
 from .datatypes import DictType, VoidType, TypeAlias, StringType
+from .datatypes import original_type_to_pyccel_type
 from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -796,6 +797,9 @@ class PythonList(TypedAstNode):
         args = ', '.join(str(a) for a in self)
         return f'PythonList({args})'
 
+    def __len__(self):
+        return len(self._args)
+
     @property
     def args(self):
         """
@@ -900,6 +904,9 @@ class PythonSet(TypedAstNode):
 
     def __iter__(self):
         return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
 
     @property
     def args(self):
@@ -1790,3 +1797,8 @@ builtin_functions_dict = {
     'type'       : PythonType,
     'zip'        : PythonZip,
 }
+
+original_type_to_pyccel_type[list] = PythonListFunction
+original_type_to_pyccel_type[set] = PythonSetFunction
+original_type_to_pyccel_type[dict] = PythonDictFunction
+original_type_to_pyccel_type[tuple] = PythonTupleFunction

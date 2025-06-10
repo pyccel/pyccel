@@ -7,11 +7,12 @@
 """
 
 from pyccel.ast.bind_c    import BindCVariable
-from pyccel.ast.core      import ClassDef
+from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
+from pyccel.ast.typingext import TypingTypeVar
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
@@ -69,7 +70,7 @@ class Scope(object):
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_aliases',
-            'macros','templates','headers','decorators',
+            'macros','headers','decorators',
             'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
@@ -105,14 +106,6 @@ class Scope(object):
         self._loops = []
 
         self._dotted_symbols = []
-
-    def __setstate__(self, state):
-        state = state[1] # Retrieve __dict__ ignoring None
-        if any(s not in state for s in self.__slots__):
-            raise AttributeError("Missing attribute from slots. Please update pickle file")
-
-        for s in state:
-            setattr(self, s, state[s])
 
     def new_child_scope(self, name, **kwargs):
         """
@@ -188,12 +181,6 @@ class Scope(object):
         """A dictionary of user defined headers which may
         be applied to functions in this scope"""
         return self._locals['headers']
-
-    @property
-    def templates(self):
-        """A dictionary of user defined templates which may
-        be applied to functions in this scope"""
-        return self._locals['templates']
 
     @property
     def decorators(self):
@@ -277,14 +264,22 @@ class Scope(object):
             return None
 
     def find_all(self, category):
-        """ Find and return all objects from the specified category
-        in the scope.
+        """
+        Find and return all objects from the specified category in the scope.
 
-        Parameter
-        ---------
+        Find and return all objects from the specified category in the scope.
+
+        Parameters
+        ----------
         category : str
             The type of object we are searching for.
-            This must be one of the strings in Scope.categories
+            This must be one of the strings in Scope.categories.
+
+        Returns
+        -------
+        dict
+            A dictionary containing all the objects of the specified category
+            found in the scope.
         """
         if self.parent_scope:
             result = self.parent_scope.find_all(category)
@@ -292,6 +287,7 @@ class Scope(object):
             result = {}
 
         result.update(self._locals[category])
+        result.update(self._imports[category])
 
         return result
 
@@ -459,10 +455,6 @@ class Scope(object):
             name = name.name[-1]
 
         self._locals['macros'][name] = macro
-
-    def insert_template(self, expr):
-        """append the scope's templates with the given template"""
-        self._locals['templates'][expr.name] = expr
 
     def insert_header(self, expr):
         """
@@ -772,6 +764,26 @@ class Scope(object):
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
 
+    def collect_all_type_vars(self):
+        """
+        Collect all TypeVar objects which are available in this scope.
+
+        Collect all TypeVar objects which are available in this scope. This includes
+        TypeVars declared in parent scopes.
+
+        Returns
+        -------
+        list[TypeVar]
+            A list of TypeVars in the scope.
+        """
+        type_vars = {n:t for n,t in self.symbolic_aliases.items() if isinstance(t, TypingTypeVar)}
+        if self.parent_scope:
+            parent_type_vars = self.parent_scope.collect_all_type_vars()
+            parent_type_vars.update(type_vars)
+            return parent_type_vars
+        else:
+            return type_vars
+
     def update_parent_scope(self, new_parent, is_loop, name = None):
         """ Change the parent scope
         """
@@ -862,10 +874,13 @@ class Scope(object):
         name : str
             The suggested name for the new function.
         """
+        assert isinstance(o, FunctionDef)
         newname = self.get_new_name(name)
         python_name = self._original_symbol.pop(o.name)
+        assert python_name == o.scope.python_names.pop(o.name)
         o.rename(newname)
         self._original_symbol[newname] = python_name
+        o.scope.python_names[newname] = python_name
 
     def collect_tuple_element(self, tuple_elem):
         """
@@ -892,6 +907,11 @@ class Scope(object):
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base, DottedVariable):
+            cls_scope = tuple_elem.base.lhs.cls_base.scope
+            if cls_scope is not self:
+                return cls_scope.collect_tuple_element(tuple_elem)
+
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
                 and not isinstance(tuple_elem.base, PyccelFunction):
             if isinstance(tuple_elem.base, DottedVariable):
