@@ -4901,15 +4901,21 @@ class SemanticParser(BasicParser):
             func = insertion_scope.functions.get(name, None)
             if func:
                 if func.is_semantic:
-                    return EmptyNode()
+                    if self.is_header_file:
+                        # Only Interfaces should be revisited in a header file
+                        assert isinstance(func, Interface)
+                        existing_semantic_funcs = [*func.functions]
+                    else:
+                        return EmptyNode()
                 else:
                     insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
+            expr.invalidate_node()
             expr = expr.syntactic_node
             name = expr.scope.get_expected_name(expr.name)
 
-        decorators         = expr.decorators
+        decorators         = expr.decorators.copy()
         new_semantic_funcs = []
         sub_funcs          = []
         func_interfaces    = []
@@ -4923,7 +4929,7 @@ class SemanticParser(BasicParser):
             assert is_inline
             found_func = False
 
-        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
+        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
@@ -4998,7 +5004,7 @@ class SemanticParser(BasicParser):
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-        is_interface = n_templates > 1
+        is_interface = n_templates > 1 or 'overload' in decorators
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
             if function_call_args is not None and found_func:

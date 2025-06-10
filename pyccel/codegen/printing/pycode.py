@@ -234,25 +234,33 @@ class PythonCodePrinter(CodePrinter):
             The code which describes the function signature.
         """
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
-        self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
+        if func.is_inline:
+            if interface:
+                assert len(interface) == 1
+                interf = interface[0]
+                if func is interf.functions[0]:
+                    return self._print(interf)
+                else:
+                    return ''
+            else:
+                return self._print(func)
         if interface:
+            self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
         else:
             overload = ''
-        if func.is_inline:
-            return overload + self._print(func)
+
+        self.set_scope(func.scope)
+        args = ', '.join(self._print(a) for a in func.arguments)
+        result = func.results
+        body = '...'
+        if result:
+            res = f' -> {self._get_type_annotation(result.var)}'
         else:
-            self.set_scope(func.scope)
-            args = ', '.join(self._print(a) for a in func.arguments)
-            result = func.results
-            body = '...'
-            if result:
-                res = f' -> {self._get_type_annotation(result.var)}'
-            else:
-                res = ' -> None'
-            name = self.scope.get_python_name(interface[0].name if interface else func.name)
-            self.exit_scope()
-            return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
+            res = ' -> None'
+        name = self.scope.get_python_name(interface[0].name if interface else func.name)
+        self.exit_scope()
+        return ''.join((overload, f"def {name}({args}){res}:\n", self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
         """
@@ -475,8 +483,17 @@ class PythonCodePrinter(CodePrinter):
             code = ast.unparse(expr.python_ast) + '\n'
             return code
 
+        interface = expr.get_direct_user_nodes(lambda x: isinstance(x, Interface))
+        if self._in_header and interface:
+            name = self._print(expr.scope.get_python_name(expr.name))
+        else:
+            name = self._print(expr.name)
+
+        in_header = self._in_header
+        if expr.is_inline:
+            self._in_header = False
+
         self.set_scope(expr.scope)
-        name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces if not i.is_argument)
         functions  = [f for f in expr.functions if not any(f in i.functions for i in expr.interfaces)]
@@ -511,6 +528,9 @@ class PythonCodePrinter(CodePrinter):
             code = '{header}\n{code}'.format(header=headers, code=code)
 
         self.exit_scope()
+
+        self._in_header = in_header
+
         return code
 
     def _print_PyccelFunctionDef(self, expr):
@@ -1300,9 +1320,11 @@ class PythonCodePrinter(CodePrinter):
         self._in_header = True
         mod = expr.module
         variables = mod.variables
+        init_func = mod.init_func
         var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
                             for v in variables if not v.is_temp)
-        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
+        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs \
+                if f not in (mod.init_func, mod.free_func))
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
@@ -1320,7 +1342,17 @@ class PythonCodePrinter(CodePrinter):
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
 
         self._in_header = False
-        return '\n'.join((imports, var_decl, classes, funcs))
+
+        if init_func:
+            # Collect initialisation body
+            init_if = init_func.get_attribute_nodes(IfSection)[0]
+            # Remove boolean from init_body
+            init_body = init_if.body.body[:-1]
+            init_body = ''.join(self._print(l) for l in init_body)
+        else:
+            init_body = ''
+
+        return '\n'.join((imports, var_decl, classes, funcs, init_body))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)

@@ -188,6 +188,7 @@ All notable changes to this project will be documented in this file.
 -   #2242 : Change format of compiler info files.
 -   #2302 : Print the deallocation in a 1 line if statement.
 -   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

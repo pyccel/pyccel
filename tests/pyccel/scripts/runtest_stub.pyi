@@ -1,6 +1,6 @@
 from typing import Final, TypeVar
-from typing import overload
 from numpy import float64
+from typing import overload
 
 
 class A:
@@ -69,3 +69,4 @@ def p(a : 'complex') -> 'complex':
 
 def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
     ...
+

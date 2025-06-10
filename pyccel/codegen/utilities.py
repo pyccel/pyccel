@@ -29,6 +29,9 @@ stdlib_path = Path(stdlib_folder.__file__).parent
 # get path to pyccel/extensions/lib_name
 ext_path = Path(ext_folder.__file__).parent
 
+# get path to pyccel/
+pyccel_root = Path(__file__).parent.parent
+
 errors = Errors()
 
 __all__ = ['copy_internal_library','recompile_object']
@@ -426,9 +429,10 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
         The key is the name of the file containing the module. The value
         is the CompileObj describing the .o file.
     """
-    filename = parser.filename
-    mod_folder = os.path.join(os.path.dirname(filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
-    mod_base = os.path.basename(filename)
+    dep_fname = Path(parser.filename)
+    assert compile_libs is None or dep_fname.suffix in ('.pyi', '.pyh') or pyccel_root in dep_fname.parents
+    mod_folder = dep_fname.parent
+    mod_base = dep_fname.name
 
     if compile_libs is None:
         assert deps is None
@@ -440,11 +444,11 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
             return compile_libs, deps
 
         if parser.compile_obj:
-            deps[filename] = parser.compile_obj
-        elif filename not in deps:
+            deps[dep_fname] = parser.compile_obj
+        elif dep_fname not in deps:
             dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
             if not parser.metavars.get('ignore_at_import', False):
-                deps[filename] = CompileObj(mod_base,
+                deps[dep_fname] = CompileObj(mod_base,
                                     folder          = mod_folder,
                                     libs            = dep_compile_libs,
                                     has_target_file = not parser.metavars.get('no_target', False))
