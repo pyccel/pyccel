@@ -12,10 +12,11 @@ class PyccelStage(metaclass = Singleton):
 
     Class wrapping a string indicating which treatment stage Pyccel is executing.
     This string is one of:
-     - syntactic
-     - semantic
-     - codegen
-     - cwrapper
+
+    - syntactic
+    - semantic
+    - codegen
+    - cwrapper
 
     When Pyccel is not executing the stage is None.
     """

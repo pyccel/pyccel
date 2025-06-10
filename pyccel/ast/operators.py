@@ -5,7 +5,7 @@
 """
 Module handling all Python builtin operators
 These operators all have a precedence as detailed here:
-    https://docs.python.org/3/reference/expressions.html#operator-precedence
+https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, rank, shape, class_type
 """
 
@@ -192,7 +192,7 @@ class PyccelOperator(TypedAstNode):
         The precedence of the operator.
 
         The precedence of the operator as defined here:
-            https://docs.python.org/3/reference/expressions.html#operator-precedence
+        https://docs.python.org/3/reference/expressions.html#operator-precedence
         The precedence shows the order in which operators should be handled.
         In this file it is represented as an integer. The higher the integer
         value of the precedence, the higher the priority of the operator.
@@ -319,9 +319,11 @@ class PyccelUnary(PyccelUnaryOperator):
 
     Class representing a call to the Python positive operator.
     I.e:
+
         +a
+
     is equivalent to:
-        PyccelUnary(a)
+    >>> PyccelUnary(a)
 
     Parameters
     ----------
@@ -346,9 +348,11 @@ class PyccelUnarySub(PyccelUnary):
 
     Class representing a call to the Python negative operator.
     I.e:
+
         -a
+
     is equivalent to:
-        PyccelUnarySub(a)
+    >>> PyccelUnarySub(a)
 
     Parameters
     ----------
@@ -371,9 +375,11 @@ class PyccelNot(PyccelUnaryOperator):
 
     Class representing a call to the Python not operator.
     I.e:
+
         not a
+
     is equivalent to:
-        PyccelNot(a).
+    >>> PyccelNot(a).
 
     Parameters
     ----------
@@ -568,9 +574,11 @@ class PyccelPow(PyccelArithmeticOperator):
 
     Class representing a call to the Python exponent operator.
     I.e:
+
         a ** b
+
     is equivalent to:
-        PyccelPow(a, b)
+    >>>  PyccelPow(a, b)
 
     Parameters
     ----------
@@ -609,9 +617,11 @@ class PyccelAdd(PyccelArithmeticOperator):
 
     Class representing a call to the Python addition operator.
     I.e:
+
         a + b
+
     is equivalent to:
-        PyccelAdd(a, b)
+    >>> PyccelAdd(a, b)
 
     Parameters
     ----------
@@ -693,9 +703,11 @@ class PyccelMul(PyccelArithmeticOperator):
 
     Class representing a call to the Python multiplication operator.
     I.e:
+
         a * b
+
     is equivalent to:
-        PyccelMul(a, b)
+    >>> PyccelMul(a, b)
 
     Parameters
     ----------
@@ -743,9 +755,11 @@ class PyccelMinus(PyccelArithmeticOperator):
 
     Class representing a call to the Python subtraction operator.
     I.e:
+
         a - b
+
     is equivalent to:
-        PyccelMinus(a, b)
+    >>> PyccelMinus(a, b)
 
     Parameters
     ----------
@@ -793,9 +807,11 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     Class representing a call to the Python division operator.
     I.e:
+
         a / b
+
     is equivalent to:
-        PyccelDiv(a, b)
+    >>> PyccelDiv(a, b)
 
     Parameters
     ----------
@@ -861,9 +877,11 @@ class PyccelMod(PyccelArithmeticOperator):
 
     Class representing a call to the Python modulo operator.
     I.e:
+
         a % b
+
     is equivalent to:
-        PyccelMod(a, b)
+    >>> PyccelMod(a, b)
 
     Parameters
     ----------
@@ -886,9 +904,11 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
     Class representing a call to the Python integer division operator.
     I.e:
+
         a // b
+
     is equivalent to:
-        PyccelFloorDiv(a, b)
+    >>> PyccelFloorDiv(a, b)
 
     Parameters
     ----------
@@ -969,9 +989,11 @@ class PyccelEq(PyccelComparisonOperator):
 
     Class representing a call to the Python equality operator.
     I.e:
+
         a == b
+
     is equivalent to:
-        PyccelEq(a, b)
+    >>> PyccelEq(a, b)
 
     Parameters
     ----------
@@ -1001,9 +1023,11 @@ class PyccelNe(PyccelComparisonOperator):
 
     Class representing a call to the Python inequality operator.
     I.e:
+
         a != b
+
     is equivalent to:
-        PyccelNe(a, b)
+    >>> PyccelNe(a, b)
 
     Parameters
     ----------
@@ -1033,9 +1057,11 @@ class PyccelLt(PyccelComparisonOperator):
 
     Class representing a call to the Python less than operator.
     I.e:
+
         a < b
+
     is equivalent to:
-        PyccelLt(a, b)
+    >>> PyccelLt(a, b)
 
     Parameters
     ----------
@@ -1053,9 +1079,11 @@ class PyccelLe(PyccelComparisonOperator):
 
     Class representing a call to the Python less or equal operator.
     I.e:
+
         a <= b
+
     is equivalent to:
-        PyccelLe(a, b)
+    >>> PyccelLe(a, b)
 
     Parameters
     ----------
@@ -1073,9 +1101,11 @@ class PyccelGt(PyccelComparisonOperator):
 
     Class representing a call to the Python greater than operator.
     I.e:
+
         a > b
+
     is equivalent to:
-        PyccelGt(a, b)
+    >>> PyccelGt(a, b)
 
     Parameters
     ----------
@@ -1108,9 +1138,11 @@ class PyccelGe(PyccelComparisonOperator):
 
     Class representing a call to the Python greater or equal operator.
     I.e:
+
         a >= b
+
     is equivalent to:
-        PyccelGe(a, b)
+    >>> PyccelGe(a, b)
 
     Parameters
     ----------
@@ -1165,9 +1197,11 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Class representing a call to the Python AND operator.
     I.e:
+
         a and b
+
     is equivalent to:
-        PyccelAnd(a, b)
+    >>> PyccelAnd(a, b)
 
     Parameters
     ----------
@@ -1211,9 +1245,11 @@ class PyccelOr(PyccelBooleanOperator):
 
     Class representing a call to the Python OR operator.
     I.e:
+
         a or b
+
     is equivalent to:
-        PyccelOr(a, b)
+    >>> PyccelOr(a, b)
 
     Parameters
     ----------

@@ -34,28 +34,26 @@ class FunctionalFor(TypedAstNode):
     Parameters
     ----------
     loops : CodeBlock/For
-              The loops contained in the expression.
+        The loops contained in the expression.
     expr : PyccelAstNode
-              The expression at the origin of the expression
-              E.g. 'i' for '[i for i in range(10)]'.
+        The expression at the origin of the expression
+        E.g. 'i' for '[i for i in range(10)]'.
     lhs : Variable
-              The variable to which the result is assigned.
+        The variable to which the result is assigned.
     indices : list of Variable
-              All iterator targets for the for loops.
+        All iterator targets for the for loops.
     index : Variable
-              Index of result in rhs
-              E.g.:
-              ```
-              a = [i in range(1,10,2)]
-              ```
-              is translated to:
-              ```
-              Dummy_0 = 0
-              for i in range(1,10,2):
-                  a[Dummy_0]=i
-                  Dummy_0 += 1
-              ```
-              Index is `Dummy_0`.
+        Index of result in rhs
+        E.g.:
+        >>> a = [i in range(1,10,2)]
+
+        is translated to:
+        >>> Dummy_0 = 0
+        >>> for i in range(1,10,2):
+        >>>     a[Dummy_0]=i
+        >>>     Dummy_0 += 1
+
+        Index is `Dummy_0`.
     target_type : PyccelSymbol, optional
         The type of the result of the functional for. This is useful at
         the syntactic stage to pass along the final type of the lhs (list/set/array/etc).

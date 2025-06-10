@@ -475,7 +475,7 @@ class TypeAlias(SymbolicType):
 
     See Also
     --------
-    typing.TypeAlias : <https://docs.python.org/3/library/typing.html#typing.TypeAlias>.
+    typing.TypeAlias : https://docs.python.org/3/library/typing.html#typing.TypeAlias
     """
     __slots__ = ()
     _name = 'TypeAlias'
