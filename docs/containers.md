@@ -91,7 +91,7 @@ def f():
     print(a[i])
 ```
 
-```
+```none
 ERROR at annotation (semantic) stage
 pyccel:
  |fatal [semantic]: foo.py [4,10]| Inhomogeneous tuples must be indexed with constant integers for the type inference to work (a)

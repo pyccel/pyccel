@@ -626,7 +626,7 @@ int64_t f(int64_t* a, int64_t* b, int64_t* c, int64_t* d)
 
 Using the previous example, if we import the function `get_val`, we get this error:
 
-```
+```none
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
 ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)

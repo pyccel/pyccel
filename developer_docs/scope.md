@@ -1,4 +1,4 @@
-## Scope
+# Scope
 
 In computer science, the _scope_ is the area of a program where an item (e.g. variable, function, etc.) is recognised. For example a variable defined in a function will not be recognised outside of that function, therefore the function defines its scope.
 
