@@ -13,6 +13,7 @@ from .datatypes import TypeAlias
 
 __all__ = (
     'TypingFinal',
+    'TypingOverload',
     'TypingTypeAlias',
     'TypingTypeVar',
     'typing_mod'
@@ -125,11 +126,23 @@ class TypingTypeVar(TypedAstNode):
         return self._possible_types
 
 #==============================================================================
+class TypingOverload(TypedAstNode):
+    """
+    Class representing a call to the typing.overload decorator.
+
+    Class representing a call to the typing.overload decorator. This object
+    will never be constructed. It exists to recognise the import.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+#==============================================================================
 
 typing_funcs = {
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),
+        'overload': PyccelFunctionDef('overload', TypingOverload)
     }
 
 typing_mod = Module('typing',

@@ -489,7 +489,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint)):
+        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
@@ -1100,7 +1100,12 @@ class SyntaxParser(BasicParser):
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
-            results = FunctionDefResult(Nil())
+            if result_annotation:
+                results = self.scope.get_new_name('result', is_temp = True)
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
+                results = FunctionDefResult(results, annotation = result_annotation)
+            else:
+                results = FunctionDefResult(Nil())
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
