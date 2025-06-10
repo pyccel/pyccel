@@ -2415,8 +2415,7 @@ class FunctionDef(ScopedAstNode):
 
     @is_external.setter
     def is_external(self, is_external):
-        """
-        """
+        assert isinstance(is_external, bool)
         self._is_external = is_external
 
     @property
