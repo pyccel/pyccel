@@ -7,8 +7,13 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 from itertools import chain
 import pathlib
+import sys
 
 from pygments.lexers.fortran import FortranLexer
+
+pyccel_dir = pathlib.Path(__file__).parent.parent.parent
+
+sys.path.append(str(pyccel_dir.resolve()))
 
 def setup(app):
     """
@@ -32,8 +37,15 @@ release = '*'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.todo", "sphinx.ext.viewcode", "sphinx.ext.autodoc", "myst_parser",
-              "sphinx.ext.coverage", "sphinx.ext.doctest", "sphinx.ext.napoleon", "sphinx.ext.autosummary"]
+extensions = [
+        "sphinx.ext.viewcode",
+        "sphinx.ext.autodoc",
+        "sphinx.ext.doctest",
+        "sphinx.ext.napoleon", #NumPy style docstrings
+        "sphinx.ext.autosummary",
+        "sphinx_github_style",
+        "myst_parser",
+        ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -56,8 +68,14 @@ html_theme = 'renku'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
 
-base_dir = pathlib.Path(__file__).parent
-pyccel_dir = base_dir.parent.parent
+# -- Options for myst_parser -------------------------------------------------
+myst_heading_anchors = 3
+
+# -- Options for sphinx_github_style -----------------------------------------
+linkcode_url = 'https://github.com/pyccel/pyccel'
+
+# -- Link fixing -------------------------------------------------------------
+base_dir = pyccel_dir / 'docs' / 'source'
 api_dir = base_dir / 'api'
 python_path_substitutions = {}
 for module in api_dir.iterdir():
