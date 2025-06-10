@@ -9,10 +9,12 @@
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
-from .datatypes import TypeAlias
+from .datatypes import TypeAlias, GenericType
 
 __all__ = (
+    'TypingAny',
     'TypingFinal',
+    'TypingOverload',
     'TypingTypeAlias',
     'TypingTypeVar',
     'typing_mod'
@@ -125,11 +127,36 @@ class TypingTypeVar(TypedAstNode):
         return self._possible_types
 
 #==============================================================================
+class TypingOverload(TypedAstNode):
+    """
+    Class representing a call to the typing.overload decorator.
+
+    Class representing a call to the typing.overload decorator. This object
+    will never be constructed. It exists to recognise the import.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+#==============================================================================
+class TypingAny(TypedAstNode):
+    """
+    Class representing a call to the typing.Any construct.
+
+    Class representing a call to the typing.Any construct. This object
+    will never be constructed. It exists to recognise the import.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+    _static_type = GenericType()
+
+#==============================================================================
 
 typing_funcs = {
+        'Any': PyccelFunctionDef('Any', TypingAny),
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),
+        'overload': PyccelFunctionDef('overload', TypingOverload)
     }
 
 typing_mod = Module('typing',

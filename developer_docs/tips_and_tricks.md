@@ -9,4 +9,4 @@
 -   When you have broken previously working code, comparing the difference in the generated code before and after your changes should help you target which of your changes caused the problems
 -   Sometimes the traceback provided by Pyccel in developer-mode is too short to find the problem. If this is the case, the length of the traceback can be changed temporarily in `pyccel.errors.errors.Errors.report` (the default traceback length is 5).
 
-_Please feel free to add any tips or tricks you find to this non-exhaustive list_
+Please feel free to add any tips or tricks you find to this non-exhaustive list

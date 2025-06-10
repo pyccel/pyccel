@@ -4,7 +4,7 @@ The review process is the process through which a branch which solves an issue i
 
 When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the `devel` branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
 
-Once the pull request is opened 9 tests should be triggered they are: 
+Once the pull request is opened 9 tests should be triggered they are:
 
 -   **Linux** : Runs the suite of tests on a linux machine
 -   **MacOS** : Runs the suite of tests on a macOS machine

@@ -106,14 +106,6 @@ class Scope(object):
 
         self._dotted_symbols = []
 
-    def __setstate__(self, state):
-        state = state[1] # Retrieve __dict__ ignoring None
-        if any(s not in state for s in self.__slots__):
-            raise AttributeError("Missing attribute from slots. Please update pickle file")
-
-        for s in state:
-            setattr(self, s, state[s])
-
     def new_child_scope(self, name, **kwargs):
         """
         Create a new child Scope object which has the current object as parent.

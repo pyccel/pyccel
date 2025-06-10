@@ -1,4 +1,4 @@
-## Developer Setup
+# Developer Setup
 
 Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../README.md#from-sources). If this step is not followed then any changes made to source will not be used when `pyccel` or `epyccel` are used.
 
@@ -6,11 +6,11 @@ Before beginning any development in Pyccel, it is important to ensure Pyccel is 
 
 Pyccel's development is split into 4 main stages:
 
--   [Syntactic Stage](#Syntactic-stage) (for more details see [syntactic stage](syntactic_stage.md))
--   [Semantic Stage](#Semantic-stage) (for more details see [semantic stage](semantic_stage.md))
--   [Code Generation Stage](#Code-generation-stage) (for more details see [codegen stage](codegen_stage.md))
--   [Wrapping Stage](#Wrapping-stage) (for more details see [wrapping stage](wrapper_stage.md))
--   [Compilation Stage](#Compilation-stage)
+-   [Syntactic Stage](#syntactic-stage) (for more details see [syntactic stage](syntactic_stage.md))
+-   [Semantic Stage](#semantic-stage) (for more details see [semantic stage](semantic_stage.md))
+-   [Code Generation Stage](#code-generation-stage) (for more details see [codegen stage](codegen_stage.md))
+-   [Wrapping Stage](#wrapping-stage) (for more details see [wrapping stage](wrapper_stage.md))
+-   [Compilation Stage](#compilation-stage)
 
 ### Syntactic Stage
 
@@ -51,18 +51,21 @@ Finally the generated code is compiled. This is handled in the [pipeline](../pyc
 In the syntactic, semantic, and code generation stages a similar strategy is used for traversing the Python objects. This strategy is based on function names. The majority of functions have names of the form: `_prefix_ClassName` (in the syntactic and semantic stages the prefix is `visit`, in the code generation stages it is `print`). These functions are never called directly, but instead are called via a high level function `_prefix` (e.g. `_visit` for the semantic stage). This strategy avoids large `if`/`elif` blocks to handle all possible types.
 
 #### Example
+
 Suppose we want to generate the code for an object of the class `NumpyTanh`, first we collect the inheritance tree of `NumpyTanh`. This gives us:
+
 ```python
 ('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelFunction', 'TypedAstNode', 'PyccelAstNode')
 ```
+
 Therefore the print functions which are acceptable for visiting this object are:
 
--   `_print_NumpyTanh` 
--   `_print_NumpyUfuncUnary` 
--   `_print_NumpyUfuncBase` 
--   `_print_PyccelFunction` 
--   `_print_TypedAstNode` 
--   `_print_PyccelAstNode` 
+-   `_print_NumpyTanh`
+-   `_print_NumpyUfuncUnary`
+-   `_print_NumpyUfuncBase`
+-   `_print_PyccelFunction`
+-   `_print_TypedAstNode`
+-   `_print_PyccelAstNode`
 
 We run through these possible functions choosing the one which is the most specialised. If none of these methods exist, then an error is raised.
 

@@ -1,9 +1,11 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -166,6 +168,10 @@ All notable changes to this project will be documented in this file.
 -   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
 -   #1814 : Fix class method visitation order to correctly access the global scope from methods.
 -   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
+-   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
+-   Fix casting of arrays in Python translation.
+-   #2167 : Stop modifying variables to add `Final` annotation.
 
 ### Changed
 
@@ -184,6 +190,7 @@ All notable changes to this project will be documented in this file.
 -   #2242 : Change format of compiler info files.
 -   #2302 : Print the deallocation in a 1 line if statement.
 -   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -215,6 +222,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
 
 ### Deprecated
 
@@ -535,6 +543,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed

@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 from numpy.random import randint, uniform
 import numpy as np
 import pytest
@@ -7,11 +8,13 @@ from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, m
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from pyccel import epyccel
-from pyccel.decorators import template
 
+T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
+NumType = TypeVar('NumType', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
+FArrays = TypeVar('FArrays', 'float[:,:,:](order=F)', 'float[:,:](order=F)')
+CArrays = TypeVar('CArrays', 'float[:,:,:](order=C)', 'float[:,:](order=C)')
 
 def test_single_return(language):
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
     def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
@@ -110,7 +113,6 @@ def test_single_return(language):
 
 
 def test_multi_returns(language):
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
     def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
@@ -210,8 +212,7 @@ def test_multi_returns(language):
 
 def test_return_array_array_op(language):
 
-    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def return_array(a : 'T', b : 'T'):
+    def return_array(a : 'NumType', b : 'NumType'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         y = array([a,b], dtype=type(a))
@@ -298,8 +299,7 @@ def test_return_array_array_op(language):
 
 def test_return_multi_array_array_op(language):
 
-    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def return_array(a : 'T', b : 'T'):
+    def return_array(a : 'NumType', b : 'NumType'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         y = array([a,b], dtype=type(a))
@@ -386,8 +386,7 @@ def test_return_multi_array_array_op(language):
 
 def test_return_array_scalar_op(language):
 
-    @template('T', ['int8', 'int16', 'int32', 'int64', 'int', 'float32', 'float64', 'float', 'complex64', 'complex128'])
-    def return_array_scalar_op(a : 'T'):
+    def return_array_scalar_op(a : NumType):
         from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 # pylint: disable=unused-import
         x = ones(5, dtype=type(a))
         return x * a
@@ -473,8 +472,7 @@ def test_return_array_scalar_op(language):
 
 def test_multi_return_array_scalar_op(language):
 
-    @template('T', ['int8', 'int16', 'int32', 'int64', 'int', 'float32', 'float64', 'float', 'complex64', 'complex128'])
-    def return_multi_array_scalar_op(a : 'T'):
+    def return_multi_array_scalar_op(a : NumType):
         from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 #pylint: disable=unused-import
         x = ones(5, dtype=type(a))
         y = ones(5, dtype=type(a))
@@ -561,8 +559,7 @@ def test_multi_return_array_scalar_op(language):
 
 def test_multi_return_array_array_op(language):
 
-    @template('T', ['int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'int[:]', 'float32[:]', 'float64[:]', 'float[:]', 'complex64[:]', 'complex128[:]'])
-    def return_array_arg_array_op(a : 'T'):
+    def return_array_arg_array_op(a : 'NumType[:]'):
         from numpy import ones
         x = ones(7)
         return x * a
@@ -699,10 +696,7 @@ def test_return_arrays_in_expression2(language):
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
 
 def test_c_array_return(language):
-    @template('T', ['int', 'int8', 'int16', 'int32', 'int64',
-                    'float', 'float32', 'float64',
-                    'complex64', 'complex128'])
-    def return_c_array(b : 'T'):
+    def return_c_array(b : NumType):
         from numpy import array
         a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b))
         return a
@@ -735,10 +729,7 @@ def test_c_array_return(language):
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
 def test_f_array_return(language):
-    @template('T', ['int', 'int8', 'int16', 'int32', 'int64',
-                    'float', 'float32', 'float64',
-                    'complex64', 'complex128'])
-    def return_f_array(b : 'T'):
+    def return_f_array(b : NumType):
         from numpy import array
         a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order='F')
         return a
@@ -771,8 +762,7 @@ def test_f_array_return(language):
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
 def test_copy_f_to_f(language):
-    @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
-    def copy_f_to_f(b : 'T'):
+    def copy_f_to_f(b : FArrays):
         from numpy import array
         a = array(b, order='F')
         return a
@@ -791,8 +781,7 @@ def test_copy_f_to_f(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_f_to_c(language):
-    @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
-    def copy_f_to_c(b : 'T'):
+    def copy_f_to_c(b : FArrays):
         from numpy import array
         a = array(b, order='C')
         return a
@@ -811,8 +800,7 @@ def test_copy_f_to_c(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_c_to_c(language):
-    @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
-    def copy_c_to_c(b : 'T'):
+    def copy_c_to_c(b : CArrays):
         from numpy import array
         a = array(b, order='C')
         return a
@@ -831,8 +819,7 @@ def test_copy_c_to_c(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_c_to_f(language):
-    @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
-    def copy_c_to_f(b : 'T'):
+    def copy_c_to_f(b : CArrays):
         from numpy import array
         a = array(b, order='F')
         return a
@@ -851,8 +838,7 @@ def test_copy_c_to_f(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_c_to_default(language):
-    @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
-    def copy_c_to_default(b : 'T'):
+    def copy_c_to_default(b : CArrays):
         from numpy import array
         a = array(b)
         return a
@@ -871,8 +857,7 @@ def test_copy_c_to_default(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 def test_copy_f_to_default(language):
-    @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
-    def copy_f_to_default(b : 'T'):
+    def copy_f_to_default(b : FArrays):
         from numpy import array
         a = array(b)
         return a

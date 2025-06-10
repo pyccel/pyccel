@@ -489,7 +489,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint)):
+        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
@@ -894,7 +894,11 @@ class SyntaxParser(BasicParser):
                 decorators[tmp_var] = [d]
 
         if 'types' in decorators:
-            warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
+            warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
 
         if 'stack_array' in decorators:
             decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
@@ -964,11 +968,10 @@ class SyntaxParser(BasicParser):
         #                   To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
         if headers:
-            warnings.warn("Support for specifying types via headers will be removed in a " +
-                          "future version of Pyccel. Please use type hints. The @template " +
-                          "decorator can be used to specify multiple types. See the " +
-                          "documentation at " +
-                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+            warnings.warn("Support for specifying types via headers will be removed in version 2.0 of Pyccel. " +
+                          "Please use type hints. TypeVar from Python's typing module can " +
+                          "be used to specify multiple types. See the documentation at " +
+                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                           "for examples.", FutureWarning)
             if any(a is not None for a in argument_annotations):
                 errors.report("Type annotations and type specification via headers should not be mixed",
@@ -1097,7 +1100,12 @@ class SyntaxParser(BasicParser):
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
-            results = FunctionDefResult(Nil())
+            if result_annotation:
+                results = self.scope.get_new_name('result', is_temp = True)
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
+                results = FunctionDefResult(results, annotation = result_annotation)
+            else:
+                results = FunctionDefResult(Nil())
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
