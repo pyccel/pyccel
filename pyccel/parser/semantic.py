@@ -5203,11 +5203,14 @@ class SemanticParser(BasicParser):
         self._current_function.pop()
 
         for func_a_name, call_a in zip(func_args, positional_call_args):
-            self.scope.remove_variable(call_a, func_a_name)
+            if not isinstance(call_a, Variable) or func_a_name != call_a.name:
+                self.scope.remove_variable(call_a, func_a_name)
 
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
             if func_a_name in kw_call_args:
-                self.scope.remove_variable(kw_call_args[func_a_name], func_a_name)
+                call_a = kw_call_args[func_a_name]
+                if not isinstance(call_a, Variable) or func_a_name != call_a.name:
+                    self.scope.remove_variable(call_a, func_a_name)
 
 
         if assign:
