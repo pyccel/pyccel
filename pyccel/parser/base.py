@@ -48,9 +48,13 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
 
     Return a valid filename with an absolute path, that corresponds to the
     definition of module_name.
-    The priority order is:
-        - python files (extension == py)
-        - header files (extension == pyi)
+    When searching for files in a folder, the order of priority is:
+        - python files (extension == .py)
+        - header files (extension == .pyi)
+
+    In the Pyccel folder the priority is inverted as .py files are sometimes
+    provided alongside .pyi files to spoof the functionalities so user code
+    relying on these methods can be run in Python.
 
     Parameters
     ----------
