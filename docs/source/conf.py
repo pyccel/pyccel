@@ -4,8 +4,16 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+from itertools import chain
 import os
+import pathlib
 
+from pygments.lexers.fortran import FortranLexer  # fallback
+
+def setup(app):
+    # Override the 'fortran' lexer with the modern one
+    from sphinx.highlighting import lexers
+    lexers['fortran'] = FortranLexer()
 
 # -- Project information -----------------------------------------------------
 
@@ -45,3 +53,25 @@ html_theme = 'renku'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+base_dir = pathlib.Path(__file__).parent
+pyccel_dir = base_dir.parent.parent
+api_dir = base_dir / 'api'
+python_path_substitutions = {}
+for module in api_dir.iterdir():
+    path_name = module.stem.replace('.','/')
+    new_link = f'../api/{module.name}'
+    if (pyccel_dir / (path_name + '.py')).exists():
+        python_path_substitutions[f'../{path_name}.py'] = new_link
+    else:
+        python_path_substitutions[f'../{path_name})'] = new_link
+        python_path_substitutions[f'../{path_name}/)'] = new_link
+
+for doc_files in chain((base_dir / 'docs').iterdir(), (base_dir / 'developer_docs').iterdir()):
+    with open(doc_files, 'r') as f:
+        contents = f.read()
+    for file_path, api_mod_path in python_path_substitutions.items():
+        contents = contents.replace(file_path, api_mod_path)
+    contents = contents.replace('../', 'https://github.com/pyccel/pyccel/tree/devel/')
+    with open(doc_files, 'w') as f:
+        f.write(contents)
