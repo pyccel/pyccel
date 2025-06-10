@@ -20,7 +20,7 @@ Welcome to Pyccel's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting started:
+   :caption: Using Pyccel
    :hidden:
 
    docs/builtin-functions
