@@ -192,6 +192,7 @@ DistributeClauses:
 OrderedClauses:
     clause=threads_clause
     | clause=simd_clause
+    | clause=ordered_depend_clause
 ;
 
 CancelClauses:
@@ -334,6 +335,12 @@ depend_clause: name='depend' '('(
                      VERSION=OMP_4_5 dependence_type=DependenceType ':' omp_exprs=OmpTxList
              )')';
 
+ordered_depend_clause: name='depend' '('(
+                     VERSION=OMP_4_5 dependence_type='sink' ':' omp_exprs=OmpTxExpressionList
+                     | VERSION=OMP_4_5 dependence_type='source'
+             )')';
+
+
 priority_clause: name='priority' '('(
                    VERSION=OMP_4_5 omp_exprs=OmpTxIntegerExpr
              )')';
@@ -411,6 +418,10 @@ ReductionModifier: VERSION=OMP_5_0 'inscan'
                         allowed_parents += PARALLEL_PARENT[';']
                         allowed_parents += TEAMS_PARENT[';']
                     ;
+
+OmpTxExpressionList:
+    variable=ID (operator='+' constant=INT | operator='-' constant=INT)? (',' variable=ID (operator='+' constant=INT | operator='-' constant=INT)?)*
+;
 
 lastprivate_modifier: 'conditional';
 ScheduleModifier: 'monotonic' | 'nonmonotonic' | 'simd';
