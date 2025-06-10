@@ -2237,11 +2237,6 @@ class FunctionDef(ScopedAstNode):
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for header')
 
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-        else:
-            is_external = is_external and is_header and ( len(results) == 1 )
-
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2361,11 +2356,6 @@ class FunctionDef(ScopedAstNode):
         return self._headers
 
     @property
-    def templates(self):
-        """ List of templates used to determine the types """
-        return self._templates
-
-    @property
     def is_recursive(self):
         """ Returns True if the function is recursive (i.e. calls itself)
         and False otherwise """
@@ -2417,6 +2407,11 @@ class FunctionDef(ScopedAstNode):
         """ True if the function is exposed through a header file and coming
         from a f77 module """
         return self._is_external
+
+    @is_external.setter
+    def is_external(self, is_external):
+        assert isinstance(is_external, bool)
+        self._is_external = is_external
 
     @property
     def is_imported(self):
