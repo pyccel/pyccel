@@ -5177,8 +5177,6 @@ class SemanticParser(BasicParser):
         for func_a, call_a in zip(func_args, positional_call_args):
             func_a_name = self.scope.get_expected_name(func_a)
             self.scope.variables[func_a_name] = call_a
-            if not isinstance(call_a, Variable):
-                non_var_local_vars.append((func_a_name, call_a))
 
         nargs = len(positional_call_args)
         kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
@@ -5207,8 +5205,8 @@ class SemanticParser(BasicParser):
         expr.substitute(local_var, to_replace)
         self._current_function.pop()
 
-        for func_a_name, val in non_var_local_vars:
-            self.scope.remove_variable(val, func_a_name)
+        for func_a_name, call_a in zip(func_args, positional_call_args):
+            self.scope.remove_variable(call_a, func_a_name)
 
         if assign:
             if isinstance(syntactic_lhs, PythonTuple):
