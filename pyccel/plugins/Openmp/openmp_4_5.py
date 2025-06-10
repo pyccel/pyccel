@@ -13,11 +13,12 @@ from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.variable import Variable
+from pyccel.ast.operators import PyccelMinus, PyccelAdd
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpList, \
-    OmpTxDirective, OmpTxEndDirective, OmpTxNode
+    OmpTxDirective, OmpTxEndDirective, OmpTxNode, OmpExpressionList
 from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
 
 errors = Errors()
@@ -283,6 +284,11 @@ class SyntaxParser(ConfigMixin):
         fst = cls._helper_parse_expr(expr)
         return OmpList(value=instance._visit(fst), **expr.get_fixed_state())
 
+    @staticmethod
+    def _visit_OmpTxExpressionList(instance, expr, cls=None, method=None):
+        fst = cls._helper_parse_expr(expr)
+        return OmpExpressionList(value=instance._visit(fst), **expr.get_fixed_state())
+
 
 class SemanticParser(ConfigMixin):
     """Openmp 4.5 semantic parser"""
@@ -378,6 +384,19 @@ class SemanticParser(ConfigMixin):
                     severity="fatal",
                 )
         return OmpList(value=items, **expr.get_fixed_state())
+
+    @staticmethod
+    def _visit_OmpExpressionList(instance, expr, cls=None, method=None):
+        items = tuple(instance._visit(var) for var in expr.value)
+        for i in items:
+            if not isinstance(i, Variable) and not isinstance(i, PyccelMinus) and not isinstance(i, PyccelAdd):
+                errors.report(
+                    "omp list must be a list of expressions",
+                    symbol=expr,
+                    severity="fatal",
+                )
+        return OmpExpressionList(value=items, **expr.get_fixed_state())
+
 
     @staticmethod
     def _visit_OmpClause(instance, expr, cls=None, method=None):
