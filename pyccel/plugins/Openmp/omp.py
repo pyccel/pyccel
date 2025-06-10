@@ -264,6 +264,10 @@ class OmpList(OmpExpr):
             return f"({self.raw},)"
 
 
+class OmpExpressionList(OmpList):
+    """Represents an expression list"""
+
+
 class OmpTxNode(OmpNode):
     """
     Parent class for all textx openmp classes, common grammar logic is treated here.
@@ -486,5 +490,11 @@ class OmpTxIntegerExpr(OmpTxExpr, OmpIntegerExpr):
 class OmpTxList(OmpTxExpr, OmpList):
     """Represents a list"""
 
+    def __init__(self, tx_expr, comment, **kwargs):
+        super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)
+
+
+class OmpTxExpressionList(OmpTxExpr, OmpExpressionList):
+    """Represents a list of expressions"""
     def __init__(self, tx_expr, comment, **kwargs):
         super().__init__(tx_obj=tx_expr, comment=comment, **kwargs)
