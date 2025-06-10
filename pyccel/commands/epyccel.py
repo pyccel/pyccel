@@ -204,6 +204,7 @@ def epyccel_seq(function_class_or_module, *,
                 libs          = (),
                 folder        = None,
                 conda_warnings= 'basic',
+                context_dict  = None,
                 comm          = None,
                 root          = None,
                 bcast         = None):
@@ -251,6 +252,12 @@ def epyccel_seq(function_class_or_module, *,
         Output folder for the compiled code.
     conda_warnings : {off, basic, verbose}
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict[str, obj], optional
+        A dictionary containing any Python objects from the calling scope which should
+        be made available to the translated code. By default any objects that are used
+        in the body of the function are made available, as well as any global objects.
+        If the argument is provided then these objects will be treated as additional
+        to the default arguments.
 
     Returns
     -------
@@ -285,12 +292,12 @@ def epyccel_seq(function_class_or_module, *,
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
-    # Define variable for context information
-    context_dict = None
-
     # ... get the module source code
     if isinstance(function_class_or_module, (FunctionType, type)):
-        code, context_dict = get_source_code_and_context(function_class_or_module)
+        code, collected_context_dict = get_source_code_and_context(function_class_or_module)
+        if context_dict:
+            collected_context_dict.update(context_dict)
+        context_dict = collected_context_dict
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 

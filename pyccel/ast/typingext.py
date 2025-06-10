@@ -36,6 +36,7 @@ class TypingFinal(TypedAstNode):
     """
     __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
+    name = 'Final'
 
     def __init__(self, arg):
         self._arg = arg
@@ -94,6 +95,7 @@ class TypingTypeVar(TypedAstNode):
     _attribute_nodes = ()
     _class_type = TypeAlias()
     _shape = None
+    name = 'TypeVar'
 
     def __init__(self, name, *constraints, bound=None, covariant=False, contravariant=False,
             infer_variance=False, default=None):
@@ -109,7 +111,7 @@ class TypingTypeVar(TypedAstNode):
         super().__init__()
 
     @property
-    def name(self):
+    def name_str(self):
         """
         The name that is printed to represent the TypeVar.
 

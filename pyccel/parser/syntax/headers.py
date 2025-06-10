@@ -11,7 +11,7 @@ from os.path import join, dirname
 from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
+from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.headers   import MetaVariable, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
@@ -162,43 +162,6 @@ class FuncType(BasicStmt):
         results = self.results.expr if self.results else Nil()
 
         return FunctionTypeAnnotation(args, results)
-
-class TemplateStmt(BasicStmt):
-    """
-    Base class representing a template in the grammar.
-
-    Base class representing a template in the grammar.
-    To be removed when header support is deprecated.
-
-    Parameters
-    ----------
-    name : str
-        The name of the template type symbol.
-    dtypes : list of str
-        A list of the types that the template describes.
-    **kwargs : dict
-        The textx arguments.
-    """
-    def __init__(self, *, name, dtypes, **kwargs):
-        self.dtypes = dtypes
-        self.name   = name
-        super().__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Get the Pyccel equivalent of this object.
-
-        Get the Pyccel equivalent of this object.
-        """
-        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
-            msg = 'Functions in a template are not supported yet'
-            errors.report(msg,
-                        severity='error')
-            return EmptyNode()
-
-        dtypes = {t.expr  for t in self.dtypes}
-        return Template(self.name, dtypes)
 
 class ShapedID(BasicStmt):
     """class representing a ShapedID in the grammar.
@@ -614,7 +577,6 @@ hdr_classes = [Header,
                ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
-               TemplateStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
