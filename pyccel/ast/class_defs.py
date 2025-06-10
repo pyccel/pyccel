@@ -21,7 +21,8 @@ from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
 from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                          PythonNativeComplex, StringType, TupleType, CustomDataType,
-                         HomogeneousListType, HomogeneousSetType, DictType, SymbolicType)
+                         HomogeneousListType, HomogeneousSetType, DictType, SymbolicType,
+                         GenericType)
 from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                          NumpyImag, NumpyReal, NumpyTranspose,
                          NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -274,7 +275,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, (CustomDataType, SymbolicType)):
+    if isinstance(class_type, (CustomDataType, SymbolicType, GenericType)):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]

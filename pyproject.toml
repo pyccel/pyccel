@@ -52,7 +52,7 @@ artifacts = [
 ]
 include = [
   "pyccel/**/*.py",
-  "pyccel/**/*.pyh",
+  "pyccel/**/*.pyi",
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
