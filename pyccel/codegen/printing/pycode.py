@@ -260,7 +260,7 @@ class PythonCodePrinter(CodePrinter):
             res = ' -> None'
         name = self.scope.get_python_name(interface[0].name if interface else func.name)
         self.exit_scope()
-        return overload + f"def {name}({args}){res}:\n"+self._indent_codestring(body)
+        return ''.join((overload, f"def {name}({args}){res}:\n", self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
         """
