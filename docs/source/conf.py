@@ -39,10 +39,8 @@ release = '*'
 # ones.
 extensions = [
         "sphinx.ext.viewcode",
-        "sphinx.ext.autodoc",
         "sphinx.ext.doctest",
         "sphinx.ext.napoleon", #NumPy style docstrings
-        "sphinx.ext.autosummary",
         "sphinx_github_style",
         "myst_parser",
         ]
@@ -55,6 +53,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+suppress_warnings = [
+        "autodoc.import_object",
+        ]
 
 # -- Options for HTML output -------------------------------------------------
 
