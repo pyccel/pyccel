@@ -25,7 +25,7 @@ class Parser(object):
     Parameters
     ----------
     filename : str | Path
-        The name of the file being translated.
+        The absolute path to the file being translated.
 
     output_folder : str | Path
         The output folder for the generated file.
