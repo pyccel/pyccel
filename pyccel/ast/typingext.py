@@ -12,6 +12,7 @@ from .core      import Module, PyccelFunctionDef
 from .datatypes import TypeAlias, GenericType
 
 __all__ = (
+    'TypingAny',
     'TypingFinal',
     'TypingOverload',
     'TypingTypeAlias',
