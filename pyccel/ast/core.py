@@ -2952,7 +2952,6 @@ class Interface(PyccelAstNode):
             return call_arg.class_type == func_arg.class_type \
                     and (call_arg.rank == func_arg.rank)
 
-
         j = -1
         for i in fs_args:
             j += 1
@@ -3381,16 +3380,36 @@ class ClassDef(ScopedAstNode):
 
     def update_interface(self, syntactic_interface, semantic_interface):
         """
-        Replace a syntactic_interface with its semantic equivalent.
+        Replace an existing interface with a new interface.
 
-        Replace a syntactic_interface with its semantic equivalent.
+        Replace an existing interface with a new semantic interface.
+        When translating a .py file this will always be an operation which
+        replaces a syntactic interface with its semantic equivalent.
+        The syntactic interface is inserted into the class at its creation
+        to ensure that the method can be located when it is called, but
+        it is only treated on the first call (or once the rest of the
+        enlosing Module has been translated) to ensure that all global
+        variables that it may use have been declared. When the method
+        is visited to create the semantic version, this method is called
+        to update the stored interface.
+
+        When translating a .pyi file, an additional case is seen due to
+        the use of the `@overload` decorator. When this decorator is used
+        each `FunctionDef` in the `Interface` is visited individually.
+        When the first implementation is visited, the syntactic interface
+        will be replaced by the semantic interface, but when subsequent
+        implementations are visited, the syntactic interface will already
+        have been removed, rather it is the previous semantic interface
+        (identified by its name) which will be replaced.
 
         Parameters
         ----------
         syntactic_interface : FunctionDef
-            The interface that has already been added to the class.
+            The syntactic interface that should be removed from the class.
+            In the case of a .pyi file this interface may not appear in
+            the class any more.
         semantic_interface : FunctionDef
-            The interface that will replace the syntactic_interface.
+            The new interface that should appear in the class.
         """
         assert isinstance(semantic_interface, Interface)
         assert semantic_interface.is_semantic
@@ -3398,7 +3417,10 @@ class ClassDef(ScopedAstNode):
             syntactic_interface.remove_user_node(self)
         semantic_interface.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
-        self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
+        self._interfaces = tuple(m for m in self._interfaces \
+                                 if m is not syntactic_interface and \
+                                    m.name!=semantic_interface.name) \
+                            + (semantic_interface,)
 
     def get_method(self, name, raise_error_from = None):
         """

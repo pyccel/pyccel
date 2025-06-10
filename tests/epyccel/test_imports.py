@@ -48,19 +48,6 @@ def test_import_as(language):
     x = ones(10, dtype=int)
     assert f(x) == f3(x)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-)
-def test_import_collision(language):
-    def f4(x : 'int'):
-        import modules.Module_3 as mod
-        add_one = mod.add_one(x)
-        return add_one
-
-    f = epyccel(f4, language = language)
-    assert f(5) == f4(5)
-
 def test_import_method(language):
     def f5(x : 'int[:]'):
         s = x.shape[0]

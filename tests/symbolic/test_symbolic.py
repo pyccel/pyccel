@@ -29,7 +29,7 @@ T = TypeVar('T', 'float[:]', 'float[:,:]')
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
 def test_symbolic(f):
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse()
 
     settings = {}
