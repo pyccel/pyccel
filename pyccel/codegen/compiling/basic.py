@@ -7,7 +7,6 @@
 """
 Module handling classes for compiler information relevant to a given object
 """
-from itertools import chain
 from pathlib import Path
 import sys
 from filelock import FileLock
@@ -92,7 +91,7 @@ class CompileObj:
                                             self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._includes     = set(chain([folder], (Path(i) for i in includes)))
+        self._includes     = {folder, *(Path(i) for i in includes)}
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
