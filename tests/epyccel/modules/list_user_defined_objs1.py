@@ -5,12 +5,7 @@ class A:
         self.x = x
 
 def fn():
-    a = A(1)
-    b = A(2)
-    c = A(3)
-    d = A(4)
-    e = A(5)
-    lst = [a, b, c]
-    lst.append(d)
-    lst.append(e, e)
+    lst = [A(1), A(2), A(3)]
+    lst.append(A(4))
+    lst.append(A(5))
     return lst

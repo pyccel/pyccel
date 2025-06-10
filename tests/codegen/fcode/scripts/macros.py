@@ -15,13 +15,10 @@ def f1(n):
     x = zeros(n, 'int')
     __f(x)
 
-# TODO not working yet, x is intent(inout)
-#      but it is not infered as inout
-##$ header function f2(int [:])
-#def f2(x):
-#    __f(x)
+#$ header function f2(int [:])
+def f2(x):
+    __f(x) # pylint: disable=undefined-variable
 # .....................................
-
 
 # .....................................
 #           2d case

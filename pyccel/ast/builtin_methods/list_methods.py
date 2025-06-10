@@ -124,8 +124,9 @@ class ListPop(ListMethod) :
     name = 'pop'
 
     def __init__(self, list_obj, index_element=None) -> None:
-        self._shape = (None if len(list_obj.shape) == 1 else tuple(list_obj.shape[1:]))
         self._class_type = list_obj.class_type.element_type
+        rank = self._class_type.rank
+        self._shape = None if rank == 0 else (None,)*rank
         super().__init__(list_obj, index_element)
 
     @property
@@ -199,6 +200,24 @@ class ListInsert(ListMethod):
         if new_elem.class_type != list_obj.class_type.element_type:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_obj, index, new_elem)
+
+    @property
+    def index(self):
+        """
+        The index of the object after insertion in the list.
+
+        The index of the object after insertion in the list.
+        """
+        return self._args[0]
+
+    @property
+    def object(self):
+        """
+        The object to insert into the list.
+
+        The object to insert into the list.
+        """
+        return self._args[1]
 
 #==============================================================================
 class ListExtend(ListMethod):

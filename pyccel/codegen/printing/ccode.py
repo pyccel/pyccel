@@ -21,15 +21,15 @@ from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
 from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
 
-from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys
+from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
 from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import Deallocate, If, IfSection
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName
+from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 from pyccel.ast.c_concepts import CStackArray, CStrStr
@@ -48,7 +48,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil, convert_to_literal
 
-from pyccel.ast.low_level_tools import IteratorType
+from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType, ManagedMemory, UnpackManagedMemory
 
 from pyccel.ast.mathext  import math_constants
 
@@ -63,11 +63,11 @@ from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
 
-from pyccel.ast.utilities import expand_to_loops, is_literal_integer
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer, get_managed_memory_object
 
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
@@ -256,6 +256,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'CSpan_extensions']}
 
 import_header_guard_prefix = {
+    'STC_Extensions/Managed_memory': '_TOOLS_MEMORY',
     'stc/common': '_TOOLS_COMMON',
     'stc/cspan': '', # Included for import sorting
     'stc/hmap': '_TOOLS_DICT',
@@ -292,9 +293,9 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    dtype_registry = {CNativeInt()    : 'int',
-                      VoidType() : 'void',
+    dtype_registry = {VoidType() : 'void',
                       CharType() : 'char',
+                      (PrimitiveIntegerType(),None) : 'int',
                       (PrimitiveComplexType(),8) : 'double complex',
                       (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',
@@ -345,13 +346,24 @@ class CCodePrinter(CodePrinter):
         list[Import]
             A sorted list of the imports.
         """
-        import_src = [str(i.source) for i in imports]
-        dependent_imports = [i for i in import_src if i in import_header_guard_prefix]
-        non_stc_imports = [i for i in import_src if i not in dependent_imports]
-        dependent_imports.sort()
-        non_stc_imports.sort()
-        sorted_imports = [imports[import_src.index(name)] for name in chain(non_stc_imports, dependent_imports)]
-        return sorted_imports
+        stc_imports = [i for i in imports if str(i.source) in import_header_guard_prefix]
+        split_stc_imports = [Import(i.source, t) for i in stc_imports for t in i.target]
+        split_stc_imports.sort(key = lambda i:
+                # Sort by rank to avoid elements printed after classes
+                (next(iter(i.target)).object.class_type.rank
+                    # Add 0.5 to arc ranks to ensure they are printed after the elements
+                    # they contain but before they are used
+                    + 0.5*(i.source == 'STC_Extensions/Managed_memory'),
+                 # Additionally sort by the source file
+                 str(i.source),
+                 # Finally sort by type name for reproducibility
+                 next(iter(i.target)).local_alias))
+
+        non_stc_imports = [i for i in imports if i not in stc_imports]
+        non_stc_imports.sort(key = lambda i: str(i.source))
+
+
+        return non_stc_imports + split_stc_imports
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -537,7 +549,7 @@ class CCodePrinter(CodePrinter):
             c_type = self.get_c_type(lhs.class_type)
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            code_init += f'c_foreach({iter_var_name}, {c_type}, {lhs_code}) {{\n'
+            code_init += f'for (c_each({iter_var_name}, {c_type}, {lhs_code})) {{\n'
             code_init += f'*({iter_var_name}.ref) = {fill_val};\n'
             code_init += '}\n'
         return code_init
@@ -672,44 +684,77 @@ class CCodePrinter(CodePrinter):
 
         return code
 
-    def init_stc_container(self, expr, assignment_var):
+    def get_stc_init_elements(self, class_type, elements):
+        """
+        Get the elements that can be passed to a `c_make` call.
+
+        Get the elements that can be passed to a `c_make` call. For some
+        types this calculation is non-trivial. For example for elements
+        that may be pointers an arc type must be created in order to
+        ensure correct memory deallocation.
+
+        From a STC point of view this method constructs types that are
+        saved in the container (e.g. i_key) from the equivalent raw type
+        (e.g. i_keyraw).
+
+        Parameters
+        ----------
+        class_type : PyccelType
+            The type of the elements in the `c_make` call.
+        elements : list[TypedAstNode]
+            The elements that should be printed in the `c_make` call.
+
+        Returns
+        -------
+        list[str]
+            A list whose elements describe the c code which gets an element
+            of the container from a raw object.
+        """
+        if isinstance(class_type, StringType):
+            return [self._print(CStrStr(e)) for e in elements]
+        elif class_type.rank > 0:
+            stc_init_elements = []
+            element_type = self.get_c_type(class_type, in_container = True)
+            for e in elements:
+                if isinstance(e, Variable):
+                    mem_var = get_managed_memory_object(e)
+                    stc_init_elements.append(f'{element_type}_clone({self._print(mem_var)})')
+                else:
+                    code = self.init_stc_container(e, class_type)
+                    stc_init_elements.append(f'{element_type}_make({code})')
+            return stc_init_elements
+        else:
+            return [self._print(e) for e in elements]
+
+    def init_stc_container(self, expr, class_type):
         """
         Generate the initialization of an STC container in C.
 
-        This method generates and prints the C code for initializing a container using the STC `c_init()` method.
+        This method generates and prints the C code for initializing a container using the STC `c_make()` method.
 
         Parameters
         ----------
         expr : TypedAstNode
             The object representing the container being printed (e.g., PythonList, PythonSet).
 
-        assignment_var : Variable
-            The variable that the Python container is being assigned to.
+        class_type : PyccelType
+            The type of the Python container being created.
 
         Returns
         -------
         str
             The generated C code for the container initialization.
         """
-
-        class_type = assignment_var.class_type
         dtype = self.get_c_type(class_type)
         if isinstance(expr, PythonDict):
-            values = [self._print(k) for k in expr.values]
-            if isinstance(class_type.key_type, StringType):
-                keys = [self._print(CStrStr(k)) for k in expr.keys]
-            else:
-                keys = [self._print(k) for k in expr.keys]
+            values = self.get_stc_init_elements(class_type.value_type, expr.values)
+            keys = self.get_stc_init_elements(class_type.key_type, expr.keys)
             keyraw = '{' + ', '.join(f'{{{k}, {v}}}' for k,v in zip(keys, values)) + '}'
         else:
-            if isinstance(class_type.element_type, StringType):
-                args = [self._print(CStrStr(a)) for a in expr.args]
-            else:
-                args = [self._print(a) for a in expr.args]
-            keyraw = '{' + ', '.join(args) + '}'
-        container_name = self._print(assignment_var)
-        init = f'{container_name} = c_init({dtype}, {keyraw});\n'
-        return init
+            args = self.get_stc_init_elements(class_type.element_type, expr.args)
+            split = '\n' if any(len(a) > 10 for a in args) else ''
+            keyraw = '{' + split + f',{split}'.join(args) + split + '}'
+        return f'c_make({dtype}, {keyraw})'
 
     def rename_imported_methods(self, expr):
         """
@@ -792,7 +837,7 @@ class CCodePrinter(CodePrinter):
             self._additional_code = tmp_additional_code
 
             return prefix + (f'{lhs} = {start};\n'
-                    f'c_foreach({iter_var_name}, {c_type}, {arg}) {{\n'
+                    f'for (c_each({iter_var_name}, {c_type}, {arg})) {{\n'
                     f'{body}'
                      '}\n')
         else:
@@ -801,6 +846,51 @@ class CCodePrinter(CodePrinter):
             self._additional_code += self._handle_numpy_functional(expr,
                             ElementExpression, start_val)
             return self._print(tmp_var)
+
+    def _get_stc_element_type_decl(self, element_type, expr, tag = 'key', in_arc = False):
+        """
+        Get the declaration of an STC type in an include header.
+
+        Get the declaration of an STC type in an include header. This method is
+        provided to reduce duplication.
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of an element of the container being declared.
+        expr : TypedAstNode
+            A node describing the include. This is used for error handling.
+        tag : str, optional, default='key'
+            The name under which the element is identified in STC (usually key
+            or value).
+        in_arc : bool, default = True
+            Indicates whether the STC element should print the type that is stored
+            in a container (i.e. the memory handler) or in an arc type.
+
+        Returns
+        -------
+        prefix : str
+            Code that should be printed before the include command.
+        decl_line : str
+            Code that describes the declaration of the element type. This code
+            is printed both when including the STC file and when including the
+            STC extension.
+        """
+        if in_arc:
+            type_decl = self.get_c_type(element_type, not in_arc)
+            decl_line = f'#define i_{tag}class {type_decl}\n'
+        elif isinstance(element_type, FixedSizeType):
+            decl_line = f'#define i_{tag} {self.get_c_type(element_type)}\n'
+        elif isinstance(element_type, StringType):
+            decl_line = f'#define i_{tag}pro cstr\n'
+        elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+            type_decl = self.get_c_type(element_type, not in_arc)
+            decl_line = f'#define i_{tag}class {type_decl}\n'
+        else:
+            decl_line = ''
+            errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
+                    symbol=expr, severity='error')
+        return decl_line
 
     # ============ Elements ============ #
 
@@ -975,7 +1065,8 @@ class CCodePrinter(CodePrinter):
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
             classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
             for method in classDef.methods:
-                funcs += f"{self.function_signature(method)};\n"
+                if not method.is_inline:
+                    funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     funcs += f"{self.function_signature(func)};\n"
@@ -986,7 +1077,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(self._print(d) for d in decls)
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *self._additional_imports.values()]
+        imports = [i for i in chain(expr.module.imports, self._additional_imports.values()) if not i.ignore]
         imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
@@ -1046,6 +1137,9 @@ class CCodePrinter(CodePrinter):
         for i, (c, b) in enumerate(expr.blocks):
             body = self._print(b)
             if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+                if i == 0:
+                    lines.append(body)
+                    break
                 lines.append("else\n")
             else:
                 # Print condition
@@ -1076,12 +1170,16 @@ class CCodePrinter(CodePrinter):
         return '0'
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' && '.join(a for a in args)
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
+        return ' && '.join(args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' || '.join(a for a in args)
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
+        return ' || '.join(args)
 
     def _print_PyccelEq(self, expr):
         lhs, rhs = expr.args
@@ -1089,10 +1187,24 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'!strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} == {rhs_code}'
+        elif isinstance(lhs.class_type, HomogeneousListType):
+            if lhs.class_type is rhs.class_type:
+                c_type = self.get_c_type(lhs.class_type)
+                lhs_code = self._print(ObjectAddress(lhs))
+                rhs_code = self._print(ObjectAddress(rhs))
+                return f'{c_type}_eq({lhs_code}, {rhs_code})'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                        symbol = expr, severity = 'error')
+                return ''
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelNe(self, expr):
         lhs, rhs = expr.args
@@ -1100,10 +1212,14 @@ class CCodePrinter(CodePrinter):
             lhs_code = self._print(CStrStr(lhs))
             rhs_code = self._print(CStrStr(rhs))
             return f'strcmp({lhs_code}, {rhs_code})'
-        else:
+        elif isinstance(lhs.class_type, FixedSizeNumericType):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return f'{lhs_code} != {rhs_code}'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity = 'error')
+            return ''
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])
@@ -1126,8 +1242,11 @@ class CCodePrinter(CodePrinter):
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
-        a = self._print(expr.args[0])
-        return '!{}'.format(a)
+        arg = expr.args[0]
+        a = self._print(arg)
+        if isinstance(arg, PyccelOperator) and not isinstance(arg, PyccelAssociativeParenthesis):
+            a = f'({a})'
+        return f'!{a}'
 
     def _print_PyccelIn(self, expr):
         container_type = expr.container.class_type
@@ -1221,37 +1340,25 @@ class CCodePrinter(CodePrinter):
             for t in expr.target:
                 class_type = t.object.class_type
                 container_type = t.local_alias
-                self.add_import(Import(stc_extension_mapping[source],
-                       AsName(VariableTypeAnnotation(class_type), container_type),
-                       ignore_at_print=True))
+                if source in stc_extension_mapping:
+                    self.add_import(Import(stc_extension_mapping[source],
+                           AsName(VariableTypeAnnotation(class_type), container_type),
+                           ignore_at_print=True))
+
+                decl_line = f'#define i_type {container_type}\n'
                 if isinstance(class_type, DictType):
-                    key_type = class_type.key_type
-                    container_key_key = self.get_c_type(class_type.key_type)
-                    container_val_key = self.get_c_type(class_type.value_type)
-                    container_key = f'{container_key_key}_{container_val_key}'
-                    type_decl = f'{container_key_key},{container_val_key}'
-                    if isinstance(key_type, FixedSizeType):
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(key_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n'
-                                     f'#define i_val {container_val_key}\n')
+                    key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
+                    val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
+                    decl_line += (key_decl_line + val_decl_line)
+                elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType)):
+                    key_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr)
+                    decl_line += key_decl_line
+                elif isinstance(class_type, MemoryHandlerType):
+                    element_type = self.get_c_type(class_type.element_type)
+                    m_decl_line = self._get_stc_element_type_decl(class_type.element_type, expr, in_arc = True)
+                    decl_line += m_decl_line
                 else:
-                    element_type = class_type.element_type
-                    if isinstance(element_type, FixedSizeType):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = f'#define i_type {container_type},{type_decl}\n'
-                    elif isinstance(element_type, StringType):
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keypro cstr\n')
-                    elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
-                        type_decl = self.get_c_type(element_type)
-                        decl_line = (f'#define i_type {container_type}\n'
-                                     f'#define i_keyclass {type_decl}\n')
-                    else:
-                        decl_line = ''
-                        errors.report(f"The declaration of type {class_type} is not yet implemented.",
-                                symbol=expr, severity='error')
+                    raise NotImplementedError(f"Import not implemented for {container_type}")
                 if isinstance(class_type, (HomogeneousListType, HomogeneousSetType)) and isinstance(class_type.element_type, FixedSizeNumericType) \
                         and not isinstance(class_type.element_type.primitive_type, PrimitiveComplexType):
                     decl_line += '#define i_use_cmp\n'
@@ -1383,26 +1490,30 @@ class CCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
-        tuple_start = FunctionCallArgument(LiteralString('('))
-        tuple_sep   = LiteralString(', ')
-        tuple_end   = FunctionCallArgument(LiteralString(')'))
+        container_sep = LiteralString(', ')
+        tuple_tags = (FunctionCallArgument(LiteralString('(')), FunctionCallArgument(LiteralString(')')))
+        list_tags = (FunctionCallArgument(LiteralString('[')), FunctionCallArgument(LiteralString(']')))
+        set_tags = (FunctionCallArgument(LiteralString('{')), FunctionCallArgument(LiteralString('}')))
 
         for i, f in enumerate(orig_args):
             f = f.value
 
-            if isinstance(f, PythonTuple):
+            if isinstance(f, (PythonTuple, PythonList, PythonSet)):
+                start_tag, end_tag = tuple_tags if isinstance(f, PythonTuple) else \
+                             list_tags if isinstance(f, PythonList) else \
+                             set_tags
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                args = [FunctionCallArgument(print_arg) for elem in f for print_arg in (elem, container_sep)][:-1]
                 if len(f) == 1:
                     args.append(FunctionCallArgument(LiteralString(',')))
                 if i + 1 == len(orig_args):
-                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                    end_of_block = FunctionCallArgument(LiteralString(end), 'end')
                 else:
-                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                    end_of_block = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([start_tag, *args, end_tag, empty_sep, end_of_block]))
                 args = []
                 continue
             if isinstance(f, PythonType):
@@ -1437,11 +1548,14 @@ class CCodePrinter(CodePrinter):
                 for_loop  = For((for_index,), for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
+                if_body = [PythonPrint([FunctionCallArgument(f[max_index]), empty_end], file=expr.file)]
+                if_block = If(IfSection(PyccelGt(f.shape[0], LiteralInteger(0), simplify = True), if_body))
+
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
                                                 file=expr.file),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
-                                                file=expr.file)],
+                                  if_block,
+                                  PythonPrint([for_end], file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             elif isinstance(f, LiteralString):
@@ -1454,7 +1568,7 @@ class CCodePrinter(CodePrinter):
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
-    def get_c_type(self, dtype):
+    def get_c_type(self, dtype, in_container = False):
         """
         Find the corresponding C type of the PyccelType.
 
@@ -1470,6 +1584,10 @@ class CCodePrinter(CodePrinter):
         dtype : PyccelType
             The data type of the expression. This can be a fixed-size numeric type,
             a primitive type, or a container type.
+
+        in_container : bool, default = False
+            A boolean indicating whether the type will be stored in a container.
+            If this is the case then an additional arc type may be created.
 
         Returns
         -------
@@ -1495,30 +1613,43 @@ class CCodePrinter(CodePrinter):
 
             key = (primitive_type, dtype.precision)
 
+        elif isinstance(dtype, StringType):
+            self.add_import(c_imports['stc/cstr'])
+            return 'cstr'
+
+        elif in_container:
+            return self.get_c_type(MemoryHandlerType(dtype))
+
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
-            element_type = self.get_c_type(dtype.datatype).replace(' ', '_').rstrip('_t')
+            element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_')
             i_type = f'array_{element_type}_{dtype.rank}d'
             self.add_import(Import('stc/cspan', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, (HomogeneousSetType, HomogeneousListType)):
             container_type = 'hset' if dtype.name == 'set' else 'vec'
-            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            element_type = self.get_c_type(dtype.element_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{element_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
         elif isinstance(dtype, DictType):
             container_type = 'hmap'
-            key_type = self.get_c_type(dtype.key_type).replace(' ', '_')
-            val_type = self.get_c_type(dtype.value_type).replace(' ', '_')
+            key_type = self.get_c_type(dtype.key_type, in_container = True).replace(' ', '_')
+            val_type = self.get_c_type(dtype.value_type, in_container = True).replace(' ', '_')
             i_type = f'{container_type}_{key_type}_{val_type}'
             self.add_import(Import(f'stc/{container_type}', AsName(VariableTypeAnnotation(dtype), i_type)))
             return i_type
 
-        elif isinstance(dtype, StringType):
-            self.add_import(c_imports['stc/cstr'])
-            return 'cstr'
+        elif isinstance(dtype, MemoryHandlerType):
+            element_type = self.get_c_type(dtype.element_type).replace(' ', '_')
+            i_type = f'{element_type}_mem'
+            self.add_import(Import('STC_Extensions/Managed_memory', AsName(VariableTypeAnnotation(dtype), i_type)))
+            return i_type
+
+        elif isinstance(dtype, CustomDataType):
+            return self._print(dtype)
+
         else:
             key = dtype
 
@@ -1571,10 +1702,10 @@ class CCodePrinter(CodePrinter):
             dtype = self.get_c_type(expr.class_type.element_type)
         elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
             dtype = self.get_c_type(expr.class_type)
-        elif not isinstance(class_type, CustomDataType):
-            dtype = self.get_c_type(expr.dtype)
+        elif isinstance(class_type, MemoryHandlerType):
+            dtype = self.get_c_type(class_type.element_type) + '_mem'
         else:
-            dtype = self._print(expr.class_type)
+            dtype = self.get_c_type(expr.class_type)
 
         if getattr(expr, 'is_const', False):
             dtype = f'const {dtype}'
@@ -1587,6 +1718,8 @@ class CCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         var = expr.variable
         if isinstance(var.class_type, InhomogeneousTupleType):
+            return ''
+        if get_managed_memory_object(var) != var and not var.on_stack and not var.is_argument:
             return ''
 
         declaration_type = self.get_declare_type(var)
@@ -1605,8 +1738,20 @@ class CCodePrinter(CodePrinter):
             preface, init = self._init_stack_array(var)
         else:
             preface = ''
-            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external:
+            if isinstance(var.class_type, (HomogeneousContainerType, DictType)) and not expr.external and not var.is_alias:
                 init = ' = {0}'
+            elif isinstance(var.class_type, MemoryHandlerType) and not expr.external:
+                managed_mem_lst = var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+                if managed_mem_lst:
+                    managed_mem = managed_mem_lst[0]
+                    managed_var = managed_mem.var
+                    if managed_var.on_stack:
+                        mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
+                        init = f' = {mem_type}_from_ptr(&{managed_var.name})'
+                    elif not managed_var.is_alias:
+                        mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
+                        elem_type = self.get_c_type(var.class_type.element_type)
+                        init = f' = {mem_type}_make({elem_type}_init())'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -1647,7 +1792,11 @@ class CCodePrinter(CodePrinter):
 
         if n_results > 1 or isinstance(expr.results.var.class_type, InhomogeneousTupleType):
             ret_type = self.get_c_type(PythonNativeInt())
-            arg_vars.extend(result_vars)
+            if expr.arguments and expr.arguments[0].bound_argument:
+                # Place the first arg_var (the bound class object) first
+                arg_vars = arg_vars[:1] + result_vars + arg_vars[1:]
+            else:
+                arg_vars = result_vars + arg_vars
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         elif n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
@@ -1720,14 +1869,18 @@ class CCodePrinter(CodePrinter):
             index = self._print(inds[0])
             list_var = self._print(ObjectAddress(base))
             container_type = self.get_c_type(base.class_type)
+            code = f"{container_type}_at({list_var}, {index})"
             if assign:
                 is_mut = False
                 for a in assign:
                     lhs = a.lhs
                     is_mut = is_mut or lhs == expr or lhs.is_user_of(expr)
                 if is_mut:
-                    return f"(*{container_type}_at_mut({list_var},{index}))"
-            return f"(*{container_type}_at({list_var},{index}))"
+                    code = f"{container_type}_at_mut({list_var}, {index})"
+            if base.class_type.rank > 1:
+                return f'(*{code}->get)'
+            else:
+                return f'(*{code})'
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
@@ -1803,41 +1956,43 @@ class CCodePrinter(CodePrinter):
         Slice
             The new slice with processed arguments (start, stop, step).
         """
-        start = LiteralInteger(0) if _slice.start is None else _slice.start
-        stop = array_size if _slice.stop is None else _slice.stop
+        explicit_start = LiteralInteger(0) if _slice.start is None else _slice.start
+        explicit_stop = array_size if _slice.stop is None else _slice.stop
 
         # negative start and end in slice
-        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArrayShapeElement)):
-            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                            PyccelMinus(array_size, start, simplify = True), start)
+        if isinstance(explicit_start, PyccelUnarySub) and isinstance(explicit_start.args[0], LiteralInteger):
+            start = PyccelMinus(array_size, explicit_start.args[0], simplify = True)
+        elif allow_negative_index and not isinstance(explicit_start, (LiteralInteger, PyccelArrayShapeElement)):
+            start = IfTernaryOperator(PyccelLt(explicit_start, LiteralInteger(0)),
+                            PyccelAdd(array_size, explicit_start, simplify = True), explicit_start)
         else:
             start = _slice.start
 
-        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArrayShapeElement)):
-            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                            PyccelMinus(array_size, stop, simplify = True), stop)
+        if isinstance(explicit_stop, PyccelUnarySub) and isinstance(explicit_stop.args[0], LiteralInteger):
+            stop = PyccelMinus(array_size, explicit_stop.args[0], simplify = True)
+        elif allow_negative_index and not isinstance(explicit_stop, (LiteralInteger, PyccelArrayShapeElement)):
+            stop = IfTernaryOperator(PyccelLt(explicit_stop, LiteralInteger(0)),
+                            PyccelAdd(array_size, explicit_stop, simplify = True), explicit_stop)
         else:
             stop = _slice.stop
 
         # steps in slices
-        step = _slice.step
+        explicit_step = _slice.step or LiteralInteger(1)
 
         # negative step in slice
-        if step and isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+        if isinstance(explicit_step, PyccelUnarySub) and isinstance(explicit_step.args[0], LiteralInteger):
             start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
             raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
-        elif step and allow_negative_index and step and not isinstance(step, LiteralInteger):
-            og_start = start
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
-            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
+        elif allow_negative_index and not isinstance(explicit_step, LiteralInteger):
+            start = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_start,
+                                      PyccelMinus(explicit_stop, LiteralInteger(1), simplify = True))
+            stop = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_stop, explicit_start)
             raise NotImplementedError("Negative step not yet handled")
+        else:
+            step = _slice.step
 
         return Slice(start, stop, step)
 
@@ -1930,28 +2085,40 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType, StringType)):
-            if expr.variable.is_alias:
-                return ''
-            variable_address = self._print(ObjectAddress(expr.variable))
-            container_type = self.get_c_type(expr.variable.class_type)
-            return f'{container_type}_drop({variable_address});\n'
-        if isinstance(expr.variable.class_type, InhomogeneousTupleType):
-            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if isinstance(expr.variable.dtype, CustomDataType):
-            variable_address = self._print(ObjectAddress(expr.variable))
-            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
-            return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            if expr.variable.is_alias:
-                return ''
+        var = expr.variable
+        mgd_var = get_managed_memory_object(var)
+        code = ''
+        if mgd_var != var:
+            variable_address = self._print(ObjectAddress(mgd_var))
+            container_type = self.get_c_type(mgd_var.class_type)
+            code = f'{container_type}_drop({variable_address});\n'
+            if not var.on_stack and not var.is_argument:
+                return code
+
+        if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,
+                                                 DictType, StringType)):
+            if var.is_alias:
+                return code
+
+            variable_address = self._print(ObjectAddress(var))
+            container_type = self.get_c_type(var.class_type)
+            return f'{container_type}_drop({variable_address});\n' + code
+        if isinstance(var.class_type, InhomogeneousTupleType):
+            return ''.join(self._print(Deallocate(v)) for v in var)
+        if isinstance(var.dtype, CustomDataType):
+            variable_address = self._print(ObjectAddress(var))
+            Pyccel__del = var.cls_base.scope.find('__del__').name
+            return f"{Pyccel__del}({variable_address});\n" + code
+        elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+            if var.is_alias:
+                return code
             else:
-                data_ptr = DottedVariable(VoidType(), 'data', lhs = expr.variable, memory_handling='alias')
+                data_ptr = DottedVariable(VoidType(), 'data', lhs = var, memory_handling='alias')
                 data_ptr_code = self._print(ObjectAddress(data_ptr))
-                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n'
+                return f'free({data_ptr_code});\n{data_ptr_code} = NULL;\n' + code
         else:
-            variable_address = self._print(ObjectAddress(expr.variable))
-            return f'free({variable_address});\n'
+            variable_address = self._print(ObjectAddress(var))
+            return f'free({variable_address});\n' + code
 
     def _print_Slice(self, expr):
         start = expr.start
@@ -2206,33 +2373,29 @@ class CCodePrinter(CodePrinter):
         return self._handle_numpy_functional(expr, PyccelAdd, convert_to_literal(0, expr.class_type))
 
     def _print_NumpyLinspace(self, expr):
-        template = '({start} + {index}*{step})'
+        start = self._print(expr.start)
+        step  = self._print(expr.step)
+        stop = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
+        index = self._print(expr.ind)
+
+        init_value = f'({start} + {index}*{step})'
+        endpoint_code = ''
         if not isinstance(expr.endpoint, LiteralFalse):
-            template = '({start} + {index}*{step})'
             lhs_source = expr.get_user_nodes(Assign)[0].lhs
             lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
             lhs = self._print(lhs_source)
 
             if isinstance(expr.endpoint, LiteralTrue):
-                cond_template = lhs + ' = {stop}'
+                endpoint_code = f'{lhs} = {stop}'
             else:
-                cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
+                cond = self._print(expr.endpoint)
+                endpoint_code = f'{lhs} = {cond} ? {stop} : {lhs}'
 
-        v = self._cast_to(expr.stop, expr.dtype).format(self._print(expr.stop))
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
+            self.add_import(c_imports['math'])
+            init_value = f'floor({init_value})'
 
-        init_value = template.format(
-            start = self._print(expr.start),
-            step  = self._print(expr.step),
-            index = self._print(expr.ind),
-        )
-        if isinstance(expr.endpoint, LiteralFalse):
-            code = init_value
-        elif isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + ';\n' + cond_template.format(stop = v)
-        else:
-            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
-
-        return code
+        return ';\n'.join((init_value, endpoint_code))
 
     def _print_Interface(self, expr):
         return ""
@@ -2263,6 +2426,11 @@ class CCodePrinter(CodePrinter):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
         decs  = ''.join(self._print(i) for i in decs)
 
+        if len(expr.body.get_attribute_nodes(Return)) == 0:
+            extra_deallocs = [v for v in expr.local_vars if isinstance(v.class_type, MemoryHandlerType) and \
+                                            v.is_temp]
+            body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
+
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
             self._additional_args.pop()
@@ -2287,10 +2455,34 @@ class CCodePrinter(CodePrinter):
         if func.is_inline:
             return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
-        args = ', '.join(self._print(a) for a in chain(expr.args, self._temporary_args))
+        args = []
+        for a, f in zip(expr.args, func.arguments):
+            arg_val = a.value or Nil()
+            f = f.var
+            if self.is_c_pointer(f):
+                if isinstance(arg_val, Variable):
+                    args.append(ObjectAddress(arg_val))
+                elif not self.is_c_pointer(arg_val):
+                    tmp_var = self.scope.get_temporary_variable(f.dtype)
+                    assign = Assign(tmp_var, arg_val)
+                    code = self._print(assign)
+                    self._additional_code += code
+                    args.append(ObjectAddress(tmp_var))
+                else:
+                    args.append(arg_val)
+            else :
+                args.append(arg_val)
+
+        if func.arguments and func.arguments[0].bound_argument:
+            # Place the first arg_var (the bound class object) first
+            args = args[:1] + self._temporary_args + args[1:]
+        else:
+            args = self._temporary_args + args
+
+        args_code = ', '.join(self._print(a) for a in args)
         self._temporary_args = []
 
-        call_code = f'{func.name}({args})'
+        call_code = f'{func.name}({args_code})'
         if func.results.var is not Nil() and \
                 not isinstance(func.results.var.class_type, InhomogeneousTupleType):
             return call_code
@@ -2298,24 +2490,24 @@ class CCodePrinter(CodePrinter):
             return f'{call_code};\n'
 
     def _print_Return(self, expr):
-        code = ''
+        funcs = expr.get_user_nodes(FunctionDef)
+        assert len(funcs) == 1
+        extra_deallocs = [v for v in funcs[0].local_vars if isinstance(v.class_type, MemoryHandlerType) and \
+                                        v.is_temp]
+        code = ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
+
         return_obj = expr.expr
         if return_obj is None:
             args = []
         elif isinstance(return_obj.class_type, InhomogeneousTupleType):
             if expr.stmt:
-                return self._print(expr.stmt)+'return 0;\n'
-            return 'return 0;\n'
+                return code + self._print(expr.stmt)+'return 0;\n'
+            return code + 'return 0;\n'
         else:
             args = [ObjectAddress(return_obj) if self.is_c_pointer(return_obj) else return_obj]
 
         if len(args) == 0:
-            return 'return;\n'
-
-        if len(args) > 1:
-            if expr.stmt:
-                return self._print(expr.stmt)+'return 0;\n'
-            return 'return 0;\n'
+            return code + 'return;\n'
 
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
@@ -2326,12 +2518,12 @@ class CCodePrinter(CodePrinter):
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
             elif isinstance(last_assign[-1], (AugAssign, AliasAssign)):
                 last_assign[-1].lhs.is_temp = False
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
             elif isinstance(last_assign[-1].rhs, PythonTuple):
-                code = self._print(expr.stmt)
+                code = code + self._print(expr.stmt)
                 last_assign[-1].lhs.is_temp = False
             else:
                 # make sure that stmt contains one assign node.
@@ -2340,12 +2532,12 @@ class CCodePrinter(CodePrinter):
                 unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
                         isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
                 if unneeded_var:
-                    code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                    code = code + ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
                     if isinstance(last_assign.lhs, Variable):
                         last_assign.lhs.is_temp = False
-                    code = self._print(expr.stmt)
+                    code = code + self._print(expr.stmt)
 
         returned_value = self.scope.collect_tuple_element(args[0])
 
@@ -2408,14 +2600,20 @@ class CCodePrinter(CodePrinter):
         return ' ^ '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelBitOr(self, expr):
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
         if expr.dtype is PythonNativeBool():
-            return ' || '.join(self._print(a) for a in expr.args)
-        return ' | '.join(self._print(a) for a in expr.args)
+            return ' || '.join(args)
+        return ' | '.join(args)
 
     def _print_PyccelBitAnd(self, expr):
+        args = [f'({self._print(a)})' if isinstance(a, PyccelOperator) and \
+                                        not isinstance(a, PyccelAssociativeParenthesis) \
+                    else self._print(a) for a in expr.args]
         if expr.dtype is PythonNativeBool():
-            return ' && '.join(self._print(a) for a in expr.args)
-        return ' & '.join(self._print(a) for a in expr.args)
+            return ' && '.join(args)
+        return ' & '.join(args)
 
     def _print_PyccelInvert(self, expr):
         return '~{}'.format(self._print(expr.args[0]))
@@ -2434,7 +2632,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if op == '%' and isinstance(lhs.dtype.primitive_type, PrimitiveFloatingPointType):
+        if op == '//' or (op == '%' and isinstance(lhs.dtype.primitive_type, PrimitiveFloatingPointType)):
             _expr = expr.to_basic_assign()
             expr.invalidate_node()
             return self._print(_expr)
@@ -2446,12 +2644,12 @@ class CCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, InhomogeneousTupleType):
+        if isinstance(rhs, (FunctionCall, DictPopitem)) and isinstance(rhs.class_type, InhomogeneousTupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             code = self._print(rhs)
             self._temporary_args = []
             return code
-        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
         if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
@@ -2460,8 +2658,9 @@ class CCodePrinter(CodePrinter):
             return self.arrayFill(expr)
         lhs_code = self._print(lhs)
         if isinstance(rhs, (PythonList, PythonSet, PythonDict)):
-            return self.init_stc_container(rhs, expr.lhs)
-        rhs_code = self._print(rhs)
+            rhs_code = self.init_stc_container(rhs, expr.lhs.class_type)
+        else:
+            rhs_code = self._print(rhs)
         return f'{lhs_code} = {rhs_code};\n'
 
     def _print_AliasAssign(self, expr):
@@ -2499,20 +2698,22 @@ class CCodePrinter(CodePrinter):
         iterable = expr.iterable
         indices = iterable.loop_counters
 
-        if isinstance(iterable, (VariableIterator, DictItems, DictKeys)) and \
+        if isinstance(iterable, (VariableIterator, DictItems, DictKeys, DictValues)) and \
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
             counter = Variable(IteratorType(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
-            for_code = f'c_foreach ({self._print(counter)}, {c_type}, {iterable_code})'
+            for_code = f'for (c_each ({self._print(counter)}, {c_type}, {iterable_code}))'
             tmp_ref = DottedVariable(VoidType(), 'ref', memory_handling='alias', lhs = counter)
             if isinstance(iterable, DictItems):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref)),
                            Assign(expr.target[1], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
             elif isinstance(iterable, DictKeys):
                 assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'first', lhs = tmp_ref))]
+            elif isinstance(iterable, DictValues):
+                assigns = [Assign(expr.target[0], DottedVariable(VoidType(), 'second', lhs = tmp_ref))]
             else:
                 assigns = [Assign(expr.target[0], tmp_ref)]
             additional_assign = CodeBlock(assigns)
@@ -2694,9 +2895,11 @@ class CCodePrinter(CodePrinter):
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
             return self._print(cast_func(expr.value))
 
-
     def _print_Variable(self, expr):
-        if self.is_c_pointer(expr):
+        managed_mem = get_managed_memory_object(expr)
+        if managed_mem is not expr:
+            return f'(*{managed_mem.name}.get)'
+        elif self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
@@ -2733,13 +2936,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
+        if isinstance(expr.obj, ObjectAddress):
+            return f'&{obj_code}'
+        elif obj_code.startswith('(*') and obj_code.endswith(')'):
+            return f'{obj_code[2:-1]}'
+        elif not self.is_c_pointer(expr.obj):
             return f'&{obj_code}'
         else:
-            if obj_code.startswith('(*') and obj_code.endswith(')'):
-                return f'{obj_code[2:-1]}'
-            else:
-                return obj_code
+            return obj_code
 
     def _print_PointerCast(self, expr):
         declare_type = self.get_declare_type(expr.cast_type)
@@ -2824,6 +3028,19 @@ class CCodePrinter(CodePrinter):
         raise errors.report(PYCCEL_INTERNAL_ERROR,
                 symbol = expr, severity='fatal')
 
+    def _print_UnpackManagedMemory(self, expr):
+        mem_var = expr.memory_handler_var
+        lhs_code = self._print(mem_var)
+        rhs_code = self._print(expr.managed_object)
+
+        if rhs_code.endswith('->get)'):
+            rhs_code = rhs_code.removesuffix('->get)').removeprefix('(*')
+            class_type = self.get_c_type(mem_var.class_type)
+            rhs_code = f'{class_type}_clone(*{rhs_code})'
+
+        return f'{lhs_code} = {rhs_code};\n'
+
+
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
@@ -2856,7 +3073,7 @@ class CCodePrinter(CodePrinter):
         variables = self.scope.variables.values()
         decs = ''.join(self._print(Declare(v)) for v in variables)
 
-        imports = [*expr.imports, *self._additional_imports.values()]
+        imports = [i for i in chain(expr.imports, self._additional_imports.values()) if not i.ignore]
         imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
 
@@ -2890,7 +3107,7 @@ class CCodePrinter(CodePrinter):
         target = expr.list_obj
         class_type = target.class_type
         c_type = self.get_c_type(class_type)
-        arg = self._print(expr.args[0])
+        arg = self.get_stc_init_elements(class_type.element_type, expr.args)[0]
         list_obj = self._print(ObjectAddress(expr.list_obj))
         return f'{c_type}_push({list_obj}, {arg});\n'
 
@@ -2904,9 +3121,25 @@ class CCodePrinter(CodePrinter):
                 idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
             else:
                 idx_code = self._print(expr.index_element)
-            return f'{c_type}_pull_elem({list_obj}, {idx_code})'
+            code = f'{c_type}_pull_elem({list_obj}, {idx_code})'
         else:
-            return f'{c_type}_pull({list_obj})'
+            code = f'{c_type}_pull({list_obj})'
+
+        if not isinstance(expr.class_type, FixedSizeNumericType) and \
+                not expr.get_direct_user_nodes(lambda u: isinstance(u, UnpackManagedMemory)):
+            elem_type = self.get_c_type(class_type.element_type, in_container=True)
+            code = f'{elem_type}_release({code})'
+
+        return code
+
+    def _print_ListInsert(self, expr):
+        target = expr.list_obj
+        class_type = target.class_type
+        c_type = self.get_c_type(class_type)
+        idx = self._print(expr.index)
+        obj = self._print(expr.object)
+        list_obj = self._print(ObjectAddress(expr.list_obj))
+        return f'{c_type}_insert({list_obj}, {idx}, {obj});\n'
 
     def _print_ListClear(self, expr):
         target = expr.list_obj
@@ -2986,7 +3219,8 @@ class CCodePrinter(CodePrinter):
     def _print_PythonSet(self, expr):
         tmp_var = self.scope.get_temporary_variable(expr.class_type, shape = expr.shape,
                     memory_handling='heap')
-        self._additional_code += self.init_stc_container(expr, tmp_var)
+        assign_code = self._print(Assign(tmp_var, expr))
+        self._additional_code += assign_code
         return self._print(tmp_var)
 
     #================== Dict methods ==================
@@ -3032,6 +3266,20 @@ class CCodePrinter(CodePrinter):
 
         return pop_expr
 
+    def _print_DictPopitem(self, expr):
+        dict_obj = expr.dict_obj
+        class_type = dict_obj.class_type
+        c_type = self.get_c_type(class_type)
+
+        dict_obj_code = self._print(ObjectAddress(dict_obj))
+
+        key, value = self._temporary_args
+
+        key_code = self._print(key)
+        value_code = self._print(value)
+
+        return f'{c_type}_popitem({dict_obj_code}, {key_code}, {value_code});\n'
+
     def _print_DictGetItem(self, expr):
         dict_obj = expr.dict_obj
         dict_obj_code = self._print(ObjectAddress(dict_obj))
@@ -3042,14 +3290,16 @@ class CCodePrinter(CodePrinter):
         else:
             key = self._print(expr.key)
         assign = expr.get_user_nodes(Assign)
-        if assign:
-            assert len(assign) == 1
-            assign_node = assign[0]
-            lhs = assign_node.lhs
-            if lhs == expr or lhs.is_user_of(expr):
-                return f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
 
-        return f"(*{container_type}_at({dict_obj_code}, {key}))"
+        code = f"(*{container_type}_at({dict_obj_code}, {key}))"
+        if assign:
+            if any(a.lhs == expr or a.lhs.is_user_of(expr) for a in assign):
+                code = f"(*{container_type}_at_mut({dict_obj_code}, {key}))"
+
+        if not isinstance(expr.class_type, FixedSizeNumericType):
+            code = code[:-1] + '->get)'
+
+        return code
 
     #================== String methods ==================
 

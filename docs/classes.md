@@ -258,9 +258,7 @@ module cls_test
 
     if (.not. self%is_freed) then
       ! pass
-      if (allocated(self%param2)) then
-        deallocate(self%param2)
-      end if
+      if (allocated(self%param2)) deallocate(self%param2)
       self%is_freed = .True._b1
     end if
 
@@ -592,9 +590,7 @@ module cls_test
 
     if (.not. self%is_freed) then
       ! pass
-      if (allocated(self%param2)) then
-        deallocate(self%param2)
-      end if
+      if (allocated(self%param2)) deallocate(self%param2)
       self%is_freed = .True._b1
     end if
 

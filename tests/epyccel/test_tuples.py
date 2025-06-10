@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import inspect
+from typing import TypeVar
 import pytest
 import numpy as np
 
 from modules import tuples as tuples_module
 
 from pyccel import epyccel
-from pyccel.decorators import template
 from pyccel.errors.errors import PyccelError
 
 
@@ -76,7 +76,7 @@ c_marks = [f[1] for f in tuple_funcs if f[0] in failing_c_tests]
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="function in function is not implemented yet\
-                in C language"),
+                in C language", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -150,8 +150,9 @@ def test_homogeneous_tuples_of_numpy_ints_as_args(language):
     assert my_tuple(tuple_arg) == epyc_func(tuple_arg)
 
 def test_homogeneous_tuples_template_args(language):
-    @template('T', [int, float])
-    def my_tuple(a : 'tuple[T,...]'):
+    T = TypeVar('T', int, float)
+
+    def my_tuple(a : tuple[T,...]):
         return len(a), a[0], a[1], a[2]
 
     epyc_func = epyccel(my_tuple, language=language)

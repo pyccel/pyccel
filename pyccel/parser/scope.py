@@ -7,11 +7,11 @@
 """
 
 from pyccel.ast.bind_c    import BindCVariable
-from pyccel.ast.core      import ClassDef
+from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
@@ -105,14 +105,6 @@ class Scope(object):
         self._loops = []
 
         self._dotted_symbols = []
-
-    def __setstate__(self, state):
-        state = state[1] # Retrieve __dict__ ignoring None
-        if any(s not in state for s in self.__slots__):
-            raise AttributeError("Missing attribute from slots. Please update pickle file")
-
-        for s in state:
-            setattr(self, s, state[s])
 
     def new_child_scope(self, name, **kwargs):
         """
@@ -236,7 +228,7 @@ class Scope(object):
         Find and return the specified object in the scope.
 
         Find a specified object in the scope and return it.
-        The object is identified by a string contianing its name.
+        The object is identified by a string containing its name.
         If the object cannot be found then None is returned unless
         an error is requested.
 
@@ -277,14 +269,22 @@ class Scope(object):
             return None
 
     def find_all(self, category):
-        """ Find and return all objects from the specified category
-        in the scope.
+        """
+        Find and return all objects from the specified category in the scope.
 
-        Parameter
-        ---------
+        Find and return all objects from the specified category in the scope.
+
+        Parameters
+        ----------
         category : str
             The type of object we are searching for.
-            This must be one of the strings in Scope.categories
+            This must be one of the strings in Scope.categories.
+
+        Returns
+        -------
+        dict
+            A dictionary containing all the objects of the specified category
+            found in the scope.
         """
         if self.parent_scope:
             result = self.parent_scope.find_all(category)
@@ -292,6 +292,7 @@ class Scope(object):
             result = {}
 
         result.update(self._locals[category])
+        result.update(self._imports[category])
 
         return result
 
@@ -862,10 +863,13 @@ class Scope(object):
         name : str
             The suggested name for the new function.
         """
+        assert isinstance(o, FunctionDef)
         newname = self.get_new_name(name)
         python_name = self._original_symbol.pop(o.name)
+        assert python_name == o.scope.python_names.pop(o.name)
         o.rename(newname)
         self._original_symbol[newname] = python_name
+        o.scope.python_names[newname] = python_name
 
     def collect_tuple_element(self, tuple_elem):
         """
@@ -892,7 +896,13 @@ class Scope(object):
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
-        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType):
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base, DottedVariable):
+            cls_scope = tuple_elem.base.lhs.cls_base.scope
+            if cls_scope is not self:
+                return cls_scope.collect_tuple_element(tuple_elem)
+
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
+                and not isinstance(tuple_elem.base, PyccelFunction):
             if isinstance(tuple_elem.base, DottedVariable):
                 class_var = tuple_elem.base.lhs
                 base = tuple_elem.base.clone(tuple_elem.base.name, Variable)

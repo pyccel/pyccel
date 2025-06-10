@@ -12,11 +12,8 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.errors.errors     import Errors
 from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 from .basic import iterable
-
-errors = Errors()
 
 __all__ = (
         # ------------ Super classes ------------
@@ -135,6 +132,9 @@ class PyccelType:
 
     Where applicable, types also contain an and operator. The operator indicates the type that
     is expected when calling a bitwise comparison operator on objects of these types.
+
+    A type also contains an attribute _name which can be useful to examine
+    the type.
     """
     __slots__ = ()
     _name = None
@@ -761,6 +761,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     element_type : PyccelType
         The type of the elements of the homogeneous tuple.
     """
+    _name = 'tuple'
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
@@ -813,12 +814,6 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
         self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        if element_type.rank > 0:
-            # When this error is removed the pop() of the warning must also be removed
-            # in parser/semantic.py before the creation of the AllDeclaration node
-            errors.report("Lists of non-scalar objects are not yet fully supported. " +
-                    "Using containers in lists may lead to bugs such as memory leaks",
-                    symbol=self, severity="warning")
         super().__init__()
 
     def __eq__(self, other):
@@ -1087,7 +1082,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._container_rank
+        return self._container_rank + self._value_type.rank
 
     @property
     def order(self):

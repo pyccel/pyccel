@@ -167,8 +167,8 @@ def create_shared_library(codegen,
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
     start_compile_libs = time.time()
-    manage_dependencies(wrapper_codegen.get_additional_imports(), compiler, pyccel_dirpath, wrapper_compile_obj,
-            language, verbose)
+    manage_dependencies(wrapper_codegen.get_additional_imports(), compiler,
+            pyccel_dirpath, wrapper_compile_obj, 'c', verbose)
     timings['Dependency compilation'] = (time.time() - start_compile_libs)
 
     #---------------------------------------

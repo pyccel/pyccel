@@ -1,8 +1,11 @@
 #include <vector/header.inc>
+#define __IDENTITY(x) x
+
+public :: __IDENTITY(Vector)_min
+public :: __IDENTITY(Vector)_max
 
 contains
 
-#define __IDENTITY(x) x
 #define __guard __vector_guard
 #include "parameters/T/copy_vector_T_to_internal_T.inc"
 #include "parameters/T/define_derived_macros.inc"
@@ -76,5 +79,26 @@ contains
     end do
 
   end function __IDENTITY(Vector)_max
+
+  subroutine __IDENTITY(Vector)_insert(my_vector, idx, value)
+    use, intrinsic :: ISO_C_BINDING, only: i64 => C_INT64_T
+
+    class(Vector), intent(inout)              :: my_vector
+    integer(i64), intent(in)                  :: idx
+    __T_declare_dummy__, intent(in)           :: value
+  
+    integer(i64) :: n, pos, i
+    type(VectorIterator) :: iter
+  
+    n = my_vector%size()
+    pos = idx
+    iter = my_vector % begin()
+  
+    if (pos < 0) pos = pos + n
+    if (pos < 0) pos = 0
+    if (pos > n) pos = n
+  
+    iter =  my_vector % insert(iter + pos, value)
+  end subroutine __IDENTITY(Vector)_insert
 
 #include <vector/tail.inc>

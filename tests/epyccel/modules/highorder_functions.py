@@ -130,7 +130,7 @@ def euler (dydt: '()(float, const float[:], float[:])',
         dydt ( t[i], y[i,:], y[i+1,:] )
         y[i+1,:] = y[i,:] + dt * y[i+1,:]
 
-def predator_prey_deriv ( t: 'float', rf: 'float[:]', out: 'float[:]' ):
+def predator_prey_deriv ( t: 'float', rf: 'const float[:]', out: 'float[:]' ):
 
     r = rf[0]
     f = rf[1]

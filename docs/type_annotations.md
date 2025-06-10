@@ -72,7 +72,7 @@ a : list[int] = [1, 2]
 b : list[bool] = [False, True]
 c : list[float] = []
 ```
-So far lists can be declared as local variables or as results of functions.
+So far lists can be declared as local variables or as arguments or results of functions.
 
 ## Sets
 
@@ -102,6 +102,7 @@ b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
 Strings are not yet supported as keys in Fortran.
+Dictionaries can be declared as local variables, or results of functions, but not yet as arguments or class variables.
 
 ## Strings
 
@@ -136,20 +137,20 @@ def f(a : float, b : int):
 def f(a : float, b : float):
 ```
 
-In order to keep the number of functions to what is necessary and thus reduce compilation times, Pyccel also provides a decorator `@template` which allows the type to be specified for all arguments at once.
+In order to keep the number of functions to what is necessary and thus reduce compilation times, users should use a `TypeVar` object from Python's `typing` module. This allows the type to be specified for all arguments at once.
 E.g.
 ```python
-from pyccel.decorators import template
-@template(name='T', types=['int','float'])
-def f(a : 'T', b : 'T'):
+from typing import TypeVar
+
+T = TypeVar('T', int, float)
+
+def f(a : T, b : T):
     pass
 ```
 
-For more details, see the documentation for [templates](./templates.md).
-
 ## Type Aliases
 
-Python also provides type alias objects as described in the Python docs (<https://docs.python.org/3/library/typing.html#type-aliases>). For the moment type parameter lists are not supported. Both the new Python 3.12 syntax and the old syntax are supported. Type aliases cannot be redefined. This allows the user to more easily change between different types. The type name will not appear in the underlying code.
+Python also provides type alias objects as described in the Python docs (<https://docs.python.org/3/library/typing.html#type-aliases>). This allows the user to more easily change between different types. Type parameter lists are not supported as they do not fully define the final type. Both the new Python 3.12 syntax and the old syntax are supported. Type aliases cannot be redefined. The type name will not appear in the underlying code.
 
 E.g.
 ```python

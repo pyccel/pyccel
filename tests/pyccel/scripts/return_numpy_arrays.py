@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import numpy as np
-from pyccel.decorators import template
 
 def single_return():
     a = np.array([1,2,3,4])
@@ -11,8 +11,9 @@ def multi_returns():
     y = np.array([1,2,3,4,5])
     return x, y
 
-@template('T', ['bool', 'int', 'float', 'complex'])
-def f(a : 'T', b : 'T'):
+T = TypeVar('T', bool, int, float, complex)
+
+def f(a : T, b : T):
     c = np.array([a,b])
     return c
 

@@ -16,7 +16,6 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
 from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
-from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -486,7 +485,8 @@ class Variable(TypedAstNode):
                             if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
-        new_kwargs['shape'] = self.alloc_shape
+        if 'shape' not in kwargs:
+            new_kwargs['shape'] = self.alloc_shape
 
         return cls(**new_kwargs)
 
@@ -828,6 +828,15 @@ class IndexedElement(TypedAstNode):
         Indicate whether variables used to index this Variable can be negative.
         """
         return self.base.allows_negative_indexes
+
+    @property
+    def is_slice(self):
+        """
+        Indicates whether this instance represents a slice.
+
+        Indicates whether this instance represents a slice or an element.
+        """
+        return self._is_slice
 
     def __hash__(self):
         return hash((self.base, self._indices))

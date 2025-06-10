@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import sys
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -70,7 +71,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Indicate whether the object is a pointer in C code.
 
         This function extends `CCodePrinter.is_c_pointer` to specify more objects
-        which are always accesed via a C pointer.
+        which are always accessed via a C pointer.
 
         Parameters
         ----------
@@ -599,3 +600,15 @@ class CWrapperCodePrinter(CCodePrinter):
         n = len(args)
         args_code = ', '.join(self._print(a) for a in args)
         return f'(*PyTuple_Pack( {n}, {args_code} ))'
+
+    def _print_PyList_Clear(self, expr):
+        list_code = self._print(ObjectAddress(expr.list_obj))
+        if sys.version_info < (3, 13):
+            return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
+        else:
+            return f'PyList_Clear({list_code})'
+
+    def _print_PyArgumentError(self, expr):
+        args = ', '.join([f'"{self._print(expr.error_msg)}"'] + \
+                         [f'PyObject_Str((PyObject*)Py_TYPE({self._print(a)}))' for a in expr.args])
+        return f'PyErr_SetObject({self._print(expr.error_type)}, PyUnicode_FromFormat({args}));\n'

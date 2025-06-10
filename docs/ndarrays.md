@@ -156,9 +156,7 @@ This limitation is due to the fact that the rank of Fortran allocatable objects 
             allocate(a(0:9_i64))
           end if
           a = 1.0_f64
-          if (allocated(a)) then
-            deallocate(a)
-          end if
+          if (allocated(a)) deallocate(a)
 
         end program prog_prog_ex
         ```
@@ -247,9 +245,7 @@ Some examples:
           allocate(a(0:3_i64))
           a = [1_i64, 3_i64, 4_i64, 5_i64]
           a(0_i64) = 0_i64
-          if (allocated(a)) then
-            deallocate(a)
-          end if
+          if (allocated(a)) deallocate(a)
 
         end program prog_prog_ex
         ```
@@ -312,9 +308,7 @@ Some examples:
           allocate(a(0:19_i64, 0:9_i64))
           a = 1.0_f64
           b(0:, 0:) => a(:4_i64, 2_i64:)
-          if (allocated(a)) then
-            deallocate(a)
-          end if
+          if (allocated(a)) deallocate(a)
 
         end program prog_prog_ex
         ```
@@ -398,9 +392,7 @@ Some examples:
           b(0:) => a(:, 1_i64)
           c = b(2_i64)
           write(stdout, '(I0)', advance="yes") c
-          if (allocated(a)) then
-            deallocate(a)
-          end if
+          if (allocated(a)) deallocate(a)
 
         end program prog_prog_ex
         ```
@@ -473,9 +465,7 @@ Some examples:
           a = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64, 7_i64, 8_i64]
           b = a(5_i64)
           write(stdout, '(I0)', advance="yes") b
-          if (allocated(a)) then
-            deallocate(a)
-          end if
+          if (allocated(a)) deallocate(a)
 
         end program prog_prog_ex
         ```

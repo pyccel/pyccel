@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 -   #1895 : Add Python support for dict initialisation with `{}`.
 -   #1895 : Add Python support for dict initialisation with `dict()`.
 -   #1881 : Add Python support for dict method `copy()`.
--   #1887 : Add Python support for dict method `popitem()`.
 -   #1888 : Add Python support for dict method `setdefault()`.
 -   #1885 : Add Python and C support for dict method `get()`.
 -   #1844 : Add line numbers and code to errors from built-in function calls.
@@ -29,11 +28,14 @@ All notable changes to this project will be documented in this file.
 -   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
 -   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
 -   #1665 : Add C and Fortran support for returning lists from functions.
+-   #1663 : Add C and Fortran support for lists as arguments.
 -   #1689 : Add C and Fortran support for list method `append()`.
 -   #1876 : Add C support for indexing lists.
 -   #1690 : Add C and Fortran support for list method `pop()`.
 -   #1695 : Add C and Fortran support for list method `reverse()`.
 -   #2256 : Add C and Fortran support for list method `clear()`.
+-   #2259 : Add C and Fortran support for list method `insert()`.
+-   #2298 : Add support for `list.__eq__`.
 -   #1663 : Add C and Fortran support for sets as arguments.
 -   #1664 : Add C and Fortran support for returning sets from functions.
 -   #2023 : Add support for iterating over a `set`.
@@ -49,12 +51,14 @@ All notable changes to this project will be documented in this file.
 -   #1744 : Add support for set method `intersection()`.
 -   #1745 : Add support for set method `intersection_update()`.
 -   #1745 : Add support for set method `isdisjoint()`.
--   #2059 : Add C support for returning dictionaries from functions.
+-   #2059 : Add C and Fortran support for returning dictionaries from functions.
 -   #2164 : Add support for dict indexing.
 -   #1880 : Add support for dict method `clear()`.
 -   #1884 : Add support for dict method `items()`.
 -   #1884 : Add support for dict method `keys()`.
--   #1886 : Add Python and C support for dict method `pop()`.
+-   #1884 : Add support for dict method `values()`.
+-   #1886 : Add support for dict method `pop()`.
+-   #1887 : Add support for dict method `popitem()`.
 -   #1936 : Add missing C output for inline decorator example in documentation
 -   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
 -   #1544 : Add support for `typing.TypeAlias`.
@@ -77,12 +81,19 @@ All notable changes to this project will be documented in this file.
 -   #2139 : Add support for `__getitem__`
 -   #337 : Add support for returning tuples from functions.
 -   #2194 : Add support for strings as arguments.
+-   #2192 : Add support for the floor division assignment operator.
+-   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
+-   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
+-   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   Generate stub files to allow double compilation to potentially be bypassed.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
+-   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
 -   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Added a spell checker for the code itself.
 
 ### Fixed
 
@@ -142,9 +153,28 @@ All notable changes to this project will be documented in this file.
 -   #2098 : Fix using multiple list comprehensions.
 -   #1948 : Fix list comprehension does not work in C.
 -   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
+-   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
+-   #2274 : Do not pass include flags to linker (they are useless).
+-   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
+-   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
+-   #2097 : Fix printing of an empty list.
+-   #2235 : Fix negative numbers in slice indices when translating to C.
+-   #2144 : Fix accidental imports due to modules making their contents public by default.
+-   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
+-   #2125 : Fix missing type check for argument of known type in a function with arguments whose type can be one of several types.
+-   #2042 : Fix missing index in loop unravelling for loop of length 1.
+-   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
+-   #1814 : Fix class method visitation order to correctly access the global scope from methods.
+-   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
+-   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
+-   Fix casting of arrays in Python translation.
+-   #2167 : Stop modifying variables to add `Final` annotation.
 
 ### Changed
 
+-   #2282 : Change the order of the function arguments (out arguments are now first).
 -   #2008 : Remove dependency on `astunparse` package.
 -   #1920 : Add a maximum version for NumPy.
 -   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
@@ -157,6 +187,9 @@ All notable changes to this project will be documented in this file.
 -   #2234 : Print all constant C variables with `const` specifier.
 -   #2249 : Improve installation docs and recommend virtual environment.
 -   #2242 : Change format of compiler info files.
+-   #2302 : Print the deallocation in a 1 line if statement.
+-   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

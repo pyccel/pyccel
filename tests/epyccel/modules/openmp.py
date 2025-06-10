@@ -60,9 +60,9 @@ def test_omp_in_parallel2():
     #$ omp end parallel
     return in_parallel
 
-def test_omp_set_get_dynamic(dynamic_theads : 'bool'):
+def test_omp_set_get_dynamic(dynamic_threads : 'bool'):
     from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
-    omp_set_dynamic(dynamic_theads)
+    omp_set_dynamic(dynamic_threads)
     return omp_get_dynamic()
 
 def test_omp_set_get_nested(nested : 'bool'):
@@ -147,7 +147,7 @@ def test_omp_get_proc_bind():
     bind_var = omp_get_proc_bind()
     return bind_var
 
-#The function give som errors
+#The function give some errors
 # def test_omp_places():
 #     from pyccel.stdlib.internal.openmp import omp_get_partition_num_places
 #     from pyccel.stdlib.internal.openmp import omp_get_partition_place_nums

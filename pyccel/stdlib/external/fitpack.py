@@ -18,10 +18,10 @@ def bispev2(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, ierr):
 
     from numpy import empty
     lwrk = mx*(kx+1)+my*(ky+1)
-    wrk  = empty(lwrk)
+    work  = empty(lwrk)
     kwrk = mx+my
     iwrk = empty(kwrk,'int')
-    bispev(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, wrk, lwrk, iwrk, kwrk, ierr)
+    bispev(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, work, lwrk, iwrk, kwrk, ierr)
 
 
 

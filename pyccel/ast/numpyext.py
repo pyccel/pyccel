@@ -25,7 +25,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType, ContainerType
+from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -38,7 +38,7 @@ from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, Num
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .type_annotations import typenames_to_dtypes as dtype_registry
+from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
@@ -110,6 +110,7 @@ __all__ = (
     'NumpySum',
     'NumpyOnes',
     'NumpyOnesLike',
+    'NumpyNDArray',
     'NumpyProduct',
     'NumpyRand',
     'NumpyRandint',
@@ -610,7 +611,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
         The actual dtype passed to the NumPy function.
 
     Returns
@@ -625,6 +626,8 @@ def process_dtype(dtype):
     TypeError: In the case of unrecognized argument type.
     TypeError: In the case of passed string argument not recognized as valid dtype.
     """
+    if isinstance(dtype, VariableTypeAnnotation):
+        dtype = dtype.class_type
 
     if isinstance(dtype, PythonType):
         if dtype.arg.rank > 0:
@@ -2723,6 +2726,32 @@ class NumpyIsFinite(NumpyUfuncUnary):
         return PythonNativeBool()
 
 #==============================================================================
+class NumpyNDArray(PyccelFunction):
+    """
+    A class representing np.ndarray.
+
+    A class representing np.ndarray. np.ndarray is useful for type
+    checks. NumpyNDArray is not designed to be instantiated as
+    np.ndarray raises a warning when used in code, but as its
+    implementation is identical to np.array the __new__ method maps
+    to that class so the method is supported.
+
+    Parameters
+    ----------
+    *args : tuple
+        Positional arguments. See NumpyArray.
+    **kwargs : dict
+        Keyword arguments. See NumpyArray.
+    """
+    __slots__ = ()
+    _dtype = SymbolicType()
+    _static_type = NumpyNDArrayType
+    name = 'ndarray'
+
+    def __new__(cls, *args, **kwargs):
+        return NumpyArray(*args, **kwargs)
+
+#==============================================================================
 
 DtypePrecisionToCastFunction.update({
     NumpyInt8Type()       : NumpyInt8,
@@ -2739,10 +2768,10 @@ DtypePrecisionToCastFunction.update({
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 
-numpy_linalg_mod = Module('linalg', (),
+numpy_linalg_mod = Module('numpy.linalg', (),
     [PyccelFunctionDef('norm', NumpyNorm)])
 
-numpy_random_mod = Module('random', (),
+numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
      PyccelFunctionDef('random' , NumpyRand),
      PyccelFunctionDef('randint', NumpyRandint)])
@@ -2829,6 +2858,8 @@ numpy_funcs = {
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
     'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
+    'dtype'     : PyccelFunctionDef('dtype', NumpyResultType),
+    'ndarray'   : PyccelFunctionDef('ndarray', NumpyNDArray),
 }
 
 numpy_mod = Module('numpy',

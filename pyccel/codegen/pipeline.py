@@ -18,7 +18,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import manage_dependencies
+from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -58,7 +58,8 @@ def execute_pyccel(fname, *,
                    accelerators    = (),
                    output_name     = None,
                    compiler_export_file = None,
-                   conda_warnings  = 'basic'):
+                   conda_warnings  = 'basic',
+                   context_dict    = None):
     """
     Run Pyccel on the provided code.
 
@@ -113,6 +114,9 @@ def execute_pyccel(fname, *,
         Name of the JSON file to which compiler information is exported. Default is None.
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict[str, object], optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
     timers = {}
@@ -209,7 +213,7 @@ def execute_pyccel(fname, *,
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath)
+        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)
@@ -296,15 +300,16 @@ def execute_pyccel(fname, *,
             print_timers(start, timers)
         return
 
-    compile_libs = [*libs, parser.metavars['libraries']] \
-                    if 'libraries' in parser.metavars else libs
+    compile_libs, deps = get_module_and_compile_dependencies(parser)
+    compile_libs.extend(libs)
+
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,
             libs         = compile_libs,
             libdirs      = libdirs,
-            dependencies = modules,
+            dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj
 
@@ -335,36 +340,6 @@ def execute_pyccel(fname, *,
         if show_timings:
             print_timers(start, timers)
         return
-
-    deps = dict()
-    # ...
-    # Determine all .o files and all folders needed by executable
-    def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
-        mod_base = os.path.basename(parser.filename)
-
-        # Stop conditions
-        if parser.metavars.get('module_name', None) == 'omp_lib':
-            return
-
-        if parser.compile_obj:
-            deps[mod_base] = parser.compile_obj
-        elif mod_base not in deps:
-            compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
-            no_target = parser.metavars.get('no_target',False) or \
-                    parser.metavars.get('ignore_at_import',False)
-            deps[mod_base] = CompileObj(mod_base,
-                                folder          = mod_folder,
-                                libs            = compile_libs,
-                                has_target_file = not no_target)
-
-        # Proceed recursively
-        for son in parser.sons:
-            get_module_dependencies(son, deps)
-
-    for son in parser.sons:
-        get_module_dependencies(son, deps)
-    mod_obj.add_dependencies(*deps.values())
 
     start_compile_target_language = time.time()
     # Compile code to modules

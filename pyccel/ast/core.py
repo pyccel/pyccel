@@ -27,6 +27,7 @@ from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
+from .operators import PyccelFloorDiv
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable, AnnotatedPyccelSymbol
@@ -373,7 +374,7 @@ class Allocate(PyccelAstNode):
 
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
-        - 'resize' referes to cases where the container is populated via indexed elements.
+        - 'resize' refers to cases where the container is populated via indexed elements.
 
     Notes
     -----
@@ -626,7 +627,7 @@ class AliasAssign(PyccelAstNode):
 
     Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where lhs is a pointer and rhs is a local_alias. In other words
-    the contents of `lhs` will change if the contents of `rhs` are modfied.
+    the contents of `lhs` will change if the contents of `rhs` are modified.
 
     Parameters
     ----------
@@ -721,6 +722,7 @@ class AugAssign(Assign):
             '-' : PyccelMinus,
             '*' : PyccelMul,
             '/' : PyccelDiv,
+            '//': PyccelFloorDiv,
             '%' : PyccelMod,
             '|' : PyccelBitOr,
             '&' : PyccelBitAnd,
@@ -1985,7 +1987,7 @@ class Return(PyccelAstNode):
         self._stmt = stmt
 
         self._n_returns = 0 if isinstance(expr, Nil) else \
-                1 if not isinstance(expr, (PythonTuple, PythonList)) else \
+                1 if not isinstance(expr, PythonTuple) else \
                 len(expr)
 
         super().__init__()
@@ -2167,6 +2169,13 @@ class FunctionDef(ScopedAstNode):
         result_pointer_map={},
         docstring=None,
         scope=None):
+
+        # Outside of semantic stage, if the scope is provided then the original name
+        # of the function should be retrievable from the semantic name using scope.python_names
+        assert pyccel_stage != "semantic" or scope is None or \
+                name in scope.python_names
+        assert pyccel_stage != "semantic" or scope is None or \
+                scope.name == scope.python_names[name]
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2948,7 +2957,6 @@ class Interface(PyccelAstNode):
             return call_arg.class_type == func_arg.class_type \
                     and (call_arg.rank == func_arg.rank)
 
-
         j = -1
         for i in fs_args:
             j += 1
@@ -3114,9 +3122,6 @@ class ClassDef(ScopedAstNode):
     methods : iterable
         Class methods.
 
-    options : list, tuple
-        A list of options ('public', 'private', 'abstract').
-
     imports : list, tuple
         A list of required imports.
 
@@ -3152,7 +3157,7 @@ class ClassDef(ScopedAstNode):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
-    __slots__ = ('_name','_attributes','_methods','_options', '_class_type',
+    __slots__ = ('_name','_attributes','_methods', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
@@ -3161,7 +3166,6 @@ class ClassDef(ScopedAstNode):
         name,
         attributes=(),
         methods=(),
-        options=('public',),
         imports=(),
         superclasses=(),
         interfaces=(),
@@ -3188,11 +3192,6 @@ class ClassDef(ScopedAstNode):
         if not iterable(methods):
             raise TypeError('methods must be an iterable')
 
-        # options
-
-        if not iterable(options):
-            raise TypeError('options must be an iterable')
-
         # imports
 
         if not iterable(imports):
@@ -3218,39 +3217,12 @@ class ClassDef(ScopedAstNode):
         imports = set(imports)  # for unicity
         imports = tuple(imports)
 
-        # ...
-        # look if the class has the method __del__
-        # d_methods = {}
-        # for i in methods:
-        #    d_methods[str(i.name).replace('\'','')] = i
-        # if not ('__del__' in d_methods):
-        #    dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
-        #    this  = Variable(dtype(), 'self')
-
-            # constructs the __del__ method if not provided
-         #   args = []
-         #   for a in attributes:
-         #       if isinstance(a, Variable):
-         #           if a.allocatable:
-         #              args.append(a)
-
-         #   args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
-         #   body = [Del(a) for a in args]
-
-         #   free = FunctionDef('__del__', [this], [], \
-         #                      body, local_vars=[], global_vars=[], \
-         #                      cls_name='__UNDEFINED__', imports=[])
-
-         #  methods = list(methods) + [free]
-         # TODO move this somewhere else
-
         methods = tuple(methods)
 
         # ...
         self._name = name
         self._attributes = attributes
         self._methods = methods
-        self._options = options
         self._imports = imports
         self._superclasses  = superclasses
         self._interfaces = interfaces
@@ -3290,10 +3262,6 @@ class ClassDef(ScopedAstNode):
     @property
     def methods(self):
         return self._methods
-
-    @property
-    def options(self):
-        return self._options
 
     @property
     def imports(self):
@@ -3356,6 +3324,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(attr, Variable):
             raise TypeError("Attributes must be Variables")
+        assert attr not in self._attributes
         attr.set_current_user_node(self)
         self._attributes += (attr,)
 
@@ -3373,6 +3342,7 @@ class ClassDef(ScopedAstNode):
 
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
+        assert method.pyccel_staging != "semantic" or method.name in self.scope.python_names
         method.set_current_user_node(self)
         self._methods += (method,)
 
@@ -3415,24 +3385,47 @@ class ClassDef(ScopedAstNode):
 
     def update_interface(self, syntactic_interface, semantic_interface):
         """
-        Replace a syntactic_interface with its semantic equivalent.
+        Replace an existing interface with a new interface.
 
-        Replace a syntactic_interface with its semantic equivalent.
+        Replace an existing interface with a new semantic interface.
+        When translating a .py file this will always be an operation which
+        replaces a syntactic interface with its semantic equivalent.
+        The syntactic interface is inserted into the class at its creation
+        to ensure that the method can be located when it is called, but
+        it is only treated on the first call (or once the rest of the
+        enlosing Module has been translated) to ensure that all global
+        variables that it may use have been declared. When the method
+        is visited to create the semantic version, this method is called
+        to update the stored interface.
+
+        When translating a .pyi file, an additional case is seen due to
+        the use of the `@overload` decorator. When this decorator is used
+        each `FunctionDef` in the `Interface` is visited individually.
+        When the first implementation is visited, the syntactic interface
+        will be replaced by the semantic interface, but when subsequent
+        implementations are visited, the syntactic interface will already
+        have been removed, rather it is the previous semantic interface
+        (identified by its name) which will be replaced.
 
         Parameters
         ----------
         syntactic_interface : FunctionDef
-            The interface that has already been added to the class.
+            The syntactic interface that should be removed from the class.
+            In the case of a .pyi file this interface may not appear in
+            the class any more.
         semantic_interface : FunctionDef
-            The interface that will replace the syntactic_interface.
+            The new interface that should appear in the class.
         """
         assert isinstance(semantic_interface, Interface)
-        assert syntactic_interface in self._methods
         assert semantic_interface.is_semantic
-        syntactic_interface.remove_user_node(self)
+        if syntactic_interface in self._methods:
+            syntactic_interface.remove_user_node(self)
         semantic_interface.set_current_user_node(self)
         self._methods = tuple(m for m in self._methods if m is not syntactic_interface)
-        self._interfaces = tuple(m for m in self._interfaces if m is not syntactic_interface) + (semantic_interface,)
+        self._interfaces = tuple(m for m in self._interfaces \
+                                 if m is not syntactic_interface and \
+                                    m.name!=semantic_interface.name) \
+                            + (semantic_interface,)
 
     def get_method(self, name, raise_error_from = None):
         """
@@ -3528,10 +3521,13 @@ class ClassDef(ScopedAstNode):
 
     @property
     def hide(self):
-        if 'hide' in self.options:
-            return True
-        else:
-            return self.is_iterable or self.is_with_construct
+        """
+        Indicate whether the class should be hidden.
+
+        Indicate whether the class should be hidden. A hidden class does
+        not appear in the printed code.
+        """
+        return self.is_iterable or self.is_with_construct
 
     @property
     def is_unused(self):
@@ -4135,8 +4131,8 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
-            cond = PythonBool(cond)
+        assert pyccel_stage == 'syntactic' or cond.dtype is PythonNativeBool()
+
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
         elif isinstance(body, CodeBlock):
@@ -4200,15 +4196,31 @@ class If(PyccelAstNode):
 
     @property
     def blocks(self):
-        return self._blocks
+        """
+        The IfSection blocks inside this if.
 
-    @property
-    def bodies(self):
-        return [b.body for b in self._blocks]
+        The IfSection blocks inside this if.
+        """
+        return self._blocks
 
     def __str__(self):
         blocks = ','.join(str(b) for b in self.blocks)
         return f"If({blocks})"
+
+    def set_current_ast(self, ast_node):
+        """
+        Set the current AST.
+
+        See PyccelAstNode.set_current_ast for more details.
+
+        Parameters
+        ----------
+        ast_node : ast.AST
+            The Python AST node describing the original code and its location.
+        """
+        for b in self.blocks:
+            b.set_current_ast(ast_node)
+        super().set_current_ast(ast_node)
 
 class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)

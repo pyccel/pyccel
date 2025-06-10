@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
+from typing import TypeVar
 import pytest
 from numpy.random import uniform
 import numpy as np
@@ -9,10 +10,13 @@ from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
 from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
-from pyccel.decorators import template
 from pyccel import epyccel
 
 numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
+
+NT1 = TypeVar('NT1', 'int32', 'int64', 'float32', 'float64', 'complex64', 'complex128')
+NT2 = TypeVar('NT2', 'int32', 'int64', 'float32', 'float64', 'complex64', 'complex128')
+T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64')
 
 def test_mult_numpy_python_type(language):
 
@@ -90,9 +94,7 @@ def test_mult_numpy_python_type(language):
 
 def test_numpy_scalar_promotion(language):
 
-    @template(name='T', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
-    @template(name='D', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
-    def add_numpy_to_numpy_type(np_s_l : 'T', np_s_r : 'D'):
+    def add_numpy_to_numpy_type(np_s_l : NT1, np_s_r : NT2):
         rs = np_s_l + np_s_r
         return rs
 
@@ -122,8 +124,7 @@ def test_numpy_scalar_promotion(language):
 @pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
 def test_numpy_bool_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-    def get_bool(a : 'T'):
+    def get_bool(a : T):
         from numpy import bool as NumpyBool
         b = NumpyBool(a)
         return b
@@ -202,32 +203,27 @@ def test_numpy_bool_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_int(a : 'T'):
+def get_int(a : T):
     from numpy import int as Numpyint
     b = Numpyint(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_int64(a : 'T'):
+def get_int64(a : T):
     from numpy import int64
     b = int64(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_int32(a : 'T'):
+def get_int32(a : T):
     from numpy import int32
     b = int32(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_int16(a : 'T'):
+def get_int16(a : T):
     from numpy import int16
     b = int16(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_int8(a : 'T'):
+def get_int8(a : T):
     from numpy import int8
     b = int8(a)
     return b
@@ -249,8 +245,8 @@ def test_numpy_int_scalar(language, function_boundaries):
     integer64 = randint(min_int8, max_int8, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -322,29 +318,25 @@ def test_numpy_int_scalar(language, function_boundaries):
     assert f_fl32_output == test_float32_output
     assert matching_types(f_fl32_output, test_float32_output)
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_int64_arr_1d(arr : 'T'):
+def get_int64_arr_1d(arr : 'T[:]'):
     from numpy import int64, shape
     a = int64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_int32_arr_1d(arr : 'T'):
+def get_int32_arr_1d(arr : 'T[:]'):
     from numpy import int32, shape
     a = int32(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_int16_arr_1d(arr : 'T'):
+def get_int16_arr_1d(arr : 'T[:]'):
     from numpy import int16, shape
     a = int16(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_int8_arr_1d(arr : 'T'):
+def get_int8_arr_1d(arr : 'T[:]'):
     from numpy import int8, shape
     a = int8(arr)
     s = shape(a)
@@ -365,8 +357,8 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -388,29 +380,25 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
     assert epyccel_func(fl64) == get_int(fl64)
     assert epyccel_func(fl32) == get_int(fl32)
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_int64_arr_2d(arr : 'T'):
+def get_int64_arr_2d(arr : 'T[:,:]'):
     from numpy import int64, shape
     a = int64(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[1,0]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_int32_arr_2d(arr : 'T'):
+def get_int32_arr_2d(arr : 'T[:,:]'):
     from numpy import int32, shape
     a = int32(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[1,0]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_int16_arr_2d(arr : 'T'):
+def get_int16_arr_2d(arr : 'T[:,:]'):
     from numpy import int16, shape
     a = int16(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[1,0]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_int8_arr_2d(arr : 'T'):
+def get_int8_arr_2d(arr : 'T[:,:]'):
     from numpy import int8, shape
     a = int8(arr)
     s = shape(a)
@@ -431,8 +419,8 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     get_int = function_boundaries[0]
-    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
-    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # Modifying a global variable in a scope will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundaries
     # ffb stands for 'from function_boundaries'
     max_int_ffb = function_boundaries[1]
     min_int_ffb = function_boundaries[2]
@@ -454,20 +442,17 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     assert epyccel_func(fl64) == get_int(fl64)
     assert epyccel_func(fl32) == get_int(fl32)
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_float(a : 'T'):
+def get_float(a : T):
     from numpy import float as NumpyFloat
     b = NumpyFloat(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_float64(a : 'T'):
+def get_float64(a : T):
     from numpy import float64
     b = float64(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_float32(a : 'T'):
+def get_float32(a : T):
     from numpy import float32
     b = float32(a)
     return b
@@ -555,15 +540,13 @@ def test_numpy_float_scalar(language, get_float):
     assert matching_types(f_fl64_output, test_float64_output)
 
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_float64_arr_1d(arr : 'T'):
+def get_float64_arr_1d(arr : 'T[:]'):
     from numpy import float64, shape
     a = float64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_float32_arr_1d(arr : 'T'):
+def get_float32_arr_1d(arr : 'T[:]'):
     from numpy import float32, shape
     a = float32(arr)
     s = shape(a)
@@ -599,15 +582,13 @@ def test_numpy_float_array_like_1d(language, get_float):
     assert epyccel_func(fl64) == get_float(fl64)
     assert epyccel_func(fl32) == get_float(fl32)
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_float64_arr_2d(arr : 'T'):
+def get_float64_arr_2d(arr : 'T[:,:]'):
     from numpy import float64, shape
     a = float64(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[0,1]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_float32_arr_2d(arr : 'T'):
+def get_float32_arr_2d(arr : 'T[:,:]'):
     from numpy import float32, shape
     a = float32(arr)
     s = shape(a)
@@ -645,8 +626,7 @@ def test_numpy_float_array_like_2d(language, get_float):
 
 def test_numpy_double_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-    def get_double(a : 'T'):
+    def get_double(a : T):
         from numpy import double
         b = double(a)
         return b
@@ -728,8 +708,7 @@ def test_numpy_double_scalar(language):
 
 def test_numpy_double_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def get_double(arr : 'T'):
+    def get_double(arr : 'T[:]'):
         from numpy import double, shape
         a = double(arr)
         s = shape(a)
@@ -764,8 +743,7 @@ def test_numpy_double_array_like_1d(language):
 
 def test_numpy_double_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def get_double(arr : 'T'):
+    def get_double(arr : 'T[:,:]'):
         from numpy import double, shape
         a = double(arr)
         s = shape(a)
@@ -799,28 +777,16 @@ def test_numpy_double_array_like_2d(language):
     assert epyccel_func(fl32) == get_double(fl32)
 
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_complex64(a : 'T'):
+def get_complex64(a : T):
     from numpy import complex64
     b = complex64(a)
     return b
 
-@template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-def get_complex128(a : 'T'):
+def get_complex128(a : T):
     from numpy import complex128
     b = complex128(a)
     return b
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128, get_complex64])
 def test_numpy_complex_scalar(language, get_complex):
 
@@ -830,11 +796,10 @@ def test_numpy_complex_scalar(language, get_complex):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
+    fl   = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
+    fl64 = uniform(min_float32 / 2, max_float32 / 2)
 
     epyccel_func = epyccel(get_complex, language=language)
 
@@ -900,45 +865,31 @@ def test_numpy_complex_scalar(language, get_complex):
 
 
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_complex128_arr_1d(arr : 'T'):
+def get_complex128_arr_1d(arr : 'T[:]'):
     from numpy import complex128, shape
     a = complex128(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-def get_complex64_arr_1d(arr : 'T'):
+def get_complex64_arr_1d(arr : 'T[:]'):
     from numpy import complex64, shape
     a = complex64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_complex128_arr_2d(arr : 'T'):
+def get_complex128_arr_2d(arr : 'T[:,:]'):
     from numpy import complex128, shape
     a = complex128(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[0,1]
 
-@template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-def get_complex64_arr_2d(arr : 'T'):
+def get_complex64_arr_2d(arr : 'T[:,:]'):
     from numpy import complex64, shape
     a = complex64(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[0,1]
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_1d, get_complex64_arr_1d])
 def test_numpy_complex_array_like_1d(language, get_complex):
 
@@ -974,16 +925,6 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_2d, get_complex64_arr_2d])
 def test_numpy_complex_array_like_2d(language, get_complex):
 

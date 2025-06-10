@@ -11,6 +11,14 @@ ATOL = 1e-15
 def modnew(language):
     return epyccel(mod, language = language)
 
+def test_empty_class(language):
+    class A:
+        pass
+
+    epyc_A = epyccel(A, language = language)
+
+    assert isinstance(epyc_A, type)
+
 def test_class_import(language):
     class A:
         def __init__(self : 'A'):
@@ -244,7 +252,6 @@ def test_classes_9(language):
 
     assert a_py.get_A_contents() == a_l.get_A_contents()
     assert a_py.x == a_l.x
-    assert a_py.y == a_l.y
 
 def test_generic_methods(language):
     import classes.generic_methods as mod
@@ -463,3 +470,34 @@ def test_class_magic(language):
 
     for i in range(5):
         assert a_py[i] == a_l[i]
+
+def test_class_property_name_conflict(language):
+    import classes.class_property_name_conflict as mod
+    modnew = epyccel(mod, language = language)
+
+    a_py = mod.A(3.0)
+    a_l = modnew.A(3.0)
+
+    assert a_py.x == a_l.x
+
+    a_py.translate(4.5)
+    a_l.translate(4.5)
+
+    assert a_py.x == a_l.x
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Attribute renamed. See #1705"),
+            pytest.mark.python]
+        )
+    )
+)
+def test_class_globals_visitation_order(language):
+    import classes.class_globals_visitation_order as mod
+    modnew = epyccel(mod, language = language)
+    a_py = mod.A()
+    a_l = modnew.A()
+
+    assert a_py.x == a_l.x

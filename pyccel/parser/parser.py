@@ -8,7 +8,7 @@
 Module containing the Parser object
 """
 
-import os
+from pathlib import Path
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -24,15 +24,28 @@ class Parser(object):
 
     Parameters
     ----------
-    filename : str
-        The name of the file being translated.
+    filename : str | Path
+        The absolute path to the file being translated.
+
+    output_folder : str | Path
+        The output folder for the generated file.
+
+    context_dict : dict, optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
+
+    original_filename : str, optional
+        The name of the original Python file. This won't match the filename if the
+        filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
+        auto-generated to describe the prototypes of the methods).
 
     **kwargs : dict
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, *, output_folder, context_dict = None, original_filename = None, **kwargs):
 
+        filename = Path(filename)
         self._filename = filename
         self._kwargs   = kwargs
 
@@ -48,7 +61,12 @@ class Parser(object):
         self._semantic_parser = None
         self._compile_obj     = None
 
-        self._input_folder = os.path.dirname(filename)
+        self._context_dict = context_dict
+
+        self._original_filename = Path(original_filename or filename)
+
+        self._input_folder = self._original_filename.parent
+        self._output_folder = output_folder
 
     @property
     def semantic_parser(self):
@@ -160,6 +178,22 @@ class Parser(object):
         return parser.ast
 
     def annotate(self, **settings):
+        """
+        Annotate the AST collected from the syntactic stage.
+
+        Use the semantic parser to annotate the AST collected from
+        the syntactic stage.
+
+        Parameters
+        ----------
+        **settings : dict
+            Additional keyword arguments for BasicParser.
+
+        Returns
+        -------
+        SemanticParser
+            The semantic parser that was used to annotate the AST.
+        """
 
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
@@ -171,8 +205,9 @@ class Parser(object):
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
-                                d_parsers=self.d_parsers,
-                                parents=self.parents,
+                                d_parsers = self.d_parsers,
+                                parents = self.parents,
+                                context_dict = self._context_dict,
                                 **settings)
         self._semantic_parser = parser
 
@@ -217,10 +252,12 @@ class Parser(object):
         """
 
         imports     = self.imports
-        source_to_filename = {i: get_filename_from_import(i, self._input_folder) for i in imports}
+        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
-        for filename in not_treated:
+        for filename, stashed_filename in not_treated:
+            filename = str(filename)
+
             if verbose:
                 print ('>>> treating :: ', filename)
 
@@ -228,15 +265,18 @@ class Parser(object):
             if filename in d_parsers_by_filename:
                 q = d_parsers_by_filename[filename]
             else:
-                q = Parser(filename)
+                q_output_folder = stashed_filename.parent
+                if stashed_filename.suffix == '.pyi' and q_output_folder.name.startswith('__pyccel__'):
+                    q_output_folder = q_output_folder.parent
+                q = Parser(stashed_filename, output_folder = q_output_folder, original_filename = filename)
             q.parse(d_parsers_by_filename=d_parsers_by_filename)
             d_parsers_by_filename[filename] = q
 
         d_parsers = {}
         # link self to its sons
         for source in imports:
-            filename = source_to_filename[source]
-            son = d_parsers_by_filename[filename]
+            filename,_ = source_to_filename[source]
+            son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
             d_parsers[source] = son
@@ -271,18 +311,4 @@ class Parser(object):
                     print ('>>> treating :: ', p.filename)
                 p.annotate()
 
-#==============================================================================
 
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError('Expecting an argument for filename')
-
-    pyccel = Parser(filename)
-    pyccel.parse(verbose=True)
-
-    settings = {}
-    pyccel.annotate(**settings)
