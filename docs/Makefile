@@ -22,7 +22,6 @@ html: api_docs
 	@cp *.md source/docs
 	@mkdir -p source/developer_docs
 	@cp ../developer_docs/*.md source/developer_docs
-	@sed -i 's/..\/pyccel/api/g' source/*.md
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
