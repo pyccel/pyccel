@@ -15,6 +15,8 @@ pyccel_dir = pathlib.Path(__file__).parent.parent.parent
 
 sys.path.append(str(pyccel_dir.resolve()))
 
+from pyccel.version import __version__ as pyccel_version
+
 def setup(app):
     """
     Override the default 'fortran' lexer with one from Pygments which is
@@ -25,11 +27,10 @@ def setup(app):
 
 # -- Project information -----------------------------------------------------
 
-project = 'pyccel'
-author = '*'
+project = 'Pyccel'
 
 # The full version, including alpha/beta/rc tags
-release = '*'
+release = pyccel_version
 
 
 # -- General configuration ---------------------------------------------------
@@ -62,12 +63,32 @@ suppress_warnings = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'renku'
+html_theme = 'sphinx_book_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+html_theme_options = {
+    "repository_branch": "devel",
+    "show_toc_level": 2,
+    "secondary_sidebar_items": ["page-toc"],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/pyccel/pyccel",
+            "icon": "fab fa-github",
+            "type": "fontawesome",
+        },
+        {
+            "name": "⭐ Star us!",
+            "url": "https://github.com/pyccel/pyccel",
+            "icon": "fas fa-star",
+            "type": "fontawesome",
+        },
+    ],
+}
 
 # -- Options for myst_parser -------------------------------------------------
 myst_heading_anchors = 3
