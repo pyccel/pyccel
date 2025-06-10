@@ -161,6 +161,7 @@ cd -
 ```
 
 On Windows it is important that all locations containing DLLs are on the PATH. If you have added any variables to locations which are not on the PATH then you need to add them:
+
 ```sh
 echo $PATH
 export PATH=$LIBRARY_DIR;$PATH
@@ -168,6 +169,7 @@ export PATH=$LIBRARY_DIR;$PATH
 
 [As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell Python which directories contain trusted DLLs. In order to use Pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to Python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
 E.g:
+
 ```python
 import os
 os.add_dll_directory(C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')
@@ -177,21 +179,26 @@ os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64
 These commands must be run every time a Python instance is opened which will import a Pyccel-generated library.
 
 If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [Python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
+
 ```sh
 echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
 ```
+
 (The command may need adapting for your installation locations)
 
 ## Installation
 
 We recommend creating a clean Python virtual environment using [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment):
+
 ```sh
 python3 -m venv <ENV-PATH>
 ```
+
 where `<ENV-PATH>` is the location to create the virtual environment.
 (A new directory will be created at the required location.)
 
 In order to activate the environment from a new terminal session just run the command
+
 ```sh
 source <ENV-PATH>/bin/activate
 ```
@@ -206,10 +213,12 @@ The **`pyccel-clean`** command is a user helper tool which cleans up the environ
 ### Standard install from PyPI
 
 In order to install the latest release of Pyccel on PyPI, the Python package index, just run
+
 ```sh
 source <ENV-PATH>/bin/activate
 pip install pyccel
 ```
+
 Pip automatically downloads any required Python packages from PyPI and installs them.
 The flags `--upgrade` and `--force-reinstall` may be needed in order to overwrite a pre-existing installation of Pyccel.
 It is also possible to install a specific release of Pyccel, for example `pip install pyccel==1.11.2`.
@@ -217,12 +226,14 @@ It is also possible to install a specific release of Pyccel, for example `pip in
 ### Editable install from sources
 
 For those who want to have the most recent version ("trunk") of Pyccel, and possibly modify its source code, the following commands clone our Git repository from GitHub, checkout the `devel` branch, and install symbolic links to the `pyccel` directory:
+
 ```sh
 source <ENV-PATH>/bin/activate
 git clone --recurse-submodules https://github.com/pyccel/pyccel.git
 cd pyccel
 pip install --editable ".[test]"
 ```
+
 This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
 
 ## Additional packages

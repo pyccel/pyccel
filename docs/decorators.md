@@ -357,6 +357,7 @@ Any functions with the `@inline` decorator will not be exposed to the user in th
 ### Basic Example
 
 Here is a simple usage example:
+
 ```python
 def f():
     @inline
@@ -367,6 +368,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -393,6 +395,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 #include <stdlib.h>
@@ -432,6 +435,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -471,6 +475,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 
@@ -508,6 +513,7 @@ void f(void)
 ### Example with Optional Variables
 
 Finally we present an example with optional variables:
+
 ```python
 @inline
 def get_val(x : int = None , y : int = None):
@@ -530,6 +536,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -581,6 +588,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 
@@ -616,6 +624,7 @@ int64_t f(int64_t* a, int64_t* b, int64_t* c, int64_t* d)
 
 ### Import Error when imported from the shared library
 Using the previous example, if we import the function `get_val`, we get this error:
+
 ```
 Traceback (most recent call last):
   File "<string>", line 1, in <module>

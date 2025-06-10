@@ -40,9 +40,11 @@ These requirements are detailed in the [documentation](https://github.com/pyccel
 Once all requirements are satisfied, we recommend installing Pyccel into a Python virtual environment, which can be created with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment).
 Once the Python virtual environment is ready and activated, Pyccel can be easily installed using [pip](https://github.com/pypa/pip?tab=readme-ov-file#pip---the-python-package-installer), the Python package installer.
 The simple command
+
 ```sh
 pip install pyccel
 ```
+
 will download the latest release of Pyccel from [PyPI](https://pypi.org/project/pyccel/), the Python package index.
 Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 

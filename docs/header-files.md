@@ -17,12 +17,14 @@ We create the file `header.pyi` that contains an OpenMP function definition:
 
 #$ header function omp_get_num_threads() results(int)
 ```
+
 We then create `example.py` file:
 
 ```python
 from header import omp_get_num_threads
 print('number of threads is :', omp_get_num_threads())
 ```
+
 Pyccel can compile the Python file with the following command: `pyccel example.py --openmp`, it will then create the executable file `example`.
 
 #### Link with a static library
@@ -63,12 +65,14 @@ We then create a static library using these commands:
 -   `ar rcs libfuncs.a funcs.o`
 
 In order to use this library the user needs to create a header file, we call it  `funcs_headers.pyi`
+
 ```python
 #$ header metavar module_name      = "funcs"
 #$ header metavar ignore_at_import = True
 
 #$ header function fib(int) results(int)
 ```
+
 After that we can create a Python file `test_funcs.py`,where we can import the Fortran functions and use them
 
 ```python
@@ -76,4 +80,5 @@ def print_fib(x : int):
     from  funcs_headers import fib
     print(fib(x))
 ```
+
 To compile this file we execute the following command `pyccel test_funcs.py --libs=funcs --libdir=$PWD`, this will create the shared library `test_funcs.so`
