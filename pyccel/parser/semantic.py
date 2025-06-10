@@ -1232,7 +1232,7 @@ class SemanticParser(BasicParser):
             a = self._visit(arg)
             val = a.value
             if isinstance(val, FunctionDef) and not isinstance(val, PyccelFunctionDef) and not val.is_semantic:
-                semantic_func = self._annotate_the_called_function_def(val, ())
+                semantic_func = self._annotate_the_called_function_def(val, (), expr)
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
             if isinstance(val, StarredArguments):
@@ -1375,7 +1375,7 @@ class SemanticParser(BasicParser):
             if is_inline:
                 return self._visit_InlineFunctionDef(func, args, expr)
             elif not func.is_semantic:
-                func = self._annotate_the_called_function_def(func, args)
+                func = self._annotate_the_called_function_def(func, args, expr)
 
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
@@ -1454,7 +1454,7 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, old_func, function_call_args):
+    def _annotate_the_called_function_def(self, old_func, function_call_args, function_call):
         """
         Annotate the called FunctionDef.
 
@@ -1467,6 +1467,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : list[FunctionCallArgument]
            The list of the call arguments.
+
+        function_call : FunctionCall
+            The syntactic function call being expanded to a function definition.
 
         Returns
         -------
@@ -3640,7 +3643,7 @@ class SemanticParser(BasicParser):
             method = d_methods.pop('__init__', None)
 
             if not method.is_semantic:
-                method = self._annotate_the_called_function_def(method, args)
+                method = self._annotate_the_called_function_def(method, args, expr)
 
             if method is None:
 
@@ -5146,7 +5149,6 @@ class SemanticParser(BasicParser):
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
-        res_vars = ()
         if expr.results:
             # Swap in the result of the function to replace the variable representing
             # the result of the inlined function
@@ -5155,7 +5157,6 @@ class SemanticParser(BasicParser):
                 res_var = res_var.name
             to_replace.append(res_var)
             local_var.append(lhs)
-            res_vars = (res_var,)
 
         func_args = [a.var for a in expr.arguments]
         func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
