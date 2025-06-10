@@ -173,6 +173,7 @@ All notable changes to this project will be documented in this file.
 -   #2286 : Fix warnings due to non-existent include directories.
 -   Fix casting of arrays in Python translation.
 -   #2167 : Stop modifying variables to add `Final` annotation.
+-   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
 
 ### Changed
 

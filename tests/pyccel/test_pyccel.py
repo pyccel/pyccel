@@ -1234,9 +1234,19 @@ def test_stubs(language):
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
 
+    if language != 'python':
+        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
+
     assert expected_pyi == generated_pyi
 
 #------------------------------------------------------------------------------
 def test_builtin_container_print(language):
     pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_pyccel_generated_compilation_dependency(language):
+    pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
+            dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
+            output_dtype = int,
             language = language)
