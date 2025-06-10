@@ -18,8 +18,8 @@ default_python_versions = {
         'linux': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
-        'installation': '3.9',
-        'editable_installation': '3.9',
+        'check_install': '3.9',
+        'editable_check_install': '3.9',
         'pyccel_lint': '3.11',
         'pylint': '3.9',
         'spelling': '3.12',
@@ -35,8 +35,8 @@ test_names = {
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
-        'installation': "Test file generation during source installation",
-        'editable_installation': "Test file generation during editable source installation",
+        'check_install': "Test file generation during source installation",
+        'editable_check_install': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -384,8 +384,8 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_installation":
-            test = "installation"
+        elif test == "editable_check_install":
+            test = "check_install"
             inputs["editable_string"] = "-e"
         print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', self._pr_details["head"]["ref"], inputs)

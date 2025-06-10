@@ -215,3 +215,13 @@ def test_type_var_container_4(language):
     epyc_f = epyccel(f, language=language)
     assert f(a) == epyc_f(a)
     assert isinstance(f(a), type(epyc_f(a)))
+
+def test_local_type_var_in_str(language):
+    T = TypeVar('T', int, float)
+
+    def f(a : 'T'):
+        return a + 3.0
+
+    epyc_f = epyccel(f, language=language, context_dict={'T': T})
+    assert f(1) == epyc_f(1)
+    assert f(2.5) == epyc_f(2.5)

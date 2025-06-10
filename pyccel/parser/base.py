@@ -10,7 +10,9 @@ Module containing aspects of a parser which are in common over all stages.
 
 import importlib
 import os
+import pathlib
 import re
+import warnings
 
 #==============================================================================
 from pyccel.version import __version__
@@ -40,86 +42,123 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module, input_folder=''):
+def get_filename_from_import(module_name, input_folder_name, output_folder_name):
     """
-    Get the absolute path of a module, searching in a given folder.
+    Get the absolute path of a module_name, searching in a given folder.
 
     Return a valid filename with an absolute path, that corresponds to the
-    definition of module.
-    The priority order is:
-        - header files (extension == pyh)
-        - python files (extension == py)
+    definition of module_name.
+    When searching for files in a folder, the order of priority is:
+        - python files (extension == .py)
+        - header files (extension == .pyi)
+
+    In the Pyccel folder the priority is inverted as .py files are sometimes
+    provided alongside .pyi files to spoof the functionalities so user code
+    relying on these methods can be run in Python.
 
     Parameters
     ----------
-    module : str | AsName
-        Name of the module of interest.
+    module_name : str | AsName
+        Name of the module_name of interest.
 
-    input_folder : str
-        Relative path of the folder which should be searched for the module.
+    input_folder_name : str | Path
+        Relative path of the folder which should be searched for the module_name.
+
+    output_folder_name : str | Path
+        The name of the folder where the output of the translation of the module
+        from which we are searching was printed.
 
     Returns
     -------
-    str
-        Absolute path of the given module.
+    filename : pathlib.Path
+        Absolute path to the Python file being imported.
+    stashed_filename : pathlib.Path
+        Absolute path to the .pyi version of the Python file being imported.
+        If none exists then the absolute path to the Python file being imported.
 
     Raises
     ------
     PyccelError
-        Error raised when the module cannot be found.
+        Error raised when the module_name cannot be found.
+        Error raised when the file imports a file that has not been translated.
+        Error raised when the file imports a file that has been changed since its last translation.
     """
 
-    if (isinstance(module, AsName)):
-        module = str(module.name)
+    if (isinstance(module_name, AsName)):
+        module_name = str(module_name.name)
 
-    # Remove first '.' as it doesn't represent a folder change
-    if module[0] == '.':
-        module = module[1:]
-    filename = module.replace('.','/')
+    relative_project_path = module_name[0] == '.'
+    in_project = '.' in module_name
 
-    # relative imports
-    folder_above = '../'
-    while filename.startswith('/'):
-        filename = folder_above + filename[1:]
+    input_folder = pathlib.Path(input_folder_name)
 
-    filename_pyh = f'{filename}.pyh'
-    filename_py  = f'{filename}.py'
+    if relative_project_path:
+        project_depth = next(i for i, c in enumerate(module_name) if c != '.')
+        if project_depth == 1:
+            project_dir = input_folder
+        else:
+            project_dir = input_folder.parents[project_depth-2]
+        module_path = module_name[project_depth:].split('.')
+        filename_stem = project_dir.joinpath(*module_path)
+    elif in_project:
+        filename_stem = input_folder.joinpath(*module_name.split('.')).with_suffix('.py')
+        if not filename_stem.exists():
+            module_name_parts = module_name.split('.')
+            package = None
+            for i in range(len(module_name_parts)):
+                try:
+                    package = importlib.import_module('.'.join(module_name_parts[:len(module_name_parts)-i]))
+                    break
+                except ImportError:
+                    pass
+            if package is None:
+                errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
+                                severity='fatal')
+            filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
+    else:
+        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
 
-    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
-    poss_filename_py  = os.path.join( input_folder, filename_py  )
-    if is_valid_filename_pyh(poss_filename_pyh):
-        return os.path.abspath(poss_filename_pyh)
-    if is_valid_filename_py(poss_filename_py):
-        return os.path.abspath(poss_filename_py)
+    pyccel_folder = pathlib.Path(__file__).parent.parent
+    filename_py = filename_stem.with_suffix('.py')
+    filename_pyi = filename_stem.with_suffix('.pyi')
+    filename_pyh = filename_stem.with_suffix('.pyh')
 
-    source = module
-    if len(module.split(""".""")) > 1:
-
-        # we remove the last entry, since it can be a pyh file
-
-        source = """.""".join(i for i in module.split(""".""")[:-1])
-        _module = module.split(""".""")[-1]
-        filename_pyh = f'{_module}.pyh'
-        filename_py  = f'{_module}.py'
-
-    try:
-        package = importlib.import_module(source)
-        package_dir = str(package.__path__[0])
-    except ImportError:
-        errors = Errors()
-        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
+    # Look for .pyi or .pyh files in pyccel
+    # Header files take priority in case .py files exist so files can run in Python
+    if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
+        abs_pyi_fname = filename_pyi.absolute()
+        return abs_pyi_fname, abs_pyi_fname
+    elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
+        abs_pyh_fname = filename_pyh.absolute()
+        return abs_pyh_fname, abs_pyh_fname
+    elif filename_py.exists() and pyccel_folder in filename_pyh.parents:
+        # External files are pure Python
+        abs_py_fname = filename_py.absolute()
+        return abs_py_fname, abs_py_fname
+    # Look for Python files which should have been translated once
+    elif filename_py.exists():
+        rel_path = os.path.relpath(filename_py.parent, input_folder_name)
+        pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+        stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
+        if not stashed_file.exists():
+            errors.report("Imported files must be pyccelised before they can be used.",
+                    symbol=module_name, severity='fatal')
+        if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
+            errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
+                    symbol=module_name, severity='fatal')
+        return filename_py.absolute(), stashed_file.resolve()
+    # Look for user-defined .pyi or .pyh files
+    elif filename_pyi.exists():
+        abs_pyi_fname = filename_pyi.absolute()
+        return abs_pyi_fname, abs_pyi_fname
+    elif filename_pyh.exists():
+        warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
+                "Please use a .pyi file instead.", FutureWarning)
+        abs_pyh_fname = filename_pyh.absolute()
+        return abs_pyh_fname, abs_pyh_fname
+    else:
+        raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')
-
-    filename_pyh = os.path.join(package_dir, filename_pyh)
-    filename_py = os.path.join(package_dir, filename_py)
-    if os.path.isfile(filename_pyh):
-        return filename_pyh
-    elif os.path.isfile(filename_py):
-        return filename_py
-
-    errors = Errors()
-    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
-                  severity='fatal')
 
 #==============================================================================
 class BasicParser(object):
@@ -250,10 +289,16 @@ class BasicParser(object):
 
     @property
     def is_header_file(self):
-        """Returns True if we are treating a header file."""
+        """
+        Indicate if the file being translated is a header file.
+
+        Indicate if the file being translated is a header file.
+        A file is a header file if it does not include the implementation of the
+        methods. This is the case for .pyi files.
+        """
 
         if self.filename:
-            return self.filename.split(""".""")[-1] == 'pyh'
+            return self.filename.suffix in ('.pyi', '.pyh')
         else:
             return False
 
