@@ -35,8 +35,9 @@ class Parser(object):
         This can allow certain constants to be defined outside of the function passed to epyccel.
 
     original_filename : str, optional
-        The name of the original Python file. This won't match the filename if the filename is a
-        stashed .pyi file.
+        The name of the original Python file. This won't match the filename if the
+        filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
+        auto-generated to describe the prototypes of the methods).
 
     **kwargs : dict
         Any keyword arguments for BasicParser.
