@@ -42,7 +42,7 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
+def get_filename_from_import(module_name, input_folder_name, output_folder_name):
     """
     Get the absolute path of a module_name, searching in a given folder.
 
@@ -64,7 +64,7 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     input_folder_name : str | Path
         Relative path of the folder which should be searched for the module_name.
 
-    wk_folder_name : str | Path
+    output_folder_name : str | Path
         The name of the folder where the output of the translation of the module
         from which we are searching was printed.
 
@@ -138,8 +138,8 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     # Look for Python files which should have been translated once
     elif filename_py.exists():
         rel_path = os.path.relpath(filename_py.parent, input_folder_name)
-        pyccel_wk_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
-        stashed_file = pathlib.Path(wk_folder_name) / rel_path / pyccel_wk_folder / filename_pyi.name
+        pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+        stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
         if not stashed_file.exists():
             errors.report("Imported files must be pyccelised before they can be used.",
                     symbol=module_name, severity='fatal')

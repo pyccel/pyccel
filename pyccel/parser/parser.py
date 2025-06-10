@@ -27,7 +27,7 @@ class Parser(object):
     filename : str | Path
         The name of the file being translated.
 
-    wk_folder : str | Path
+    output_folder : str | Path
         The output folder for the generated file.
 
     context_dict : dict, optional
@@ -42,7 +42,7 @@ class Parser(object):
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, wk_folder, context_dict = None, original_filename = None, **kwargs):
+    def __init__(self, filename, *, output_folder, context_dict = None, original_filename = None, **kwargs):
 
         filename = Path(filename)
         self._filename = filename
@@ -65,7 +65,7 @@ class Parser(object):
         self._original_filename = Path(original_filename or filename)
 
         self._input_folder = self._original_filename.parent
-        self._wk_folder = wk_folder
+        self._output_folder = output_folder
 
     @property
     def semantic_parser(self):
@@ -251,7 +251,7 @@ class Parser(object):
         """
 
         imports     = self.imports
-        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._wk_folder) for i in imports}
+        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:
@@ -264,10 +264,10 @@ class Parser(object):
             if filename in d_parsers_by_filename:
                 q = d_parsers_by_filename[filename]
             else:
-                q_wk_folder = stashed_filename.parent
-                if stashed_filename.suffix == '.pyi' and q_wk_folder.name.startswith('__pyccel__'):
-                    q_wk_folder = q_wk_folder.parent
-                q = Parser(stashed_filename, q_wk_folder, original_filename = filename)
+                q_output_folder = stashed_filename.parent
+                if stashed_filename.suffix == '.pyi' and q_output_folder.name.startswith('__pyccel__'):
+                    q_output_folder = q_output_folder.parent
+                q = Parser(stashed_filename, q_output_folder, original_filename = filename)
             q.parse(d_parsers_by_filename=d_parsers_by_filename)
             d_parsers_by_filename[filename] = q
 
