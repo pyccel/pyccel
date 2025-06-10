@@ -221,6 +221,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
 
 ### Deprecated
 
