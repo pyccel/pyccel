@@ -551,3 +551,13 @@ def test_parallel_if(language):
     f2 = openmp.parallel_if
     assert (f1(9) == f2(9)).all()
     assert (f1(11) == f2(11)).all()
+
+@pytest.mark.external
+def test_omp_ordered(language):
+    f1 = epyccel(openmp.stenc_2d, fflags = '-Wall', accelerators=['openmp'], language=language)
+    f2 = openmp.stenc_2d
+    A = np.ones([3, 3], dtype=int)
+    B = np.ones([3, 3], dtype=int)
+    f1(A, 3, 3)
+    f2(B, 3, 3)
+    assert np.array_equal(A, B)
