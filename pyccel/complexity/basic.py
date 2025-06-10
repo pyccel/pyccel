@@ -23,7 +23,7 @@ class Complexity(object):
         parse as a string.
     """
     def __init__(self, filename_or_text):
-        pyccel = Parser(filename_or_text, os.getcwd())
+        pyccel = Parser(filename_or_text, output_folder = os.getcwd())
         self._ast = pyccel.parse()
         settings = {}
         self._ast = pyccel.annotate(**settings).ast

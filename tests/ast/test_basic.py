@@ -15,7 +15,7 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 def get_functions(filename):
-    pyccel = Parser(filename, os.getcwd())
+    pyccel = Parser(filename, output_folder = os.getcwd())
     errors = Errors()
 
     ast = pyccel.parse()

@@ -268,7 +268,7 @@ class Parser(object):
                 q_output_folder = stashed_filename.parent
                 if stashed_filename.suffix == '.pyi' and q_output_folder.name.startswith('__pyccel__'):
                     q_output_folder = q_output_folder.parent
-                q = Parser(stashed_filename, q_output_folder, original_filename = filename)
+                q = Parser(stashed_filename, output_folder = q_output_folder, original_filename = filename)
             q.parse(d_parsers_by_filename=d_parsers_by_filename)
             d_parsers_by_filename[filename] = q
 
@@ -311,18 +311,4 @@ class Parser(object):
                     print ('>>> treating :: ', p.filename)
                 p.annotate()
 
-#==============================================================================
-
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError('Expecting an argument for filename')
-
-    pyccel = Parser(filename)
-    pyccel.parse(verbose=True)
-
-    settings = {}
-    pyccel.annotate(**settings)
+    
