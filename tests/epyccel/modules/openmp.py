@@ -273,9 +273,8 @@ def test_omp_get_max_task_priority():
     return max_task_priority_var
 
 def omp_matmul(A : 'float[:,:]', x : 'float[:,:]', out : 'float[:,:]'):
-    i, j, k = 0, 0, 0
     #$ omp parallel shared(A,x,out) private(i,j,k)
-    #$ omp for ordered(1)
+    #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
         for j in range(len(x[0])):# pylint: disable=C0200
             for k in range(len(x)):# pylint: disable=C0200
@@ -530,7 +529,6 @@ def potential_internal_data_race_condition():
     #$ omp end parallel
     return z + t
 
-
 def parallel_if(n : int):
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
@@ -548,3 +546,16 @@ def parallel_if(n : int):
         a[i] = 2 * i
     #$ omp end parallel
     return a
+
+def stenc_2d(matrix: 'int[:,:]', n: 'int', m: 'int'):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_set_num_threads
+    omp_set_num_threads(np.int32(4))
+    #$ omp parallel
+    #$ omp for ordered(2) collapse(2)
+    for i in range(1, n):
+        for j in range(1, m):
+            #$ omp ordered depend(sink: i, j-1) depend(sink: i-1, j)
+            matrix[i][j] = 2 * (matrix[i][j-1] + matrix[i-1][j])
+            #$ omp ordered depend(source)
+    #$ omp end parallel
