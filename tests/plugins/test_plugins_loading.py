@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring, protected-access
 import os
+import inspect
 from unittest.mock import patch
 
 import pytest
@@ -24,7 +25,8 @@ def get_funcs(obj):
     for name in dir(obj):
         if name.startswith('__'):
             continue
-
+        if inspect.isdatadescriptor(getattr(type(obj), name, None)):
+            continue
         attr = getattr(obj, name)
         if callable(attr) and hasattr(attr, '__func__'):
             methods[name] = attr.__func__

@@ -26,7 +26,7 @@ def test_blockers(f):
     errors.reset()
 
     with pytest.raises(PyccelError):
-        pyccel = Parser(f)
+        pyccel = Parser(f, output_folder=os.getcwd())
         ast = pyccel.parse()
 
         settings = {}

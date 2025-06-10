@@ -167,3 +167,4 @@ OMP_VERSION_NOT_SUPPORTED = "OPENMP {} is not supported. Defaulting to OPENMP {}
 
 #plugins
 PLUGIN_DIRECTORY_NOT_FOUND = "Plugin directory not found: {}."
+
