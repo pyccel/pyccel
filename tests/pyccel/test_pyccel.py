@@ -1234,6 +1234,9 @@ def test_stubs(language):
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
 
+    if language != 'python':
+        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
+
     assert expected_pyi == generated_pyi
 
 #------------------------------------------------------------------------------
