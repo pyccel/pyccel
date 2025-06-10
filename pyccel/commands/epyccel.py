@@ -296,9 +296,8 @@ def epyccel_seq(function_class_or_module, *,
     if isinstance(function_class_or_module, (FunctionType, type)):
         code, collected_context_dict = get_source_code_and_context(function_class_or_module)
         if context_dict:
-            context_dict = collected_context_dict.update(context_dict)
-        else:
-            context_dict = collected_context_dict
+            collected_context_dict.update(context_dict)
+        context_dict = collected_context_dict
 
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
