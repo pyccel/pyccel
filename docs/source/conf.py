@@ -1,24 +1,26 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
 
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
 from itertools import chain
-import os
 import pathlib
 
-from pygments.lexers.fortran import FortranLexer  # fallback
+from pygments.lexers.fortran import FortranLexer
 
 def setup(app):
-    # Override the 'fortran' lexer with the modern one
+    """
+    Override the default 'fortran' lexer with one from Pygments which is
+    better at parsing the code.
+    """
     from sphinx.highlighting import lexers
     lexers['fortran'] = FortranLexer()
 
 # -- Project information -----------------------------------------------------
 
 project = 'pyccel'
-copyright = '2023, *'
 author = '*'
 
 # The full version, including alpha/beta/rc tags
@@ -68,10 +70,10 @@ for module in api_dir.iterdir():
         python_path_substitutions[f'../{path_name}/)'] = new_link
 
 for doc_files in chain((base_dir / 'docs').iterdir(), (base_dir / 'developer_docs').iterdir()):
-    with open(doc_files, 'r') as f:
+    with open(doc_files, 'r', encoding="utf-8") as f:
         contents = f.read()
     for file_path, api_mod_path in python_path_substitutions.items():
         contents = contents.replace(file_path, api_mod_path)
     contents = contents.replace('../', 'https://github.com/pyccel/pyccel/tree/devel/')
-    with open(doc_files, 'w') as f:
+    with open(doc_files, 'w', encoding="utf-8") as f:
         f.write(contents)
