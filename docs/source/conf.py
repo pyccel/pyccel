@@ -70,6 +70,8 @@ html_theme = 'sphinx_book_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
 
+html_logo = "pyccel_logo_rectangle.png"
+
 html_theme_options = {
     "repository_branch": "devel",
     "show_toc_level": 2,
