@@ -1,6 +1,6 @@
+from typing import Final, TypeVar
 from typing import Final, TypeVar, overload
 from numpy import float64
-from typing import overload
 
 T = TypeVar('T', 'int', 'float', 'complex')
 S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
