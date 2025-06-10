@@ -470,7 +470,7 @@ expr = x**2 + x*5
 f = lambdify(expr, {x : 'float'})
 print(f(3.0))
 
-expr2 = x-x
+expr = x-x
 f2 = lambdify(expr, {x : 'float'}, result_type = 'float')
 print(f2(3.0))
 
@@ -494,7 +494,7 @@ from pyccel import lambdify
 
 x = sp.Symbol('x')
 expr = x**2 + x*5
-f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]')
+f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]', use_out = True)
 x_2d = np.ones((4,2))
 y_2d = np.empty_like(x_2d)
 f(x_2d, y_2d)
