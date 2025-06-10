@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
+from typing import TypeVar
 import pytest
 from numpy.random import randint, uniform
 from numpy import iinfo, finfo
 import numpy as np
 
 from pyccel import epyccel
-from pyccel.decorators import template
 
 ATOL = 1e-15
 RTOL = 2e-14
@@ -17,6 +17,9 @@ max_int = iinfo(np.int32).max
 
 min_float = finfo(float).min
 max_float = finfo(float).max
+
+T = TypeVar('T', int, float)
+T2 = TypeVar('T2', int, float, complex)
 
 def test_abs_i(language):
     def f1(x : 'int'):
@@ -111,8 +114,7 @@ def test_min_2_args_f(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_3_args(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -150,8 +152,7 @@ def test_min_in_min(language):
     assert epyc_f(*int_args) == f(*int_args)
 
 def test_min_list(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -163,8 +164,7 @@ def test_min_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_tuple(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return min((x, y, z))
 
     epyc_f = epyccel(f, language=language)
@@ -176,8 +176,7 @@ def test_min_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_list_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = [x, y, z]
         return min(w)
 
@@ -190,8 +189,7 @@ def test_min_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_tuple_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = (x, y, z)
         return min(w)
 
@@ -204,8 +202,7 @@ def test_min_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_min_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return min((x, y))+3, min(x, y)+4
 
     epyc_f = epyccel(f, language=language)
@@ -257,8 +254,7 @@ def test_max_2_args_f(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_3_args(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -270,8 +266,7 @@ def test_max_3_args(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_list(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -283,8 +278,7 @@ def test_max_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_tuple(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         return max((x, y, z))
 
     epyc_f = epyccel(f, language=language)
@@ -296,8 +290,7 @@ def test_max_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_list_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = [x, y, z]
         return max(w)
 
@@ -310,8 +303,7 @@ def test_max_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_tuple_var(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T', z : 'T'):
+    def f(x : T, y : T, z : T):
         w = (x, y, z)
         return max(w)
 
@@ -324,8 +316,7 @@ def test_max_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return max((x, y))+3, max(x, y)+4
 
     epyc_f = epyccel(f, language=language)
@@ -366,8 +357,7 @@ def test_max_temp_var_second_arg(language):
     )
 )
 def test_sum_matching_types(language):
-    @template('T',['int','float','complex'])
-    def f(x : 'T', y : 'T'):
+    def f(x : T2, y : T2):
         return sum([x, y])
 
     epyc_f = epyccel(f, language=language)
@@ -391,8 +381,7 @@ def test_sum_matching_types(language):
     )
 )
 def test_sum_expr(language):
-    @template('T', [int, float])
-    def f(x : 'T', y : 'T'):
+    def f(x : T, y : T):
         return sum((x, y))+3
 
     epyc_f = epyccel(f, language=language)
@@ -718,16 +707,6 @@ def test_round_ndigits_bool(language):
     assert all(o == r for o, r in zip(f_output, round_ndigits_output))
     assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_native(language):
     def isinstance_test(a : 'bool | int | float | complex'):
         return isinstance(a, bool), isinstance(a, int), isinstance(a, float), isinstance(a, complex)
@@ -764,16 +743,6 @@ def test_isinstance_containers(language):
 
         assert f(2, 5) == f_epyc(2, 5)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_numpy(language):
     def isinstance_test(a : 'int32 | int64 | int | float32'):
         return isinstance(a, np.int32), isinstance(a, np.int64), isinstance(a, int), isinstance(a, np.float32)
@@ -784,18 +753,11 @@ def test_isinstance_numpy(language):
     assert f(4) == isinstance_test(4)
     assert f(np.float32(4)) == isinstance_test(np.float32(4))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_tuple(language):
     def isinstance_test(a : 'bool | int | float | complex'):
+        """
+        Testing a case which should generate radically different functions.
+        """
         return (isinstance(a, (bool, int)), isinstance(a, (bool, float)), isinstance(a, (int, complex)),
                 isinstance(a, (tuple, list)))
 
@@ -807,16 +769,6 @@ def test_isinstance_tuple(language):
     assert f(1+2j) == isinstance_test(6.5+8.3j)
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [pytest.mark.c]),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("isinstance is evaluated during translation so Python translation "
-                "gives wrong results. See #802")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_isinstance_union(language):
     def isinstance_test(a : bool | int | float | complex): #pylint: disable=unsupported-binary-operation
         return (isinstance(a, bool | int), isinstance(a, bool | float), isinstance(a, int | complex), #pylint: disable=unsupported-binary-operation

@@ -88,6 +88,7 @@ All notable changes to this project will be documented in this file.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
 -   Generate stub files to allow double compilation to potentially be bypassed.
+-   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
@@ -169,6 +170,11 @@ All notable changes to this project will be documented in this file.
 -   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
 -   #1814 : Fix class method visitation order to correctly access the global scope from methods.
 -   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
+-   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
+-   Fix casting of arrays in Python translation.
+-   #2167 : Stop modifying variables to add `Final` annotation.
+-   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
 
 ### Changed
 
@@ -187,6 +193,7 @@ All notable changes to this project will be documented in this file.
 -   #2242 : Change format of compiler info files.
 -   #2302 : Print the deallocation in a 1 line if statement.
 -   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -218,12 +225,15 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Save a shape whose length is limited to the container length.
 -   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
 
 ### Deprecated
 
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
+-   #1487 : Remove support for `@template` decorator.
 -   #1812 : Stop allowing multiple main blocks inside a module.
+-   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.

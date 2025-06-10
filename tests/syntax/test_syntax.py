@@ -24,7 +24,7 @@ def test_syntax(f):
     extensions = Plugins()
     extensions.set_options({'accelerators':['openmp'], 'omp_version':4.5})
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse()
 
     # Assert syntactic success

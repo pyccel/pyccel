@@ -1,10 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-
+from typing import TypeVar, Final
 import pytest
 import numpy as np
 from pyccel import epyccel
-from pyccel.decorators import private, inline, template
+from pyccel.decorators import private, inline
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -289,8 +289,9 @@ def test_multi_level_inhomogeneous_tuple_in_inline(language):
     assert f() == g()
 
 def test_indexed_template(language):
-    @template(name='T', types=['const float', 'const complex'])
-    def my_sum(v: 'T[:]'):
+    T = TypeVar('T', 'float[:]', 'complex[:]')
+
+    def my_sum(v: Final[T]):
         return v.sum()
 
     pyccel_sum = epyccel(my_sum, language=language)

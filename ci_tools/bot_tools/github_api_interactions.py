@@ -65,8 +65,8 @@ class GitHubAPIInteractions:
     A helper class which exposes the GitHub API in a readable
     manner.
     """
-    def __init__(self):
-        repo = os.environ["GITHUB_REPOSITORY"]
+    def __init__(self, repo):
+        repo = repo or os.environ["GITHUB_REPOSITORY"]
         self._org, self._repo = repo.split('/')
         if "installation_token" in os.environ:
             self._authenticated = True
@@ -342,7 +342,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
         return self._post_request("GET", url).json()
 
-    def run_workflow(self, filename, inputs):
+    def run_workflow(self, filename, branch, inputs):
         """
         Create a workflow dispatch event.
 
@@ -357,6 +357,9 @@ class GitHubAPIInteractions:
         filename : str
             The name of the file containing the workflow we wish to run.
 
+        branch : str
+            The name of the branch that the tests should be run on.
+
         inputs : dict
             A dictionary of any inputs required for the workflow.
 
@@ -367,7 +370,7 @@ class GitHubAPIInteractions:
         """
         assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
-        json = {"ref": "devel",
+        json = {"ref": branch,
                 "inputs": inputs}
         print(url, json)
         reply = self._post_request("POST", url, json)

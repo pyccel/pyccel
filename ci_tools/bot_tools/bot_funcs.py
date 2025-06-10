@@ -18,8 +18,8 @@ default_python_versions = {
         'linux': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
-        'installation': '3.9',
-        'editable_installation': '3.9',
+        'check_install': '3.9',
+        'editable_check_install': '3.9',
         'pyccel_lint': '3.11',
         'pylint': '3.9',
         'spelling': '3.12',
@@ -35,8 +35,8 @@ test_names = {
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
-        'installation': "Test file generation during source installation",
-        'editable_installation': "Test file generation during editable source installation",
+        'check_install': "Test file generation during source installation",
+        'editable_check_install': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -49,6 +49,8 @@ tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling', 'intel')
+
+pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 
@@ -107,17 +109,17 @@ class Bot:
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._source_repo = None
-        self._GAI = GitHubAPIInteractions()
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
         else:
             self._pr_id = int(pr_id)
         print("PR ID =", self._pr_id)
         if self._pr_id != 0:
-            self._pr_details = self._GAI.get_pr_details(pr_id)
-            print(self._pr_details)
+            GAI = GitHubAPIInteractions(self._repo)
+            self._pr_details = GAI.get_pr_details(pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
+        self._GAI = GitHubAPIInteractions(self._source_repo)
         if commit:
             self._ref = commit
             if '/' in self._ref:
@@ -382,11 +384,11 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_installation":
-            test = "installation"
+        elif test == "editable_check_install":
+            test = "check_install"
             inputs["editable_string"] = "-e"
         print("Post workflow")
-        self._GAI.run_workflow(f'{test}.yml', inputs)
+        self._GAI.run_workflow(f'{test}.yml', self._pr_details["head"]["ref"], inputs)
 
     def mark_as_draft(self):
         """
@@ -473,7 +475,7 @@ class Bot:
             return False
 
         if self.is_user_trusted(user):
-            states = self.run_tests(pr_test_keys)
+            states = self.run_tests(pr_test_keys_to_trigger)
 
             if 'failure' in states:
                 self.draft_due_to_failure()

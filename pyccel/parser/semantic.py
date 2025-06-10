@@ -2336,7 +2336,10 @@ class SemanticParser(BasicParser):
                 class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
-                dtype = numpy_process_dtype(dtype_cls.static_type())
+                try:
+                    dtype = numpy_process_dtype(dtype_cls.static_type())
+                except AttributeError:
+                    errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
                 class_type = NumpyNDArrayType(dtype, rank, order)
             return VariableTypeAnnotation(class_type)
 
@@ -2725,7 +2728,8 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        for c in self.scope.classes.values():
+        classes = self.scope.classes.values()
+        for c in classes:
             self._create_class_destructor(c)
 
         for f in self.scope.functions.values():
@@ -2821,47 +2825,12 @@ class SemanticParser(BasicParser):
         # FunctionDef etc ...
 
         if self.is_header_file:
-            # ARA : issue-999
-            is_external = self.metavars.get('external', False)
-            for name, headers in self.scope.headers.items():
-                if all(isinstance(v, FunctionHeader) and \
-                        not isinstance(v, MethodHeader) for v in headers):
-                    F = self.scope.find(name, 'functions')
-                    if F is None:
-                        func_defs = []
-                        for v in headers:
-                            scope = self.create_new_function_scope(name, v.name)
-                            types = [self._visit(d).type_list[0] for d in v.dtypes]
-                            args = [Variable(t.class_type, PyccelSymbol(f'anon_{i}'),
-                                shape = None, is_const = t.is_const, is_optional = False,
-                                cls_base = t.class_type,
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
-
-                            if v.results:
-                                name = self.scope.get_new_name('result')
-                                pyccel_stage.set_stage('syntactic')
-                                syntactic_result = FunctionDefResult(AnnotatedPyccelSymbol(name, v.results), annotation = v.results)
-                                pyccel_stage.set_stage('semantic')
-                                results = self._visit(syntactic_result)
-                            else:
-                                results = FunctionDefResult(Nil())
-
-                            args = [FunctionDefArgument(a) for a in args]
-                            self.exit_function_scope()
-                            func_defs.append(FunctionDef(v.name, args, [], results, is_external = is_external, is_header = True,
-                                scope = scope))
-
-                        if len(func_defs) == 1:
-                            F = func_defs[0]
-                            funcs.append(F)
-                        else:
-                            F = Interface(name, func_defs)
-                            interfaces.append(F)
-                        self.insert_function(F)
-                    else:
-                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                symbol=name,
-                                severity='fatal')
+            if self.metavars.get('external', False):
+                for f in funcs:
+                    f.is_external = True
+                for c in classes:
+                    for m in c.methods:
+                        m.is_external = True
 
         for v in variables:
             if v.rank > 0 and not v.is_alias:
@@ -2873,7 +2842,7 @@ class SemanticParser(BasicParser):
                     init_func = init_func,
                     free_func = free_func,
                     interfaces=interfaces,
-                    classes=self.scope.classes.values(),
+                    classes=classes,
                     imports=self.scope.imports['imports'].values(),
                     scope=self.scope)
 
@@ -3148,9 +3117,7 @@ class SemanticParser(BasicParser):
 
         if var is None and self._in_annotation:
             var = numpy_funcs.get(name, None)
-            if name == 'real':
-                var = numpy_funcs['float']
-            elif name == '*':
+            if name == '*':
                 return GenericType()
 
         if var is None and name in self._context_dict:
@@ -3279,9 +3246,15 @@ class SemanticParser(BasicParser):
         self._in_annotation = False
         order = expr.order
 
+        if isinstance(visited_dtype, UnionTypeAnnotation) and len(visited_dtype.type_list) == 1:
+            visited_dtype = visited_dtype.type_list[0]
+
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
-            class_type = dtype_cls.static_type()
+            try:
+                class_type = dtype_cls.static_type()
+            except AttributeError:
+                errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
             return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if order and order != visited_dtype.class_type.order:
@@ -3565,6 +3538,24 @@ class SemanticParser(BasicParser):
                 func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
         args = self._handle_function_args(expr.args)
+
+        if isinstance(func, PyccelFunctionDef) and func.cls_name is TypingTypeVar:
+            new_args = [args[0]]
+            for a in args[1:]:
+                a_val = a.value
+                if isinstance(a_val, LiteralString):
+                    pyccel_stage.set_stage('syntactic')
+                    try:
+                        syntactic_a = types_meta.model_from_str(a_val.python_value)
+                    except TextXSyntaxError as e:
+                        errors.report(f"Invalid annotation. {e.message}",
+                                symbol = self.current_ast_node, severity='fatal')
+                    annot = syntactic_a.expr
+                    pyccel_stage.set_stage('semantic')
+                    new_args.append(FunctionCallArgument(self._visit(annot)))
+                else:
+                    new_args.append(a)
+            args = new_args
 
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
@@ -4714,26 +4705,15 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr):
         warnings.warn("Support for specifying types via headers will be removed in a " +
-                      "future version of Pyccel. Please use type hints. The @template " +
-                      "decorator can be used to specify multiple types. See the " +
-                      "documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                      "future version of Pyccel. Please use type hints. TypeVar from " +
+                      "Python's typing module can be used to specify multiple types. " +
+                      "See the documentation at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                       "for examples.", FutureWarning)
         # TODO should we return it and keep it in the AST?
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         self.scope.insert_header(expr)
-        return expr
-
-    def _visit_Template(self, expr):
-        warnings.warn("Support for specifying templates via headers will be removed in " +
-                      "a future version of Pyccel. Please use the @template decorator. " +
-                      "See the documentatiosn at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/templates.md " +
-                      "for examples.", FutureWarning)
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_template(expr)
         return expr
 
     def _visit_Return(self, expr):
@@ -4825,15 +4805,21 @@ class SemanticParser(BasicParser):
             func = insertion_scope.functions.get(name, None)
             if func:
                 if func.is_semantic:
-                    return EmptyNode()
+                    if self.is_header_file:
+                        # Only Interfaces should be revisited in a header file
+                        assert isinstance(func, Interface)
+                        existing_semantic_funcs = [*func.functions]
+                    else:
+                        return EmptyNode()
                 else:
                     insertion_scope.functions.pop(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
+            expr.invalidate_node()
             expr = expr.syntactic_node
             name = expr.scope.get_expected_name(expr.name)
 
-        decorators         = expr.decorators
+        decorators         = expr.decorators.copy()
         new_semantic_funcs = []
         sub_funcs          = []
         func_interfaces    = []
@@ -4847,89 +4833,56 @@ class SemanticParser(BasicParser):
             assert is_inline
             found_func = False
 
-        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property')]
+        not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        templates = self.scope.find_all('templates')
-        if 'template' in decorators:
-            # Load templates dict from decorators dict
-            templates.update(decorators['template']['template_dict'])
-
-        for t,v in templates.items():
-            if not isinstance(v, TypingTypeVar):
-                templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
-
-        def unpack(ann):
-            if isinstance(ann, UnionTypeAnnotation):
-                return ann.type_list
-            else:
-                return [ann]
-
-        # Filter out unused templates
-        templatable_args = [unpack(a.annotation) for a in expr.arguments \
-                if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation, TypingFinal))]
-        arg_annotations = [annot for a in templatable_args for annot in a \
-                if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
-        used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
-        templates = {t: v for t,v in templates.items() if t in used_type_names}
-        for n in used_type_names:
-            t = self.scope.find(n, 'symbolic_aliases')
-            if t is None and n in self._context_dict:
-                t = self.env_var_to_pyccel(self._context_dict[n])
-            if isinstance(t, TypingTypeVar):
-                templates[n] = t
-
-        # Create new temporary templates for the arguments with a Union data type.
-        tmp_templates = {}
-        new_expr_args = []
+        available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
+        available_type_vars.update(self.scope.collect_all_type_vars())
+        used_type_vars = {}
         for a in expr.arguments:
-            annot = a.annotation
-            if isinstance(annot, UnionTypeAnnotation):
-                annotation = [aa for a in annot for aa in unpack(a)]
-            elif isinstance(annot, SyntacticTypeAnnotation):
-                if isinstance(annot.dtype, PyccelSymbol):
-                    elem = [annot.dtype]
-                else:
-                    elem = annot.dtype.get_attribute_nodes(PyccelSymbol)
-                if all(e not in templates for e in elem):
-                    annotation = unpack(self._visit(annot))
-                else:
-                    annotation = [annot]
-            else:
-                annotation = [annot]
-            if len(annotation)>1:
-                tmp_template_name = a.name + '_' + random_string(12)
-                tmp_template_name = self.scope.get_new_name(tmp_template_name)
-                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
-                pyccel_stage.set_stage('syntactic')
-                dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
-                dtype_symb = SyntacticTypeAnnotation(dtype_symb)
-                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
-                new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
-                                        value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
-                pyccel_stage.set_stage('semantic')
-            else:
-                new_expr_args.append(a)
+            used_objs = a.annotation.get_attribute_nodes(PyccelSymbol)
+            for o in used_objs:
+                if o in available_type_vars:
+                    used_type_vars[o] = available_type_vars[o]
 
-        templates.update(tmp_templates)
-        template_combinations = list(product(*[v.type_list for v in templates.values()]))
-        template_names = list(templates.keys())
-        n_templates = len(template_combinations)
+        for o, t in used_type_vars.items():
+            if isinstance(t, typing.TypeVar):
+                pyccel_type_var = self.env_var_to_pyccel(t)
+                used_type_vars[o] = pyccel_type_var
+                global_scope = self.scope
+                while global_scope.parent_scope:
+                    global_scope = global_scope.parent_scope
+                global_scope.insert_symbol(o)
+                global_scope.insert_symbolic_alias(o, pyccel_type_var)
 
-        decorators.setdefault('template', {})['template_dict'] = templates
+        possible_combinations = list(product(*[t.type_list for t in used_type_vars.values()]))
+
+        argument_combinations = []
+        type_var_indices = []
+        for i,p in enumerate(possible_combinations):
+            scope = self.create_new_function_scope(expr.name, '_', decorators = decorators,
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy(),
+                    symbolic_aliases = expr.scope.symbolic_aliases)
+            for n, dtype in zip(used_type_vars, p):
+                self.scope.insert_symbolic_alias(n, dtype)
+            args = list(product(*[self._visit(a) for a in expr.arguments]))
+            argument_combinations.extend(args)
+            type_var_indices.extend([i]*len(args))
+            self.exit_function_scope()
 
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-        is_interface = n_templates > 1
+        is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-        for tmpl_idx in range(n_templates):
+        for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if function_call_args is not None and found_func:
                 break
 
             if is_interface:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
+                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
             insertion_scope.python_names[name] = expr.name
 
@@ -4938,14 +4891,11 @@ class SemanticParser(BasicParser):
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
 
-            for n, v in zip(template_names, template_combinations[tmpl_idx]):
-                self.scope.insert_symbolic_alias(n, v)
             self.scope.decorators.update(decorators)
 
-            # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
-            # so we flatten the arguments
-            arguments = [i for a in new_expr_args for i in self._visit(a)]
-            assert len(arguments) == len(expr.arguments)
+            for n, dtype in zip(used_type_vars, possible_combinations[type_var_idx]):
+                self.scope.insert_symbolic_alias(n, dtype)
+
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
 
@@ -5053,33 +5003,6 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            # Find all nodes which can modify variables
-            assigns = body.get_attribute_nodes((Assign, AliasAssign), excluded_nodes = (FunctionCall,))
-            calls   = body.get_attribute_nodes(FunctionCall)
-            builtin_func_calls = body.get_attribute_nodes((PyccelFunction, Iterable))
-            builtin_calls = body.get_attribute_nodes((Allocate, Deallocate))
-
-            # Collect the modified objects
-            lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [call_arg.value for f in calls
-                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
-            modified_args += [f.variable for f in builtin_calls]
-            modified_args += [v for f in builtin_func_calls for v in f.modified_args]
-            # Collect modified variables
-            all_assigned = [v for a in (lhs_assigns + modified_args) for v in
-                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
-
-            # Search for Variables in DottedVariable (get_attribute_nodes is not sufficient
-            # as a DottedVariable is a Variable)
-            while any(isinstance(v, DottedVariable) for v in all_assigned):
-                all_assigned = [v for a in all_assigned for v in (a.get_attribute_nodes(Variable) \
-                                                                 if isinstance(a, DottedVariable) else [a])]
-
-            # ... computing inout arguments
-            for a in arguments:
-                if a.var not in all_assigned and expr.name not in ('__del__', '__init__'):
-                    a.make_const()
-            # ...
             # Raise an error if one of the return arguments is an alias.
             pointer_targets = self._pointer_targets.pop()
             result_pointer_map = {}

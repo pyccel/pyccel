@@ -1,9 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import Final
+from typing import Final, TypeVar
 import pytest
 import numpy as np
 from pyccel import epyccel
-from pyccel.decorators import template
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
@@ -878,8 +877,9 @@ def test_list_str(stc_language):
     assert python_result == pyccel_result
 
 def test_list_const_arg(language):
-    @template('T', ['int', 'float', 'complex'])
-    def list_arg(arg : 'const list[T]', my_sum : 'T'):
+    T = TypeVar('T', int, float, complex)
+
+    def list_arg(arg : Final[list[T]], my_sum : T):
         for ai in arg:
             my_sum += ai
         return my_sum

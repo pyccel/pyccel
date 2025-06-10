@@ -477,7 +477,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock, PythonPrint)):
+        if not isinstance(val, (CommentBlock, PythonPrint, LiteralEllipsis)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             val = Assign(PyccelSymbol('_', is_temp=True), val)
@@ -865,7 +865,6 @@ class SyntaxParser(BasicParser):
 
         arguments    = self._visit(stmt.args)
 
-        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -882,7 +881,11 @@ class SyntaxParser(BasicParser):
                 decorators[tmp_var] = [d]
 
         if 'types' in decorators:
-            warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
+            warnings.warn("The @types decorator will be removed in version 2.0 of Pyccel. " +
+                  "Please use type hints. TypeVar from Python's typing module can " +
+                  "be used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
 
         if 'stack_array' in decorators:
             decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
@@ -908,42 +911,6 @@ class SyntaxParser(BasicParser):
         if 'inline' in decorators:
             is_inline = True
 
-        template['template_dict'] = {}
-        # extract the templates
-        if 'template' in decorators:
-            for template_decorator in decorators['template']:
-                dec_args = template_decorator.args
-                if len(dec_args) != 2:
-                    msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg, symbol = template_decorator,
-                                    severity='error')
-
-                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
-                    errors.report('Argument provided to the template decorator is not valid',
-                                    symbol = template_decorator, severity='error')
-
-                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
-                    type_name = dec_args[1].value.python_value
-                    type_descriptors = dec_args[0].value
-                else:
-                    type_name = dec_args[0].value.python_value
-                    type_descriptors = dec_args[1].value
-
-                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
-                    type_descriptors = PythonTuple(type_descriptors)
-
-                if type_name in template['template_dict']:
-                    errors.report(f'The template "{type_name}" is duplicated',
-                                symbol = template_decorator, severity='warning')
-
-                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
-
-                # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][type_name] = possible_types
-
-            # Make template decorator list accessible from decorators dict
-            template['decorator_list'] = decorators['template']
-            decorators['template'] = template
 
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
@@ -952,11 +919,10 @@ class SyntaxParser(BasicParser):
         #                   To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
         if headers:
-            warnings.warn("Support for specifying types via headers will be removed in a " +
-                          "future version of Pyccel. Please use type hints. The @template " +
-                          "decorator can be used to specify multiple types. See the " +
-                          "documentation at " +
-                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+            warnings.warn("Support for specifying types via headers will be removed in version 2.0 of Pyccel. " +
+                          "Please use type hints. TypeVar from Python's typing module can " +
+                          "be used to specify multiple types. See the documentation at " +
+                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
                           "for examples.", FutureWarning)
             if any(a is not None for a in argument_annotations):
                 errors.report("Type annotations and type specification via headers should not be mixed",
@@ -1085,7 +1051,12 @@ class SyntaxParser(BasicParser):
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
-            results = FunctionDefResult(Nil())
+            if result_annotation:
+                results = self.scope.get_new_name('result', is_temp = True)
+                results = AnnotatedPyccelSymbol(results, annotation = result_annotation)
+                results = FunctionDefResult(results, annotation = result_annotation)
+            else:
+                results = FunctionDefResult(Nil())
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),

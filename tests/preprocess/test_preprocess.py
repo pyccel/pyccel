@@ -18,7 +18,7 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 def test_preprocess(f):
     extensions = Plugins()
     extensions.set_options({'accelerators':['openmp'], 'omp_version':4.5})
-    pyccel = Parser(f)
+    pyccel = Parser(f, output_folder=os.getcwd())
     pyccel.parse()
     print(pyccel.fst)
 

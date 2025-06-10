@@ -37,7 +37,6 @@ test = [
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel"
 pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
-pyccel-init = "pyccel.commands.pyccel_init:pyccel_init_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
@@ -52,7 +51,7 @@ artifacts = [
 ]
 include = [
   "pyccel/**/*.py",
-  "pyccel/**/*.pyh",
+  "pyccel/**/*.pyi",
   "pyccel/parser/grammar/*.tx",
   "pyccel/plugins/**/*.tx",
   "pyccel/stdlib/**/*.h",

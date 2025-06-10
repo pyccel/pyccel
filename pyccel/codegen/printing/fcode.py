@@ -36,7 +36,7 @@ from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import FunctionAddress, Interface
 from pyccel.ast.core import Return, Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
@@ -491,7 +491,12 @@ class FCodePrinter(CodePrinter):
 
         if (func.global_vars or func.global_funcs) and \
                 not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
-            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            interface = func.get_direct_user_nodes(lambda u: isinstance(u, Interface) and u.is_imported)
+            if interface:
+                assert len(interface) == 1
+                mod = interface[0].get_direct_user_nodes(lambda u: isinstance(u, Module))[0]
+            else:
+                mod = func.get_direct_user_nodes(lambda u: isinstance(u, Module))[0]
             current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
             if current_mod is not mod:
                 self.add_import(Import(mod.name, [AsName(v, v.name) \
@@ -2601,7 +2606,7 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = [v for v in self.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
+        out_args = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) if v and not v.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
         class_arg = next((a for a in arguments if a.bound_argument), None)
