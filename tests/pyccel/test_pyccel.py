@@ -1240,3 +1240,10 @@ def test_stubs(language):
 def test_builtin_container_print(language):
     pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_pyccel_generated_compilation_dependency(language):
+    pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
+            dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
+            output_dtype = int,
+            language = language)
