@@ -57,10 +57,10 @@ def get_filename_from_import(module_name, input_folder_name, wk_folder_name):
     module_name : str | AsName
         Name of the module_name of interest.
 
-    input_folder_name : str
+    input_folder_name : str | Path
         Relative path of the folder which should be searched for the module_name.
 
-    wk_folder_name : str
+    wk_folder_name : str | Path
         The name of the folder where the output of the translation of the module
         from which we are searching was printed.
 

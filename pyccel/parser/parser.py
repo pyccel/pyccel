@@ -24,10 +24,10 @@ class Parser(object):
 
     Parameters
     ----------
-    filename : str
+    filename : str | Path
         The name of the file being translated.
 
-    wk_folder : str
+    wk_folder : str | Path
         The output folder for the generated file.
 
     context_dict : dict, optional
