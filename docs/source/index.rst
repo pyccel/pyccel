@@ -63,5 +63,5 @@ Welcome to Pyccel's documentation!
    :caption: API Reference:
    :hidden:
 
-   modules
+   api/modules
 
