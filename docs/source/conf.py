@@ -15,7 +15,7 @@ pyccel_dir = pathlib.Path(__file__).parent.parent.parent
 
 sys.path.append(str(pyccel_dir.resolve()))
 
-from pyccel.version import __version__ as pyccel_version
+from pyccel.version import __version__ as pyccel_version #pylint:disable=wrong-import-position
 
 def setup(app):
     """
