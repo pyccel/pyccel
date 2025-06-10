@@ -1,9 +1,11 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -541,6 +543,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed

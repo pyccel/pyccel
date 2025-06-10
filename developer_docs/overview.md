@@ -1,4 +1,4 @@
-## Developer Setup
+# Developer Setup
 
 Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../README.md#from-sources). If this step is not followed then any changes made to source will not be used when `pyccel` or `epyccel` are used.
 
@@ -52,17 +52,19 @@ In the syntactic, semantic, and code generation stages a similar strategy is use
 
 #### Example
 Suppose we want to generate the code for an object of the class `NumpyTanh`, first we collect the inheritance tree of `NumpyTanh`. This gives us:
+
 ```python
 ('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelFunction', 'TypedAstNode', 'PyccelAstNode')
 ```
+
 Therefore the print functions which are acceptable for visiting this object are:
 
--   `_print_NumpyTanh` 
--   `_print_NumpyUfuncUnary` 
--   `_print_NumpyUfuncBase` 
--   `_print_PyccelFunction` 
--   `_print_TypedAstNode` 
--   `_print_PyccelAstNode` 
+-   `_print_NumpyTanh`
+-   `_print_NumpyUfuncUnary`
+-   `_print_NumpyUfuncBase`
+-   `_print_PyccelFunction`
+-   `_print_TypedAstNode`
+-   `_print_PyccelAstNode`
 
 We run through these possible functions choosing the one which is the most specialised. If none of these methods exist, then an error is raised.
 
