@@ -2992,7 +2992,8 @@ class SemanticParser(BasicParser):
         ls = []
         self._additional_exprs.append([])
         for b in expr.body:
-
+            if isinstance(b, EmptyNode):
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
@@ -5131,7 +5132,6 @@ class SemanticParser(BasicParser):
         """
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
-        #scope = self.create_new_loop_scope()
         if assign:
             syntactic_lhs = assign[-1].lhs
             if isinstance(syntactic_lhs, PythonTuple):
@@ -5191,17 +5191,20 @@ class SemanticParser(BasicParser):
 
         expr.substitute(to_replace, local_var, invalidate = False)
 
-        body = self._visit(expr.body)
-
         # Remove return expressions
-        returns = body.get_attribute_nodes(Return)
-        new_assigns = [r.stmt if r.stmt else EmptyNode() for r in returns]
-        body.substitute(returns, new_assigns)
+        returns = expr.body.get_attribute_nodes(Return)
+        pyccel_stage.set_stage('syntactic')
+        replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
+                          if not isinstance(r.expr, PyccelSymbol) \
+                          else EmptyNode() for r in returns]
+        pyccel_stage.set_stage('semantic')
+        expr.body.substitute(returns, replace_return)
+
+        body = self._visit(expr.body)
 
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
         expr.substitute(local_var, to_replace)
-        #self.exit_loop_scope()
         self._current_function.pop()
 
         for func_a_name, val in non_var_local_vars:
