@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel_generated_compilation_dependency import f
 
 def g():
