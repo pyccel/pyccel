@@ -16,7 +16,6 @@ default_python_versions = {
         'docs': '3.10',
         'intel': '3.10',
         'linux': '3.9',
-        'linux_pyccel-test_cmd': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
         'check_install': '3.9',
@@ -34,7 +33,6 @@ test_names = {
         'docs': "Check documentation",
         'intel': "Unit tests on Linux with Intel compiler",
         'linux': "Unit tests on Linux",
-        'linux_pyccel-test_cmd': "Unit tests on Linux with pyccel-test command",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
         'check_install': "Test file generation during source installation",
@@ -49,7 +47,7 @@ test_dependencies = {'coverage':['linux']}
 
 tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
-pr_test_keys = ('linux', 'linux_pyccel-test_cmd', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling', 'intel')
 
 pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
