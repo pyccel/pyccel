@@ -78,7 +78,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py linux
+          python ci_tools/setup_check_run.py linux_pyccel-test_cmd
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel with tests
