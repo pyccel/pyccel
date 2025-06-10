@@ -72,3 +72,6 @@ tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
 
 benchmarks/tmp/*
+
+docs/source/**/*.md
+docs/source/api
