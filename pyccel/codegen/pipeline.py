@@ -30,8 +30,6 @@ from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
-pyccel_root = Path(__file__).parent.parent
-
 __all__ = ['execute_pyccel']
 
 #==============================================================================

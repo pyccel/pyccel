@@ -29,6 +29,9 @@ stdlib_path = Path(stdlib_folder.__file__).parent
 # get path to pyccel/extensions/lib_name
 ext_path = Path(ext_folder.__file__).parent
 
+# get path to pyccel/
+pyccel_root = Path(__file__).parent.parent
+
 errors = Errors()
 
 __all__ = ['copy_internal_library','recompile_object']
