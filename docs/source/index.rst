@@ -23,19 +23,19 @@ Welcome to Pyccel's documentation!
    :caption: Using Pyccel
    :hidden:
 
+   docs/type_annotations
    docs/builtin-functions
-   docs/supported-libraries
-   docs/classes
    docs/compiler
-   docs/const_keyword
-   docs/containers
    docs/decorators
-   docs/function-pointers-as-arguments
-   docs/header-files
+   docs/supported-libraries
    docs/ndarrays
    docs/numpy-functions
+   docs/classes
+   docs/const_keyword
+   docs/containers
+   docs/function-pointers-as-arguments
+   docs/header-files
    docs/openmp
-   docs/type_annotations
 
 .. toctree::
    :maxdepth: 2
