@@ -14,49 +14,35 @@ Welcome to Pyccel's documentation!
    :caption: Getting started:
    :hidden:
 
-   quickstart
-   installation
-   CONTRIBUTING
+   docs/quickstart
+   docs/installation
+   docs/CONTRIBUTING
 
 .. toctree::
    :maxdepth: 2
    :caption: Getting started:
    :hidden:
 
-   builtin-functions
-   supported-libraries
-   classes
-   compiler
-   const_keyword
-   containers
-   decorators
-   function-pointers-as-arguments
-   header-files
-   ndarrays
-   numpy-functions
-   openmp
-   type_annotations
+   docs/builtin-functions
+   docs/supported-libraries
+   docs/classes
+   docs/compiler
+   docs/const_keyword
+   docs/containers
+   docs/decorators
+   docs/function-pointers-as-arguments
+   docs/header-files
+   docs/ndarrays
+   docs/numpy-functions
+   docs/openmp
+   docs/type_annotations
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer Guide:
    :hidden:
 
-   developer_docs/getting_started
-   developer_docs/overview
-   developer_docs/development_conventions
-   developer_docs/how_to_solve_an_issue
-   developer_docs/tips_and_tricks
-   developer_docs/review_process
-   developer_docs/syntactic_stage
-   developer_docs/semantic_stage
-   developer_docs/codegen_stage
-   developer_docs/wrapper_stage
-   developer_docs/ast_nodes
-   developer_docs/order_docs
-   developer_docs/scope
-   developer_docs/tuples
-   developer_docs/type_inference
+   developer_docs
 
 .. toctree::
    :maxdepth: 2
