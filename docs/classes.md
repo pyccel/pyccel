@@ -14,7 +14,7 @@ Pyccel strives to provide robust support for object-oriented programming concept
 ## Constructor Method
 
 -   The Constructor Method, `__init__`, is used to initialise the object's attributes.
--   Pyccel only permits one type definition for each of the arguments of the `__init__` method. Union types or templates cannot be used.
+-   Pyccel only permits one type definition for each of the arguments of the `__init__` method. Union types or `TypeVar`s cannot be used.
 -   The first parameter of any method within a class should always be named `self`.
 
 ## Destructor Method

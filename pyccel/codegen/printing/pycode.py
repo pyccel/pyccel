@@ -13,12 +13,13 @@ from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, P
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.core       import Interface, FunctionDefArgument
+from pyccel.ast.core       import Interface, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
+from pyccel.ast.datatypes  import FixedSizeNumericType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals  import PyccelSymbol
-from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
@@ -26,6 +27,7 @@ from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
+from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -205,14 +207,26 @@ class PythonCodePrinter(CodePrinter):
         if isinstance(obj, FunctionDefArgument):
             is_temp_union_name = isinstance(obj.annotation, SyntacticTypeAnnotation) and \
                                  isinstance(obj.annotation.dtype, PyccelSymbol)
-            if obj.annotation and not is_temp_union_name:
+            if obj.annotation and not is_temp_union_name and not self._in_header:
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
                 return self._get_type_annotation(obj.var)
+        elif isinstance(obj, FunctionDefResult):
+            if obj.var is Nil():
+                return ''
+            else:
+                return self._get_type_annotation(obj.var)
         elif isinstance(obj, Variable):
             type_annotation = self._print(obj.class_type)
+            if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
+                self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
+                type_annotation = f'Final[{type_annotation}]'
             return f"'{type_annotation}'"
+        elif isinstance(obj, FunctionAddress):
+            args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)
+            res = self._get_type_annotation(obj.results).strip("'")
+            return f"'({res})({args})'"
         else:
             raise NotImplementedError(f"Unexpected object of type {type(obj)}")
 
@@ -285,17 +299,13 @@ class PythonCodePrinter(CodePrinter):
             if name in pyccel_decorators:
                 self.add_import(Import(DottedName('pyccel.decorators'), [AsName(decorators_mod[name], name)]))
             # TODO - All decorators must be stored in a list
-            if name == 'template':
-                f = list(f['template_dict'].items())
-            elif not isinstance(f, list):
+            if not isinstance(f, list):
                 f = [f]
             for func in f:
                 if isinstance(func, FunctionCall):
                     args = ', '.join(self._print(a) for a in func.args)
                 elif func == name:
                     args = ''
-                elif name == 'template':
-                    args = f"'{func[0]}', (" + ', '.join(f"'{self._print(t)}'" for t in func[1].type_list) + ')'
                 else:
                     args = ', '.join(self._print(LiteralString(a)) for a in func)
 
@@ -305,6 +315,23 @@ class PythonCodePrinter(CodePrinter):
                 else:
                     dec += f'@{name}\n'
         return dec
+
+    def _get_type_var_declarations(self):
+        """
+        Print the TypeVar declarations.
+
+        Print the TypeVar declarations that exist in the current scope.
+
+        Returns
+        -------
+        str
+            A string containing the code which declares the TypeVar objects.
+        """
+        type_vars_in_scope = {n:t for n,t in self.scope.symbolic_aliases.items() \
+                            if isinstance(t, TypingTypeVar)}
+        type_var_constraints = [", ".join(f"'{self._print(ti)}'" for ti in t.type_list) for t in type_vars_in_scope.values()]
+        self.add_import(Import('typing', [AsName(TypingTypeVar, 'TypeVar')]))
+        return ''.join(f"{n} = TypeVar('{n}', {t})\n" for n,t in zip(type_vars_in_scope, type_var_constraints))
 
     #----------------------------------------------------------------------
 
@@ -1274,6 +1301,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
+
+        type_var_declarations = self._get_type_var_declarations()
+
         # Print interface functions (one function with multiple decorators describes the problem)
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
@@ -1300,7 +1330,7 @@ class PythonCodePrinter(CodePrinter):
 
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
 
-        body = ''.join((interfaces, funcs, classes, init_body))
+        body = '\n'.join((type_var_declarations, interfaces, funcs, classes, init_body))
 
         if expr.program:
             expr.program.remove_import(expr.name)
@@ -1320,6 +1350,10 @@ class PythonCodePrinter(CodePrinter):
         self._in_header = True
         mod = expr.module
         variables = mod.variables
+
+        self.set_scope(mod.scope)
+        type_var_declarations = self._get_type_var_declarations()
+
         init_func = mod.init_func
         var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
                             for v in variables if not v.is_temp)
@@ -1341,6 +1375,8 @@ class PythonCodePrinter(CodePrinter):
         imports  = ''.join(self._print(i) for i in mod.imports)
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
 
+        self.exit_scope()
+
         self._in_header = False
 
         if init_func:
@@ -1352,7 +1388,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             init_body = ''
 
-        return '\n'.join((imports, var_decl, classes, funcs, init_body))
+        return '\n'.join((imports, type_var_declarations, var_decl, classes, funcs, init_body))
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
@@ -1535,12 +1571,14 @@ class PythonCodePrinter(CodePrinter):
     def _print_VariableTypeAnnotation(self, expr):
         dtype = self._print(expr.class_type)
         if expr.is_const:
-            dtype = f'const {dtype}'
+            self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
+            dtype = f'Final[{dtype}]'
         return dtype
 
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
-        return f'const {annotation}'
+        self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
+        return f'Final[{annotation}]'
 
     def _print_NumpyNDArrayType(self, expr):
         dims = ','.join(':'*expr.container_rank)
