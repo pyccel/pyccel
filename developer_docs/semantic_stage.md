@@ -4,13 +4,13 @@ The semantic stage is described by the file [pyccel.parser.semantic](../pyccel/p
 
 The semantic stage serves several purposes:
 
-1.  [**Types**](#Types) : Determine the type of each symbol
-2.  [**Impose Restrictions**](#Impose-restrictions) : Ensure that the code follows any restrictions that Pyccel imposes
-3.  [**Function Recognition**](#Function-recognition) : Identify any functions that are recognised by Pyccel
-4.  [**Imports**](#Imports) : Identify imports
-5.  [**Low-level Objects**](#Low-level-objects) : Create any objects which are hidden in high-level code, but must appear explicitly in low-level code
-6.  [**Object Tree**](#Object-tree) : Ensure the object tree is correctly constructed
-7.  [**Name Collisions**](#Name-collisions) : Ensure any potential name collisions are avoided
+1.  [**Types**](#types) : Determine the type of each symbol
+2.  [**Impose Restrictions**](#impose-restrictions) : Ensure that the code follows any restrictions that Pyccel imposes
+3.  [**Function Recognition**](#function-recognition) : Identify any functions that are recognised by Pyccel
+4.  [**Imports**](#imports) : Identify imports
+5.  [**Low-level Objects**](#low-level-objects) : Create any objects which are hidden in high-level code, but must appear explicitly in low-level code
+6.  [**Object Tree**](#object-tree) : Ensure the object tree is correctly constructed
+7.  [**Name Collisions**](#name-collisions) : Ensure any potential name collisions are avoided
 
 ## Navigation
 
@@ -90,6 +90,7 @@ Errors in the semantic stage should raise a `PyccelSemanticError`.
 Where possible this should be done by accessing the `Errors()` singleton and calling the `report` function.
 This function takes several arguments (see docstring for more details).
 The most important arguments are:
+
 -   _message_ : Describe the issue that lead to the error
 
 -   _symbol_ : The Python AST object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
@@ -212,9 +213,10 @@ Name collisions may occur when generating temporary variables.
 The scope helps keep track of the variables and prevent name collisions.
 See [Scope](scope.md) for more details.
 
-If variables are created as described above in the [Types](#Types) section, they will be added to the scope.
+If variables are created as described above in the [Types](#types) section, they will be added to the scope.
 It is also possible that they will be renamed to avoid collisions.
 For this reason it is very important to use the [`pyccel.parser.scope.Scope.find`](../pyccel/parser/scope.py) function to access variables.
 There are two helper functions in the `SemanticParser` to facilitate these  searches:
+
 -   `SemanticParser.check_for_variable` which returns the variable if it exists and None if it doesn't
 -   `SemanticParser.get_variable` which raises an error if the requested variable is not found

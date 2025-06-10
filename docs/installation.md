@@ -6,7 +6,7 @@ Pyccel can be installed on virtually any machine that provides Python 3, the pip
 Some advanced features of Pyccel require additional non-Python libraries to be installed, for which we provide detailed instructions below.
 
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
-For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
+For more information, please read the section on [Pyccel container images](#pyccel-container-images).
 
 It is possible to use Pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
 Support is provided for anaconda on linux/macOS.

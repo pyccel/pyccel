@@ -56,13 +56,13 @@ From the many routines defined in the [OpenMP 5.1 Standard](https://www.openmp.o
 
 Pyccel uses the same clauses as OpenMP, you can refer to the references below for more information on how to use them:
 
-[*OpenMP 5.1 API Specification (pdf)*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)\
-[*OpenMP 5.1 API Specification (html)*](https://www.openmp.org/spec-html/5.1/openmp.html)
-[*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
+[_OpenMP 5.1 API Specification (pdf)_](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)\
+[_OpenMP 5.1 API Specification (html)_](https://www.openmp.org/spec-html/5.1/openmp.html)
+[_OpenMP 5.1 Syntax Reference Guide_](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
 
 Other references:
 
-[*OpenMP Clauses*](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
+[_OpenMP Clauses_](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
 
 ### `parallel` Construct
 
@@ -289,6 +289,7 @@ structured-block
 ```
 
 #### Example
+
 The `#$ omp taskloop` construct specifies that the iterations of one or more associated loops will be executed in parallel using explicit tasks.
 The `#$ omp atomic` is used to ensure that a specific storage location is accessed atomically; which prevent the possibility of multiple, simultaneous reading and writing of threads.
 
@@ -403,6 +404,7 @@ print(fib(10))
 ```
 
 The output of this program is:
+
 ```shell
 ❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
@@ -440,6 +442,7 @@ long_function_2()
 #### Example
 
 The ``` #$ omp flush ``` pragma is used to ensure that all threads in a team have a consistent view of certain objects in memory.
+
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 flag = 0
@@ -459,6 +462,7 @@ print("flag:", flag)
 ```
 
 The output of this program is:
+
 ```shell
 ❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
@@ -477,6 +481,7 @@ flag: 2
 #### Example
 
 The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
+
 ```python
 import numpy as np
 v = np.array([1, -5, 3, 4, 5])
@@ -509,7 +514,7 @@ structured-block
 #$ omp end teams
 ```
 
-#### Syntax *distribute*
+#### Syntax _distribute_
 
 ```python
 #$ omp distribute [clause[ [,]clause] ... ]
@@ -521,6 +526,7 @@ for-loops
 In this example we show how we can use the ``` #$ omp target ``` pragma to define a target region, which is a computational block that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
 The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
 The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
+
 ```python
 from numpy import zeros
 from pyccel.stdlib.internal.openmp import omp_get_team_num
@@ -540,6 +546,7 @@ for i in range(0, n):
 ```
 
 The output of this program is:
+
 ```shell
 ❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
@@ -743,7 +750,6 @@ z[ 6 ] : 3
 z[ 7 ] : 3
 ```
 
-
 ### `teams distribute simd`
 
 #### Syntax of `teams distribute simd`
@@ -860,6 +866,7 @@ result: 49995000
 ## Supported Constructs
 
 All constructs in the OpenMP 5.1 standard are supported except:
+
 -   `scope`
 -   `workshare`
 -   `scan`

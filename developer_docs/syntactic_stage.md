@@ -4,10 +4,10 @@ The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel
 
 The syntactic stage serves 4 main purposes:
 
-1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
-2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by Pyccel
-3.  [**Headers**](#Headers) : Convert header comments from strings to Pyccel's AST representation
-4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if Pyccel generates Variable names
+1.  [**Navigation and AST Creation**](#navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
+2.  [**Errors**](#errors) : Raise an error for any syntax used that is not yet supported by Pyccel
+3.  [**Headers**](#headers) : Convert header comments from strings to Pyccel's AST representation
+4.  [**Scoping**](#scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if Pyccel generates Variable names
 
 ## Navigation and AST Creation
 
@@ -107,6 +107,7 @@ This is usually done in the `_visit_Name` function, however this function is not
 To get round this the class has the attribute `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and `False` elsewhere.
 
 Consider for example a for loop. Such a loop has 3 main parts (which are each members of `ast.For`):
+
 -   target  (`ast.For.target`)
 -   iterable  (`ast.For.iter`)
 -   body (`ast.For.body`)

@@ -68,6 +68,7 @@ The types can be compared using either the `is` operator or the `==` operator. T
 These classes also have a method `shape_is_compatible` which allows us to check if the calculated shape of an object is compatible with the data type (see [AST Nodes](./ast_nodes.md) for more details).
 
 #### Fixed Size Type
+
 A `FixedSizeType` is an object whose size in memory is known and cannot change from one instance to another (e.g. `float64`, `int32`, `void`). In most cases the developer will need the sub-class `FixedSizeNumericType` which refers to the subset of fixed size types which contain numeric values. These objects are characterised by a `primitive_type` describing the category of datatype (integer/floating point/etc) and a `precision`. They additionally implement two magic methods:
 
 -   `__add__` (+)
@@ -80,6 +81,7 @@ The and operator describes what happens when two numeric types are combined in a
 When using these operators on an unknown number of arguments it can be useful to use `NativeGeneric()` as a starting point for the sum.
 
 #### Container Type
+
 A `ContainerType` is an object which is comprised of `FixedSizeType` objects (e.g. `ndarray`,`list`,`tuple`, custom class). The sub-class `HomogeneousContainerType` describes containers which contain homogeneous data. These objects are characterised by an `element_type`, a `rank` (and associated `container_rank`) and an `order`. The elements of a `HomogeneousContainerType` are instances of `PyccelType`, but they can be either `FixedSizeType`s or `ContainerType`s. The `container_rank` is an integer equal to the number of indices necessary to index the container and get an element of type `element_type`. As these elements may also be indexable the `rank` property allows us to get the number of indices necessary to obtain a scalar element. It is the sum of all the `container_rank`s in the nested types. The `order` specifies the order in which the indices should be used to index the object. This is discussed in detail in the [order docs](./order_docs.md).
 
 `HomogeneousContainerType`s also contain some utility functions. They implement `primitive_type` and `precision` to get the properties of the internal `FixedSizeType` (even if that type is inside another `HomogeneousContainerType`). They also implement `switch_basic_type` which creates a new `HomogeneousContainerType` which is similar to the current `HomogeneousContainerType`. The only difference is that the `FixedSizeType` is exchanged. This is useful when we want to preserve information about the container but need to change the type. For example, when we divide an integer by another we get a floating point type. When we divide a NumPy array or a CuPy array of integers by an integer (or array of integers) we get a NumPy/CuPy array of floating point numbers (with default Python precision). In order to preserve the container type we therefore call `switch_basic_type`. So for the division in the case of NumPy arrays, we want to change the type from `np.ndarray[int]` to `np.ndarray[float]`. This is done in one line:

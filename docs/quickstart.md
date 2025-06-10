@@ -36,7 +36,7 @@ In particular, it is worth clarifying the difference between an object and a var
 -   Since a variable can be reassigned to any object, its type could change at run-time; hence we say that Python is **dynamically typed**.
 
 ### Statically Typed Languages
-	
+ 
 A language is statically typed if the type of a variable is known at compile-time instead of run-time.
 Common examples of statically typed languages include Java, C, C++, FORTRAN, Pascal and Scala.
 These languages provide a set of built-in types, and provide the means for creating additional user-defined types.
@@ -205,7 +205,7 @@ def binomial_coefficient(n : int, k : int):
 We use the `pyccel` command to translate `mod.py` to the C files `mod.c` and `mod.h`, which are placed in the new `__pyccel__` directory:
 
 ```bash
-$ pyccel mod.py --language c
+pyccel mod.py --language c
 ```
 
 By default Pyccel also compiles the C code into a Python C extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`.
@@ -326,7 +326,7 @@ def matmul(a: 'float[:,:](order=C)',
 We now translate this file to Fortran, and compile it to a Python C extension module, using the command
 
 ```bash
-$ pyccel mod.py --language fortran
+pyccel mod.py --language fortran
 ```
 
 The flag `--language fortran` may be omitted, as Pyccel uses Fortran as the default backend language.
@@ -552,7 +552,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 If you face problems with Pyccel, please take the following steps:
 
 1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
-2.  Send an email message to pyccel@googlegroups.com;
+2.  Send an email message to <pyccel@googlegroups.com>;
 3.  Open an issue on GitHub.
 
 Thank you!

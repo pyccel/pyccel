@@ -4,11 +4,14 @@
 
 A header file in Pyccel is a Python stub file with a name ending with `.pyi`, which contains function/variable declarations, macro definitions, templates and metavariable declarations.
 Header files serve two purposes:
+
 -   Link external libraries in the targeted languages by providing their function declarations;
 -   Accelerate the parsing process of an imported Python module by parsing only its header file (automatically generated) instead of the full module.
 
 ### Examples
+
 #### Link with OpenMP
+
 We create the file `header.pyi` that contains an OpenMP function definition:
 
 ```python
@@ -28,6 +31,7 @@ print('number of threads is :', omp_get_num_threads())
 Pyccel can compile the Python file with the following command: `pyccel example.py --openmp`, it will then create the executable file `example`.
 
 #### Link with a static library
+
 We have the following Fortran Module that we put in the file `funcs.f90`  
 
 ```fortran
@@ -61,6 +65,7 @@ end module funcs
 ```
 
 We then create a static library using these commands:
+
 -   `gfortran -c funcs.f90`
 -   `ar rcs libfuncs.a funcs.o`
 
