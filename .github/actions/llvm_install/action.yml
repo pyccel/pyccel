@@ -58,6 +58,7 @@ runs:
       run: |
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         sudo apt-get install -y libomp-dev libomp5
+        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
 
     - name: Export libomp path
