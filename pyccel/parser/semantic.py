@@ -5144,21 +5144,23 @@ class SemanticParser(BasicParser):
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
+        res_vars = ()
         if expr.results:
             # Swap in the result of the function to replace the variable representing
             # the result of the inlined function
             res_var = expr.results.var
             if isinstance(res_var, AnnotatedPyccelSymbol):
                 res_var = res_var.name
-            replace_map[res_var] = lhs
+            if isinstance(lhs, PyccelSymbol):
+                replace_map[res_var] = lhs
+                res_vars = (res_var,)
 
         func_args = [a.var for a in expr.arguments]
         func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
 
         # Ensure local variables will be recognised and use a name that is not already in use
         for v in expr.scope.local_used_symbols:
-            if v != expr.name:
-                print(expr.name, v, self.scope.symbol_in_use(v))
+            if v != expr.name and v not in res_vars:
                 if self.scope.symbol_in_use(v):
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
                     replace_map[v] = new_v
@@ -5205,7 +5207,7 @@ class SemanticParser(BasicParser):
         returns = expr.body.get_attribute_nodes(Return)
         pyccel_stage.set_stage('syntactic')
         replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
-                          if not isinstance(r.expr, PyccelSymbol) \
+                          if not isinstance(r.expr, PyccelSymbol) or not isinstance(lhs, PyccelSymbol) \
                           else EmptyNode() for r in returns]
         pyccel_stage.set_stage('semantic')
         expr.body.substitute(returns, replace_return, invalidate = False)
