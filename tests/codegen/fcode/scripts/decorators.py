@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-#An example of a class
+from pyccel.decorators import inline
 
+#An example of a class
 class Shape:
 
     def __init__(self : 'Shape', x : float, y : float):
@@ -44,6 +45,4 @@ y = f(6)
 def g(z : int):
     x= 5+z
     return x
-
-
 
