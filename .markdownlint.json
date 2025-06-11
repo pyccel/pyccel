@@ -1,0 +1,10 @@
+{
+  "line-length": false,
+  "ul-style": { "style" : "dash" },
+  "ul-indent": { "indent": 4 },
+  "ol-prefix": false,
+  "no-duplicate-heading": { "siblings_only": true },
+  "no-hard-tabs": true,
+  "list-marker-space": false
+}
+
