@@ -394,7 +394,7 @@ allocate_clause: name='allocate' '('(
              )')';
 
 order_clause: name='order' '('
-                   VERSION=OMP_5_0 'concurent'
+                   VERSION=OMP_5_0 'concurrent'
                    ')';
 
 ////////////////////////////////////////////////////

@@ -368,7 +368,7 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
             is_construct = False
         # Imposed by the grammar: clean up the tx directive object's clauses.
         clauses = d_attrs.get('_tx_clauses', [])
-        # Get a list containing all the versions of the childs omp objcets,
+        # Get a list containing all the versions of the children omp objects,
         # necessary to calculate the directives versions.
         version = d_attrs.get('VERSION')
         version = max(filter(None, [*[c.VERSION for c in clauses if hasattr(c, 'VERSION')], version]), default=None)
