@@ -1232,7 +1232,7 @@ class SemanticParser(BasicParser):
             a = self._visit(arg)
             val = a.value
             if isinstance(val, FunctionDef) and not isinstance(val, PyccelFunctionDef) and not val.is_semantic:
-                semantic_func = self._annotate_the_called_function_def(val, (), None)
+                semantic_func = self._annotate_the_called_function_def(val, ())
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
             if isinstance(val, StarredArguments):
@@ -1375,7 +1375,7 @@ class SemanticParser(BasicParser):
             if is_inline:
                 return self._visit_InlineFunctionDef(func, args, expr)
             elif not func.is_semantic:
-                func = self._annotate_the_called_function_def(func, args, expr)
+                func = self._annotate_the_called_function_def(func, args)
 
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
@@ -1454,7 +1454,7 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, old_func, function_call_args, function_call):
+    def _annotate_the_called_function_def(self, old_func, function_call_args):
         """
         Annotate the called FunctionDef.
 
@@ -1467,9 +1467,6 @@ class SemanticParser(BasicParser):
 
         function_call_args : list[FunctionCallArgument]
            The list of the call arguments.
-
-        function_call : FunctionCall
-            The syntactic function call being expanded to a function definition.
 
         Returns
         -------
@@ -1505,10 +1502,7 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = new_scope
-        if old_func.is_inline:
-            self._visit_InlineFunctionDef(old_func, function_call_args = function_call_args)
-        else:
-            self._visit(old_func)
+        self._visit(old_func)
 
         # Retrieve the annotated function
         if cls_base_syntactic:
@@ -3643,7 +3637,10 @@ class SemanticParser(BasicParser):
             method = d_methods.pop('__init__', None)
 
             if not method.is_semantic:
-                method = self._annotate_the_called_function_def(method, args, expr)
+                if method.is_inline:
+                    errors.report("An __init__ method cannot be inlined",
+                            severity='fatal', symbol=expr)
+                method = self._annotate_the_called_function_def(method, args)
 
             if method is None:
 
