@@ -1232,7 +1232,7 @@ class SemanticParser(BasicParser):
             a = self._visit(arg)
             val = a.value
             if isinstance(val, FunctionDef) and not isinstance(val, PyccelFunctionDef) and not val.is_semantic:
-                semantic_func = self._annotate_the_called_function_def(val, (), expr)
+                semantic_func = self._annotate_the_called_function_def(val, (), None)
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
             if isinstance(val, StarredArguments):
