@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from pyccel.decorators import inline
+from pyccel.decorators import inline, vectorize
 
 #An example of a class
 class Shape:
