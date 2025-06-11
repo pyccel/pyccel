@@ -5212,8 +5212,15 @@ class SemanticParser(BasicParser):
         pyccel_stage.set_stage('semantic')
         expr.body.substitute(returns, replace_return, invalidate = False)
 
+        import_init_calls = [self._visit(i) for i in expr.imports]
+
+        if expr.functions:
+            errors.report("Functions in inline functions are not supported",
+                    severity='error', symbol=expr)
+
         # Visit the body as though it appeared directly in the code
         body = self._visit(expr.body)
+        body.insert2body(*import_init_calls, back=False)
 
         # Put back the returns to create custom Assign nodes on the next visit
         expr.body.substitute(replace_return, returns)
