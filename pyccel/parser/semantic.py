@@ -5144,8 +5144,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self.scope.get_new_name()
         # Build the syntactic body
-        to_replace = []
-        local_var = []
+        replace_map = {}
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
@@ -5155,8 +5154,7 @@ class SemanticParser(BasicParser):
             res_var = expr.results.var
             if isinstance(res_var, AnnotatedPyccelSymbol):
                 res_var = res_var.name
-            to_replace.append(res_var)
-            local_var.append(lhs)
+            replace_map[res_var] = lhs
 
         func_args = [a.var for a in expr.arguments]
         func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
@@ -5166,26 +5164,27 @@ class SemanticParser(BasicParser):
             if v != expr.name:
                 if self.scope.symbol_in_use(v):
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
-                    if v not in func_args:
-                        to_replace.append(v)
-                        local_var.append(new_v)
+                    replace_map[v] = new_v
                 else:
                     self.scope.insert_symbol(v)
+
+        to_replace = list(replace_map.keys())
+        local_var = list(replace_map.values())
+        expr.substitute(to_replace, local_var, invalidate = False)
 
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
         for func_a, call_a in zip(func_args, positional_call_args):
-            func_a_name = self.scope.get_expected_name(func_a)
+            func_a_name = self.scope.get_expected_name(replace_map.get(func_a, func_a))
             self.scope.variables[func_a_name] = call_a
 
         nargs = len(positional_call_args)
         kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
-            func_a_target_name = self.scope.get_expected_name(func_a_name)
-            val = kw_call_args.get(func_a_name, func_a.default_call_arg.value)
+            used_func_a_name = replace_map.get(func_a_name, func_a_name)
+            func_a_target_name = self.scope.get_expected_name(used_func_a_name)
+            val = kw_call_args.get(used_func_a_name, func_a.default_call_arg.value)
             self.scope.variables[func_a_target_name] = val
-
-        expr.substitute(to_replace, local_var, invalidate = False)
 
         # Remove return expressions
         returns = expr.body.get_attribute_nodes(Return)
@@ -5200,19 +5199,20 @@ class SemanticParser(BasicParser):
 
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
-        expr.substitute(local_var, to_replace)
         self._current_function.pop()
 
         for func_a_name, call_a in zip(func_args, positional_call_args):
             if not isinstance(call_a, Variable) or func_a_name != call_a.name:
-                self.scope.remove_variable(call_a, func_a_name)
+                self.scope.remove_variable(call_a, replace_map.get(func_a_name, func_a_name))
 
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
             if func_a_name in kw_call_args:
-                call_a = kw_call_args[func_a_name]
-                if not isinstance(call_a, Variable) or func_a_name != call_a.name:
-                    self.scope.remove_variable(call_a, func_a_name)
+                used_func_a_name = replace_map.get(func_a_name, func_a_name)
+                call_a = kw_call_args[used_func_a_name]
+                if not isinstance(call_a, Variable) or used_func_a_name != call_a.name:
+                    self.scope.remove_variable(call_a, used_func_a_name)
 
+        expr.substitute(local_var, to_replace)
 
         if assign:
             if isinstance(syntactic_lhs, PythonTuple):
