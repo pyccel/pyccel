@@ -12,8 +12,8 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.variable import Variable
 from pyccel.ast.operators import PyccelMinus, PyccelAdd
+from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
@@ -91,8 +91,7 @@ class SyntaxParser(ConfigMixin):
         ----------
         options : dict
             Configuration options.
-        method : callable, optional
-            An other setup method from a previous plugin if existing.
+        parser : instance of pyccel SyntaxParser
 
         Returns
         -------
@@ -110,9 +109,11 @@ class SyntaxParser(ConfigMixin):
             # The rules OMP_X_Y are used to insert the version of the syntax used
             textx_mm = metamodel_for_language('textx')
             grammar_model = textx_mm.grammar_model_from_file(grammar)
+
             def make_parent_processor(rule):
                 """returns a processor that handles allowed parent directives"""
-                return lambda _ : rule.name.replace('_PARENT', '').lower()
+                return lambda _: rule.name.replace('_PARENT', '').lower()
+
             obj_processors = {r.name: make_parent_processor(r)
                               for r in grammar_model.rules if r.name.endswith('_PARENT')}
             obj_processors.update({
@@ -167,9 +168,9 @@ class SyntaxParser(ConfigMixin):
             from textx.exceptions import TextXError
             try:
                 model = cls._omp_metamodel.model_from_str(line)
-                directive = OmpTxEndDirective(model.statement, line, lineno=expr.lineno,
+                directive = OmpTxEndDirective(model.statement, line, cls._version, lineno=expr.lineno,
                                               column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(
-                    model.statement, line, lineno=expr.lineno, column=expr.col_offset)
+                    model.statement, line, cls._version, lineno=expr.lineno, column=expr.col_offset)
                 return instance._visit(directive)
             except TextXError as e:
                 errors.report(e.message, severity="fatal", symbol=expr)
@@ -261,7 +262,7 @@ class SyntaxParser(ConfigMixin):
 
     @staticmethod
     def _visit_OmpTxEndDirective(instance, expr, cls=None, method=None):
-        clauses = [instance._visit(clause) for clause in expr.clauses]
+        clauses = tuple(instance._visit(clause) for clause in expr.clauses)
         return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
     @staticmethod
@@ -340,7 +341,7 @@ class SemanticParser(ConfigMixin):
                 symbol=expr,
                 severity="error",
             )
-        clauses = [instance._visit(clause) for clause in expr.clauses]
+        clauses = tuple(instance._visit(clause) for clause in expr.clauses)
         return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
     @staticmethod
@@ -396,7 +397,6 @@ class SemanticParser(ConfigMixin):
                     severity="fatal",
                 )
         return OmpExpressionList(value=items, **expr.get_fixed_state())
-
 
     @staticmethod
     def _visit_OmpClause(instance, expr, cls=None, method=None):
@@ -502,6 +502,7 @@ class FCodePrinter(ConfigMixin):
     @staticmethod
     def _print_end_section_directive(instance, expr, cls=None, method=None):
         return ""
+
 
 class PythonCodePrinter(ConfigMixin):
     """Openmp 4.5 python code printer parser"""
