@@ -5139,6 +5139,7 @@ class SemanticParser(BasicParser):
         # Build the syntactic body
         replace_map = {}
 
+        pyccel_stage.set_stage('syntactic')
         global_scope_import_targets = {}
         if expr.is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
@@ -5147,7 +5148,6 @@ class SemanticParser(BasicParser):
             global_symbols = set(expr.body.get_attribute_nodes(PyccelSymbol))
             global_symbols.difference_update(expr.scope.local_used_symbols)
 
-            pyccel_stage.set_stage('syntactic')
             for v in global_symbols:
                 import_mod_name = mod_name
                 if mod.scope.find(v):
@@ -5164,7 +5164,6 @@ class SemanticParser(BasicParser):
                         global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
                     else:
                         global_scope_import_targets.setdefault(import_mod_name, []).append(v)
-            pyccel_stage.set_stage('semantic')
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
@@ -5229,7 +5228,6 @@ class SemanticParser(BasicParser):
 
         # Replace return expressions with an assign to the results
         returns = expr.body.get_attribute_nodes(Return)
-        pyccel_stage.set_stage('syntactic')
         replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
                           if not isinstance(r.expr, PyccelSymbol) or not isinstance(lhs, PyccelSymbol) \
                           else EmptyNode() for r in returns]
@@ -5238,6 +5236,7 @@ class SemanticParser(BasicParser):
         imports = list(expr.imports)
         imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
         pyccel_stage.set_stage('semantic')
+
         import_init_calls = [self._visit(i) for i in imports]
 
         if expr.functions:
@@ -5248,9 +5247,11 @@ class SemanticParser(BasicParser):
         body = self._visit(expr.body)
         body.insert2body(*import_init_calls, back=False)
 
+        self._current_function.pop()
+
+        pyccel_stage.set_stage('syntactic')
         # Put back the returns to create custom Assign nodes on the next visit
         expr.body.substitute(replace_return, returns)
-        self._current_function.pop()
 
         # Remove the symbol maps added to handle the function arguments
         # These are found in self.scope.variables but do not represent variables
@@ -5270,6 +5271,7 @@ class SemanticParser(BasicParser):
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
         expr.substitute(local_var, to_replace)
+        pyccel_stage.set_stage('semantic')
 
         if assign:
             return body
