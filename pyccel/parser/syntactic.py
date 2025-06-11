@@ -869,7 +869,6 @@ class SyntaxParser(BasicParser):
 
         arguments    = self._visit(stmt.args)
 
-        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -916,42 +915,6 @@ class SyntaxParser(BasicParser):
         if 'inline' in decorators:
             is_inline = True
 
-        template['template_dict'] = {}
-        # extract the templates
-        if 'template' in decorators:
-            for template_decorator in decorators['template']:
-                dec_args = template_decorator.args
-                if len(dec_args) != 2:
-                    msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg, symbol = template_decorator,
-                                    severity='error')
-
-                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
-                    errors.report('Argument provided to the template decorator is not valid',
-                                    symbol = template_decorator, severity='error')
-
-                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
-                    type_name = dec_args[1].value.python_value
-                    type_descriptors = dec_args[0].value
-                else:
-                    type_name = dec_args[0].value.python_value
-                    type_descriptors = dec_args[1].value
-
-                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
-                    type_descriptors = PythonTuple(type_descriptors)
-
-                if type_name in template['template_dict']:
-                    errors.report(f'The template "{type_name}" is duplicated',
-                                symbol = template_decorator, severity='warning')
-
-                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
-
-                # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][type_name] = possible_types
-
-            # Make template decorator list accessible from decorators dict
-            template['decorator_list'] = decorators['template']
-            decorators['template'] = template
 
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))

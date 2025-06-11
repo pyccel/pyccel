@@ -4855,85 +4855,52 @@ class SemanticParser(BasicParser):
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        templates = self.scope.find_all('templates')
-        if 'template' in decorators:
-            # Load templates dict from decorators dict
-            templates.update(decorators['template']['template_dict'])
-
-        for t,v in templates.items():
-            if not isinstance(v, TypingTypeVar):
-                templates[t] = TypingTypeVar(t, *[self._visit(vi) for vi in v])
-
-        def unpack(ann):
-            if isinstance(ann, UnionTypeAnnotation):
-                return ann.type_list
-            else:
-                return [ann]
-
-        # Filter out unused templates
-        templatable_args = [unpack(a.annotation) for a in expr.arguments \
-                if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation, TypingFinal))]
-        arg_annotations = [annot for a in templatable_args for annot in a \
-                if isinstance(annot, (SyntacticTypeAnnotation, TypingFinal))]
-        used_type_names = set(t for a in arg_annotations for t in a.get_attribute_nodes(PyccelSymbol))
-        templates = {t: v for t,v in templates.items() if t in used_type_names}
-        for n in used_type_names:
-            t = self.scope.find(n, 'symbolic_aliases')
-            if t is None and n in self._context_dict:
-                t = self.env_var_to_pyccel(self._context_dict[n])
-            if isinstance(t, TypingTypeVar):
-                templates[n] = t
-
-        # Create new temporary templates for the arguments with a Union data type.
-        tmp_templates = {}
-        new_expr_args = []
+        available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
+        available_type_vars.update(self.scope.collect_all_type_vars())
+        used_type_vars = {}
         for a in expr.arguments:
-            annot = a.annotation
-            if isinstance(annot, UnionTypeAnnotation):
-                annotation = [aa for a in annot for aa in unpack(a)]
-            elif isinstance(annot, SyntacticTypeAnnotation):
-                if isinstance(annot.dtype, PyccelSymbol):
-                    elem = [annot.dtype]
-                else:
-                    elem = annot.dtype.get_attribute_nodes(PyccelSymbol)
-                if all(e not in templates for e in elem):
-                    annotation = unpack(self._visit(annot))
-                else:
-                    annotation = [annot]
-            else:
-                annotation = [annot]
-            if len(annotation)>1:
-                tmp_template_name = a.name + '_' + random_string(12)
-                tmp_template_name = self.scope.get_new_name(tmp_template_name)
-                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
-                pyccel_stage.set_stage('syntactic')
-                dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
-                dtype_symb = SyntacticTypeAnnotation(dtype_symb)
-                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
-                new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
-                                        value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
-                pyccel_stage.set_stage('semantic')
-            else:
-                new_expr_args.append(a)
+            used_objs = a.annotation.get_attribute_nodes(PyccelSymbol)
+            for o in used_objs:
+                if o in available_type_vars:
+                    used_type_vars[o] = available_type_vars[o]
 
-        templates.update(tmp_templates)
-        template_combinations = list(product(*[v.type_list for v in templates.values()]))
-        template_names = list(templates.keys())
-        n_templates = len(template_combinations)
+        for o, t in used_type_vars.items():
+            if isinstance(t, typing.TypeVar):
+                pyccel_type_var = self.env_var_to_pyccel(t)
+                used_type_vars[o] = pyccel_type_var
+                global_scope = self.scope
+                while global_scope.parent_scope:
+                    global_scope = global_scope.parent_scope
+                global_scope.insert_symbol(o)
+                global_scope.insert_symbolic_alias(o, pyccel_type_var)
 
-        decorators.setdefault('template', {})['template_dict'] = templates
+        possible_combinations = list(product(*[t.type_list for t in used_type_vars.values()]))
+
+        argument_combinations = []
+        type_var_indices = []
+        for i,p in enumerate(possible_combinations):
+            scope = self.create_new_function_scope(expr.name, '_', decorators = decorators,
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy(),
+                    symbolic_aliases = expr.scope.symbolic_aliases)
+            for n, dtype in zip(used_type_vars, p):
+                self.scope.insert_symbolic_alias(n, dtype)
+            args = list(product(*[self._visit(a) for a in expr.arguments]))
+            argument_combinations.extend(args)
+            type_var_indices.extend([i]*len(args))
+            self.exit_function_scope()
 
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-        is_interface = n_templates > 1 or 'overload' in decorators
+        is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-        for tmpl_idx in range(n_templates):
+        for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if function_call_args is not None and found_func:
                 break
 
             if is_interface:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
+                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
             insertion_scope.python_names[name] = expr.name
 
@@ -4942,14 +4909,11 @@ class SemanticParser(BasicParser):
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
 
-            for n, v in zip(template_names, template_combinations[tmpl_idx]):
-                self.scope.insert_symbolic_alias(n, v)
             self.scope.decorators.update(decorators)
 
-            # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
-            # so we flatten the arguments
-            arguments = [i for a in new_expr_args for i in self._visit(a)]
-            assert len(arguments) == len(expr.arguments)
+            for n, dtype in zip(used_type_vars, possible_combinations[type_var_idx]):
+                self.scope.insert_symbolic_alias(n, dtype)
+
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
 

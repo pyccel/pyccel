@@ -11,6 +11,7 @@ from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
+from pyccel.ast.typingext import TypingTypeVar
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
 
@@ -66,8 +67,7 @@ class Scope(object):
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_aliases',
-            'macros','templates','decorators',
-            'cls_constructs')
+            'macros','decorators', 'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
@@ -171,12 +171,6 @@ class Scope(object):
         """ A dictionary of macros defined in this scope
         """
         return self._locals['macros']
-
-    @property
-    def templates(self):
-        """A dictionary of user defined templates which may
-        be applied to functions in this scope"""
-        return self._locals['templates']
 
     @property
     def decorators(self):
@@ -732,6 +726,26 @@ class Scope(object):
         imports = list(self._imports['imports'].keys())
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
+
+    def collect_all_type_vars(self):
+        """
+        Collect all TypeVar objects which are available in this scope.
+
+        Collect all TypeVar objects which are available in this scope. This includes
+        TypeVars declared in parent scopes.
+
+        Returns
+        -------
+        list[TypeVar]
+            A list of TypeVars in the scope.
+        """
+        type_vars = {n:t for n,t in self.symbolic_aliases.items() if isinstance(t, TypingTypeVar)}
+        if self.parent_scope:
+            parent_type_vars = self.parent_scope.collect_all_type_vars()
+            parent_type_vars.update(type_vars)
+            return parent_type_vars
+        else:
+            return type_vars
 
     def update_parent_scope(self, new_parent, is_loop, name = None):
         """ Change the parent scope

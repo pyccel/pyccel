@@ -17,7 +17,6 @@ __all__ = (
     'pure',
     'stack_array',
     'sympy',
-    'template',
     'types',
 )
 
@@ -27,33 +26,6 @@ def sympy(f):
 
 def bypass(f):
     return f
-
-def template(name, types=()):
-    """
-    Template decorator.
-
-    Decorator to replace with TypeVar.
-
-    Parameters
-    ----------
-    name : str
-        The name.
-    types : iterable
-        The constraints.
-
-    Returns
-    -------
-    func
-        Fake decorator.
-    """
-    def identity(f):
-        return f
-    warnings.warn("The @template decorator will be removed in version 2.0 of Pyccel. " +
-                  "Please use type hints. TypeVar from Python's typing module can " +
-                  "be used to specify multiple types. See the documentation at " +
-                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                  "for examples.", FutureWarning)
-    return identity
 
 def pure(f):
     return f

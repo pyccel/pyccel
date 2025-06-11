@@ -458,21 +458,24 @@ After subtracting the amount of time required to create an array copy from the g
 While Pyccel is usually used to accelerate Python code, it is also possible to accelerate other expressions. The Pyccel library provides the `lambdify` Python function. This function is similar to SymPy's [`lambdify`](https://docs.sympy.org/latest/modules/utilities/lambdify.html) function, given a SymPy expression `f` and type annotations, `lambdify` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
 For example:
 ```python
+from typing import TypeVar
 import numpy as np
 import sympy as sp
 from pyccel import lambdify
+
+T = TypeVar('T', 'float[:]', 'float[:,:]')
 
 x = sp.Symbol('x')
 expr = x**2 + x*5
 f = lambdify(expr, {x : 'float'})
 print(f(3.0))
 
-expr2 = x-x
+expr = x-x
 f2 = lambdify(expr, {x : 'float'}, result_type = 'float')
 print(f2(3.0))
 
 expr = x**2 + x*5 + 4.5
-f3 = lambdify(expr, {x : 'T'}, templates = {'T': ['float[:]', 'float[:,:]']})
+f3 = lambdify(expr, {x : 'T'}, context_dict = {'T': T})
 x_1d = np.ones(4)
 x_2d = np.ones((4,2))
 print(f3(x_1d))
@@ -491,7 +494,7 @@ from pyccel import lambdify
 
 x = sp.Symbol('x')
 expr = x**2 + x*5
-f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]')
+f = lambdify(expr, {x : 'float[:,:]'}, result_type = 'float[:,:]', use_out = True)
 x_2d = np.ones((4,2))
 y_2d = np.empty_like(x_2d)
 f(x_2d, y_2d)
