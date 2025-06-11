@@ -1,6 +1,7 @@
 # Container types in Pyccel
 
 Pyccel provides support for some container types with certain limits. The types that are currently supported are:
+
 -   NumPy arrays
 -   Tuples
 -   Lists
@@ -28,6 +29,7 @@ Elements of a homogeneous tuple should have the same type, the same number of di
 Inhomogeneous tuples are handled symbolically. This means that an inhomogeneous tuple is treated as a collection of translatable objects. Each of these objects is then handled individually. In particular this means that tuples can only be indexed by compile-time constants.
 
 For example the following code:
+
 ```python
 def f():
     a = (1, True, 3.0)
@@ -35,7 +37,9 @@ def f():
     b = a[0]+2
     return a[2]
 ```
+
 is translated to the following C code:
+
 ```c
 double f(void)
 {
@@ -51,7 +55,9 @@ double f(void)
     return a_2;
 }
 ```
+
 and the following Fortran code:
+
 ```fortran
   function f() result(Out_0001)
 
@@ -77,13 +83,15 @@ and the following Fortran code:
 ```
 
 But the following code will raise an error:
+
 ```python
 def f():
     a = (1, True, 3.0)
     i = 2
     print(a[i])
 ```
-```
+
+```none
 ERROR at annotation (semantic) stage
 pyccel:
  |fatal [semantic]: foo.py [4,10]| Inhomogeneous tuples must be indexed with constant integers for the type inference to work (a)
@@ -94,6 +102,7 @@ pyccel:
 Homogeneous lists, sets and dictionaries are implemented using external libraries. In C we rely on [STC](https://github.com/stclib/STC). In Fortran we rely on [gFTL](https://github.com/goddard-Fortran-Ecosystem/gFTL/).
 
 For example the following code:
+
 ```python
 def f():
     my_list = [1, 2, 3, 4]
@@ -102,7 +111,9 @@ def f():
     b = my_list[0]+2
     return b + my_set.pop() + my_dict[1]
 ```
+
 is translated to the following C code:
+
 ```c
 double f(void)
 {
@@ -122,7 +133,9 @@ double f(void)
     return result;
 }
 ```
+
 and the following Fortran code:
+
 ```fortran
   function f() result(result_0001)
 
@@ -148,6 +161,7 @@ and the following Fortran code:
 ### Lists of lists and more
 
 Containers such as lists, sets and dictionaries can also contain other containers. In this case memory management is critical to ensure that the memory is shared as it would be in Python. Consider the following example:
+
 ```python
 def f():
     a = [1, 2, 3]
@@ -156,8 +170,10 @@ def f():
     a[0] = 4 # This modifies b
     c[0] = 7 # This modifies b
 ```
+
 The memory deallocation is not trivial in this case. As a result managed memory counting is used.
 The example above is translated to the following C code:
+
 ```c
 void f(void)
 {

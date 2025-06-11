@@ -9,7 +9,7 @@ on the stack.
 
 In order to store the array on the stack it is important that the size be known at the declaration.
 In Fortran all declarations must occur at the start of the function.
-As a result, Pyccel requires that the size of the stack array object is expressed as a function of arguments and [pure](#Pure) function results only.
+As a result, Pyccel requires that the size of the stack array object is expressed as a function of arguments and [pure](#pure) function results only.
 
 This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack_array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
@@ -358,6 +358,7 @@ They are only parsed when encountered in a function call, as a result, type anno
 ### Basic Example
 
 Here is a simple usage example:
+
 ```python
 def f():
     @inline
@@ -368,6 +369,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -394,6 +396,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 #include <stdlib.h>
@@ -433,6 +436,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -472,6 +476,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 
@@ -509,6 +514,7 @@ void f(void)
 ### Example with Optional Variables
 
 Finally we present an example with optional variables:
+
 ```python
 @inline
 def get_val(x : int = None , y : int = None):
@@ -531,6 +537,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -582,6 +589,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 
@@ -616,8 +624,10 @@ int64_t f(int64_t* a, int64_t* b, int64_t* c, int64_t* d)
 ```
 
 ### Import Error when imported from the shared library
+
 Using the previous example, if we import the function `get_val`, we get this error:
-```
+
+```none
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
 ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)
@@ -628,7 +638,7 @@ ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)
 If you face problems with Pyccel, please take the following steps:
 
 1.  Consult our documentation in the tutorial directory;
-2.  Send an email message to pyccel@googlegroups.com;
+2.  Send an email message to <pyccel@googlegroups.com>;
 3.  Open an issue on GitHub.
 
 Thank you!

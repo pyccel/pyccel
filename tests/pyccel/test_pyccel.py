@@ -782,12 +782,6 @@ def test_array_binary_op(language):
     pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_basic_header():
-    filename='scripts/basic_header.pyh'
-    cwd = get_abs_path('.')
-    compile_pyccel(cwd, filename)
-
-#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",

@@ -10,13 +10,10 @@ from pyccel.ast.bind_c    import BindCVariable
 from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.headers   import MacroFunction, MacroVariable
-from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.typingext import TypingTypeVar
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import IndexedElement, DottedVariable
-
-from pyccel.parser.syntax.headers import FunctionHeaderStmt
 
 from pyccel.errors.errors import Errors
 
@@ -70,8 +67,7 @@ class Scope(object):
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_aliases',
-            'macros','headers','decorators',
-            'cls_constructs')
+            'macros','decorators', 'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
@@ -175,12 +171,6 @@ class Scope(object):
         """ A dictionary of macros defined in this scope
         """
         return self._locals['macros']
-
-    @property
-    def headers(self):
-        """A dictionary of user defined headers which may
-        be applied to functions in this scope"""
-        return self._locals['headers']
 
     @property
     def decorators(self):
@@ -454,33 +444,6 @@ class Scope(object):
             name = name.name[-1]
 
         self._locals['macros'][name] = macro
-
-    def insert_header(self, expr):
-        """
-        Add a header to the current scope.
-
-        Add a header describing a function, method or class to
-        the current scope.
-
-        Parameters
-        ----------
-        expr : pyccel.ast.Header
-            The header description.
-
-        Raises
-        ------
-        TypeError
-            Raised if the header type is unknown.
-        """
-        if isinstance(expr, (FunctionHeader, MethodHeader, FunctionHeaderStmt)):
-            if expr.name in self.headers:
-                self.headers[expr.name].append(expr)
-            else:
-                self.headers[expr.name] = [expr]
-        else:
-            msg = 'header of type{0} is not supported'
-            msg = msg.format(str(type(expr)))
-            raise TypeError(msg)
 
     def insert_symbol(self, symbol):
         """

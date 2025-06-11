@@ -1,9 +1,11 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -231,6 +233,8 @@ All notable changes to this project will be documented in this file.
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1487 : Remove support for `@template` decorator.
+-   #1487 : Remove support for `@types` decorator.
+-   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
@@ -547,6 +551,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed
