@@ -1,0 +1,6 @@
+sphinx
+numpydoc
+myst-parser
+Pygments
+sphinx-github-style
+sphinx-book-theme
