@@ -638,8 +638,7 @@ These functions are handled via multiple functions in the wrapper:
 The following Python code:
 
 ```python
-@template('T', [int, float])
-def f(x : 'T'):
+def f(x : int | float):
     return x + 2
 ```
 

@@ -2357,11 +2357,6 @@ class FunctionDef(ScopedAstNode):
         return self._headers
 
     @property
-    def templates(self):
-        """ List of templates used to determine the types """
-        return self._templates
-
-    @property
     def is_recursive(self):
         """ Returns True if the function is recursive (i.e. calls itself)
         and False otherwise """

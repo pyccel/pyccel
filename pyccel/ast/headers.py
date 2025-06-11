@@ -22,7 +22,6 @@ __all__ = (
     'MacroVariable',
     'MetaVariable',
     'MethodHeader',
-    'Template',
 )
 
 #==============================================================================
@@ -55,50 +54,6 @@ class MetaVariable(Header):
     @property
     def value(self):
         return self._value
-
-#==============================================================================
-class Template(Header):
-    """
-    Represents a template.
-
-    Represents a call to the template decorator.
-
-    Parameters
-    ----------
-    name : str
-        The name of the template.
-
-    dtypes : iterable
-        The types the template represents.
-
-    Examples
-    --------
-    >>> from pyccel.ast.headers import Template
-    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
-    >>>        'precision': 8, 'is_func': False, 'is_const': False}
-    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
-    >>>        'precision': 8, 'is_func': False, 'is_const': False}
-    >>> T = Template('T', [d_var0, d_var1])
-    """
-    __slots__ = ('_name','_dtypes')
-
-    def __init__(self, name, dtypes):
-        super().__init__()
-        self._name = name
-        self._dtypes = dtypes
-
-    @property
-    def name(self):
-        "The name of the template."
-        return self._name
-
-    @property
-    def dtypes(self):
-        "Types the template represents."
-        return self._dtypes
-
-    def __iter__(self):
-        return self._dtypes.__iter__()
 
 #==============================================================================
 class FunctionHeader(Header):

@@ -159,7 +159,11 @@ class Codegen:
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
-        return self._printer.get_additional_imports()
+        additional_imports = self._printer.get_additional_imports().copy()
+        if self._parser.metavars['printer_imports']:
+            for i in self._parser.metavars['printer_imports'].split(','):
+                additional_imports.setdefault(i.strip(), None)
+        return additional_imports
 
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
@@ -230,6 +234,10 @@ class Codegen:
                 f.write(code)
 
         code = printer_registry['python'](self.parser.filename).doprint(module_header)
+        if self.language != 'python':
+            printer_imports = ', '.join(self.get_printer_imports().keys())
+            if printer_imports:
+                code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
         with open(pyi_filename, 'w', encoding="utf-8") as f:
             f.write(code)
 
