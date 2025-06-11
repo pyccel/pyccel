@@ -844,11 +844,13 @@ class PythonCodePrinter(CodePrinter):
                                         for t in target if not isinstance(t.object, VariableTypeAnnotation) and \
                                                            t.name != t.local_alias)
 
-            if expr.source_module:
-                if expr.source_module.init_func:
-                    self._ignore_funcs.append(expr.source_module.init_func)
-                if expr.source_module.free_func:
-                    self._ignore_funcs.append(expr.source_module.free_func)
+            if init_func:
+                self._ignore_funcs.append(init_func)
+                if init_func.name in self.scope.imports['functions']:
+                    self._ignore_funcs.append(self.scope.imports['functions'][init_func.name])
+            if free_func:
+                self._ignore_funcs.append(free_func)
+
             target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)

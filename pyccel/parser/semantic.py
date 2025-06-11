@@ -5546,6 +5546,7 @@ class SemanticParser(BasicParser):
 
                 if new_name != old_name:
                     import_init = import_init.clone(new_name)
+                    container['functions'][old_name] = import_init
 
                 result  = import_init()
 
