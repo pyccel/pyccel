@@ -4,67 +4,57 @@ from numpy import zeros
 # .....................................
 #           1d case
 # .....................................
-#$ header function f(int, int [:])
 #$ header macro __f(x) := f(x.shape, x)
-def f(n, a):
+def f(n : int, a : 'int[:]'):
     for i in range(0, n):
         a[i] = i
 
-#$ header function f1(int)
-def f1(n):
+def f1(n : int):
     x = zeros(n, 'int')
-    __f(x)
+    __f(x) #pylint:disable=undefined-variable
 
-#$ header function f2(int [:])
-def f2(x):
+def f2(x : 'int[:]'):
     __f(x) # pylint: disable=undefined-variable
 # .....................................
 
 # .....................................
 #           2d case
 # .....................................
-#$ header function f2d(int [:], int [:,:])
 #$ header macro __f2d(x) := f2d(x.shape, x)
-def f2d(nm, a):
+def f2d(nm : 'tuple[int, ...]', a : 'int[:,:]'):
     for i in range(0, nm[0]):
         for j in range(0, nm[1]):
             a[i,j] = i*j
 
-# TODO not working yet
-#      gfortran error: ‘nm’ must be ALLOCATABLE
-##$ header function f2d1(int, int)
-#def f2d1(n,m):
-#    x = zeros((n, m), 'int')
-#    __f2d(x)
+def f2d1(n : int, m : int):
+    x = zeros((n, m), 'int')
+    __f2d(x) #pylint:disable=undefined-variable
 
-#$ header function k2d(int, int, int [:,:])
 #$ header macro __k2d(x) := k2d(x.shape[0], x.shape[1], x)
-def k2d(n, m, a):
+def k2d(n : int, m : int, a : 'int[:,:]'):
     for i in range(0, n):
         for j in range(0, m):
             a[i,j] = i*j
 
-#$ header function k2d1(int, int)
-def k2d1(n, m):
+def k2d1(n : int, m : int):
     x = zeros((n, m), 'int')
-    __k2d(x)
+    __k2d(x) #pylint:disable=undefined-variable
 
 # .....................................
 
 # .....................................
 #       macros with results
 # .....................................
-#$ header function h(int, int [:], int [:])
 #$ header macro (y), __h(x) := h(x.shape, x, y)
 
-def h(n, a, b):
+def h(n : int, a : 'int[:]', b : 'int[:]'):
     b[:] = a[:]
 # .....................................
 
 
 # ... 1d array
 a = zeros(4, 'int')
-__f(a)
+__f(a) #pylint:disable=undefined-variable
 f1(5)
 # TODO not working yet
 #f2(a)
@@ -76,14 +66,14 @@ b = zeros((4,3), 'int')
 #      gfortran error: ‘nm’ must be ALLOCATABLE
 #__f2d(b)
 
-__k2d(b)
+__k2d(b) #pylint:disable=undefined-variable
 k2d1(3,5)
 # ...
 
 # ... macros with results
 a1 = zeros(4, 'int')
 b1 = zeros(4, 'int')
-b1 = __f(a1)
+b1 = __f(a1) #pylint:disable=undefined-variable
 # ...
 
 print('hello world')

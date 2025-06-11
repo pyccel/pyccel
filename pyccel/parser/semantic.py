@@ -83,7 +83,7 @@ from pyccel.ast.datatypes import original_type_to_pyccel_type
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.functionalexpr import MaxLimit, MinLimit
 
-from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
+from pyccel.ast.headers import Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
@@ -599,21 +599,6 @@ class SemanticParser(BasicParser):
             container = current_scope.imports
             container['imports'][storage_name] = Import(source, target, True)
 
-
-    def get_headers(self, name):
-        """ Get all headers in the scope which reference the
-        requested name
-        """
-        container = self.scope
-        headers = []
-        while container:
-            if name in container.headers:
-                if isinstance(container.headers[name], list):
-                    headers += container.headers[name]
-                else:
-                    headers.append(container.headers[name])
-            container = container.parent_scope
-        return headers
 
     def create_tuple_of_inhomogeneous_elements(self, tuple_var):
         """
@@ -2993,13 +2978,8 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
-            # ----- If block to handle VariableHeader. To be removed when headers are deprecated. ---
             elif isinstance(line, list) and isinstance(line[0], Variable):
                 self.scope.insert_variable(line[0])
-                if len(line) != 1:
-                    errors.report(f"Variable {line[0]} cannot have multiple types",
-                            severity='error', symbol=line[0])
-            # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
         self._additional_exprs.pop()
@@ -3907,7 +3887,8 @@ class SemanticParser(BasicParser):
             elif expr.lhs.is_temp:
                 return rhs
             else:
-                raise NotImplementedError("Cannot assign result of a function without a return")
+                errors.report("Cannot assign result of a function without a return",
+                        severity='fatal', symbol=expr)
 
             if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):
                 temp = self.scope.get_new_name()
@@ -4703,19 +4684,6 @@ class SemanticParser(BasicParser):
             value_false = self._visit(expr.value_false)
             return IfTernaryOperator(cond, value_true, value_false)
 
-    def _visit_FunctionHeader(self, expr):
-        warnings.warn("Support for specifying types via headers will be removed in a " +
-                      "future version of Pyccel. Please use type hints. TypeVar from " +
-                      "Python's typing module can be used to specify multiple types. " +
-                      "See the documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                      "for examples.", FutureWarning)
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
-        return expr
-
     def _visit_Return(self, expr):
 
         results     = expr.expr
@@ -5404,38 +5372,13 @@ class SemanticParser(BasicParser):
         # we change here the master name to its FunctionDef
 
         f_name = expr.master
-        header = self.get_headers(f_name)
-        if not header:
-            func = self.scope.find(f_name, 'functions')
-            if func is None:
-                errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                    symbol=f_name,severity='error',
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
-        else:
-            interfaces = []
-            for hd in header:
-                for i,_ in enumerate(hd.dtypes):
-                    self.scope.insert_symbol(f'arg_{i}')
-                pyccel_stage.set_stage('syntactic')
-                syntactic_args = [AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg) \
-                        for i, arg in enumerate(hd.dtypes)]
-                pyccel_stage.set_stage('semantic')
-                arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
-
-                if hd.results:
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
-                            for i, arg in enumerate(hd.results)]
-                    pyccel_stage.set_stage('semantic')
-                    results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
-                else:
-                    results = FunctionDefResult(Nil())
-
-                interfaces.append(FunctionDef(f_name, arguments, [], results))
-
-            # TODO -> Said: must handle interface
-
-            func = interfaces[0]
+        func = self.scope.find(f_name, 'functions')
+        if func is None:
+            errors.report(MACRO_MISSING_HEADER_OR_FUNC,
+                symbol=f_name,severity='error',
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+        if not func.is_semantic:
+            func = self._annotate_the_called_function_def(func, expr.master_arguments)
 
         name = expr.name
         args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
@@ -5467,11 +5410,7 @@ class SemanticParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_TODO,
                           bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                           severity='fatal')
-        header = self.get_headers(master)
-        if header is None:
-            var = self.get_variable(master)
-        else:
-            var = self.get_variable(master)
+        var = self.get_variable(master)
 
                 # TODO -> Said: must handle interface
 

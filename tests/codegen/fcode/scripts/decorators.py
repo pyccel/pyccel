@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-#An example of a class
+from pyccel.decorators import inline
 
+#An example of a class
 class Shape:
 
     def __init__(self : 'Shape', x : float, y : float):
@@ -33,18 +34,14 @@ rectangle = Shape(100., 45.)
 #finding the area of your rectangle:
 print(rectangle.area)
 
-#$ header function f(int)
-#@inline
-#def f(t):
-#    x = 5*t
-#    return x
-# y = f(6)
-
-#$ header function g(int)
-@vectorize(z)
-def g(z):
-    x= 5+z
+@inline
+def f(t : int):
+    x = 5*t
     return x
 
+y = f(6)
 
+def g(z : int):
+    x= 5+z
+    return x
 

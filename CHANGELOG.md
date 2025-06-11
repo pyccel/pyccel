@@ -1,9 +1,11 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1226 : Support introducing multiple OpenMP versions to Pyccel.
 -   #1226 : Separate OpenMP from Pyccel and introduce it as a Plugin.
 -   #1226 : Add basic Plugin functionality.
@@ -232,6 +234,8 @@ All notable changes to this project will be documented in this file.
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1487 : Remove support for `@template` decorator.
+-   #1487 : Remove support for `@types` decorator.
+-   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
@@ -548,6 +552,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed
