@@ -76,6 +76,7 @@ With `order='C'` (as in C), the last dimension contains contiguous elements, whe
 Fast code should index efficiently.
 By this, we mean that the elements should be visited in the order in which they appear in memory.
 For example here is the efficient indexing for 2D arrays:
+
 ```python
 import numpy as np
 if __name__ == "__main__":
@@ -106,6 +107,7 @@ Multidimensional arrays in `C` code are flattened into a one dimensional array, 
 For indexing the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can mirror NumPy's conventions.
 
 If we take the following 2D array as an example:
+
 |   |   |   |
 |---|---|---|
 | 1 | 2 | 3 |
@@ -114,6 +116,7 @@ If we take the following 2D array as an example:
 with `array.rows = 2` and `array.columns = 3`, `GET_ELEMENT(arr, int32, 0, 1)` which is equivalent to `arr[0][1]` would return `2` no matter the `order`.
 
 To loop efficiently in an `order_c ndarray`, we would do this:
+
 ```c
 for (int row = 0; row < array.rows; ++i)
 {
@@ -155,6 +158,7 @@ If we take the following 2D array as an example:
 
 In C the element `A[1,0]=4` is the fourth element in memory, however in Fortran the element `A(1,0)=4` is the second element in memory.
 Thus to iterate over this array in the most efficient way in C we would do:
+
 ```C
 # A.shape = (2,3)
 for (int row = 0; row < 2; ++row) {
@@ -165,6 +169,7 @@ for (int row = 0; row < 2; ++row) {
 ```
 
 while in Fortran we would do:
+
 ```Fortran
 # A.shape = (2,3)
 do column = 0, 3
@@ -179,6 +184,7 @@ In C code the index `i_1, i_2, i_3` points to the element `i_1 * (n_2 * n_3) + i
 In Fortran code the index `i_1, i_2, i_3` points to the element `i_1 + i_2 * n_1 + i_3 * (n_2 * n_3)` in memory.
 
 ### Order F
+
 Pyccel's translation of code with `order='F'` should look very similar to the original Python code.
 
 NumPy's storage of the strides ensures that the first dimension is the contiguous dimension as in Fortran, so the code is equivalent for all element-wise operations.
@@ -213,6 +219,7 @@ As a result we cannot pass the data block without either rearranging the element
 This is equivalent to the transpose of the original array. As a result we can obtain expected results by simply inverting the index order.
 
 Therefore the following Python code
+
 ```python
 for i in range(2):
     for j in range(3):
@@ -220,6 +227,7 @@ for i in range(2):
 ```
 
 is translated to the following efficient indexing:
+
 ```fortran
 do i = 0_i64, 1_i64
   do j = 0_i64, 2_i64
@@ -231,6 +239,7 @@ end do
 As we are effectively operating on the transpose of the array, this must be taken into account when printing anything related to arrays with `order='C'`.
 
 For example, consider the code:
+
 ```python
 def f(c_array : 'float[:,:](order=C)', f_array : 'float[:,:](order=F)'):
     print(c_array.shape)

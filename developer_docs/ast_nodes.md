@@ -2,13 +2,14 @@
 
 While translating from Python to the target language, Pyccel needs to store all of the concepts in the code in Python objects which fully describe them. These objects are called AST nodes. AST stands for Abstract Syntax Tree.
 
-All objects in the Abstract Syntax Tree inherit from the class `pyccel.ast.basic.PyccelAstNode`. This class serves 2 roles. Firstly it provides a super class from which all our AST nodes can inherit which makes them easy to identify. Secondly it provides functionalities common to all AST nodes. For example it provides the `ast` property which allows the original code parsed by Python's `ast` module to be stored in the class. This object is important in order to report neat errors for code that cannot be handled by Pyccel. It also contains functions involving the relations between the nodes. These are explained in the section [Constructing a tree](#Constructing-a-tree).
+All objects in the Abstract Syntax Tree inherit from the class `pyccel.ast.basic.PyccelAstNode`. This class serves 2 roles. Firstly it provides a super class from which all our AST nodes can inherit which makes them easy to identify. Secondly it provides functionalities common to all AST nodes. For example it provides the `ast` property which allows the original code parsed by Python's `ast` module to be stored in the class. This object is important in order to report neat errors for code that cannot be handled by Pyccel. It also contains functions involving the relations between the nodes. These are explained in the section [Constructing a tree](#constructing-a-tree).
 
 The inheritance tree for a Python AST node is often more complicated than directly inheriting from `PyccelAstNode`. In particular there are two classes which you will see in the inheritance throughout the code. These classes are `TypedAstNode` and `PyccelFunction`. These classes are explained in more detail below.
 
 ## Typed AST Node
 
 The class `TypedAstNode` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe objects which take up space in memory in a running program. For example a Variable requires space in memory, as does the result of a function call or an arithmetic operation, however a loop or a module does not require runtime memory to store the concept. Objects which require memory must therefore contain all information necessary to declare them in the generated code. A `TypedAstNode` therefore exposes the following properties:
+
 -   `dtype`
 -   `rank`
 -   `shape`
@@ -18,14 +19,17 @@ The class `TypedAstNode` is a super class. This class should never be used direc
 The contents of these types are explained in more detail below.
 
 The class `TypedAstNode` also contains static class methods. The static class method is used for type deductions when [parsing type annotations](./type_inference.md). In type annotations we do not generally have an instance of a class, however we can get access to the class itself. The available class methods are:
+
 -   `static_type`
 -   `static_rank`
 -   `static_order`
 
 For instance let us consider the following type annotation:
+
 ```python
 a : int
 ```
+
 When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticParser` will return the class `PythonInt`. This is usually used as a function (e.g to cast a variable), however here we use it to deduce the type. Following the [development conventions](./development_conventions.md#Class-variables-vs.-Instance-variables) any attributes which will remain constant over all instances of a class should be stored in static class attributes. This means that they can be accessed via these static methods. Returning to our example, a call to the function `int` always returns a scalar object with the built-in `float` type. This means that all the properties of a `TypedAstNode` can be defined without having an instance of this class. These properties cannot be defined statically for all nodes (e.g. it would not be possible for `PyccelAdd`), however generally they can be defined for the nodes which can be used in type annotations.
 
 ### Class type
@@ -67,6 +71,7 @@ The constructor of `PyccelFunction` takes a tuple of arguments passed to the fun
 ## Constructing a tree
 
 The `PyccelAstNode` class is used to construct a tree of AST nodes. Each node is aware of its users and attributes. As attributes are saved inside the class instance the constructor of `PyccelAstNode` ensures that these objects are informed of their new user. Constructing a tree in this way allows a few useful utilities to be provided. The most useful of these are:
+
 -   `pyccel.ast.basic.PyccelAstNode.get_user_nodes`
 -   `pyccel.ast.basic.PyccelAstNode.get_attribute_nodes`
 -   `pyccel.ast.basic.PyccelAstNode.substitute`
