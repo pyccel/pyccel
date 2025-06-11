@@ -5139,6 +5139,33 @@ class SemanticParser(BasicParser):
         # Build the syntactic body
         replace_map = {}
 
+        global_scope_import_targets = {}
+        if expr.is_imported:
+            mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+            mod = self.d_parsers[mod_name].semantic_parser.ast
+
+            global_symbols = set(expr.body.get_attribute_nodes(PyccelSymbol))
+            global_symbols.difference_update(expr.scope.local_used_symbols)
+
+            pyccel_stage.set_stage('syntactic')
+            for v in global_symbols:
+                import_mod_name = mod_name
+                if mod.scope.find(v):
+                    imported_obj = None
+                    for import_type in mod.scope.imports.values():
+                        if v in import_type:
+                            imported_obj = import_type[v]
+                            break
+                    if imported_obj:
+                        import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+                    if self.scope.symbol_in_use(v):
+                        new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                        replace_map[v] = new_v
+                        global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                    else:
+                        global_scope_import_targets.setdefault(import_mod_name, []).append(v)
+            pyccel_stage.set_stage('semantic')
+
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
         res_vars = ()
@@ -5206,10 +5233,12 @@ class SemanticParser(BasicParser):
         replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
                           if not isinstance(r.expr, PyccelSymbol) or not isinstance(lhs, PyccelSymbol) \
                           else EmptyNode() for r in returns]
-        pyccel_stage.set_stage('semantic')
         expr.body.substitute(returns, replace_return, invalidate = False)
 
-        import_init_calls = [self._visit(i) for i in expr.imports]
+        imports = list(expr.imports)
+        imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
+        pyccel_stage.set_stage('semantic')
+        import_init_calls = [self._visit(i) for i in imports]
 
         if expr.functions:
             errors.report("Functions in inline functions are not supported",
