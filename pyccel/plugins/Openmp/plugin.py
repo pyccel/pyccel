@@ -78,6 +78,7 @@ class Openmp(Plugin):
         super().__init__()
 
     def set_options(self, options):
+        """set options for the plugin, this may impact its targets"""
         assert isinstance(options, dict)
         self._options.clear()
         self._options.update(options)
@@ -99,6 +100,7 @@ class Openmp(Plugin):
             reg.loaded_versions.append(version)
 
     def refresh(self):
+        """refresh all registered targets with current options"""
         self._refresh = True
         self.register(self.get_all_targets())
         self._refresh = False
