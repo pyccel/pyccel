@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from pyccel.decorators import inline, vectorize
+from pyccel.decorators import inline
 
 #An example of a class
 class Shape:
@@ -41,7 +41,6 @@ def f(t : int):
 
 y = f(6)
 
-@vectorize(z)
 def g(z : int):
     x= 5+z
     return x
