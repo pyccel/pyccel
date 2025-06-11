@@ -5136,11 +5136,7 @@ class SemanticParser(BasicParser):
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
         if assign:
-            syntactic_lhs = assign[-1].lhs
-            if isinstance(syntactic_lhs, PythonTuple):
-                lhs = self.scope.get_new_name()
-            else:
-                lhs = syntactic_lhs
+            lhs = assign[-1].lhs
         else:
             lhs = self.scope.get_new_name()
         # Build the syntactic body
@@ -5159,86 +5155,88 @@ class SemanticParser(BasicParser):
         func_args = [a.var for a in expr.arguments]
         func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
 
-        # Ensure local variables will be recognised
+        # Ensure local variables will be recognised and use a name that is not already in use
         for v in expr.scope.local_used_symbols:
             if v != expr.name:
+                print(expr.name, v, self.scope.symbol_in_use(v))
                 if self.scope.symbol_in_use(v):
                     new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
                     replace_map[v] = new_v
                 else:
                     self.scope.insert_symbol(v)
 
-        to_replace = list(replace_map.keys())
-        local_var = list(replace_map.values())
-        expr.substitute(to_replace, local_var, invalidate = False)
-
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
         for func_a, call_a in zip(func_args, positional_call_args):
-            func_a_name = self.scope.get_expected_name(replace_map.get(func_a, func_a))
-            self.scope.variables[func_a_name] = call_a
+            if func_a == call_a:
+                # If call argument is a variable with the same name as the target function
+                # argument then there is no need to rename
+                new_func_a = replace_map.pop(func_a)
+                self.scope.remove_symbol(new_func_a)
+            else:
+                # Otherwise the symbol used for the function arguments should be mapped
+                # to the call argument
+                func_a_name = replace_map.get(func_a, func_a)
+                self.scope.variables[func_a_name] = call_a
 
+        # Map local keyword call arguments to function arguments
         nargs = len(positional_call_args)
         kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
-            used_func_a_name = replace_map.get(func_a_name, func_a_name)
-            func_a_target_name = self.scope.get_expected_name(used_func_a_name)
-            val = kw_call_args.get(used_func_a_name, func_a.default_call_arg.value)
-            self.scope.variables[func_a_target_name] = val
+            call_a = kw_call_args.get(func_a_name, func_a.default_call_arg.value)
+            if func_a == call_a:
+                # If call argument is a variable with the same name as the target function
+                # argument then there is no need to rename
+                new_func_a = replace_map.pop(func_a)
+                self.scope.remove_symbol(new_func_a)
+            else:
+                # Otherwise the symbol used for the function arguments should be mapped
+                # to the call argument
+                used_func_a_name = replace_map.get(func_a_name, func_a_name)
+                self.scope.variables[used_func_a_name] = call_a
 
-        # Remove return expressions
+        to_replace = list(replace_map.keys())
+        local_var = list(replace_map.values())
+        # Replace local syntactic variables from the inline functions with the syntactic
+        # variables defined above which are sure to not cause name collisions
+        expr.substitute(to_replace, local_var, invalidate = False)
+
+        # Replace return expressions with an assign to the results
         returns = expr.body.get_attribute_nodes(Return)
         pyccel_stage.set_stage('syntactic')
         replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
                           if not isinstance(r.expr, PyccelSymbol) \
                           else EmptyNode() for r in returns]
         pyccel_stage.set_stage('semantic')
-        expr.body.substitute(returns, replace_return)
+        expr.body.substitute(returns, replace_return, invalidate = False)
 
+        # Visit the body as though it appeared directly in the code
         body = self._visit(expr.body)
 
-        # Swap the arguments back to the original version to preserve the syntactic
-        # inline function definition.
+        # Put back the returns to create custom Assign nodes on the next visit
+        expr.body.substitute(replace_return, returns)
         self._current_function.pop()
 
-        for func_a_name, call_a in zip(func_args, positional_call_args):
+        # Remove the symbol maps added to handle the function arguments
+        # These are found in self.scope.variables but do not represent variables
+        # that need to be declared.
+        for func_a, call_a in zip(func_args, positional_call_args):
+            func_a_name = replace_map.get(func_a, func_a)
             if not isinstance(call_a, Variable) or func_a_name != call_a.name:
-                self.scope.remove_variable(call_a, replace_map.get(func_a_name, func_a_name))
+                self.scope.remove_variable(call_a, func_a_name)
 
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
             if func_a_name in kw_call_args:
                 used_func_a_name = replace_map.get(func_a_name, func_a_name)
                 call_a = kw_call_args[used_func_a_name]
                 if not isinstance(call_a, Variable) or used_func_a_name != call_a.name:
-                    self.scope.remove_variable(call_a, used_func_a_name)
+                    self.scope.remove_variable(call_a, func_a_name)
 
+        # Swap the arguments back to the original version to preserve the syntactic
+        # inline function definition.
         expr.substitute(local_var, to_replace)
 
         if assign:
-            if isinstance(syntactic_lhs, PythonTuple):
-                def replace_tuples(syntactic_lhs, semantic_lhs):
-                    """
-                    Replace inhomogeneous tuple returns with the underlying variables
-                    from the lhs of the assign.
-                    """
-                    for i, l in enumerate(syntactic_lhs):
-                        elem = self.scope.collect_tuple_element(self._visit(semantic_lhs)[i])
-                        if isinstance(l, PythonTuple):
-                            replace_tuples(l, elem)
-                        elif isinstance(elem, IndexedElement):
-                            pyccel_stage.set_stage('syntactic')
-                            syntactic_assign = Assign(l, elem, python_ast=function_call.python_ast)
-                            pyccel_stage.set_stage('semantic')
-                            body.insert2body(self._visit(syntactic_assign))
-                        else:
-                            if self.scope.find(l):
-                                body.substitute(elem, self._visit(l))
-                            else:
-                                new_elem = elem.clone(self.scope.get_expected_name(l))
-                                body.substitute(elem, new_elem)
-                                self.scope.remove_variable(elem)
-                                self.scope.insert_variable(new_elem, l)
-                replace_tuples(syntactic_lhs, lhs)
             return body
         else:
             self._additional_exprs[-1].append(body)
