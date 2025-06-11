@@ -33,7 +33,6 @@ Pyccel automatically validates OpenMP syntax compatibility with your selected ve
 
 This ensures the code remains compatible with the chosen OpenMP standard.
 
-
 ## Using the Runtime Library Routines
 
 OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the `pyccel.stdlib`:
