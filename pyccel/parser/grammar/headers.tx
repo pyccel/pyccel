@@ -6,26 +6,11 @@ HeaderStmt: '#$' 'header' stmt=Statement;
 
 Statement:
     FunctionMacroStmt 
-  | VariableHeaderStmt
-  | FunctionHeaderStmt
   | MetavarHeaderStmt
-  | InterfaceStmt
 ;
-
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
-
-FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
-;
-
-FunctionKind: 'function' | 'method';
-Static: 'static';
-HeaderResults: 'results' '(' (decs=TypeHeader) ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
-
-InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
 
 // **** macros ****
 
