@@ -33,11 +33,12 @@ rectangle = Shape(100., 45.)
 #finding the area of your rectangle:
 print(rectangle.area)
 
-#@inline
-#def f(t : int):
-#    x = 5*t
-#    return x
-# y = f(6)
+@inline
+def f(t : int):
+    x = 5*t
+    return x
+
+y = f(6)
 
 @vectorize(z)
 def g(z : int):
