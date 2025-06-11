@@ -1498,7 +1498,7 @@ class NumpyFullLike(PyccelFunction):
     See Also
     --------
     numpy.full_like :
-        See documentation of `numpy.full_like`: https://numpy.org/doc/stable/reference/generated/numpy.full_like.html
+        See documentation of `numpy.full_like`: https://numpy.org/doc/stable/reference/generated/numpy.full_like.html .
     """
     __slots__ = ()
     name = 'full_like'
@@ -1542,7 +1542,7 @@ class NumpyEmptyLike(PyccelFunction):
     See Also
     --------
     numpy.empty_like :
-        See documentation of `numpy.empty_like`: https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html
+        See documentation of `numpy.empty_like`: https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html .
     """
     __slots__ = ()
     name = 'empty_like'
@@ -1588,7 +1588,7 @@ class NumpyOnesLike(PyccelFunction):
     See Also
     --------
     numpy.ones_like :
-        See documentation of `numpy.ones_like`: https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html
+        See documentation of `numpy.ones_like`: https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html .
     """
     __slots__ = ()
     name = 'ones_like'
@@ -1633,7 +1633,7 @@ class NumpyZerosLike(PyccelFunction):
     See Also
     --------
     numpy.zeros_like :
-        See documentation of `numpy.zeros_like`: https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html
+        See documentation of `numpy.zeros_like`: https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html .
     """
     __slots__ = ()
     name = 'zeros_like'
@@ -2591,7 +2591,7 @@ class NumpySize(PyccelFunction):
     See Also
     --------
     numpy.size :
-        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html
+        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html .
     """
     __slots__ = ()
     name = 'size'
@@ -2621,7 +2621,7 @@ class NumpyIsNan(NumpyUfuncUnary):
     See Also
     --------
     numpy.isnan :
-        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isnan.html
+        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isnan.html .
     """
     __slots__ = ()
     name = 'isnan'
@@ -2661,7 +2661,7 @@ class NumpyIsInf(NumpyUfuncUnary):
     See Also
     --------
     numpy.isinf :
-        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isinf.html
+        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isinf.html .
     """
     __slots__ = ()
     name = 'isinf'
@@ -2701,7 +2701,7 @@ class NumpyIsFinite(NumpyUfuncUnary):
     See Also
     --------
     numpy.isfinite :
-        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html
+        See NumPy docs : https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html .
     """
     __slots__ = ()
     name = 'isfinite'
