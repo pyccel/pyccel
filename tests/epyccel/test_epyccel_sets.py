@@ -3,9 +3,6 @@ from typing import TypeVar, Final
 import pytest
 from pyccel import epyccel
 
-# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
-# pytestmark = pytest.mark.skip_llvm
-
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="set method not implemented in fortran"),
