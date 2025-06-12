@@ -31,7 +31,6 @@ Welcome to Pyccel's documentation!
    docs/ndarrays
    docs/numpy-functions
    docs/classes
-   docs/const_keyword
    docs/containers
    docs/function-pointers-as-arguments
    docs/header-files
