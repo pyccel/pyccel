@@ -128,10 +128,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: sphinx_format
         run: |
-          cd compare
-          git branch
-          ls
-          ls docs
+          cd base
           python -m pip install -r docs/requirements.txt
           make -C docs html
         shell: bash
