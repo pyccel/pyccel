@@ -2,7 +2,7 @@ name: documentation
 
 on:
   push:
-    branches: [ devel ]
+    branches: [ devel, ebourne_deploy_docs ]
 
 permissions:
   contents: read
