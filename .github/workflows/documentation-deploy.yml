@@ -3,8 +3,6 @@ name: documentation
 on:
   push:
     branches: [ devel ]
-  pull_request:
-    branches: [ devel ]
 
 permissions:
   contents: read
@@ -35,19 +33,6 @@ jobs:
         make -C docs html
     - name: Setup Pages
       uses: actions/configure-pages@v3
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v1
-      with:
-        path: 'docs/build/html'
-
-  deploy_docs:
-    if: github.event_name != 'pull_request'
-    needs: build_docs
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v2
