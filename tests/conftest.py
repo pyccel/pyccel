@@ -75,3 +75,10 @@ def pytest_sessionstart(session):
         marks = [m.name for m in session.own_markers ]
         if 'parallel' not in marks:
             pyccel_clean(path_dir)
+
+def pytest_runtest_setup(item):
+    # Skip on `skip_llvm` marker and environment variable
+    if 'skip_llvm' in item.keywords:
+        if os.environ.get('PYCCEL_DEFAULT_COMPILER', '').lower() == 'llvm':
+            pytest.skip("Skipping test because PYCCEL_DEFAULT_COMPILER=LLVM")
+

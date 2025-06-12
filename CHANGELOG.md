@@ -177,6 +177,7 @@ All notable changes to this project will be documented in this file.
 -   Fix casting of arrays in Python translation.
 -   #2167 : Stop modifying variables to add `Final` annotation.
 -   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
+-   #2261 : Add LLVM compilers.
 
 ### Changed
 
