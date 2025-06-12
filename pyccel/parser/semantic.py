@@ -4764,8 +4764,6 @@ class SemanticParser(BasicParser):
         return_var = return_objs.var
         if isinstance(return_var, (AnnotatedPyccelSymbol, Variable)):
             return_var = return_var.name
-        if return_var == '_':
-            return EmptyNode()
 
         assigns     = []
         if return_var != results:
