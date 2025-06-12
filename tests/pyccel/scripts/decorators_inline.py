@@ -81,3 +81,4 @@ if __name__ == '__main__':
     add2(a2, b2, c2)
     add2(a2, b2, c2)
     print(h())
+    print(add(a,b=b))
