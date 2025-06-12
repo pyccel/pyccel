@@ -32,6 +32,7 @@ env:
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.9' }}
+  BASE: ${{ inputs.base || github.event.pull_request.base.ref }}
 
 jobs:
   Linter:
@@ -74,7 +75,7 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
+          check_files=$(git diff ${{ env.BASE }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
           if [ -z ${check_files} ]
           then
             touch pylint_results.txt
@@ -86,7 +87,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pylint
         run: |
-          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ env.BASE }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
