@@ -93,12 +93,9 @@ b : set[bool] = {False, True}
 c : set[float] = {}
 ```
 
-Sets can be declared as local variables, arguments or results of functions, but not yet as class variables. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
+Sets can be declared as local variables, arguments or results of functions, but not yet as class variables. An argument can be marked as constant using the `Final` qualifier:
 
 ```python
-def f(a : 'const set[int]'):
-    pass
-
 from typing import Final
 def g(b : Final[set[bool]]):
     pass

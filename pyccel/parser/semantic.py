@@ -4105,14 +4105,14 @@ class SemanticParser(BasicParser):
                 for li in l:
                     if li.is_const:
                         # If constant (can't use annotations on tuple assignment)
-                        errors.report("Cannot modify 'const' variable",
+                        errors.report("Cannot modify variable marked as Final",
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
                 if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
                         any(not isinstance(u, (Allocate, PyccelArrayShapeElement)) for u in l.get_all_user_nodes())):
                     # If constant and not the initialising declaration of a constant variable
-                    errors.report("Cannot modify 'const' variable",
+                    errors.report("Cannot modify variable marked as Final",
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         symbol=l, severity='error')
             if isinstance(expr, AugAssign):
@@ -4173,7 +4173,7 @@ class SemanticParser(BasicParser):
     def _visit_AugAssign(self, expr):
         lhs = self._visit(expr.lhs)
         if lhs.is_const:
-            errors.report("Cannot modify 'const' variable",
+            errors.report("Cannot modify variable marked as Final",
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 symbol=lhs, severity='error')
         rhs = self._visit(expr.rhs)
