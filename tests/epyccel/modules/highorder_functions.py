@@ -1,4 +1,5 @@
- # pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import Final #pylint: disable=unused-import
 
 def function(a : int):
     return a
@@ -119,7 +120,7 @@ def test_float_float_int_2():
     x = high_float_float_int_2(f7, f4, f3)
     return x
 
-def euler (dydt: '()(float, const float[:], float[:])',
+def euler (dydt: '()(float, Final[float[:]], float[:])',
            t0: 'float', t1: 'float', y0: 'float[:]', n: int,
            t: 'float[:]', y: 'float[:,:]'):
 
@@ -130,7 +131,7 @@ def euler (dydt: '()(float, const float[:], float[:])',
         dydt ( t[i], y[i,:], y[i+1,:] )
         y[i+1,:] = y[i,:] + dt * y[i+1,:]
 
-def predator_prey_deriv ( t: 'float', rf: 'const float[:]', out: 'float[:]' ):
+def predator_prey_deriv ( t: 'float', rf: 'Final[float[:]]', out: 'float[:]' ):
 
     r = rf[0]
     f = rf[1]

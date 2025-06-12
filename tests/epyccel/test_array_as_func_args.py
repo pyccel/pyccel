@@ -3,7 +3,7 @@ This test file is made for testing the functionality of passing numpy arrays
 in the function arguments.
 """
 # pylint: disable=missing-function-docstring
-from typing import TypeVar
+from typing import TypeVar, Final #pylint: disable=unused-import
 import numpy as np
 from numpy.random import randint, uniform
 
