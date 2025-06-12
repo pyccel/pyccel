@@ -9,7 +9,7 @@ Pyccel provides default compiler settings for 4 different compiler families:
 -   **NVIDIA** : `nvc` / `nvfort`
 -   **LLVM**: `clang` / `flang`
 
-**Warning** : The **NVIDIA** and **LLVM** compilers are not currently tested regularly
+**Warning** : The **NVIDIA** compiler is not currently tested regularly
 
 ## Specifying a compiler
 
