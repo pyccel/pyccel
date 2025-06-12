@@ -129,6 +129,9 @@ jobs:
         id: sphinx_format
         run: |
           cd compare
+          git branch
+          ls
+          ls docs
           python -m pip install -r docs/requirements.txt
           make -C docs html
         shell: bash
