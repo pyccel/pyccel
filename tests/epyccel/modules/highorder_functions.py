@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import Final #pylint: disable=unused-import
+from typing import Final
 
 def function(a : int):
     return a
