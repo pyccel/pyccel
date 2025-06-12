@@ -82,12 +82,20 @@ def pyccel_test():
     print("Changing into the test directory...")
     os.chdir('pyccel-devel/tests')
 
-    print("Run the single-process tests which must be run one at a time...")
+    print("Run the single-process tests which must be run one at a time... [all languages]")
     retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
     print(f"refcode = {retcode}")
 
-    print("Run the single-process tests which can be run in parallel...")
-    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible)', '-n', 'auto'])
+    print("Run the single-process tests which can be run in parallel... [language: C]")
+    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and c)', '-n', 'auto'])
+    print(f"refcode = {retcode}")
+
+    print("Run the single-process tests which can be run in parallel... [language: Fortran]")
+    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and not python and not c)', '-n', 'auto'])
+    print(f"refcode = {retcode}")
+
+    print("Run the single-process tests which can be run in parallel... [language: Python]")
+    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and python', '-n', 'auto'])
     print(f"refcode = {retcode}")
 
     # TODO: run the parallel tests
