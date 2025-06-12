@@ -1,6 +1,5 @@
-UnionTypeStmt: (const ?= Const) dtypes += TypeHeader['|'];
+UnionTypeStmt: dtypes += TypeHeader['|'];
 
-Const: 'const';
 TypeHeader: FuncType|Type;
 
 Slice: ':';
