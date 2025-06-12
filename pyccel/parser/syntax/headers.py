@@ -20,7 +20,6 @@ from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
 from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
-from pyccel.ast.typingext import TypingFinal
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
@@ -221,15 +220,11 @@ class UnionTypeStmt(BasicStmt):
     ----------
     dtypes : list of VariableHeader | FuncHeader
         A list of the possible types described.
-    const : bool
-        A boolean indicating if the generated object will be constant or
-        modifiable.
     **kwargs : dict
         TextX keyword arguments.
     """
-    def __init__(self, dtypes, const = False, **kwargs):
+    def __init__(self, dtypes, **kwargs):
         self.dtypes = list(dtypes)
-        self.const = const
         super().__init__(**kwargs)
 
     @property
@@ -241,8 +236,6 @@ class UnionTypeStmt(BasicStmt):
         To be removed when header support is deprecated.
         """
         dtypes = [i.expr for i in self.dtypes]
-        if self.const:
-            dtypes = [TypingFinal(d) for d in dtypes]
         if len(dtypes)==1:
             return dtypes[0]
 

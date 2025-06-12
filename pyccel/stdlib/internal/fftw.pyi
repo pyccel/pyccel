@@ -1,4 +1,5 @@
 #$ header metavar external=False
+from typing import Final
 
 FFTW_FORWARD : int
 FFTW_BACKWARD : int
@@ -14,69 +15,69 @@ FFTW_THREADSAFE : int
 def fftw_plan_dft_1d(int, *in : complex, *out : complex, sign : int, flags : unsigned):
     ...
 
-def fftw_plan_dft_2d(n0 : int, n1 : int, fftw_*in : complex, fftw_*out : complex, sign : int, flags : unsigned):
+def fftw_plan_dft_2d(n0 : int, n1 : int, *in : fftw_complex, *out : fftw_complex, sign : int, flags : unsigned):
     ...
 
-def fftw_plan_dft_3d(n0 : int, n1 : int, n2 : int, fftw_*in : complex, fftw_*out : complex, sign : int, flags : unsigned):
+def fftw_plan_dft_3d(n0 : int, n1 : int, n2 : int, *in : fftw_complex, *out : fftw_complex, sign : int, flags : unsigned):
     ...
 
-def fftw_plan_dft(rank : int, *n : 'const int',fftw_*in : complex, fftw_*out : complex, sign : int, flags : unsigned):
-    ...
-
-
-def fftw_plan_dft_r2c_1d(n : int, *in : float, fftw_*out : complex, flags : unsigned):
-    ...
-
-def fftw_plan_dft_r2c_2d(n0 : int, n1 : int, *in : float, fftw_*out : complex, flags : unsigned):
-    ...
-
-def fftw_plan_dft_r2c_3d(n0 : int, n1 : int, n2 : int, *in : float, fftw_*out : complex, flags : unsigned):
-    ...
-
-def fftw_plan_dft_r2c(rank : int, *n : 'const int', *in : float, fftw_*out : complex, flags : unsigned):
+def fftw_plan_dft(rank : int, *n : Final[int],*in : fftw_complex, *out : fftw_complex, sign : int, flags : unsigned):
     ...
 
 
-def fftw_plan_dft_c2r_1d(n0 : int,fftw_*in : complex, *out : float,flags : unsigned):
+def fftw_plan_dft_r2c_1d(n : int, *in : float, *out : fftw_complex, flags : unsigned):
     ...
 
-def fftw_plan_dft_c2r_2d(n0 : int, n1 : int,fftw_*in : complex, *out : float,flags : unsigned):
+def fftw_plan_dft_r2c_2d(n0 : int, n1 : int, *in : float, *out : fftw_complex, flags : unsigned):
     ...
 
-def fftw_plan_dft_c2r_3d(n0 : int, n1 : int, n2 : int,fftw_*in : complex, *out : float,flags : unsigned):
+def fftw_plan_dft_r2c_3d(n0 : int, n1 : int, n2 : int, *in : float, *out : fftw_complex, flags : unsigned):
     ...
 
-def fftw_plan_dft_c2r(rank : int, *n : 'const int',fftw_*in : complex, *out : float,flags : unsigned):
-    ...
-
-
-def fftw_plan_r2r_1d(n : int, *in : float, *out : float, fftw_r2r_kind kind, flags : unsigned):
-    ...
-
-def fftw_plan_r2r_2d(n0 : int, n1 : int, *in : float, *out : float, fftw_r2r_kind kind0, fftw_r2r_kind kind1, flags : unsigned):
-    ...
-
-def fftw_plan_r2r_3d(n0 : int, n1 : int, n2 : int, *in : float, *out : float, fftw_r2r_kind kind0, fftw_r2r_kind kind1, fftw_r2r_kind kind2, flags : unsigned):
-    ...
-
-def fftw_plan_r2r(rank : int, *n : 'const int', *in : float, *out : float, const fftw_r2r_kind *kind, flags : unsigned):
+def fftw_plan_dft_r2c(rank : int, *n : Final[int], *in : float, *out : fftw_complex, flags : unsigned):
     ...
 
 
+def fftw_plan_dft_c2r_1d(n0 : int,*in : fftw_complex, *out : float,flags : unsigned):
+    ...
 
-def fftw_plan_many_dft(rank : int, *n : 'const int', howmany : int, fftw_*in : complex, *inembed : 'const int', istride : int, idist : int, fftw_*out : complex, *onembed : 'const int', ostride : int, odist : int,sign : int, flags : unsigned):
+def fftw_plan_dft_c2r_2d(n0 : int, n1 : int,*in : fftw_complex, *out : float,flags : unsigned):
+    ...
+
+def fftw_plan_dft_c2r_3d(n0 : int, n1 : int, n2 : int,*in : fftw_complex, *out : float,flags : unsigned):
+    ...
+
+def fftw_plan_dft_c2r(rank : int, *n : Final[int],*in : fftw_complex, *out : float,flags : unsigned):
     ...
 
 
-def fftw_plan_many_dft_r2c(rank : int, *n : 'const int', howmany : int,*in : float, *inembed : 'const int', istride : int, idist : int, fftw_*out : complex, *onembed : 'const int', ostride : int, odist : int, flags : unsigned):
+def fftw_plan_r2r_1d(n : int, *in : float, *out : float, kind : fftw_r2r_kind, flags : unsigned):
+    ...
+
+def fftw_plan_r2r_2d(n0 : int, n1 : int, *in : float, *out : float, kind0 : fftw_r2r_kind, kind1 : fftw_r2r_kind, flags : unsigned):
+    ...
+
+def fftw_plan_r2r_3d(n0 : int, n1 : int, n2 : int, *in : float, *out : float, kind0 : fftw_r2r_kind, kind1 : fftw_r2r_kind, kind2 : fftw_r2r_kind, flags : unsigned):
+    ...
+
+def fftw_plan_r2r(rank : int, *n : Final[int], *in : float, *out : float, *kind : Final[fftw_r2r_kind], flags : unsigned):
     ...
 
 
-def fftw_plan_many_dft_c2r(rank : int, *n : 'const int', howmany : int,fftw_*in : complex, *inembed : 'const int',istride : int, idist : int,*out : float, *onembed : 'const int', ostride : int, odist : int, flags : unsigned):
+
+def fftw_plan_many_dft(rank : int, *n : Final[int], howmany : int, *in : fftw_complex, *inembed : Final[int], istride : int, idist : int, *out : fftw_complex, *onembed : Final[int], ostride : int, odist : int,sign : int, flags : unsigned):
     ...
 
 
-def fftw_plan_many_r2r(rank : int, *n : 'const int', howmany : int,*in : float, *inembed : 'const int', istride : int, idist : int,*out : float, *onembed : 'const int',ostride : int, odist : int, const fftw_r2r_kind *kind, flags : unsigned):
+def fftw_plan_many_dft_r2c(rank : int, *n : Final[int], howmany : int,*in : float, *inembed : Final[int], istride : int, idist : int, *out : fftw_complex, *onembed : Final[int], ostride : int, odist : int, flags : unsigned):
+    ...
+
+
+def fftw_plan_many_dft_c2r(rank : int, *n : Final[int], howmany : int,*in : fftw_complex, *inembed : Final[int],istride : int, idist : int,*out : float, *onembed : Final[int], ostride : int, odist : int, flags : unsigned):
+    ...
+
+
+def fftw_plan_many_r2r(rank : int, *n : Final[int], howmany : int,*in : float, *inembed : Final[int], istride : int, idist : int,*out : float, *onembed : Final[int],ostride : int, odist : int,  *kind : Final[fftw_r2r_kind], flags : unsigned):
     ...
 
 
