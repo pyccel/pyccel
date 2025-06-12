@@ -3,6 +3,9 @@ import numpy as np
 import pytest
 from pyccel import epyccel
 
+# Most of the tests are currently skipped for LLVM because
+# flang-new does not support most -W* flags, except -Werror
+
 def test_single_return_var_assign(language):
     def single_return_var_assign():
         y = 3
