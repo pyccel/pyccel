@@ -365,6 +365,7 @@ class Iterable(TypedAstNode):
 
     If an iterable can be iterated over using a range then this can be done automatically
     by defining the following 3 functions:
+
     - get_range : Returns the range required for the iteration.
     - get_python_iterable_item : Returns the item of the iterable that will be saved to the
         variables which are the loop targets.

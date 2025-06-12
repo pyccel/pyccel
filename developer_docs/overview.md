@@ -46,7 +46,7 @@ In this stage, Pyccel creates a wrapper to interface the generated low-level cod
 
 Finally the generated code is compiled. This is handled in the [pipeline](../pyccel/codegen/pipeline.py). The compilers commands are found in [codegen/compiling/compilers.py](../pyccel/codegen/compiling/compilers.py). Different compilers have different flags and need different libraries. Once Pyccel has been executed once on your machine the flags and libraries can be found in JSON files in the [compilers](../pyccel/compilers) folder.
 
-### Function Naming Conventions/File Navigation
+### Function Naming Conventions
 
 In the syntactic, semantic, and code generation stages a similar strategy is used for traversing the Python objects. This strategy is based on function names. The majority of functions have names of the form: `_prefix_ClassName` (in the syntactic and semantic stages the prefix is `visit`, in the code generation stages it is `print`). These functions are never called directly, but instead are called via a high level function `_prefix` (e.g. `_visit` for the semantic stage). This strategy avoids large `if`/`elif` blocks to handle all possible types.
 
