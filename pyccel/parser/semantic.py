@@ -5230,9 +5230,9 @@ class SemanticParser(BasicParser):
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
             if func_a_name in kw_call_args:
                 used_func_a_name = replace_map.get(func_a_name, func_a_name)
-                call_a = kw_call_args[used_func_a_name]
+                call_a = kw_call_args[func_a_name]
                 if not isinstance(call_a, Variable) or used_func_a_name != call_a.name:
-                    self.scope.remove_variable(call_a, func_a_name)
+                    self.scope.remove_variable(call_a, used_func_a_name)
 
         # Swap the arguments back to the original version to preserve the syntactic
         # inline function definition.
