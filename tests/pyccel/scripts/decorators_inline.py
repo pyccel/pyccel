@@ -16,7 +16,7 @@ S = TypeVar('S', 'int8[:]','int8[:,:]','int8[:,:,:]','int8[:,:,:,:]','int8[:,:,:
 
 @inline
 def add(a : T, b : T):
-    return a+b
+    return 2*a+b
 
 @inline
 def get_powers(s : int):
@@ -82,3 +82,4 @@ if __name__ == '__main__':
     add2(a2, b2, c2)
     print(h())
     print(add(a,b=b))
+    print(add(b=2, a=3))
