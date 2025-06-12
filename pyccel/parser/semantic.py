@@ -5175,10 +5175,10 @@ class SemanticParser(BasicParser):
         kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
         for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
             call_a = kw_call_args.get(func_a_name, getattr(func_a.default_call_arg, 'value', func_a.default_call_arg))
-            if isinstance(call_a, Variable) and func_a == self.scope.get_expected_name(call_a.name):
+            if isinstance(call_a, Variable) and func_a_name == self.scope.get_expected_name(call_a.name):
                 # If call argument is a variable with the same name as the target function
                 # argument then there is no need to rename
-                new_func_a = replace_map.pop(func_a)
+                new_func_a = replace_map.pop(func_a_name)
                 self.scope.remove_symbol(new_func_a)
             else:
                 # Otherwise the symbol used for the function arguments should be mapped
