@@ -241,6 +241,7 @@ All notable changes to this project will be documented in this file.
 -   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
+-   #2339 : Deprecated `const` type modifier which cannot be used in objects such as `TypeVar`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
