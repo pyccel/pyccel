@@ -12,7 +12,7 @@ The key lines of the function `doprint` are the call to `self._print(expr)` and 
 ## `_print`
 
 The `_print` function internally calls a function named `_print_X`, where `X` is the type of the object.
-The logic of how the `_print` function chooses the appropriate `_print_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+The logic of how the `_print` function chooses the appropriate `_print_X` function is detailed in the [overview](./overview.md#function-naming-conventions).
 These `_print_X` functions must have the form:
 
 ```python
@@ -270,7 +270,7 @@ If they are not modified then they can be passed as normal arguments, however if
 
 Unlike Fortran, C does not have any native support for arrays.
 In order to translate array expressions, Pyccel contains a basic array implementation.
-This implementation can be found in the folder [pyccel/stdlib/ndarrays/](..pyccel/stdlib/ndarrays/).
+This implementation can be found in the folder [pyccel/stdlib/ndarrays/](../pyccel/stdlib/ndarrays/).
 It is heavily inspired by the NumPy implementation which makes it easy to collect the array from the NumPy object and pass it to the function.
 
 When adding new array functionalities to Pyccel developers must therefore consider whether it is better/more readable to implement the function in the Pyccel's standard library (`stdlib`) or in the generated code.

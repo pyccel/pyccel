@@ -826,7 +826,7 @@ class PythonListFunction(PyccelFunction):
     Class representing a call to the `list` function.
 
     Class representing a call to the `list` function. This is
-    different to the `[,]' syntax as it only takes one argument
+    different to the `[,]` syntax as it only takes one argument
     and unpacks any variables.
 
     Parameters
