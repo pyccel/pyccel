@@ -44,10 +44,3 @@ Welcome to Pyccel's documentation!
 
    developer_docs
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference:
-   :hidden:
-
-   api/modules
-

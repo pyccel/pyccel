@@ -15,7 +15,7 @@ help:
 .PHONY: help Makefile
 
 api_docs: ../pyccel/**/*.py
-	@sphinx-apidoc -e -o source/api -H Pyccel ../pyccel
+	@sphinx-apidoc -e -o source/api -H "Internal library reference" ../pyccel
 
 html: api_docs
 	@mkdir -p source/docs

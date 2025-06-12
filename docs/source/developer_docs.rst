@@ -23,3 +23,10 @@ This documentation is designed to help developers get familiar with how Pyccel's
    developer_docs/tuples
    developer_docs/type_inference
 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Internal library reference:
+   :hidden:
+
+   api/modules
