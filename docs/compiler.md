@@ -1,7 +1,9 @@
 # Different compilers in Pyccel
+
 ## Compilers supported by Pyccel
 
 Pyccel provides default compiler settings for 4 different compiler families:
+
 -   **GNU** : `gcc` / `gfortran`
 -   **Intel** : `icx` / `ifx`
 -   **NVIDIA** : `nvc` / `nvfort`
@@ -13,20 +15,25 @@ Pyccel provides default compiler settings for 4 different compiler families:
 
 The default compiler family is **GNU**. To use a different compiler, the compiler family should be passed to either `pyccel` or `epyccel`.
 E.g.
+
 ```shell
 pyccel example.py --compiler=intel
 ```
+
 or
+
 ```python
 epyccel(my_func, compiler='intel')
 ```
 
 It is also possible to change the default compiler family by setting the environment variable `PYCCEL_DEFAULT_COMPILER`.
 E.g.
+
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel'
 pyccel example.py
 ```
+
 The `--compiler` flag overrides the default compiler: if this is provided, the environment variable is ignored.
 
 ## Using an unsupported compiler or custom compiler flags
@@ -55,16 +62,21 @@ Python is considered to be an accelerator and must additionally specify `shared_
 
 The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `--export-compile-info` flag and provide a target file name.
 E.g.
+
 ```shell
 pyccel --compiler=intel --export-compile-info=intel.json
 ```
+
 once this file has been modified it can then be used with:
+
 ```shell
 pyccel --compiler=intel.json <file_to_translate>
 ```
+
 Instead of using the `--compiler` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
 This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) is used many times with the same flags.
 E.g.
+
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel.json'
 pyccel mod1.py
@@ -72,9 +84,11 @@ pyccel mod2.py
 pyccel subdir/mod3.py
 ...
 ```
+
 Passing the `--compiler` flag still allows the user to retrieve the normal behaviour of Pyccel.
 
 ## Utilising Pyccel within the Anaconda environment
+
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
 
 Upon installation Anaconda modifies your shell's environment variables.

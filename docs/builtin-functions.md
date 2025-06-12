@@ -72,7 +72,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`type`** | **Yes** |
 | `vars` | No |
 | **`zip`** | as a loop iterable |
-| \_\_`import`\_\_ | No
+| `__import__` | No |
 
 ## List methods
 

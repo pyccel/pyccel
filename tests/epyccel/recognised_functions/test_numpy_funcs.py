@@ -7,7 +7,6 @@ from numpy.random import rand, randn, uniform
 from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
-from pyccel.decorators import template
 from pyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -36,6 +35,13 @@ min_float64 = finfo('float64').min
 max_float64 = finfo('float64').max
 
 default_numpy_int = np.array([1]).dtype
+
+F = TypeVar('F', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64')
+C = TypeVar('C', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
+CT = TypeVar('CT', 'complex', 'complex64', 'complex128')
+CNT = TypeVar('CNT', 'complex64', 'complex128') # complex numpy types
+T = TypeVar('T', 'int','float', 'complex', 'int32', 'float32', 'float64', 'complex64', 'complex128')
+S = TypeVar('S', int, 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64')
 
 def randint(*args, **kwargs):
     if 'dtype' in kwargs:
@@ -388,8 +394,7 @@ def test_absolute_call_i(language):
     assert matching_types(f1(x), absolute_call_i(x))
 
 def test_absolute_call_c(language):
-    @template(name='T', types=['complex','complex64','complex128'])
-    def absolute_call_c(x : 'T'):
+    def absolute_call_c(x : CT):
         from numpy import absolute
         return absolute(x)
 
@@ -1574,21 +1579,8 @@ def test_full_dtype(language):
     assert isclose(f_real_complex128(val_float), create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip("full handles types in __new__ so it "
-                "cannot be used in a translated interface in python"),
-            pytest.mark.python]
-        ),
-    )
-)
-
 def test_full_dtype_auto(language):
-    @template(name='T', types=['int','float', 'complex', 'int32',
-                               'float32', 'float64', 'complex64', 'complex128'])
-    def create_full_val_auto(val : 'T'):
+    def create_full_val_auto(val : T):
         from numpy import full
         a = full(3,val)
         return a[0]
@@ -3744,20 +3736,9 @@ def test_zeros_like_combined_args(language):
     assert isclose(f3_val(), create_zeros_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_like_3_val())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_numpy_real_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def get_real(a : 'T'):
+    def get_real(a : C):
         from numpy import real
         b = real(a)
         return b
@@ -3856,24 +3837,9 @@ def test_numpy_real_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert matching_types(f_complex64_output, test_complex64_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_real_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
-    def get_real(arr : 'T'):
+    def get_real(arr : 'C[:]'):
         from numpy import real, shape
         a = real(arr)
         s = shape(a)
@@ -3914,24 +3880,9 @@ def test_numpy_real_array_like_1d(language):
     assert epyccel_func(cmplx64) == get_real(cmplx64)
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_real_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
-    def get_real(arr : 'T'):
+    def get_real(arr : 'C[:,:]'):
         from numpy import real, shape
         a = real(arr)
         s = shape(a)
@@ -3973,20 +3924,9 @@ def test_numpy_real_array_like_2d(language):
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
 def test_numpy_imag_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def get_imag(a : 'T'):
+    def get_imag(a : C):
         from numpy import imag
         b = imag(a)
         return b
@@ -4085,21 +4025,9 @@ def test_numpy_imag_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert matching_types(f_complex64_output, test_complex64_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_imag_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
-    def get_imag(arr : 'T'):
+    def get_imag(arr : 'C[:]'):
         from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
@@ -4140,21 +4068,9 @@ def test_numpy_imag_array_like_1d(language):
     assert epyccel_func(cmplx64) == get_imag(cmplx64)
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("imag handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_imag_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
-    def get_imag(arr : 'T'):
+    def get_imag(arr : 'C[:,:]'):
         from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
@@ -4209,8 +4125,7 @@ def test_numpy_imag_array_like_2d(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-    def get_mod(a : 'T'):
+    def get_mod(a : F):
         from numpy import mod
         b = mod(a, a)
         return b
@@ -4274,8 +4189,7 @@ def test_numpy_mod_scalar(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def get_mod(arr : 'T'):
+    def get_mod(arr : 'F[:]'):
         from numpy import mod, shape
         a = mod(arr, arr)
         s = shape(a)
@@ -4321,8 +4235,7 @@ def test_numpy_mod_array_like_1d(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def get_mod(arr : 'T'):
+    def get_mod(arr : 'F[:,:]'):
         from numpy import mod, shape
         a = mod(arr, arr)
         s = shape(a)
@@ -4377,11 +4290,7 @@ def test_numpy_mod_mixed_order(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -4389,8 +4298,7 @@ def test_numpy_mod_mixed_order(language):
 
 def test_numpy_prod_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def get_prod(a : 'T'):
+    def get_prod(a : C):
         from numpy import prod
         b = prod(a)
         return b
@@ -4493,18 +4401,13 @@ def test_numpy_prod_scalar(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
 def test_numpy_prod_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
-    def get_prod(arr : 'T'):
+    def get_prod(arr : 'C[:]'):
         from numpy import prod
         a = prod(arr)
         return a
@@ -4576,18 +4479,13 @@ def test_numpy_prod_array_like_1d(language):
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason=("prod handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
-            pytest.mark.python]
-        )
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
 def test_numpy_prod_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
-    def get_prod(arr : 'T'):
+    def get_prod(arr : 'C[:,:]'):
         from numpy import prod
         a = prod(arr)
         return a
@@ -4654,8 +4552,7 @@ def test_numpy_prod_array_like_2d(language):
 
 def test_numpy_norm_scalar(language):
 
-    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
-    def get_norm(a : 'T'):
+    def get_norm(a : C):
         from numpy.linalg import norm
         b = norm(a)
         return b
@@ -4766,8 +4663,7 @@ def test_numpy_norm_scalar(language):
 
 def test_numpy_norm_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
-    def get_norm(arr : 'T'):
+    def get_norm(arr : 'C[:]'):
         from numpy.linalg import norm
         a = norm(arr)
         return a
@@ -4826,8 +4722,7 @@ def test_numpy_norm_array_like_1d(language):
 
 def test_numpy_norm_array_like_2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
-    def get_norm(arr : 'T'):
+    def get_norm(arr : 'C[:,:]'):
         from numpy.linalg import norm
         from numpy import shape
         a = norm(arr)
@@ -4887,18 +4782,7 @@ def test_numpy_norm_array_like_2d(language):
 
 def test_numpy_norm_array_like_2d_fortran_order(language):
 
-    @template('T', ['bool[:,:](order=F)',
-                    'int[:,:](order=F)',
-                    'int8[:,:](order=F)',
-                    'int16[:,:](order=F)',
-                    'int32[:,:](order=F)',
-                    'int64[:,:](order=F)',
-                    'float[:,:](order=F)',
-                    'float32[:,:](order=F)',
-                    'float64[:,:](order=F)',
-                    'complex64[:,:](order=F)',
-                    'complex128[:,:](order=F)'])
-    def get_norm(arr : 'T'):
+    def get_norm(arr : 'C[:,:](order=F)'):
         from numpy.linalg import norm
         from numpy import shape
         a = norm(arr, axis=0)
@@ -4974,18 +4858,7 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
 def test_numpy_norm_array_like_3d(language):
 
-    @template('T', ['bool[:,:,:]',
-                    'int[:,:,:]',
-                    'int8[:,:,:]',
-                    'int16[:,:,:]',
-                    'int32[:,:,:]',
-                    'int64[:,:,:]',
-                    'float[:,:,:]',
-                    'float32[:,:,:]',
-                    'float64[:,:,:]',
-                    'complex64[:,:,:]',
-                    'complex128[:,:,:]'])
-    def get_norm(arr : 'T'):
+    def get_norm(arr : 'C[:,:,:]'):
         from numpy.linalg import norm
         a = norm(arr)
         return a
@@ -5044,11 +4917,7 @@ def test_numpy_norm_array_like_3d(language):
 
 def test_numpy_norm_array_like_3d_fortran_order(language):
 
-    @template('T', ['bool[:,:,:](order=F)', 'int[:,:,:](order=F)', 'int8[:,:,:](order=F)',
-                    'int16[:,:,:](order=F)', 'int32[:,:,:](order=F)', 'int64[:,:,:](order=F)',
-                    'float[:,:,:](order=F)', 'float32[:,:,:](order=F)', 'float64[:,:,:](order=F)',
-                    'complex64[:,:,:](order=F)', 'complex128[:,:,:](order=F)'])
-    def get_norm(arr : 'T'):
+    def get_norm(arr : 'C[:,:,:](order=F)'):
         from numpy.linalg import norm
         from numpy import shape
         a = norm(arr, axis=0)
@@ -5127,8 +4996,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
-    def get_matmul(arr : 'T'):
+    def get_matmul(arr : 'C[:]'):
         from numpy import matmul
         a = matmul(arr, arr)
         return a
@@ -5189,8 +5057,7 @@ def test_numpy_matmul_array_like_1d(language):
 
 def test_numpy_matmul_array_like_2x2d(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]', 'complex64[:,:]', 'complex128[:,:]'])
-    def get_matmul(arr : 'T'):
+    def get_matmul(arr : 'C[:,:]'):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
@@ -5252,8 +5119,7 @@ def test_numpy_matmul_array_like_2x2d(language):
 
 def test_numpy_where_array_like_1d_with_condition(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def get_chosen_elements(arr : 'T'):
+    def get_chosen_elements(arr : 'F[:]'):
         from numpy import where, shape
         a = where(arr > 0, arr, arr * 2)
         s = shape(a)
@@ -5297,8 +5163,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
 )
 def test_numpy_where_array_like_1d_1_arg(language):
 
-    @template('T', ['int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def get_chosen_elements(arr : 'T'):
+    def get_chosen_elements(arr : 'S[:]'):
         from numpy import where, shape
         a = where(arr > 5)
         s = shape(a)
@@ -5330,8 +5195,7 @@ def test_numpy_where_array_like_1d_1_arg(language):
 
 def test_numpy_where_array_like_2d_with_condition(language):
 
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def get_chosen_elements(arr : 'T'):
+    def get_chosen_elements(arr : 'F[:,:]'):
         from numpy import where, shape
         a = where(arr < 0, arr, arr + 1)
         s = shape(a)
@@ -5365,8 +5229,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 def test_numpy_where_complex(language):
-    @template('T', ['complex64[:]','complex128[:]'])
-    def where_wrapper(arr1 : 'T', arr2 : 'T', cond : 'bool[:]'):
+    def where_wrapper(arr1 : 'CNT[:]', arr2 : 'CNT[:]', cond : 'bool[:]'):
         from numpy import where, shape
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -5432,8 +5295,7 @@ def test_where_combined_types(language):
 def test_numpy_linspace_scalar(language):
     from numpy import linspace
 
-    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
-    def get_linspace(start : 'T', steps : int, num : int):
+    def get_linspace(start : S, steps : int, num : int):
         stop = start + steps
         b = linspace(start, stop, num)
         return b
@@ -5534,8 +5396,7 @@ def test_numpy_linspace_scalar(language):
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
 
-    @template('T', ['int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def test_linspace(start : 'T', stop : int, endpoint : bool):
+    def test_linspace(start : 'S[:]', stop : int, endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
@@ -5659,8 +5520,7 @@ def test_numpy_linspace_array_like_1d(language):
 def test_numpy_linspace_array_like_2d(language):
     from numpy import linspace
 
-    @template('T', ['int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def test_linspace(start : 'T', stop : int, endpoint : bool):
+    def test_linspace(start : 'S[:,:]', stop : int, endpoint : bool):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
@@ -5800,8 +5660,7 @@ def test_numpy_linspace_array_like_2d(language):
     )
 )
 def test_numpy_count_non_zero_1d(language):
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:]'):
         from numpy import count_nonzero
         return count_nonzero(arr)
 
@@ -5842,8 +5701,7 @@ def test_numpy_count_non_zero_1d(language):
     )
 )
 def test_numpy_count_non_zero_2d(language):
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:,:]'):
         from numpy import count_nonzero
         return count_nonzero(arr)
 
@@ -5884,8 +5742,7 @@ def test_numpy_count_non_zero_2d(language):
     )
 )
 def test_numpy_count_non_zero_1d_keep_dims(language):
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:]'):
         from numpy import count_nonzero
         a = count_nonzero(arr, keepdims=True)
         s = a.shape
@@ -5928,8 +5785,7 @@ def test_numpy_count_non_zero_1d_keep_dims(language):
     )
 )
 def test_numpy_count_non_zero_2d_keep_dims(language):
-    @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:,:]'):
         from numpy import count_nonzero
         a = count_nonzero(arr, keepdims=True)
         s = a.shape
@@ -5972,8 +5828,7 @@ def test_numpy_count_non_zero_2d_keep_dims(language):
     )
 )
 def test_numpy_count_non_zero_axis(language):
-    @template('T', ['bool[:,:,:]', 'int[:,:,:]', 'int8[:,:,:]', 'int16[:,:,:]', 'int32[:,:,:]', 'int64[:,:,:]', 'float[:,:,:]', 'float32[:,:,:]', 'float64[:,:,:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:,:,:]'):
         from numpy import count_nonzero
         a = count_nonzero(arr, axis = 1)
         s = a.shape
@@ -6016,8 +5871,7 @@ def test_numpy_count_non_zero_axis(language):
     )
 )
 def test_numpy_count_non_zero_axis_keep_dims(language):
-    @template('T', ['bool[:,:,:]', 'int[:,:,:]', 'int8[:,:,:]', 'int16[:,:,:]', 'int32[:,:,:]', 'int64[:,:,:]', 'float[:,:,:]', 'float32[:,:,:]', 'float64[:,:,:]'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:,:,:]'):
         from numpy import count_nonzero, empty
         a = count_nonzero(arr, axis = 0, keepdims=True)
         s = a.shape
@@ -6060,16 +5914,7 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     )
 )
 def test_numpy_count_non_zero_axis_keep_dims_F(language):
-    @template('T', ['bool[:,:,:](order=F)',
-                    'int[:,:,:](order=F)',
-                    'int8[:,:,:](order=F)',
-                    'int16[:,:,:](order=F)',
-                    'int32[:,:,:](order=F)',
-                    'int64[:,:,:](order=F)',
-                    'float[:,:,:](order=F)',
-                    'float32[:,:,:](order=F)',
-                    'float64[:,:,:](order=F)'])
-    def count(arr : 'T'):
+    def count(arr : 'F[:,:,:](order=F)'):
         from numpy import count_nonzero
         a = count_nonzero(arr, axis = 1, keepdims=True)
         s = a.shape
@@ -6112,8 +5957,7 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
 )
 def test_nonzero(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
-    def nonzero_func(a : 'T'):
+    def nonzero_func(a : 'F[:]'):
         from numpy import nonzero
         b = nonzero(a)
         return len(b), b[0][0], b[0][1]
@@ -6144,9 +5988,7 @@ def test_nonzero(language):
 
 def test_dtype(language):
 
-    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]',
-                    'float[:]', 'float32[:]', 'float64[:]'])
-    def func(a : 'T'):
+    def func(a : 'F[:]'):
         from numpy import zeros
         b = zeros(5, dtype=a.dtype)
         return b[0]
@@ -6227,18 +6069,17 @@ def test_result_type(language):
     )
 )
 def test_copy(language):
-    @template('T', ['int[:]', 'float[:,:]', 'complex[:,:,:](order=F)'])
-    def copy_array(a : 'T'):
+    X = TypeVar('X', 'int[:]', 'float[:,:]', 'complex[:,:,:](order=F)')
+    def copy_array(a : X):
         b = a.copy()
         return b
 
-    @template('T', ['float[:,:]', 'complex[:,:,:](order=F)'])
-    def copy_array_to_F(a : 'T'):
+    Y = TypeVar('Y', 'float[:,:]', 'complex[:,:,:](order=F)')
+    def copy_array_to_F(a : Y):
         b = a.copy(order='F')
         return b
 
-    @template('T', ['float[:,:]', 'complex[:,:,:](order=F)'])
-    def copy_array_to_C(a : 'T'):
+    def copy_array_to_C(a : Y):
         b = a.copy(order='C')
         return b
 

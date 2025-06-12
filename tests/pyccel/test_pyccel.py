@@ -783,12 +783,6 @@ def test_array_binary_op(language):
     pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_basic_header():
-    filename='scripts/basic_header.pyh'
-    cwd = get_abs_path('.')
-    compile_pyccel(cwd, filename)
-
-#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
@@ -1235,9 +1229,19 @@ def test_stubs(language):
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
 
+    if language != 'python':
+        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
+
     assert expected_pyi == generated_pyi
 
 #------------------------------------------------------------------------------
 def test_builtin_container_print(language):
     pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_pyccel_generated_compilation_dependency(language):
+    pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
+            dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
+            output_dtype = int,
             language = language)

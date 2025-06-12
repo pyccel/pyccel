@@ -6,6 +6,7 @@ If successful you should be able to add a print inside a function that is always
 Once you have confirmed that you have a working editable installation you should be able to make changes to the code in a branch or fork to fix your chosen issue.
 
 If this is your first contribution, then we recommend starting with an issue labelled as a `good-first-issue`. These issues roughly fall into two groups:
+
 1.  New features whose implementation should be carried out similarly to an existing feature.
 2.  Issues where the work is confined to only one of Pyccel's stages (see the [overview](./overview.md) for a definition of the different stages).
 

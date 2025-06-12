@@ -80,7 +80,7 @@ pyccel:
 If you face problems with Pyccel, please take the following steps:
 
 1.  Consult our documentation in the tutorial directory;
-2.  Send an email message to pyccel@googlegroups.com;
+2.  Send an email message to <pyccel@googlegroups.com>;
 3.  Open an issue on GitHub.
 
 Thank you!
