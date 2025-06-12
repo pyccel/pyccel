@@ -1,4 +1,4 @@
-name: Doc Coverage Action
+name: Documentation
 
 on:
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: Documentation Format (docs, ${{ inputs.python_version || '3.10' }})
+    name: Documentation (docs, ${{ inputs.python_version || '3.10' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
@@ -129,6 +129,14 @@ jobs:
           python -m pip install -r docs/requirements.txt
           make -C docs html
         shell: bash
+      - name: Setup Pages
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/build/html'
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:

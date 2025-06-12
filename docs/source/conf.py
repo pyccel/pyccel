@@ -28,6 +28,7 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'Pyccel'
+author  = 'Pyccel development team'
 
 # The full version, including alpha/beta/rc tags
 release = pyccel_version
