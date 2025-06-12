@@ -18,10 +18,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import recompile_object
-from pyccel.codegen.utilities      import copy_internal_library
-from pyccel.codegen.utilities      import internal_libs
-from pyccel.codegen.utilities      import external_libs
+from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -43,25 +40,26 @@ __all__ = ['execute_pyccel']
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel(fname, *,
-                   syntax_only   = False,
-                   semantic_only = False,
-                   convert_only  = False,
-                   verbose       = False,
-                   show_timings  = False,
-                   folder        = None,
-                   language      = None,
-                   compiler      = None,
-                   fflags        = None,
-                   wrapper_flags = None,
-                   includes      = (),
-                   libdirs       = (),
-                   modules       = (),
-                   libs          = (),
-                   debug         = False,
-                   accelerators  = (),
-                   output_name   = None,
+                   syntax_only     = False,
+                   semantic_only   = False,
+                   convert_only    = False,
+                   verbose         = False,
+                   show_timings    = False,
+                   folder          = None,
+                   language        = None,
+                   compiler_family = None,
+                   fflags          = None,
+                   wrapper_flags   = None,
+                   includes        = (),
+                   libdirs         = (),
+                   modules         = (),
+                   libs            = (),
+                   debug           = None,
+                   accelerators    = (),
+                   output_name     = None,
                    compiler_export_file = None,
-                   conda_warnings = 'basic'):
+                   conda_warnings  = 'basic',
+                   context_dict    = None):
     """
     Run Pyccel on the provided code.
 
@@ -89,8 +87,9 @@ def execute_pyccel(fname, *,
         Path to the working directory. Default is the folder containing the file to be translated.
     language : str, optional
         The target language Pyccel is translating to. Default is 'fortran'.
-    compiler : str, optional
+    compiler_family : str, optional
         The compiler used to compile the generated files. Default is 'GNU'.
+        This can also contain the name of a json file describing a compiler.
     fflags : str, optional
         The flags passed to the compiler. Default is provided by the Compiler.
     wrapper_flags : str, optional
@@ -104,8 +103,9 @@ def execute_pyccel(fname, *,
     libs : list, optional
         List of required libraries.
     debug : bool, optional
-        Indicates whether the file should be compiled in debug mode. Default is False.
-        (Currently, this only implies that the flag -fcheck=bounds is added.).
+        Indicates whether the file should be compiled in debug mode.
+        The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
+        If no such environment variable exists then the default is False.
     accelerators : iterable, optional
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     output_name : str, optional
@@ -114,6 +114,9 @@ def execute_pyccel(fname, *,
         Name of the JSON file to which compiler information is exported. Default is None.
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    context_dict : dict[str, object], optional
+        A dictionary containing any variables that are available in the calling context.
+        This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
     timers = {}
@@ -165,6 +168,10 @@ def execute_pyccel(fname, *,
     else:
         folder = os.path.abspath(folder)
 
+    # Define default debug mode
+    if debug is None:
+        debug = bool(os.environ.get('PYCCEL_DEBUG_MODE', False))
+
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
@@ -181,20 +188,19 @@ def execute_pyccel(fname, *,
         language = 'fortran'
 
     # Choose Fortran compiler
-    if compiler is None:
-        compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    if compiler_family is None:
+        compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
-    src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler('GNU', 'c', debug)
+    compiler = Compiler(compiler_family, debug)
 
     # Export the compiler information if requested
     if compiler_export_file:
-        src_compiler.export_compiler_info(compiler_export_file)
+        compiler.export_compiler_info(compiler_export_file)
         if not fname:
             return
 
@@ -207,7 +213,7 @@ def execute_pyccel(fname, *,
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath)
+        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)
@@ -294,15 +300,16 @@ def execute_pyccel(fname, *,
             print_timers(start, timers)
         return
 
-    compile_libs = [*libs, parser.metavars['libraries']] \
-                    if 'libraries' in parser.metavars else libs
+    compile_libs, deps = get_module_and_compile_dependencies(parser)
+    compile_libs.extend(libs)
+
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,
             libs         = compile_libs,
             libdirs      = libdirs,
-            dependencies = modules,
+            dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj
 
@@ -313,35 +320,18 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-
-    # Iterate over the internal_libs list and determine if the printer
-    # requires an internal lib to be included.
-    for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-        if lib_name in codegen.get_printer_imports():
-
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
-
-            # stop after copying lib to __pyccel__ directory for
-            # convert only
-            if convert_only:
-                continue
-
-            # Pylint determines wrong type
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-            # get the include folder path and library files
-            recompile_object(stdlib,
-                              compiler = src_compiler,
-                              verbose  = verbose)
-
-            mod_obj.add_dependencies(stdlib)
-
-
-    # Iterate over the external_libs list and determine if the printer
-    # requires an external lib to be included.
-    for key in codegen.get_printer_imports():
-        lib_name = key.split("/", 1)[0]
-        if lib_name in external_libs:
-            lib_dest_path = copy_internal_library(lib_name, pyccel_dirpath)
+    try:
+        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
+                language, verbose, convert_only)
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
 
     if convert_only:
         # Change working directory back to starting point
@@ -351,41 +341,12 @@ def execute_pyccel(fname, *,
             print_timers(start, timers)
         return
 
-    deps = dict()
-    # ...
-    # Determine all .o files and all folders needed by executable
-    def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
-        mod_base = os.path.basename(parser.filename)
-
-        # Stop conditions
-        if parser.metavars.get('module_name', None) == 'omp_lib':
-            return
-
-        if parser.compile_obj:
-            deps[mod_base] = parser.compile_obj
-        elif mod_base not in deps:
-            compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
-            no_target = parser.metavars.get('no_target',False) or \
-                    parser.metavars.get('ignore_at_import',False)
-            deps[mod_base] = CompileObj(mod_base,
-                                folder          = mod_folder,
-                                libs            = compile_libs,
-                                has_target_file = not no_target)
-
-        # Proceed recursively
-        for son in parser.sons:
-            get_module_dependencies(son, deps)
-
-    for son in parser.sons:
-        get_module_dependencies(son, deps)
-    mod_obj.add_dependencies(*deps.values())
-
     start_compile_target_language = time.time()
     # Compile code to modules
     try:
-        src_compiler.compile_module(compile_obj=mod_obj,
+        compiler.compile_module(compile_obj=mod_obj,
                 output_folder=pyccel_dirpath,
+                language=language,
                 verbose=verbose)
     except Exception:
         handle_error('compilation')
@@ -398,8 +359,9 @@ def execute_pyccel(fname, *,
                     folder       = pyccel_dirpath,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
-            generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
+            generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
+                    language=language,
                     verbose=verbose)
 
         timers["Compilation without wrapper"] = time.time() - start_compile_target_language
@@ -410,8 +372,7 @@ def execute_pyccel(fname, *,
                                                language,
                                                wrapper_flags,
                                                pyccel_dirpath,
-                                               src_compiler,
-                                               wrapper_compiler,
+                                               compiler,
                                                output_name,
                                                verbose)
     except NotImplementedError as error:

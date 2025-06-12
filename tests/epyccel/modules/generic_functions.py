@@ -1,47 +1,41 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import template
+from typing import TypeVar
 
-#$ header function gen_2(real, int)
-#$ header function gen_2(int, real)
-#$ header function gen_4(T, T)
-#$ header template T(int|real)
-#$ header template R(int|real)
-#$ header template O(real|complex)
-#$ header template S(int|real|complex)
+T : type = 'int | float'
+R : type = 'int | float'
+S : type = 'int | float | complex'
 
 def gen_1(a : 'float'):
     return a / 10
 
-def gen_2(y, x):
+def gen_2(y : 'float | int', x : 'int | float'):
     return y / x
 
-def gen_3(x : 'T', y : 'T'):
+def gen_3(x : T, y : T):
     return x / y
 
-def gen_4(x, y):
+def gen_4(x : T, y : T):
     return x / y
 
-def gen_5(x : 'T', y : 'R'):
+def gen_5(x : T, y : R):
     return x / y
 
-def gen_6(x : 'S', y : 'S'):
+def gen_6(x : S, y : S):
     return x + y
 
-def gen_7(x : 'T', y : 'T', z : 'R'):
+def gen_7(x : T, y : T, z : R):
     return x + y + z
 
+Z = TypeVar('Z', int, float)
+O = TypeVar('O', int, float)
 
-
-@template('Z', types=['int', 'real'])
-def tmplt_head_1(x : 'Z', y : 'Z'):
+def tmplt_head_1(x : Z, y : Z):
     return x + y
 
-@template('O', types=['int', 'real'])
-def local_overide_1(x : 'O', y : 'O'):
+def local_override_1(x : O, y : O):
     return x + y
 
-@template('Z', types=['int', 'real'])
-def tmplt_tmplt_1(x : 'Z', y : 'Z', z : 'R'):
+def tmplt_tmplt_1(x : Z, y : Z, z : R):
     return x + y + z
 
 def tst_gen_1():
@@ -90,9 +84,9 @@ def tst_tmplt_head_1():
     y = tmplt_head_1(5.5, 7.3)
     return x, y
 
-def tst_local_overide_1():
-    x = local_overide_1(5, 4)
-    y = local_overide_1(6.56, 3.3)
+def tst_local_override_1():
+    x = local_override_1(5, 4)
+    y = local_override_1(6.56, 3.3)
     return x, y
 
 def tst_tmplt_tmplt_1():

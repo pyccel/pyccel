@@ -6,20 +6,25 @@
 """
 Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
+This file contains classes but also many FunctionDef/Variable instances representing
+objects defined in Python.h.
 """
+import re
 
 from pyccel.utilities.metaclasses import Singleton
 
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 
 from .bind_c    import BindCPointer
 
+from .builtins  import PythonInt
+
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import PythonNativeBool, StringType, VoidType
+from .datatypes import PythonNativeBool, StringType, VoidType, CharType
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
@@ -30,7 +35,7 @@ from .c_concepts import ObjectAddress, CNativeInt
 
 from .internals import PyccelFunction
 
-from .literals  import LiteralString, LiteralInteger
+from .literals  import LiteralString, LiteralInteger, Nil
 
 from .variable  import Variable
 
@@ -42,6 +47,7 @@ __all__ = (
     'PyccelPyObject',
     'PyccelPyClassType',
     'PyccelPyTypeObject',
+    'Py_ssize_t',
     'WrapperCustomDataType',
 # --------- CLASSES -----------
     'PyFunctionDef',
@@ -50,6 +56,7 @@ __all__ = (
     'PyModule',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
+    'PyArgumentError',
     'PyBuildValueNode',
     'PyCapsule_New',
     'PyCapsule_Import',
@@ -57,6 +64,8 @@ __all__ = (
     'PyModule_Create',
     'PyModule_AddObject',
     'PyModInitFunc',
+    'Py_ssize_t_Cast',
+    'PyTuple_Pack',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -64,17 +73,39 @@ __all__ = (
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
-    'PyObject_TypeCheck',
+    'PyType_Ready',
     'PySys_GetObject',
     'PyUnicode_FromString',
-    'PyList_GetItem',
-    'PyList_SetItem',
     'PyErr_Occurred',
     'PyErr_SetString',
     'PyAttributeError',
     'PyNotImplementedError',
     'PyTypeError',
     'PyObject_TypeCheck',
+    'PyList_New',
+    'PyList_Append',
+    'PyList_GetItem',
+    'PyList_SetItem',
+    'PyList_Size',
+    'PyList_Check',
+    'PyList_Clear',
+    'PyTuple_New',
+    'PyTuple_Check',
+    'PyTuple_Size',
+    'PyTuple_GetItem',
+    'PyTuple_SetItem',
+    'PySet_New',
+    'PySet_Add',
+    'PySet_Check',
+    'PySet_Size',
+    'PySet_Clear',
+    'PyObject_GetIter',
+    'PyIter_Next',
+    'PyDict_New',
+    'PyDict_SetItem',
+    'PyUnicode_AsUTF8',
+    'PyUnicode_Check',
+    'PyUnicode_GetLength',
 )
 
 #-------------------------------------------------------------------
@@ -119,6 +150,16 @@ class WrapperCustomDataType(CustomDataType):
     """
     __slots__ = ()
     _name = 'pycustomclasstype'
+
+class Py_ssize_t(FixedSizeType):
+    """
+    Class representing Python's Py_ssize_t type.
+
+    Class representing Python's Py_ssize_t type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PrimitiveIntegerType()
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -267,7 +308,7 @@ class PyBuildValueNode(PyccelFunction):
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, result_args = ()):
@@ -312,8 +353,7 @@ class PyModule_AddObject(PyccelFunction):
     _class_type = PythonNativeInt()
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, LiteralString):
-            raise TypeError("Name must be a string")
+        assert isinstance(name.dtype, CharType)
         if not isinstance(variable, Variable) or \
                 variable.dtype not in (PyccelPyObject(), PyccelPyClassType()):
             raise TypeError("Variable must be a PyObject Variable")
@@ -357,7 +397,7 @@ class PyModule_Create(PyccelFunction):
     """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, module_def_name):
@@ -397,7 +437,7 @@ class PyCapsule_New(PyccelFunction):
     """
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
-    _shape = ()
+    _shape = None
     _class_type = PyccelPyObject()
 
     def __init__(self, API_var, module_name):
@@ -445,7 +485,7 @@ class PyCapsule_Import(PyccelFunction):
     """
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
-    _shape = ()
+    _shape = None
     _class_type = BindCPointer()
 
     def __init__(self, module_name):
@@ -510,8 +550,8 @@ class PyModule(Module):
         self._external_funcs = external_funcs
         self._declarations = declarations
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
+            self._import_func = FunctionDef(f'{name}_import', (), (),
+                            FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -718,7 +758,8 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func', '_properties')
+                 '_new_func', '_properties', '_magic_methods')
+    _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -727,6 +768,7 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         self._properties = ()
+        self._magic_methods = ()
         variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
                      Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
                      Variable(PythonNativeBool(), 'is_alias')]
@@ -819,6 +861,32 @@ class PyClassDef(ClassDef):
         """
         return self._properties
 
+    def add_new_magic_method(self, method):
+        """
+        Add a new magic method to the current class.
+
+        Add a new magic method to the current ClassDef.
+
+        Parameters
+        ----------
+        method : FunctionDef
+            The Method that will be added.
+        """
+
+        if not isinstance(method, PyFunctionDef):
+            raise TypeError("Method must be FunctionDef")
+        method.set_current_user_node(self)
+        self._magic_methods += (method,)
+
+    @property
+    def magic_methods(self):
+        """
+        Get the magic methods describing methods.
+
+        Get the magic methods describing methods such as __add__.
+        """
+        return self._magic_methods
+
 #-------------------------------------------------------------------
 
 class PyGetSetDefElement(PyccelAstNode):
@@ -843,10 +911,8 @@ class PyGetSetDefElement(PyccelAstNode):
     _attribute_nodes = ('_getter', '_setter', '_docstring')
     __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
     def __init__(self, python_name, getter, setter, docstring):
-        if not isinstance(getter, PyFunctionDef):
-            raise TypeError("Getter should be a PyFunctionDef")
-        if not isinstance(setter, PyFunctionDef):
-            raise TypeError("Setter should be a PyFunctionDef")
+        assert isinstance(getter, PyFunctionDef)
+        assert isinstance(setter, PyFunctionDef) or setter is None
         self._python_name = python_name
         self._getter = getter
         self._setter = setter
@@ -917,7 +983,7 @@ class PyModInitFunc(FunctionDef):
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
-        super().__init__(name, (), (), body, scope=scope)
+        super().__init__(name, (), body, scope=scope)
 
     @property
     def declarations(self):
@@ -926,8 +992,109 @@ class PyModInitFunc(FunctionDef):
 
         Returns the declarations of the variables.
         """
-        return [Declare(v, static=(v in self._static_vars)) \
+        return [Declare(v, static=(v in self._static_vars),
+                        value = (Nil() if isinstance(v.class_type, (VoidType, BindCPointer)) else None)) \
                 for v in self.scope.variables.values()]
+
+class Py_ssize_t_Cast(PythonInt):
+    """
+    A class for casting integers to Python's Py_ssize_t type.
+
+    A class for casting integers to Python's Py_ssize_t type.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
+    """
+    __slots__ = ()
+    _static_type = Py_ssize_t()
+    _class_type = Py_ssize_t()
+    name = 'Py_ssize_t'
+
+
+class PyTuple_Pack(PyccelFunction):
+    """
+    A class representing a call to Python's PyTuple_Pack function.
+
+    A class representing a call to Python's PyTuple_Pack function. A class
+    is used instead of a FunctionDef as the number of arguments is variable.
+    A PyTuple_Pack is described here:
+    <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>
+
+    Parameters
+    ----------
+    *args : PyccelAstNode
+        The arguments that should be packed into the tuple.
+    """
+    __slots__ = ()
+    _class_type = PyccelPyObject()
+    _shape = None
+
+class PyArgumentError(PyccelAstNode):
+    """
+    Class to display errors related to arguments.
+
+    Class to display errors related to arguments. This class helps
+    format the arguments to display the type of the received argument.
+
+    Parameters
+    ----------
+    error_type : Variable
+        A Variable containing the error type to be raised. E.g. PyTypeError.
+    error_msg : str
+        The message to be displayed containing f-string style type indicators.
+    **kwargs : dict[str, Variable]
+        The arguments whose types will be printed.
+    """
+    __slots__ = ('_error_type', '_error_msg', '_args')
+    _attribute_nodes = ('_args',)
+
+    def __init__(self, error_type, error_msg : str, **kwargs):
+        assert isinstance(error_type, Variable)
+        assert isinstance(error_msg, str)
+        args = []
+        # Find all expressions of the style '{type(var_name)}' in the error message
+        type_indicators = re.findall(r'{type\([a-zA-Z0-9_]+\)}', error_msg)
+        # Save the error message, replacing type indicators with the format string
+        self._error_msg = re.sub(r'{type\([a-zA-Z0-9_]+\)}', '%V', error_msg)
+        # Find the relevant arguments for each type indicator
+        for t in type_indicators:
+            var_name = t.removeprefix('{type(').removesuffix(')}')
+            args.append(ObjectAddress(kwargs[var_name]))
+
+        self._args = tuple(args)
+        self._error_type = error_type
+        super().__init__()
+
+    @property
+    def error_type(self):
+        """
+        The error type that should be raised.
+
+        The error type that should be raised.
+        """
+        return self._error_type
+
+    @property
+    def error_msg(self):
+        """
+        The error message that should be formatted.
+
+        The error message that should be formatted.
+        """
+        return self._error_msg
+
+    @property
+    def args(self):
+        """
+        The arguments whose types are printed in the error message.
+
+        The arguments whose types are printed in the error message.
+        These arguments are displayed in the order they appear in
+        the error message.
+        """
+        return self._args
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
@@ -943,47 +1110,30 @@ Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_INCREF
 Py_INCREF = FunctionDef(name = 'Py_INCREF',
                         body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [])
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [])
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
 
 # https://docs.python.org/3/c-api/type.html#c.PyType_Ready
 PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(PythonNativeInt(), '_'))])
+                        results = FunctionDefResult(Variable(PythonNativeInt(), '_')))
 
 # https://docs.python.org/3/c-api/sys.html#PySys_GetObject
 PySys_GetObject = FunctionDef(name = 'PySys_GetObject',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(StringType(), name='_'))],
-                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
+                        results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
 
 # https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FromString
 PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(StringType(), name='_'))],
-                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
-
-# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
-PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i'))],
-                        results = [FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias'))])
-
-# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
-PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(CNativeInt(), name='i')),
-                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
-                        results = [])
+                        results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
 
 #-------------------------------------------------------------------
 
@@ -993,6 +1143,7 @@ pytype_parse_registry = {
     PythonNativeComplex() : 'O',
     PythonNativeBool()    : 'p',
     StringType()          : 's',
+    CharType()            : 's',
     PyccelPyObject()      : 'O',
     }
 
@@ -1031,20 +1182,17 @@ def C_to_Python(c_object):
     FunctionDef
         The function which casts the C object to Python.
     """
-    if c_object.rank != 0:
-        cast_function = 'ndarray_to_pyarray'
-        memory_handling = 'stack'
-    else:
-        try :
-            cast_function = c_to_py_registry[c_object.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-        memory_handling = 'alias'
+    assert c_object.rank == 0
+    try :
+        cast_function = c_to_py_registry[c_object.dtype]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    memory_handling = 'alias'
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling, new_class = Variable))],
-                       results   = [FunctionDefResult(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))])
+                       results   = FunctionDefResult(Variable(PyccelPyObject(), name = 'o', memory_handling='alias')))
 
     return cast_func
 
@@ -1064,14 +1212,13 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [FunctionDefResult(Variable(PyccelPyObject(), name = 'r', memory_handling = 'alias'))],
+                             results   = FunctionDefResult(Variable(PyccelPyObject(), name = 'r', memory_handling = 'alias')),
                              body      = [])
 
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o')),
-                           FunctionDefArgument(Variable(StringType(), name = 's'))],
-              results   = [])
+                           FunctionDefArgument(Variable(CharType(), name = 's', memory_handling='alias'))])
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
@@ -1080,31 +1227,208 @@ PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),
                          FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
-            results = [FunctionDefResult(Variable(PythonNativeBool(), 'r'))],
+            results = FunctionDefResult(Variable(PythonNativeBool(), 'r')),
             body = [])
 
+#-------------------------------------------------------------------
+#                          List functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_New
 PyList_New = FunctionDef(name = 'PyList_New',
                     arguments = [FunctionDefArgument(Variable(PythonNativeInt(), 'size'), value = LiteralInteger(0))],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias')),
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Append
 PyList_Append = FunctionDef(name = 'PyList_Append',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PythonNativeInt(), 'i'))],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias')),
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_Size
 PyList_Size = FunctionDef(name = 'PyList_Size',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
                     body = [])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
+PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = FunctionDefResult(Variable(CNativeInt(), 'i')))
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_Check
+PyList_Check = FunctionDef(name = 'PyList_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
+                    body = [])
+
+class PyList_Clear(TypedAstNode):
+    """
+    A class representing a call to list.clear() in the wrapper.
+
+    A class representing a call to list.clear() in the wrapper.
+    There is no simple method to describe this operation before
+    Python 3.13.
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list that must be emptied.
+    """
+    __slots__ = ('_list_obj',)
+    _attribute_nodes = ('_list_obj',)
+    _class_type = PythonNativeInt()
+    _shape = ()
+
+    def __init__(self, list_obj):
+        self._list_obj = list_obj
+        super().__init__()
+
+    @property
+    def list_obj(self):
+        """
+        The list that must be emptied.
+
+        The list that must be emptied.
+        """
+        return self._list_obj
+
+#-------------------------------------------------------------------
+#                         Tuple functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_New
+PyTuple_New = FunctionDef(name = 'PyTuple_New',
+                    arguments = [FunctionDefArgument(Variable(PythonNativeInt(), 'size'), value = LiteralInteger(0))],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'tuple', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Check
+PyTuple_Check = FunctionDef(name = 'PyTuple_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Size
+PyTuple_Size = FunctionDef(name = 'PyTuple_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'tuple', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_GetItem
+PyTuple_GetItem = FunctionDef(name = 'PyTuple_GetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='tuple', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i'))],
+                        results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
+
+# https://docs.python.org/3/c-api/tuple.html#c.PyTuple_SetItem
+PyTuple_SetItem = FunctionDef(name = 'PyTuple_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(PythonNativeInt(), name='i')),
+                                     FunctionDefArgument(Variable(PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = FunctionDefResult(Variable(CNativeInt(), 'i')))
+
+#-------------------------------------------------------------------
+#                         Set functions
+#-------------------------------------------------------------------
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_New
+PySet_New = FunctionDef(name = 'PySet_New',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'iterable', memory_handling='alias'), value = Nil())],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Add
+PySet_Add = FunctionDef(name = 'PySet_Add',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Check
+PySet_Check = FunctionDef(name = 'PySet_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Size
+PySet_Size = FunctionDef(name = 'PySet_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'set', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/object.html#c.PyObject_GetIter
+PyObject_GetIter = FunctionDef(name = 'PyObject_GetIter',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
+
+# https://docs.python.org/3/c-api/set.html#c.PySet_Clear
+PySet_Clear = FunctionDef(name = 'PySet_Clear',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='set', memory_handling='alias'))],
+                        results = FunctionDefResult(Variable(PythonNativeInt(), 'i')))
+
+# https://docs.python.org/3/c-api/iter.html#c.PyIter_Check
+PyIter_Next = FunctionDef(name = 'PyIter_Next',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name='iter', memory_handling='alias'))],
+                        results = FunctionDefResult(Variable(PyccelPyObject(), name='o', memory_handling='alias')))
+
+#-------------------------------------------------------------------
+#                         Dict functions
+#-------------------------------------------------------------------
+
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_New
+PyDict_New = FunctionDef(name = 'PyDict_New',
+                    arguments = [],
+                    results = FunctionDefResult(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/dict.html#c.PyDict_SetItem
+PyDict_SetItem = FunctionDef(name = 'PyDict_SetItem',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'dict', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'key', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'val', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'i')),
+                    body = [])
+
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_AsUTF8
+PyUnicode_AsUTF8 = FunctionDef(name = 'PyUnicode_AsUTF8',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'unicode', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CharType(), 'str', memory_handling='alias')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_Check
+PyUnicode_Check = FunctionDef(name = 'PyUnicode_Check',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(CNativeInt(), 'out')),
+                    body = [])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_GetLength
+PyUnicode_GetLength = FunctionDef(name = 'PyUnicode_GetLength',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'str', memory_handling='alias'))],
+                    results = FunctionDefResult(Variable(PythonNativeInt(), 'len')),
+                    body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

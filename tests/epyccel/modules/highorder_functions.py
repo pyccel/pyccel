@@ -1,78 +1,61 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function function(int)
-def function(a):
+def function(a : int):
     return a
 
-#$ header function f1(int)
-def f1(a):
+def f1(a : int):
     return a
 
-#$ header function f2(int)
-def f2(a):
+def f2(a : int):
     return a * 2
 
-#$ header function f3(int)
-def f3(a):
+def f3(a : int):
     return a * 5
 
-#$ header function f4(int, float)
-def f4(a, b):
+def f4(a : int, b : float):
     return a + b
 
-#$ header function f5(float, float, float)
-def f5(a, b, c):
+def f5(a : float, b : float, c : float):
     return a * b + c
 
-#$ header function f6(int, int)
-def f6(a, b):
+def f6(a : int, b : int):
     return a * 5 + b
 
-#$ header function f7(float, float)
-def f7(a, b):
+def f7(a : float, b : float):
     return a * 5 + b
 
-#$ header function f8()
 def f8():
     return 0.5
 
-#$ header function f9()
 def f9():
     return 0.5, 0.3
 
-#$ header function high_int_1((int)(int), int)
-def high_int_1(function, a):
+def high_int_1(function : '(int)(int)', a : int):
     x = function(a)
     return x
 
-#$ header function high_int_int_1((int)(int), (int)(int), int)
-def high_int_int_1(function1, function2, a):
+def high_int_int_1(function1 : '(int)(int)', function2 : '(int)(int)', a : int):
     x = function1(a)
     y = function2(a)
     return x + y
 
-#$ header function high_float_1((float)(int, float), int, float)
-def high_float_1(function, a, b):
+def high_float_1(function : '(float)(int, float)', a : int, b : float):
     x = function(a, b)
     return x
 
-#$ header function high_float_2((float)(float, float), float, float)
-def high_float_2(function, a, b):
+def high_float_2(function : '(float)(float, float)', a : float, b : float):
     x = function(a, b)
     return x
 
-#$ header function high_float_3((float)())
-def high_float_3(function):
+def high_float_3(function : '(float)()'):
     x = function()
     return x
 
-#$ header function high_valuedarg_1(int, (int)(int))
-def high_valuedarg_1(a, function=f1):
+def high_valuedarg_1(a : int, function : '(int)(int)' = f1):
     x = function(a)
     return x
 
-#$ header function high_float_float_int_1((float)(float, float), (float)(int, float), (int)(int))
-def high_float_float_int_1(func1, func2, func3):
+def high_float_float_int_1(func1 : '(float)(float, float)', func2 : '(float)(int, float)', func3 : '(int)(int)'):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
@@ -80,8 +63,7 @@ def high_float_4(function : '(float)()'):
     x = function()
     return x
 
-#$ header function high_float_5((float,float)())
-def high_float_5(function):
+def high_float_5(function : '(tuple[float,float])()'):
     x,y = function()
     return x+y
 
@@ -93,37 +75,30 @@ def high_float_float_int_2(func1 : '(float)(float, float)', func2 : '(float)(int
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
-#$ header function test_int_1()
 def test_int_1():
     x = high_int_1(f1, 0)
     return x
 
-#$ header function test_int_int_1()
 def test_int_int_1():
     x = high_int_int_1(f1, f2, 10)
     return x
 
-#$ header function test_float_1()
 def test_float_1():
     x = high_float_1(f4, 10, 10.5)
     return x
 
-#$ header function test_float_2()
 def test_float_2():
     x = high_float_2(f7, 999.11, 10.5)
     return x
 
-#$ header function test_float_3()
 def test_float_3():
     x = high_float_3(f8)
     return x
 
-#$ header function test_valuedarg_1()
 def test_valuedarg_1():
     x = high_valuedarg_1(2)
     return x
 
-#$ header function test_float_float_int_1()
 def test_float_float_int_1():
     x = high_float_float_int_1(f7, f4, f3)
     return x
@@ -132,7 +107,6 @@ def test_float_4():
     x = high_float_4(f8)
     return x
 
-#$ header function test_float_5()
 def test_float_5():
     x = high_float_5(f9)
     return x
@@ -156,7 +130,7 @@ def euler (dydt: '()(float, const float[:], float[:])',
         dydt ( t[i], y[i,:], y[i+1,:] )
         y[i+1,:] = y[i,:] + dt * y[i+1,:]
 
-def predator_prey_deriv ( t: 'float', rf: 'float[:]', out: 'float[:]' ):
+def predator_prey_deriv ( t: 'float', rf: 'const float[:]', out: 'float[:]' ):
 
     r = rf[0]
     f = rf[1]

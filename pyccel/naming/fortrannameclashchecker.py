@@ -38,14 +38,15 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             'target', 'use', 'while', 'where', 'elemental', 'forall',
             'pure', 'abstract', 'associate', 'asynchronous', 'bind',
             'class', 'deferred', 'enum', 'enumerator', 'extends',
-            'final', 'flush', 'generic', 'import', 'non_overrideable',
+            'final', 'flush', 'generic', 'import', 'non_overridable',
             'nopass', 'pass', 'protected', 'value', 'volatile',
             'wait', 'codimension', 'concurrent', 'contiguous',
             'critical', 'error', 'submodule', 'sync', 'lock',
             'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
-            'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer', 'c_ptr'])
+            'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer',
+            'c_ptr', 'c_malloc', 'storage_size', 'c_size_t'])
 
     def has_clash(self, name, symbols):
         """
@@ -91,9 +92,10 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            # Ignore magic methods
+        if name in ('__init__', '__del__'):
             return name
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
         name = self._get_collisionless_name(name, symbols)

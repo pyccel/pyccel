@@ -130,6 +130,15 @@ def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
     return res
 
 # ...
+def enumerate_on_1d_array_with_tuple(z : 'int[:]'):
+
+    res = 0
+    for v in enumerate( z ):
+        res += v[0]*v[1]
+
+    return res
+
+# ...
 def zip_prod(m : int):
 
     x = [  i for i in range(m)]
@@ -254,4 +263,23 @@ def less_than_100(n : int):
             return True
     return False
 
+def for_expression():
+    import numpy as np
+    c = np.array([1,2,3,4,5])
+    d = np.array([2.0,3.0,1.0,9.0,11.0])
+    sum_e = 0.0
+    for ei in c+d:
+        sum_e = ei
 
+    return sum_e
+
+def for_lists_of_lists():
+    a = [[1,2], [3,4]]
+    b = [[5,6], [7,8]]
+    c = [0, 0]
+    for ai, bi in zip(a, b):
+        for i in range(2):
+            c[i] = ai[i] + bi[i]
+            bi[i] = -1
+
+    return c[0], c[1], b[0][0], b[0][1], b[1][0], b[1][1]

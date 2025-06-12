@@ -5,11 +5,29 @@
 
 module pyc_math_f90
 
-use ISO_C_BINDING
-
+  use, intrinsic :: ISO_C_Binding, only : i32 => C_INT32_T, &
+         i64 => C_INT64_T, &
+         f32 => C_FLOAT, & 
+         f64 => C_DOUBLE, &
+         c64 => C_DOUBLE_COMPLEX, &
+         c32 => C_FLOAT_COMPLEX
 implicit none
 
-real(C_DOUBLE), parameter, private :: pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+public :: pyc_gcd, &
+          pyc_factorial, &
+          pyc_lcm, &
+          pyc_radians, &
+          pyc_degrees, &
+          amax, &
+          amin, &
+          csgn, &
+          csign, &
+          pyc_bankers_round, &
+          pyc_floor_div
+
+private
+
+real(f64), parameter :: pi = 4.0_f64 * DATAN(1.0_f64)
 
 interface pyc_gcd
     module procedure pyc_gcd_4
@@ -36,6 +54,28 @@ interface amin
     module procedure amin_8
 end interface
 
+interface csgn
+    module procedure numpy_v1_sign_c32
+    module procedure numpy_v1_sign_c64
+end interface csgn
+
+interface csign
+    module procedure numpy_v2_sign_c32
+    module procedure numpy_v2_sign_c64
+end interface csign
+
+interface pyc_bankers_round
+    module procedure pyc_bankers_round_float
+    module procedure pyc_bankers_round_int
+end interface pyc_bankers_round
+
+interface pyc_floor_div
+    module procedure pyc_floor_div_i8
+    module procedure pyc_floor_div_i16
+    module procedure pyc_floor_div_i32
+    module procedure pyc_floor_div_i64
+end interface pyc_floor_div
+
 contains
 
 ! Implementation of math factorial function
@@ -43,12 +83,12 @@ pure function pyc_factorial_4(x) result(fx) ! integers with precision 4
 
     implicit none
 
-    integer(C_INT32_T), value      :: x
-    integer(C_INT32_T)             :: i
-    integer(C_INT32_T)             :: fx
+    integer(i32), value      :: x
+    integer(i32)             :: i
+    integer(i32)             :: fx
 
-    fx = 1_C_INT32_T
-    do i = 2_C_INT32_T, x
+    fx = 1_i32
+    do i = 2_i32, x
         fx = fx * i
     enddo
     return
@@ -59,12 +99,12 @@ pure function pyc_factorial_8(x) result(fx) ! integers with precision 8
 
     implicit none
 
-    integer(C_INT64_T), value       :: x
-    integer(C_INT64_T)              :: fx
-    integer(C_INT64_T)              :: i
+    integer(i64), value       :: x
+    integer(i64)              :: fx
+    integer(i64)              :: i
 
-    fx = 1_C_INT64_T
-    do i = 2_C_INT64_T, x
+    fx = 1_i64
+    do i = 2_i64, x
         fx = fx * i
     enddo
 
@@ -75,12 +115,12 @@ pure function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
 
     implicit none
 
-    integer(C_INT32_T), value      :: a, b
-    integer(C_INT32_T)             :: x, y
-    integer(C_INT32_T)             :: gcd
+    integer(i32), value      :: a, b
+    integer(i32)             :: x, y
+    integer(i32)             :: gcd
 
-    x = a
-    y = b
+    x = MERGE(a, -a, a > 0)
+    y = MERGE(b, -b, b > 0)
     do while (y > 0)
         x = MOD(x, y)
         x = IEOR(x, y)
@@ -96,12 +136,12 @@ pure function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
 
     implicit none
 
-    integer(C_INT64_T), value       :: a, b
-    integer(C_INT64_T)              :: x, y
-    integer(C_INT64_T)              :: gcd
+    integer(i64), value       :: a, b
+    integer(i64)              :: x, y
+    integer(i64)              :: gcd
 
-    x = a
-    y = b
+    x = MERGE(a, -a, a > 0)
+    y = MERGE(b, -b, b > 0)
     do while (y > 0)
         x = MOD(x, y)
         x = IEOR(x, y)
@@ -118,10 +158,12 @@ pure function pyc_lcm_4(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT32_T), value      :: a
-    integer(C_INT32_T), value      :: b
-    integer(C_INT32_T)             :: lcm
+    integer(i32), value      :: a
+    integer(i32), value      :: b
+    integer(i32)             :: lcm
 
+    a = MERGE(a, -a, a > 0)
+    b = MERGE(b, -b, b > 0)
     lcm = a / pyc_gcd(a, b) * b
     return
 
@@ -131,10 +173,12 @@ pure function pyc_lcm_8(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT64_T), value      :: a
-    integer(C_INT64_T), value      :: b
-    integer(C_INT64_T)             :: lcm
+    integer(i64), value      :: a
+    integer(i64), value      :: b
+    integer(i64)             :: lcm
 
+    a = MERGE(a, -a, a > 0)
+    b = MERGE(b, -b, b > 0)
     lcm = a / pyc_gcd(a, b) * b
     return
 
@@ -145,10 +189,10 @@ pure function pyc_radians(deg) result(rad)
 
     implicit none
 
-    real(C_DOUBLE), value     :: deg
-    real(C_DOUBLE)            :: rad
+    real(f64), value     :: deg
+    real(f64)            :: rad
 
-    rad = deg * (pi / 180.0_C_DOUBLE)
+    rad = deg * (pi / 180.0_f64)
     return
 
 end function pyc_radians
@@ -158,10 +202,10 @@ pure function pyc_degrees(rad) result(deg)
 
     implicit none
 
-    real(C_DOUBLE), value     :: rad
-    real(C_DOUBLE)            :: deg
+    real(f64), value     :: rad
+    real(f64)            :: deg
 
-    deg = rad * (180.0_C_DOUBLE / pi)
+    deg = rad * (180.0_f64 / pi)
     return
 
 end function pyc_degrees
@@ -171,16 +215,16 @@ function amax_4(arr) result(max_value)
 
     implicit none
 
-    complex( C_FLOAT_COMPLEX)                :: max_value
-    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
-    complex( C_FLOAT_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c32)                :: max_value
+    complex(c32), intent(in)    :: arr(0:)
+    complex(c32)                :: a
+    integer(i64)                       :: current_value
 
-    max_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    max_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_FLOAT) > Real(max_value, C_FLOAT) .or. (Real(a, C_FLOAT) == &
-            Real(max_value, C_FLOAT) .and. aimag(a) > aimag(max_value &
+      if (Real(a, f32) > Real(max_value, f32) .or. (Real(a, f32) == &
+            Real(max_value, f32) .and. aimag(a) > aimag(max_value &
             ))) then
         max_value = a
       end if
@@ -193,16 +237,16 @@ function amax_4(arr) result(max_value)
 
     implicit none
 
-    complex(C_DOUBLE_COMPLEX)                :: max_value
-    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
-    complex(C_DOUBLE_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c64)                :: max_value
+    complex(c64), intent(in)    :: arr(0:)
+    complex(c64)                :: a
+    integer(i64)                       :: current_value
 
-    max_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    max_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_DOUBLE) > Real(max_value, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
-            Real(max_value, C_DOUBLE) .and. aimag(a) > aimag(max_value &
+      if (Real(a, f64) > Real(max_value, f64) .or. (Real(a, f64) == &
+            Real(max_value, f64) .and. aimag(a) > aimag(max_value &
             ))) then
         max_value = a
       end if
@@ -216,16 +260,16 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex( C_FLOAT_COMPLEX)                :: min_value
-    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
-    complex( C_FLOAT_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c32)                :: min_value
+    complex(c32), intent(in)    :: arr(0:)
+    complex(c32)                :: a
+    integer(i64)                       :: current_value
 
-    min_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    min_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_FLOAT) < Real(min_value, C_FLOAT) .or. (Real(a, C_FLOAT) == &
-            Real(min_value, C_FLOAT) .and. aimag(a) < aimag(min_value &
+      if (Real(a, f32) < Real(min_value, f32) .or. (Real(a, f32) == &
+            Real(min_value, f32) .and. aimag(a) < aimag(min_value &
             ))) then
         min_value = a
       end if
@@ -238,16 +282,16 @@ function amin_4(arr) result(min_value)
 
     implicit none
 
-    complex(C_DOUBLE_COMPLEX)                :: min_value
-    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
-    complex(C_DOUBLE_COMPLEX)                :: a
-    integer(C_INT64_T)                       :: current_value
+    complex(c64)                :: min_value
+    complex(c64), intent(in)    :: arr(0:)
+    complex(c64)                :: a
+    integer(i64)                       :: current_value
 
-    min_value = arr(0_C_INT64_T)
-    do current_value = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+    min_value = arr(0_i64)
+    do current_value = 1_i64, size(arr, kind=i64) - 1_i64
       a = arr(current_value)
-      if (Real(a, C_DOUBLE) < Real(min_value, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
-            Real(min_value, C_DOUBLE) .and. aimag(a) < aimag(min_value &
+      if (Real(a, f64) < Real(min_value, f64) .or. (Real(a, f64) == &
+            Real(min_value, f64) .and. aimag(a) < aimag(min_value &
             ))) then
         min_value = a
       end if
@@ -255,5 +299,160 @@ function amin_4(arr) result(min_value)
     return
 
   end function amin_8
+
+
+  elemental function numpy_v1_sign_c32(x) result(Out_0001)
+
+    implicit none
+
+    complex(c32) :: Out_0001
+    complex(c32), value :: x
+    logical :: real_ne_zero ! Condition for x.real different than 0
+    logical :: imag_ne_zero ! Condition for x.imag different than 0
+    real(f32) :: real_sign ! np.sign(x.real)
+    real(f32) :: imag_sign ! np.sign(x.imag)
+
+    real_ne_zero = (real(x) .ne. 0._f32)
+    imag_ne_zero = (aimag(x) .ne. 0._f32)
+    real_sign = sign(1._f32, real(x))
+    imag_sign = sign(merge(1._f32, 0._f32, imag_ne_zero), aimag(x))
+
+    Out_0001 = merge(real_sign, imag_sign, real_ne_zero)
+    return
+
+  end function numpy_v1_sign_c32
+  
+  elemental function numpy_v1_sign_c64(x) result(Out_0001)
+
+    implicit none
+
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
+    logical :: real_ne_zero ! Condition for x.real different than 0
+    logical :: imag_ne_zero ! Condition for x.imag different than 0
+    real(f64) :: real_sign ! np.sign(x.real)
+    real(f64) :: imag_sign ! np.sign(x.imag)
+
+    real_ne_zero = (real(x) .ne. 0._f64)
+    imag_ne_zero = (aimag(x) .ne. 0._f64)
+    real_sign = sign(1._f64, real(x))
+    imag_sign = sign(merge(1._f64, 0._f64, imag_ne_zero), aimag(x))
+
+    Out_0001 = merge(real_sign, imag_sign, real_ne_zero)
+    return
+
+  end function numpy_v1_sign_c64
+  
+  elemental function numpy_v2_sign_c32(x) result(Out_0001)
+    implicit none
+
+    complex(c32) :: Out_0001
+    complex(c32), value :: x
+
+    real(f32) :: abs_val
+
+    abs_val = abs(x)
+    if (abs_val == 0) then
+      Out_0001 = 0._c32
+    else
+      Out_0001 = x / abs_val
+    end if
+
+  end function numpy_v2_sign_c32
+
+  elemental function numpy_v2_sign_c64(x) result(Out_0001)
+    implicit none
+
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
+
+    real(f64) :: abs_val
+
+    abs_val = abs(x)
+    if (abs_val == 0) then
+      Out_0001 = 0._c64
+    else
+      Out_0001 = x / abs_val
+    end if
+
+  end function numpy_v2_sign_c64
+
+pure function pyc_bankers_round_float(arg, ndigits) result(rnd)
+
+    implicit none
+
+    real(f64), value     :: arg
+    integer(i64), value :: ndigits
+    real(f64)            :: rnd
+
+    real(f64) :: diff
+
+    arg = arg * 10._f64**ndigits
+
+    rnd = nint(arg, kind=i64)
+
+    diff = arg - rnd
+
+    if (ndigits <= 0 .and. (diff == 0.5_f64 .or. diff == -0.5_f64)) then
+        rnd = nint(arg*0.5_f64, kind=i64)*2_i64
+    end if
+
+    rnd = rnd * 10._f64**(-ndigits)
+
+end function pyc_bankers_round_float
+
+pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
+
+    implicit none
+
+    integer(i64), value :: arg
+    integer(i64), value :: ndigits
+    integer(i64)        :: rnd
+
+    integer(i64) :: val
+    integer(i64) :: mul_fact
+    integer(i64) :: pivot_point
+    integer(i64) :: remainder
+
+    if (ndigits >= 0) then
+        rnd = arg
+    else
+        mul_fact = 10_i64**(-ndigits)
+        pivot_point = sign(5_i64*10_i64**(-ndigits-1_i64), arg)
+        remainder = modulo(arg, mul_fact)
+        if ( remainder == pivot_point ) then
+            val = (mul_fact - remainder) / mul_fact
+            rnd = (val + IAND(val, 1_i64)) * mul_fact
+        else
+            rnd = ((arg + pivot_point) / mul_fact) * mul_fact
+        endif
+    endif
+
+end function pyc_bankers_round_int
+
+elemental pure integer(kind=1) function pyc_floor_div_i8(x, y) result(res)
+  implicit none
+  integer(kind=1), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i8
+
+elemental pure integer(kind=2) function pyc_floor_div_i16(x, y) result(res)
+  implicit none
+  integer(kind=2), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i16
+
+elemental pure integer(kind=4) function pyc_floor_div_i32(x, y) result(res)
+  implicit none
+  integer(kind=4), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i32
+
+elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
+  implicit none
+  integer(kind=8), intent(in) :: x, y
+  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+end function pyc_floor_div_i64
+
 
 end module pyc_math_f90

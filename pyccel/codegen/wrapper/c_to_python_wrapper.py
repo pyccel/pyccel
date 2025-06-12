@@ -8,40 +8,58 @@ Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
 import warnings
-from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
-from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
-from pyccel.ast.builtins      import PythonTuple
+from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
+from pyccel.ast.bind_c        import BindCModule, BindCModuleVariable, BindCVariable
+from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty, BindCArrayType
+from pyccel.ast.builtins      import PythonTuple, PythonRange, PythonLen, PythonSet
+from pyccel.ast.builtins      import VariableIterator, PythonStr, PythonList
+from pyccel.ast.builtin_methods.dict_methods import DictItems
+from pyccel.ast.builtin_methods.list_methods import ListAppend
+from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
-from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
+from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock, For
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
-from pyccel.ast.cwrapper      import PyAttributeError
-from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
+from pyccel.ast.cwrapper      import PyAttributeError, Py_ssize_t, Py_ssize_t_Cast
+from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface, PyTuple_Pack
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
+from pyccel.ast.cwrapper      import PyTuple_Size, PyTuple_Check, PyTuple_New
+from pyccel.ast.cwrapper      import PyTuple_GetItem, PyTuple_SetItem
+from pyccel.ast.cwrapper      import PySet_New, PySet_Add, PyList_Check, PyList_Size
+from pyccel.ast.cwrapper      import PySet_Size, PySet_Check, PyObject_GetIter, PySet_Clear
+from pyccel.ast.cwrapper      import PyIter_Next, PyList_Clear, PyArgumentError
+from pyccel.ast.cwrapper      import PyDict_New, PyDict_SetItem
+from pyccel.ast.cwrapper      import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
+from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import FixedSizeNumericType
+from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
+from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
+from pyccel.ast.datatypes     import HomogeneousContainerType
+from pyccel.ast.datatypes     import TupleType, CharType, StringType
+from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.literals      import LiteralFalse
-from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.literals      import LiteralFalse, convert_to_literal
+from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
+from pyccel.ast.numpy_wrapper import PyArray_DATA
+from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import PyccelPyArrayObject, to_pyarray
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
-from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
+from pyccel.ast.operators     import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
+from pyccel.ast.operators     import PyccelNe
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -50,7 +68,29 @@ from .wrapper                 import Wrapper
 
 errors = Errors()
 
-cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
+cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ())),
+                            Import('ndarrays', Module('ndarrays', (), ()))]
+
+magic_binary_funcs = ('__add__',
+                      '__sub__',
+                      '__mul__',
+                      '__truediv__',
+                      '__pow__',
+                      '__lshift__',
+                      '__rshift__',
+                      '__and__',
+                      '__or__',
+                      '__iadd__',
+                      '__isub__',
+                      '__imul__',
+                      '__itruediv__',
+                      '__ipow__',
+                      '__ilshift__',
+                      '__irshift__',
+                      '__iand__',
+                      '__ior__',
+                      '__getitem__'
+                      )
 
 class CToPythonWrapper(Wrapper):
     """
@@ -68,8 +108,6 @@ class CToPythonWrapper(Wrapper):
     def __init__(self, file_location):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
-        # Indicate if arrays were wrapped.
-        self._wrapping_arrays = False
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
@@ -135,7 +173,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        orig_args = [getattr(a, 'original_function_argument_variable', a.var) for a in args]
+        orig_args = [getattr(a.var, 'original_var', a.var) for a in args]
         is_bound = [getattr(a, 'wrapping_bound_argument', a.bound_argument) for a in args]
         collect_args = [self.get_new_PyObject(o_a.name+'_obj',
                                               dtype = o_a.dtype if b else None)
@@ -200,7 +238,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map[bound_arg] = func_args[0]
 
         # Create the list of argument names
-        arg_names = [getattr(a, 'original_function_argument_variable', a.var).name for a in args]
+        arg_names = [getattr(a.var, 'original_var', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
@@ -210,7 +248,7 @@ class CToPythonWrapper(Wrapper):
         body = [AliasAssign(py_arg, Py_None) for func_def_arg, py_arg in zip(args, arg_vars) if func_def_arg.has_default]
 
         body.append(keyword_list)
-        body.append(If(IfSection(PyccelNot(parse_node), [Return([self._error_exit_code])])))
+        body.append(If(IfSection(PyccelNot(parse_node), [Return(self._error_exit_code)])))
 
         return func_args, body
 
@@ -236,11 +274,11 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.update(dict(zip(results, collect_results)))
         return collect_results
 
-    def _get_check_function(self, py_obj, arg, raise_error):
+    def _get_type_check_condition(self, py_obj, arg, raise_error, body):
         """
-        Get the function which checks if an argument has the expected type.
+        Get the condition which checks if an argument has the expected type.
 
-        Using the c-compatible description of a function argument, determine whether the Python
+        Using the C-compatible description of a function argument, determine whether the Python
         object (with datatype `PyccelPyObject`) holds data which is compatible with the expected
         type. The check is returned along with any errors that may be raised depending upon the
         result and the value of `raise_error`.
@@ -256,10 +294,16 @@ class CToPythonWrapper(Wrapper):
         raise_error : bool
             True if an error should be raised in case of an unexpected type, False otherwise.
 
+        body : list
+            A list describing code where the type check will occur. This allows any necessary code
+            to be inserted into the code block. E.g. code which should be run before the condition
+            can be checked.
+
         Returns
         -------
-        func_call : FunctionCall
-            The function call which checks if the argument has the expected type.
+        type_check_condition : FunctionCall | Variable
+            The function call which checks if the argument has the expected type or the variable
+            indicating if the argument has the expected type.
 
         error_code : tuple of pyccel.ast.basic.PyccelAstNode
             The code which raises any necessary errors.
@@ -269,7 +313,9 @@ class CToPythonWrapper(Wrapper):
         dtype = arg.dtype
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
-            func_call = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
+            type_check_condition = PyObject_TypeCheck(py_obj, python_cls_base.type_object)
+        elif isinstance(dtype, StringType):
+            type_check_condition = PyccelNe(PyUnicode_Check(py_obj), LiteralInteger(0))
         elif rank == 0:
             try :
                 cast_function = check_type_registry[dtype]
@@ -279,10 +325,10 @@ class CToPythonWrapper(Wrapper):
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
+                               results   = FunctionDefResult(Variable(PythonNativeBool(), name = 'v')))
 
-            func_call = FunctionCall(func, [py_obj])
-        else:
+            type_check_condition = func(py_obj)
+        elif isinstance(arg.class_type, NumpyNDArrayType):
             try :
                 type_ref = numpy_dtype_registry[dtype]
             except KeyError:
@@ -297,17 +343,61 @@ class CToPythonWrapper(Wrapper):
             else:
                 flag = numpy_flag_c_contig
 
-            check_func = pyarray_check if raise_error else is_numpy_array
-            # No error code required as the error is raised inside pyarray_check
+            if raise_error:
+                type_check_condition = pyarray_check(CStrStr(LiteralString(arg.name)), py_obj, type_ref,
+                                 LiteralInteger(rank), flag)
+            else:
+                type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag)
 
-            func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+        elif isinstance(arg.class_type, HomogeneousContainerType):
+            # Create type check result variable
+            type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_homog_set')
 
-        if raise_error:
-            message = LiteralString(f"Expected an argument of type {arg.class_type} for argument {arg.name}")
-            python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
+            check_funcs = {'set': PySet_Check,
+                           'tuple': PyTuple_Check,
+                           'list': PyList_Check}
+
+            size_getter = {'set': PySet_Size,
+                           'tuple': PyTuple_Size,
+                           'list': PyList_Size}
+
+            if arg.class_type.name not in check_funcs:
+                return errors.report(f"Wrapping function arguments is not implemented for type {arg.class_type}. "
+                        + PYCCEL_RESTRICTION_TODO, symbol=arg, severity='fatal')
+
+            # Check if the object is a set
+            type_check = PyccelNe(check_funcs[arg.class_type.name](py_obj), LiteralInteger(0))
+
+            # If the set is an object check that the elements have the right type
+            for_scope = self.scope.create_new_loop_scope()
+            size_var = self.scope.get_temporary_variable(PythonNativeInt(), 'size')
+            idx = self.scope.get_temporary_variable(CNativeInt())
+            indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+            iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
+
+            size_assign = Assign(size_var, size_getter[arg.class_type.name](py_obj))
+            iter_assign = AliasAssign(iter_obj, PyObject_GetIter(py_obj))
+            indexed_init = AliasAssign(indexed_py_obj, PyIter_Next(iter_obj))
+            for_body = [indexed_init]
+            internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
+            for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
+            internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
+
+            type_checks = IfSection(type_check, [size_assign, iter_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
+            default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
+            body.append(If(type_checks, default_value))
+        else:
+            errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
+                    symbol=arg, severity='fatal')
+
+        if raise_error and not isinstance(arg.class_type, NumpyNDArrayType):
+            # No error code required for arrays as the error is raised inside pyarray_check
+            python_error = PyArgumentError(PyTypeError,
+                                f"Expected an argument of type {arg.class_type} for argument {arg.name}. Received {{type(arg)}}",
+                                arg = py_obj)
             error_code = (python_error,)
 
-        return func_call, error_code
+        return type_check_condition, error_code
 
     def _get_type_check_function(self, name, args, funcs):
         """
@@ -361,6 +451,7 @@ class CToPythonWrapper(Wrapper):
             A dictionary whose keys are the functions and whose values are the integer keys
             which indicate that the function should be chosen.
         """
+        args = [a.clone(a.name, is_argument = True) for a in args]
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
@@ -375,7 +466,7 @@ class CToPythonWrapper(Wrapper):
         step = 1
         for i, py_arg in enumerate(args):
             # Get the relevant typed arguments from the original functions
-            interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
+            interface_args = [func.arguments[i].var for func in orig_funcs]
             # Get the type key
             interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
@@ -393,16 +484,22 @@ class CToPythonWrapper(Wrapper):
                 # Create the type checks and incrementation of the type_indicator
                 if_blocks = []
                 for index, t in enumerate(possible_types):
-                    check_func_call, _ = self._get_check_function(py_arg, type_to_example_arg[t], False)
+                    check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
-                            [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type for argument {interface_args[0].name}"]),
-                             Return([PyccelUnarySub(LiteralInteger(1))])])))
+                            [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
+                                arg = py_arg),
+                             Return(PyccelUnarySub(LiteralInteger(1)))])))
+            elif not orig_funcs[0].arguments[i].has_default:
+                check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
+                err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
+                if_sec = IfSection(PyccelNot(check_func_call), err_body)
+                body.append(If(if_sec))
 
             # Update the step to ensure unique indices for each argument
             step *= n_possible_types
 
-        body.append(Return([type_indicator]))
+        body.append(Return(type_indicator))
 
         self.exit_scope()
 
@@ -410,8 +507,8 @@ class CToPythonWrapper(Wrapper):
                         "which indicates which function should be called.")
 
         # Build the function
-        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
-                            body, docstring=docstring, scope=func_scope)
+        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], body,
+                            FunctionDefResult(type_indicator), docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
@@ -444,13 +541,12 @@ class CToPythonWrapper(Wrapper):
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
-            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+            func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
         else:
-            func_results = [FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))]
+            func_results = FunctionDefResult(self.scope.get_temporary_variable(self._error_exit_code.class_type, "result"))
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
-                body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
-                                        LiteralString(error_msg)]),
-                        Return([self._error_exit_code])],
+                body = [PyErr_SetString(PyNotImplementedError, CStrStr(LiteralString(error_msg))),
+                        Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
         self.scope.functions[name] = function
@@ -496,9 +592,9 @@ class CToPythonWrapper(Wrapper):
                 python_arg = self._python_object_map[a]
                 if not isinstance(python_arg.dtype, PyccelPyObject):
                     python_arg = ObjectAddress(PointerCast(python_arg, PyList_Append.arguments[1].var))
-                append_call = FunctionCall(PyList_Append, (ref_list, python_arg))
+                append_call = PyList_Append(ref_list, python_arg)
                 body.extend([If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),
-                                          [Return([self._error_exit_code])]))])
+                                          [Return(self._error_exit_code)]))])
         return body
 
     def _incref_return_pointer(self, ref_obj, return_var, orig_var):
@@ -526,18 +622,18 @@ class CToPythonWrapper(Wrapper):
             Any nodes which must be printed to increase reference counts.
         """
         if isinstance(orig_var.class_type, NumpyNDArrayType):
-            save_ref_call = FunctionCall(PyArray_SetBaseObject,
-                                    (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
-                                     ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
-            return [FunctionCall(Py_INCREF, (ref_obj,)),
+            save_ref_call = PyArray_SetBaseObject(
+                    ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
+                    ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var)))
+            return [Py_INCREF(ref_obj),
                     If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, dtype=CNativeInt())),
-                                      [Return([self._error_exit_code])]))]
+                                      [Return(self._error_exit_code)]))]
         elif isinstance(orig_var.dtype, CustomDataType):
             ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
             ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
-            save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
+            save_ref_call = PyList_Append(ref_list, ObjectAddress(PointerCast(ref_obj, ref_list)))
             return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, dtype=CNativeInt())),
-                                      [Return([self._error_exit_code])]))]
+                                      [Return(self._error_exit_code)]))]
         elif isinstance(orig_var.class_type, FixedSizeNumericType):
             return []
         else:
@@ -571,12 +667,12 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             The code which adds the object to the module.
         """
-        add_expr = PyModule_AddObject(module_var, LiteralString(name), obj)
+        add_expr = PyModule_AddObject(module_var, CStrStr(LiteralString(name)), obj)
         if_expr = If(IfSection(PyccelLt(add_expr, LiteralInteger(0)),
-                        [FunctionCall(Py_DECREF, [i]) for i in initialised] +
-                        [Return([self._error_exit_code])]))
+                        [Py_DECREF(i) for i in initialised] +
+                        [Return(self._error_exit_code)]))
         initialised.append(obj)
-        return [if_expr, FunctionCall(Py_INCREF, (obj,))]
+        return [if_expr, Py_INCREF(obj)]
 
     def _build_module_init_function(self, expr, imports):
         """
@@ -621,7 +717,7 @@ class CToPythonWrapper(Wrapper):
 
         module_def_name = self.scope.get_new_name(f'{mod_name}_module')
         body = [AliasAssign(module_var, PyModule_Create(module_def_name)),
-                If(IfSection(PyccelIs(module_var, Nil()), [Return([self._error_exit_code])]))]
+                If(IfSection(PyccelIs(module_var, Nil()), [Return(self._error_exit_code)]))]
 
         initialised = [module_var]
 
@@ -639,16 +735,16 @@ class CToPythonWrapper(Wrapper):
         body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, mod_name)))
         body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
 
-        body.append(FunctionCall(import_array, ()))
+        body.append(import_array())
         import_funcs = [i.source_module.import_func for i in imports if isinstance(i.source_module, PyModule)]
         for i_func in import_funcs:
-            body.append(If(IfSection(PyccelLt(FunctionCall(i_func, ()), ok_code),
-                            [FunctionCall(Py_DECREF, [i]) for i in initialised] +
-                            [Return([self._error_exit_code])])))
+            body.append(If(IfSection(PyccelLt(i_func(), ok_code),
+                            [Py_DECREF(i) for i in initialised] +
+                            [Return(self._error_exit_code)])))
 
         # Call the initialisation function
         if expr.init_func:
-            body.append(FunctionCall(expr.init_func, []))
+            body.append(expr.init_func())
 
         # Save classes to the module variable
         for i,c in enumerate(expr.classes):
@@ -656,10 +752,10 @@ class CToPythonWrapper(Wrapper):
             type_object = wrapped_class.type_object
             class_name = wrapped_class.name
 
-            ready_type = FunctionCall(PyType_Ready, (type_object,))
+            ready_type = PyType_Ready(type_object)
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
-                            [FunctionCall(Py_DECREF, [i]) for i in initialised] +
-                            [Return([self._error_exit_code])]))
+                            [Py_DECREF(i) for i in initialised] +
+                            [Return(self._error_exit_code)]))
             body.append(if_expr)
 
             body.extend(self._add_object_to_mod(module_var, type_object, class_name, initialised))
@@ -674,7 +770,7 @@ class CToPythonWrapper(Wrapper):
             var_name = self.scope.get_python_name(name)
             body.extend(self._add_object_to_mod(module_var, wrapped_var, var_name, initialised))
 
-        body.append(Return([module_var]))
+        body.append(Return(module_var))
 
         self.exit_scope()
 
@@ -721,24 +817,29 @@ class CToPythonWrapper(Wrapper):
 
         ok_code = LiteralInteger(0, dtype=CNativeInt())
         error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
+        self._error_exit_code = error_code
 
         # Create variables to temporarily modify the Python path so the file will be discovered
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
         stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
 
-        body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
-                AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, dtype=CNativeInt())])),
-                FunctionCall(Py_INCREF, [stash_path]),
-                FunctionCall(PyList_SetItem, [current_path,
-                                              LiteralInteger(0, dtype=CNativeInt()),
-                                              FunctionCall(PyUnicode_FromString, [LiteralString(self._file_location)])]),
+        body = [AliasAssign(current_path, PySys_GetObject(CStrStr(LiteralString("path")))),
+                AliasAssign(stash_path, PyList_GetItem(current_path, LiteralInteger(0, dtype=CNativeInt()))),
+                Py_INCREF(stash_path),
+                If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
+                                                PyUnicode_FromString(CStrStr(LiteralString(self._file_location)))),
+                                      PyccelUnarySub(LiteralInteger(1))),
+                             [Return(self._error_exit_code)])),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
-                FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path]),
-                Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
+                If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path),
+                                      PyccelUnarySub(LiteralInteger(1))),
+                             [Return(self._error_exit_code)])),
+                Return(IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code))]
 
         result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
-        import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
+        self._error_exit_code = Nil()
+        import_func = FunctionDef(func_name, (), body, FunctionDefResult(result), is_static=True, scope = func_scope)
 
         return API_var, import_func
 
@@ -775,8 +876,8 @@ class CToPythonWrapper(Wrapper):
 
         alias_val = LiteralTrue() if is_alias else LiteralFalse()
 
-        return [Allocate(class_var, shape=(), status='unallocated'),
-                AliasAssign(ref_list, FunctionCall(PyList_New, ())),
+        return [Allocate(class_var, shape=None, status='unallocated'),
+                AliasAssign(ref_list, PyList_New()),
                 Assign(alias_bool, alias_val)]
 
     def _get_class_allocator(self, class_dtype, func = None):
@@ -808,11 +909,11 @@ class CToPythonWrapper(Wrapper):
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
                               memory_handling='alias')
-        self.scope.insert_variable(self_var)
+        self.scope.insert_variable(self_var, 'self')
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
 
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
 
         # Get the results of the PyFunctionDef
         python_result_var = self.get_new_PyObject('result_obj', class_dtype)
@@ -823,19 +924,19 @@ class CToPythonWrapper(Wrapper):
         body = self._allocate_class_instance(python_result_var, scope, False)
 
         if func:
-            body.append(AliasAssign(c_res, FunctionCall(func, ())))
+            body.append(AliasAssign(c_res, func()))
         else:
             result_name = self.scope.get_new_name('result')
             result = Variable(class_dtype, result_name)
-            body.append(Allocate(c_res, shape=(), status='unallocated',
+            body.append(Allocate(c_res, shape=None, status='unallocated',
                          like = result))
 
-        body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
+        body.append(Return(PointerCast(python_result_var, func_results.var)))
 
         self.exit_scope()
 
-        return PyFunctionDef(func_name, func_args, func_results,
-                             body, scope=func_scope, original_function = None)
+        return PyFunctionDef(func_name, func_args, body, func_results,
+                             scope=func_scope, original_function = None)
 
     def _get_class_initialiser(self, init_function, cls_dtype):
         """
@@ -871,7 +972,7 @@ class CToPythonWrapper(Wrapper):
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in init_function.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in init_function.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
@@ -880,15 +981,11 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in init_function.arguments:
-            func_scope.insert_symbol(a.var.name)
-        for a in getattr(init_function, 'bind_c_arguments', ()):
-            func_scope.insert_symbol(a.original_function_argument_variable.name)
+            a_var = a.var
+            func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
         # Get variables describing the arguments and results that are seen from Python
-        python_args = init_function.bind_c_arguments if is_bind_c_function_def else init_function.arguments
-
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = init_function.arguments
+        python_args = init_function.arguments
 
         # Get the arguments of the PyFunctionDef
         func_args, body = self._unpack_python_args(python_args, cls_dtype)
@@ -898,39 +995,27 @@ class CToPythonWrapper(Wrapper):
         python_result_variable = Variable(CNativeInt(), self.scope.get_new_name(), is_temp = True)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
-        body += [l for a in python_args for l in self._wrap(a)]
+        wrapped_args = [self._wrap(a) for a in python_args]
+        body += [l for a in wrapped_args for l in a['body']]
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+        func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
         body.extend(self._save_referenced_objects(init_function, func_args))
 
         # Call the C-compatible function
-        body.append(FunctionCall(init_function, func_call_args))
-
-        # Deallocate the C equivalent of any array arguments
-        # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
-        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
-        # is an ndarray.
-        for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if orig_var.is_ndarray:
-                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
-                if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
-                else:
-                    body.append(Deallocate(v))
+        body.append(init_function(*func_call_args))
 
         # Pack the Python compatible results of the function into one argument.
-        func_results = [FunctionDefResult(python_result_variable)]
-        body.append(Return([LiteralInteger(0, dtype=CNativeInt())]))
+        func_results = FunctionDefResult(python_result_variable)
+        body.append(Return(LiteralInteger(0, dtype=CNativeInt())))
 
         self.exit_scope()
         for a in python_args:
             if not a.bound_argument:
                 self._python_object_map.pop(a)
 
-        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+        function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
@@ -981,9 +1066,9 @@ class CToPythonWrapper(Wrapper):
         is_alias = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
 
         if isinstance(del_function, BindCFunctionDef):
-            body = [FunctionCall(del_function, [c_obj])]
+            body = [del_function(c_obj)]
         else:
-            body = [FunctionCall(del_function, [c_obj]),
+            body = [del_function(c_obj),
                     Deallocate(c_obj)]
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
@@ -991,18 +1076,148 @@ class CToPythonWrapper(Wrapper):
         ref_attribute = wrapper_scope.find('referenced_objects', 'variables', raise_if_missing = True)
         ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = func_arg)
 
-        body.extend([FunctionCall(Py_DECREF, (ref_list,)),
+        body.extend([Py_DECREF(ref_list),
                      Deallocate(func_arg)])
 
         self.exit_scope()
 
-        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], [], body, scope=func_scope,
+        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
         self.scope.functions[func_name] = function
         self._python_object_map[del_function] = function
 
         return function
+
+    def _get_array_parts(self, orig_var, collect_arg):
+        """
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+
+        Get AST nodes describing the extraction of the data pointer, shape, and strides from a Python array object.
+        These nodes as well as the new objects can then be packed into a structure or passed directly to a function
+        depending on the target language.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list containing the AST nodes which extract the data pointer, shape, and strides.
+             - data : a Variable describing a pointer in which the data is stored.
+             - shape : a Variable describing a stack array in which the shape information is stored.
+             - strides : a Variable describing a stack array in which the strides are stored.
+        """
+        pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
+        data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
+                            memory_handling='alias')
+        shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+                            shape = (orig_var.rank,))
+        stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
+                            shape = (orig_var.rank,))
+        self.scope.insert_variable(data_var)
+        self.scope.insert_variable(shape_var)
+        self.scope.insert_variable(stride_var)
+
+        get_data = AliasAssign(data_var, PyArray_DATA(ObjectAddress(pyarray_collect_arg)))
+        get_strides_and_shape = get_strides_and_shape_from_numpy_array(
+                                        ObjectAddress(collect_arg), shape_var, stride_var)
+
+        body = [get_data, get_strides_and_shape]
+
+        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
+
+    def _call_wrapped_function(self, func, args, results):
+        """
+        Call the wrapped function.
+
+        Call the wrapped function. The call is either a FunctionCall, an Assign or
+        an AliasAssign depending on the number of results and the return type.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        args : iterable[TypedAstNode]
+            The arguments passed to the wrapped function.
+        results : iterable[TypedAstNode]
+            The results returned from the wrapped function.
+
+        Returns
+        -------
+        FunctionCall | Assign | AliasAssign
+            An AST node describing the function call.
+        """
+        n_results = len(results)
+        if n_results == 0:
+            return func(*args)
+        elif isinstance(results, PythonTuple):
+            return Assign(results, func(*args))
+        elif n_results == 1:
+            res = results[0]
+            func_call = func(*args)
+            if func_call.is_alias:
+                if isinstance(res, PointerCast):
+                    res = res.obj
+                if isinstance(res, ObjectAddress):
+                    res = res.obj
+                return AliasAssign(res, func_call)
+            else:
+                return Assign(res, func_call)
+        else:
+            return Assign(results, func(*args))
+
+    def connect_pointer_targets(self, orig_var, python_res, funcdef, is_bind_c):
+        """
+        Get the code to connect pointers to their targets.
+
+        Get the code to connect pointers to their targets. The connection is done via reference
+        counting to ensure that the target is not cleaned by the garbage collector before the
+        pointer.
+
+        Parameters
+        ----------
+        orig_var : Variable
+            The result of the function being wrapped.
+        python_res : Variable
+            The Python accessible result of the function being wrapped.
+        funcdef : FunctionDef
+            The function being wrapped.
+        is_bind_c : bool
+            True if the code is translated from a C-compatible language. False if the
+            translated code is in C.
+
+        Returns
+        -------
+        list
+            Any nodes which must be printed to increase reference counts.
+        """
+        python_args = funcdef.arguments
+        arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+        n_targets = len(arg_targets)
+        if n_targets == 1:
+            collect_arg = self._python_object_map[python_args[arg_targets[0]]]
+            return self._incref_return_pointer(collect_arg, python_res, orig_var)
+        elif n_targets > 1:
+            if isinstance(orig_var.class_type, NumpyNDArrayType):
+                raise errors.report((f"Can't determine the pointer target for the return object {orig_var}. "
+                            "Please avoid calling this function to prevent accidental creation of dangling pointers."),
+                        symbol = getattr(funcdef, 'original_function', funcdef), severity='warning')
+            else:
+                body = []
+                for t in arg_targets:
+                    collect_arg = self._python_object_map[python_args[t]]
+                    body.extend(self._incref_return_pointer(collect_arg, python_res, orig_var))
+                return body
+        return []
 
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1053,7 +1268,6 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod = getattr(expr, 'original_module', expr)
@@ -1079,36 +1293,36 @@ class CToPythonWrapper(Wrapper):
         -------
         PyModule
             The module which can be called from Python.
-
         """
         pymod = self._wrap_Module(expr)
 
         # Add declarations for C-compatible variables
         decs = [Declare(v.clone(v.name.lower()), module_variable=True, external = True) \
-                                    for v in expr.variables if not v.is_private and isinstance(v, BindCVariable)]
+                                    for v in expr.variables if not v.is_private and isinstance(v, BindCModuleVariable)]
         pymod.declarations = decs
 
         external_funcs = []
         # Add external functions for functions wrapping array variables
         for v in expr.variable_wrappers:
             f = v.wrapper_function
-            external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
         for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, f.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         for c in expr.classes:
             m = c.new_func
-            external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+            external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for m in c.methods:
-                external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+                external_funcs.append(FunctionDef(m.name, m.arguments, [], m.results, is_header = True, scope = m.scope))
             for i in c.interfaces:
                 for f in i.functions:
-                    external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+                    external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
             for a in c.attributes:
                 for f in (a.getter, a.setter):
-                    external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
+                    if f:
+                        external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -1153,11 +1367,11 @@ class CToPythonWrapper(Wrapper):
 
 
         # Add the variables to the expected symbols in the scope
-        for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
+        for a in example_func.arguments:
             func_scope.insert_symbol(a.var.name)
 
         # Create necessary arguments
-        python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
+        python_args = example_func.arguments
         func_args, body = self._unpack_python_args(python_args, class_dtype)
 
         # Get python arguments which will be passed to FunctionDefs
@@ -1174,7 +1388,7 @@ class CToPythonWrapper(Wrapper):
 
         self.scope = func_scope
         # Build the body of the function
-        body.append(Assign(type_indicator, FunctionCall(type_check_func, python_arg_objs)))
+        body.append(Assign(type_indicator, type_check_func(*python_arg_objs)))
 
         functions = []
         if_sections = []
@@ -1182,18 +1396,20 @@ class CToPythonWrapper(Wrapper):
             # Add an IfSection calling the appropriate function if the type_indicator matches the index
             wrapped_func = self._python_object_map[func]
             if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
-                                [Return([FunctionCall(wrapped_func, python_arg_objs)])]))
+                                [Return(wrapped_func(*python_arg_objs))]))
             functions.append(wrapped_func)
+        if_sections.append(IfSection(PyccelEq(type_indicator, PyccelUnarySub(LiteralInteger(1))),
+                    [Return(self._error_exit_code)]))
         if_sections.append(IfSection(LiteralTrue(),
-                    [FunctionCall(PyErr_SetString, [PyTypeError, "Unexpected type combination"]),
-                     Return([self._error_exit_code])]))
+                    [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
+                     Return(self._error_exit_code)]))
         body.append(If(*if_sections))
         self.exit_scope()
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
-                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
                                      body,
+                                     FunctionDefResult(self.get_new_PyObject("result", is_temp=True)),
                                      scope=func_scope)
         for a in python_args:
             self._python_object_map.pop(a)
@@ -1202,7 +1418,7 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDef(self, expr):
         """
-        Build a `PyFunctionDef` form a `FunctionDef`.
+        Build a `PyFunctionDef` from a `FunctionDef`.
 
         Create a `PyFunctionDef` which wraps a C-compatible `FunctionDef`.
         The `PyFunctionDef` should take three arguments (`self`, `args`,
@@ -1224,6 +1440,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        original_func_name = original_func.scope.get_python_name(original_func.name)
 
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
@@ -1240,7 +1457,7 @@ class CToPythonWrapper(Wrapper):
                          "Private functions are not accessible from python")
 
         # Handle un-wrappable functions
-        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in expr.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             self.exit_scope()
             warnings.warn("Functions with functions as arguments will not be callable from Python")
             return self._get_untranslatable_function(func_name,
@@ -1249,143 +1466,109 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
-            func_scope.insert_symbol(a.var.name)
-        for a in getattr(expr, 'bind_c_arguments', ()):
-            func_scope.insert_symbol(a.original_function_argument_variable.name)
-        for r in expr.results:
-            func_scope.insert_symbol(r.var.name)
+            a_var = a.var
+            func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         # Get variables describing the arguments and results that are seen from Python
-        python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
-
-        # Get variables describing the arguments and results that must be passed to the function
-        original_c_args = expr.arguments
-        original_c_results = expr.results
+        python_args = expr.arguments
+        python_results = expr.results
 
         # Get the arguments of the PyFunctionDef
-        if in_interface:
-            func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
+        if 'property' in original_func.decorators:
+            func_args = [self.get_new_PyObject('self_obj', dtype = class_dtype),
+                         func_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+            self._python_object_map[python_args[0]] = func_args[0]
+            func_args = [FunctionDefArgument(a) for a in func_args]
             body = []
         else:
-            func_args, body = self._unpack_python_args(python_args, class_dtype)
-            func_args = [FunctionDefArgument(a) for a in func_args]
-
-        # Get the results of the PyFunctionDef
-        python_result_variables = self._get_python_result_variables(python_results)
-        for p_r, c_r in zip(python_result_variables, original_func.results):
-            if isinstance(p_r.dtype, CustomDataType):
-                body.extend(self._allocate_class_instance(p_r, p_r.cls_base.scope, c_r.var.is_alias))
+            if in_interface or original_func_name in magic_binary_funcs or original_func_name == '__len__':
+                func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
+                body = []
+            else:
+                func_args, body = self._unpack_python_args(python_args, class_dtype)
+                func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
-        body += [l for a in python_args for l in self._wrap(a)]
+        wrapped_args = [self._wrap(a) for a in python_args]
+        body += [l for a in wrapped_args for l in a['body']]
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        result_wrap = [l for r in python_results for l in self._wrap(r)]
+        if original_func_name in magic_binary_funcs and original_func_name.startswith('__i'):
+            res = func_args[0].var.clone(self.scope.get_new_name(func_args[0].var.name), is_argument=False)
+            wrapped_results = {'c_results': [], 'py_result': res, 'body': []}
+            body.append(AliasAssign(res, func_args[0].var))
+            body.append(Py_INCREF(res))
+        else:
+            wrapped_results = self._extract_FunctionDefResult(expr.results.var, is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+        func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
         # Get the names of the results collected from the C-compatible function
-        c_result_names = []
-        for r in original_c_results:
-            if isinstance(r, BindCFunctionDefResult):
-                orig_var = r.original_function_result_variable
-                if orig_var.rank == 0 and isinstance(orig_var.dtype, FixedSizeNumericType):
-                    c_result_names.append(orig_var.name)
-                    continue
-            c_result_names.append(r.var.name)
-        c_results = [self.scope.find(n, category='variables', raise_if_missing = True) for n in c_result_names]
-        for n, r, o_r in zip(c_result_names, c_results, original_c_results):
-            if isinstance(r, DottedVariable):
-                self.scope.remove_variable(r, name=n)
-                if not o_r.var.is_alias:
-                    body.append(Allocate(r, shape=(), status='unallocated', like=o_r.var))
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
+        body.extend(l for l in wrapped_results.get('setup',()))
+        c_results =  wrapped_results['c_results']
+        python_result_variable = wrapped_results['py_result']
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
 
         # Call the C-compatible function
-        n_c_results = len(c_results)
-        if n_c_results == 0:
-            body.append(FunctionCall(expr, func_call_args))
-        elif n_c_results == 1:
-            res = c_results[0]
-            if original_func.results[0].var.is_alias and not is_bind_c_function_def:
-                if isinstance(res, PointerCast):
-                    res = res.obj
-                body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
-            else:
-                body.append(Assign(res, FunctionCall(expr, func_call_args)))
-        else:
-            body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
+        body.append(self._call_wrapped_function(expr, func_call_args, c_results))
 
         # Deallocate the C equivalent of any array arguments
         # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
-        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
-        # is an ndarray.
-        for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
+        # In this case known-size stack arrays are used which are automatically deallocated when they go out of scope.
+        for a in python_args:
+            orig_var = a.var
             if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
-        body.extend(result_wrap)
 
-        for p_r, c_r in zip(python_result_variables, original_func.results):
-            arg_targets = expr.result_pointer_map.get(c_r, ())
-            n_targets = len(arg_targets)
-            if n_targets == 1:
-                collect_arg = self._python_object_map[python_args[arg_targets[0]]]
-                body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
-            elif n_targets > 1:
-                if isinstance(c_r.var.class_type, NumpyNDArrayType):
-                    errors.report((f"Can't determine the pointer target for the return object {c_r}. "
-                                "Please avoid calling this function to prevent accidental creation of dangling pointers."),
-                            symbol = original_func, severity='warning')
-                else:
-                    for t in arg_targets:
-                        collect_arg = self._python_object_map[python_args[t]]
-                        body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
+        if original_func_name == '__len__':
+            self.scope.remove_variable(python_result_variable)
+            python_result_variable = c_results[0]
+        else:
+            body.extend(wrapped_results['body'])
+        body.extend(ai for arg in wrapped_args for ai in arg['clean_up'])
 
         # Pack the Python compatible results of the function into one argument.
-        n_py_results = len(python_result_variables)
-        if n_py_results == 0:
+        if python_result_variable is Py_None:
             res = Py_None
-            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
-            body.append(FunctionCall(Py_INCREF, [res]))
-        elif n_py_results == 1:
-            res = python_result_variables[0]
-            func_results = [FunctionDefResult(res)]
+            func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
+            body.append(Py_INCREF(res))
+        elif original_func_name == '__len__':
+            res = Py_ssize_t_Cast(python_result_variable)
+            func_results = FunctionDefResult(Variable(Py_ssize_t(), self.scope.get_new_name(), is_temp = True))
         else:
-            res = self.get_new_PyObject("result")
-            body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
-            for r in python_result_variables:
-                body.append(FunctionCall(Py_DECREF, [r]))
-            func_results = [FunctionDefResult(res)]
-        body.append(Return([res]))
+            res = python_result_variable
+            func_results = FunctionDefResult(res)
+        body.append(Return(res))
 
         self.exit_scope()
         for a in python_args:
             if not a.bound_argument:
                 self._python_object_map.pop(a)
-        for r in python_results:
-            self._python_object_map.pop(r)
 
-        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+        function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
         self._python_object_map[expr] = function
 
-        return function
+        if 'property' in original_func.decorators:
+            python_name = original_func.scope.get_python_name(original_func.name)
+            docstring = LiteralString(
+                            '\n'.join(original_func.docstring.comments)
+                            if original_func.docstring else f"The attribute {python_name}")
+            return PyGetSetDefElement(python_name, function, None, CStrStr(docstring))
+        else:
+            return function
 
     def _wrap_FunctionDefArgument(self, expr):
         """
@@ -1410,277 +1593,54 @@ class CToPythonWrapper(Wrapper):
 
         Returns
         -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the `PyccelPyObject`
+                        to a C-compatible variable.
+             - args : a list of Variables which should be passed to call the function being wrapped.
         """
 
         collect_arg = self._python_object_map[expr]
         in_interface = len(expr.get_user_nodes(Interface)) > 0
+        is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
-        orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
-        bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
+        orig_var = getattr(expr.var, 'original_var', expr.var)
+        bound_argument = expr.bound_argument
 
-        if orig_var.is_ndarray:
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='alias', new_class = Variable)
-            self._wrapping_arrays = orig_var.is_ndarray
-            self.scope.insert_variable(arg_var, orig_var.name)
-        else:
-            kwargs = {'is_argument':False}
-            if isinstance(orig_var.dtype, CustomDataType):
-                kwargs['memory_handling']='alias'
-                if isinstance(expr, BindCFunctionDefArgument):
-                    kwargs['class_type'] = VoidType()
-
-            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
-                                    **kwargs)
-            self.scope.insert_variable(arg_var, expr.var.name)
+        # Collect the function which casts from a Python object to a C object
+        arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg, bound_argument, is_bind_c_argument)
 
         body = []
+        cast = arg_extraction['body']
+        arg_vars = arg_extraction['args']
 
         # Initialise to any default value
         if expr.has_default:
-            default_val = expr.value
-            if isinstance(default_val, Nil):
-                body.append(AliasAssign(arg_var, default_val))
+            if 'default_init' in arg_extraction:
+                for i, l in enumerate(arg_extraction['default_init']):
+                    body.insert(i, l)
             else:
-                body.append(Assign(arg_var, default_val))
-
-        # Collect the function which casts from a Python object to a C object
-        dtype = orig_var.dtype
-        if isinstance(dtype, CustomDataType):
-            python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
-            scope = python_cls_base.scope
-            attribute = scope.find('instance', 'variables', raise_if_missing = True)
-            if bound_argument:
-                cast_type = collect_arg
-                cast = []
-            else:
-                cast_type = Variable(self._python_object_map[dtype],
-                                    self.scope.get_new_name(collect_arg.name),
-                                    memory_handling='alias',
-                                    cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
-                self.scope.insert_variable(cast_type)
-                cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
-            c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
-            cast_c_res = PointerCast(c_res, orig_var)
-            cast.append(AliasAssign(arg_var, cast_c_res))
-        elif arg_var.rank == 0:
-            try :
-                cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
-            except KeyError:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
-            cast_func = FunctionDef(name = cast_function,
-                               body      = [],
-                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
-            cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
-        else:
-            cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
-
-        if arg_var.is_optional and not isinstance(dtype, CustomDataType):
-            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
-            cast.insert(0, AliasAssign(arg_var, memory_var))
+                assert len(arg_vars) == 1
+                arg_var = arg_vars[0]
+                default_val = expr.value
+                if isinstance(default_val, Nil):
+                    body.insert(0, AliasAssign(arg_var, default_val))
+                else:
+                    body.insert(0, Assign(arg_var, default_val))
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, orig_var, False)
-            body.append(If( IfSection(check_func, cast),
-                        IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
-                        ))
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
+            body.append(If( IfSection(PyccelIsNot(collect_arg, Py_None), [
+                                If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return(self._error_exit_code)]))])))
         elif not (in_interface or bound_argument):
-            check_func, err = self._get_check_function(collect_arg, orig_var, True)
-            body.append(If( IfSection(check_func, cast),
-                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
-                        ))
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
+            body.append(If( IfSection(PyccelNot(check_func), [*err, Return(self._error_exit_code)])))
+            body.extend(cast)
         else:
             body.extend(cast)
 
-        return body
-
-    def _wrap_BindCFunctionDefArgument(self, expr):
-        """
-        Get the code which translates a Python `FunctionDefArgument` to a C-compatible `Variable`.
-
-        Get the code necessary to transform a Variable passed as an argument in Python, from an object with
-        datatype `PyccelPyObject` to a Variable that can be used in C code to call code written in Fortran.
-
-        This function calls the more general self._wrap_FunctionDefArgument, however some additional
-        steps are necessary to handle arrays. In this case the arguments passed to the Fortran function are
-        not the same as the C-compatible arguments so they must also be created and initialised.
-
-        Parameters
-        ----------
-        expr : FunctionDefArgument
-            The argument of the C function.
-
-        Returns
-        -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the `PyccelPyObject` to a C-compatible variable.
-        """
-        body = self._wrap_FunctionDefArgument(expr)
-
-        orig_var = expr.original_function_argument_variable
-
-        if orig_var.rank:
-            bound_var_name = expr.var.name
-            # Create variable to hold raw data pointer
-            arg_var = expr.var.clone(self.scope.get_expected_name(bound_var_name), is_argument = False)
-            # Create variables for the shapes and strides
-            shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
-            stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
-
-            # Add variables to scope
-            self.scope.insert_variable(arg_var, bound_var_name)
-            for v,s in zip(shape_vars, expr.shape):
-                self.scope.insert_variable(v,s.name)
-            for v,s in zip(stride_vars, expr.strides):
-                self.scope.insert_variable(v,s.name)
-
-            # Get the C-compatible variable created in self._wrap_FunctionDefArgument
-            c_arg = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
-
-            # Unpack the C-compatible variable
-            body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
-            body.extend(Assign(s, FunctionCall(array_get_dim, [c_arg, i])) for i,s in enumerate(shape_vars))
-            if orig_var.order == 'C':
-                body.extend(Assign(s, FunctionCall(array_get_c_step, [c_arg, i])) for i,s in enumerate(stride_vars))
-            else:
-                body.extend(Assign(s, FunctionCall(array_get_f_step, [c_arg, i])) for i,s in enumerate(stride_vars))
-
-        return body
-
-    def _wrap_FunctionDefResult(self, expr):
-        """
-        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
-
-        Get the code necessary to transform a Variable returned from a C-compatible function to an object with
-        datatype `PyccelPyObject`.
-
-        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
-
-        The necessary steps are:
-        - Create a variable to store the C-compatible result.
-        - Cast the C object to the Python object using utility functions.
-        - Deallocate any unused memory (e.g. shapes of a C array).
-
-        Parameters
-        ----------
-        expr : FunctionDefArgument
-            The argument of the C function.
-
-        Returns
-        -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the variable to a `PyccelPyObject`.
-        """
-
-        orig_var = expr.var
-
-        # Get the object with datatype PyccelPyObject
-        python_res = self._python_object_map[expr]
-
-        name = self.scope.get_expected_name(orig_var.name)
-
-        # Create a variable to store the C-compatible result.
-        if orig_var.is_ndarray:
-            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
-            c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
-        elif isinstance(orig_var.dtype, CustomDataType):
-            scope = python_res.cls_base.scope
-            attribute = scope.find('instance', 'variables', raise_if_missing = True)
-            c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-        else:
-            c_res = orig_var.clone(name, is_argument = False)
-        self.scope.insert_variable(c_res, orig_var.name)
-
-        # Cast from C to Python
-        if not isinstance(orig_var.dtype, CustomDataType):
-            body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
-        else:
-            body = []
-
-        # Deallocate any unused memory
-        if orig_var.rank:
-            body.append(Deallocate(c_res))
-
-        return body
-
-    def _wrap_BindCFunctionDefResult(self, expr):
-        """
-        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
-
-        Get the code necessary to transform a Variable returned from a C-compatible function written in
-        Fortran to an object with datatype `PyccelPyObject`.
-
-        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
-
-        The necessary steps are:
-        - Create a variable to store the C-compatible result.
-        - For arrays also create variables for the Fortran-compatible results.
-        - If necessary, pack the Fortran-compatible results into a C-compatible array.
-        - Cast the Python object to the C object using utility functions.
-        - Deallocate any unused memory (e.g. shapes of a C array).
-
-        Parameters
-        ----------
-        expr : FunctionDefArgument
-            The argument of the C function.
-
-        Returns
-        -------
-        list of pyccel.ast.basic.PyccelAstNode
-            The code which translates the variable to a `PyccelPyObject`.
-        """
-
-        orig_var = expr.original_function_result_variable
-
-        python_res = self._python_object_map[expr]
-
-        body = []
-
-        orig_var_name = orig_var.name
-        var_name = expr.var.name
-
-        if orig_var.rank:
-            # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
-                                    memory_handling='alias', new_class = Variable)
-            self._wrapping_arrays = True
-            # Result of calling the bind-c function
-            arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
-            shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
-            # Save so we can find by iterating over func.results
-            self.scope.insert_variable(arg_var, var_name)
-            for v,s in zip(shape_vars, expr.shape):
-                self.scope.insert_variable(v,s.name)
-            # Save so we can find by iterating over func.bind_c_results
-            self.scope.insert_variable(c_res, orig_var_name)
-
-            body.append(Allocate(c_res, shape = shape_vars, status='unallocated'))
-            body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
-        elif isinstance(orig_var.dtype, CustomDataType):
-            c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
-            self.scope.insert_variable(c_res, var_name)
-        else:
-            c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False,
-                    new_class = Variable)
-            self.scope.insert_variable(c_res, orig_var_name)
-
-        if not isinstance(orig_var.dtype, CustomDataType):
-            body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
-        else:
-            scope = python_res.cls_base.scope
-            attribute = scope.find('instance', 'variables', raise_if_missing = True)
-            attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            body.append(AliasAssign(attrib_var, c_res))
-
-        if orig_var.rank:
-            body.append(Deallocate(c_res))
-
-        return body
+        return {'body': body, 'args': arg_vars, 'clean_up': arg_extraction.get('clean_up', ())}
 
     def _wrap_Variable(self, expr):
         """
@@ -1701,18 +1661,26 @@ class CToPythonWrapper(Wrapper):
             The code which translates the Variable to a Python-compatible variable.
         """
 
-        # Ensure that cwrapper_ndarrays is imported
-        if expr.rank > 0:
-            self._wrapping_arrays = True
-
         # Create the resulting Variable with datatype `PyccelPyObject`
         py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
         # Save the Variable so it can be located later
         self._python_object_map[expr] = py_equiv
 
-        # Cast the C variable into a Python variable
-        wrapper_function = C_to_Python(expr)
-        return [AliasAssign(py_equiv, FunctionCall(wrapper_function, [expr]))]
+        if isinstance(expr.class_type, NumpyNDArrayType):
+            # Cast the C variable into a Python variable
+            typenum = numpy_dtype_registry[expr.dtype]
+            data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
+                        lhs=expr)
+            shape_var = DottedVariable(CStackArray(NumpyInt32Type()), 'shape',
+                        lhs=expr)
+            release_memory = False
+            return [AliasAssign(py_equiv, to_pyarray(
+                             LiteralInteger(expr.rank), typenum, data_var, shape_var,
+                             convert_to_literal(expr.order != 'F'),
+                             convert_to_literal(release_memory)))]
+        else:
+            wrapper_function = C_to_Python(expr)
+            return [AliasAssign(py_equiv, wrapper_function(expr))]
 
     def _wrap_BindCArrayVariable(self, expr):
         """
@@ -1742,33 +1710,28 @@ class CToPythonWrapper(Wrapper):
         """
         v = expr.original_variable
 
+        typenum = numpy_dtype_registry[v.dtype]
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
+        data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape = [self.scope.get_temporary_variable(PythonNativeInt(),
-                v.name+'_size') for _ in range(v.rank)]
+        shape_var = self.scope.get_temporary_variable(CStackArray(NumpyInt32Type()), name = v.name+'_size',
+                shape = (v.rank,))
+        shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
         var_wrapper = expr.wrapper_function
         # Call bind_c function
-        call = Assign(PythonTuple(ObjectAddress(var), *shape), FunctionCall(var_wrapper, ()))
+        call = Assign(PythonTuple(ObjectAddress(data_var), *shape), var_wrapper())
 
-        # Create ndarray to store array data
-        nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
-                name = v.name, memory_handling = 'alias')
-        alloc = Allocate(nd_var, shape=shape, status='unallocated')
-        # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
-                memory_handling = 'alias', lhs=nd_var), var)
-
-        # Save the ndarray to vars_to_wrap to be handled as if it came from C
-        body = [call, alloc, set_data] + self._wrap_Variable(nd_var)
-
-        # Correct self._python_object_map key
-        py_equiv = self._python_object_map.pop(nd_var)
+        # Create the resulting Variable with datatype `PyccelPyObject`
+        py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
         self._python_object_map[expr] = py_equiv
 
-        return body
+        release_memory = False
+        # Save the ndarray to vars_to_wrap to be handled as if it came from C
+        return [call, AliasAssign(py_equiv, to_pyarray(LiteralInteger(v.rank), typenum,
+                            data_var, shape_var, convert_to_literal(v.order != 'F'),
+                            convert_to_literal(release_memory)))]
 
     def _wrap_DottedVariable(self, expr):
         """
@@ -1806,22 +1769,23 @@ class CToPythonWrapper(Wrapper):
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
-        getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
-        get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
-        self._python_object_map[get_val_result] = getter_result
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-        self.scope.insert_variable(class_obj)
+        self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        new_res_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+        result_wrapping = self._extract_FunctionDefResult(expr.clone(expr.name, new_class = Variable), False)
+        res_wrapper = result_wrapping['body']
+        new_res_val = result_wrapping['c_results'][0]
+        getter_result = result_wrapping['py_result']
+        setup = result_wrapping.get('setup', ())
         if new_res_val.rank > 0:
             body = [AliasAssign(new_res_val, attrib), *res_wrapper]
         elif isinstance(expr.dtype, CustomDataType):
-            self.scope.remove_variable(new_res_val, name = expr.name)
-            body = [Allocate(getter_result, shape=(), status='unallocated'),
+            if isinstance(new_res_val, PointerCast):
+                new_res_val = new_res_val.obj
+            body = [Allocate(getter_result, shape=None, status='unallocated'),
                     AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
@@ -1829,18 +1793,17 @@ class CToPythonWrapper(Wrapper):
 
         body.extend(self._incref_return_pointer(getter_args[0], getter_result, expr))
 
-        getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
+        getter_body = [*setup, AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
                                                                                 lhs = getter_args[0]),
                                                           cast_type = lhs)),
                        *body,
-                       Return((getter_result,))]
+                       Return(getter_result)]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
+        getter = PyFunctionDef(getter_name, args, getter_body, FunctionDefResult(getter_result),
                                 original_function = expr, scope = getter_scope)
-        self._python_object_map.pop(get_val_result)
 
         # ----------------------------------------------------------------------------------
         #                        Create setter
@@ -1852,18 +1815,19 @@ class CToPythonWrapper(Wrapper):
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
                        setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
+        setter_result = FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-            self.scope.insert_variable(class_obj)
+            self.scope.insert_variable(class_obj, 'self')
 
             attrib = expr.clone(expr.name, lhs = class_obj)
-            arg_wrapper = self._wrap(new_set_val_arg)
-            new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+            wrap_arg = self._wrap(new_set_val_arg)
+            arg_wrapper = wrap_arg['body']
+            new_set_val = wrap_arg['args'][0]
 
             if expr.memory_handling == 'alias':
                 update = AliasAssign(attrib, new_set_val)
@@ -1878,15 +1842,15 @@ class CToPythonWrapper(Wrapper):
                                                               cast_type = lhs)),
                            *self._incref_return_pointer(setter_args[1], setter_args[0], expr.lhs),
                            update,
-                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
+                           Return(LiteralInteger(0, dtype=CNativeInt()))]
         else:
-            setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
-                                        LiteralString("Can't reallocate memory via Python interface.")]),
-                        Return([self._error_exit_code])]
+            setter_body = [PyErr_SetString(PyAttributeError,
+                                        CStrStr(LiteralString("Can't reallocate memory via Python interface."))),
+                        Return(self._error_exit_code)]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in setter_args]
-        setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
+        setter = PyFunctionDef(setter_name, args, setter_body, setter_result,
                                 original_function = expr, scope = setter_scope)
         self._error_exit_code = Nil()
         self._python_object_map.pop(new_set_val_arg)
@@ -1894,7 +1858,7 @@ class CToPythonWrapper(Wrapper):
 
         python_name = class_type.scope.get_python_name(expr.name)
         return PyGetSetDefElement(python_name, getter, setter,
-                                LiteralString(f"The attribute {python_name}"))
+                                CStrStr(LiteralString(f"The attribute {python_name}")))
 
     def _wrap_BindCClassProperty(self, expr):
         """
@@ -1927,99 +1891,102 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
-        self.scope.insert_symbol(get_val_arg.var.name)
-        get_val_result = expr.getter.bind_c_results[0]
-        result_name = get_val_result.var.name
-        self.scope.insert_symbol(result_name)
-        for r in expr.getter.results:
-            self.scope.insert_symbol(r.var.name)
+        self.scope.insert_symbol(get_val_arg.var.original_var.name)
+        get_val_result = expr.getter.results
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-        getter_result = self.get_new_PyObject(f'{name}_obj',
-                                        dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
         self._python_object_map[get_val_arg] = getter_args[0]
-        self._python_object_map[get_val_result] = getter_result
 
-        arg_code = self._wrap(get_val_arg)
-        class_obj = self.scope.find(get_val_arg.var.name, raise_if_missing = True)
+        wrapped_args = self._wrap(get_val_arg)
+        arg_code = wrapped_args['body']
+        class_obj = wrapped_args['args'][0]
 
         # Cast the C variable into a Python variable
-        res_wrapper = self._wrap(get_val_result)
-        res_vars = [self.scope.find(r.var.name, category='variables', raise_if_missing = True)
-                        for r in expr.getter.results]
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in res_vars]
+        get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
+        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
+        res_wrapper = result_wrapping['body']
+        c_results = result_wrapping['c_results']
+        getter_result = result_wrapping['py_result']
+        setup = result_wrapping.get('setup', ())
 
-        if len(c_results) == 1:
-            call = Assign(c_results[0], FunctionCall(expr.getter, (class_obj,)))
-        else:
-            call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
+        call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
         if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=(), status='unallocated'))
+            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
 
-        wrapped_var = expr.getter.original_function
+        if isinstance(expr.getter.original_function, DottedVariable):
+            wrapped_var = expr.getter.original_function
+        else:
+            wrapped_var = expr.getter.original_function.results.var
         res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
-        getter_body = [*arg_code,
+        getter_body = [*setup,
+                       *arg_code,
                        call,
                        *res_wrapper,
-                       Return((getter_result,))]
+                       Return(getter_result)]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
-        getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
+        getter = PyFunctionDef(getter_name, args, getter_body, FunctionDefResult(getter_result),
                                 original_function = expr.getter, scope = getter_scope)
 
         # ----------------------------------------------------------------------------------
         #                        Create setter
         # ----------------------------------------------------------------------------------
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
-        setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
-        setter_scope = self.scope.new_child_scope(setter_name)
-        self.scope = setter_scope
+        if expr.setter:
+            self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
+            setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
+            setter_scope = self.scope.new_child_scope(setter_name)
+            self.scope = setter_scope
 
-        original_args = expr.setter.bind_c_arguments
-        f_wrapped_args = expr.setter.arguments
+            original_args = expr.setter.arguments
+            f_wrapped_args = expr.setter.arguments
 
-        self_arg = original_args[0]
-        set_val_arg = original_args[1]
-        for a in f_wrapped_args:
-            self.scope.insert_symbol(a.var.name)
-        self.scope.insert_symbol(self_arg.original_function_argument_variable.name)
-        self.scope.insert_symbol(set_val_arg.original_function_argument_variable.name)
+            self_arg = original_args[0]
+            set_val_arg = original_args[1]
+            for a in f_wrapped_args:
+                self.scope.insert_symbol(a.var.name)
+            self.scope.insert_symbol(self_arg.var.original_var.name)
+            self.scope.insert_symbol(set_val_arg.var.original_var.name)
 
-        setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
+            setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
+                           self.get_new_PyObject(f'{name}_obj'),
+                           setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+            setter_result = FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))
 
-        self._python_object_map[self_arg] = setter_args[0]
-        self._python_object_map[set_val_arg] = setter_args[1]
+            self._python_object_map[self_arg] = setter_args[0]
+            self._python_object_map[set_val_arg] = setter_args[1]
 
-        if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
-            arg_code = [l for a in original_args for l in self._wrap(a)]
+            if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
+                wrapped_args = [self._wrap(a) for a in original_args]
+                arg_code = [l for a in wrapped_args for l in a['body']]
+                func_call_args = [ca for a in wrapped_args for ca in a['args']]
 
-            func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
+                setter_body = [*arg_code,
+                               expr.setter(*func_call_args),
+                               *self._save_referenced_objects(expr.setter, setter_args),
+                               Return(LiteralInteger(0, dtype=CNativeInt()))]
+            else:
+                setter_body = [PyErr_SetString(PyAttributeError,
+                                            CStrStr(LiteralString("Can't reallocate memory via Python interface."))),
+                            Return(self._error_exit_code)]
+            self.exit_scope()
 
-            setter_body = [*arg_code,
-                           FunctionCall(expr.setter, func_call_args),
-                           *self._save_referenced_objects(expr.setter, setter_args),
-                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
+            args = [FunctionDefArgument(a) for a in setter_args]
+            setter = PyFunctionDef(setter_name, args, setter_body, setter_result,
+                                    original_function = expr, scope = setter_scope)
         else:
-            setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
-                                        LiteralString("Can't reallocate memory via Python interface.")]),
-                        Return([self._error_exit_code])]
-        self.exit_scope()
+            setter = None
 
-        args = [FunctionDefArgument(a) for a in setter_args]
-        setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
-                                original_function = expr, scope = setter_scope)
         self._error_exit_code = Nil()
 
-        return PyGetSetDefElement(expr.python_name, getter, setter,
-                                LiteralString(f"The attribute {expr.python_name}"))
+        docstring = LiteralString(
+                        '\n'.join(expr.docstring.comments)
+                        if expr.docstring else f"The attribute {expr.python_name}")
+        return PyGetSetDefElement(expr.python_name, getter, setter, CStrStr(docstring))
 
     def _wrap_ClassDef(self, expr):
         """
@@ -2063,7 +2030,11 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
             elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
-            else:
+            elif python_name in (*magic_binary_funcs, '__len__'):
+                wrapped_class.add_new_magic_method(self._wrap(f))
+            elif 'property' in f.decorators:
+                wrapped_class.add_property(self._wrap(f))
+            elif not f.is_inline:
                 wrapped_class.add_new_method(self._wrap(f))
 
         for i in expr.interfaces:
@@ -2079,6 +2050,12 @@ class CToPythonWrapper(Wrapper):
         # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
         pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         for a in expr.attributes:
+            if isinstance(a.class_type, TupleType):
+                errors.report("Tuples cannot yet be exposed to Python.",
+                        severity='warning',
+                        symbol=a)
+                continue
+
             if bound_class or not a.is_private:
                 if isinstance(a, (DottedVariable, BindCClassProperty)):
                     wrapped_class.add_property(self._wrap(a))
@@ -2129,3 +2106,1034 @@ class CToPythonWrapper(Wrapper):
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
+
+    def _extract_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by finding the appropriate function
+        _extract_X_FunctionDefArgument for the object expr. X is the class type of the
+        object expr. If this function does not exist then the method resolution order
+        is used to search for other compatible _extract_X_FunctionDefArgument functions.
+        If none are found then an error is raised.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
+        class_type = orig_var.class_type
+
+        classes = type(class_type).__mro__
+        for cls in classes:
+            annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(orig_var, collect_arg, bound_argument,
+                                                is_bind_c_argument, arg_var = arg_var)
+
+        # Unknown object, we raise an error.
+        return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO, symbol=orig_var,
+            severity='fatal')
+
+    def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by calling a function from the C-Python API. These functions
+        are indexed in the dictionary `py_to_c_registry`.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
+
+        arg_var : Variable | IndexedElement
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
+        assert not bound_argument
+        if arg_var is None:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
+                                    is_argument = False, is_const = False)
+            self.scope.insert_variable(arg_var, orig_var.name)
+
+        dtype = orig_var.dtype
+        try :
+            cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
+        cast_func = FunctionDef(name = cast_function,
+                           body      = [],
+                           arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                           results   = FunctionDefResult(Variable(dtype, name = 'v')))
+
+        body = [Assign(arg_var, cast_func(collect_arg))]
+
+        if getattr(orig_var, 'is_optional', False):
+            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
+            body.insert(0, AliasAssign(arg_var, memory_var))
+
+        return {'body': body,
+                'args': [arg_var]}
+
+    def _extract_CustomDataType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible class FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible class FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by accessing the pointer from the `instance` attribute of the
+        Pyccel generated class definition.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
+        if arg_var is None:
+            kwargs = {'is_argument': False}
+            kwargs['memory_handling']='alias'
+            if is_bind_c_argument:
+                kwargs['class_type'] = VoidType()
+
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
+                                    **kwargs)
+            self.scope.insert_variable(arg_var, orig_var.name)
+
+        dtype = orig_var.dtype
+        python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
+        scope = python_cls_base.scope
+        attribute = scope.find('instance', 'variables', raise_if_missing = True)
+        if bound_argument:
+            cast_type = collect_arg
+            cast = []
+        else:
+            cast_type = Variable(self._python_object_map[dtype],
+                                self.scope.get_new_name(collect_arg.name),
+                                memory_handling='alias',
+                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
+            self.scope.insert_variable(cast_type)
+            cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
+        c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
+        cast_c_res = PointerCast(c_res, orig_var)
+        cast.append(AliasAssign(arg_var, cast_c_res))
+        return {'body': cast, 'args': [arg_var]}
+
+    def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by calling the function `pyarray_to_ndarray` from the stdlib.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
+        assert arg_var is None
+        parts = self._get_array_parts(orig_var, collect_arg)
+        body = parts['body']
+        shape = parts['shape']
+        strides = parts['strides']
+        shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
+        stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        args = [parts['data']] + shape_elems + stride_elems
+        default_body = [AliasAssign(parts['data'], Nil())] + \
+                [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 1) for s in stride_elems]
+
+        if is_bind_c_argument:
+            rank = orig_var.rank
+            arg_var = Variable(BindCArrayType(rank, True), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(rank*2+1),))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
+            for i,s in enumerate(shape):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+
+            return {'body': body, 'args': [arg_var], 'default_init': default_body}
+
+        arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
+                                memory_handling='alias', new_class = Variable, allows_negative_indexes = False,
+                                is_const = False)
+        self.scope.insert_variable(arg_var)
+        if orig_var.is_optional:
+            sliced_arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
+                                    is_optional=False, memory_handling='alias', new_class = Variable,
+                                    allows_negative_indexes = False, is_const = False)
+            self.scope.insert_variable(sliced_arg_var)
+        else:
+            sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    is_optional=False, memory_handling='alias', new_class = Variable,
+                                    allows_negative_indexes = False, is_const = False)
+            self.scope.insert_variable(sliced_arg_var, orig_var.name)
+
+        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
+
+        body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
+        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+
+        collect_arg = sliced_arg_var
+        if orig_var.is_optional:
+            optional_arg_var = sliced_arg_var.clone(self.scope.get_expected_name(orig_var.name), is_optional = True)
+            self.scope.insert_variable(optional_arg_var)
+            body.append(AliasAssign(optional_arg_var, sliced_arg_var))
+            default_body.append(AliasAssign(optional_arg_var, Nil()))
+            collect_arg = optional_arg_var
+        return {'body': body, 'args': [collect_arg], 'default_init': default_body}
+
+    def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by allocating an array and filling the elements with values
+        extracted from the indexed Python tuple in collect_arg.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was defined in a BindCFunctionDef. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to access the argument.
+        """
+        assert arg_var is None
+
+        if orig_var.rank > 1:
+            errors.report("Wrapping multi-level tuples is not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        if orig_var.is_optional:
+            errors.report("Optional tuples are not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+
+        if is_bind_c_argument:
+            data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
+                                memory_handling='alias')
+            self.scope.insert_variable(data_var)
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(data_var))
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
+            fill_var = data_var
+            like = Variable(orig_var.class_type.element_type, '_')
+        else:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='heap', new_class = Variable)
+            self.scope.insert_variable(arg_var, orig_var.name)
+            fill_var = arg_var
+            like = None
+
+        arg_vars = [arg_var]
+
+        assert not bound_argument
+        idx = self.scope.get_temporary_variable(CNativeInt())
+        indexed_orig_var = IndexedElement(orig_var, idx)
+        indexed_arg_var = IndexedElement(fill_var, idx)
+        indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        body = [Assign(size_var, PyTuple_Size(collect_arg)),
+                Allocate(fill_var, shape = (size_var,), status = 'unallocated', like = like)]
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        for_body = [AliasAssign(indexed_collect_arg, PyTuple_GetItem(collect_arg, idx))]
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
+                                    bound_argument, is_bind_c_argument, arg_var = indexed_arg_var)['body']
+        self.exit_scope()
+
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
+
+
+        return {'body': body, 'args': arg_vars}
+
+    def _extract_HomogeneousSetType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        assert arg_var is None
+
+        if orig_var.is_optional:
+            errors.report("Optionals are not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        assert not bound_argument
+
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+        body = [Assign(size_var, PySet_Size(collect_arg))]
+
+        if is_bind_c_argument:
+            element_type = orig_var.class_type.element_type
+            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+                                shape = (size_var,), memory_handling = 'heap')
+            self.scope.insert_variable(arr_var, orig_var.name)
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            data = DottedVariable(VoidType(), 'data', lhs=arr_var)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
+            arg_vars = [arg_var]
+            body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
+        else:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='heap', new_class = Variable, is_const = False)
+            self.scope.insert_variable(arg_var, orig_var.name)
+            arg_vars = [arg_var]
+            body.append(Assign(arg_var, PythonSet()))
+
+        idx = self.scope.get_temporary_variable(CNativeInt())
+        indexed_orig_var = self.scope.get_temporary_variable(orig_var.class_type.element_type)
+        indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
+
+        body.append(AliasAssign(iter_obj, PyObject_GetIter(collect_arg)))
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
+                                    bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
+        if is_bind_c_argument:
+            for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
+        else:
+            for_body.append(SetAdd(arg_var, indexed_orig_var))
+        self.exit_scope()
+
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
+
+        clean_up = []
+        if not orig_var.is_const:
+            if is_bind_c_argument:
+                errors.report("Python built-in containers should be passed as constant arguments when "
+                              "translating to languages other than C. Any changes to the set will not "
+                              "be reflected in the calling code.",
+                              severity='warning', symbol=orig_var)
+            else:
+                element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
+                                                is_bind_c_argument, None)
+                elem_set = PySet_Add(collect_arg, element_extraction['py_result'])
+                for_body = [*element_extraction['body'],
+                        If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)]))]
+
+                loop_iterator = VariableIterator(arg_var)
+                loop_iterator.set_loop_counter(idx)
+                clean_up = [If(IfSection(PyccelEq(PySet_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)])),
+                        For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
+
+        return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
+
+    def _extract_HomogeneousListType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        assert arg_var is None
+
+        if orig_var.is_optional:
+            errors.report("Optionals are not yet supported",
+                    severity='fatal', symbol=orig_var)
+
+        assert not bound_argument
+
+        size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
+        body = [Assign(size_var, PyList_Size(collect_arg))]
+
+        if is_bind_c_argument:
+            element_type = orig_var.class_type.element_type
+            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
+            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+                                shape = (size_var,), memory_handling = 'heap')
+            self.scope.insert_variable(arr_var, orig_var.name)
+            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(2),))
+            data = DottedVariable(VoidType(), 'data', lhs=arr_var)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
+            self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
+            arg_vars = [arg_var]
+            body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
+        else:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='heap', new_class = Variable, is_const = False)
+            self.scope.insert_variable(arg_var, orig_var.name)
+            arg_vars = [arg_var]
+            body.append(Assign(arg_var, PythonList()))
+
+        idx = self.scope.get_temporary_variable(CNativeInt())
+        indexed_orig_var = self.scope.get_temporary_variable(orig_var.class_type.element_type)
+        indexed_collect_arg = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        iter_obj = self.scope.get_temporary_variable(PyccelPyObject(), 'iter', memory_handling='alias')
+
+        body.append(AliasAssign(iter_obj, PyObject_GetIter(collect_arg)))
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
+        for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
+                                    bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
+        if is_bind_c_argument:
+            for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
+        else:
+            for_body.append(ListAppend(arg_var, indexed_orig_var))
+        self.exit_scope()
+
+        body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
+
+        clean_up = []
+        if not orig_var.is_const:
+            if is_bind_c_argument:
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                              "Any changes to the list will not be reflected in the calling code.",
+                              severity='warning', symbol=orig_var)
+            else:
+                element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx),
+                                                is_bind_c_argument, None)
+                elem_set = PyList_Append(collect_arg, element_extraction['py_result'])
+                for_body = [*element_extraction['body'],
+                        If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)]))]
+
+                loop_iterator = VariableIterator(arg_var)
+                loop_iterator.set_loop_counter(idx)
+                clean_up = [If(IfSection(PyccelEq(PyList_Clear(collect_arg), PyccelUnarySub(LiteralInteger(1))),
+                                                 [Return(self._error_exit_code)])),
+                        For((element_extraction['c_results'][0],), loop_iterator, for_body, for_scope)]
+
+        return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
+
+    def _extract_StringType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, *, arg_var = None):
+        """
+        Extract the C-compatible string FunctionDefArgument from the PythonObject.
+
+        Extract the C-compatible string FunctionDefArgument from the PythonObject.
+        The C-compatible argument is extracted from collect_arg which holds a Python
+        object into arg_var.
+
+        The extraction is done by allocating an array and filling the elements with values
+        extracted from the indexed Python tuple in collect_arg.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefArgument being wrapped.
+
+        collect_arg : Variable
+            A variable with type PythonObject* holding the Python argument from which the
+            C-compatible argument should be collected.
+
+        bound_argument : bool
+            True if the argument is the self argument of a class method. False otherwise.
+            This should always be False for this function.
+
+        is_bind_c_argument : bool
+            True if the argument was saved in a BindCFunctionDefArgument. False otherwise.
+
+        arg_var : Variable | IndexedElement, optional
+            A variable or an element of the variable representing the argument that
+            will be passed to the low-level function call.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions which extract the argument from collect_arg into arg_var.
+        """
+        assert bound_argument is False
+
+        if is_bind_c_argument:
+            if arg_var is None:
+                data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
+                                    shape = (None,), memory_handling='alias', is_const = True)
+                size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
+                arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                                    shape = (LiteralInteger(2),))
+                self.scope.insert_variable(data_var, orig_var.name)
+                self.scope.insert_variable(size_var)
+                self.scope.insert_variable(arg_var, tuple_recursive = False)
+                self.scope.insert_symbolic_alias(arg_var[0], ObjectAddress(data_var))
+                self.scope.insert_symbolic_alias(arg_var[1], size_var)
+
+            if getattr(orig_var, 'is_optional', False):
+                body = [AliasAssign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+            else:
+                body = [Assign(orig_var, PyUnicode_AsUTF8(collect_arg)),
+                        Assign(self.scope.collect_tuple_element(arg_var[1]), PyUnicode_GetLength(collect_arg))]
+
+            default_init = [AliasAssign(data_var, Nil()),
+                            Assign(size_var, 0)]
+        else:
+
+            if arg_var is None:
+                arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
+                                        is_argument = False)
+                self.scope.insert_variable(arg_var, orig_var.name)
+
+            body = [Assign(orig_var, PythonStr(PyUnicode_AsUTF8(collect_arg)))]
+
+            default_init = [AliasAssign(arg_var, Nil())]
+            if getattr(orig_var, 'is_optional', False):
+                memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False,
+                                                clone_scope = self.scope)
+                body.insert(0, AliasAssign(arg_var, memory_var))
+
+        return {'body': body,
+                'args': [arg_var],
+                'default_init': default_init}
+
+    def _extract_FunctionDefResult(self, orig_var, is_bind_c, funcdef = None):
+        """
+        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
+
+        Get the code necessary to transform a Variable returned from a C-compatible function written in
+        Fortran to an object with datatype `PyccelPyObject`.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates the C-compatible variable
+                        to a `PyccelPyObject`.
+             - c_results : a list of Variables which are returned from the function being wrapped.
+             - py_result : the Variable returned to Python.
+             - setup : An optional key containing a list of PyccelAstNodes with code which should be
+                        run before calling the function being wrapped.
+        """
+        if orig_var is Nil():
+            return {'c_results': [], 'py_result': Py_None, 'body': []}
+
+        if isinstance(orig_var, BindCVariable):
+            class_type = orig_var.original_var.class_type
+        else:
+            class_type = orig_var.class_type
+
+        classes = type(class_type).__mro__
+        for cls in classes:
+            annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(orig_var, is_bind_c, funcdef)
+
+        # Unknown object, we raise an error.
+        return errors.report(f"Wrapping function results is not implemented for type {class_type}. " + PYCCEL_RESTRICTION_TODO, symbol=orig_var,
+            severity='fatal')
+
+    def _extract_CustomDataType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a class instance to a PyObject.
+
+        Get the code which translates a `Variable` containing a class instance to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = orig_var.name
+        python_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        setup = self._allocate_class_instance(python_res, python_res.cls_base.scope, orig_var.is_alias)
+        if is_bind_c:
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
+                                    memory_handling='alias', new_class = Variable)
+            self.scope.insert_variable(c_res, orig_var.name)
+            scope = python_res.cls_base.scope
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
+            attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
+            body = [AliasAssign(attrib_var, c_res)]
+            result = ObjectAddress(c_res)
+        else:
+            scope = python_res.cls_base.scope
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
+            c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
+            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
+            result = PointerCast(c_res, cast_type = orig_var)
+            body = []
+
+        if funcdef:
+            body.extend(self.connect_pointer_targets(orig_var, python_res, funcdef, is_bind_c))
+
+        return {'c_results': [result], 'py_result': python_res, 'body': body, 'setup': setup}
+
+    def _extract_FixedSizeType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a scalar to a PyObject.
+
+        Get the code which translates a `Variable` containing a scalar to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        c_res = Variable(orig_var.class_type, self.scope.get_new_name(name))
+        self.scope.insert_variable(c_res)
+
+        body = [AliasAssign(py_res, FunctionCall(C_to_Python(c_res), [c_res]))]
+        return {'c_results': [c_res], 'py_result': py_res, 'body': body}
+
+    def _extract_NumpyNDArrayType_FunctionDefResult(self, orig_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Parameters
+        ----------
+        orig_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        if is_bind_c:
+            return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
+        name = orig_var.name
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
+        typenum = numpy_dtype_registry[orig_var.dtype]
+        data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
+                    lhs=c_res)
+        shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+                    lhs=c_res)
+        release_memory = False
+        if funcdef:
+            arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+            release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+        body = [AliasAssign(py_res, to_pyarray(
+                         LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                         convert_to_literal(orig_var.order != 'F'),
+                         convert_to_literal(release_memory)))]
+        self.scope.insert_variable(c_res)
+        c_result_vars = [c_res]
+
+        if funcdef:
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, False))
+
+        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
+
+    def _extract_BindCArrayType_FunctionDefResult(self, wrapped_var, funcdef):
+        """
+        Get the code which translates a `Variable` containing an array to a PyObject.
+
+        Get the code which translates a `Variable` containing a BindCArray, which describes an
+        array in Fortran, to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        orig_var = wrapped_var.original_var
+        name = orig_var.name
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        # Result of calling the bind-c function
+        data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+        shape_var = Variable(CStackArray(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
+                        shape = (orig_var.rank,), memory_handling='alias')
+        typenum = numpy_dtype_registry[orig_var.dtype]
+        # Save so we can find by iterating over func.results
+        self.scope.insert_variable(data_var)
+        self.scope.insert_variable(shape_var)
+
+        release_memory = False
+        if funcdef:
+            arg_targets = funcdef.result_pointer_map.get(orig_var, ())
+            release_memory = len(arg_targets) == 0 and not isinstance(orig_var, DottedVariable)
+
+        body = [AliasAssign(py_res, to_pyarray(
+                         LiteralInteger(orig_var.rank), typenum, data_var, shape_var,
+                         convert_to_literal(orig_var.order != 'F'),
+                         convert_to_literal(release_memory)))]
+
+        shape_vars = [IndexedElement(shape_var, i) for i in range(orig_var.rank)]
+        c_result_vars = [ObjectAddress(data_var)]+shape_vars
+
+        if funcdef:
+            body.extend(self.connect_pointer_targets(orig_var, py_res, funcdef, True))
+
+        return {'c_results': c_result_vars, 'py_result': py_res, 'body': body}
+
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
+
+        Get the code which translates a `Variable` containing an inhomogeneous tuple to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = orig_var.name if isinstance(orig_var, Variable) else 'Out'
+        c_compatible_var = getattr(wrapped_var, 'new_var', wrapped_var)
+        extract_elems = [self._extract_FunctionDefResult(funcdef.scope.collect_tuple_element(e),
+                                                         is_bind_c, funcdef) for e in c_compatible_var]
+        body = [l for e in extract_elems for l in e['body']]
+        setup = [l for e in extract_elems for l in e.get('setup', ())]
+        c_result_vars = [r for e in extract_elems for r in e['c_results']]
+        py_result_vars = [e['py_result'] for e in extract_elems]
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
+        body.extend(Py_DECREF(r) for r in py_result_vars)
+        return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
+
+    def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
+
+        Get the code which translates a `Variable` containing a homogeneous container to a PyObject.
+        This function handles lists, sets, and tuples.
+        The current implementation for tuples is not working correctly as Pyccel does not handle
+        function calls to functions returning tuples correctly.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result comes from a C-binding from another language. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        if isinstance(wrapped_var, PythonTuple):
+            return self._extract_InhomogeneousTupleType_FunctionDefResult(wrapped_var, is_bind_c, funcdef)
+
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            result = wrapped_var.new_var
+            ptr_var = funcdef.scope.collect_tuple_element(result[0])
+            shape_var = funcdef.scope.collect_tuple_element(result[1])
+            c_res = Variable(CStackArray(orig_var.class_type.element_type),
+                             self.scope.get_new_name(ptr_var.name))
+            loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
+            c_results = [ObjectAddress(c_res), loop_size]
+        else:
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_results = [c_res]
+            loop_size = Variable(PythonNativeInt(), self.scope.get_new_name(f'{name}_size'))
+        idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+        self.scope.insert_variable(c_res)
+        self.scope.insert_variable(loop_size)
+        self.scope.insert_variable(idx)
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        element_extraction = self._extract_FunctionDefResult(IndexedElement(orig_var, idx), is_bind_c, funcdef)
+        self.exit_scope()
+
+        class_type = orig_var.class_type
+        if isinstance(class_type, HomogeneousSetType):
+            if is_bind_c:
+                element = IndexedElement(c_res, idx)
+            else:
+                element = SetPop(c_res)
+            elem_set = PySet_Add(py_res, element_extraction['py_result'])
+            init = PySet_New()
+        elif isinstance(class_type, HomogeneousListType):
+            element = IndexedElement(c_res, idx)
+            elem_set = PyList_SetItem(py_res, idx, element_extraction['py_result'])
+            init = PyList_New(loop_size)
+        elif isinstance(class_type, HomogeneousTupleType):
+            element = IndexedElement(c_res, idx)
+            elem_set = PyTuple_SetItem(py_res, idx, element_extraction['py_result'])
+            init = PyTuple_New(loop_size)
+        else:
+            raise NotImplementedError(f"Don't know how to return an object of type {class_type}")
+
+        for_body = [Assign(element_extraction['c_results'][0], element),
+                *element_extraction['body'],
+                If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                         [Return(self._error_exit_code)]))]
+        body = [Assign(loop_size, PythonLen(c_res))] if not is_bind_c else []
+        body += [AliasAssign(py_res, init),
+                 For((idx,), PythonRange(loop_size), for_body, for_scope)]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
+
+        return {'c_results': c_results, 'py_result': py_res, 'body': body}
+
+    def _extract_DictType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        """
+        Get the code which translates a `Variable` containing a dictionary to a PyObject.
+
+        Get the code which translates a `Variable` containing a dictionary to a PyObject.
+
+        Parameters
+        ----------
+        wrapped_var : Variable | IndexedElement
+            An object representing the variable or an element of the variable from the
+            FunctionDefResult being wrapped.
+        is_bind_c : bool
+            True if the result was saved in a BindCFunctionDefResult. False otherwise.
+        funcdef : FunctionDef
+            The function being wrapped.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the objects necessary to collect the result.
+        """
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            result = wrapped_var.new_var
+            key_ptr_var = funcdef.scope.collect_tuple_element(result[0])
+            val_ptr_var = funcdef.scope.collect_tuple_element(result[1])
+            shape_var = funcdef.scope.collect_tuple_element(result[2])
+            key_c_res = Variable(CStackArray(orig_var.class_type.key_type),
+                             self.scope.get_new_name(key_ptr_var.name))
+            val_c_res = Variable(CStackArray(orig_var.class_type.value_type),
+                             self.scope.get_new_name(val_ptr_var.name))
+            loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
+            c_results = [ObjectAddress(key_c_res), ObjectAddress(val_c_res), loop_size]
+            iterable = PythonRange(shape_var)
+            self.scope.insert_variable(key_c_res)
+            self.scope.insert_variable(val_c_res)
+            self.scope.insert_variable(shape_var)
+            idx = Variable(PythonNativeInt(), self.scope.get_new_name())
+            self.scope.insert_variable(idx)
+            iterable.set_loop_counter(idx)
+            key_elem = IndexedElement(key_c_res, idx)
+            val_elem = IndexedElement(val_c_res, idx)
+        else:
+            c_res = orig_var.clone(self.scope.get_new_name(name), is_argument = False)
+            c_results = [c_res]
+            iterable = DictItems(c_res)
+            self.scope.insert_variable(c_res)
+            iterable.set_loop_counter(Variable(PythonNativeInt(), self.scope.get_new_name()))
+            key_elem, val_elem = iterable.get_python_iterable_item()
+
+
+        for_scope = self.scope.create_new_loop_scope()
+        self.scope = for_scope
+        key_extraction = self._extract_FunctionDefResult(key_elem, is_bind_c, funcdef)
+        value_extraction = self._extract_FunctionDefResult(val_elem, is_bind_c, funcdef)
+        elem_set = PyDict_SetItem(py_res, key_extraction['py_result'], value_extraction['py_result'])
+        for_body = [*key_extraction['body'], *value_extraction['body'],
+                    If(IfSection(PyccelEq(elem_set, PyccelUnarySub(LiteralInteger(1))),
+                                         [Return(self._error_exit_code)]))]
+        if is_bind_c:
+            for_body = [Assign(key_extraction['c_results'][0], key_elem),
+                        Assign(value_extraction['c_results'][0], val_elem)] + for_body
+        self.exit_scope()
+        for_loop = For((key_extraction['c_results'][0], value_extraction['c_results'][0]),
+                        iterable, for_body, for_scope)
+
+        body = [AliasAssign(py_res, PyDict_New()),
+                for_loop]
+
+        return {'c_results': c_results, 'py_result': py_res, 'body': body}
+
+    def _extract_StringType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
+        orig_var = getattr(wrapped_var, 'original_var', wrapped_var)
+        name = getattr(orig_var, 'name', 'tmp')
+        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        if is_bind_c:
+            c_res = Variable(CharType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
+            self.scope.insert_variable(c_res)
+            char_data = ObjectAddress(c_res)
+            result = [char_data]
+        else:
+            c_res = Variable(StringType(), self.scope.get_new_name(name), memory_handling='heap')
+            self.scope.insert_variable(c_res)
+            char_data = CStrStr(c_res)
+            result = [c_res]
+
+        body = [AliasAssign(py_res, PyBuildValueNode([char_data]))]
+        if is_bind_c:
+            body.append(Deallocate(c_res))
+        return {'c_results': result, 'py_result': py_res, 'body': body}
+

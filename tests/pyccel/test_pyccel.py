@@ -2,12 +2,14 @@
 import subprocess
 import json
 import os
+import platform
 import shutil
 import sys
 import re
 import random
 import pytest
 import numpy as np
+from filelock import FileLock
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
 
@@ -593,49 +595,16 @@ def test_in_specified(language):
     pyccel_test("scripts/runtest_degree_in.py", language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
                                         "scripts/hope_benchmarks/quicksort.py",
                                         "scripts/hope_benchmarks/hope_pisum.py",
                                         "scripts/hope_benchmarks/hope_ln_python.py",
                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
-                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
-                                        "scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                        "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/quicksort.py",
-
                                         ] )
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-    )
-)
 def test_hope_benchmarks( test_file, language ):
     pyccel_test(test_file, language=language)
-
-#------------------------------------------------------------------------------
-@pytest.mark.c
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
-                                        "scripts/hope_benchmarks/quicksort.py",
-                                        "scripts/hope_benchmarks/hope_pisum.py",
-                                        "scripts/hope_benchmarks/hope_ln_python.py",
-                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
-                                        pytest.param("scripts/hope_benchmarks/point_spread_func.py",
-                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
-                                        "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
-                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
-                                        pytest.param("scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
-                                        "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/quicksort.py",
-                                        ] )
-def test_hope_benchmarks_c( test_file ):
-    pyccel_test(test_file, language='c')
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
@@ -752,11 +721,6 @@ def test_print_integers(language):
     pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_print_tuples(language):
-    types = str
-    pyccel_test("scripts/print_tuples.py", language=language, output_dtype=types)
-
-#------------------------------------------------------------------------------
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
@@ -769,10 +733,27 @@ def test_c_arrays(language):
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
+    if platform.system() == 'Darwin' and language=='fortran':
+        # MacOS compiler incorrectly reports
+        # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
+        # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
+        # x(0:) => a(1_i64:, merge(3_i64 + v, v, v < 0_i64))
+        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types,
+                    pyccel_commands="--no-debug")
+    else:
+        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_return_numpy_arrays(language):
@@ -780,10 +761,11 @@ def test_return_numpy_arrays(language):
     types += [int]*2 # 2 ints for b
     types += [float]*2 # 2 floats for c
     types += [bool]*2 # 2 bools for d
-    types += [complex]*2 # 2 complexs for e
+    types += [complex]*2 # 2 complexes for e
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
+    types += [float]*48 # 48 floats for x
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
@@ -800,13 +782,6 @@ def test_array_binary_op(language):
     pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_basic_header():
-    filename='scripts/basic_header.pyh'
-    cwd = get_abs_path('.')
-    compile_pyccel(cwd, filename)
-
-#------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
@@ -816,7 +791,6 @@ def test_basic_header():
                                         "scripts/classes/classes_6.py",
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
-                                        "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
@@ -825,6 +799,14 @@ def test_basic_header():
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
+
+def test_class_magic(language):
+    pyccel_test("scripts/classes/class_magic.py", language=language,
+            output_dtype = [int]*6 + [bool]*2 + [int])
+
+def test_tuples_in_classes(language):
+    test_file = "scripts/classes/tuples_in_classes.py"
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
@@ -993,9 +975,9 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 @pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
-                                        "scripts/asserts/unvalid_assert1.py",
-                                        "scripts/asserts/unvalid_assert2.py",
-                                        "scripts/asserts/unvalid_assert3.py",
+                                        "scripts/asserts/invalid_assert1.py",
+                                        "scripts/asserts/invalid_assert2.py",
+                                        "scripts/asserts/invalid_assert3.py",
                                         ] )
 
 def test_assert(language, test_file):
@@ -1007,8 +989,6 @@ def test_assert(language, test_file):
 
     cwd = get_abs_path(test_dir)
 
-    if not language:
-        language = "fortran"
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
 
@@ -1091,11 +1071,20 @@ def test_function_aliasing():
 
 def test_function(language):
     pyccel_test("scripts/functions.py",
-            language = language, output_dtype=[str]+[int]*8 )
+            language = language, output_dtype=str )
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
@@ -1145,7 +1134,8 @@ def test_reserved_file_name():
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
 
 #------------------------------------------------------------------------------
-def test_concatentation():
+@pytest.mark.skip(reason="List concatenation not yet implemented")
+def test_concatenation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
@@ -1215,3 +1205,42 @@ def test_module_name_containing_conflict(language):
     out2 = get_python_output(test_file)
 
     assert out1 == out2
+
+#------------------------------------------------------------------------------
+def test_stubs(language):
+    """
+    This tests that a stub file is generated and ensures the stub files are
+    still generated with the expected format. However it is not a good test.
+    It prevents any changes being made to the output format and doesn't
+    check that it can be parsed. This test should be replaced once stub files
+    can be read.
+    """
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+
+    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+        expected_pyi = f.read()
+
+    wk_dir = get_abs_path("scripts/stub_test")
+    with FileLock(wk_dir+'.lock'):
+        compile_pyccel(path_dir, get_abs_path("scripts/runtest_stub.py"), options = f"--language={language} --output=stub_test")
+        with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+            generated_pyi = f.read()
+        shutil.rmtree(wk_dir)
+
+    if language != 'python':
+        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
+
+    assert expected_pyi == generated_pyi
+
+#------------------------------------------------------------------------------
+def test_builtin_container_print(language):
+    pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_pyccel_generated_compilation_dependency(language):
+    pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
+            dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
+            output_dtype = int,
+            language = language)

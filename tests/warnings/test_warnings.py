@@ -31,12 +31,13 @@ def get_files_from_folder(foldername):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f)
+#    pyccel = Parser(f, output_folder = os.getcwd())
 #
 #    ast = pyccel.parse()
 #
 #    assert errors.num_messages()!=0
 
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f",get_files_from_folder('semantic'))
 def test_semantic_warnings(f):
 
@@ -44,7 +45,7 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
+    pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse()
 
     settings = {}
@@ -60,7 +61,7 @@ def test_semantic_warnings(f):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f)
+#    pyccel = Parser(f, output_folder = os.getcwd())
 #    ast = pyccel.parse()
 #
 #    settings = {}

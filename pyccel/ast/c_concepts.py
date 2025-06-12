@@ -4,24 +4,27 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module representing object address.
+Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
 
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
+from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
+from .datatypes import CharType
+from .internals import PyccelFunction
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
            'CNativeInt',
            'CStackArray',
+           'CStrStr',
            'CStringExpression',
            'ObjectAddress',
            'PointerCast')
 
 #------------------------------------------------------------------------------
 
-class CNativeInt(FixedSizeType):
+class CNativeInt(FixedSizeNumericType):
     """
     Class representing C's native integer type.
 
@@ -30,6 +33,7 @@ class CNativeInt(FixedSizeType):
     __slots__ = ()
     _name = 'int'
     _primitive_type = PrimitiveIntegerType()
+    _precision = None
 
 #------------------------------------------------------------------------------
 
@@ -332,3 +336,32 @@ class CMacro(PyccelAstNode):
         """ The string containing macro name
         """
         return self._macro
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+class CStrStr(PyccelFunction):
+    """
+    A class which extracts a const char* from a literal string.
+
+    A class which extracts a const char* from a literal string. This
+    is useful for calling C functions which were not designed for
+    STC.
+
+    Parameters
+    ----------
+    arg : TypedAstNode | CMacro
+        The object which should be passed as a const char*.
+    """
+    __slots__ = ()
+    _class_type = CharType()
+    _shape = (None,)
+
+    def __new__(cls, arg):
+        if isinstance(arg, CMacro):
+            return arg
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg):
+        super().__init__(arg)

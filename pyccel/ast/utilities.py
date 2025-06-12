@@ -12,26 +12,30 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,
+from .core          import (AsName, Import, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Module, PyccelFunctionDef)
+                            Concatenate, Module, PyccelFunctionDef, AliasAssign)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
+from .bind_c        import BindCVariable
 from .cmathext      import cmath_mod
-from .datatypes     import HomogeneousTupleType, PythonNativeInt
-from .internals     import PyccelFunction, Slice
+from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
+from .datatypes     import StringType
+from .internals     import PyccelFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
+from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
-from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
-                            NumpyTranspose, NumpyLinspace)
+from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
+from .numpyext      import get_shape_of_multi_level_container
+from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
+from .operators     import PyccelUnarySub
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
+from .variable      import Variable, IndexedElement
 
 from .c_concepts import ObjectAddress
 
@@ -97,26 +101,28 @@ def recognised_source(source_name):
 #==============================================================================
 def collect_relevant_imports(module, targets):
     """
-    Extract all objects necessary to create imports from a module given a list of targets
+    Extract all objects necessary to create imports from a module given a list of targets.
+
+    Extract all objects necessary to create imports from a module given a list of targets.
 
     Parameters
     ----------
-    module  : Module
-              The module from which we want to collect the targets
+    module : Module
+              The module from which we want to collect the targets.
     targets : list of str/AsName
-              The names of the objects which we would like to import from the module
+              The names of the objects which we would like to import from the module.
 
-    Results
+    Returns
     -------
-    imports : list of tuples
+    list of tuples
               A list where each element is a tuple containing the name which
-              will be used to refer to the object in the code, and the object
+              will be used to refer to the object in the code, and the object.
     """
     imports = []
     for target in targets:
         if isinstance(target, AsName):
             import_name = target.name
-            code_name = target.target
+            code_name = target.local_alias
         else:
             import_name = target
             code_name = import_name
@@ -157,7 +163,7 @@ def builtin_import(expr):
         if expr.target:
             return collect_relevant_imports(builtin_import_registry[source], expr.target)
         elif isinstance(expr.source, AsName):
-            return [(expr.source.target, builtin_import_registry[source])]
+            return [(expr.source.local_alias, builtin_import_registry[source])]
         else:
             return [(expr.source, builtin_import_registry[source])]
 
@@ -185,27 +191,33 @@ def split_positional_keyword_arguments(*args):
 #==============================================================================
 def compatible_operation(*args, language_has_vectors = True):
     """
-    Indicates whether an operation requires an index to be
-    correctly understood
+    Indicate whether an operation only uses compatible arguments.
+
+    Indicate whether an operation requires an index to be
+    correctly interpreted in the target language or if the arguments
+    are already compatible.
 
     Parameters
-    ==========
-    args      : list of TypedAstNode
-                The operator arguments
+    ----------
+    *args : list of TypedAstNode
+        The operator arguments.
     language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
-    Results
-    =======
-    compatible : bool
-                 A boolean indicating if the operation is compatible
+        Indicates if the language has support for vector
+        operations of the same shape.
+
+    Returns
+    -------
+    bool
+        A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors:
+    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
+    elif any(isinstance(a.class_type, StringType) for a in args):
+        return True
     else:
         return all(a.rank == 0 for a in args)
 
@@ -276,14 +288,13 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
     """
-    if expr.rank==0:
+    if expr.rank==0 or -pos > expr.rank:
         return expr
-    elif isinstance(expr, (Variable, ObjectAddress)):
-        if expr.rank==0 or -pos>expr.rank:
-            return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
+
+    if expr.shape and expr.shape[pos] == 1:
+        index_var = LiteralInteger(0)
+
+    if isinstance(expr, (Variable, ObjectAddress)):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
@@ -292,9 +303,6 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, NumpyTranspose):
         if expr.rank==0 or -pos>expr.rank:
             return expr
-        if expr.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            index_var = LiteralInteger(0)
 
         # Add index at the required position
         if expr.rank<2:
@@ -331,16 +339,14 @@ def insert_index(expr, pos, index_var):
             return expr
 
         # Add index at the required position
-        if base.shape[pos]==1:
-            # If there is no dimension in this axis, reduce the rank
-            assert indices[pos].start is None
-            index_var = LiteralInteger(0)
-
-        else:
-            # Calculate new index to preserve slice behaviour
-            if indices[pos].step is not None:
-                index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
-            if indices[pos].start is not None:
+        # Calculate new index to preserve slice behaviour
+        if indices[pos].step is not None:
+            index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
+        if indices[pos].start is not None:
+            if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
+                index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
+                                      index_var, simplify=True)
+            else:
                 index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
 
         # Update index
@@ -409,13 +415,18 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
                                     and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
-        if (isinstance(line, Assign) and
+        if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
+            # Save line in top level (no for loop)
+            result.append(line)
+            current_level = 0
+
+        elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
@@ -494,7 +505,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0].var for f in funcs]
+            func_results = [f.funcdef.results.var for f in funcs]
             func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
@@ -511,7 +522,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 current_level = 0
 
             rank = line.lhs.rank
-            shape = line.lhs.shape
+            shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \
+                    else line.lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
@@ -534,10 +546,10 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars,
-                    excluded_nodes = (FunctionCall, PyccelFunction))
+                    excluded_nodes = (FunctionCall, PyccelFunction, PyccelArrayShapeElement))
             line.substitute(transposed_vars + indexed_funcs, handled_funcs,
                     excluded_nodes = (FunctionCall))
-            _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]
+            _ = [f.substitute(variables, new_vars, excluded_nodes = (PyccelArrayShapeElement,)) for f in elemental_func_calls]
             _ = [f.substitute(transposed_vars + indexed_funcs, handled_funcs) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
@@ -555,7 +567,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     break
 
             for k in range(j,new_level):
-                # Create new loops until we have the neccesary depth
+                # Create new loops until we have the necessary depth
                 save_spot.append(LoopCollection([], shape[k], set(lhs_vars)))
                 save_spot = save_spot[-1].body
 
@@ -568,13 +580,19 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
-                for index_depth in range(lhs.rank-rhs.rank):
+                loop_len = []
+                n_new_loops = lhs.rank-rhs.rank
+                for index_depth in range(n_new_loops):
+                    loop_len.append(lhs.shape[0])
                     # If an index exists at the same depth, reuse it if not create one
                     if index_depth >= len(indices):
                         indices.append(new_index(PythonNativeInt(), 'i'))
                     index = indices[index_depth]
                     lhs = insert_index(lhs, index_depth, index)
-                collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors, result = result)
+                block = collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors)
+                for s in loop_len:
+                    block = LoopCollection(block, s, set([lhs]))
+                result.append(block)
 
             elif not language_has_vectors:
                 if isinstance(rhs, NumpyArray):
@@ -674,11 +692,13 @@ def insert_fors(blocks, indices, scope, level = 0):
         body = [bi for b in body for bi in b]
 
     if blocks.length == 1:
+        for b in body:
+            b.substitute(indices[level], LiteralInteger(0))
         return body
     else:
         body = CodeBlock(body, unravelled = True)
         loop_scope = scope.create_new_loop_scope()
-        return [For(indices[level],
+        return [For([indices[level]],
                     PythonRange(0,blocks.length),
                     body,
                     scope = loop_scope)]
@@ -732,8 +752,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         block.substitute(allocs_to_unravel, new_allocs)
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, InhomogeneousTupleVariable) \
-                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
+                if isinstance(a.lhs.class_type, InhomogeneousTupleType) \
+                and isinstance(a.rhs, (PythonTuple, Variable))]
     if len(assigns) != 0:
         new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
         block.substitute(assigns, new_assigns)
@@ -796,3 +816,49 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     body = [bi for b in body for bi in b]
 
     return body
+
+#==============================================================================
+def is_literal_integer(expr):
+    """
+    Determine whether the expression is a literal integer.
+
+    Determine whether the expression is a literal integer. A literal integer
+    can be described by a LiteralInteger, a PyccelUnarySub(LiteralInteger) or
+    a Constant.
+
+    Parameters
+    ----------
+    expr : object
+        Any Python object which should be analysed to determine whether it is an integer.
+
+    Returns
+    -------
+    bool
+        True if the object represents a literal integer, false otherwise.
+    """
+    return isinstance(expr, (int, LiteralInteger)) or \
+        isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))
+
+#==============================================================================
+def get_managed_memory_object(maybe_managed_var):
+    """
+    Get the variable responsible for managing the memory of the object passed as argument.
+
+    Get the variable responsible for managing the memory of the object passed as argument.
+    This may be the variable itself or a different variable of type MemoryHandlerType.
+
+    Parameters
+    ----------
+    maybe_managed_var : Variable
+        The variable whose management we are interested in.
+
+    Returns
+    -------
+    Variable
+        The variable responsible for managing the memory of the object.
+    """
+    managed_mem = maybe_managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+    if managed_mem:
+        return managed_mem[0].mem_var
+    else:
+        return maybe_managed_var

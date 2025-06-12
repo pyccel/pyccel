@@ -3,17 +3,18 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import sys
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray
+from pyccel.ast.c_concepts import CStackArray, CStrStr
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
-from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
-from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
+from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
+from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -70,7 +71,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Indicate whether the object is a pointer in C code.
 
         This function extends `CCodePrinter.is_c_pointer` to specify more objects
-        which are always accesed via a C pointer.
+        which are always accessed via a C pointer.
 
         Parameters
         ----------
@@ -86,7 +87,8 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
+        if isinstance(a.class_type, (WrapperCustomDataType, BindCPointer,
+                                     CStackArray, PyTuple_Pack)):
             return True
         elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
@@ -157,7 +159,16 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void*'
+            if expr.is_const:
+                return 'const void*'
+            else:
+                return 'void*'
+        if expr.dtype is Py_ssize_t():
+            dtype =  'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
+            if expr.is_const:
+                return f'const {dtype}'
+            else:
+                return dtype
         return CCodePrinter.get_declare_type(self, expr)
 
     def _handle_is_operator(self, Op, expr):
@@ -234,7 +245,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join([f'(char*)"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
                         '};\n')
@@ -285,7 +296,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     "};\n")
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces) + \
-                          tuple(getset for p in c.properties for getset in (p.getter, p.setter))
+                          tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset) + \
+                          c.magic_methods
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
             macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
@@ -339,13 +351,17 @@ class CWrapperCodePrinter(CCodePrinter):
 
         class_defs = f"\n{sep}\n".join(self._print(c) for c in expr.classes)
 
-        method_def_func = ''.join('\n'.join(('{',
-                                     f'"{self.get_python_name(expr.scope, f.original_function)}",',
-                                     f'(PyCFunction){f.name},',
-                                     'METH_VARARGS | METH_KEYWORDS,',
-                                     self._print(LiteralString('\n'.join(f.docstring.comments))) \
-                                                        if f.docstring else '""',
-                                     '},')) for f in funcs if not getattr(f, 'is_header', False))
+        method_def_func = ''.join(('{{\n'
+                                     '"{name}",\n'
+                                     '(PyCFunction){wrapper_name},\n'
+                                     'METH_VARARGS | METH_KEYWORDS,\n'
+                                     '{docstring}\n'
+                                     '}},\n').format(
+                                            name = self.get_python_name(expr.scope, f.original_function),
+                                            wrapper_name = f.name,
+                                            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
+                                                        if f.docstring else '""')
+                                     for f in funcs if not getattr(f, 'is_header', False))
 
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
@@ -384,14 +400,14 @@ class CWrapperCodePrinter(CCodePrinter):
         struct_name = expr.struct_name
         type_name = expr.type_name
         name = self.scope.get_python_name(expr.name)
-        docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
+        docstring = self._print(CStrStr(LiteralString('\n'.join(expr.docstring.comments)))) \
                     if expr.docstring else '""'
 
         original_scope = expr.original_class.scope
         getters = tuple(p.getter for p in expr.properties)
-        setters = tuple(p.setter for p in expr.properties)
+        setters = tuple(p.setter for p in expr.properties if p.setter)
         print_methods = expr.methods + (expr.new_func,) + expr.interfaces + \
-                         getters + setters
+                         expr.magic_methods + getters + setters
         functions = '\n'.join(self._print(f) for f in print_methods)
         init_string = ''
         del_string = ''
@@ -403,23 +419,23 @@ class CWrapperCodePrinter(CCodePrinter):
             elif py_name == '__del__':
                 del_string = f"    .tp_dealloc = (destructor) {f.name},\n"
             else:
-                docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                         if f.docstring else '""'
                 funcs[py_name] = (f.name, docstring)
 
         for f in expr.interfaces:
             py_name = self.get_python_name(original_scope, f.original_function)
-            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+            docstring = self._print(CStrStr(LiteralString('\n'.join(f.docstring.comments)))) \
                                                     if f.docstring else '""'
             funcs[py_name] = (f.name, docstring)
 
-        property_definitions = ''.join(('{\n'
-                                        f'"{p.python_name}",\n'
-                                        f'(getter) {p.getter.name},\n'
-                                        f'(setter) {p.setter.name},\n'
-                                        f'{self._print(p.docstring)},\n'
-                                        'NULL\n'
-                                        '},\n') for p in expr.properties)
+        property_definitions = ''.join(''.join(('{\n',
+                                        f'"{p.python_name}",\n',
+                                        f'(getter) {p.getter.name},\n',
+                                        f'(setter) {p.setter.name},\n' if p.setter else '(setter) NULL,\n',
+                                        f'{self._print(p.docstring)},\n',
+                                        'NULL\n',
+                                        '},\n')) for p in expr.properties)
         property_definitions += '{ NULL }\n'
 
         method_def_funcs = ''.join(('{\n'
@@ -430,6 +446,59 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '},\n')
                                      for name, (wrapper_name, doc_string) in funcs.items())
 
+        magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
+
+        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods')
+
+        number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
+        if '__add__' in magic_methods:
+            number_magic_methods_def += f"     .nb_add = (binaryfunc){magic_methods['__add__'].name},\n"
+        if '__sub__' in magic_methods:
+            number_magic_methods_def += f"     .nb_subtract = (binaryfunc){magic_methods['__sub__'].name},\n"
+        if '__mul__' in magic_methods:
+            number_magic_methods_def += f"     .nb_multiply = (binaryfunc){magic_methods['__mul__'].name},\n"
+        if '__truediv__' in magic_methods:
+            number_magic_methods_def += f"     .nb_true_divide = (binaryfunc){magic_methods['__truediv__'].name},\n"
+        if '__lshift__' in magic_methods:
+            number_magic_methods_def += f"     .nb_lshift = (binaryfunc){magic_methods['__lshift__'].name},\n"
+        if '__rshift__' in magic_methods:
+            number_magic_methods_def += f"     .nb_rshift = (binaryfunc){magic_methods['__rshift__'].name},\n"
+        if '__and__' in magic_methods:
+            number_magic_methods_def += f"     .nb_and = (binaryfunc){magic_methods['__and__'].name},\n"
+        if '__or__' in magic_methods:
+            number_magic_methods_def += f"     .nb_or = (binaryfunc){magic_methods['__or__'].name},\n"
+        if '__iadd__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_add = (binaryfunc){magic_methods['__iadd__'].name},\n"
+        if '__isub__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_subtract = (binaryfunc){magic_methods['__isub__'].name},\n"
+        if '__imul__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_multiply = (binaryfunc){magic_methods['__imul__'].name},\n"
+        if '__itruediv__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_true_divide = (binaryfunc){magic_methods['__itruediv__'].name},\n"
+        if '__ilshift__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_lshift = (binaryfunc){magic_methods['__ilshift__'].name},\n"
+        if '__irshift__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_rshift = (binaryfunc){magic_methods['__irshift__'].name},\n"
+        if '__iand__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_and = (binaryfunc){magic_methods['__iand__'].name},\n"
+        if '__ior__' in magic_methods:
+            number_magic_methods_def += f"     .nb_inplace_or = (binaryfunc){magic_methods['__ior__'].name},\n"
+        number_magic_methods_def += '};\n'
+
+        seq_magic_method_name = self.scope.get_new_name(f'{expr.name}_sequence_methods')
+
+        seq_magic_methods_def = f"static PySequenceMethods {seq_magic_method_name} = {{\n"
+        if '__len__' in magic_methods:
+            seq_magic_methods_def += f"    .sq_length = (lenfunc){magic_methods['__len__'].name},\n"
+        seq_magic_methods_def += '};\n'
+
+        map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods')
+        map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
+        if '__len__' in magic_methods:
+            map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
+        if '__getitem__' in magic_methods:
+            map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
+        map_magic_methods_def += '};\n'
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
@@ -444,6 +513,9 @@ class CWrapperCodePrinter(CCodePrinter):
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
+                f"    .tp_as_number = &{number_magic_method_name},\n"
+                f"    .tp_as_sequence = &{seq_magic_method_name},\n"
+                f"    .tp_as_mapping = &{map_magic_method_name},\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
                 f"    .tp_basicsize = sizeof(struct {struct_name}),\n"
                  "    .tp_itemsize = 0,\n"
@@ -454,7 +526,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_getset = {property_def_name},\n"
                 "};\n")
 
-        return '\n'.join((method_def, property_def, type_code, functions))
+        return '\n'.join((method_def, number_magic_methods_def, seq_magic_methods_def,
+                        map_magic_methods_def, property_def, type_code, functions))
 
     def _print_PyModInitFunc(self, expr):
         decs = ''.join(self._print(d) for d in expr.declarations)
@@ -497,14 +570,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
             variable = self._print(expr.variable.name)
 
+            init = f' = {self._print(expr.value)}' if expr.value is not None else ''
+
             if var.rank == 0:
-                return f'{static}{external}{declaration_type} {variable};\n'
+                return f'{static}{external}{declaration_type} {variable}{init};\n'
 
             size = var.shape[0]
             if isinstance(size, LiteralInteger):
                 return f'{static}{external}{declaration_type} {variable}[{size}];\n'
             else:
-                return f'{static}{external}{declaration_type}* {variable};\n'
+                return f'{static}{external}{declaration_type}* {variable}{init};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
 
@@ -515,3 +590,25 @@ class CWrapperCodePrinter(CCodePrinter):
             return f'{base}{idxs}'
         else:
             return CCodePrinter._print_IndexedElement(self, expr)
+
+    def _print_Py_ssize_t_Cast(self, expr):
+        var = self._print(expr.args[0])
+        return f'(Py_ssize_t){var}'
+
+    def _print_PyTuple_Pack(self, expr):
+        args = expr.args
+        n = len(args)
+        args_code = ', '.join(self._print(a) for a in args)
+        return f'(*PyTuple_Pack( {n}, {args_code} ))'
+
+    def _print_PyList_Clear(self, expr):
+        list_code = self._print(ObjectAddress(expr.list_obj))
+        if sys.version_info < (3, 13):
+            return f'PyList_SetSlice({list_code}, 0, PY_SSIZE_T_MAX, NULL)'
+        else:
+            return f'PyList_Clear({list_code})'
+
+    def _print_PyArgumentError(self, expr):
+        args = ', '.join([f'"{self._print(expr.error_msg)}"'] + \
+                         [f'PyObject_Str((PyObject*)Py_TYPE({self._print(a)}))' for a in expr.args])
+        return f'PyErr_SetObject({self._print(expr.error_type)}, PyUnicode_FromFormat({args}));\n'

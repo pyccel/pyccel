@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import pytest
 import numpy as np
 from numpy.random import randint
@@ -10,7 +11,7 @@ def test_sum_range(language):
         return sum(a0[i] for i in range(len(a0)))
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -21,7 +22,7 @@ def test_sum_var(language):
         return sum(ai for ai in a)
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -33,7 +34,7 @@ def test_sum_var2(language):
 
     n1 = randint(1,10)
     n2 = randint(1,10)
-    x = randint(10,size=(n1,n2))
+    x = np.array(randint(10, size=(n1,n2)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -47,7 +48,7 @@ def test_sum_var3(language):
     n1 = randint(1,10)
     n2 = randint(1,10)
     n3 = randint(1,10)
-    x = randint(10,size=(n1,n2,n3))
+    x = np.array(randint(10, size=(n1,n2,n3)), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -59,7 +60,7 @@ def test_sum_var4(language):
         return sum(ai for ai in a),s
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
@@ -92,7 +93,6 @@ def test_max(language):
     f_epyc = epyccel(f, language = language)
 
     assert f() == f_epyc()
-
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -113,10 +113,10 @@ def test_min(language):
 def test_expression1(language):
     def f(b : 'float[:]'):
         n = b.shape[0]
-        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
+        return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9*max(j+1. for j in b)**4
 
     n = randint(1,10)
-    x = np.array(randint(100,size=n), dtype=float)
+    x = np.array(randint(100, size=n), dtype=float)
 
     f_epyc = epyccel(f, language = language)
 
@@ -125,7 +125,7 @@ def test_expression1(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -140,7 +140,7 @@ def test_expression2(language):
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
     n = randint(1,10)
-    x = randint(100,size=n).astype(np.int64)
+    x = randint(100, size=n).astype(np.int64)
 
     f_epyc = epyccel(f, language = language)
 
@@ -193,8 +193,106 @@ def test_sum_range_overwrite(language):
         return v
 
     n = randint(1,50)
-    x = randint(100,size=n)
+    x = np.array(randint(100, size=n), dtype=int)
 
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+def test_sum_with_condition(language):
+    def f():
+        v = sum(i for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_sum_with_multiple_conditions(language):
+    def f():
+        v = sum(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_max_with_condition(language):
+    def f():
+        v = max(i for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_max_with_condition_float(language):
+    def f():
+        v = max(i/2 for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_max_with_multiple_conditions(language):
+    def f():
+        v = max(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_condition(language):
+    def f():
+        v = min(i for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_condition_float(language):
+    def f():
+        v = min(i/2 for i in range(20) if i % 2 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_min_with_multiple_conditions(language):
+    def f():
+        v = min(i - j for i in range(20) if i % 2 == 1 for j in range(30) if j % 3 == 1)
+        return v
+
+    f_epyc = epyccel(f, language = language)
+    assert f() == f_epyc()
+
+def test_sum_with_two_variables(language):
+    def f():
+        x = sum(i-j for i in range(10) for j in range(7))
+        return x
+
+    f_epyc = epyccel(f, language=language)
+
+    assert f() == f_epyc()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Var arg causes type promotion. See #2251."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_min_max_values(language):
+    T = TypeVar('T', 'int16[:]', 'int32[:]', 'int64[:]', 'float32[:]', 'float64[:]')
+
+    def f(a : T):
+        min_val = min(ai for ai in a)
+        max_val = max(ai for ai in a)
+        return min_val, max_val
+
+    f_epyc = epyccel(f, language=language)
+
+    for dtype in (np.int16, np.int32, np.int64, np.float32, np.float64):
+        x = randint(0, 100, size=(5,)).astype(dtype)
+        print(f(x))
+        print(f_epyc(x))
+        assert f(x) == f_epyc(x)

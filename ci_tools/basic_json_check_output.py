@@ -22,9 +22,9 @@ if __name__ == '__main__':
 
     output_file = 'test_json_result.json'
 
-    json_ouput = {
+    json_output = {
         "summary":summary
     }
 
     with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(json_ouput,f)
+        json.dump(json_output,f)

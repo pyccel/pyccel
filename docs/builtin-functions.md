@@ -38,7 +38,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `id` | No |
 | `input` | No |
 | **`int`** | **Yes** |
-| `isinstance` | No |
+| **`isinstance`** | **Yes** |
 | `issubclass` | No |
 | `iter` | No |
 | **`len`** | **Yes** |
@@ -59,39 +59,60 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`range`** | **Yes** |
 | `repr` | No |
 | `reversed` | No |
-| `round` | No |
-| *`set`* | Python-only |
+| **`round`** | **Yes** |
+| **`set`** | **Yes** |
 | `setattr` | No  |
 | `slice` | No |
 | `sorted` | No |
 | `staticmethod` | No |
-| `str` | No |
+| `str` | As a type annotation or with string arguments |
 | **`sum`** | **Yes** |
 | `super` | No |
 | **`tuple`** | **Yes** |
 | **`type`** | **Yes** |
 | `vars` | No |
 | **`zip`** | as a loop iterable |
-| \_\_`import`\_\_ | No
+| `__import__` | No |
 
 ## List methods
 
 | Method | Supported |
 |----------|-----------|
-| `append` | Python-only |
-| `clear` | Python-only |
+| **`append`** | **Yes** |
+| **`clear`** | **Yes** |
 | `copy` | Python-only |
 | `count` | No |
-| `extend` | Python-only |
+| **`extend`** | **Yes** |
 | `index` | No |
-| `insert` | Python-only |
+| **`insert`** | **Yes** |
 | `max` | No |
 | `min` | No |
-| `pop` | Python-only |
+| **`pop`** | **Yes** |
 | `remove` | Python-only |
-| `reverse` | No |
+| **`reverse`** | **Yes** |
 | `sort` | Python-only |
 
+## Set methods
+
+| Method | Supported |
+|----------|-----------|
+| **`add`** | **Yes** |
+| **`clear`** | **Yes** |
+| **`copy`** | **Yes** |
+| `difference` | No |
+| `difference_update` | No |
+| **`discard`** | **Yes** |
+| **`intersection`** | **Yes** |
+| **`intersection_update`** | **Yes** |
+| **`isdisjoint`** | **Yes** |
+| `issubset` | No |
+| `issuperset` | No |
+| **`pop`** | **Yes** |
+| **`remove`** | **Yes** |
+| `symmetric_difference` | No |
+| `symmetric_difference_update` | No |
+| **`union`** | **Yes** |
+| **`update`** | **Yes** |
 
 ## Dictionary methods
 
@@ -99,15 +120,66 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Method | Supported |
 |----------|-----------|
-| `clear` | No |
-| `copy` | No |
-| `get` | No |
-| `items` | No |
-| `keys` | No |
-| `pop` | Python-only |
-| `popitem` | No |
+| **`clear`** | **Yes** |
+| `copy` | Python-only |
+| `get` | Python and C |
+| **`items`** | **Yes** |
+| **`keys`** | **Yes** |
+| **`pop`** | **Yes** |
+| **`popitem`** | **Yes** |
 | `reversed` | No |
-| `setdefault` | No |
+| `setdefault` | Python-only |
 | `update` | No |
-| `values` | No |
+| **`values`** | **Yes** |
 
+## String methods
+
+| Method | Supported |
+|----------|-----------|
+| `capitalize` | No |
+| `casefold` | No |
+| `center` | No |
+| `count` | No |
+| `encode` | No |
+| `endswith` | No |
+| `expandtabs` | No |
+| `find` | No |
+| `format` | No |
+| `format_map` | No |
+| `index` | No |
+| `isalnum` | No |
+| `isalpha` | No |
+| `isascii` | No |
+| `isdecimal` | No |
+| `isdigit` | No |
+| `isidentifier` | No |
+| `islower` | No |
+| `isnumeric` | No |
+| `isprintable` | No |
+| `isspace` | No |
+| `istitle` | No |
+| `isupper` | No |
+| `join` | No |
+| `ljust` | No |
+| `lower` | No |
+| `lstrip` | No |
+| `make_trans` | No |
+| `partition` | No |
+| `removeprefix` | No |
+| `removesufix` | No |
+| `replace` | No |
+| `rfind` | No |
+| `rindex` | No |
+| `rjust` | No |
+| `rpartition` | No |
+| `rsplit` | No |
+| `rstrip` | No |
+| `split` | No |
+| `splitlines` | No |
+| `startswith` | No |
+| `strip` | No |
+| `swapcase` | No |
+| `title` | No |
+| `translate` | No |
+| `upper` | No |
+| `zfill` | No |

@@ -11,18 +11,20 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
 
-from .core import FunctionDefArgument
+from .bitwise_operators import PyccelBitOr
+
+from .core import FunctionDefArgument, FunctionDefResult
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import VoidType, GenericType, StringType
+from .datatypes import VoidType, GenericType, StringType, PyccelType
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
         'FunctionTypeAnnotation',
         'SyntacticTypeAnnotation',
-        'VariableTypeAnnotation',
         'UnionTypeAnnotation',
+        'VariableTypeAnnotation',
         'typenames_to_dtypes',
         )
 
@@ -39,7 +41,7 @@ class VariableTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    class_type : DataType
+    class_type : PyccelType
         The requested Python type of the variable.
 
     is_const : bool, default=False
@@ -47,7 +49,7 @@ class VariableTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, class_type : 'DataType', is_const : bool = False):
+    def __init__(self, class_type : PyccelType, is_const : bool = False):
         self._class_type = class_type
         self._is_const = is_const
 
@@ -120,26 +122,28 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
 
-    results : list of SyntacticTypeAnnotation | UnionTypeAnnotation
-        The type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+    result : SyntacticTypeAnnotation | UnionTypeAnnotation
+        The type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
 
     is_const : bool, default=True
         True if the function pointer cannot be modified, false otherwise.
     """
-    __slots__ = ('_args', '_results', '_is_const')
-    _attribute_nodes = ('_args', '_results', '_is_const')
+    __slots__ = ('_args', '_result', '_is_const')
+    _attribute_nodes = ('_args', '_result', '_is_const')
 
-    def __init__(self, args, results, is_const = True):
+    def __init__(self, args, result, is_const = True):
         if pyccel_stage == 'syntactic':
             self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
-            self._results = [FunctionDefArgument(AnnotatedPyccelSymbol('_', r), annotation = r) \
-                            for i, r in enumerate(results)]
+            if result:
+                self._result = FunctionDefResult(AnnotatedPyccelSymbol('_', result), annotation = result)
+            else:
+                self._result = FunctionDefResult(result)
         else:
             self._args = args
-            self._results = results
+            self._result = result
 
         self._is_const = is_const
 
@@ -157,15 +161,15 @@ class FunctionTypeAnnotation(PyccelAstNode):
         return self._args
 
     @property
-    def results(self):
+    def result(self):
         """
-        Get the type annotations describing the results of the function address.
+        Get the type annotation describing the result of the function address.
 
-        Get the type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+        Get the type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
         """
-        return self._results
+        return self._result
 
     def __repr__(self):
         return f'func({repr(self.args)}) -> {repr(self.results)}'
@@ -255,22 +259,30 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : PyccelSymbol | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName
         The dtype named in the type annotation.
 
     order : str | None
         The order requested in the type annotation.
     """
     __slots__ = ('_dtype', '_order')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_dtype',)
+
+    def __new__(cls, dtype = None, order = None):
+        if isinstance(dtype, PyccelBitOr):
+            return UnionTypeAnnotation(*[SyntacticTypeAnnotation(d) for d in dtype.args])
+        else:
+            return super().__new__(cls)
+
     def __init__(self, dtype, order = None):
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
-            raise ValueError("Syntactic datatypes should be strings")
+            raise ValueError(f"Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")
         self._dtype = dtype
         self._order = order
         super().__init__()
+        assert self.pyccel_staging == 'syntactic'
 
     @property
     def dtype(self):
@@ -301,6 +313,10 @@ class SyntacticTypeAnnotation(PyccelAstNode):
                     self.order == o.order
         else:
             return False
+
+    def __str__(self):
+        order_str = f'(order={self.order})' if self.order else ''
+        return f'{self.dtype}{order_str}'
 
 #==============================================================================
 

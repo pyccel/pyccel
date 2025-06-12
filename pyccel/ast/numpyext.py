@@ -6,6 +6,8 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
+from packaging.version import Version
+
 import numpy
 
 from pyccel.errors.errors import Errors
@@ -23,7 +25,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType, ContainerType
+from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -36,11 +38,12 @@ from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, Num
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .type_annotations import typenames_to_dtypes as dtype_registry
+from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
+numpy_v2_1 = Version(numpy.__version__) >= Version("2.1.0")
 
 __all__ = (
     'process_shape',
@@ -107,6 +110,7 @@ __all__ = (
     'NumpySum',
     'NumpyOnes',
     'NumpyOnesLike',
+    'NumpyNDArray',
     'NumpyProduct',
     'NumpyRand',
     'NumpyRandint',
@@ -142,6 +146,51 @@ dtype_registry.update({
     'c8'         : NumpyComplex64Type(),
     'c16'        : NumpyComplex128Type(),
     })
+
+#=======================================================================================
+def get_shape_of_multi_level_container(expr, shape_prefix = ()):
+    """
+    Get the shape of a multi-level container.
+
+    Get the shape of a multi-level container such as a list of list
+    of tuple of tuple. These objects only store the shape of the top
+    layer as the elements may have different sizes but in NumPy
+    functions we can assume that the shape is homogeneous as otherwise
+    the original Python code would raise errors.
+
+    Parameters
+    ----------
+    expr : TypedAstNode
+        The expression whose shape we want to know.
+    shape_prefix : tuple[TypedAstNode, ...], optional
+        A tuple of objects describing the shape of the containers where
+        the expression is found. This is used internally to call this
+        function recursively. In most cases it is not necessary to
+        provide this value when calling this function.
+
+    Returns
+    -------
+    tuple[TypedAstNode, ...]
+        A tuple of objects describing the shape of the mult-level container.
+    """
+    class_type = expr.class_type
+    assert isinstance(class_type, ContainerType)
+
+    shape = expr.shape
+    new_shape = shape_prefix + expr.shape
+
+    assert len(shape) <= class_type.rank
+
+    if class_type.rank == len(shape):
+        return new_shape
+    elif isinstance(expr, (PythonTuple, PythonList)):
+        return get_shape_of_multi_level_container(expr.args[0], new_shape)
+    elif isinstance(expr, (Variable, IndexedElement)):
+        return get_shape_of_multi_level_container(expr[LiteralInteger(0)], new_shape)
+    else:
+        errors.report(f"Can't calculate shape of object of type {type(expr)}",
+                severity = 'error', symbol=expr)
+        return (None,)*expr.rank
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
@@ -562,7 +611,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
         The actual dtype passed to the NumPy function.
 
     Returns
@@ -577,6 +626,8 @@ def process_dtype(dtype):
     TypeError: In the case of unrecognized argument type.
     TypeError: In the case of passed string argument not recognized as valid dtype.
     """
+    if isinstance(dtype, VariableTypeAnnotation):
+        dtype = dtype.class_type
 
     if isinstance(dtype, PythonType):
         if dtype.arg.rank > 0:
@@ -692,35 +743,13 @@ class NumpyArray(NumpyNewArray):
         have.
     """
     __slots__ = ('_arg','_shape')
-    _attribute_nodes = ('_arg',)
+    _attribute_nodes = NumpyNewArray._attribute_nodes + ('_arg',)
     name = 'array'
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
-            raise TypeError(f'Unknown type of  {type(arg)}')
-
-        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
-        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        if isinstance(arg.class_type, InhomogeneousTupleType):
-            is_homogeneous_tuple = isinstance(arg.dtype, FixedSizeNumericType) and len(set(a.rank for a in arg))
-            if not isinstance(arg, PythonTuple):
-                arg = PythonTuple(*arg)
-
-        # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
-            raise TypeError('we only accept homogeneous arguments')
-
-        if not isinstance(order, (LiteralString, str)):
-            raise TypeError("The order must be specified explicitly with a string.")
-        elif isinstance(order, LiteralString):
-            order = order.python_value
-
-        if ndmin is not None:
-            if not isinstance(ndmin, (LiteralInteger, int)):
-                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
-            elif isinstance(ndmin, LiteralInteger):
-                ndmin = ndmin.python_value
+        assert isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement))
+        assert isinstance(order, str)
 
         init_dtype = dtype
 
@@ -729,17 +758,16 @@ class NumpyArray(NumpyNewArray):
             if dtype is None:
                 dtype = arg[0].class_type.datatype
             dtype = process_dtype(dtype)
-
-            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
         else:
             # Verify dtype and get precision
             if dtype is None:
                 dtype = arg.dtype
             dtype = process_dtype(dtype)
 
-            shape = process_shape(False, arg.shape)
+        shape = process_shape(False, get_shape_of_multi_level_container(arg))
 
-        rank  = len(shape)
+        rank  = arg.rank
+        assert len(shape) == rank
 
         if ndmin and ndmin>rank:
             shape = (LiteralInteger(1),)*(ndmin-rank) + shape
@@ -885,7 +913,7 @@ class NumpyProduct(PyccelFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
-        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonTuple(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
         if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
                 arg.dtype.precision <= lowest_possible_type.precision:
@@ -989,10 +1017,7 @@ class NumpyShape(PyccelFunction):
     name = 'shape'
 
     def __new__(cls, arg):
-        if isinstance(arg.shape, PythonTuple):
-            return arg.shape
-        else:
-            return PythonTuple(*arg.shape)
+        return PythonTuple(*get_shape_of_multi_level_container(arg))
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -1307,6 +1332,7 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
     """
     __slots__ = ('_fill_value','_shape')
+    _attribute_nodes = NumpyNewArray._attribute_nodes + ('_shape',)
     name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
@@ -1648,7 +1674,7 @@ class NumpyNorm(PyccelFunction):
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
@@ -2074,6 +2100,27 @@ class NumpyFloor(NumpyUfuncUnary):
     __slots__ = ()
     name = 'floor'
 
+    def _get_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
+        """
+        if numpy_v2_1:
+            return process_dtype(x.dtype)
+        else:
+            return super()._get_dtype(x)
+
 class NumpyMod(NumpyUfuncBinary):
     """
     Represent a call to the `numpy.mod` function.
@@ -2476,16 +2523,18 @@ class NumpyCountNonZero(PyccelFunction):
             rank  = a.rank
             order = a.order
             if axis is not None:
-                self._shape = list(a.shape)
-                self._shape[axis.python_value] = LiteralInteger(1)
+                shape = list(a.shape)
+                shape[axis.python_value] = LiteralInteger(1)
+                self._shape = tuple(shape)
             else:
                 self._shape = (LiteralInteger(1),)*rank
             self._class_type = NumpyNDArrayType(dtype, rank, order)
         else:
             if axis is not None:
                 dtype = NumpyInt64Type()
-                self._shape = list(a.shape)
-                self._shape.pop(axis.python_value)
+                shape = list(a.shape)
+                shape.pop(axis.python_value)
+                self._shape = tuple(shape)
                 rank  = a.rank-1
                 order = a.order
                 self._class_type = NumpyNDArrayType(dtype, rank, order)
@@ -2677,6 +2726,32 @@ class NumpyIsFinite(NumpyUfuncUnary):
         return PythonNativeBool()
 
 #==============================================================================
+class NumpyNDArray(PyccelFunction):
+    """
+    A class representing np.ndarray.
+
+    A class representing np.ndarray. np.ndarray is useful for type
+    checks. NumpyNDArray is not designed to be instantiated as
+    np.ndarray raises a warning when used in code, but as its
+    implementation is identical to np.array the __new__ method maps
+    to that class so the method is supported.
+
+    Parameters
+    ----------
+    *args : tuple
+        Positional arguments. See NumpyArray.
+    **kwargs : dict
+        Keyword arguments. See NumpyArray.
+    """
+    __slots__ = ()
+    _dtype = SymbolicType()
+    _static_type = NumpyNDArrayType
+    name = 'ndarray'
+
+    def __new__(cls, *args, **kwargs):
+        return NumpyArray(*args, **kwargs)
+
+#==============================================================================
 
 DtypePrecisionToCastFunction.update({
     NumpyInt8Type()       : NumpyInt8,
@@ -2693,10 +2768,10 @@ DtypePrecisionToCastFunction.update({
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 
-numpy_linalg_mod = Module('linalg', (),
+numpy_linalg_mod = Module('numpy.linalg', (),
     [PyccelFunctionDef('norm', NumpyNorm)])
 
-numpy_random_mod = Module('random', (),
+numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
      PyccelFunctionDef('random' , NumpyRand),
      PyccelFunctionDef('randint', NumpyRandint)])
@@ -2783,6 +2858,8 @@ numpy_funcs = {
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
     'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
+    'dtype'     : PyccelFunctionDef('dtype', NumpyResultType),
+    'ndarray'   : PyccelFunctionDef('ndarray', NumpyNDArray),
 }
 
 numpy_mod = Module('numpy',

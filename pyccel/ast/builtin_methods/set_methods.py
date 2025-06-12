@@ -9,7 +9,7 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import VoidType
+from pyccel.ast.datatypes import VoidType, PythonNativeBool
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.basic import TypedAstNode
 
@@ -18,9 +18,12 @@ __all__ = (
     'SetClear',
     'SetCopy',
     'SetDiscard',
+    'SetIntersection',
+    'SetIntersectionUpdate',
+    'SetIsDisjoint',
     'SetMethod',
     'SetPop',
-    'SetRemove',
+    'SetUnion',
     'SetUpdate'
 )
 
@@ -53,6 +56,16 @@ class SetMethod(PyccelFunction):
         Get the variable representing the set.
         """
         return self._set_variable
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._set_variable,)
 
 #==============================================================================
 class SetAdd(SetMethod) :
@@ -123,6 +136,16 @@ class SetCopy(SetMethod):
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
 
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
 #==============================================================================
 class SetPop(SetMethod):
     """
@@ -146,34 +169,6 @@ class SetPop(SetMethod):
     def __init__(self, set_variable):
         self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
-
-#==============================================================================
-class SetRemove(SetMethod):
-    """
-    Represents a call to the .remove() method.
-
-    The remove() method removes the specified item from 
-    the set and updates the set. It doesn't return any value.
-
-    Parameters
-    ----------
-    set_variable : TypedAstNode
-        The set on which the method will operate.
-
-    item : TypedAstNode
-        The item to search for, and remove.
-    """
-    __slots__ = ()
-    _shape = None
-    _class_type = VoidType()
-    name = 'remove'
-
-    def __init__(self, set_variable, item) -> None:
-        if not isinstance(item, TypedAstNode):
-            raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
-        if item.class_type != set_variable.class_type.element_type:
-            raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
-        super().__init__(set_variable, item)
 
 #==============================================================================
 class SetDiscard(SetMethod):
@@ -227,6 +222,130 @@ class SetUpdate(SetMethod):
     """
     __slots__ = ()
     name = 'update'
+    _shape = None
+    _class_type = VoidType()
 
     def __init__(self, set_obj, iterable) -> None:
         super().__init__(set_obj, iterable)
+
+#==============================================================================
+class SetUnion(SetMethod):
+    """
+    Represents a call to the set method .union.
+
+    Represents a call to the set method .union. This method builds a new set
+    by including all elements which appear in at least one of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'union'
+
+    def __init__(self, set_obj, *others):
+        self._class_type = set_obj.class_type
+        element_type = self._class_type.element_type
+        for o in others:
+            if element_type != o.class_type.element_type:
+                raise TypeError(f"Argument of type {o.class_type} cannot be used to build set of type {self._class_type}")
+        self._shape = (None,)*self._class_type.rank
+        super().__init__(set_obj, *others)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
+#==============================================================================
+
+class SetIntersection(SetMethod):
+    """
+    Represents a call to the set method .intersection.
+
+    Represents a call to the set method .intersection. This method builds a new set
+    by including all elements which appear in "both" of the iterables
+    (the set object and the arguments).
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The iterables which will be combined (common elements) with this set.
+    """
+    __slots__ = ('_other','_class_type', '_shape')
+    name = 'intersection'
+
+#==============================================================================
+
+class SetIntersectionUpdate(SetMethod):
+    """
+    Represents a call to the .intersection_update() method.
+
+    Represents a call to the set method .intersection_update(). This method combines
+    two sets by including all elements which appear in all of the sets.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The sets which will be combined with this set.
+    """
+    __slots__ = ()
+    name = 'intersection_update'
+    _class_type = VoidType()
+    _shape = None
+
+    def __init__(self, set_obj, *others):
+        class_type = set_obj.class_type
+        for o in others:
+            if class_type != o.class_type:
+                raise TypeError(f"Only arguments of type {class_type} are supported for the functions intersection and .intersection_update")
+        super().__init__(set_obj, *others)
+
+#==============================================================================
+
+class SetIsDisjoint(SetMethod):
+    """
+    Represents a call to the .isdisjoint() method.
+
+    Represents a call to the .isdisjoint() method. This method checks if two
+    sets have a null intersection.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    other_set_obj : TypedAstNode
+        The set object which is passed as an argument to the method.
+    """
+    __slots__ = ()
+    name = 'isdisjoint'
+    _class_type = PythonNativeBool()
+    _shape = None
+
+    def __init__(self, set_obj, other_set_obj):
+        if set_obj.class_type != other_set_obj.class_type:
+            raise TypeError("Is disjoint can only be used to compare sets of the same type.")
+        super().__init__(set_obj, other_set_obj)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()

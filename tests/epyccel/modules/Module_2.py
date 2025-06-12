@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+__all__ = ['f6', 'h']
 
 def f6(m1 : 'int', m2 : 'int', x : 'float [:,:]'):
     x[:,:] = 0.

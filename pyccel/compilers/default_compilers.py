@@ -17,7 +17,6 @@ from pyccel import __version__ as pyccel_version
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
-              'language': 'fortran',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
@@ -32,7 +31,6 @@ gfort_info = {'exec' : 'gfortran',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'GNU',
               }
 
 if sys.platform == "win32":
@@ -45,26 +43,23 @@ if sys.platform == "win32":
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
-              'language': 'fortran',
               'module_output_flag': '-module',
-              'debug_flags': ("-check=bounds","-g","-O0"),
+              'debug_flags': ("-check", "bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
-                  'flags' : ('-fopenmp','-nostandard-realloc-lhs'),
+                  'flags' : ('-qopenmp','-nostandard-realloc-lhs'),
                   'libs'  : ('iomp5',),
                   },
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'intel',
               }
 
 #------------------------------------------------------------
 pgfortran_info = {'exec' : 'pgfortran',
               'mpi_exec' : 'pgfortran',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -76,13 +71,11 @@ pgfortran_info = {'exec' : 'pgfortran',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'PGI',
               }
 
 #------------------------------------------------------------
 nvfort_info = {'exec' : 'nvfort',
               'mpi_exec' : 'mpifort',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -94,13 +87,11 @@ nvfort_info = {'exec' : 'nvfort',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'nvidia',
               }
 
 #------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
@@ -114,7 +105,6 @@ gcc_info = {'exec' : 'gcc',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'GNU',
             }
 
 if sys.platform == "darwin":
@@ -138,24 +128,21 @@ elif sys.platform == "win32":
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpiicx',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
-                'flags' : ('-fopenmp',),
+                'flags' : ('-qopenmp',),
                 },
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'intel',
             }
 
 #------------------------------------------------------------
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -166,13 +153,11 @@ pgcc_info = {'exec' : 'pgcc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'PGI',
             }
 
 #------------------------------------------------------------
 nvc_info = {'exec' : 'nvc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -183,7 +168,6 @@ nvc_info = {'exec' : 'nvc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'nvidia',
             }
 
 #------------------------------------------------------------
@@ -263,6 +247,7 @@ else:
                 possible_shared_lib = preferred_lib
 
         python_info['python']['dependencies'] = (possible_shared_lib[0],)
+        python_info['python']['libdirs'] = (os.path.dirname(possible_shared_lib[0]),)
     elif possible_static_lib:
         if len(possible_static_lib)>1:
             preferred_lib = [l for l in possible_static_lib if l.endswith('.a')]
@@ -289,13 +274,13 @@ pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
 
-available_compilers = {('GNU', 'c') : gcc_info,
-                       ('GNU', 'fortran') : gfort_info,
-                       ('intel', 'c') : icc_info,
-                       ('intel', 'fortran') : ifort_info,
-                       ('PGI', 'c') : pgcc_info,
-                       ('PGI', 'fortran') : pgfortran_info,
-                       ('nvidia', 'c') : nvc_info,
-                       ('nvidia', 'fortran') : nvfort_info}
+available_compilers = {'GNU': {'c' : gcc_info,
+                               'fortran' : gfort_info},
+                       'intel': {'c' : icc_info,
+                                 'fortran' : ifort_info},
+                       'PGI': {'c' : pgcc_info,
+                               'fortran' : pgfortran_info},
+                       'nvidia': {'c' : nvc_info,
+                                  'fortran' : nvfort_info}}
 
 vendors = ('GNU','intel','PGI','nvidia')

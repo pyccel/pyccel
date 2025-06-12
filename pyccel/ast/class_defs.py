@@ -6,17 +6,23 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy, SetPop, SetRemove, SetDiscard, SetUpdate
+from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, SetPop,
+                                                     SetDiscard, SetUpdate, SetUnion,
+                                                     SetIntersection, SetIntersectionUpdate,
+                                                     SetIsDisjoint)
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
-                                                     ListCopy, ListSort)
-from pyccel.ast.builtin_methods.dict_methods  import DictPop
+                                                     ListCopy, ListSort, ListReverse)
+from pyccel.ast.builtin_methods.dict_methods import (DictPop, DictPopitem, DictGet, DictClear,DictCopy,
+                                                     DictSetDefault, DictItems, DictGetItem, DictKeys,
+                                                     DictValues)
 
 from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
 from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                          PythonNativeComplex, StringType, TupleType, CustomDataType,
-                         HomogeneousListType, HomogeneousSetType, DictType, SymbolicType)
+                         HomogeneousListType, HomogeneousSetType, DictType, SymbolicType,
+                         GenericType)
 from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                          NumpyImag, NumpyReal, NumpyTranspose,
                          NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -151,6 +157,7 @@ ListClass = ClassDef('list',
             PyccelFunctionDef('pop', func_class = ListPop),
             PyccelFunctionDef('sort', func_class = ListSort),
             PyccelFunctionDef('remove', func_class = ListRemove),
+            PyccelFunctionDef('reverse', func_class = ListReverse),
         ])
 
 #=======================================================================================
@@ -162,15 +169,32 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('copy', func_class = SetCopy),
             PyccelFunctionDef('discard', func_class = SetDiscard),
             PyccelFunctionDef('pop', func_class = SetPop),
-            PyccelFunctionDef('remove', func_class = SetRemove),
+            PyccelFunctionDef('remove', func_class = SetDiscard),
+            PyccelFunctionDef('union', func_class = SetUnion),
+            PyccelFunctionDef('intersection', func_class = SetIntersection),
+            PyccelFunctionDef('intersection_update', func_class = SetIntersectionUpdate),
+            PyccelFunctionDef('isdisjoint', func_class = SetIsDisjoint),
             PyccelFunctionDef('update', func_class = SetUpdate),
+            PyccelFunctionDef('__or__', func_class = SetUnion),
+            PyccelFunctionDef('__and__', func_class = SetIntersection),
+            PyccelFunctionDef('__iand__', func_class = SetIntersectionUpdate),
+            PyccelFunctionDef('__ior__', func_class = SetUpdate),
         ])
 
 #=======================================================================================
 
 DictClass = ClassDef('dict',
         methods=[
+            PyccelFunctionDef('copy', func_class = DictCopy),
+            PyccelFunctionDef('clear', func_class = DictClear),
+            PyccelFunctionDef('get', func_class = DictGet),
+            PyccelFunctionDef('items', func_class = DictItems),
+            PyccelFunctionDef('keys', func_class = DictKeys),
             PyccelFunctionDef('pop', func_class = DictPop),
+            PyccelFunctionDef('popitem', func_class = DictPopitem),
+            PyccelFunctionDef('setdefault', func_class = DictSetDefault),
+            PyccelFunctionDef('values', func_class = DictValues),
+            PyccelFunctionDef('__getitem__', func_class = DictGetItem),
         ])
 
 #=======================================================================================
@@ -251,7 +275,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, (CustomDataType, SymbolicType)):
+    if isinstance(class_type, (CustomDataType, SymbolicType, GenericType)):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]

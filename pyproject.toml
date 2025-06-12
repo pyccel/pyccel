@@ -7,7 +7,7 @@ name = "pyccel"
 dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 authors = [
     { name = "Pyccel development team" },
 ]
@@ -16,11 +16,10 @@ keywords = [
 ]
 dependencies = [
     "filelock >= 3.4.0",
-    "numpy >= 1.16, < 2.0",
+    "numpy >= 1.16, != 2.0.*",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
-    "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
     "packaging",
 ]
 
@@ -32,12 +31,12 @@ test = [
     "pytest-xdist >= 1.16",
     "scipy >= 1.5.0",
     "tblib >= 1.7.0",
+    "numpydoc >= 1.8.0",
 ]
 
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel"
 pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
-pyccel-init = "pyccel.commands.pyccel_init:pyccel_init_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
@@ -48,21 +47,18 @@ path = "pyccel/version.py"
 [tool.hatch.build.targets.wheel]
 artifacts = [
   "*.pyccel",
+  "pyccel/extensions/gFTL/install/GFTL-1.13/include/v2"
 ]
 include = [
   "pyccel/**/*.py",
-  "pyccel/**/*.pyh",
-  "pyccel/**/*.pyccel",
+  "pyccel/**/*.pyi",
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",
+  "pyccel/stdlib/**/*.inc",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/gFTL/include/v2"
-]
-exclude = [
-    "pyccel/extensions/STC/src",
-    "pyccel/extensions/STC/misc"
+  "pyccel/extensions/STC/src/*.c"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]

@@ -29,7 +29,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 If Pyccel has been significant in your research, and you would like to acknowledge the project in your academic publication, we would ask that you cite the following paper:
 
-Bourne, Güçlü, Hadjout and Ratnani (2023). Pyccel: a Python-to-X transpiler for scientific high-performance computing. Journal of Open Source Software, 8(83), 4991, https://doi.org/10.21105/joss.04991
+Bourne, Güçlü, Hadjout and Ratnani (2023). Pyccel: a Python-to-X transpiler for scientific high-performance computing. Journal of Open Source Software, 8(83), 4991, <https://doi.org/10.21105/joss.04991>
 
 The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/devel/pyccel.bib).
 
@@ -37,14 +37,16 @@ The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/
 
 Pyccel has a few system requirements to ensure that the system where it is installed is capable of compiling Fortran code.
 These requirements are detailed in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
-Once all requirements are satisfied, the simplest way to install Pyccel is using PyPI.
-Simply run:
+Once all requirements are satisfied, we recommend installing Pyccel into a Python virtual environment, which can be created with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment).
+Once the Python virtual environment is ready and activated, Pyccel can be easily installed using [pip](https://github.com/pypa/pip?tab=readme-ov-file#pip---the-python-package-installer), the Python package installer.
+The simple command
 
 ```sh
-python3 -m pip install --user pyccel
+pip install pyccel
 ```
 
-Alternative installation methods such as installing from source, or installing with a docker are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+will download the latest release of Pyccel from [PyPI](https://pypi.org/project/pyccel/), the Python package index.
+Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 
 ## Contributing
 
