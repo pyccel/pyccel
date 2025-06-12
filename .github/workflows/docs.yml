@@ -130,8 +130,10 @@ jobs:
           make -C docs html
         shell: bash
       - name: Setup Pages
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
         uses: actions/configure-pages@v3
       - name: Upload artifact
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'docs/build/html'
