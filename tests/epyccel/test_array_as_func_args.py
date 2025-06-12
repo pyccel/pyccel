@@ -138,7 +138,7 @@ def test_array_complex_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_final(language):
-    def array_final(x : 'const float[:]'):
+    def array_final(x : 'Final[float[:]]'):
         return x[0]
 
     f1 = array_final
