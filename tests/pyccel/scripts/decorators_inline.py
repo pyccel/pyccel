@@ -53,6 +53,10 @@ def positron_charge():
 def add2(a : S, b : S, c : S):
     c[...] = a+b
 
+@inline
+def h() -> int:
+    return 2
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -76,3 +80,4 @@ if __name__ == '__main__':
     add2(a1, b1, c1)
     add2(a2, b2, c2)
     add2(a2, b2, c2)
+    print(h())
