@@ -12,7 +12,6 @@ from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import MetaVariable
-from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
@@ -161,54 +160,6 @@ class FuncType(BasicStmt):
 
         return FunctionTypeAnnotation(args, results)
 
-class ShapedID(BasicStmt):
-    """class representing a ShapedID in the grammar.
-
-    Parameters
-    ----------
-    name: str
-        Name of the variable result
-
-    shape: list
-        A list representing the shape of the result
-    """
-
-    def __init__(self, **kwargs):
-        self._name   = kwargs.pop('name')
-        self._shape  = kwargs.pop('shape', [])
-
-        super().__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """Returns a dictionary containing name and shape of result"""
-
-        shape = [i.expr if isinstance(i, MacroStmt) else PyccelSymbol(i) for i in self._shape]
-        d_var = {'name': self._name, 'shape': shape}
-
-        return d_var
-
-class StringStmt(BasicStmt):
-    """
-    Class describing a string in a macro.
-
-    Class describing a string in a macro.
-    To be removed when macro support is deprecated.
-
-    Parameters
-    ----------
-    arg : str
-        The string.
-    **kwargs : dict
-        TextX keyword arguments.
-    """
-    def __init__(self, arg, **kwargs):
-        self.arg = arg
-        super().__init__(**kwargs)
-    @property
-    def expr(self):
-        return LiteralString(str(self.arg))
-
 class UnionTypeStmt(BasicStmt):
     """
     Class describing a union of possible types.
@@ -266,145 +217,6 @@ class MetavarHeaderStmt(BasicStmt):
         value = self.value
         return MetaVariable(name, value)
 
-# ...
-class MacroArg(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-
-        self.arg = kwargs.pop('arg')
-        self.value = kwargs.pop('value',None)
-
-        super(MacroArg, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        arg_ = self.arg
-        if isinstance(arg_, MacroList):
-            return tuple(arg_.expr)
-        arg = PyccelSymbol(arg_)
-        value = self.value
-        if not(value is None):
-            if isinstance(value, (MacroStmt,StringStmt)):
-                value = value.expr
-            return FunctionDefArgument(arg, value=value)
-        return arg
-
-
-class MacroStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.arg = kwargs.pop('arg')
-        self.macro = kwargs.pop('macro')
-        self.parameter = kwargs.pop('parameter', None)
-
-        super(MacroStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        name = str(self.macro)
-        arg  = PyccelSymbol(self.arg)
-        parameter = self.parameter
-        return construct_macro(name, arg, parameter=parameter)
-
-# ...
-
-class MacroList(BasicStmt):
-    """ reresent a MacroList statement"""
-    def __init__(self, **kwargs):
-        ls = []
-        for i in kwargs.pop('ls'):
-            if isinstance(i, MacroArg):
-                ls.append(i.expr)
-            else:
-                ls.append(i)
-        self.ls = ls
-
-        super(MacroList, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        return self.ls
-
-
-class FunctionMacroStmt(BasicStmt):
-    """Base class representing an alias function statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a FunctionMacroStmt statement
-
-        name: str
-            function name
-        master: str
-            master function name
-        """
-
-        self.dotted_name = tuple(kwargs.pop('dotted_name'))
-        self.results = kwargs.pop('results', [])
-        self.args = kwargs.pop('args')
-        self.master_name = tuple(kwargs.pop('master_name'))
-        self.master_args = kwargs.pop('master_args')
-
-        super(FunctionMacroStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-
-        if len(self.dotted_name)>1:
-            name = DottedName(*self.dotted_name)
-        else:
-            name = str(self.dotted_name[0])
-
-        args = []
-        for i in self.args:
-            if isinstance(i, MacroArg):
-                args.append(i.expr)
-            else:
-                raise TypeError('argument must be of type MacroArg')
-
-
-        if len(self.master_name)==1:
-            master_name = str(self.master_name[0])
-        else:
-            raise NotImplementedError('TODO')
-
-        master_args = []
-        for i in self.master_args:
-            if isinstance(i, MacroStmt):
-                master_args.append(i.expr)
-            elif isinstance(i, str):
-                master_args.append(PyccelSymbol(i))
-            elif isinstance(i, int):
-                master_args.append(LiteralInteger(i))
-            elif isinstance(i, float):
-                master_args.append(LiteralFloat(i))
-            elif i is True:
-                master_args.append(LiteralTrue())
-            elif i is False:
-                master_args.append(LiteralFalse())
-            else:
-                NotImplementedError("Unrecognised macro argument type")
-
-        results = [PyccelSymbol(r.expr['name']) for r in self.results]
-        results_shapes = [r.expr['shape'] for r in self.results]
-
-        if len(args + master_args + results) == 0:
-            return MacroVariable(name, master_name)
-
-        if not isinstance(name, str):
-            #we treat the other all the names except the last one  as arguments
-            # so that we always have a name of type str
-            args = list(name.name[:-1]) + list(args)
-            name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results,
-                             results_shapes=results_shapes)
-
 
 #################################################
 
@@ -414,11 +226,7 @@ class FunctionMacroStmt(BasicStmt):
 type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
 hdr_classes = [Header,
                ShapedID,
-               MetavarHeaderStmt,
-               MacroStmt,
-               MacroArg,
-               MacroList,
-               FunctionMacroStmt, StringStmt]
+               MetavarHeaderStmt]
 
 this_folder = dirname(__file__)
 

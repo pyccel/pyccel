@@ -2008,62 +2008,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonMax(self, expr):
         return self._print_PythonMinMax(expr)
 
-    # ... MACROS
-    def _print_MacroShape(self, expr):
-        var = expr.argument
-        if not isinstance(var, (Variable, IndexedElement)):
-            raise TypeError('Expecting a variable, given {}'.format(type(var)))
-        shape = var.shape
-
-        if len(shape) == 1:
-            shape = shape[0]
-
-
-        elif not(expr.index is None):
-            if expr.index < len(shape):
-                shape = shape[expr.index]
-            else:
-                shape = '1'
-
-        return self._print(shape)
-
-    # ...
-    def _print_MacroType(self, expr):
-        dtype = self._print(expr.argument.dtype)
-        prec  = expr.argument.dtype.precision
-
-        if dtype == 'integer':
-            if prec==4:
-                return 'MPI_INTEGER'
-            elif prec==8:
-                return 'MPI_INTEGER8'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-
-        elif dtype == 'float':
-            if prec==8:
-                return 'MPI_DOUBLE'
-            if prec==4:
-                return 'MPI_FLOAT'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-
-        else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
-
-    def _print_MacroCount(self, expr):
-
-        var = expr.argument
-
-        if var.rank == 0:
-            return '1'
-        else:
-            return self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
-
     def _print_Declare(self, expr):
         # ... ignored declarations
         var = expr.variable
