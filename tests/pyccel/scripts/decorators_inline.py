@@ -59,7 +59,7 @@ def h() -> int:
 
 def call_in_loop():
     x = np.ones((3, 3), dtype=int)
-    for i in range(10):
+    for _ in range(10):
         arg_modifier(x)
     return x
 
