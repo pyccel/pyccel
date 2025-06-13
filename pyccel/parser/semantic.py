@@ -4736,7 +4736,12 @@ class SemanticParser(BasicParser):
         else:
             cond        = self._visit(expr.cond)
             value_false = self._visit(expr.value_false)
-            return IfTernaryOperator(cond, value_true, value_false)
+            if isinstance(cond, LiteralTrue):
+                return value_true
+            elif isinstance(cond, LiteralFalse):
+                return value_false
+            else:
+                return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_Return(self, expr):
 
@@ -5355,15 +5360,11 @@ class SemanticParser(BasicParser):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
-            if not isinstance(var1, Variable):
+            if not isinstance(var1, Variable) or not var1.is_optional:
                 if IsClass == PyccelIsNot:
                     return LiteralTrue()
                 elif IsClass == PyccelIs:
                     return LiteralFalse()
-            elif not var1.is_optional:
-                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                        severity='error')
             return IsClass(var1, expr.rhs)
 
         if (var1.dtype != var2.dtype):
