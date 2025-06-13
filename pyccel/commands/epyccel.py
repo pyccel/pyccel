@@ -366,7 +366,7 @@ def epyccel_seq(function_class_or_module, *,
         package = importlib.import_module(module_name)
         sys.path.remove(epyccel_dirpath)
 
-        if language.lower() != 'python':
+        if language and language.lower() != 'python':
             # Verify that we have imported the shared library, not the Python one
             loader = getattr(package, '__loader__', None)
             if not isinstance(loader, ExtensionFileLoader):
