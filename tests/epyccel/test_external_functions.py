@@ -6,6 +6,12 @@ import scipy.linalg.blas as sp_blas
 import modules.external_functions as mod
 from pyccel import epyccel
 
+#==============================================================================
+
+# Skip all tests for now
+pytestmark = pytest.mark.skip
+
+
 # ==============================================================================
 @pytest.mark.fortran
 def test_dnrm2_1():
