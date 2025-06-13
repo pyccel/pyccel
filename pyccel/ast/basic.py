@@ -117,12 +117,12 @@ class PyccelAstNode:
         for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             c = getattr(self, c_name)
 
-            if self._ignore(c):
+            if self._ignore(c) or c.pyccel_staging != self.pyccel_staging:
+                # Pyccel stage can change for basic objects with no attributes (e.g. Literal, Pass, etc)
                 continue
             elif isinstance(c, tuple):
                 _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci)]
-            elif c.pyccel_staging == self.pyccel_staging:
-                # Pyccel stage can change for basic objects with no attributes (e.g. Literal, Pass, etc)
+            else:
                 c.remove_user_node(self)
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
