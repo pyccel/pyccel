@@ -2631,7 +2631,6 @@ class FCodePrinter(CodePrinter):
         decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
-        # we rename all methods because of the aliasing
         cls_methods = [i for i in expr.methods if not i.is_inline]
         for i in expr.interfaces:
             cls_methods +=  [j for j in i.functions if not j.is_inline]
