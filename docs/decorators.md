@@ -1,4 +1,4 @@
-# Decorators
+# Pyccel Decorators To Improve Performance
 
 As Pyccel converts a dynamically typed language (Python) to statically typed languages, it has some *decorators* which the user can add in the code to provide access to low level optimisations. Here are the available decorators.
 

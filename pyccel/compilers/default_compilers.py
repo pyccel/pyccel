@@ -107,6 +107,41 @@ gcc_info = {'exec' : 'gcc',
                 },
             }
 
+#------------------------------------------------------------
+clang_info = {'exec': 'clang',
+            'mpi_exec': 'mpicc',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=c99",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
+            },
+            }
+
+#------------------------------------------------------------
+flang_info = {
+            'exec': 'flang',
+            'mpi_exec': 'mpif90',
+            'module_output_flag': '-J',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3",),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=f2003",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
+            },
+            }
+
+
 if sys.platform == "darwin":
     p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
     HOMEBREW_PREFIX = p.stdout.decode().strip()
@@ -273,14 +308,30 @@ pgcc_info.update(python_info)
 pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
+clang_info.update(python_info)
+flang_info.update(python_info)
 
-available_compilers = {'GNU': {'c' : gcc_info,
-                               'fortran' : gfort_info},
-                       'intel': {'c' : icc_info,
-                                 'fortran' : ifort_info},
-                       'PGI': {'c' : pgcc_info,
-                               'fortran' : pgfortran_info},
-                       'nvidia': {'c' : nvc_info,
-                                  'fortran' : nvfort_info}}
+available_compilers = {
+                        'GNU': {
+                            'c' : gcc_info,
+                            'fortran' : gfort_info
+                            },
+                        'intel': {
+                            'c' : icc_info,
+                            'fortran' : ifort_info
+                            },
+                        'PGI': {
+                            'c' : pgcc_info,
+                            'fortran' : pgfortran_info
+                            },
+                        'nvidia': {
+                           'c' : nvc_info,
+                            'fortran' : nvfort_info
+                            },
+                        'LLVM': {
+                            'c': clang_info,
+                            'fortran': flang_info
+                            },
+                        }
 
-vendors = ('GNU','intel','PGI','nvidia')
+vendors = ('GNU','intel','PGI','nvidia','LLVM')

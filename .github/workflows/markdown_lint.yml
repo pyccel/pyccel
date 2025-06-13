@@ -53,7 +53,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py spelling
+          python ci_tools/setup_check_run.py markdownlint
       - name: Markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v19
         with:

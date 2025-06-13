@@ -15,6 +15,7 @@ default_python_versions = {
         'coverage': '3.9',
         'docs': '3.10',
         'intel': '3.10',
+        'llvm': '3.10',
         'linux': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
@@ -33,6 +34,7 @@ test_names = {
         'coverage': "Coverage verification",
         'docs': "Check documentation",
         'intel': "Unit tests on Linux with Intel compiler",
+        'llvm': "Unit tests on Linux with LLVM compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
@@ -47,7 +49,7 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
-tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'markdown_lint', 'pylint')
+tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'markdown_lint', 'pyccel_lint', 'spelling', 'intel')

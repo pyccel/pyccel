@@ -20,7 +20,7 @@ This function is called from the constructor to examine an AST (Abstract Syntax 
 The key line of the function `annotate` is the call to `self._visit(self.ast)`.
 All elements of the tree must be visited.
 Similarly to in the [syntactic stage](syntactic_stage.md), the `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventions).
 These `_visit_X` functions must have the form:
 
 ```python
@@ -34,7 +34,7 @@ Each of these `_visit_X` functions should internally call the `_visit` function 
 
 Variables and objects which can be saved in variables (e.g. literals and arrays), are  characterised by their type.
 The type indicates all the information that allows the object to be declared in a low-level language.
-The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](./ast_nodes.md#Typed-AST-Node).
+The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](./ast_nodes.md#typed-ast-node).
 The characteristics are:
 
 -   **data type** : boolean/integer/float/complex/class type/etc

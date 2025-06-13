@@ -849,8 +849,9 @@ class With(ScopedAstNode):
 
     Represents a 'with' statement in the code.
     Expressions are of the form:
-        "with statement:
-            body..."
+
+    >>> with statement:
+    >>>     body...
 
     !! This code is untested.
 
@@ -2703,7 +2704,7 @@ class PyccelFunctionDef(FunctionDef):
     Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
     This is useful for importing builtin functions and for defining
-    classes which have `PyccelFunction`s as attributes or methods.
+    classes which have `PyccelFunction` objects as attributes or methods.
 
     Parameters
     ----------
