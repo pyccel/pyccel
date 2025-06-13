@@ -2,27 +2,33 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-
-
 """
 Module exposing the fitpack library function to pyccel (see  http://www.netlib.org/dierckx/).
 """
-
 #$ header metavar print=True
+import numpy as np
 from pyccel.stdlib.internal.fitpack import bispev
 
 
 
-#$ header function bispev2(double[:] , int, double[:], int, double[:], int, int, double[:], int, double[:], int, double[:,:], int)
-def bispev2(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, ierr):
+def bispev2(tx : 'float64[:]', nx : 'int', ty : 'float64[:]', ny : int,
+            c : 'float64[:]', kx : int, ky : int, x : 'float64[:]',
+            mx : int, y : 'float64[:]', my : int, z : 'float64[:]', ierr : int):
 
-    from numpy import empty
+def bispev(tx : 'float64[:]', ty : 'float64[:]', c : 'float64[:]',
+           kx : int, ky : int, x : 'float64[:]', y : 'float64[:]'):
+    nx = tx.size
+    ny = ty.size
+    mx = x.size
+    my = y.size
+    z = np.empty(mx*my)
     lwrk = mx*(kx+1)+my*(ky+1)
-    work  = empty(lwrk)
+    work  = np.empty(lwrk)
     kwrk = mx+my
-    iwrk = empty(kwrk,'int')
+    iwrk = np.empty(kwrk, dtype=np.int32)
     bispev(tx, nx, ty, ny, c, kx, ky, x, mx, y, my, z, work, lwrk, iwrk, kwrk, ierr)
 
+    return z, ierr
 
 
-#$ header macro (z,ierr), _bispev(tx, ty, c, kx, ky, x, y) := bispev2(tx, tx.count , ty, ty.count, c, kx, ky, x, x.count, y, y.count, z, ierr)
+
