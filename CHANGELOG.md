@@ -240,7 +240,7 @@ All notable changes to this project will be documented in this file.
 -   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
--   #2339 : Remove `const` type modifier which cannot be used in objects such as `TypeVar`.
+-   #2339 : Remove `const` type modifier in favour of `typing.TypeVar`.
 -   #1287 : Remove unused method `BasicParser.copy()`.
 -   #2345 : Remove undocumented macro syntax in favour of inline methods.
 -   #2345 : Break support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
