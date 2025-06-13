@@ -67,6 +67,11 @@ def call_in_loop():
 def arg_modifier(arr: "int[:,:]"):
     arr[:] = 0.0
 
+@inline
+def optional_in_ternary(a : int = None):
+    b = 2 if a is None else a
+    return b
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -94,3 +99,6 @@ if __name__ == '__main__':
     print(add(a,b=b))
     print(add(b=2, a=3))
     print(call_in_loop())
+    print(optional_in_ternary())
+    print(optional_in_ternary(3))
+    print(optional_in_ternary(b))
