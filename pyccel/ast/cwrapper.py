@@ -388,7 +388,7 @@ class PyModule_Create(PyccelFunction):
     The PyModule_Create function can be found in Python.h.
     It acts as a constructor for a module. More information about
     this function can be found in Python's documentation.
-    See <https://docs.python.org/3/c-api/module.html#c.PyModule_Create>.
+    See https://docs.python.org/3/c-api/module.html#c.PyModule_Create .
 
     Parameters
     ----------
@@ -422,9 +422,9 @@ class PyCapsule_New(PyccelFunction):
     the creation of a capsule. A capsule contains all information
     from a module which should be exposed to other modules that import
     this module.
-    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    See https://docs.python.org/3/extending/extending.html#using-capsules
     for a tutorial involving capsules.
-    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New>
+    See https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New
     for the API docstrings for this method.
 
     Parameters
@@ -473,9 +473,9 @@ class PyCapsule_Import(PyccelFunction):
     the initialisation of a capsule by importing the information from
     another module. A capsule contains all information from a module
     which should be exposed to other modules that import this module.
-    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    See https://docs.python.org/3/extending/extending.html#using-capsules
     for a tutorial involving capsules.
-    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import>
+    See https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import
     for the API docstrings for this method.
 
     Parameters
@@ -528,12 +528,12 @@ class PyModule(Module):
 
     init_func : FunctionDef, optional
         The function which is executed when a module is initialised.
-        See: <https://docs.python.org/3/c-api/module.html#multi-phase-initialization>.
+        See: https://docs.python.org/3/c-api/module.html#multi-phase-initialization .
 
     import_func : FunctionDef, optional
         The function which allows types from this module to be imported in other
         modules.
-        See: <https://docs.python.org/3/extending/extending.html>.
+        See: https://docs.python.org/3/extending/extending.html .
 
     **kwargs : dict
         See Module.
@@ -600,7 +600,7 @@ class PyModule(Module):
         The function which allows types from this module to be imported in other modules.
 
         The function which allows types from this module to be imported in other modules.
-        See <https://docs.python.org/3/extending/extending.html> to understand how this
+        See https://docs.python.org/3/extending/extending.html to understand how this
         is done.
         """
         return self._import_func
@@ -895,7 +895,7 @@ class PyGetSetDefElement(PyccelAstNode):
 
     A class representing an element of the list of PyGetSetDef objects
     which are used to add attributes/properties to classes.
-    See <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>.
+    See https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef .
 
     Parameters
     ----------
@@ -1020,7 +1020,7 @@ class PyTuple_Pack(PyccelFunction):
     A class representing a call to Python's PyTuple_Pack function. A class
     is used instead of a FunctionDef as the number of arguments is variable.
     A PyTuple_Pack is described here:
-    <https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack>
+    https://docs.python.org/3/c-api/tuple.html#c.PyTuple_Pack
 
     Parameters
     ----------
