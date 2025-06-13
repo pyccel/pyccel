@@ -57,6 +57,16 @@ def add2(a : S, b : S, c : S):
 def h() -> int:
     return 2
 
+def call_in_loop():
+    x = ones((3, 3), dtype=int)
+    for i in range(10):
+        arg_modifier(x)
+    return x
+
+@inline
+def arg_modifier(arr: "int[:,:]"):
+    arr[:] = 0.0
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -83,3 +93,4 @@ if __name__ == '__main__':
     print(h())
     print(add(a,b=b))
     print(add(b=2, a=3))
+    print(call_in_loop())
