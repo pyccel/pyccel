@@ -225,7 +225,6 @@ class MetavarHeaderStmt(BasicStmt):
 # lists.
 type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
 hdr_classes = [Header,
-               ShapedID,
                MetavarHeaderStmt]
 
 this_folder = dirname(__file__)
