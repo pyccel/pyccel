@@ -1356,7 +1356,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
+            is_inline = func.is_inline if isinstance(func, FunctionDef) else False
             if is_inline:
                 return self._visit_InlineFunctionDef(func, args, expr)
             elif not func.is_semantic:
