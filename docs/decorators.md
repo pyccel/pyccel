@@ -1,4 +1,4 @@
-# Decorators
+# Pyccel Decorators To Improve Performance
 
 As Pyccel converts a dynamically typed language (Python) to statically typed languages, it has some *decorators* which the user can add in the code to provide access to low level optimisations. Here are the available decorators.
 
@@ -352,7 +352,8 @@ end module boo
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
-Any functions with the `@inline` decorator will not be exposed to the user in the shared library.
+Functions with the `@inline` decorator will not be exposed to the user in the shared library.
+They are only parsed when encountered in a function call. As a result, type annotations are optional for functions with the `@inline` decorator.
 
 ### Basic Example
 

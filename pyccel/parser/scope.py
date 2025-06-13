@@ -366,12 +366,11 @@ class Scope(object):
                 Default : var.name.
         """
         if name is None:
-            name = self._original_symbol[var.name]
-
-        self._used_symbols.pop(name)
+            name = self.get_python_name(var.name)
 
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
+            self._used_symbols.pop(name)
         elif self.parent_scope:
             self.parent_scope.remove_variable(var, name)
         else:
@@ -553,6 +552,29 @@ class Scope(object):
         excluding enclosing scopes
         """
         return self._used_symbols
+
+    def symbol_in_use(self, name):
+        """
+        Determine if a name is already in use in this scope.
+
+        Determine if a name is already in use in this scope.
+
+        Parameters
+        ----------
+        name : PyccelSymbol
+            The name we are searching for.
+
+        Returns
+        -------
+        bool
+            True if the name has already been inserted into this scope, False otherwise.
+        """
+        if name in self._used_symbols:
+            return True
+        elif self.parent_scope:
+            return self.parent_scope.symbol_in_use(name)
+        else:
+            return False
 
     def get_new_incremented_symbol(self, prefix, counter):
         """

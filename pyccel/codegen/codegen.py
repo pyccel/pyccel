@@ -199,7 +199,7 @@ class Codegen:
         a program and the target language is not Python a program source file is
         also generated. The source and header files are named by appending the
         extension to the requested filename. The program source file is named by
-        additionally prepending 'prog_' to the requested filename.
+        additionally prepending `prog_` to the requested filename.
 
         Parameters
         ----------

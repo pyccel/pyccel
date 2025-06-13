@@ -19,7 +19,7 @@ This is necessary as Python's `ast` module discards all comments.
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
 The `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventions).
 These `_visit_X` functions must have the form:
 
 ```python
@@ -87,7 +87,7 @@ The most important arguments are:
 
 Although the failures in visitation functions (`_visit_X`) do not affect other visitation functions it is still important to ensure that the functions provide a valid output.
 In the `SyntacticParser` all `_visit_X` should return a Pyccel AST object (an object which inherits from [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py), `pyccel.ast.core.EmptyNode` can be used to ensure this restriction is fulfilled.
-This is important to avoid errors caused by the construction of the tree which relates the objects (for more details see the [semantic stage](semantic_stage.md#Object-tree)).
+This is important to avoid errors caused by the construction of the tree which relates the objects (for more details see the [semantic stage](semantic_stage.md#object-tree)).
 
 ## Headers
 
