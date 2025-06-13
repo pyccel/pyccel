@@ -239,6 +239,7 @@ All notable changes to this project will be documented in this file.
 -   #2339 : Remove `const` type modifier which cannot be used in objects such as `TypeVar`.
 -   #1287 : Remove unused method `BasicParser.copy()`.
 -   #2345 : Remove undocumented macro syntax in favour of inline methods.
+-   #2345 : Broken support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
