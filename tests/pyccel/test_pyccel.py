@@ -535,6 +535,13 @@ def test_folder_imports(language):
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
 
+@pytest.mark.xdist_incompatible
+def test_capitalised_language(language):
+    test_file = get_abs_path("scripts/runtest_funcs.py")
+    cwd = os.path.dirname(test_file)
+    output_folder = "__pyccel__" + os.environ.get('PYTEST_XDIST_WORKER', '')
+    compile_pyccel(cwd, test_file, f'--language={language.capitalize()} --output={output_folder}')
+
 #------------------------------------------------------------------------------
 # Enumerate not supported in c
 def test_inout_func(language):
