@@ -353,7 +353,7 @@ end module boo
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
 Functions with the `@inline` decorator will not be exposed to the user in the shared library.
-They are only parsed when encountered in a function call, as a result, type annotations are optional for functions with the `@inline` decorator.
+They are only parsed when encountered in a function call. As a result, type annotations are optional for functions with the `@inline` decorator.
 
 ### Basic Example
 
