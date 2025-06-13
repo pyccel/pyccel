@@ -174,7 +174,7 @@ All notable changes to this project will be documented in this file.
 -   Fix casting of arrays in Python translation.
 -   #2167 : Stop modifying variables to add `Final` annotation.
 -   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
--   #???? : Allow language to set using a capitalised name (Fortran, C, Python).
+-   #2344 : Allow language to be set using a capitalised name (Fortran, C, Python).
 
 ### Changed
 
