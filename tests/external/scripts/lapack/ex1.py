@@ -19,10 +19,10 @@ from scipy.linalg.lapack import dgetrs
 from numpy import zeros, empty, int32
 
 def test_1():
-    n   = int32(25)
-    ml  = int32(1)
-    mu  = int32(1)
-    lda = int32(2 * ml + mu + 1)
+    n   = 25
+    ml  = 1
+    mu  = 1
+    lda = 2 * ml + mu + 1
 
     a = zeros((lda,n))
     b = zeros((1,n))
