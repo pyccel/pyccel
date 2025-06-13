@@ -136,7 +136,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs/build/html'
+          path: 'compare/docs/build/html'
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
