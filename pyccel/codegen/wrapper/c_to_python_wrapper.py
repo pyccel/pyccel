@@ -2023,6 +2023,8 @@ class CToPythonWrapper(Wrapper):
         orig_scope = expr.scope
 
         for f in expr.methods:
+            if f.is_inline:
+                continue
             orig_f = getattr(f, 'original_function', f)
             name = orig_f.name
             python_name = orig_scope.get_python_name(name)
@@ -2034,7 +2036,7 @@ class CToPythonWrapper(Wrapper):
                 wrapped_class.add_new_magic_method(self._wrap(f))
             elif 'property' in f.decorators:
                 wrapped_class.add_property(self._wrap(f))
-            elif not f.is_inline:
+            else:
                 wrapped_class.add_new_method(self._wrap(f))
 
         for i in expr.interfaces:

@@ -1087,10 +1087,7 @@ def test_function(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
-            pytest.mark.c]
-        )
+        pytest.param("c", marks = pytest.mark.c)
     )
 )
 def test_inline(language):
