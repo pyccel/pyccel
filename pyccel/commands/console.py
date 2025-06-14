@@ -80,7 +80,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     # ... backend compiler options
     group = parser.add_argument_group('Backend compiler options')
 
-    group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
+    group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language', type=str.lower)
 
     group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI,nvidia}')
 

@@ -190,6 +190,8 @@ def execute_pyccel(fname, *,
 
     if language is None:
         language = 'fortran'
+    else:
+        language = language.lower()
 
     # Choose Fortran compiler
     if compiler_family is None:

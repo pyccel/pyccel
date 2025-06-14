@@ -1,4 +1,4 @@
-# Supported Class by Pyccel
+# Pyccel Support for Classes
 
 Pyccel strives to provide robust support for object-oriented programming concepts commonly used by developers. In Pyccel, classes are a fundamental building block for creating structured and reusable code. This documentation outlines key features and considerations when working with classes in Pyccel.
 

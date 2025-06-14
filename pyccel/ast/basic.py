@@ -5,6 +5,7 @@
 
 """
 This module contains classes from which all pyccel nodes inherit. They are:
+
 - PyccelAstNode, which provides a base class for our Python AST nodes;
 - TypedAstNode, which inherits from PyccelAstNode and provides a base class for
   AST nodes requiring type descriptors.
@@ -120,8 +121,10 @@ class PyccelAstNode:
             if self._ignore(c):
                 continue
             elif isinstance(c, tuple):
-                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci)]
-            else:
+                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci) \
+                        and ci.pyccel_staging == self.pyccel_staging]
+            elif c.pyccel_staging == self.pyccel_staging:
+                # Pyccel stage can change for basic objects with no attributes (e.g. Literal, Pass, etc)
                 c.remove_user_node(self)
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
