@@ -934,7 +934,7 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
         temporary object. This is sometimes necessary to facilitate the translation.
     """
     __slots__ = ('_name', '_annotation')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_name',)
 
     def __init__(self, name, annotation, is_temp = False):
         assert annotation is None or isinstance(annotation, PyccelAstNode)

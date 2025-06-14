@@ -849,8 +849,9 @@ class With(ScopedAstNode):
 
     Represents a 'with' statement in the code.
     Expressions are of the form:
-        "with statement:
-            body..."
+
+    >>> with statement:
+    >>>     body...
 
     !! This code is untested.
 
@@ -2079,11 +2080,6 @@ class FunctionDef(ScopedAstNode):
     is_imported : bool, default : False
         True for a function that is imported.
 
-    is_semantic : bool, optional
-        True for a function that is annotated.
-        It is used to indicate if the function has been visited in the semantic stage or not.
-        It is only used by the clone method, where we might clone a syntactic function in the semantic stage.
-
     functions : list, tuple
         A list of functions defined within this function.
 
@@ -2163,7 +2159,6 @@ class FunctionDef(ScopedAstNode):
         is_header=False,
         is_external=False,
         is_imported=False,
-        is_semantic=None,
         functions=(),
         interfaces=(),
         result_pointer_map={},
@@ -2237,11 +2232,6 @@ class FunctionDef(ScopedAstNode):
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for header')
 
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-        else:
-            is_external = is_external and is_header and ( len(results) == 1 )
-
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2269,7 +2259,7 @@ class FunctionDef(ScopedAstNode):
         self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
-        self._is_semantic    = self.pyccel_staging != 'syntactic' if is_semantic is None else is_semantic
+        self._is_semantic    = self.pyccel_staging != 'syntactic'
 
     @property
     def name(self):
@@ -2361,11 +2351,6 @@ class FunctionDef(ScopedAstNode):
         return self._headers
 
     @property
-    def templates(self):
-        """ List of templates used to determine the types """
-        return self._templates
-
-    @property
     def is_recursive(self):
         """ Returns True if the function is recursive (i.e. calls itself)
         and False otherwise """
@@ -2417,6 +2402,11 @@ class FunctionDef(ScopedAstNode):
         """ True if the function is exposed through a header file and coming
         from a f77 module """
         return self._is_external
+
+    @is_external.setter
+    def is_external(self, is_external):
+        assert isinstance(is_external, bool)
+        self._is_external = is_external
 
     @property
     def is_imported(self):
@@ -2498,8 +2488,12 @@ class FunctionDef(ScopedAstNode):
         args, kwargs = self.__getnewargs_ex__()
         kwargs.update(new_kwargs)
         cls = type(self)
+        current_pyccel_stage = pyccel_stage.current_stage
+        if not self.is_semantic:
+            pyccel_stage.set_stage('syntactic')
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)
+        pyccel_stage.set_stage(current_pyccel_stage)
         return new_func
 
     def rename(self, newname):
@@ -2542,7 +2536,6 @@ class FunctionDef(ScopedAstNode):
             'functions':self._functions,
             'is_external':self._is_external,
             'is_imported':self._is_imported,
-            'is_semantic':self._is_semantic,
             'interfaces':self._interfaces,
             'docstring':self._docstring,
             'scope':self._scope}
@@ -2708,7 +2701,7 @@ class PyccelFunctionDef(FunctionDef):
     Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
     This is useful for importing builtin functions and for defining
-    classes which have `PyccelFunction`s as attributes or methods.
+    classes which have `PyccelFunction` objects as attributes or methods.
 
     Parameters
     ----------

@@ -489,6 +489,7 @@ def test_imports_in_folder(language):
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skip_llvm
 @pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py",
@@ -533,6 +534,13 @@ def test_folder_imports(language):
 @pytest.mark.xdist_incompatible
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
+
+@pytest.mark.xdist_incompatible
+def test_capitalised_language(language):
+    test_file = get_abs_path("scripts/runtest_funcs.py")
+    cwd = os.path.dirname(test_file)
+    output_folder = "__pyccel__" + os.environ.get('PYTEST_XDIST_WORKER', '')
+    compile_pyccel(cwd, test_file, f'--language={language.capitalize()} --output={output_folder}')
 
 #------------------------------------------------------------------------------
 # Enumerate not supported in c
@@ -780,12 +788,6 @@ def test_array_binary_op(language):
     types += [int, float, int, int]
     types += [int] * 8
     pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
-
-#------------------------------------------------------------------------------
-def test_basic_header():
-    filename='scripts/basic_header.pyh'
-    cwd = get_abs_path('.')
-    compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
@@ -1085,10 +1087,7 @@ def test_function(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
-            pytest.mark.c]
-        )
+        pytest.param("c", marks = pytest.mark.c)
     )
 )
 def test_inline(language):
@@ -1234,9 +1233,19 @@ def test_stubs(language):
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
 
+    if language != 'python':
+        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
+
     assert expected_pyi == generated_pyi
 
 #------------------------------------------------------------------------------
 def test_builtin_container_print(language):
     pyccel_test("scripts/print_builtin_containers.py", output_dtype = str,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_pyccel_generated_compilation_dependency(language):
+    pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
+            dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
+            output_dtype = int,
             language = language)

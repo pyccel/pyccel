@@ -1,4 +1,4 @@
-name: Doc Coverage Action
+name: Documentation
 
 on:
   workflow_dispatch:
@@ -32,13 +32,14 @@ env:
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
 
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: Documentation Format (docs, ${{ inputs.python_version || '3.10' }})
+    name: Documentation (docs, ${{ inputs.python_version || '3.10' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
@@ -53,7 +54,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.base }}
+          ref: ${{ env.BASE }}
           path: base
           submodules: true
       - uses: actions/checkout@v4
@@ -108,10 +109,7 @@ jobs:
         id: doc_format
         run: |
           cd compare
-          git fetch
-          git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
-          git checkout ${{ env.COMMIT }}
-          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ env.BASE }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
           export PYTHONPATH=ci_tools
@@ -123,10 +121,26 @@ jobs:
           export PYTHONPATH=compare
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
+      - name: Check doc generation
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: sphinx_format
+        run: |
+          cd compare
+          python -m pip install -r docs/requirements.txt
+          make -C docs html
+        shell: bash
+      - name: Setup Pages
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'compare/docs/build/html'
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
-          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }}
+          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }}
         shell: bash -l {0}
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'

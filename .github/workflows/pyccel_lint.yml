@@ -32,6 +32,7 @@ env:
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
   PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
+  BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
   Pyccel-Linter:
@@ -78,7 +79,7 @@ jobs:
       - name: Collect diff information
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          git diff ${{ inputs.base }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ env.BASE }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
         if: steps.duplicate_check.outputs.should_skip != 'true'

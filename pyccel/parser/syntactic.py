@@ -55,7 +55,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
+from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
@@ -257,10 +257,7 @@ class SyntaxParser(BasicParser):
                     errors.report(f"Invalid header. {e.message}",
                             symbol = stmt, column = e.col,
                               severity='fatal')
-                if isinstance(expr, (MethodHeader, FunctionHeader)):
-                    self.scope.insert_header(expr)
-                    expr = EmptyNode()
-                elif isinstance(expr, AnnotatedPyccelSymbol):
+                if isinstance(expr, AnnotatedPyccelSymbol):
                     self.scope.insert_symbol(expr.name)
                 elif isinstance(expr, MetaVariable):
                     # a metavar will not appear in the semantic stage.
@@ -619,10 +616,7 @@ class SyntaxParser(BasicParser):
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
 
-        headers = self.scope.find(self._context[-2].name, 'headers') \
-                if isinstance(self._context[-2], ast.FunctionDef) else None
-
-        if is_class_method and not headers:
+        if is_class_method:
             expected_self_arg = arguments[0]
             if expected_self_arg.annotation is None:
                 class_name = self._context[-3].name
@@ -867,8 +861,6 @@ class SyntaxParser(BasicParser):
         name = PyccelSymbol(self._visit(stmt.name))
         self.scope.insert_symbol(name)
 
-        headers = self.scope.find(name, 'headers')
-
         new_name = self.scope.get_expected_name(name)
 
         scope = self.create_new_function_scope(name,
@@ -877,7 +869,6 @@ class SyntaxParser(BasicParser):
 
         arguments    = self._visit(stmt.args)
 
-        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -924,143 +915,9 @@ class SyntaxParser(BasicParser):
         if 'inline' in decorators:
             is_inline = True
 
-        template['template_dict'] = {}
-        # extract the templates
-        if 'template' in decorators:
-            for template_decorator in decorators['template']:
-                dec_args = template_decorator.args
-                if len(dec_args) != 2:
-                    msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg, symbol = template_decorator,
-                                    severity='error')
-
-                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
-                    errors.report('Argument provided to the template decorator is not valid',
-                                    symbol = template_decorator, severity='error')
-
-                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
-                    type_name = dec_args[1].value.python_value
-                    type_descriptors = dec_args[0].value
-                else:
-                    type_name = dec_args[0].value.python_value
-                    type_descriptors = dec_args[1].value
-
-                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
-                    type_descriptors = PythonTuple(type_descriptors)
-
-                if type_name in template['template_dict']:
-                    errors.report(f'The template "{type_name}" is duplicated',
-                                symbol = template_decorator, severity='warning')
-
-                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
-
-                # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][type_name] = possible_types
-
-            # Make template decorator list accessible from decorators dict
-            template['decorator_list'] = decorators['template']
-            decorators['template'] = template
 
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
-
-        #---------------------------------------------------------------------------------------------------------
-        #                   To remove when headers are deprecated
-        #---------------------------------------------------------------------------------------------------------
-        if headers:
-            warnings.warn("Support for specifying types via headers will be removed in version 2.0 of Pyccel. " +
-                          "Please use type hints. TypeVar from Python's typing module can " +
-                          "be used to specify multiple types. See the documentation at " +
-                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                          "for examples.", FutureWarning)
-            if any(a is not None for a in argument_annotations):
-                errors.report("Type annotations and type specification via headers should not be mixed",
-                        symbol=stmt, severity='error')
-
-            for i, _ in enumerate(argument_annotations):
-                argument_annotations[i] = UnionTypeAnnotation()
-            if result_annotation is not None:
-                errors.report("Type annotations and type specification via headers should not be mixed",
-                            symbol=stmt, severity='error')
-
-            n_results = 0
-
-            for head in headers:
-                if len(head.dtypes) != len(argument_annotations):
-                    errors.report(f"Wrong number of types in header for function {name}",
-                            severity='error', symbol=stmt)
-                else:
-                    for i,arg in enumerate(head.dtypes):
-                        argument_annotations[i].add_type(arg)
-                if head.results:
-                    if result_annotation is None:
-                        result_annotation = head.results
-                    else:
-                        if len(result_annotation) != len(head.results):
-                            errors.report("Different length results in headers.",
-                                    severity='error', symbol=stmt)
-                        else:
-                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
-                                                        for r,t in zip(head.results, result_annotation))
-                    n_results += 1
-
-            if n_results and n_results != len(headers):
-                errors.report("Results have only been provided for some of the headers. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
-                        severity='warning', symbol=stmt)
-
-        # extract the types to construct a header
-        if 'types' in decorators:
-            if any(a is not None for a in argument_annotations):
-                errors.report("Type annotations and type specification via headers should not be mixed",
-                        symbol=stmt, severity='error')
-
-            for i, _ in enumerate(argument_annotations):
-                argument_annotations[i] = UnionTypeAnnotation()
-            n_results = 0
-
-            for types_decorator in decorators['types']:
-                type_args = types_decorator.args
-
-                args = [a for a in type_args if not a.has_keyword]
-                kwargs = [a for a in type_args if a.has_keyword]
-
-                if len(kwargs) > 1:
-                    errors.report('Too many keyword arguments passed to @types decorator',
-                                symbol = types_decorator,
-                                bounding_box = (stmt.lineno, stmt.col_offset),
-                                severity='error')
-                elif kwargs:
-                    if kwargs[0].keyword != 'results':
-                        errors.report('Wrong keyword argument passed to @types decorator',
-                                    symbol = types_decorator,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='error')
-                    annots = self._treat_type_annotation(kwargs[0], kwargs[0].value.args)
-                    if result_annotation is None:
-                        result_annotation = annots
-                    else:
-                        if len(result_annotation) != len(annots):
-                            errors.report("Different length results in headers.",
-                                    severity='error', symbol=stmt)
-                        else:
-                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
-                                                        for r,t in zip(annots, result_annotation))
-                    n_results += 1
-
-                if len(args) != len(argument_annotations):
-                    errors.report(f"Wrong number of types in header for function {name}",
-                            severity='error', symbol=stmt)
-                else:
-                    for i,arg in enumerate(args):
-                        argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
-
-            if n_results and n_results != len(decorators['types']):
-                errors.report("Results have only been provided for some of the types decorators. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
-                        severity='warning', symbol=stmt)
-
-        #---------------------------------------------------------------------------------------------------------
-        #                   End of : To remove when headers are deprecated
-        #---------------------------------------------------------------------------------------------------------
 
         argument_names = {a.var.name for a in arguments}
         # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators

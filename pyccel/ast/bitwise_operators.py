@@ -5,7 +5,7 @@
 """
 Module handling all Python builtin operators
 These operators all have a precision as detailed here:
-    https://docs.python.org/3/reference/expressions.html#operator-precedence
+https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
 from .builtins     import PythonInt
@@ -32,9 +32,11 @@ class PyccelInvert(PyccelUnaryOperator):
 
     Class representing a call to the Python bitwise not operator.
     I.e:
+
         ~a
+
     is equivalent to:
-        PyccelInvert(a)
+    >>> PyccelInvert(a)
 
     Parameters
     ----------
@@ -147,9 +149,11 @@ class PyccelRShift(PyccelBitOperator):
 
     Class representing a call to the Python right shift operator.
     I.e:
+
         a >> b
+
     is equivalent to:
-        PyccelRShift(a, b)
+    >>> PyccelRShift(a, b)
 
     Parameters
     ----------
@@ -170,9 +174,11 @@ class PyccelLShift(PyccelBitOperator):
 
     Class representing a call to the Python right shift operator.
     I.e:
+
         a << b
+
     is equivalent to:
-        PyccelRShift(a, b)
+    >>> PyccelRShift(a, b)
 
     Parameters
     ----------
@@ -246,9 +252,11 @@ class PyccelBitXor(PyccelBitComparisonOperator):
 
     Class representing a call to the Python bitwise XOR operator.
     I.e:
+
         a ^ b
+
     is equivalent to:
-        PyccelBitXor(a, b)
+    >>> PyccelBitXor(a, b)
 
     Parameters
     ----------
@@ -269,9 +277,11 @@ class PyccelBitOr(PyccelBitComparisonOperator):
 
     Class representing a call to the Python bitwise OR operator.
     I.e:
+
         a | b
+
     is equivalent to:
-        PyccelBitOr(a, b)
+    >>> PyccelBitOr(a, b)
 
     Parameters
     ----------
@@ -292,9 +302,11 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
 
     Class representing a call to the Python bitwise AND operator.
     I.e:
+
         a & b
+
     is equivalent to:
-        PyccelBitAnd(a, b)
+    >>> PyccelBitAnd(a, b)
 
     Parameters
     ----------

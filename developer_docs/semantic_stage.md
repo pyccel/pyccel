@@ -3,13 +3,14 @@
 The semantic stage is described by the file [pyccel.parser.semantic](../pyccel/parser/semantic.py).
 
 The semantic stage serves several purposes:
-1.  [**Types**](#Types) : Determine the type of each symbol
-2.  [**Impose Restrictions**](#Impose-restrictions) : Ensure that the code follows any restrictions that Pyccel imposes
-3.  [**Function Recognition**](#Function-recognition) : Identify any functions that are recognised by Pyccel
-4.  [**Imports**](#Imports) : Identify imports
-5.  [**Low-level Objects**](#Low-level-objects) : Create any objects which are hidden in high-level code, but must appear explicitly in low-level code
-6.  [**Object Tree**](#Object-tree) : Ensure the object tree is correctly constructed
-7.  [**Name Collisions**](#Name-collisions) : Ensure any potential name collisions are avoided
+
+1.  [**Types**](#types) : Determine the type of each symbol
+2.  [**Impose Restrictions**](#impose-restrictions) : Ensure that the code follows any restrictions that Pyccel imposes
+3.  [**Function Recognition**](#function-recognition) : Identify any functions that are recognised by Pyccel
+4.  [**Imports**](#imports) : Identify imports
+5.  [**Low-level Objects**](#low-level-objects) : Create any objects which are hidden in high-level code, but must appear explicitly in low-level code
+6.  [**Object Tree**](#object-tree) : Ensure the object tree is correctly constructed
+7.  [**Name Collisions**](#name-collisions) : Ensure any potential name collisions are avoided
 
 ## Navigation
 
@@ -19,20 +20,23 @@ This function is called from the constructor to examine an AST (Abstract Syntax 
 The key line of the function `annotate` is the call to `self._visit(self.ast)`.
 All elements of the tree must be visited.
 Similarly to in the [syntactic stage](syntactic_stage.md), the `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventions).
 These `_visit_X` functions must have the form:
+
 ```python
 def _visit_ClassName(self, stmt):
     ...
 ```
+
 Each of these `_visit_X` functions should internally call the `_visit` function on each of the elements of the object to obtain annotated objects which are combined to finally create an annotated syntax tree.
 
 ## Types
 
 Variables and objects which can be saved in variables (e.g. literals and arrays), are  characterised by their type.
 The type indicates all the information that allows the object to be declared in a low-level language.
-The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](./ast_nodes.md#Typed-AST-Node).
+The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](./ast_nodes.md#typed-ast-node).
 The characteristics are:
+
 -   **data type** : boolean/integer/float/complex/class type/etc
 -   **precision** : The number of bytes required to store an object of this data type
 -   **rank** : The number of dimensions of the array (0 for a scalar)
@@ -56,9 +60,11 @@ Errors are also raised at this point if the arguments do not match the expected 
 
 Not all valid Python code can be translated by Pyccel.
 This is for one of three reasons:
+
 1.  Support has not yet been added but is planned (e.g. classes)
 
 2.  It would be impractical to support the code in a low-level language. E.g. functions which return objects of different types :
+
     ```python
     def f(a : bool, b : bool):
         if a and b:
@@ -84,6 +90,7 @@ Errors in the semantic stage should raise a `PyccelSemanticError`.
 Where possible this should be done by accessing the `Errors()` singleton and calling the `report` function.
 This function takes several arguments (see docstring for more details).
 The most important arguments are:
+
 -   _message_ : Describe the issue that lead to the error
 
 -   _symbol_ : The Python AST object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
@@ -180,15 +187,18 @@ In this case the new object does not pass through the constructor of its user.
 It is therefore important to call `set_current_user_node` on the new object to update the tree.
 
 Secondly, if the object contains all necessary information after the syntactic stage (e.g. `pyccel.ast.core.Continue`) we may be tempted to return the object as is:
+
 ```python
 def _visit_Continue(self, expr):
     return expr
 ```
+
 However if this were done there would be multiple user nodes from both the semantic and the syntactic stage.
 For example, if we need to have access to the containing function we could do `expr.get_user_nodes(FunctionDef)`.
 We expect that this only returns semantic objects if `expr` is a result of the semantic stage.
 However if objects such as `pyccel.ast.core.Continue` are returned as is, then we would get access to both the syntactic and the semantic versions of the containing function without any way to distinguish between the two.
 To avoid this it is important to call the `pyccel.ast.basic.PyccelAstNode.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
+
 ```python
 def _visit_Continue(self, expr):
     expr.clear_user_nodes()
@@ -203,9 +213,10 @@ Name collisions may occur when generating temporary variables.
 The scope helps keep track of the variables and prevent name collisions.
 See [Scope](scope.md) for more details.
 
-If variables are created as described above in the [Types](#Types) section, they will be added to the scope.
+If variables are created as described above in the [Types](#types) section, they will be added to the scope.
 It is also possible that they will be renamed to avoid collisions.
 For this reason it is very important to use the [`pyccel.parser.scope.Scope.find`](../pyccel/parser/scope.py) function to access variables.
 There are two helper functions in the `SemanticParser` to facilitate these  searches:
+
 -   `SemanticParser.check_for_variable` which returns the variable if it exists and None if it doesn't
 -   `SemanticParser.get_variable` which raises an error if the requested variable is not found

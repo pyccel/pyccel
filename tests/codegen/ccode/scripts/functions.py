@@ -1,15 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function fib(int) results(int)
-def fib(n):
+def fib(n : int) -> int:
     if n < 2:
         return n
     i = fib(n-1)
     j = fib(n-2)
     return i + j
 
-#$ header function recu_func(int) results(int)
-def recu_func(x):
+def recu_func(x : int) -> int:
     if x > 0:
         x = x - 1
     return x
@@ -17,22 +15,18 @@ def recu_func(x):
 def helloworld():
     print('hello world')
 
-#$ header function incr(int)
-def incr(x):
+def incr(x : int):
     x = x + 1
 
-#$ header function decr(int) results(int)
-def decr(x):
+def decr(x : int) -> int:
     y = x - 1
     return y
 
-#$ header function f1(int, int, int) results(int)
-def f1(x, n=2, m=3):
+def f1(x : int, n : int = 2, m : int = 3) -> int:
     y = x - n*m
     return y
 
-#$ header function f2(int, int) results(int)
-def f2(x, m=None):
+def f2(x : int, m : int = None) -> int:
     if m is None:
         y = x + 1
     else:

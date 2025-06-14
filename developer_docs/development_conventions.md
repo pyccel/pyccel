@@ -7,6 +7,7 @@ There are a few conventions that are used in Pyccel and come up regularly during
 Accessing the property of a class has a small associated cost. As Python is an interpreted language, these costs add up. Therefore if you are going to use the same property multiple times in a section of code it is usually better (and often more readable) to define it once before beginning.
 
 E.g:
+
 ```python
 prec = self.precision
 dtype = self.dtype
@@ -19,7 +20,9 @@ if self._obj.rank > 0:
 else:
     return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 ```
+
 should be preferred over:
+
 ```python
 if self.precision in (None, -1):
     return LiteralString(f"<class '{self.dtype}'>")
@@ -48,6 +51,7 @@ We therefore ask developers to add the following line to the top of every file i
 ### Disabling false positives
 
 Very occasionally Pylint will raise a false positive. In this case the errors can be ignored on a line by line basis, e.g:
+
 ```python
 return self._attribute_nodes # pylint: disable=no-member
 ```
@@ -63,6 +67,7 @@ If you are not familiar with slots there is lots of documentation available onli
 ## Class variables vs. Instance variables
 
 Classes can contain both class variables and instance variables. E.g:
+
 ```python
 class MyClass:
     __slots__ = ('myInstanceVar',)

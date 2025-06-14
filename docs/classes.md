@@ -1,4 +1,4 @@
-# Supported Class by Pyccel
+# Pyccel Support for Classes
 
 Pyccel strives to provide robust support for object-oriented programming concepts commonly used by developers. In Pyccel, classes are a fundamental building block for creating structured and reusable code. This documentation outlines key features and considerations when working with classes in Pyccel.
 
@@ -14,7 +14,7 @@ Pyccel strives to provide robust support for object-oriented programming concept
 ## Constructor Method
 
 -   The Constructor Method, `__init__`, is used to initialise the object's attributes.
--   Pyccel only permits one type definition for each of the arguments of the `__init__` method. Union types or templates cannot be used.
+-   Pyccel only permits one type definition for each of the arguments of the `__init__` method. Union types or `TypeVar`s cannot be used.
 -   The first parameter of any method within a class should always be named `self`.
 
 ## Destructor Method
@@ -64,6 +64,7 @@ if __name__ == '__main__':
 ```
 
 ### PYTHON _OUTPUT_
+
 ```Shell
 MyClass1 Object created!
 MyClass Object created!
@@ -91,6 +92,7 @@ void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1);
 struct MyClass MyClass1__Method2(struct MyClass1* self);
 void MyClass1__del__(struct MyClass1* self);
 ```
+
 ### - C File Equivalent
 
 ```C
@@ -153,6 +155,7 @@ void MyClass1__del__(struct MyClass1* self)
 ```
 
 ### - C Program File Equivalent
+
 ```C
 int main()
 {
@@ -193,6 +196,7 @@ MyClass Object created!
 ```
 
 ### Fortran Module
+
 ```fortran
 module cls_test
 
@@ -338,6 +342,7 @@ end module cls_test
 ```
 
 ### Fortran program
+
 ```fortran
 program prog_prog_cls_test
 
@@ -400,6 +405,7 @@ if __name__ == '__main__':
 ```
 
 ### PYTHON _OUTPUT_
+
 ```Shell
 MyClass Object created!
 2
@@ -470,6 +476,7 @@ void MyClass__del__(struct MyClass* self)
 ```
 
 ### - C Program File Equivalent
+
 ```C
 int main()
 {

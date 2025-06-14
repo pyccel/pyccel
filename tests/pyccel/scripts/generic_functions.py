@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
 import numpy as np
-from pyccel.decorators import types
 
 T : type = 'int | float'
 R : type = 'int | float'

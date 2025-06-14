@@ -15,12 +15,14 @@ default_python_versions = {
         'coverage': '3.9',
         'docs': '3.10',
         'intel': '3.10',
+        'llvm': '3.10',
         'linux': '3.9',
         'macosx': '3.13',
         'wheel': '3.9',
         'check_install': '3.9',
         'editable_check_install': '3.9',
         'pyccel_lint': '3.11',
+        'markdown_lint': '3.11',
         'pylint': '3.9',
         'spelling': '3.12',
         'windows': '3.11'
@@ -32,12 +34,14 @@ test_names = {
         'coverage': "Coverage verification",
         'docs': "Check documentation",
         'intel': "Unit tests on Linux with Intel compiler",
+        'llvm': "Unit tests on Linux with LLVM compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
         'check_install': "Test file generation during source installation",
         'editable_check_install': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
+        'markdown_lint': 'Markdown best practices',
         'pylint': "Python linting",
         'spelling': "Spelling verification",
         'windows': "Unit tests on Windows"
@@ -48,7 +52,7 @@ test_dependencies = {'coverage':['linux']}
 tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'pyccel_lint', 'spelling', 'intel')
+                'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
 
 pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
 

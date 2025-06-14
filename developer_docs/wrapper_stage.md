@@ -3,6 +3,7 @@
 Python is written in C. In order to create a module which can be imported from Python, we therefore have to print a wrapper using the [Python-C API](https://docs.python.org/3/c-api/index.html). This code must call the Pyccel generated translation of the code. If that code was not generated in C then further wrappers are necessary in order to make the code compatible with C.
 
 For example in Fortran generated code there are often array arguments. These do not exist in C, therefore three or more arguments must be passed to the function instead:
+
 1.  The data
 2.  The size(s) of the array in each dimension
 3.  The stride(s) between elements in each dimension
@@ -19,11 +20,13 @@ The entry point for the class `Wrapper` is the function `wrap`.
 
 The `_wrap` function internally calls a function named `_wrap_X`, where `X` is the type of the object.
 These functions must have the form:
+
 ```python
 def _wrap_ClassName(self, stmt):
     ...
     return Y
 ```
+
 Each of these `_wrap_X` functions should internally call the `_wrap` function on each of the elements relevant to the wrapper to obtain AST objects which describe the same information, but in a way that is accessible from the target language.
 
 ## Name Collisions
@@ -31,6 +34,7 @@ Each of these `_wrap_X` functions should internally call the `_wrap` function on
 While creating the wrapper, it is often necessary to create multiple variables to fully describe something which was a single object in the original code. In order to facilitate reading the code these objects should have names similar to that of the original variable. As a result a **lot** of care must be taken to avoid name collisions.
 
 In general the following rules should be respected:
+
 -   Any variables which we wish to be able to retrieve from the scope using the `Scope.find` function must be added to the scope with `Scope.insert_symbol`. We cannot do this with 2 variables with the same name so the names must come from the AST where collisions have already been removed.
 -   Any names saved via `Scope.insert_symbol` must be accessed using `Scope.get_expected_name` (as the name may have been changed to avoid other collisions).
 -   Any new names must be created using `Scope.get_new_name`
@@ -50,12 +54,14 @@ Arrays are not compatible with C. Instead the wrapper prints a function which re
 #### Example
 
 When the following code is translated to Fortran:
+
 ```python
 import numpy as np
 x = np.empty(6)
 ```
 
 The following Fortran translation is obtained:
+
 ```fortran
 module tmp
 
@@ -101,6 +107,7 @@ end module tmp
 ```
 
 The array `x` is wrapped as follows:
+
 ```fortran
   subroutine bind_c_x(bound_x, x_shape_1) bind(c)
 
@@ -143,6 +150,7 @@ def f(x : int):
 ```
 
 is translated to the following Fortran code:
+
 ```fortran
   function f(x) result(Out_0001)
 
@@ -158,6 +166,7 @@ is translated to the following Fortran code:
 ```
 
 which is then wrapped as follows:
+
 ```fortran
   function bind_c_f(x) bind(c) result(Out_0001)
 
@@ -172,6 +181,7 @@ which is then wrapped as follows:
 ```
 
 This function has the following prototype in C:
+
 ```c
 int64_t bind_c_f(int64_t);
 ```
@@ -179,12 +189,14 @@ int64_t bind_c_f(int64_t);
 #### Example 2 : function with array arguments
 
 The following function:
+
 ```python
 def f(x : 'int[:]'):
     return x + 3
 ```
 
 is translated to the following Fortran code:
+
 ```fortran
   subroutine f(x, Out_0001)
 
@@ -201,6 +213,7 @@ is translated to the following Fortran code:
 ```
 
 which is then wrapped as follows:
+
 ```fortran
   subroutine bind_c_f(bound_x, bound_x_shape_1, bound_x_stride_1, &
         bound_Out_0001, Out_0001_shape_1) bind(c)
@@ -227,6 +240,7 @@ which is then wrapped as follows:
 ```
 
 This function has the following prototype in C:
+
 ```c
 int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 ```
@@ -234,6 +248,7 @@ int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 #### Example 3 : function with optional scalar arguments
 
 The following function:
+
 ```python
 def f(x : int = None):
     if x is None:
@@ -243,6 +258,7 @@ def f(x : int = None):
 ```
 
 is translated to the following Fortran code:
+
 ```fortran
   function f(x) result(Out_0001)
 
@@ -263,6 +279,7 @@ is translated to the following Fortran code:
 ```
 
 which is then wrapped as follows:
+
 ```fortran
   function bind_c_f(bound_x) bind(c) result(Out_0001)
 
@@ -283,6 +300,7 @@ which is then wrapped as follows:
 ```
 
 This function has the following prototype in C:
+
 ```c
 int64_t bind_c_f(void*);
 ```
@@ -290,6 +308,7 @@ int64_t bind_c_f(void*);
 #### Example 4 : function with optional array arguments
 
 The following function:
+
 ```python
 def f(x : 'float[:]' = None):
     import numpy as np
@@ -300,6 +319,7 @@ def f(x : 'float[:]' = None):
 ```
 
 is translated to the following Fortran code:
+
 ```fortran
   subroutine f(x, Out_0001)
 
@@ -323,6 +343,7 @@ is translated to the following Fortran code:
 ```
 
 which is then wrapped as follows:
+
 ```fortran
   subroutine bind_c_f(bound_x, bound_x_shape_1, bound_x_stride_1, &
         bound_Out_0001, Out_0001_shape_1) bind(c)
@@ -353,6 +374,7 @@ which is then wrapped as follows:
 ```
 
 This function has the following prototype in C:
+
 ```c
 int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 ```
@@ -370,6 +392,7 @@ The C to Python wrapper wraps C code to make it callable from Python. This modul
 ### Functions
 
 A function that can be called from Python must have the following prototype:
+
 ```c
 PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
 ```
@@ -389,17 +412,20 @@ The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](http
 #### Example 1
 
 The following Python code:
+
 ```python
 def f(x : 'float[:]', y : float = 3):
     return x + y
 ```
 
 leads to C code with the following prototype:
+
 ```c
 array_double_1d f(array_double_1d x, double y);
 ```
 
 which is then wrapped as follows:
+
 ```c
 static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -451,6 +477,7 @@ static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 ```
 
 The function is linked to the module via a `PyMethodDef` as follows:
+
 ```c
 static PyMethodDef tmp_methods[] = {
     {
@@ -464,11 +491,13 @@ static PyMethodDef tmp_methods[] = {
 ```
 
 If the code was translated to Fortran the prototype is:
+
 ```c
 int bind_c_f(void*, int64_t, int64_t, double, void*, int64_t*);
 ```
 
 which is then wrapped as follows:
+
 ```c
 static PyObject* bind_c_f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -519,17 +548,20 @@ static PyObject* bind_c_f_wrapper(PyObject* self, PyObject* args, PyObject* kwar
 #### Example 2 : function with tuple arguments
 
 The following Python code:
+
 ```python
 def get_first_element_of_tuple(a : 'tuple[int,...]'):
     return a[0]
 ```
 
 leads to C code with the following prototype (as homogeneous tuples are treated like arrays):
+
 ```c
 int64_t get_first_element_of_tuple(array_int64_1d a);
 ```
 
 which is then wrapped as follows:
+
 ```c
 static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -590,7 +622,9 @@ static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* ar
 
 Interfaces are functions which accept more than one type.
 These functions are handled via multiple functions in the wrapper:
+
 1.  A function which can be called from Python with the prototype:
+
     ```c
     PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
     ```
@@ -602,19 +636,21 @@ These functions are handled via multiple functions in the wrapper:
 #### Example
 
 The following Python code:
+
 ```python
-@template('T', [int, float])
-def f(x : 'T'):
+def f(x : int | float):
     return x + 2
 ```
 
 leads to C code with the following prototypes:
+
 ```c
 double f_00(double x);
 int64_t f_01(int64_t x);
 ```
 
 which is then wrapped as follows:
+
 ```c
 /*........................................*/
 PyObject* f_00_wrapper(PyObject* x_obj)
@@ -697,6 +733,7 @@ PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 ```
 
 The function is linked to the module via a `PyMethodDef` as follows:
+
 ```c
 static PyMethodDef tmp_methods[] = {
     {
@@ -718,11 +755,13 @@ This is done in a function which is executed when the module is imported for the
 #### Example
 
 The following Python code:
+
 ```python
 x = 3
 ```
 
 leads to the following module initialisation function:
+
 ```c
 int32_t tmp_exec_func(PyObject* mod)
 {
