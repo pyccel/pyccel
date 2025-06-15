@@ -9,7 +9,6 @@
 from pyccel.ast.bind_c    import BindCVariable
 from pyccel.ast.core      import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
-from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.typingext import TypingTypeVar
 from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
@@ -67,7 +66,7 @@ class Scope(object):
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_aliases',
-            'macros','decorators', 'cls_constructs')
+            'decorators', 'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
@@ -165,12 +164,6 @@ class Scope(object):
         """ A dictionary of functions defined in this scope
         """
         return self._locals['functions']
-
-    @property
-    def macros(self):
-        """ A dictionary of macros defined in this scope
-        """
-        return self._locals['macros']
 
     @property
     def decorators(self):
@@ -431,19 +424,6 @@ class Scope(object):
             if not name_found:
                 raise RuntimeError('Class not found in scope')
             self._locals['classes'][name] = cls
-
-    def insert_macro(self, macro):
-        """ Add a macro to the current scope
-        """
-
-        if not isinstance(macro, (MacroFunction, MacroVariable)):
-            raise TypeError('Expected a macro')
-
-        name = macro.name
-        if isinstance(macro.name, DottedName):
-            name = name.name[-1]
-
-        self._locals['macros'][name] = macro
 
     def insert_symbol(self, symbol):
         """
