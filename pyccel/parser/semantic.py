@@ -84,7 +84,6 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.functionalexpr import MaxLimit, MinLimit
 
 from pyccel.ast.headers import Header
-from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.internals import Iterable
@@ -143,11 +142,11 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, RECURSIVE_RESULTS_REQUIRED,
         PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
         UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
-        INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
+        WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS,
         PYCCEL_INTERNAL_ERROR)
 
 from pyccel.parser.base      import BasicParser
@@ -2725,7 +2724,7 @@ class SemanticParser(BasicParser):
         free_func = None
         program   = None
 
-        comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
+        comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
@@ -3334,15 +3333,6 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            macro = self.scope.find(rhs_name, 'macros')
-            if macro is not None:
-                master = macro.master
-                args = rhs.args
-                args = [lhs] + list(args)
-                args = [self._visit(i) for i in args]
-                args = macro.apply(args)
-                return FunctionCall(master, args, self.current_function_name)
-
             method = cls_base.get_method(rhs_name, expr)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
@@ -3368,17 +3358,6 @@ class SemanticParser(BasicParser):
                     self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
                 return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)], is_method = True)
 
-        # look for a macro
-        else:
-
-            macro = self.scope.find(rhs_name, 'macros')
-
-            # Macro
-            if isinstance(macro, MacroVariable):
-                return macro.master
-            elif isinstance(macro, MacroFunction):
-                args = macro.apply([visited_lhs])
-                return FunctionCall(macro.master, args, self.current_function_name)
 
         # did something go wrong?
         return errors.report(f'Attribute {rhs_name} not found',
@@ -3627,15 +3606,6 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
 
-            # first we check if it is a macro, in this case, we will create
-            # an appropriate FunctionCall
-
-            macro = self.scope.find(name, 'macros')
-            if macro is not None:
-                func = macro.master.funcdef
-                name = _get_name(func.name)
-                args = macro.apply(args)
-
             if func is None and name in self._context_dict:
                 env_var = self._context_dict[name]
                 func = builtin_functions_dict.get(env_var.__name__, None)
@@ -3821,56 +3791,9 @@ class SemanticParser(BasicParser):
         # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
-            macro = self.scope.find(name, 'macros')
-            if macro is None:
-                rhs = self._visit(rhs)
-                if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
-                    errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
-            else:
-
-                # TODO check types from FunctionDef
-                master = macro.master
-                results = []
-                args = [self._visit(i) for i in rhs.args]
-                args_names = [arg.value.name for arg in args if isinstance(arg.value, Variable)]
-                d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
-                                  if isinstance(arg.value, Variable)}
-
-                lhs_iter = lhs
-
-                if not sympy_iterable(lhs_iter):
-                    lhs_iter = [lhs]
-                results_shapes = macro.get_results_shapes(args)
-                for m_result, shape, result in zip(macro.results, results_shapes, lhs_iter):
-                    if m_result in d_m_args and not result in args_names:
-                        d_result = self._infer_type(d_m_args[m_result])
-                        d_result['shape'] = shape
-                        tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False)
-                        results.append(tmp)
-                    elif result in args_names:
-                        _name = _get_name(result)
-                        tmp = self.get_variable(_name)
-                        results.append(tmp)
-                    else:
-                        # TODO: check for result in master_results
-                        errors.report(INVALID_MACRO_COMPOSITION, symbol=result,
-                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                            severity='error')
-
-                expr = macro.make_necessary_copies(args, results)
-                new_expressions += expr
-                args = macro.apply(args, results=results)
-                if isinstance(master.funcdef, FunctionDef):
-                    func_call = FunctionCall(master.funcdef, args, self.current_function_name)
-                    if new_expressions:
-                        return CodeBlock([*new_expressions, func_call])
-                    else:
-                        return func_call
-                else:
-                    # TODO treat interface case
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                                  severity='fatal')
+            rhs = self._visit(rhs)
+            if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
+                errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
 
         else:
             rhs = self._visit(rhs)
@@ -5440,7 +5363,6 @@ class SemanticParser(BasicParser):
                 targets = [AsName(mod, source_target)]
 
             self.scope.cls_constructs.update(p.scope.cls_constructs)
-            self.scope.macros.update(p.scope.macros)
 
             # ... meta variables
 
@@ -5508,58 +5430,6 @@ class SemanticParser(BasicParser):
 
         self.exit_loop_scope()
         return With(domaine, body, scope).block
-
-
-
-    def _visit_MacroFunction(self, expr):
-        # we change here the master name to its FunctionDef
-
-        f_name = expr.master
-        func = self.scope.find(f_name, 'functions')
-        if func is None:
-            errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                symbol=f_name,severity='error',
-                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
-        if not func.is_semantic:
-            func = self._annotate_the_called_function_def(func, expr.master_arguments)
-
-        name = expr.name
-        args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
-
-        def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, PyccelSymbol):
-                return FunctionCallArgument(func_arg.var.clone(str(master_arg)))
-            else:
-                return FunctionCallArgument(master_arg)
-
-        master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
-
-        master = func(*master_args)
-        macro   = MacroFunction(name, args, master, master_args,
-                                results=expr.results, results_shapes=expr.results_shapes)
-        self.scope.insert_macro(macro)
-
-        return macro
-
-    def _visit_MacroShape(self, expr):
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        return expr
-
-    def _visit_MacroVariable(self, expr):
-
-        master = expr.master
-        if isinstance(master, DottedName):
-            errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-        var = self.get_variable(master)
-
-                # TODO -> Said: must handle interface
-
-        expr = MacroVariable(expr.name, var)
-        self.scope.insert_macro(expr)
-        return expr
 
     def _visit_StarredArguments(self, expr):
         var = self._visit(expr.args_var)
