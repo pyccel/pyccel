@@ -3194,36 +3194,6 @@ class CCodePrinter(CodePrinter):
             assert isinstance(arg.class_type, CharType) and getattr(arg, 'is_alias', True)
             return f'cstr_from({arg_code})'
 
-    #=================== MACROS ==================
-
-    def _print_MacroShape(self, expr):
-        var = expr.argument
-        if not isinstance(var, (Variable, IndexedElement)):
-            raise TypeError('Expecting a variable, given {}'.format(type(var)))
-        shape = var.shape
-
-        if len(shape) == 1:
-            shape = shape[0]
-
-
-        elif not(expr.index is None):
-            if expr.index < len(shape):
-                shape = shape[expr.index]
-            else:
-                shape = '1'
-
-        return self._print(shape)
-
-    def _print_MacroCount(self, expr):
-
-        var = expr.argument
-
-        if var.rank == 0:
-            return '1'
-        else:
-            return self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
-
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
