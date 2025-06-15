@@ -2763,7 +2763,7 @@ class CCodePrinter(CodePrinter):
         if managed_mem is not expr:
             return f'(*{managed_mem.name}.get)'
         elif self.is_c_pointer(expr):
-            return '(*{expr.name})'
+            return f'(*{expr.name})'
         else:
             return expr.name
 
