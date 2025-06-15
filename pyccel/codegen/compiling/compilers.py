@@ -360,6 +360,9 @@ class Compiler:
         if not compile_obj.has_target_file:
             return
 
+        if verbose:
+            print(">>> Compiling :: ", compile_obj.module_target)
+
         self._language_info = self._compiler_info[language]
 
         accelerators = compile_obj.accelerators
@@ -414,6 +417,9 @@ class Compiler:
         str
             The name of the generated executable.
         """
+        if verbose:
+            print(">>> Compiling executable :: ", compile_obj.program_target)
+
         self._language_info = self._compiler_info[language]
 
         accelerators = compile_obj.accelerators
@@ -496,6 +502,9 @@ class Compiler:
         ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
+
+        if verbose:
+            print(">>> Compiling shared library :: ", file_out)
 
         cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,

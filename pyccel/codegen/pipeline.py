@@ -371,12 +371,12 @@ def execute_pyccel(fname, *,
         # Create shared library
         generated_filepath, shared_lib_timers = create_shared_library(codegen,
                                                mod_obj,
-                                               language,
-                                               wrapper_flags,
-                                               pyccel_dirpath,
-                                               compiler,
-                                               output_name,
-                                               verbose)
+                                               language = language,
+                                               wrapper_flags = wrapper_flags,
+                                               pyccel_dirpath = pyccel_dirpath,
+                                               compiler = compiler,
+                                               sharedlib_modname = output_name,
+                                               verbose = verbose)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
