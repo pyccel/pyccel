@@ -168,8 +168,8 @@ class BasicParser(object):
 
     This class contains functions and properties which are common to SyntacticParser and SemanticParser.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     verbose : int
         The level of verbosity.
 
