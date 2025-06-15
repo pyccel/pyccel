@@ -337,7 +337,7 @@ class Compiler:
 
         return exec_cmd, inc_flags, libs_flags, libdirs_flags, m_code
 
-    def compile_module(self, compile_obj, output_folder, language, verbose = False):
+    def compile_module(self, compile_obj, output_folder, language, verbose):
         """
         Compile a module.
 
@@ -354,8 +354,8 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity.
         """
         if not compile_obj.has_target_file:
             return
@@ -389,7 +389,7 @@ class Compiler:
 
         self._language_info = None
 
-    def compile_program(self, compile_obj, output_folder, language, verbose = False):
+    def compile_program(self, compile_obj, output_folder, language, verbose):
         """
         Compile a program.
 
@@ -406,8 +406,8 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose :int
+            Indicates the level of verbosity.
 
         Returns
         -------
@@ -443,7 +443,7 @@ class Compiler:
 
         return compile_obj.program_target
 
-    def compile_shared_library(self, compile_obj, output_folder, language, verbose = False, sharedlib_modname=None):
+    def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
         """
         Compile a module to a shared library.
 
@@ -461,8 +461,8 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose :int
+            Indicates the level of verbosity.
 
         sharedlib_modname : str, optional
             The name of the library that should be generated. If none is provided then it
@@ -520,8 +520,8 @@ class Compiler:
         ----------
         cmd : list of str
             The command to run.
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity
 
         Returns
         -------
@@ -534,7 +534,7 @@ class Compiler:
             Raises `RuntimeError` if the file does not compile.
         """
         cmd = [os.path.expandvars(c) for c in cmd]
-        if verbose:
+        if verbose > 1:
             print(' '.join(cmd))
 
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
