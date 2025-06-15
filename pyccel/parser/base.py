@@ -168,6 +168,11 @@ class BasicParser(object):
 
     This class contains functions and properties which are common to SyntacticParser and SemanticParser.
 
+    Parameter
+    ---------
+    verbose : int
+        The level of verbosity.
+
     See Also
     --------
     SyntacticParser : A parser for Pyccel based on a context-free grammar.

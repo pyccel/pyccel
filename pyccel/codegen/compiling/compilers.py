@@ -288,8 +288,13 @@ class Compiler:
         ----------
         lst : iterable
             The list into which the prefix is inserted.
-        prefix : str
+        prefix : Any
             The prefix to be inserted.
+
+        Returns
+        -------
+        list
+            The list with the prefix inserted.
         """
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]

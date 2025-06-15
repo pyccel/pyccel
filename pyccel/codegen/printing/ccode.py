@@ -283,10 +283,10 @@ class CCodePrinter(CodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
-    prefix_module : str
-            A prefix to be added to the name of the module.
     verbose : int
         The level of verbosity.
+    prefix_module : str
+            A prefix to be added to the name of the module.
     """
     printmethod = "_ccode"
     language = "C"
