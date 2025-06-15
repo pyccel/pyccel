@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import multiprocessing
 import os
-import sys
 import pytest
 import numpy as np
 import modules.openmp as openmp

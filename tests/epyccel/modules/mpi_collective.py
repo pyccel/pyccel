@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from mpi4py import MPI
-from numpy  import empty
 
 
 # TODO: avoid declaration of integer variables 'ierr' and 'rank'

@@ -15,10 +15,60 @@ __all__ = ['MyParser', 'pyccel']
 class MyParser(argparse.ArgumentParser):
     """
     Custom argument parser for printing help message in case of an error.
+
+    Custom argument parser for printing help message in case of an error.
     See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
+
+    Parameters
+    ----------
+    prog : See argparse
+        See argparse.
+
+    usage : See argparse
+        See argparse.
+
+    description : See argparse
+        See argparse.
+
+    epilog : See argparse
+        See argparse.
+
+    parents : See argparse
+        See argparse.
+
+    formatter_class : See argparse
+        See argparse.
+
+    prefix_chars : See argparse
+        See argparse.
+
+    fromfile_prefix_chars : See argparse
+        See argparse.
+
+    argument_default : See argparse
+        See argparse.
+
+    conflict_handler : See argparse
+        See argparse.
+
+    add_help : See argparse
+        See argparse.
+
+    allow_abbrev : See argparse
+        See argparse.
     """
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        """
+        Print the error message.
+
+        Print the error message.
+
+        Parameters
+        ----------
+        message : str
+            The message reported by the parser.
+        """
+        sys.stderr.write(f'error: {message}\n')
         self.print_help()
         sys.exit(2)
 
@@ -59,8 +109,9 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     import pyccel
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
-    python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    py_version = sys.version_info
+    python  = f'python {py_version.major}.{py_version.minor}'
+    message = f"pyccel {version} from {libpath} ({python})"
     parser.add_argument('-V', '--version', action='version', version=message)
     # ...
 
