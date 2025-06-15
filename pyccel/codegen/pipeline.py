@@ -43,7 +43,7 @@ def execute_pyccel(fname, *,
                    syntax_only     = False,
                    semantic_only   = False,
                    convert_only    = False,
-                   verbose         = False,
+                   verbose         = 0,
                    show_timings    = False,
                    folder          = None,
                    language        = None,
@@ -79,8 +79,8 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the semantic stage. Default is False.
     convert_only : bool, optional
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
-    verbose : bool, optional
-        Indicates whether debugging messages should be printed. Default is False.
+    verbose : int, default=0
+        Indicates the level of verbosity.
     show_timings : bool, default=False
         Show the time spent in each of Pyccel's internal stages.
     folder : str, optional

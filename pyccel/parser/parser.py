@@ -154,8 +154,8 @@ class Parser(object):
 
         Parameters
         ----------
-        verbose :int 
-            Determine the verbosity.
+        verbose : int
+            Indicates the level of verbosity.
 
         d_parsers_by_filename : dict[str, Parser]
             A dictionary of parsed sons indexed by filename.
@@ -238,7 +238,7 @@ class Parser(object):
 
         self._sons.append(son)
 
-    def parse_sons(self, d_parsers_by_filename, verbose=False):
+    def parse_sons(self, d_parsers_by_filename, verbose):
         """
         Parse the files on which this file is dependent.
 
@@ -252,8 +252,8 @@ class Parser(object):
         d_parsers_by_filename : dict
             A dictionary of parsed sons.
 
-        verbose : bool, default=False
-            Set the verbosity.
+        verbose : int
+            Indicates the level of verbosity.
 
         Returns
         -------

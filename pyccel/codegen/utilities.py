@@ -305,8 +305,8 @@ def recompile_object(compile_obj,
     language : str
         The language in which code is being printed.
 
-    verbose : bool
-        Indicates whether additional information should be printed.
+    verbose : int
+        Indicates the level of verbosity.
     """
 
     # compile library source files
@@ -343,8 +343,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         The object that we are aiming to copile.
     language : str
         The language in which code is being printed.
-    verbose : bool
-        Indicates whether additional information should be printed.
+    verbose : int
+        Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
     """
