@@ -267,11 +267,11 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, filename, prefix_module = None):
+    def __init__(self, filename, *, verbose, prefix_module = None):
 
         errors.set_target(filename)
 
-        super().__init__()
+        super().__init__(verbose)
         self._constantImports = {}
         self._current_class    = None
 

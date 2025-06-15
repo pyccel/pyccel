@@ -47,10 +47,10 @@ class FortranToCWrapper(Wrapper):
     objects such that the resulting AST is C-compatible. This new AST is
     printed as an intermediary layer.
     """
-    def __init__(self):
+    def __init__(self, verbose):
         self._additional_exprs = []
         self._wrapper_names_dict = {}
-        super().__init__()
+        super().__init__(verbose)
 
     def _get_function_def_body(self, func, wrapped_args, results, handled = ()):
         """

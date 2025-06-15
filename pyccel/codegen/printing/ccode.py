@@ -315,11 +315,11 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
                       }
 
-    def __init__(self, filename, prefix_module = None):
+    def __init__(self, filename, *, verbose, prefix_module = None):
 
         errors.set_target(filename)
 
-        super().__init__()
+        super().__init__(verbose)
         self.prefix_module = prefix_module
         self._additional_imports = {'stdlib':c_imports['stdlib']}
         self._additional_code = ''

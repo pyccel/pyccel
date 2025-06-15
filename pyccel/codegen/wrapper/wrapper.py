@@ -27,9 +27,10 @@ class Wrapper:
     start_language = None
     target_language = None
 
-    def __init__(self):
+    def __init__(self, verbose):
         self._scope = None
         self._current_ast_node = None
+        self._verbose = verbose
 
     @property
     def scope(self):
@@ -105,6 +106,8 @@ class Wrapper:
         for cls in classes:
             wrap_method = '_wrap_' + cls.__name__
             if hasattr(self, wrap_method):
+                if self._verbose > 2:
+                    print(f">>>> Calling {type(self).__name__}.{wrap_method}")
                 try:
                     obj = getattr(self, wrap_method)(expr)
                 except (PyccelError, NotImplementedError) as err:

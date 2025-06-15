@@ -72,7 +72,7 @@ class Codegen:
         except KeyError as err:
             raise ValueError(f'{language} language is not available') from err
 
-        self._printer = CodePrinterSubclass(self.parser.filename)
+        self._printer = CodePrinterSubclass(self.parser.filename, verbose = self._verbose)
 
     @property
     def parser(self):
@@ -240,7 +240,7 @@ class Codegen:
 
         if self._verbose:
             print ('>>> Printing :: ', pyi_filename)
-        code = printer_registry['python'](self.parser.filename).doprint(module_header)
+        code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
         if self.language != 'python':
             printer_imports = ', '.join(self.get_printer_imports().keys())
             if printer_imports:

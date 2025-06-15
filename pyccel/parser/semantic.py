@@ -2634,6 +2634,8 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             try:
                 if hasattr(self, annotation_method):
+                    if self._verbose > 2:
+                        print(f">>>> Calling SemanticParser.{annotation_method}")
                     obj = getattr(self, annotation_method)(expr)
                     if isinstance(obj, PyccelAstNode) and self.current_ast_node:
                         obj.set_current_ast(self.current_ast_node)

@@ -27,10 +27,11 @@ class CodePrinter:
     and `_print_X` functions.
     """
     language = None
-    def __init__(self):
+    def __init__(self, verbose):
         self._scope = None
         self._current_ast_node = None
         self._additional_imports = {}
+        self._verbose = verbose
 
     def doprint(self, expr):
         """
@@ -135,6 +136,8 @@ class CodePrinter:
         for cls in classes:
             print_method = '_print_' + cls.__name__
             if hasattr(self, print_method):
+                if self._verbose > 2:
+                    print(f">>>> Calling {type(self).__name__}.{print_method}")
                 try:
                     obj = getattr(self, print_method)(expr)
                 except (PyccelError, NotImplementedError) as err:
