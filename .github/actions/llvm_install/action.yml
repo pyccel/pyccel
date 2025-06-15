@@ -1,0 +1,88 @@
+name: 'LLVM installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: update the package list
+      run:
+        sudo apt-get update
+      shell: bash
+
+    # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#homebrew-note
+    - name: Add Homebrew to PATH
+      run: |
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        brew --version
+      shell: bash
+
+    - name: Add Homebrew to PATH
+      run: |
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        echo "PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH" >> $GITHUB_ENV
+        brew --version
+      shell: bash
+
+    - name: Test Homebrew
+      run: |
+        brew --version
+        brew install hello
+      shell: bash
+
+    - name: Install flang with Homebrew
+      run: |
+        brew install flang
+      shell: bash
+  
+    - name: Add flang to LD_LIBRARY_PATH
+      run: |
+        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      shell: bash
+    
+    - name: Install clang with apt-get
+      run: |
+        sudo apt-get install -y clang
+      shell: bash
+
+
+    - name: Create flang symlink
+      run: |
+        which flang-new
+        flang-new --version
+        ldd $(which flang-new)
+        sudo ln -sf /usr/bin/flang-new /usr/local/bin/flang
+        which flang
+        flang --version
+      shell: bash
+
+    - name: Install MPI and OpenMP
+      run: |
+        sudo apt-get install -y libopenmpi-dev openmpi-bin
+        sudo apt-get install -y libomp-dev libomp5
+        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Export libomp path
+      run: |
+        LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
+        LLVM_LIB_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
+        echo "LLVM version: $LLVM_VERSION"
+        echo "LLVM path: $LLVM_LIB_PATH"
+        echo "LD_LIBRARY_PATH=${LLVM_LIB_PATH}:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Set LD_LIBRARY_PATH for OpenMP
+      run: |
+        export LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
+        export LIBOMP_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
+        echo "LD_LIBRARY_PATH=$LIBOMP_PATH:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Install LaPack
+      run:
+        sudo apt-get install libblas-dev liblapack-dev
+      shell: bash
+
+    - name: Install Valgrind
+      run:
+        sudo apt-get install valgrind
+      shell: bash

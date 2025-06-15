@@ -38,7 +38,9 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, na
 
     This function takes a prefix and a counter and uses them to construct
     a new name of the form:
-            prefix_counter
+
+         prefix_<counter>
+
     Where counter is formatted to fill 4 characters
     The new name is checked against a list of forbidden expressions. If the
     constructed name is forbidden then the counter is incremented until a valid

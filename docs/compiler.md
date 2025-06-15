@@ -7,6 +7,7 @@ Pyccel provides default compiler settings for 4 different compiler families:
 -   **GNU** : `gcc` / `gfortran`
 -   **Intel** : `icx` / `ifx`
 -   **NVIDIA** : `nvc` / `nvfort`
+-   **LLVM**: `clang` / `flang`
 
 **Warning** : The **NVIDIA** compiler is not currently tested regularly
 

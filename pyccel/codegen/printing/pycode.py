@@ -249,15 +249,7 @@ class PythonCodePrinter(CodePrinter):
         """
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
         if func.is_inline:
-            if interface:
-                assert len(interface) == 1
-                interf = interface[0]
-                if func is interf.functions[0]:
-                    return self._print(interf)
-                else:
-                    return ''
-            else:
-                return self._print(func)
+            return self._print(func)
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
@@ -506,7 +498,8 @@ class PythonCodePrinter(CodePrinter):
             return '\n'.join([l for l in (header, docstr, imports_code, code) if l != ''])
 
     def _print_FunctionDef(self, expr):
-        if expr.is_inline and not expr.is_semantic:
+        if expr.is_inline:
+            self.add_import(Import('pyccel.decorators', [AsName(FunctionDef('inline', (), ()), 'inline')]))
             code = ast.unparse(expr.python_ast) + '\n'
             return code
 
@@ -515,10 +508,6 @@ class PythonCodePrinter(CodePrinter):
             name = self._print(expr.scope.get_python_name(expr.name))
         else:
             name = self._print(expr.name)
-
-        in_header = self._in_header
-        if expr.is_inline:
-            self._in_header = False
 
         self.set_scope(expr.scope)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -555,8 +544,6 @@ class PythonCodePrinter(CodePrinter):
             code = f'{headers}\n{code}'
 
         self.exit_scope()
-
-        self._in_header = in_header
 
         return code
 
@@ -859,11 +846,13 @@ class PythonCodePrinter(CodePrinter):
                                         for t in target if not isinstance(t.object, VariableTypeAnnotation) and \
                                                            t.name != t.local_alias)
 
-            if expr.source_module:
-                if expr.source_module.init_func:
-                    self._ignore_funcs.append(expr.source_module.init_func)
-                if expr.source_module.free_func:
-                    self._ignore_funcs.append(expr.source_module.free_func)
+            if init_func:
+                self._ignore_funcs.append(init_func)
+                if init_func.name in self.scope.imports['functions']:
+                    self._ignore_funcs.append(self.scope.imports['functions'][init_func.name])
+            if free_func:
+                self._ignore_funcs.append(free_func)
+
             target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
             return f'from {source} import {target}\n'

@@ -489,6 +489,7 @@ def test_imports_in_folder(language):
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skip_llvm
 @pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py",
@@ -533,6 +534,13 @@ def test_folder_imports(language):
 @pytest.mark.xdist_incompatible
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
+
+@pytest.mark.xdist_incompatible
+def test_capitalised_language(language):
+    test_file = get_abs_path("scripts/runtest_funcs.py")
+    cwd = os.path.dirname(test_file)
+    output_folder = "__pyccel__" + os.environ.get('PYTEST_XDIST_WORKER', '')
+    compile_pyccel(cwd, test_file, f'--language={language.capitalize()} --output={output_folder}')
 
 #------------------------------------------------------------------------------
 # Enumerate not supported in c
@@ -1079,10 +1087,7 @@ def test_function(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Repeat calls to inline decorator can cause bad loop unravelling. See #2043"),
-            pytest.mark.c]
-        )
+        pytest.param("c", marks = pytest.mark.c)
     )
 )
 def test_inline(language):

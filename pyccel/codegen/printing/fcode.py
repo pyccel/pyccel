@@ -375,139 +375,6 @@ class FCodePrinter(CodePrinter):
                 .add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr, assign_lhs = None):
-        """
-        Print a function call to an inline function.
-
-        Use the arguments passed to an inline function to print
-        its body with the passed arguments in place of the function
-        arguments.
-
-        Parameters
-        ----------
-        expr : FunctionCall
-            The function call which should be printed inline.
-
-        assign_lhs : List
-            A list of lhs provided.
-
-        Returns
-        -------
-        str
-            The code for the inline function.
-        """
-
-        scope = self.scope
-        func = expr.funcdef
-
-        # Print any arguments using the same inline function
-        # As the function definition is modified directly this function
-        # cannot be called recursively with the same FunctionDef
-        args = []
-        for a in expr.args:
-            if a.is_user_of(func):
-                code = PrecomputedCode(self._print(a))
-                args.append(code)
-            else:
-                args.append(a.value)
-
-        # Create new local variables to ensure there are no name collisions
-        new_local_vars = {v: v.clone(self.scope.get_new_name(v.name)) \
-                            for v in func.local_vars}
-        local_vars_to_insert = list(new_local_vars.values())
-        inhomog_vars = {v for v in func.local_vars if isinstance(v.class_type, InhomogeneousTupleType)}
-        while inhomog_vars:
-            v = inhomog_vars.pop()
-            elems = [func.scope.collect_tuple_element(vi) for vi in v]
-            for i,vi in enumerate(elems):
-                new_vi = vi.clone(self.scope.get_new_name(vi.name))
-                new_local_vars[vi] = new_vi
-                self.scope.insert_symbolic_alias(new_local_vars[v][i], new_vi)
-                if isinstance(vi.class_type, InhomogeneousTupleType):
-                    inhomog_vars.add(vi)
-        for v in local_vars_to_insert:
-            self.scope.insert_variable(v, tuple_recursive = False)
-
-        # Put functions into current scope
-        for entry in ['variables', 'classes', 'functions']:
-            self.scope.imports[entry].update(func.namespace_imports[entry])
-
-        func.swap_in_args(args, local_vars_to_insert)
-
-        func.remove_presence_checks()
-
-        body = func.body
-
-        if not func.results.var:
-            # If there is no return then the code is already ok
-            code = self._print(body)
-        else:
-            func_result_vars = func.scope.collect_all_tuple_elements(func.results.var)
-            result = body.get_attribute_nodes(Return)[0]
-
-            if assign_lhs:
-                body.substitute(func_result_vars, assign_lhs)
-            elif result.stmt:
-                # Collect statements from results to return object
-                assigns = {i.lhs: i.rhs for i in result.stmt.body if isinstance(i, Assign)}
-                self._additional_code += ''.join(self._print(i) for i in result.stmt.body if not isinstance(i, Assign))
-                result_vars = list(assigns.values())
-            else:
-                result_vars = [r.clone(name = self.scope.get_new_name(r.name)) \
-                            for r in func_result_vars]
-                for r in result_vars:
-                    self.scope.insert_variable(r)
-                body.substitute(func_result_vars, result_vars)
-
-            # Search for the return and replace it with an empty node
-            empty_return = EmptyNode()
-            body.substitute(result, empty_return, invalidate = False)
-
-            # Everything before the return node needs handling before the line
-            # which calls the inline function is executed
-            code = self._print(body)
-
-            # Put return statement back into function
-            body.substitute(empty_return, result)
-
-            if assign_lhs:
-                if result.stmt:
-                    code += self._print(result.stmt)
-                body.substitute(assign_lhs, func_result_vars)
-            elif result.stmt:
-                self._additional_code = code
-                code = self._print(result_vars[0])
-            else:
-                self._additional_code = code
-                assert not isinstance(result.expr.class_type, InhomogeneousTupleType)
-                code = self._print(result.expr)
-                body.substitute(result_vars, func_result_vars)
-
-        # Put back original arguments
-        func.reinstate_presence_checks()
-        func.swap_out_args()
-
-        for i in func.imports:
-            self.add_import(i)
-
-        if (func.global_vars or func.global_funcs) and \
-                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
-            interface = func.get_direct_user_nodes(lambda u: isinstance(u, Interface) and u.is_imported)
-            if interface:
-                assert len(interface) == 1
-                mod = interface[0].get_direct_user_nodes(lambda u: isinstance(u, Module))[0]
-            else:
-                mod = func.get_direct_user_nodes(lambda u: isinstance(u, Module))[0]
-            current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
-            if current_mod is not mod:
-                self.add_import(Import(mod.name, [AsName(v, v.name) \
-                              for v in (*func.global_vars, *func.global_funcs)]))
-                for v in (*func.global_vars, *func.global_funcs):
-                    self.scope.insert_symbol(v.name)
-
-        self.set_scope(scope)
-        return code
-
     def _get_external_declarations(self, decs):
         """
         Find external functions and declare their result type.
@@ -1994,62 +1861,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonMax(self, expr):
         return self._print_PythonMinMax(expr)
 
-    # ... MACROS
-    def _print_MacroShape(self, expr):
-        var = expr.argument
-        if not isinstance(var, (Variable, IndexedElement)):
-            raise TypeError(f'Expecting a variable, given {type(var)}')
-        shape = var.shape
-
-        if len(shape) == 1:
-            shape = shape[0]
-
-
-        elif not(expr.index is None):
-            if expr.index < len(shape):
-                shape = shape[expr.index]
-            else:
-                shape = '1'
-
-        return self._print(shape)
-
-    # ...
-    def _print_MacroType(self, expr):
-        dtype = self._print(expr.argument.dtype)
-        prec  = expr.argument.dtype.precision
-
-        if dtype == 'integer':
-            if prec==4:
-                return 'MPI_INTEGER'
-            elif prec==8:
-                return 'MPI_INTEGER8'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-
-        elif dtype == 'float':
-            if prec==8:
-                return 'MPI_DOUBLE'
-            if prec==4:
-                return 'MPI_FLOAT'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-
-        else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
-
-    def _print_MacroCount(self, expr):
-
-        var = expr.argument
-
-        if var.rank == 0:
-            return '1'
-        else:
-            return self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
-
     def _print_Declare(self, expr):
         expr_dtype = expr.variable.dtype
         # ... ignored declarations
@@ -2746,10 +2557,9 @@ class FCodePrinter(CodePrinter):
         decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
-        # we rename all methods because of the aliasing
-        cls_methods = [i.clone(i.name) for i in expr.methods]
+        cls_methods = [i for i in expr.methods if not i.is_inline]
         for i in expr.interfaces:
-            cls_methods +=  [j.clone(j.name) for j in i.functions]
+            cls_methods +=  [j for j in i.functions if not j.is_inline]
 
         methods = f'\n{sep}\n'.join(self._print(f) for f in cls_methods)
 
@@ -3751,14 +3561,11 @@ class FCodePrinter(CodePrinter):
             results_strs = []
             results = None
 
-        if func.is_inline:
-            code = self._handle_inline_func_call(expr, assign_lhs = results)
-        else:
-            args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
-            args_code = ', '.join(results_strs+args_strs)
-            code = f'{f_name}({args_code})'
-            if not is_function:
-                code = f'call {code}\n'
+        args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
+        args_code = ', '.join(results_strs+args_strs)
+        code = f'{f_name}({args_code})'
+        if not is_function:
+            code = f'call {code}\n'
 
         if not parent_assign:
             if is_function or len(out_results) == 0:
@@ -3769,7 +3576,7 @@ class FCodePrinter(CodePrinter):
                     return self._print(results[0])
                 else:
                     return self._print(tuple(results))
-        elif is_function and not func.is_inline:
+        elif is_function:
             result_code = self._print(results[0])
             if isinstance(parent_assign[0], AliasAssign):
                 return f'{result_code} => {code}\n'

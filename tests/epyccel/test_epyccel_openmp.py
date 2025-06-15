@@ -10,6 +10,8 @@ from numpy import matmul
 from pyccel import epyccel
 #==============================================================================
 
+# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
+pytestmark = pytest.mark.skip_llvm
 
 #==============================================================================
 

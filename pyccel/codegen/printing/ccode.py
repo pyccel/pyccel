@@ -587,105 +587,6 @@ class CCodePrinter(CodePrinter):
         array_init = f' = cspan_md_layout({order}, {dummy_array_name}, {shape})'
         return buffer_array, array_init
 
-    def _handle_inline_func_call(self, expr):
-        """
-        Print a function call to an inline function.
-
-        Use the arguments passed to an inline function to print
-        its body with the passed arguments in place of the function
-        arguments.
-
-        Parameters
-        ----------
-        expr : FunctionCall
-            The function call which should be printed inline.
-
-        Returns
-        -------
-        str
-            The code for the inline function.
-        """
-        func = expr.funcdef
-        body = func.body
-
-        for b in body.body:
-            if isinstance(b, ScopedAstNode):
-                b.scope.update_parent_scope(self.scope, is_loop=True)
-
-        # Print any arguments using the same inline function
-        # As the function definition is modified directly this function
-        # cannot be called recursively with the same FunctionDef
-        args = []
-        for a in expr.args:
-            if a.is_user_of(func):
-                code = PrecomputedCode(self._print(a))
-                args.append(code)
-            else:
-                args.append(a.value)
-
-        # Create new local variables to ensure there are no name collisions
-        new_local_vars = [self.scope.get_temporary_variable(v, clone_scope = func.scope) \
-                            for v in func.local_vars]
-
-        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-        func_result_vars = func.scope.collect_all_tuple_elements(func.results.var)
-        generated_result_vars = any(v is not Nil() and (not v.is_temp or v.is_ndarray) for v in func_result_vars)
-        if generated_result_vars or self._temporary_args:
-            if self._temporary_args:
-                orig_res_vars = func_result_vars
-                new_res_vars = self._temporary_args
-            else:
-                orig_res_vars = [v for v in func_result_vars if not v.is_temp or v.is_ndarray]
-                new_res_vars = [self.scope.get_temporary_variable(r) \
-                            for r in orig_res_vars]
-            new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
-            body.substitute(orig_res_vars, new_res_vars)
-
-        # Replace the arguments in the code
-        func.swap_in_args(args, new_local_vars)
-
-        func.remove_presence_checks()
-
-        # Collect code but strip empty end
-        body_code = self._print(body)
-        code_lines = body_code.split('\n')[:-1]
-        return_regex = re.compile(r'\breturn\b')
-        has_results = [return_regex.search(l) is not None for l in code_lines]
-
-        if func.results.var is Nil() and not any(has_results):
-            code = body_code
-        else:
-            result_idx = has_results.index(True)
-            result_line = code_lines[result_idx]
-
-            body_code = '\n'.join(code_lines[:result_idx])+'\n'
-
-            if len(func.results) != 1:
-                code = body_code
-            else:
-                self._additional_code += body_code
-                code = result_line.removeprefix('return ').removesuffix(';')
-
-        # Put back original arguments
-        func.reinstate_presence_checks()
-        func.swap_out_args()
-        if generated_result_vars or self._temporary_args:
-            body.substitute(new_res_vars, orig_res_vars)
-
-        if func.global_vars or func.global_funcs and \
-                not func.get_direct_user_nodes(lambda u: isinstance(u, ClassDef)):
-            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self.add_import(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
-
-        for b in body.body:
-            if isinstance(b, ScopedAstNode):
-                b.scope.update_parent_scope(func.scope, is_loop=True)
-
-        return code
-
     def get_stc_init_elements(self, class_type, elements):
         """
         Get the elements that can be passed to a `c_make` call.
@@ -2449,8 +2350,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        if func.is_inline:
-            return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
@@ -3257,36 +3156,6 @@ class CCodePrinter(CodePrinter):
         else:
             assert isinstance(arg.class_type, CharType) and getattr(arg, 'is_alias', True)
             return f'cstr_from({arg_code})'
-
-    #=================== MACROS ==================
-
-    def _print_MacroShape(self, expr):
-        var = expr.argument
-        if not isinstance(var, (Variable, IndexedElement)):
-            raise TypeError(f'Expecting a variable, given {type(var)}')
-        shape = var.shape
-
-        if len(shape) == 1:
-            shape = shape[0]
-
-
-        elif not(expr.index is None):
-            if expr.index < len(shape):
-                shape = shape[expr.index]
-            else:
-                shape = '1'
-
-        return self._print(shape)
-
-    def _print_MacroCount(self, expr):
-
-        var = expr.argument
-
-        if var.rank == 0:
-            return '1'
-        else:
-            return self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
     def _print_PrecomputedCode(self, expr):
         return expr.code

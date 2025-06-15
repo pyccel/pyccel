@@ -16,7 +16,7 @@ S = TypeVar('S', 'int8[:]','int8[:,:]','int8[:,:,:]','int8[:,:,:,:]','int8[:,:,:
 
 @inline
 def add(a : T, b : T):
-    return a+b
+    return 2*a+b
 
 @inline
 def get_powers(s : int):
@@ -53,6 +53,25 @@ def positron_charge():
 def add2(a : S, b : S, c : S):
     c[...] = a+b
 
+@inline
+def h() -> int:
+    return 2
+
+def call_in_loop():
+    x = np.ones((3, 3), dtype=int)
+    for _ in range(10):
+        arg_modifier(x)
+    return x
+
+@inline
+def arg_modifier(arr: "int[:,:]"):
+    arr[:] = 0.0
+
+@inline
+def optional_in_ternary(a : int = None):
+    b = 2 if a is None else a
+    return b
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -76,3 +95,10 @@ if __name__ == '__main__':
     add2(a1, b1, c1)
     add2(a2, b2, c2)
     add2(a2, b2, c2)
+    print(h())
+    print(add(a,b=b))
+    print(add(b=2, a=3))
+    print(call_in_loop())
+    print(optional_in_ternary())
+    print(optional_in_ternary(3))
+    print(optional_in_ternary(b))
