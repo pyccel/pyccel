@@ -7,6 +7,8 @@ import sys
 import warnings
 import pytest
 
+from pyccel import epyccel
+
 #---------------------------------------------------------------------
 def test_with_capitalised_language(language):
     def free_gift():
