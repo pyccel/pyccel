@@ -38,7 +38,7 @@ def test_syntax_blockers(f):
     pyccel = Parser(f, output_folder = os.getcwd())
 
     with pytest.raises(PyccelSyntaxError):
-        ast = pyccel.parse()
+        ast = pyccel.parse(verbose = 0)
 
     assert errors.has_blockers()
 
@@ -50,7 +50,7 @@ def test_syntax_errors(f):
 
     pyccel = Parser(f, output_folder = os.getcwd())
 
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
     assert errors.has_errors()
 
@@ -64,11 +64,10 @@ def test_semantic_blocking_errors(f):
 
     Scope.name_clash_checker = name_clash_checkers['fortran']
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
     with pytest.raises(PyccelSemanticError):
-        ast = pyccel.annotate(**settings)
+        ast = pyccel.annotate(verbose = 0)
 
     assert errors.has_blockers()
 
@@ -84,11 +83,10 @@ def test_traceback():
     error_mode.set_mode('developer')
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
     try:
-        ast = pyccel.annotate(**settings)
+        ast = pyccel.annotate(verbose = 0)
     except PyccelSemanticError as e:
         msg = str(e)
         errors.report(msg,
@@ -109,10 +107,9 @@ def test_semantic_non_blocking_errors(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     assert errors.has_errors()
 
@@ -127,11 +124,10 @@ def test_semantic_non_blocking_developer_errors(f):
     error_mode.set_mode('developer')
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
     with pytest.raises(PyccelSemanticError):
-        ast = pyccel.annotate(**settings)
+        ast = pyccel.annotate(verbose = 0)
 
     error_mode.set_mode('user')
     assert errors.has_errors()
@@ -143,15 +139,14 @@ def test_codegen_blocking_errors(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'fortran')
+    codegen = Codegen(ast, name, 'fortran', verbose = 0)
     with pytest.raises(PyccelCodegenError):
         codegen.printer.doprint(codegen.ast)
 
@@ -164,15 +159,14 @@ def test_codegen_non_blocking_errors(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'fortran')
+    codegen = Codegen(ast, name, 'fortran', verbose = 0)
     codegen.printer.doprint(codegen.ast)
 
     assert errors.has_errors()

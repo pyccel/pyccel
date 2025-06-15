@@ -20,7 +20,7 @@ def test_syntax(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    pyccel.parse()
+    pyccel.parse(verbose = 0)
 
     # Assert syntactic success
     assert not errors.has_errors()
