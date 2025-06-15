@@ -169,7 +169,7 @@ class Parser(object):
             return self._syntax_parser.ast
 
         if verbose:
-            print ('>>> Parsing :: ', self._filename)
+            print ('>> Parsing :: ', self._filename)
 
         parser             = SyntaxParser(self._filename, verbose = verbose)
         self.syntax_parser = parser
@@ -205,7 +205,7 @@ class Parser(object):
             return self._semantic_parser
 
         if verbose:
-            print ('>>> Calculating semantic annotations :: ', self._filename)
+            print ('>> Calculating semantic annotations :: ', self._filename)
 
         # we first treat all sons to get imports
         self._annotate_sons(verbose=verbose)

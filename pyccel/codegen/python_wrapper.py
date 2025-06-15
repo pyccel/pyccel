@@ -110,7 +110,7 @@ def create_shared_library(codegen,
     if language == 'fortran':
         start_bind_c_wrapping = time.time()
         if verbose:
-            print(">>> Building Fortran-C interface :: ", module_name)
+            print(">> Building Fortran-C interface :: ", module_name)
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
@@ -118,7 +118,7 @@ def create_shared_library(codegen,
 
         bind_c_filename = f'{bind_c_mod.name}.f90'
         if verbose:
-            print(">>> Printing :: ", bind_c_filename)
+            print(">> Printing :: ", bind_c_filename)
         start_bind_c_printing = time.time()
         bind_c_code = FCodePrinter(bind_c_mod.name).doprint(bind_c_mod)
 
@@ -149,13 +149,13 @@ def create_shared_library(codegen,
     wrapper = CToPythonWrapper(base_dirpath)
 
     if verbose:
-        print(">>> Building C-Python interface :: ", c_ast.name)
+        print(">> Building C-Python interface :: ", c_ast.name)
     start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
     if verbose:
-        print(">>> Printing :: ", wrapper_filename)
+        print(">> Printing :: ", wrapper_filename)
     start_print_cwrapper = time.time()
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)

@@ -199,13 +199,13 @@ class Compiler:
 
         Examples
         --------
-        >>> self._get_property("libs", ("-lmy_lib",), ())
+        >> self._get_property("libs", ("-lmy_lib",), ())
         dict_keys(['-lmy_lib', '-lm'])
 
-        >>> self._get_property("libs", ("-lmy_lib",), ("openmp",))
+        >> self._get_property("libs", ("-lmy_lib",), ("openmp",))
         dict_keys(['-lmy_lib', '-lm', 'gomp'])
 
-        >>> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
+        >> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
         dict_keys(['/home/user/homemade-install-dir/'])
         """
         # Use a dictionary instead of a set to ensure properties are ordered by insertion
@@ -278,8 +278,8 @@ class Compiler:
     def _insert_prefix_to_list(lst, prefix):
         """
         Add a prefix into a list. E.g:
-        >>> lst = [1, 2, 3]
-        >>> _insert_prefix_to_list(lst, 'num:')
+        >> lst = [1, 2, 3]
+        >> _insert_prefix_to_list(lst, 'num:')
         ['num:', 1, 'num:', 2, 'num:', 3]
 
         Parameters
@@ -361,7 +361,7 @@ class Compiler:
             return
 
         if verbose:
-            print(">>> Compiling :: ", compile_obj.module_target)
+            print(">> Compiling :: ", compile_obj.module_target)
 
         self._language_info = self._compiler_info[language]
 
@@ -418,7 +418,7 @@ class Compiler:
             The name of the generated executable.
         """
         if verbose:
-            print(">>> Compiling executable :: ", compile_obj.program_target)
+            print(">> Compiling executable :: ", compile_obj.program_target)
 
         self._language_info = self._compiler_info[language]
 
@@ -504,7 +504,7 @@ class Compiler:
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
-            print(">>> Compiling shared library :: ", file_out)
+            print(">> Compiling shared library :: ", file_out)
 
         cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
