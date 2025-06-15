@@ -180,10 +180,11 @@ class BasicParser(object):
     >>> result = parser.parse("1 + 2")
     """
 
-    def __init__(self):
+    def __init__(self, verbose):
         self._code = None
         self._fst = None
         self._ast = None
+        self._verbose = verbose
 
         self._filename = None
         self._metavars = {}
