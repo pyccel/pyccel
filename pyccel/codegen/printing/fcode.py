@@ -258,6 +258,8 @@ class FCodePrinter(CodePrinter):
             The name of the file being pyccelised.
     prefix_module : str
             A prefix to be added to the name of the module.
+    verbose : int
+        The level of verbosity.
     """
     printmethod = "_fcode"
     language = "Fortran"

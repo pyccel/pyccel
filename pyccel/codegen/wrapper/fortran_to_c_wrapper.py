@@ -46,6 +46,11 @@ class FortranToCWrapper(Wrapper):
     A class which provides all necessary functions for wrapping different AST
     objects such that the resulting AST is C-compatible. This new AST is
     printed as an intermediary layer.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
     """
     def __init__(self, verbose):
         self._additional_exprs = []

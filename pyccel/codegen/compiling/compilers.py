@@ -277,17 +277,19 @@ class Compiler:
     @staticmethod
     def _insert_prefix_to_list(lst, prefix):
         """
+        Add a prefix into a list.
+
         Add a prefix into a list. E.g:
-        >> lst = [1, 2, 3]
-        >> _insert_prefix_to_list(lst, 'num:')
+        >>> lst = [1, 2, 3]
+        >>> _insert_prefix_to_list(lst, 'num:')
         ['num:', 1, 'num:', 2, 'num:', 3]
 
         Parameters
         ----------
-        lst    : iterable
-                 The list into which the prefix is inserted
+        lst : iterable
+            The list into which the prefix is inserted.
         prefix : str
-                 The prefix
+            The prefix to be inserted.
         """
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]
@@ -409,7 +411,7 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose :int
+        verbose : int
             Indicates the level of verbosity.
 
         Returns
@@ -467,7 +469,7 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose :int
+        verbose : int
             Indicates the level of verbosity.
 
         sharedlib_modname : str, optional
@@ -530,7 +532,7 @@ class Compiler:
         cmd : list of str
             The command to run.
         verbose : int
-            Indicates the level of verbosity
+            Indicates the level of verbosity.
 
         Returns
         -------

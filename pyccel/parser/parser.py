@@ -191,8 +191,8 @@ class Parser(object):
 
         Parameters
         ----------
-        **settings : dict
-            Additional keyword arguments for BasicParser.
+        verbose : int
+            The level of verbosity.
 
         Returns
         -------

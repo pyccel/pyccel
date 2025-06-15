@@ -104,6 +104,8 @@ class CToPythonWrapper(Wrapper):
     file_location : str
         The folder where the translated code is located and where the generated .so file will
         be located.
+    verbose : int
+        The level of verbosity.
     """
     def __init__(self, file_location, verbose):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST

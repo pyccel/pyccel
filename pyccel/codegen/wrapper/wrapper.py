@@ -23,6 +23,11 @@ class Wrapper:
     The base class for any classes designed to create a wrapper around code.
     Such wrappers are necessary to create an interface between two different
     languages.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
     """
     start_language = None
     target_language = None

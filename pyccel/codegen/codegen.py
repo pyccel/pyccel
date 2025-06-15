@@ -40,6 +40,8 @@ class Codegen:
         Name of the generated module or program.
     language : str
         The language which the printer should print to.
+    verbose : int
+        The level of verbosity.
     """
     def __init__(self, parser, name, language, verbose):
         pyccel_stage.set_stage('codegen')

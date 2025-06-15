@@ -78,6 +78,8 @@ class PythonCodePrinter(CodePrinter):
     ----------
     filename : str
         The name of the file being pyccelised.
+    verbose : int
+        The level of verbosity.
     """
     printmethod = "_pycode"
     language = "python"

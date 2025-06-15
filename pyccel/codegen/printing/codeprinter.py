@@ -25,6 +25,11 @@ class CodePrinter:
 
     The base class from which code printers inherit. The sub-classes should define a language
     and `_print_X` functions.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
     """
     language = None
     def __init__(self, verbose):
