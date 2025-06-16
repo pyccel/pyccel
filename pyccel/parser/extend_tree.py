@@ -30,6 +30,28 @@ class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 
 def get_comments(code):
+    """
+    Extract comments from Python code.
+
+    This function parses the input code string and extracts all comments,
+    including single-line and multi-line comments.
+
+    Parameters
+    ----------
+    code : str
+        The Python code string to parse for comments.
+
+    Returns
+    -------
+    list
+        List of CommentLine or CommentMultiLine objects representing the comments.
+
+    See Also
+    --------
+    CommentLine : Node representing a single-line comment.
+    CommentMultiLine : Node representing a multi-line comment.
+    extend_tree : Function that uses get_comments to extend the AST.
+    """
     lines = code.split("\n")
     comments        = []
     lineno_comments = []
@@ -250,4 +272,3 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
     # insert in the rest of the comments in the end of a block
     setattr(ast, attr, body + comments.tolist())
-

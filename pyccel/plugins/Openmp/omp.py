@@ -106,13 +106,20 @@ class OmpNode(PyccelAstNode):
     def position(self):
         """
         Returns the position_start and position_end of an omp object's syntax inside the pragma.
+
+        This property provides the exact location of the OpenMP syntax within the pragma comment.
+        It is used for error reporting and for tracking the source code position of OpenMP directives
+        and clauses. The position is represented as a tuple of (start, end) indices.
         """
         return self._position
 
     @property
     def raw(self):
         """
-        Finds root model of the omp object and returns the object's syntax as written in the code.
+        Returns the object's syntax as written in the code.
+
+        This property provides access to the original, unprocessed text of the OpenMP directive
+        or clause as it appears in the source code.
         """
         return self._raw
 
@@ -182,13 +189,22 @@ class OmpConstruct(OmpNode):
 
     @property
     def start(self):
-        """Returns the directive that marks the start of the construct"""
+        """Returns the directive that marks the start of the construct.
+
+        This property provides access to the OpenMP directive that begins the construct.
+        The start directive contains important information such as the name of the construct
+        and any clauses that modify its behavior.
+        """
         return self._start
 
     @property
     def body(self):
         """
         Returns a codeblock body of the construct.
+
+        This property provides access to the code block that is enclosed by the OpenMP construct.
+        The body contains the actual code statements that will be executed according to the
+        OpenMP rules specified by the construct.
         """
         return self._body
 
@@ -196,6 +212,11 @@ class OmpConstruct(OmpNode):
     def end(self):
         """
         Returns the end directive that marks the end of the construct.
+
+        This property provides access to the OpenMP end directive that terminates the construct.
+        The end directive is paired with the start directive to delimit the scope of the OpenMP
+        construct. It may be None for certain constructs that don't require an explicit end
+        directive, such as single-line directives.
         """
         return self._end
 
@@ -246,6 +267,10 @@ class OmpDirective(OmpNode):
     def name(self):
         """
         Returns the name of the directive.
+
+        This property provides the name of the OpenMP directive, such as 'parallel', 'for',
+        'simd', etc. The name identifies the type of the directive and determines how the
+        enclosed code block will be processed according to OpenMP rules.
         """
         return self._name
 
@@ -253,6 +278,11 @@ class OmpDirective(OmpNode):
     def clauses(self):
         """
         Returns the clauses of the directive.
+
+        This property provides access to the clauses associated with the OpenMP directive.
+        Clauses modify the behavior of the directive by specifying additional information
+        such as data sharing attributes, scheduling policies, or synchronization requirements.
+        Each clause is represented as an OmpClause object with its own name and expressions.
         """
         return self._clauses
 
@@ -260,6 +290,11 @@ class OmpDirective(OmpNode):
     def is_construct(self):
         """
         Returns True if the directive is a construct.
+
+        This property indicates whether the directive is part of a larger OpenMP construct
+        that requires a corresponding end directive. Constructs like 'parallel', 'for', and
+        'critical' enclose a block of code and require proper nesting. This information is
+        used during parsing and code generation to ensure the correct structure of OpenMP directives.
         """
         return self._is_construct
 
@@ -373,6 +408,11 @@ class OmpClause(OmpNode):
     def omp_exprs(self):
         """
         Returns the OpenMP expressions of the clause.
+
+        This property provides access to the expressions associated with the OpenMP clause.
+        These expressions specify the variables, values, or conditions that the clause applies to.
+        For example, in a 'private(x,y)' clause, the expressions would be the variables x and y.
+        The expressions are represented as OmpExpr objects or their subclasses.
         """
         return self._omp_exprs
 
@@ -380,6 +420,10 @@ class OmpClause(OmpNode):
     def name(self):
         """
         Returns the name of the clause.
+
+        This property provides the name of the OpenMP clause, such as 'private', 'shared',
+        'reduction', etc. The name identifies the type of the clause and determines how it
+        affects the behavior of the associated directive.
         """
         return self._name
 
@@ -456,6 +500,12 @@ class OmpExpr(OmpNode):
     def value(self):
         """
         Returns the value of the expression.
+
+        This property provides access to the actual value of the OpenMP expression.
+        The value is typically a Pyccel AST node representing a variable, constant,
+        or more complex expression. This is the core data that the expression represents
+        and is used during code generation to produce the appropriate output for the
+        target language.
         """
         return self._value
 
@@ -594,7 +644,11 @@ class OmpList(OmpExpr):
     @property
     def value(self):
         """
-        Returns the expression, or the tweaked raw that should represent a python expression
+        Returns the expression, or the tweaked raw that should represent a python expression.
+
+        This property provides access to the list of expressions contained in the OpenMP list.
+        If the actual value is available, it returns that value. Otherwise, it constructs a
+        string representation from the raw syntax
         """
         if self._value:
             return self._value
@@ -701,6 +755,11 @@ class OmpTxNode(OmpNode):
     def version(self):
         """
         Returns the version of the OpenMP object's syntax used.
+
+        This property provides the OpenMP version required for the syntax used in this node.
+        It is used to check compatibility with the user-specified OpenMP version and to issue
+        warnings if the syntax is not supported in the target version. The version is represented
+        as a float, such as 4.5 or 5.0, corresponding to the OpenMP specification version.
         """
         return self._version
 
@@ -708,6 +767,12 @@ class OmpTxNode(OmpNode):
     def deprecated(self):
         """
         Returns the deprecated version of OpenMP syntax used.
+
+        This property provides the OpenMP version in which the syntax used in this node
+        was deprecated. It is used to issue warnings if the syntax is deprecated in the
+        user-specified OpenMP version. If the syntax is not deprecated, this property
+        returns infinity. The version is represented as a float, such as 4.5 or 5.0,
+        corresponding to the OpenMP specification version.
         """
         return self._deprecated
 
@@ -715,6 +780,12 @@ class OmpTxNode(OmpNode):
     def omp_version(self):
         """
         Returns the OpenMP version used by the user.
+
+        This property provides the OpenMP version that the user has specified for the
+        compilation. It is used to check compatibility with the syntax used in this node
+        and to issue warnings if the syntax is not supported or is deprecated in the
+        user-specified version. The version is represented as a float, such as 4.5 or 5.0,
+        corresponding to the OpenMP specification version.
         """
         return self._omp_version
 
@@ -722,6 +793,10 @@ class OmpTxNode(OmpNode):
     def parent(self):
         """
         Returns the parent of the OpenMP object.
+
+        This property provides access to the parent node in the TextX parse tree.
+        It is used to navigate the hierarchy of OpenMP directives and clauses during
+        parsing. The parent relationship helps in understanding
         """
         return self._parent
 

@@ -182,7 +182,7 @@ class SyntaxParser(ConfigMixin):
         Parameters
         ----------
         expr : str
-            a python expression
+            A python expression.
 
         Returns
         -------
