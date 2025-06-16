@@ -1,4 +1,4 @@
-"""Classes that handles plugins functionality"""
+"""Classes that handle plugins functionality."""
 import importlib.util
 import inspect
 import os
@@ -22,7 +22,35 @@ errors = Errors()
 
 @dataclass
 class PatchInfo:
-    """Store information about a single patch"""
+    """
+    Store information about a single patch.
+
+    This class is used to store information about a method patch, including
+    the original method, the patched method, and the method name. It also
+    determines whether the patch is for a new method or an existing one.
+
+    Parameters
+    ----------
+    original_method : Optional[Callable]
+        The original method that is being patched. If None, the patch
+        is considered to be for a new method.
+    patched_method : Callable
+        The new method that will replace the original method.
+    method_name : str
+        The name of the method being patched.
+
+    See Also
+    --------
+    PatchRegistry : Registry for patches applied to a single class.
+
+    Examples
+    --------
+    >>> def original_func(x):
+    ...     return x
+    >>> def patched_func(x):
+    ...     return x * 2
+    >>> patch = PatchInfo(original_func, patched_func, "func")
+    """
     original_method: Optional[Callable]
     patched_method: Callable
     method_name: str
@@ -36,19 +64,94 @@ class PatchInfo:
 
 @dataclass
 class PatchRegistry:
-    """Registry for all patches applied to a single class"""
+    """
+    Registry for all patches applied to a single class.
+
+    This class serves as a container for all patches that are applied to a 
+    specific target class. It maintains a dictionary of patches organized by 
+    method name.
+
+    Parameters
+    ----------
+    target : Any
+        The target class or object to which patches will be applied.
+    patches : Dict[str, List[PatchInfo]], optional
+        A dictionary mapping method naming to lists of PatchInfo objects.
+        Default is an empty dictionary.
+
+    See Also
+    --------
+    PatchInfo : Store information about a single patch.
+
+    Examples
+    --------
+    >>> class MyClass:
+    ...     def method(self):
+    ...         return 1
+    >>> obj = MyClass()
+    >>> registry = PatchRegistry(obj)
+    >>> def patched_method(self):
+    ...     return 2
+    >>> patch_info = PatchInfo(obj.method, patched_method, "method")
+    >>> registry.register_patch("method", patch_info)
+    """
     target: Any
     patches: Dict[str, List[PatchInfo]] = field(default_factory=dict)
 
     def register_patch(self, method_name, patch_info):
-        """register a patch for a method"""
+        """
+        Register a patch for a method.
+
+        This method adds a new patch to the registry for the specified method name.
+        If the method name is not already in the registry, a new entry is created.
+
+        Parameters
+        ----------
+        method_name : str
+            The name of the method to be patched.
+        patch_info : PatchInfo
+            The patch information object containing the original and patched methods.
+
+        See Also
+        --------
+        PatchInfo : Store information about a single patch.
+
+        Examples
+        --------
+        >>> class MyClass:
+        ...     def method(self):
+        ...         return 1
+        >>> obj = MyClass()
+        >>> registry = PatchRegistry(obj)
+        >>> def patched_method(self):
+        ...     return 2
+        >>> patch_info = PatchInfo(obj.method, patched_method, "method")
+        >>> registry.register_patch("method", patch_info)
+        >>> len(registry.patches["method"])
+        1
+        """
         if method_name not in self.patches:
             self.patches[method_name] = []
         self.patches[method_name].append(patch_info)
 
 
 class Plugin(ABC):
-    """Abstract base class for Pyccel plugins."""
+    """
+    Abstract base class for Pyccel plugins.
+
+    This class defines the interface that all Pyccel plugins must implement.
+    Plugins are used to extend the functionality of Pyccel by providing
+    additional features or modifying existing behavior through method patching.
+
+    Each plugin maintains a list of patch registries, which track the patches
+    applied to different target classes or objects.
+
+    See Also
+    --------
+    PatchRegistry : Registry for all patches applied to a single class.
+    PatchInfo : Store information about a single patch.
+    Plugins : Manager for Pyccel plugins.
+    """
 
     def __init__(self):
         self._patch_registries = []
@@ -56,36 +159,166 @@ class Plugin(ABC):
 
     @abstractmethod
     def register(self, instances):
-        """Handle loading plugin with provided options"""
+        """
+        Register instances with this plugin.
+
+        This method is called to register instances with the plugin.
+        Implementations should apply the necessary patches to the provided instances.
+
+        Parameters
+        ----------
+        instances : list or object
+            The instances to register with this plugin. Can be a single object
+            or a list of objects.
+
+        See Also
+        --------
+        unregister : Unregister instances from this plugin.
+        refresh : Refresh all registered targets.
+        """
 
     @abstractmethod
     def refresh(self):
-        """Refresh all registered targets"""
+        """
+        Refresh all registered targets.
+
+        This method is called to refresh all targets that have been registered
+        with this plugin. It should reapply all patches to ensure that the
+        plugin's functionality is up to date.
+
+        See Also
+        --------
+        register : Register instances with this plugin.
+        unregister : Unregister instances from this plugin.
+        """
 
     @abstractmethod
     def unregister(self, instances):
-        """Handle loading plugin with provided options"""
+        """
+        Unregister instances from this plugin.
+
+        This method is called to unregister instances from the plugin.
+        Implementations should remove all patches applied to the
+        provided instances.
+
+        Parameters
+        ----------
+        instances : list or object
+            The instances to unregister from this plugin. Can be a single object
+            or a list of objects.
+
+        See Also
+        --------
+        register : Register instances with this plugin.
+        refresh : Refresh all registered targets.
+        """
 
     @abstractmethod
     def set_options(self, options):
-        """Handle loading plugin with provided options"""
+        """
+        Set options for this plugin.
+
+        This method is called to configure the plugin with the provided options.
+        Implementations should update their behavior based on the options.
+
+        Parameters
+        ----------
+        options : dict
+            A dictionary of options to configure the plugin.
+
+        See Also
+        --------
+        register : Register instances with this plugin.
+        refresh : Refresh all registered targets.
+        """
 
     @property
     def name(self):
-        """Return the plugin name, defaults to class name"""
+        """
+        Return the plugin name, defaults to class name.
+
+        This property returns the name of the plugin, which by default is the
+        name of the plugin class. This can be used to identify the plugin in
+        logs or when retrieving it from the Plugins manager.
+
+        See Also
+        --------
+        Plugins.get_plugin : Get a plugin by name.
+        """
         return self.__class__.__name__
 
     def is_registered(self, target):
-        """Check if a target is registered with this plugin"""
+        """
+        Check if a target is registered with this plugin.
+
+        This method determines whether the specified target object has been
+        registered with this plugin. It checks if the target exists in any
+        of the plugin's patch registries.
+
+        Parameters
+        ----------
+        target : object
+            The target object to check for registration.
+
+        Returns
+        -------
+        bool
+            True if the target is registered with this plugin, False otherwise.
+
+        See Also
+        --------
+        register : Register instances with this plugin.
+        unregister : Unregister instances from this plugin.
+        get_all_targets : Get all objects targeted by the plugin.
+        """
         return any(registry.target is target for registry in self._patch_registries)
 
     def get_all_targets(self):
-        """Get all objects targeted by the plugin"""
+        """
+        Get all objects targeted by the plugin.
+
+        This method returns a list of all target objects that have been
+        registered with this plugin. It collects all targets from the
+        plugin's patch registries and returns them as a unique list.
+
+        Returns
+        -------
+        list
+            A list of all target objects registered with this plugin.
+
+        See Also
+        --------
+        is_registered : Check if a target is registered with this plugin.
+        register : Register instances with this plugin.
+        unregister : Unregister instances from this plugin.
+        """
         return list(set(reg.target for reg in self._patch_registries))
 
 
 class Plugins(metaclass=Singleton):
-    """Manager for Pyccel plugins"""
+    """
+    Manager for Pyccel plugins.
+
+    This class is responsible for discovering, loading, and managing plugins
+    for Pyccel. It is implemented as a singleton to ensure that there is only
+    one instance of the plugin manager throughout the application.
+
+    The Plugins class provides methods for loading plugins from a directory,
+    registering and unregistering instances with plugins, and retrieving
+    plugins by name.
+
+    Parameters
+    ----------
+    plugins_dir : str, optional
+        The directory from which to load plugins. If not provided, the default
+        plugins directory will be used.
+
+    See Also
+    --------
+    Plugin : Abstract base class for Pyccel plugins.
+    PatchRegistry : Registry for all patches applied to a single class.
+    PatchInfo : Store information about a single patch.
+    """
 
     __slots__ = ("_plugins", "_options")
 
@@ -95,7 +328,32 @@ class Plugins(metaclass=Singleton):
         self.load_plugins(plugins_dir)
 
     def set_options(self, options, refresh=False):
-        """Set options for all plugins"""
+        """
+        Set options for all plugins.
+
+        This method sets the provided options for all loaded plugins. It can
+        also refresh all plugins to ensure that the new options take effect
+        immediately.
+
+        Parameters
+        ----------
+        options : dict
+            A dictionary of options to configure the plugins.
+        refresh : bool, optional
+            Whether to refresh all plugins after setting the options.
+            Default is False.
+
+        See Also
+        --------
+        Plugin.set_options : Set options for a specific plugin.
+        refresh : Refresh all registered targets.
+
+        Examples
+        --------
+        >>> plugins = Plugins()
+        >>> plugins.load_plugins()
+        >>> plugins.set_options({"option1": "value1", "option2": True}, refresh=True)
+        """
         assert isinstance(options, dict)
         self._options = options
         plugins = self._plugins
@@ -105,7 +363,30 @@ class Plugins(metaclass=Singleton):
                 plugin.refresh()
 
     def load_plugins(self, plugins_dir=None):
-        """Discover and load all plugins from the plugins directory"""
+        """
+        Discover and load all plugins from the plugins directory.
+
+        This method searches for and loads all plugins from the specified
+        directory. If no directory is provided, it uses the default plugins
+        directory. Each plugin is loaded by importing its plugin.py file and
+        instantiating the plugin class.
+
+        Parameters
+        ----------
+        plugins_dir : str, optional
+            The directory from which to load plugins. If not provided, the default
+            plugins directory will be used.
+
+        See Also
+        --------
+        _load_plugin_from_folder : Load a single plugin from a folder.
+        unload_plugins : Unload all plugins.
+
+        Examples
+        --------
+        >>> plugins = Plugins()
+        >>> plugins.load_plugins("/path/to/plugins")
+        """
         self.unload_plugins()
         if plugins_dir is None:
             current_dir = os.path.dirname(__file__)
@@ -133,7 +414,30 @@ class Plugins(metaclass=Singleton):
                     severity='warning')
 
     def _load_plugin_from_folder(self, plugins_dir, folder):
-        """Load a single plugin from the specified folder"""
+        """
+        Load a single plugin from the specified folder.
+
+        This method loads a plugin from a specific folder within the plugins
+        directory. It looks for a plugin.py file in the folder, imports it,
+        and instantiates the plugin class found in the module.
+
+        Parameters
+        ----------
+        plugins_dir : str
+            The root directory containing all plugin folders.
+        folder : str
+            The name of the specific folder containing the plugin to load.
+
+        Returns
+        -------
+        Plugin or None
+            An instance of the plugin class if found and successfully loaded,
+            or None if the plugin could not be loaded.
+
+        See Also
+        --------
+        load_plugins : Discover and load all plugins from the plugins directory.
+        """
         plugin_path = os.path.join(plugins_dir, folder, "plugin.py")
 
         if not os.path.exists(plugin_path):
@@ -164,13 +468,51 @@ class Plugins(metaclass=Singleton):
         return plugin_class()
 
     def unload_plugins(self):
-        """unload all plugins and unregister all their targets"""
+        """
+        Unload all plugins and unregister all their targets.
+
+        This method unloads all currently loaded plugins and unregisters all
+        targets registered with those plugins. This effectively
+        removes all patches applied by the plugins.
+
+        See Also
+        --------
+        load_plugins : Discover and load all plugins from the plugins directory.
+        unregister : Unregister instances from plugins.
+
+        Examples
+        --------
+        >>> plugins = Plugins()
+        >>> plugins.load_plugins()
+        >>> # Do some work with plugins
+        >>> plugins.unload_plugins()
+        """
         for plugin in self._plugins:
             self.unregister(plugin.get_all_targets(), (plugin,))
         self._plugins = []
 
     def register(self, instances, plugins = ()):
-        """Register the given instances """
+        """
+        Register the given instances with plugins.
+
+        This method registers the provided instances with the specified plugins,
+        or with all loaded plugins if none are specified. It applies the
+        necessary patches to the instances to enable the plugin functionality.
+
+        Parameters
+        ----------
+        instances : list or object
+            The instances to register with the plugins. Can be a single object
+            or a list of objects.
+        plugins : tuple or list, optional
+            The plugins to register the instances with. If not provided, all
+            loaded plugins will be used. Default is an empty tuple.
+
+        See Also
+        --------
+        unregister : Unregister instances from plugins.
+        Plugin.register : Register instances with a specific plugin.
+        """
         if not plugins:
             plugins = self._plugins
         for plugin in plugins:
@@ -185,21 +527,92 @@ class Plugins(metaclass=Singleton):
                 raise e
 
     def unregister(self, instances, plugins = ()):
-        """Unregister the given instances from the given plugins"""
+        """
+        Unregister the given instances from the given plugins.
+
+        This method unregisters the provided instances from the specified plugins,
+        or from all loaded plugins if none are specified. It removes all patches
+         applied to the instances by the plugins.
+
+        Parameters
+        ----------
+        instances : list or object
+            The instances to unregister from the plugins. Can be a single object
+            or a list of objects.
+        plugins : tuple or list, optional
+            The plugins to unregister the instances from. If not provided, all
+            loaded plugins will be used. Default is an empty tuple.
+
+        See Also
+        --------
+        register : Register instances with plugins.
+        Plugin.unregister : Unregister instances from a specific plugin.
+        """
         if not plugins:
             plugins = self._plugins
         for plugin in plugins:
             plugin.unregister(instances)
 
     def get_plugin(self, name):
-        """Get a plugin by name"""
+        """
+        Get a plugin by name.
+
+        This method retrieves a plugin instance by its name. If no plugin
+        with the given name is found, it returns None.
+
+        Parameters
+        ----------
+        name : str
+            The name of the plugin to retrieve.
+
+        Returns
+        -------
+        Plugin or None
+            The plugin instance if found, or None if no plugin with the
+            given name exists.
+
+        See Also
+        --------
+        get_plugins : Get all plugins.
+        """
         return next((p for p in self._plugins if p.name == name), None)
 
     def get_plugins(self):
-        """Get all plugins"""
+        """
+        Get all loaded plugins.
+
+        This method returns a list of all plugin instances that have been
+        loaded by the plugin manager.
+
+        Returns
+        -------
+        list
+            A list of all loaded plugin instances.
+
+        See Also
+        --------
+        get_plugin : Get a plugin by name.
+        load_plugins : Discover and load all plugins from the plugins directory.
+        """
         return self._plugins
 
     def set_plugins(self, plugins):
-        """Set plugins instances"""
+        """
+        Set the list of plugin instances.
+
+        This method replaces the current list of plugin instances with a new one.
+        It first unloads all existing plugins before setting the new ones.
+
+        Parameters
+        ----------
+        plugins : list
+            A list of plugin instances to set as the current plugins.
+
+        See Also
+        --------
+        get_plugins : Get all loaded plugins.
+        load_plugins : Discover and load all plugins from the plugins directory.
+        unload_plugins : Unload all plugins and unregister all their targets.
+        """
         self.unload_plugins()
         self._plugins = plugins

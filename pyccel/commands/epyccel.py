@@ -273,6 +273,8 @@ def epyccel_seq(function_class_or_module, *,
         MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
+    omp_version : float, optional
+        The version of OpenMP to use. Default is None.
     """
     # Store current directory
     base_dirpath = os.getcwd()

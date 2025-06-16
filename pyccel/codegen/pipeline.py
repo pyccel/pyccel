@@ -119,6 +119,8 @@ def execute_pyccel(fname, *,
     context_dict : dict[str, object], optional
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
+    omp_version : float, optional
+        The version of OpenMP to use. Default is None.
     """
     start = time.time()
     plugins = Plugins()

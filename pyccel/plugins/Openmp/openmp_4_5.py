@@ -36,14 +36,30 @@ __all__ = (
 class ConfigMixin:
     """
     Common utilities and methods for handling OpenMP syntax and configurations.
+
+    This class provides utility methods for configuring OpenMP functionality
+    and handling version-specific features. It serves as a base class for
+    parsers and printers that need to be aware of OpenMP configurations.
+
+    See Also
+    --------
+    SyntaxParser : Parser for OpenMP syntax.
+    SemanticParser : Parser for OpenMP semantics.
+    CCodePrinter : Printer for OpenMP C code.
+    FCodePrinter : Printer for OpenMP Fortran code.
+    PythonCodePrinter : Printer for OpenMP Python code.
     """
     _version = None
 
     @classmethod
     def helper_check_config(cls, func, options, method):
-
         """
-        Check configuration for OpenMP and register methods.
+        Check configuration for OpenMP.
+
+        This method wraps OpenMP functions to ensure they are only executed
+        when the appropriate OpenMP version is configured. If the version
+        doesn't match or OpenMP is not enabled, it falls back to the provided
+        method or reports an error.
 
         Parameters
         ----------
@@ -54,12 +70,22 @@ class ConfigMixin:
         method : callable, or None
             Default method to handle unsupported expressions, could be a pyccel method,
             or another plugin's method.
-        
+
         Returns
         -------
         callable
             Wrapped function that adheres to the configuration.
-            Or original method if clear is passed in the options.
+
+        See Also
+        --------
+        SyntaxParser.setup : Setup method for configuring the SyntaxParser.
+
+        Examples
+        --------
+        >>> def my_openmp_func(expr, **kwargs):
+        >>>     pass
+        >>> options = {'omp_version': 4.5, 'accelerators': ['openmp']}
+        >>> wrapped_func = ConfigMixin.helper_check_config(my_openmp_func, options, None)
         """
 
         @functools.wraps(func)
@@ -77,27 +103,44 @@ class ConfigMixin:
 
 
 class SyntaxParser(ConfigMixin):
-    """Openmp 4.5 syntax parser"""
+    """
+    Openmp 4.5 syntax parser.
+
+    This class is responsible for parsing OpenMP 4.5 directives and constructs
+    from source code comments. It uses a textX grammar to parse the OpenMP syntax
+    and converts it into the appropriate AST nodes.
+
+    See Also
+    --------
+    ConfigMixin : Base class providing configuration utilities.
+    SemanticParser : Parser for OpenMP semantics.
+    pyccel.plugins.Openmp.omp.OmpDirective : Class representing an OpenMP directive.
+    pyccel.plugins.Openmp.omp.OmpConstruct : Class representing an OpenMP construct.
+    """
     _version = 4.5
     _omp_metamodel = None
 
     @classmethod
     def setup(cls, options, parser):
         """
-        Setup method for configuring the SyntaxParser Class.
-        Creates a metamodel from the grammar.
+        Configure the SyntaxParser class and create a metamodel from the grammar.
+
+        This method initializes the OpenMP parser by setting up the metamodel from the grammar file
+        and configuring the parser instance. It registers object processors for handling different
+        OpenMP versions and directives and prepares the parser for processing OpenMP directives
+        in the code.
 
         Parameters
         ----------
         options : dict
             Configuration options.
         parser : instance of pyccel SyntaxParser
+            The parser instance to be configured for OpenMP parsing.
 
-        Returns
-        -------
-        callable
-            A wrapped setup method that adheres to the configuration and initializes
-            the parsing environment.
+        See Also
+        --------
+        ConfigMixin.helper_check_config : Method for checking OpenMP configuration.
+        pyccel.plugins.Openmp.omp : Module containing OpenMP AST nodes.
         """
         if not cls._omp_metamodel:
             this_folder = dirname(__file__)
@@ -129,7 +172,23 @@ class SyntaxParser(ConfigMixin):
 
     @classmethod
     def _helper_parse_expr(cls, expr):
-        """Parses an expression and returns the equivalent node."""
+        """
+        Parses an expression and returns the equivalent node.
+
+        This method takes an OpenMP expression and converts it into a Python AST node
+        using the extend_tree function. It performs validation to ensure the expression
+        is valid and properly structured.
+
+        Parameters
+        ----------
+        expr : str
+            a python expression
+
+        Returns
+        -------
+        ast.AST
+            The Python AST node equivalent to the input expression.
+        """
         fst = extend_tree(expr.value)
         if (
                 not isinstance(fst, ast.Module)
@@ -153,16 +212,27 @@ class SyntaxParser(ConfigMixin):
 
         Parameters
         ----------
+        instance : object
+            The parser instance that is processing the code.
         line : str
             The comment line.
         expr : ast.Ast
             The comment object in the code. This is useful for raising
             errors.
+        method : callable
+            The fallback method to call if the line is not an OpenMP directive.
+        cls : class, optional
+            Used to access the configuration and class variables, defaults to None.
 
         Returns
         -------
         pyccel.ast.basic.PyccelAstNode
             The treated object as an Openmp node.
+
+        See Also
+        --------
+        pyccel.plugins.Openmp.omp.OmpTxDirective : Class representing an OpenMP directive.
+        pyccel.plugins.Openmp.omp.OmpTxEndDirective : Class representing an OpenMP end directive.
         """
         if line.startswith('#$') and line[2:].lstrip().startswith('omp'):
             from textx.exceptions import TextXError
@@ -178,7 +248,33 @@ class SyntaxParser(ConfigMixin):
 
     @staticmethod
     def _visit(instance, stmt, method, cls=None):
-        """Visit a statement and determine if it should be skipped."""
+        """
+        Visit a statement and determine if it should be skipped.
+
+        This method processes AST statements and handles OpenMP directives.
+        It manages the skipping of statements that are part of OpenMP constructs
+        and ensures proper AST node creation.
+
+        Parameters
+        ----------
+        instance : object
+            The parser instance that is processing the code.
+        stmt : ast.AST
+            The statement to visit.
+        method : callable
+            The method to call for visiting the statement if it's not skipped.
+        cls : class, optional
+            The class to use for processing, defaults to None.
+
+        Returns
+        -------
+        pyccel.ast.basic.PyccelAstNode
+            The processed node, or an EmptyNode if the statement should be skipped.
+
+        See Also
+        --------
+        pyccel.ast.core.EmptyNode : Node used for skipped statements.
+        """
         if instance._skip_stmts_count:
             instance._skip_stmts_count -= 1
             return EmptyNode()
@@ -292,7 +388,20 @@ class SyntaxParser(ConfigMixin):
 
 
 class SemanticParser(ConfigMixin):
-    """Openmp 4.5 semantic parser"""
+    """
+    Openmp 4.5 semantic parser.
+
+    This class is responsible for semantic analysis of OpenMP 4.5 directives
+    and constructs. It processes the AST nodes created by the SyntaxParser
+    and performs semantic validation and transformations.
+
+    See Also
+    --------
+    ConfigMixin : Base class providing configuration utilities.
+    SyntaxParser : Parser for OpenMP syntax.
+    pyccel.plugins.Openmp.omp.OmpDirective : Class representing an OpenMP directive.
+    pyccel.plugins.Openmp.omp.OmpConstruct : Class representing an OpenMP construct.
+    """
     _version = 4.5
 
     @staticmethod
@@ -405,7 +514,21 @@ class SemanticParser(ConfigMixin):
 
 
 class CCodePrinter(ConfigMixin):
-    """Openmp 4.5 C code printer parser"""
+    """
+    Openmp 4.5 C code printer parser.
+
+    This class is responsible for printing OpenMP 4.5 directives and constructs
+    as C code. It converts the AST nodes into C syntax according to the OpenMP 4.5
+    specification.
+
+    See Also
+    --------
+    ConfigMixin : Base class providing configuration utilities.
+    FCodePrinter : Printer for OpenMP Fortran code.
+    PythonCodePrinter : Printer for OpenMP Python code.
+    pyccel.plugins.Openmp.omp.OmpDirective : Class representing an OpenMP directive.
+    pyccel.plugins.Openmp.omp.OmpConstruct : Class representing an OpenMP construct.
+    """
     _version = 4.5
 
     @staticmethod
@@ -429,12 +552,61 @@ class CCodePrinter(ConfigMixin):
 
 
 class FCodePrinter(ConfigMixin):
-    """Openmp 4.5 fortran code printer parser"""
+    """
+    Openmp 4.5 fortran code printer parser.
+
+    This class is responsible for printing OpenMP 4.5 directives and constructs
+    as Fortran code. It converts the AST nodes into Fortran syntax according to 
+    the OpenMP 4.5 specification, handling Fortran-specific features.
+
+    See Also
+    --------
+    ConfigMixin : Base class providing configuration utilities.
+    CCodePrinter : Printer for OpenMP C code.
+    PythonCodePrinter : Printer for OpenMP Python code.
+    pyccel.plugins.Openmp.omp.OmpDirective : Class representing an OpenMP directive.
+    pyccel.plugins.Openmp.omp.OmpConstruct : Class representing an OpenMP construct.
+    """
     _version = 4.5
 
     @classmethod
     def _helper_delay_clauses_printing(cls, start, end, clauses):
-        """Transfer clauses of directive to an OmpEndDirective for printing"""
+        """
+        Transfer clauses of a directive to an OmpEndDirective for printing.
+
+        This method handles the special case in Fortran where certain clauses
+        need to be moved from the start directive to the end directive for proper
+        printing. It modifies the raw representation of the directives accordingly.
+
+        Parameters
+        ----------
+        start : OmpDirective
+            The starting directive of an OpenMP construct.
+        end : OmpEndDirective or None
+            The ending directive of an OpenMP construct, or None if there is no end directive.
+        clauses : list of str
+            Names of clauses to be moved from the start-to-end directive.
+
+        Returns
+        -------
+        tuple
+            A tuple containing (modified_start_string, modified_end_string).
+
+        See Also
+        --------
+        FCodePrinter._print_for_construct : Method that uses this helper.
+        FCodePrinter._print_single_construct : Method that uses this helper.
+
+        Examples
+        --------
+        >>> start = OmpDirective(clauses=[OmpClause(name='nowait')])
+        >>> end = None
+        >>> start_str, end_str = FCodePrinter._helper_delay_clauses_printing(start, end, ['nowait'])
+        >>> print(start_str)
+        !$omp 
+        >>> print(end_str)
+        !$omp end nowait
+        """
         clauses = tuple(c for c in start.clauses if c.name in clauses)
         if clauses or end:
             if end:
@@ -505,7 +677,20 @@ class FCodePrinter(ConfigMixin):
 
 
 class PythonCodePrinter(ConfigMixin):
-    """Openmp 4.5 python code printer parser"""
+    """
+    Openmp 4.5 python code printer parser.
+
+    This class is responsible for printing OpenMP 4.5 directives and constructs
+    as Python code comments.
+
+    See Also
+    --------
+    ConfigMixin : Base class providing configuration utilities.
+    CCodePrinter : Printer for OpenMP C code.
+    FCodePrinter : Printer for OpenMP Fortran code.
+    pyccel.plugins.Openmp.omp.OmpDirective : Class representing an OpenMP directive.
+    pyccel.plugins.Openmp.omp.OmpConstruct : Class representing an OpenMP construct.
+    """
     _version = 4.5
 
     @staticmethod
