@@ -40,14 +40,17 @@ class Codegen:
         Name of the generated module or program.
     language : str
         The language which the printer should print to.
+    verbose : int
+        The level of verbosity.
     """
-    def __init__(self, parser, name, language):
+    def __init__(self, parser, name, language, verbose):
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
         self._language = language
+        self._verbose  = verbose
 
         self._stmts = {}
         _structs = [
@@ -71,7 +74,7 @@ class Codegen:
         except KeyError as err:
             raise ValueError(f'{language} language is not available') from err
 
-        self._printer = CodePrinterSubclass(self.parser.filename)
+        self._printer = CodePrinterSubclass(self.parser.filename, verbose = self._verbose)
 
     @property
     def parser(self):
@@ -221,6 +224,8 @@ class Codegen:
         pyi_filename = f'{filename}.pyi'
         filename = f'{filename}.{ext}'
 
+        if self._verbose:
+            print ('>>> Printing :: ', filename)
         # print module
         code = self._printer.doprint(self.ast)
         with open(filename, 'w', encoding="utf-8") as f:
@@ -230,11 +235,15 @@ class Codegen:
         module_header = ModuleHeader(self.ast)
         # print module header
         if header_ext is not None:
+            if self._verbose:
+                print ('>>> Printing :: ', header_filename)
             code = self._printer.doprint(module_header)
             with open(header_filename, 'w', encoding="utf-8") as f:
                 f.write(code)
 
-        code = printer_registry['python'](self.parser.filename).doprint(module_header)
+        if self._verbose:
+            print ('>>> Printing :: ', pyi_filename)
+        code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
         if self.language != 'python':
             printer_imports = ', '.join(self.get_printer_imports().keys())
             if printer_imports:
@@ -248,6 +257,8 @@ class Codegen:
             folder = os.path.dirname(filename)
             fname  = os.path.basename(filename)
             prog_filename = os.path.join(folder,"prog_"+fname)
+            if self._verbose:
+                print ('>>> Printing :: ', prog_filename)
             code = self._printer.doprint(self.ast.program)
             with open(prog_filename, 'w') as f:
                 f.write(code)

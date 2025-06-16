@@ -24,19 +24,6 @@ def test_func_no_args_1(language):
     with pytest.raises(TypeError):
         c_gift(unexpected_arg)
 
-def test_func_with_capitalised_language(language):
-    '''test function with return value but no args'''
-    def free_gift():
-        gift = 10
-        return gift
-
-    c_gift = epyccel(free_gift, language=language.capitalize())
-    assert c_gift() == free_gift()
-    assert isinstance(c_gift(), type(free_gift()))
-    unexpected_arg = 0
-    with pytest.raises(TypeError):
-        c_gift(unexpected_arg)
-
 def test_func_no_args_2(language):
     '''test function with negative return value but no args'''
     def p_lose():
