@@ -131,7 +131,7 @@ Here's a step-by-step guide to creating a new plugin for Pyccel:
 
 Create a new directory for your plugin in the `pyccel/plugins` directory. The name of the directory should reflect the purpose of your plugin.
 
-```
+```text
 pyccel/plugins/MyPlugin/
 ```
 
@@ -139,7 +139,7 @@ pyccel/plugins/MyPlugin/
 
 Create a `plugin.py` file in your plugin directory. This file will contain your plugin implementation.
 
-```
+```text
 pyccel/plugins/MyPlugin/plugin.py
 ```
 
