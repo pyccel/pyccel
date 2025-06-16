@@ -24,9 +24,8 @@ class Complexity(object):
     """
     def __init__(self, filename_or_text):
         pyccel = Parser(filename_or_text, output_folder = os.getcwd())
-        self._ast = pyccel.parse()
-        settings = {}
-        self._ast = pyccel.annotate(**settings).ast
+        self._ast = pyccel.parse(verbose = 0)
+        self._ast = pyccel.annotate(verbose = 0).ast
 
     @property
     def ast(self):

@@ -16,7 +16,7 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
     pyccel = Parser(f, output_folder = os.getcwd())
-    pyccel.parse()
+    pyccel.parse(verbose = 0)
     print(pyccel.fst)
 
     # reset Errors singleton

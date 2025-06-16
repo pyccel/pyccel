@@ -86,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
