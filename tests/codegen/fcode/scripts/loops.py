@@ -47,8 +47,7 @@ from itertools import product
 for i2,j2 in product(x1, y1):
     print(i2,j2)
 
-#$ header function f(int)
-def f(z):
+def f(z : int):
     x= 5+z
     return x
 

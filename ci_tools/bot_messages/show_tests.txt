@@ -3,10 +3,12 @@ The following is a list of keywords which can be used to run tests. Tests in bol
 - **windows** : Runs the unit tests on a Windows system.
 - **macosx** : Runs the unit tests on a MacOS X system.
 - **intel** : Runs the unit tests on a Linux system using the Intel compiler.
+- **llvm** : Runs the unit tests on a linux system using the LLVM compiler.
 - **coverage** : Runs the unit tests on a Linux system and checks the coverage of the tests.
 - **docs** : Checks if the documentation follows the numpydoc format.
 - **pylint** : Runs pylint on files which are too big to be handled by codacy.
 - **pyccel_lint** : Runs a linter to check that Pyccel's best practices are followed.
+- **markdown_lint** : Runs a linter to check that Markdown best practices are followed.
 - **spelling** : Checks if everything in the documentation is spelled (and capitalised) correctly.
 - pr_tests : Runs all the tests marked in bold.
 - check_install : Checks that files have been correctly generated and installed by the installation process.

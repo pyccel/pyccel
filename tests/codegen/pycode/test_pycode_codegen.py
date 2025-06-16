@@ -22,15 +22,14 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 def test_codegen(f):
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'python')
+    codegen = Codegen(ast, name, 'python', verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # reset Errors singleton

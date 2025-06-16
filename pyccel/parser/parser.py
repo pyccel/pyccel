@@ -146,27 +146,32 @@ class Parser(object):
     def fst(self):
         return self._syntax_parser.fst
 
-    def parse(self, d_parsers_by_filename=None, verbose=False):
+    def parse(self, *, verbose, d_parsers_by_filename=None):
         """
-          Parse the parent file an all its dependencies.
+        Parse the parent file and all its dependencies.
 
-          Parameters
-          ----------
-          d_parsers_by_filename : dict
+        Parse the parent file and all its dependencies.
+
+        Parameters
+        ----------
+        verbose : int
+            Indicates the level of verbosity.
+
+        d_parsers_by_filename : dict[str, Parser]
             A dictionary of parsed sons indexed by filename.
 
-          verbose: bool
-            Determine the verbosity.
-
-          Returns
-          -------
-          ast: Ast
+        Returns
+        -------
+        PyccelAstNode
            The ast created in the syntactic stage.
-          """
+        """
         if self._syntax_parser:
             return self._syntax_parser.ast
 
-        parser             = SyntaxParser(self._filename, **self._kwargs)
+        if verbose:
+            print ('>> Parsing :: ', self._filename)
+
+        parser             = SyntaxParser(self._filename, verbose = verbose)
         self.syntax_parser = parser
         parser.ast        = parser.ast
 
@@ -177,7 +182,7 @@ class Parser(object):
 
         return parser.ast
 
-    def annotate(self, **settings):
+    def annotate(self, verbose):
         """
         Annotate the AST collected from the syntactic stage.
 
@@ -186,8 +191,8 @@ class Parser(object):
 
         Parameters
         ----------
-        **settings : dict
-            Additional keyword arguments for BasicParser.
+        verbose : int
+            The level of verbosity.
 
         Returns
         -------
@@ -199,8 +204,10 @@ class Parser(object):
         if self._semantic_parser:
             return self._semantic_parser
 
+        if verbose:
+            print ('>> Calculating semantic annotations :: ', self._filename)
+
         # we first treat all sons to get imports
-        verbose = settings.pop('verbose', False)
         self._annotate_sons(verbose=verbose)
 
         # Create a new semantic parser and store it in object
@@ -208,8 +215,11 @@ class Parser(object):
                                 d_parsers = self.d_parsers,
                                 parents = self.parents,
                                 context_dict = self._context_dict,
-                                **settings)
+                                verbose = verbose)
         self._semantic_parser = parser
+        parser.metavars.setdefault('printer_imports', '')
+        parser.metavars['printer_imports'] += ', '.join(p.metavars['printer_imports'] for p in self.sons)
+        parser.metavars['printer_imports'] = parser.metavars['printer_imports'].strip(', ')
 
         # Return the new semantic parser (maybe used by codegen)
         return parser
@@ -228,7 +238,7 @@ class Parser(object):
 
         self._sons.append(son)
 
-    def parse_sons(self, d_parsers_by_filename, verbose=False):
+    def parse_sons(self, d_parsers_by_filename, verbose):
         """
         Parse the files on which this file is dependent.
 
@@ -242,8 +252,8 @@ class Parser(object):
         d_parsers_by_filename : dict
             A dictionary of parsed sons.
 
-        verbose : bool, default=False
-            Set the verbosity.
+        verbose : int
+            Indicates the level of verbosity.
 
         Returns
         -------
@@ -258,9 +268,6 @@ class Parser(object):
         for filename, stashed_filename in not_treated:
             filename = str(filename)
 
-            if verbose:
-                print ('>>> treating :: ', filename)
-
             # get the absolute path corresponding to source
             if filename in d_parsers_by_filename:
                 q = d_parsers_by_filename[filename]
@@ -269,7 +276,7 @@ class Parser(object):
                 if stashed_filename.suffix == '.pyi' and q_output_folder.name.startswith('__pyccel__'):
                     q_output_folder = q_output_folder.parent
                 q = Parser(stashed_filename, output_folder = q_output_folder, original_filename = filename)
-            q.parse(d_parsers_by_filename=d_parsers_by_filename)
+            q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)
             d_parsers_by_filename[filename] = q
 
         d_parsers = {}
@@ -283,7 +290,7 @@ class Parser(object):
 
         return d_parsers
 
-    def _annotate_sons(self, verbose = False):
+    def _annotate_sons(self, verbose):
         """
         Annotate any dependencies of the file currently being parsed.
 
@@ -291,24 +298,20 @@ class Parser(object):
 
         Parameters
         ----------
-        verbose : bool, default=False
-            Indicates if the treatment should be run in verbose mode.
+        verbose : int
+            Indicates the level of verbosity.
         """
 
         # we first treat sons that have no imports
 
         for p in self.sons:
             if not p.sons:
-                if verbose:
-                    print ('>>> treating :: ', p.filename)
-                p.annotate()
+                p.annotate(verbose)
 
         # finally we treat the remaining sons recursively
 
         for p in self.sons:
             if p.sons:
-                if verbose:
-                    print ('>>> treating :: ', p.filename)
-                p.annotate()
+                p.annotate(verbose)
 
 

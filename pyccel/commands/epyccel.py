@@ -233,8 +233,8 @@ def epyccel_seq(function_class_or_module, *,
     accelerators : iterable of str, optional
         Parallel multi-threading acceleration strategy
         (currently supported: 'mpi', 'openmp', 'openacc').
-    verbose : bool
-        Print additional information (default: False).
+    verbose : int, default=0
+        Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
         Time the execution of Pyccel's internal stages.
     debug : bool, optional
@@ -366,7 +366,7 @@ def epyccel_seq(function_class_or_module, *,
         package = importlib.import_module(module_name)
         sys.path.remove(epyccel_dirpath)
 
-        if language != 'python':
+        if language and language.lower() != 'python':
             # Verify that we have imported the shared library, not the Python one
             loader = getattr(package, '__loader__', None)
             if not isinstance(loader, ExtensionFileLoader):

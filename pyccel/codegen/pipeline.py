@@ -43,7 +43,7 @@ def execute_pyccel(fname, *,
                    syntax_only     = False,
                    semantic_only   = False,
                    convert_only    = False,
-                   verbose         = False,
+                   verbose         = 0,
                    show_timings    = False,
                    folder          = None,
                    language        = None,
@@ -79,8 +79,8 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the semantic stage. Default is False.
     convert_only : bool, optional
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
-    verbose : bool, optional
-        Indicates whether debugging messages should be printed. Default is False.
+    verbose : int, default=0
+        Indicates the level of verbosity.
     show_timings : bool, default=False
         Show the time spent in each of Pyccel's internal stages.
     folder : str, optional
@@ -186,6 +186,8 @@ def execute_pyccel(fname, *,
 
     if language is None:
         language = 'fortran'
+    else:
+        language = language.lower()
 
     # Choose Fortran compiler
     if compiler_family is None:
@@ -267,7 +269,7 @@ def execute_pyccel(fname, *,
     start_codegen = time.time()
     # Generate .f90 file
     try:
-        codegen = Codegen(semantic_parser, module_name, language)
+        codegen = Codegen(semantic_parser, module_name, language, verbose)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname, prog_name = codegen.export(fname)
     except NotImplementedError as error:
@@ -321,7 +323,7 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
     try:
-        manage_dependencies(codegen.printer.get_additional_imports(), compiler, pyccel_dirpath, mod_obj,
+        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
                 language, verbose, convert_only)
     except NotImplementedError as error:
         errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
@@ -369,12 +371,12 @@ def execute_pyccel(fname, *,
         # Create shared library
         generated_filepath, shared_lib_timers = create_shared_library(codegen,
                                                mod_obj,
-                                               language,
-                                               wrapper_flags,
-                                               pyccel_dirpath,
-                                               compiler,
-                                               output_name,
-                                               verbose)
+                                               language = language,
+                                               wrapper_flags = wrapper_flags,
+                                               pyccel_dirpath = pyccel_dirpath,
+                                               compiler = compiler,
+                                               sharedlib_modname = output_name,
+                                               verbose = verbose)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,

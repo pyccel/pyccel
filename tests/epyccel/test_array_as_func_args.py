@@ -3,7 +3,7 @@ This test file is made for testing the functionality of passing numpy arrays
 in the function arguments.
 """
 # pylint: disable=missing-function-docstring
-from typing import TypeVar
+from typing import TypeVar, Final
 import numpy as np
 from numpy.random import randint, uniform
 
@@ -138,7 +138,7 @@ def test_array_complex_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_final(language):
-    def array_final(x : 'const float[:]'):
+    def array_final(x : 'Final[float[:]]'):
         return x[0]
 
     f1 = array_final

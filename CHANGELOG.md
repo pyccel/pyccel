@@ -1,9 +1,11 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## \[UNRELEASED\]
 
 ### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -84,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
@@ -171,6 +174,10 @@ All notable changes to this project will be documented in this file.
 -   #2286 : Fix warnings due to non-existent include directories.
 -   Fix casting of arrays in Python translation.
 -   #2167 : Stop modifying variables to add `Final` annotation.
+-   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
+-   #2261 : Add LLVM compilers.
+-   #2344 : Allow language to be set using a capitalised name (Fortran, C, Python).
+-   #2322 : Fix inline functions calling inline functions with their own local variables.
 
 ### Changed
 
@@ -190,6 +197,8 @@ All notable changes to this project will be documented in this file.
 -   #2302 : Print the deallocation in a 1 line if statement.
 -   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
 -   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
+-   #2330 : Inline functions in the semantic stage.
+-   #2322 : Stop raising an error when checking if non-optional variable is `None`.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -228,8 +237,15 @@ All notable changes to this project will be documented in this file.
 -   #2008 : Remove support for Python 3.8.
 -   #1786 : Remove support for `real` and `integer` as type annotations.
 -   #1487 : Remove support for `@template` decorator.
+-   #1487 : Remove support for `@types` decorator.
+-   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
+-   #2339 : Remove `const` type modifier in favour of `typing.TypeVar`.
+-   #1287 : Remove unused method `BasicParser.copy()`.
+-   #2345 : Remove undocumented macro syntax in favour of inline methods.
+-   #2345 : Break support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
+-   Remove undocumented, untested, obsolete Lua printer.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
@@ -544,6 +560,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed

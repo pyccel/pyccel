@@ -12,6 +12,7 @@ LAPACK
 MPI
 OpenMP
 Fortran
+Lua
 Fortran's
 pyccelise
 pyccelised
@@ -126,3 +127,5 @@ CMake
 suboptimal
 pythonic
 pre
+LLVM
+linter

@@ -83,8 +83,7 @@ from pyccel.ast.datatypes import original_type_to_pyccel_type
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.functionalexpr import MaxLimit, MinLimit
 
-from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
-from pyccel.ast.headers import MacroFunction, MacroVariable
+from pyccel.ast.headers import Header
 
 from pyccel.ast.internals import PyccelFunction, Slice, PyccelSymbol, PyccelArrayShapeElement
 from pyccel.ast.internals import Iterable
@@ -146,11 +145,11 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, RECURSIVE_RESULTS_REQUIRED,
         PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
         UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
-        INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
+        WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS,
         PYCCEL_INTERNAL_ERROR)
 
 from pyccel.parser.base      import BasicParser
@@ -602,21 +601,6 @@ class SemanticParser(BasicParser):
             container = current_scope.imports
             container['imports'][storage_name] = Import(source, target, True)
 
-
-    def get_headers(self, name):
-        """ Get all headers in the scope which reference the
-        requested name
-        """
-        container = self.scope
-        headers = []
-        while container:
-            if name in container.headers:
-                if isinstance(container.headers[name], list):
-                    headers += container.headers[name]
-                else:
-                    headers.append(container.headers[name])
-            container = container.parent_scope
-        return headers
 
     def create_tuple_of_inhomogeneous_elements(self, tuple_var):
         """
@@ -1371,16 +1355,11 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-            if not func.is_semantic:
+            is_inline = func.is_inline if isinstance(func, FunctionDef) else False
+            if is_inline:
+                return self._visit_InlineFunctionDef(func, args, expr)
+            elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
-            elif is_inline and isinstance(func, Interface):
-                is_compatible = False
-                for f in func.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
-                    is_compatible |= fl
-                if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, args)
 
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
@@ -1478,6 +1457,7 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
+        assert not old_func.is_inline
         cls_base_syntactic = old_func.get_direct_user_nodes(lambda p: isinstance(p, ClassDef))
         if cls_base_syntactic:
             cls_name = cls_base_syntactic[0].name
@@ -1506,10 +1486,7 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = new_scope
-        if old_func.is_inline:
-            self._visit_FunctionDef(old_func, function_call_args = function_call_args)
-        else:
-            self._visit_FunctionDef(old_func)
+        self._visit(old_func)
 
         # Retrieve the annotated function
         if cls_base_syntactic:
@@ -2589,7 +2566,14 @@ class SemanticParser(BasicParser):
                 pyccel_stage.set_stage('syntactic')
                 import_node = Import(AsName(mod_name, name))
                 pyccel_stage.set_stage('semantic')
+                # Insert import at global scope
+                current_scope = self.scope
+                scope = current_scope
+                while scope.parent_scope:
+                    scope = scope.parent_scope
+                self.scope = scope
                 self._additional_exprs[-1].append(self._visit(import_node))
+                self.scope = current_scope
                 return self.scope.find(name)
             else:
                 errors.report(f"Unrecognised module {mod_name} imported in global scope. Please import the module locally if it was previously Pyccelised.",
@@ -2650,6 +2634,8 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             try:
                 if hasattr(self, annotation_method):
+                    if self._verbose > 2:
+                        print(f">>>> Calling SemanticParser.{annotation_method}")
                     obj = getattr(self, annotation_method)(expr)
                     if isinstance(obj, PyccelAstNode) and self.current_ast_node:
                         obj.set_current_ast(self.current_ast_node)
@@ -2743,7 +2729,7 @@ class SemanticParser(BasicParser):
         free_func = None
         program   = None
 
-        comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
+        comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
@@ -2989,20 +2975,16 @@ class SemanticParser(BasicParser):
         ls = []
         self._additional_exprs.append([])
         for b in expr.body:
-
+            if isinstance(b, EmptyNode):
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
             self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
-            # ----- If block to handle VariableHeader. To be removed when headers are deprecated. ---
             elif isinstance(line, list) and isinstance(line[0], Variable):
                 self.scope.insert_variable(line[0])
-                if len(line) != 1:
-                    errors.report(f"Variable {line[0]} cannot have multiple types",
-                            severity='error', symbol=line[0])
-            # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
         self._additional_exprs.pop()
@@ -3403,15 +3385,6 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            macro = self.scope.find(rhs_name, 'macros')
-            if macro is not None:
-                master = macro.master
-                args = rhs.args
-                args = [lhs] + list(args)
-                args = [self._visit(i) for i in args]
-                args = macro.apply(args)
-                return FunctionCall(master, args, self.current_function_name)
-
             method = cls_base.get_method(rhs_name, expr)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
@@ -3437,17 +3410,6 @@ class SemanticParser(BasicParser):
                     self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
                 return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)], is_method = True)
 
-        # look for a macro
-        else:
-
-            macro = self.scope.find(rhs_name, 'macros')
-
-            # Macro
-            if isinstance(macro, MacroVariable):
-                return macro.master
-            elif isinstance(macro, MacroFunction):
-                args = macro.apply([visited_lhs])
-                return FunctionCall(macro.master, args, self.current_function_name)
 
         # did something go wrong?
         return errors.report(f'Attribute {rhs_name} not found',
@@ -3636,6 +3598,9 @@ class SemanticParser(BasicParser):
             method = d_methods.pop('__init__', None)
 
             if not method.is_semantic:
+                if method.is_inline:
+                    errors.report("An __init__ method cannot be inlined",
+                            severity='fatal', symbol=expr)
                 method = self._annotate_the_called_function_def(method, args)
 
             if method is None:
@@ -3692,15 +3657,6 @@ class SemanticParser(BasicParser):
             self._allocs[-1].add(cls_variable)
             return new_expr
         else:
-
-            # first we check if it is a macro, in this case, we will create
-            # an appropriate FunctionCall
-
-            macro = self.scope.find(name, 'macros')
-            if macro is not None:
-                func = macro.master.funcdef
-                name = _get_name(func.name)
-                args = macro.apply(args)
 
             if func is None and name in self._context_dict:
                 env_var = self._context_dict[name]
@@ -3887,56 +3843,9 @@ class SemanticParser(BasicParser):
         # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
-            macro = self.scope.find(name, 'macros')
-            if macro is None:
-                rhs = self._visit(rhs)
-                if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
-                    errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
-            else:
-
-                # TODO check types from FunctionDef
-                master = macro.master
-                results = []
-                args = [self._visit(i) for i in rhs.args]
-                args_names = [arg.value.name for arg in args if isinstance(arg.value, Variable)]
-                d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
-                                  if isinstance(arg.value, Variable)}
-
-                lhs_iter = lhs
-
-                if not sympy_iterable(lhs_iter):
-                    lhs_iter = [lhs]
-                results_shapes = macro.get_results_shapes(args)
-                for m_result, shape, result in zip(macro.results, results_shapes, lhs_iter):
-                    if m_result in d_m_args and not result in args_names:
-                        d_result = self._infer_type(d_m_args[m_result])
-                        d_result['shape'] = shape
-                        tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False)
-                        results.append(tmp)
-                    elif result in args_names:
-                        _name = _get_name(result)
-                        tmp = self.get_variable(_name)
-                        results.append(tmp)
-                    else:
-                        # TODO: check for result in master_results
-                        errors.report(INVALID_MACRO_COMPOSITION, symbol=result,
-                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                            severity='error')
-
-                expr = macro.make_necessary_copies(args, results)
-                new_expressions += expr
-                args = macro.apply(args, results=results)
-                if isinstance(master.funcdef, FunctionDef):
-                    func_call = FunctionCall(master.funcdef, args, self.current_function_name)
-                    if new_expressions:
-                        return CodeBlock([*new_expressions, func_call])
-                    else:
-                        return func_call
-                else:
-                    # TODO treat interface case
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                                  severity='fatal')
+            rhs = self._visit(rhs)
+            if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
+                errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
 
         else:
             rhs = self._visit(rhs)
@@ -3957,7 +3866,8 @@ class SemanticParser(BasicParser):
             elif expr.lhs.is_temp:
                 return rhs
             else:
-                raise NotImplementedError("Cannot assign result of a function without a return")
+                errors.report("Cannot assign result of a function without a return",
+                        severity='fatal', symbol=expr)
 
             if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):
                 temp = self.scope.get_new_name()
@@ -4174,14 +4084,14 @@ class SemanticParser(BasicParser):
                 for li in l:
                     if li.is_const:
                         # If constant (can't use annotations on tuple assignment)
-                        errors.report("Cannot modify 'const' variable",
+                        errors.report("Cannot modify variable marked as Final",
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
                 if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
                         any(not isinstance(u, (Allocate, PyccelArrayShapeElement)) for u in l.get_all_user_nodes())):
                     # If constant and not the initialising declaration of a constant variable
-                    errors.report("Cannot modify 'const' variable",
+                    errors.report("Cannot modify variable marked as Final",
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         symbol=l, severity='error')
             if isinstance(expr, AugAssign):
@@ -4242,7 +4152,7 @@ class SemanticParser(BasicParser):
     def _visit_AugAssign(self, expr):
         lhs = self._visit(expr.lhs)
         if lhs.is_const:
-            errors.report("Cannot modify 'const' variable",
+            errors.report("Cannot modify variable marked as Final",
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 symbol=lhs, severity='error')
         rhs = self._visit(expr.rhs)
@@ -4751,20 +4661,12 @@ class SemanticParser(BasicParser):
         else:
             cond        = self._visit(expr.cond)
             value_false = self._visit(expr.value_false)
-            return IfTernaryOperator(cond, value_true, value_false)
-
-    def _visit_FunctionHeader(self, expr):
-        warnings.warn("Support for specifying types via headers will be removed in a " +
-                      "future version of Pyccel. Please use type hints. TypeVar from " +
-                      "Python's typing module can be used to specify multiple types. " +
-                      "See the documentation at " +
-                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                      "for examples.", FutureWarning)
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
-        return expr
+            if isinstance(cond, LiteralTrue):
+                return value_true
+            elif isinstance(cond, LiteralFalse):
+                return value_false
+            else:
+                return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_Return(self, expr):
 
@@ -4789,7 +4691,10 @@ class SemanticParser(BasicParser):
                         severity='fatal', symbol=expr)
 
         return_objs = func.results
-        return_var = getattr(return_objs.var, 'name', return_objs.var)
+        return_var = return_objs.var
+        if isinstance(return_var, (AnnotatedPyccelSymbol, Variable)):
+            return_var = return_var.name
+
         assigns     = []
         if return_var != results:
             # Create a syntactic object to visit
@@ -4798,9 +4703,12 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
 
             a = self._visit(syntactic_assign)
-            assigns.append(a)
-            if isinstance(a, ConstructorCall):
-                a.cls_variable.is_temp = False
+            if not isinstance(a, Assign) or a.lhs != a.rhs:
+                assigns.append(a)
+                if isinstance(a, ConstructorCall):
+                    a.cls_variable.is_temp = False
+            else:
+                a.invalidate_node()
 
         results = self._visit(return_var)
 
@@ -4817,16 +4725,11 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr, function_call_args=None):
+    def _visit_FunctionDef(self, expr):
         """
-        Annotate the FunctionDef if necessary.
+        Semantically analyse the FunctionDef.
 
-        The FunctionDef is only annotated if the flag annotate is set to True.
-        In the case of an inlined function, we always annotate the function partially,
-        depending on the function call if it is an interface, otherwise we annotate it
-        if the function_call argument are compatible with the FunctionDef arguments.
-        In the case of non inlined function, we only pass through this method
-        twice, the first time we do nothing and the second time we annotate all of functions.
+        Analyse the FunctionDef adding all necessary semantic information.
 
         Parameter
         ---------
@@ -4834,12 +4737,9 @@ class SemanticParser(BasicParser):
            The node that needs to be annotated.
            If we provide an Interface, this means that the function has been annotated partially,
            and we need to continue annotating the needed ones.
-
-        function_call_args : list[FunctionCallArgument], optional
-            The list of call arguments, needed only in the case of an inlined function.
         """
         if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
-            errors.report("Functions can only be declared in modules or inside other functions.",
+            errors.report("Functions can only be declared in modules, classes or inside other functions.",
                     symbol=expr, severity='error')
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
@@ -4878,10 +4778,6 @@ class SemanticParser(BasicParser):
         is_elemental       = expr.is_elemental
         is_private         = expr.is_private
         is_inline          = expr.is_inline
-
-        if function_call_args is not None:
-            assert is_inline
-            found_func = False
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
@@ -4926,11 +4822,7 @@ class SemanticParser(BasicParser):
         interface_name = name
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
-        annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
-            if function_call_args is not None and found_func:
-                break
-
             if is_interface:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
@@ -4947,20 +4839,6 @@ class SemanticParser(BasicParser):
                 self.scope.insert_symbolic_alias(n, dtype)
 
             arg_dict  = {a.name:a.var for a in arguments}
-            annotated_args.append(arguments)
-
-            if function_call_args is not None:
-                is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
-                if not is_compatible:
-                    self.exit_function_scope()
-                    # remove the new created scope and the function name
-                    self.scope.sons_scopes.pop(expr.name)
-                    if is_interface:
-                        self.scope.remove_symbol(name)
-                    continue
-                #In the case of an Interface we set found_func to True so that we don't continue
-                #searching for the other functions
-                found_func = True
 
             for a in arguments:
                 a_var = a.var
@@ -5113,12 +4991,6 @@ class SemanticParser(BasicParser):
             if expr.python_ast:
                 func.set_current_ast(expr.python_ast)
 
-        if function_call_args is not None and len(new_semantic_funcs) == 0:
-            for args in annotated_args[:-1]:
-                #raise errors if we do not find any compatible function def
-                self._check_argument_compatibility(function_call_args, args, expr, is_elemental, error_type='error')
-            self._check_argument_compatibility(function_call_args, annotated_args[-1], expr, is_elemental, error_type='fatal')
-
         if existing_semantic_funcs:
             new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
@@ -5137,6 +5009,173 @@ class SemanticParser(BasicParser):
             self.insert_function(new_semantic_funcs, insertion_scope)
 
         return EmptyNode()
+
+    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+        """
+        Visit an inline function definition to add the code to the calling scope.
+
+        Visit an inline function definition to add the code to the calling scope.
+        The code is inlined at this stage.
+
+        Parameters
+        ----------
+        expr : InlineFunctionDef
+            The inline function definition being called.
+        function_call_args : list[FunctionDefArgument]
+            The semantic arguments passed to the function.
+        function_call : FunctionCall
+            The syntactic function call being expanded to a function definition.
+        """
+        assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
+        self._current_function.append(expr)
+        if assign:
+            lhs = assign[-1].lhs
+        else:
+            lhs = self.scope.get_new_name()
+        # Build the syntactic body
+        replace_map = {}
+
+        pyccel_stage.set_stage('syntactic')
+        global_scope_import_targets = {}
+        if expr.is_imported:
+            mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+            mod = self.d_parsers[mod_name].semantic_parser.ast
+
+            global_symbols = set(expr.body.get_attribute_nodes(PyccelSymbol))
+            global_symbols.difference_update(expr.scope.local_used_symbols)
+
+            for v in global_symbols:
+                import_mod_name = mod_name
+                if mod.scope.find(v):
+                    imported_obj = None
+                    for import_type in mod.scope.imports.values():
+                        if v in import_type:
+                            imported_obj = import_type[v]
+                            break
+                    if imported_obj:
+                        import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+                    if self.scope.symbol_in_use(v):
+                        new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                        replace_map[v] = new_v
+                        global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                    else:
+                        global_scope_import_targets.setdefault(import_mod_name, []).append(v)
+
+        # Swap in the function call arguments to replace the variables representing
+        # the arguments of the inlined function
+        res_vars = ()
+        if expr.results:
+            # Swap in the result of the function to replace the variable representing
+            # the result of the inlined function
+            res_var = expr.results.var
+            if isinstance(res_var, AnnotatedPyccelSymbol):
+                res_var = res_var.name
+            if isinstance(lhs, PyccelSymbol):
+                replace_map[res_var] = lhs
+                res_vars = (res_var,)
+
+        func_args = [a.var for a in expr.arguments]
+        func_args = [a.name if isinstance(a, AnnotatedPyccelSymbol) else a for a in func_args]
+
+        # Ensure local variables will be recognised and use a name that is not already in use
+        for v in expr.scope.local_used_symbols:
+            if v != expr.name and v not in res_vars:
+                if self.scope.symbol_in_use(v):
+                    new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                    replace_map[v] = new_v
+                else:
+                    self.scope.insert_symbol(v)
+
+        # Map local call arguments to function arguments
+        positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
+        for func_a, call_a in zip(func_args, positional_call_args):
+            if isinstance(call_a, Variable) and func_a == self.scope.get_expected_name(call_a.name):
+                # If call argument is a variable with the same name as the target function
+                # argument then there is no need to rename
+                new_func_a = replace_map.pop(func_a)
+                self.scope.remove_symbol(new_func_a)
+            else:
+                # Otherwise the symbol used for the function arguments should be mapped
+                # to the call argument
+                func_a_name = replace_map.get(func_a, func_a)
+                self.scope.variables[func_a_name] = call_a
+                self.scope.local_used_symbols[func_a_name] = func_a_name
+
+        # Map local keyword call arguments to function arguments
+        nargs = len(positional_call_args)
+        kw_call_args = {a.keyword: a.value for a in function_call_args[nargs:]}
+        for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
+            call_a = kw_call_args.get(func_a_name, getattr(func_a.default_call_arg, 'value', func_a.default_call_arg))
+            if isinstance(call_a, Variable) and func_a_name == self.scope.get_expected_name(call_a.name):
+                # If call argument is a variable with the same name as the target function
+                # argument then there is no need to rename
+                new_func_a = replace_map.pop(func_a_name)
+                self.scope.remove_symbol(new_func_a)
+            else:
+                # Otherwise the symbol used for the function arguments should be mapped
+                # to the call argument
+                used_func_a_name = replace_map.get(func_a_name, func_a_name)
+                self.scope.variables[used_func_a_name] = call_a
+                self.scope.local_used_symbols[func_a_name] = func_a_name
+
+        to_replace = list(replace_map.keys())
+        local_var = list(replace_map.values())
+        # Replace local syntactic variables from the inline functions with the syntactic
+        # variables defined above which are sure to not cause name collisions
+        expr.substitute(to_replace, local_var, invalidate = False)
+
+        # Replace return expressions with an assign to the results
+        returns = expr.body.get_attribute_nodes(Return)
+        replace_return = [Assign(lhs, r.expr, python_ast = r.python_ast) \
+                          if not isinstance(r.expr, PyccelSymbol) or not isinstance(lhs, PyccelSymbol) \
+                          else EmptyNode() for r in returns]
+        expr.body.substitute(returns, replace_return, invalidate = False)
+
+        imports = list(expr.imports)
+        imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
+        pyccel_stage.set_stage('semantic')
+
+        import_init_calls = [self._visit(i) for i in imports]
+
+        if expr.functions:
+            errors.report("Functions in inline functions are not supported",
+                    severity='error', symbol=expr)
+
+        # Visit the body as though it appeared directly in the code
+        body = self._visit(expr.body)
+        body.insert2body(*import_init_calls, back=False)
+
+        self._current_function.pop()
+
+        pyccel_stage.set_stage('syntactic')
+        # Put back the returns to create custom Assign nodes on the next visit
+        expr.body.substitute(replace_return, returns)
+
+        # Remove the symbol maps added to handle the function arguments
+        # These are found in self.scope.variables but do not represent variables
+        # that need to be declared.
+        for func_a, call_a in zip(func_args, positional_call_args):
+            func_a_name = replace_map.get(func_a, func_a)
+            if not isinstance(call_a, Variable) or func_a_name != call_a.name:
+                self.scope.remove_variable(call_a, func_a_name)
+
+        for func_a, func_a_name in zip(expr.arguments[nargs:], func_args[nargs:]):
+            if func_a_name in kw_call_args:
+                used_func_a_name = replace_map.get(func_a_name, func_a_name)
+                call_a = kw_call_args[func_a_name]
+                if not isinstance(call_a, Variable) or used_func_a_name != call_a.name:
+                    self.scope.remove_variable(call_a, used_func_a_name)
+
+        # Swap the arguments back to the original version to preserve the syntactic
+        # inline function definition.
+        expr.substitute(local_var, to_replace)
+        pyccel_stage.set_stage('semantic')
+
+        if assign:
+            return body
+        else:
+            self._additional_exprs[-1].append(body)
+            return self._visit(lhs)
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
@@ -5246,15 +5285,11 @@ class SemanticParser(BasicParser):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
-            if not isinstance(var1, Variable):
+            if not isinstance(var1, Variable) or not var1.is_optional:
                 if IsClass == PyccelIsNot:
                     return LiteralTrue()
                 elif IsClass == PyccelIs:
                     return LiteralFalse()
-            elif not var1.is_optional:
-                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                        severity='error')
             return IsClass(var1, expr.rhs)
 
         if (var1.dtype != var2.dtype):
@@ -5380,7 +5415,6 @@ class SemanticParser(BasicParser):
                 targets = [AsName(mod, source_target)]
 
             self.scope.cls_constructs.update(p.scope.cls_constructs)
-            self.scope.macros.update(p.scope.macros)
 
             # ... meta variables
 
@@ -5405,6 +5439,7 @@ class SemanticParser(BasicParser):
 
                 if new_name != old_name:
                     import_init = import_init.clone(new_name)
+                    container['functions'][old_name] = import_init
 
                 result  = import_init()
 
@@ -5447,87 +5482,6 @@ class SemanticParser(BasicParser):
 
         self.exit_loop_scope()
         return With(domaine, body, scope).block
-
-
-
-    def _visit_MacroFunction(self, expr):
-        # we change here the master name to its FunctionDef
-
-        f_name = expr.master
-        header = self.get_headers(f_name)
-        if not header:
-            func = self.scope.find(f_name, 'functions')
-            if func is None:
-                errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                    symbol=f_name,severity='error',
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
-        else:
-            interfaces = []
-            for hd in header:
-                for i,_ in enumerate(hd.dtypes):
-                    self.scope.insert_symbol(f'arg_{i}')
-                pyccel_stage.set_stage('syntactic')
-                syntactic_args = [AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg) \
-                        for i, arg in enumerate(hd.dtypes)]
-                pyccel_stage.set_stage('semantic')
-                arguments = [FunctionDefArgument(self._visit(a)[0]) for a in syntactic_args]
-
-                if hd.results:
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_results = [AnnotatedPyccelSymbol(f'out_{i}', annotation = arg) \
-                            for i, arg in enumerate(hd.results)]
-                    pyccel_stage.set_stage('semantic')
-                    results = [FunctionDefResult(self._visit(r)[0]) for r in syntactic_results]
-                else:
-                    results = FunctionDefResult(Nil())
-
-                interfaces.append(FunctionDef(f_name, arguments, [], results))
-
-            # TODO -> Said: must handle interface
-
-            func = interfaces[0]
-
-        name = expr.name
-        args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
-
-        def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, PyccelSymbol):
-                return FunctionCallArgument(func_arg.var.clone(str(master_arg)))
-            else:
-                return FunctionCallArgument(master_arg)
-
-        master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
-
-        master = func(*master_args)
-        macro   = MacroFunction(name, args, master, master_args,
-                                results=expr.results, results_shapes=expr.results_shapes)
-        self.scope.insert_macro(macro)
-
-        return macro
-
-    def _visit_MacroShape(self, expr):
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        return expr
-
-    def _visit_MacroVariable(self, expr):
-
-        master = expr.master
-        if isinstance(master, DottedName):
-            errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                          severity='fatal')
-        header = self.get_headers(master)
-        if header is None:
-            var = self.get_variable(master)
-        else:
-            var = self.get_variable(master)
-
-                # TODO -> Said: must handle interface
-
-        expr = MacroVariable(expr.name, var)
-        self.scope.insert_macro(expr)
-        return expr
 
     def _visit_StarredArguments(self, expr):
         var = self._visit(expr.args_var)

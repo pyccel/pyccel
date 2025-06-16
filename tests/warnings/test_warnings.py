@@ -33,7 +33,7 @@ def get_files_from_folder(foldername):
 #
 #    pyccel = Parser(f, output_folder = os.getcwd())
 #
-#    ast = pyccel.parse()
+#    ast = pyccel.parse(verbose = 0)
 #
 #    assert errors.num_messages()!=0
 
@@ -46,10 +46,9 @@ def test_semantic_warnings(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    pyccel.parse()
+    pyccel.parse(verbose = 0)
 
-    settings = {}
-    pyccel.annotate(**settings)
+    pyccel.annotate(verbose = 0)
 
     assert not errors.has_errors()
     assert errors.has_warnings()
@@ -62,15 +61,14 @@ def test_semantic_warnings(f):
 #    errors.reset()
 #
 #    pyccel = Parser(f, output_folder = os.getcwd())
-#    ast = pyccel.parse()
+#    ast = pyccel.parse(verbose = 0)
 #
-#    settings = {}
-#    ast = pyccel.annotate(**settings)
+#    ast = pyccel.annotate(verbose = 0)
 #
 #    name = os.path.basename(f)
 #    name = os.path.splitext(name)[0]
 #
-#    codegen = Codegen(ast, name, 'fortran')
+#    codegen = Codegen(ast, name, 'fortran', verbose = 0)
 #    code = codegen.printer.doprint(codegen.ast)
 #
 #    assert errors.has_warnings()

@@ -5,6 +5,7 @@ Type annotations are an integral part of Pyccel. When parsing a function, Pyccel
 Where possible we try to support Python-style annotations which are compatible with mypy.
 
 You can leave annotations on function arguments, function results or variables:
+
 ```python
 def fun(arg1: type1, arg2: type2, ..., argN: typeN) -> return_type:
     a : var_type
@@ -24,15 +25,18 @@ For scalar variables Pyccel supports the following data types:
 ## NumPy Arrays
 
 Unfortunately, NumPy does not yet provide mypy compatible type annotations which provide sufficient information for Pyccel. As a result we also support the use of string annotations:
+
 ```python
 def fun(arg1: 'type1', arg2: 'type2', ..., argN: 'typeN') -> 'return_type':
     a : 'var_type'
 ```
 
 To declare NumPy arrays with string syntax we write:
+
 ```python
 def fun(arg1: 'type1[:]', arg2: 'type2[:,:]', ..., argN: 'typeN[dimensions]'):
 ```
+
 The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets.
 So `arr[:]` means that the array `arr` has 1 dimension, `arr[:,:]` means that it has 2 dimensions and so on.
 In general string type hints must be used to provide Pyccel with information about the number of dimensions.
@@ -48,6 +52,7 @@ Tuples can be homogeneous or inhomogeneous. A homogeneous tuple is a tuple whose
 Homogeneous tuple type annotations are supported for local variables and function arguments (if the tuples contain scalar objects).
 
 To declare a homogeneous tuple the syntax is as follows:
+
 ```python
 a : tuple[int,...] = (1,2,3,4)
 ```
@@ -55,11 +60,13 @@ a : tuple[int,...] = (1,2,3,4)
 Inhomogeneous tuple type annotations are supported for local variables.
 
 To declare an inhomogeneous tuple the syntax is as follows:
+
 ```python
 a : tuple[int,bool] = (1,False)
 ```
 
 It is of course possible to create an inhomogeneous tuple in place of a homogeneous tuple to benefit from code optimisations that can arise from using multiple scalars in place of an array object. This will however imply the same restrictions as any other inhomogeneous tuple. E.g:
+
 ```python
 a : tuple[int, int] = (1,2)
 ```
@@ -67,26 +74,28 @@ a : tuple[int, int] = (1,2)
 ## Lists
 
 Lists are in the process of being added to Pyccel. Homogeneous lists can be declared in Pyccel using the following syntax:
+
 ```python
 a : list[int] = [1, 2]
 b : list[bool] = [False, True]
 c : list[float] = []
 ```
+
 So far lists can be declared as local variables or as arguments or results of functions.
 
 ## Sets
 
 Sets are in the process of being added to Pyccel. Homogeneous sets can be declared in Pyccel using the following syntax:
+
 ```python
 a : set[int] = {1, 2}
 b : set[bool] = {False, True}
 c : set[float] = {}
 ```
-Sets can be declared as local variables, arguments or results of functions, but not yet as class variables. An argument can be marked as constant using a string annotation or (in a module) using the `Final` qualifier:
-```python
-def f(a : 'const set[int]'):
-    pass
 
+Sets can be declared as local variables, arguments or results of functions, but not yet as class variables. An argument can be marked as constant using the `Final` qualifier:
+
+```python
 from typing import Final
 def g(b : Final[set[bool]]):
     pass
@@ -96,11 +105,13 @@ def g(b : Final[set[bool]]):
 
 Dictionaries are in the process of being added to Pyccel.
 Homogeneous dictionaries can be declared in Pyccel using the following syntax:
+
 ```python
 a : dict[int,float] = {1: 1.0, 2: 2.0}
 b : dict[int,bool] = {1: False, 4: True}
 c : dict[int,complex] = {}
 ```
+
 Strings are not yet supported as keys in Fortran.
 Dictionaries can be declared as local variables, or results of functions, but not yet as arguments or class variables.
 
@@ -109,6 +120,7 @@ Dictionaries can be declared as local variables, or results of functions, but no
 Pyccel contains very minimal support for strings. For example strings can be used as keys of dictionaries (only in C currently) or to represent flags in the user code with if statements checking their value. More complex string handling is not currently supported. See the documentation on [builtin functions](./builtin-functions.md) for an overview of the available string methods.
 
 Strings can be declared in Pyccel using the following syntax:
+
 ```python
 a : str = 'hello'
 ```
@@ -117,6 +129,7 @@ a : str = 'hello'
 
 The basic type annotations indicate only one type however it is common to need a function to be able to handle multiple types, e.g. integers and floats. In this case it is possible to provide a union type.
 E.g.
+
 ```python
 def f(a : int | float):
     pass
@@ -126,10 +139,13 @@ def g(a : 'int | float'):
 ```
 
 Union types are useful for specifying multiple types however the function must handle all possible permutations of the argument combinations. For example the following type annotations:
+
 ```python
 def f(a : int | float, b : int | float):
 ```
+
 will lead to four functions being created, equivalent to:
+
 ```python
 def f(a : int, b : int):
 def f(a : int, b : float):
@@ -139,6 +155,7 @@ def f(a : float, b : float):
 
 In order to keep the number of functions to what is necessary and thus reduce compilation times, users should use a `TypeVar` object from Python's `typing` module. This allows the type to be specified for all arguments at once.
 E.g.
+
 ```python
 from typing import TypeVar
 
@@ -153,6 +170,7 @@ def f(a : T, b : T):
 Python also provides type alias objects as described in the Python docs (<https://docs.python.org/3/library/typing.html#type-aliases>). This allows the user to more easily change between different types. Type parameter lists are not supported as they do not fully define the final type. Both the new Python 3.12 syntax and the old syntax are supported. Type aliases cannot be redefined. The type name will not appear in the underlying code.
 
 E.g.
+
 ```python
 from typing import TypeAlias
 
@@ -163,6 +181,7 @@ def set_i(x : 'MyType[:]', i : 'int', val : MyType):
 ```
 
 or:
+
 ```python
 type MyType = float
 

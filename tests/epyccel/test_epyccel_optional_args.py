@@ -102,7 +102,7 @@ def test_f5(language):
 def test_f6(language):
     import modules.Module_4 as mod
 
-    modnew = epyccel(mod, language = language, verbose=True)
+    modnew = epyccel(mod, language = language)
 
     # ...
     assert mod.call_optional_1() == modnew.call_optional_1()

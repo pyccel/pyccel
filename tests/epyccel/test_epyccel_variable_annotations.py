@@ -3,7 +3,7 @@
 """ Tests for headers. This ensures intermediate steps are tested before headers are deprecated.
 Once headers are deprecated this file can be removed.
 """
-
+from typing import Final
 import pytest
 
 from pyccel import epyccel
@@ -77,7 +77,7 @@ def test_local_wrong_type_annotation_2(language):
 
 def test_local_wrong_type_annotation_3(language):
     def local_wrong_type_annotation():
-        gift : 'const float' = 10.5
+        gift : Final[float] = 10.5
         gift = 11.0
         return gift
 

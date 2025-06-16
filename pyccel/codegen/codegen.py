@@ -40,14 +40,17 @@ class Codegen:
         Name of the generated module or program.
     language : str
         The language which the printer should print to.
+    verbose : int
+        The level of verbosity.
     """
-    def __init__(self, parser, name, language):
+    def __init__(self, parser, name, language, verbose):
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
         self._language = language
+        self._verbose  = verbose
 
         self._stmts = {}
         _structs = [
@@ -71,7 +74,7 @@ class Codegen:
         except KeyError as err:
             raise ValueError(f'{language} language is not available') from err
 
-        self._printer = CodePrinterSubclass(self.parser.filename)
+        self._printer = CodePrinterSubclass(self.parser.filename, verbose = self._verbose)
 
     @property
     def parser(self):
@@ -159,7 +162,11 @@ class Codegen:
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
-        return self._printer.get_additional_imports()
+        additional_imports = self._printer.get_additional_imports().copy()
+        if self._parser.metavars['printer_imports']:
+            for i in self._parser.metavars['printer_imports'].split(','):
+                additional_imports.setdefault(i.strip(), None)
+        return additional_imports
 
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
@@ -195,7 +202,7 @@ class Codegen:
         a program and the target language is not Python a program source file is
         also generated. The source and header files are named by appending the
         extension to the requested filename. The program source file is named by
-        additionally prepending 'prog_' to the requested filename.
+        additionally prepending `prog_` to the requested filename.
 
         Parameters
         ----------
@@ -217,6 +224,8 @@ class Codegen:
         pyi_filename = f'{filename}.pyi'
         filename = f'{filename}.{ext}'
 
+        if self._verbose:
+            print ('>>> Printing :: ', filename)
         # print module
         code = self._printer.doprint(self.ast)
         with open(filename, 'w', encoding="utf-8") as f:
@@ -225,11 +234,19 @@ class Codegen:
         module_header = ModuleHeader(self.ast)
         # print module header
         if header_ext is not None:
+            if self._verbose:
+                print ('>>> Printing :: ', header_filename)
             code = self._printer.doprint(module_header)
             with open(header_filename, 'w', encoding="utf-8") as f:
                 f.write(code)
 
-        code = printer_registry['python'](self.parser.filename).doprint(module_header)
+        if self._verbose:
+            print ('>>> Printing :: ', pyi_filename)
+        code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
+        if self.language != 'python':
+            printer_imports = ', '.join(self.get_printer_imports().keys())
+            if printer_imports:
+                code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
         with open(pyi_filename, 'w', encoding="utf-8") as f:
             f.write(code)
 
@@ -239,6 +256,8 @@ class Codegen:
             folder = os.path.dirname(filename)
             fname  = os.path.basename(filename)
             prog_filename = os.path.join(folder,"prog_"+fname)
+            if self._verbose:
+                print ('>>> Printing :: ', prog_filename)
             code = self._printer.doprint(self.ast.program)
             with open(prog_filename, 'w') as f:
                 f.write(code)

@@ -3,10 +3,11 @@
 The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel/parser/syntactic.py)
 
 The syntactic stage serves 4 main purposes:
-1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
-2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by Pyccel
-3.  [**Headers**](#Headers) : Convert header comments from strings to Pyccel's AST representation
-4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if Pyccel generates Variable names
+
+1.  [**Navigation and AST Creation**](#navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
+2.  [**Errors**](#errors) : Raise an error for any syntax used that is not yet supported by Pyccel
+3.  [**Headers**](#headers) : Convert header comments from strings to Pyccel's AST representation
+4.  [**Scoping**](#scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if Pyccel generates Variable names
 
 ## Navigation and AST Creation
 
@@ -18,34 +19,42 @@ This is necessary as Python's `ast` module discards all comments.
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
 The `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventionsfile-navigation).
+The logic of how the `_visit` function chooses the appropriate `_visit_X` function is detailed in the [overview](./overview.md#function-naming-conventions).
 These `_visit_X` functions must have the form:
+
 ```python
 def _visit_ClassName(self, stmt):
     ...
     return Y
 ```
+
 where `Y` must be an object of a class which inherits from [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 Each of these `_visit_X` functions should internally call the `_visit` function on each of the elements of the object to obtain Pyccel AST nodes which can be combined to create a Pyccel AST node representing the current object.
 
 ### Example
 
 Consider for example the Python expression:
+
 ```python
 a += b
 ```
+
 The Python `ast` module parses this as:
+
 ```python
 AugAssign(target=Name(id='a', ctx=Store()), op=Add(), value=Name(id='b', ctx=Load()))
 ```
+
 and we want to save this information into Pyccel's [`pyccel.ast.core.AugAssign`](../pyccel/ast/core.py).
 We therefore need to visit the 2 members of `ast.AugAssign`:
+
 -   target
 -   value
 
 and use the third (`op`) to correctly construct the `pyccel.ast.core.AugAssign`.
 
 The final code therefore resembles the following:
+
 ```python
 def _visit_AugAssign(self, stmt):
     lhs = self._visit(stmt.target)
@@ -66,6 +75,7 @@ Errors in the syntactic stage should raise a `PyccelSyntaxError`.
 Where possible this should be done by accessing the `Errors()` singleton and calling the `report` function.
 This function takes several arguments (see docstring for more details).
 The most important arguments are:
+
 -   _message_ : Describe the issue that lead to the error
 
 -   _symbol_ : The Python AST object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
@@ -77,7 +87,7 @@ The most important arguments are:
 
 Although the failures in visitation functions (`_visit_X`) do not affect other visitation functions it is still important to ensure that the functions provide a valid output.
 In the `SyntacticParser` all `_visit_X` should return a Pyccel AST object (an object which inherits from [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py), `pyccel.ast.core.EmptyNode` can be used to ensure this restriction is fulfilled.
-This is important to avoid errors caused by the construction of the tree which relates the objects (for more details see the [semantic stage](semantic_stage.md#Object-tree)).
+This is important to avoid errors caused by the construction of the tree which relates the objects (for more details see the [semantic stage](semantic_stage.md#object-tree)).
 
 ## Headers
 
@@ -97,11 +107,13 @@ This is usually done in the `_visit_Name` function, however this function is not
 To get round this the class has the attribute `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and `False` elsewhere.
 
 Consider for example a for loop. Such a loop has 3 main parts (which are each members of `ast.For`):
+
 -   target  (`ast.For.target`)
 -   iterable  (`ast.For.iter`)
 -   body (`ast.For.body`)
 
 such that a for loop is defined as:
+
 ```python
 for target in iterable:
    body
@@ -109,6 +121,7 @@ for target in iterable:
 
 Each of these 3 members must be visited individually, but the target additionally is in a declaration context.
 The visitation section of `_visit_For` is therefore:
+
 ```python
 self._in_lhs_assign = True
 iterator = self._visit(stmt.target)
@@ -126,6 +139,7 @@ Care should be taken here as this keyword is not compulsory[^1].
 [^1]: The keyword cannot currently be compulsory due to some old code and the special case of `FunctionDef`. A `FunctionDef` which represents a function defined in a header file has no body, and therefore no scope.
 
 A child scope can be created using one of the following functions (for more details see the docstrings in [pyccel.parser.scope](../pyccel/parser/scope.py):
+
 -   `Scope.new_child_scope`
 -   `Scope.create_new_loop_scope`
 -   `Scope.create_product_loop_scope`

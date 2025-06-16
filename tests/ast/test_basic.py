@@ -18,13 +18,12 @@ def get_functions(filename):
     pyccel = Parser(filename, output_folder = os.getcwd())
     errors = Errors()
 
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
     # Assert syntactic success
     assert not errors.has_errors()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     # Assert semantic success
     assert not errors.has_errors()
