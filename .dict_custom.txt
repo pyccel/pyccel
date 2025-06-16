@@ -128,3 +128,6 @@ pythonic
 pre
 LLVM
 linter
+unregister
+unregistering
+unpatching

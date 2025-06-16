@@ -184,7 +184,7 @@ def register(self, registry):
     registry.register_patch('parse', patch_info)
 ```
 
-### Step 5: Implement Un-patching Logic
+### Step 5: Implement Unpatching Logic
 
 The `unregister` method should remove all patches applied to the target class:
 
