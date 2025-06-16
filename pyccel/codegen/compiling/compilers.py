@@ -287,7 +287,7 @@ class Compiler:
         Parameters
         ----------
         lst : iterable
-            The list into which the prefix is inserted.
+            This sequence is copied to a new list with `prefix` before each element.
         prefix : Any
             The prefix to be inserted.
 
