@@ -163,7 +163,7 @@ NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'
 
 #openmp
-OMP_VERSION_NOT_SUPPORTED = "OPENMP {} is not supported. Defaulting to OPENMP {}."
+OMP_VERSION_NOT_SUPPORTED = "OpenMP {} is not supported. Defaulting to OpenMP {}."
 
 #plugins
 PLUGIN_DIRECTORY_NOT_FOUND = "Plugin directory not found: {}."
