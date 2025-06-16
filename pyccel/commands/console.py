@@ -23,66 +23,68 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-# TODO - remove output_dir from args
-#      - remove files from args
-#      but quickstart and build are still calling it for the moment
-def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
+def pyccel() -> None:
     """
     Pyccel console command.
 
-    The Pyccel console command allows translating Python files using Pyccel in a command-line environment. It provides
-    options to specify the files to be translated, enable support for MPI, OpenMP, and OpenACC, specify the output
-    directory for the translated files, and choose the compiler to be used for translation. By default, all parameters
-    are set to None, and the command will use the default behavior defined by Pyccel.
+    The Pyccel console command allows translating Python files using Pyccel in
+    a command-line environment. This function takes no parameters and sets up
+    an argument parser for the Pyccel command line interface.
 
-    Parameters
-    ----------
-    files : str or list of str, optional
-        File(s) to be translated. It can be a single file or a list of files (currently pyccel support single), by default None.
-    mpi : bool, optional
-        Enable MPI support, by default None.
-    openmp : bool, optional
-        Enable OpenMP support, by default None.
-    openacc : bool, optional
-        Enable OpenACC support, by default None.
-    output_dir : str, optional
-        Directory to store the translated file(s), by default None.
-    compiler : str, optional
-        Compiler to be used for translation, by default None.
+    The command line interface requires a Python file to be specified, and it
+    supports various options such as specifying the output language (C,
+    Fortran, or Python), compiler settings, and flags for accelerators like
+    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
+    debugging, and exporting compile information. Unless the user requires the
+    process to stop after a specific stage, Pyccel will execute the full
+    translation and compilation process until a C Python extension module is
+    generated, which can then be imported in Python. In addition, if the input
+    file contains an `if __name__ == '__main__':` block, an executable will be
+    generated for the corresponding block of code.
+
     """
-    parser = MyParser(description='pyccel command line')
 
-    parser.add_argument('files', metavar='N', type=str, nargs='*',
-                        help='a Pyccel file')
+    parser = MyParser(description="Pyccel's command line interface.",
+#                      formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                      add_help=False)
 
-    #... Version
+    # ... Positional arguments
+    group = parser.add_argument_group('Positional arguments')
+    group.add_argument('filename', metavar='FILE', type=str,
+                        help='Path (relative or absolute) to the Python file to be translated.')
+    #...
+
+    #... Help and Version
     import pyccel
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
     python  = 'python {}.{}'.format(*sys.version_info)
     message = "pyccel {} from {} ({})".format(version, libpath, python)
-    parser.add_argument('-V', '--version', action='version', version=message)
+
+    group = parser.add_argument_group('Basic options')
+    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
+    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
     # ...
 
     # ... compiler syntax, semantic and codegen
     group = parser.add_argument_group('Pyccel compiling stages')
     group.add_argument('-x', '--syntax-only', action='store_true',
-                       help='Using pyccel for Syntax Checking')
+                       help='Stop Pyccel after syntactic parsing, before semantic analysis or code generation.')
     group.add_argument('-e', '--semantic-only', action='store_true',
-                       help='Using pyccel for Semantic Checking')
+                       help='Stop Pyccel after semantic analysis, before code generation.')
     group.add_argument('-t', '--convert-only', action='store_true',
-                       help='Converts pyccel files only without build')
-#    group.add_argument('-f', '--f2py-compatible', action='store_true',
-#                        help='Converts pyccel files to be compiled by f2py')
-
+                       help='Stop Pyccel after translation to the target language, before build.')
     # ...
 
     # ... backend compiler options
     group = parser.add_argument_group('Backend compiler options')
 
-    group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language', type=str.lower)
+    group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
+                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
+                       type=str.lower)
 
-    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI,nvidia}')
+    group.add_argument('--compiler',
+                       help='Compiler family {GNU,intel,PGI,nvidia,LLVM} or JSON file containing a compiler description (default: GNU).')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
@@ -90,58 +92,60 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        help='Compiler flags for the wrapper.')
     if sys.version_info < (3, 9):
         group.add_argument('--debug', action='store_true', default=None, \
-                           help='Compiles the code with debug flags.')
+                           help='Compiles the code with debug flags')
     else:
-        group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None, \
-                           help='Compiles the code with debug flags.') # pylint: disable=no-member
+        group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
+                           help='Compile the code with debug flags, or not.\n' \
+                           ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.') # pylint: disable=no-member
 
     group.add_argument('--include',
                         type=str,
                         nargs='*',
                         dest='includes',
                         default=(),
-                        help='list of include directories.')
+                        help='List of include directories.')
 
     group.add_argument('--libdir',
                         type=str,
                         nargs='*',
                         dest='libdirs',
                         default=(),
-                        help='list of library directories.')
+                        help='List of library directories.')
 
     group.add_argument('--libs',
                         type=str,
                         nargs='*',
                         dest='libs',
                         default=(),
-                        help='list of libraries to link with.')
+                        help='List of libraries to link with.')
 
     group.add_argument('--output', type=str, default = '',\
-                       help='folder in which the output is stored.')
+                       help="Folder in which the output is stored (default: FILE's folder).")
 
     # ...
 
     # ... Accelerators
     group = parser.add_argument_group('Accelerators options')
     group.add_argument('--mpi', action='store_true', \
-                       help='uses mpi')
+                       help='Use MPI.')
     group.add_argument('--openmp', action='store_true', \
-                       help='uses openmp')
+                       help='Use OpenMP.')
     group.add_argument('--openacc', action='store_true', \
-                       help='uses openacc')
+                       help='Use OpenACC.')
     # ...
 
     # ... Other options
     group = parser.add_argument_group('Other options')
     group.add_argument('-v', '--verbose', action='count', default = 0,\
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output)')
-    group.add_argument('--time_execution', action='store_true', \
-                        help='prints the time spent in each section of the execution.')
+                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
+    group.add_argument('--time-execution', action='store_true', \
+                        help='Print the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
-                        help='shows internal messages')
-    group.add_argument('--export-compile-info', type=str, default = None, \
-                        help='file to which the compiler json file is exported')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), help='Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is basic.')
+                        help='Show internal messages.')
+    group.add_argument('--export-compile-info', metavar='COMPILER.json', type=str, default = None, \
+                        help='Export all compiler information to a JSON file with the given path (relative or absolute).')
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
+                        help='Specify the level of Conda warnings to display (default: basic).')
 
     # ...
 
@@ -156,20 +160,11 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...
-    if not files:
-        files = args.files
-
-    if args.compiler:
-        compiler = args.compiler
-
-    if not mpi:
-        mpi = args.mpi
-
-    if not openmp:
-        openmp = args.openmp
-
-    if not openacc:
-        openacc = args.openacc
+    filename = args.filename
+    compiler = args.compiler
+    mpi = args.mpi
+    openmp = args.openmp
+    openacc = args.openacc
 
     if not args.conda_warnings:
         args.conda_warnings = 'basic'
@@ -180,48 +175,31 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     # ...
 
-    if len(files) > 1:
+    compiler_export_file = args.export_compile_info
+
+    # ... report error
+    if os.path.isfile(filename):
+        # we don't use is_valid_filename_py since it uses absolute path
+        # file extension
+        ext = filename.split('.')[-1]
+        if not(ext in ['py', 'pyh']):
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report(INVALID_FILE_EXTENSION,
+                            symbol=ext,
+                            severity='error')
+            errors.check()
+            sys.exit(1)
+    else:
+        # we use Pyccel error manager, although we can do it in other ways
         errors = Errors()
         # severity is error to avoid needing to catch exception
-        errors.report('Pyccel can currently only handle 1 file at a time',
-                      severity='error')
+        errors.report(INVALID_FILE_DIRECTORY,
+                        symbol=filename,
+                        severity='error')
         errors.check()
         sys.exit(1)
     # ...
-
-    compiler_export_file = args.export_compile_info
-
-    if len(files) == 0:
-        if compiler_export_file is None:
-            parser.error("please specify a file to pyccelise")
-        else:
-            filename = ''
-    else:
-        filename = files[0]
-
-        # ... report error
-        if os.path.isfile(filename):
-            # we don't use is_valid_filename_py since it uses absolute path
-            # file extension
-            ext = filename.split('.')[-1]
-            if not(ext in ['py', 'pyh']):
-                errors = Errors()
-                # severity is error to avoid needing to catch exception
-                errors.report(INVALID_FILE_EXTENSION,
-                              symbol=ext,
-                              severity='error')
-                errors.check()
-                sys.exit(1)
-        else:
-            # we use Pyccel error manager, although we can do it in other ways
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_DIRECTORY,
-                          symbol=filename,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
-        # ...
 
     if compiler_export_file is not None:
         _, ext = os.path.splitext(compiler_export_file)
@@ -259,7 +237,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     base_dirpath = os.getcwd()
 
     if args.language == 'python' and args.output == '':
-        print("Cannot output python file to same folder as this would overwrite the original file. Please specify --output")
+        print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
 
     try:

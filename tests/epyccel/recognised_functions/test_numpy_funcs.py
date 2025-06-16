@@ -2447,7 +2447,7 @@ def test_sum_slice_in_if(language):
             m = s -1
             return np_sum(x[n:m])
 
-    f1 = epyccel(sum_call, language = language, fflags='-Werror=uninitialized')
+    f1 = epyccel(sum_call, language = language, flags='-Werror=uninitialized')
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
