@@ -9,7 +9,7 @@ The Pyccel plugin system allows for extending Pyccel's functionality through plu
 The plugin system is built around the following key components:
 
 1. `Plugin` - Abstract base class that all plugins must implement
-2. `Plugins` - Singleton manager that handles loading, registering, and un-registering plugins
+2. `Plugins` - Singleton manager that handles loading, registering, and unregistering plugins
 3. `PatchInfo` - Class that stores information about a single method patch
 4. `PatchRegistry` - Class that manages all patches applied to a single target class
 
@@ -34,7 +34,7 @@ class Plugin(ABC):
         
     @abstractmethod
     def unregister(self, instances):
-        """Un-register instances from this plugin."""
+        """Unregister instances from this plugin."""
         pass
         
     @abstractmethod
@@ -52,7 +52,7 @@ class Plugin(ABC):
 
 1. `register(instances)` - Register instances with the plugin. This method should apply patches to the provided instances.
 2. `refresh()` - Refresh all registered targets. This method should reapply patches to all registered instances.
-3. `unregister(instances)` - Un-register instances from the plugin. This method should remove all patches applied to the provided instances.
+3. `unregister(instances)` - Unregister instances from the plugin. This method should remove all patches applied to the provided instances.
 4. `set_options(options)` - Set options for the plugin. This method should update the plugin's behaviour based on the provided options.
 
 ## Patch System
@@ -115,7 +115,7 @@ class Plugins(metaclass=Singleton):
         # ...
         
     def unregister(self, instances, plugins=()):
-        """Un-register instances from plugins."""
+        """Unregister instances from plugins."""
         # ...
         
     def set_options(self, options, refresh=False):
