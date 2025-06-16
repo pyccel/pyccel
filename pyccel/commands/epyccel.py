@@ -204,10 +204,7 @@ def epyccel_seq(function_class_or_module, *,
                 libs          = (),
                 folder        = None,
                 conda_warnings= 'basic',
-                context_dict  = None,
-                comm          = None,
-                root          = None,
-                bcast         = None):
+                context_dict  = None):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
