@@ -189,7 +189,8 @@ class OmpConstruct(OmpNode):
 
     @property
     def start(self):
-        """Returns the directive that marks the start of the construct.
+        """
+        Returns the directive that marks the start of the construct.
 
         This property provides access to the OpenMP directive that begins the construct.
         The start directive contains important information such as the name of the construct
