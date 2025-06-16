@@ -41,7 +41,6 @@ def pyccel() -> None:
     generated, which can then be imported in Python. In addition, if the input
     file contains an `if __name__ == '__main__':` block, an executable will be
     generated for the corresponding block of code.
-
     """
 
     parser = MyParser(description="Pyccel's command line interface.",
@@ -121,7 +120,6 @@ def pyccel() -> None:
 
     group.add_argument('--output', type=str, default = '',\
                        help="Folder in which the output is stored (default: FILE's folder).")
-
     # ...
 
     # ... Accelerators
@@ -146,7 +144,6 @@ def pyccel() -> None:
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
-
     # ...
 
     # ...
@@ -174,7 +171,6 @@ def pyccel() -> None:
     # ...
 
     # ...
-
     compiler_export_file = args.export_compile_info
 
     # ... report error

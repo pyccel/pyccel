@@ -267,7 +267,6 @@ def epyccel_seq(function_class_or_module, *,
     -------
     object
         Return accelerated Python module and function.
-
     """
     # Store current directory
     base_dirpath = os.getcwd()
