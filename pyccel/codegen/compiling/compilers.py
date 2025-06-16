@@ -289,7 +289,7 @@ class Compiler:
         lst : iterable
             This sequence is copied to a new list with `prefix` before each element.
         prefix : Any
-            The prefix to be inserted.
+            The prefix to be placed before each element of `lst`.
 
         Returns
         -------
