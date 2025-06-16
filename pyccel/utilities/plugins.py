@@ -123,9 +123,9 @@ class PatchRegistry:
         ...         return 1
         >>> obj = MyClass()
         >>> registry = PatchRegistry(obj)
-        >>> def patched_method(self):
+        >>> def method(self):
         ...     return 2
-        >>> patch_info = PatchInfo(obj.method, patched_method, "method")
+        >>> patch_info = PatchInfo(obj.method, method, "method")
         >>> registry.register_patch("method", patch_info)
         >>> len(registry.patches["method"])
         1

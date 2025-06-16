@@ -4,14 +4,14 @@ This document provides an overview of the Pyccel plugin system and a guide on ho
 
 ## Overview
 
-The Pyccel plugin system allows for extending Pyccel's functionality through plugins. Plugins can modify the behavior of existing classes by patching their methods or adding new methods. This is particularly useful for adding support for new language features, optimizations, or code generation targets without modifying the core codebase.
+The Pyccel plugin system allows for extending Pyccel's functionality through plugins. Plugins can modify the behaviour of existing classes by patching their methods or adding new methods. This is particularly useful for adding support for new language features, optimisations, or code generation targets without modifying the core codebase.
 
 The plugin system is built around the following key components:
 
-1. **Plugin** - Abstract base class that all plugins must implement
-2. **Plugins** - Singleton manager that handles loading, registering, and unregistering plugins
-3. **PatchInfo** - Class that stores information about a single method patch
-4. **PatchRegistry** - Class that manages all patches applied to a single target class
+1. `Plugin` - Abstract base class that all plugins must implement
+2. `Plugins` - Singleton manager that handles loading, registering, and un-registering plugins
+3. `PatchInfo` - Class that stores information about a single method patch
+4. `PatchRegistry` - Class that manages all patches applied to a single target class
 
 ## Plugin Base Class
 
@@ -34,7 +34,7 @@ class Plugin(ABC):
         
     @abstractmethod
     def unregister(self, instances):
-        """Unregister instances from this plugin."""
+        """Un-register instances from this plugin."""
         pass
         
     @abstractmethod
@@ -50,16 +50,16 @@ class Plugin(ABC):
 
 ### Required Methods
 
-1. **register(instances)** - Register instances with the plugin. This method should apply patches to the provided instances.
-2. **refresh()** - Refresh all registered targets. This method should reapply patches to all registered instances.
-3. **unregister(instances)** - Unregister instances from the plugin. This method should remove all patches applied to the provided instances.
-4. **set_options(options)** - Set options for the plugin. This method should update the plugin's behavior based on the provided options.
+1. `register(instances)` - Register instances with the plugin. This method should apply patches to the provided instances.
+2. `refresh()` - Refresh all registered targets. This method should reapply patches to all registered instances.
+3. `unregister(instances)` - Un-register instances from the plugin. This method should remove all patches applied to the provided instances.
+4. `set_options(options)` - Set options for the plugin. This method should update the plugin's behaviour based on the provided options.
 
 ## Patch System
 
-The patch system is the core mechanism that allows plugins to modify the behavior of existing classes. It consists of two main components:
+The patch system is the core mechanism that allows plugins to modify the behaviour of existing classes. It consists of two main components:
 
-### PatchInfo
+### `PatchInfo`
 
 The `PatchInfo` class stores information about a single method patch:
 
@@ -71,11 +71,11 @@ class PatchInfo:
     method_name: str
 ```
 
-- **original_method** - The original method being patched (None for new methods)
-- **patched_method** - The new method that will replace the original
-- **method_name** - The name of the method being patched
+- `original_method` - The original method being patched (None for new methods)
+- `patched_method` - The new method that will replace the original
+- `method_name` - The name of the method being patched
 
-### PatchRegistry
+### `PatchRegistry`
 
 The `PatchRegistry` class manages all patches applied to a single target class:
 
@@ -92,8 +92,8 @@ class PatchRegistry:
         self.patches[method_name].append(patch_info)
 ```
 
-- **target** - The target class or object to which patches will be applied
-- **patches** - A dictionary mapping method names to lists of PatchInfo objects
+- `target` - The target class or object to which patches will be applied
+- `patches` - A dictionary mapping method names to lists of `PatchInfo` objects
 
 ## Plugin Manager
 
@@ -115,7 +115,7 @@ class Plugins(metaclass=Singleton):
         # ...
         
     def unregister(self, instances, plugins=()):
-        """Unregister instances from plugins."""
+        """Un-register instances from plugins."""
         # ...
         
     def set_options(self, options, refresh=False):
@@ -149,17 +149,17 @@ In your `plugin.py` file, implement a class that extends the `Plugin` base class
 
 ### Step 4: Implement Patching Logic
 
-The core functionality of your plugin will be in the `_apply_patches` method, which applies patches to the target class. Here's an example of how to patch a method:
+The core functionality of your plugin will be in the `register` method, which applies patches to the target class. Here's an example of how to patch a method:
 
 ```python
-def _apply_patches(self, registry):
+def register(self, registry):
     """Apply patches to the target."""
     target = registry.target
     
     # Example: Patch the 'parse' method
     original_method = getattr(target, 'parse', None)
     
-    def patched_parse(self, *args, **kwargs):
+    def parse(self, *args, **kwargs):
         # Do something before the original method
         print("Before parsing")
         
@@ -173,23 +173,23 @@ def _apply_patches(self, registry):
     
     # Apply the patch
     from types import MethodType
-    setattr(target, 'parse', MethodType(patched_parse, target))
+    setattr(target, 'parse', MethodType(parse, target))
     
     # Register the patch
     patch_info = PatchInfo(
         original_method=original_method,
-        patched_method=patched_parse,
+        patched_method=parse,
         method_name='parse'
     )
     registry.register_patch('parse', patch_info)
 ```
 
-### Step 5: Implement Unpatching Logic
+### Step 5: Implement Un-patching Logic
 
-The `_unload_patches` method should remove all patches applied to the target class:
+The `unregister` method should remove all patches applied to the target class:
 
 ```python
-def _unload_patches(self, registry):
+def unregister(self, registry):
     """Remove patches from the target."""
     target = registry.target
     
