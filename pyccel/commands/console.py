@@ -90,7 +90,7 @@ def pyccel() -> None:
                                 default='GNU',
                                 metavar='FAMILY',
                                 help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
-    compiler_group.add_argument('--load-compiler-info',
+    compiler_group.add_argument('--compiler-config',
                                 type=pathlib.Path,
                                 default=None,
                                 metavar='COMPILER.json',

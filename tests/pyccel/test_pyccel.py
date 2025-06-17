@@ -1118,7 +1118,7 @@ def test_json():
     with open(get_abs_path('scripts/test.json'), 'r') as f:
         dict_1 = json.load(f)
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-        pyccel_commands='--load-compiler-info test.json --export-compiler-info test2.json')
+        pyccel_commands='--compiler-config test.json --export-compiler-info test2.json')
     with open(get_abs_path('scripts/test2.json'), 'r') as f:
         dict_2 = json.load(f)
 
@@ -1129,7 +1129,7 @@ def test_json_relative_path():
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
             pyccel_commands='--export-compiler-info test.json')
     shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
-    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--load-compiler-info test.json')
+    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
 def test_reserved_file_name():
