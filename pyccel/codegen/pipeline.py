@@ -50,8 +50,8 @@ def execute_pyccel(fname, *,
                    compiler_family = None,
                    fflags          = None,
                    wrapper_flags   = None,
-                   includes        = (),
-                   libdirs         = (),
+                   include        = (),
+                   libdir         = (),
                    modules         = (),
                    libs            = (),
                    debug           = None,
@@ -94,9 +94,9 @@ def execute_pyccel(fname, *,
         The flags passed to the compiler. Default is provided by the Compiler.
     wrapper_flags : str, optional
         The flags passed to the compiler to compile the C wrapper. Default is provided by the Compiler.
-    includes : list, optional
+    include : list, optional
         List of include directory paths.
-    libdirs : list, optional
+    libdir : list, optional
         List of paths to directories containing the required libraries.
     modules : list, optional
         List of files that must be compiled in order to compile this module.
@@ -135,8 +135,8 @@ def execute_pyccel(fname, *,
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
     # Copy list arguments to local lists to avoid unexpected behavior
-    includes = [os.path.abspath(i) for i in includes]
-    libdirs  = [os.path.abspath(l) for l in libdirs]
+    include = [os.path.abspath(i) for i in include]
+    libdir  = [os.path.abspath(l) for l in libdir]
     modules  = [*modules]
     libs     = [*libs]
 
@@ -308,9 +308,9 @@ def execute_pyccel(fname, *,
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
-            include      = includes,
+            include      = include,
             libs         = compile_libs,
-            libdir       = libdirs,
+            libdir       = libdir,
             dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj

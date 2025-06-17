@@ -216,7 +216,7 @@ def copy_internal_library(dst_folder, lib_path, pyccel_dirpath, *, extra_files =
 
 #==============================================================================
 def generate_extension_modules(import_key, import_node, pyccel_dirpath,
-                               compiler, includes, libs, libdirs, dependencies,
+                               compiler, include, libs, libdir, dependencies,
                                accelerators, language, verbose, convert_only):
     """
     Generate any new modules that describe extensions.
@@ -235,11 +235,11 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         The folder where files are being saved.
     compiler : Compiler
         A compiler that can be used to compile dependencies.
-    includes : iterable of strs
+    include : iterable of strs
         Include directories paths.
     libs : iterable of strs
         Required libraries.
-    libdirs : iterable of strs
+    libdir : iterable of strs
         Paths to directories containing the required libraries.
     dependencies : iterable of CompileObjs
         Objects which must also be compiled in order to compile this module/program.
@@ -274,8 +274,8 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                 f.write(code)
 
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
-                            includes=includes,
-                            libs=libs, libdirs=libdirs,
+                            include=include,
+                            libs=libs, libdir=libdir,
                             dependencies=(*dependencies, internal_libs['gFTL'][2]),
                             accelerators=accelerators))
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
@@ -382,9 +382,9 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
                                           compiler     = compiler,
-                                          includes     = mod_obj.include,
+                                          include     = mod_obj.include,
                                           libs         = mod_obj.libs,
-                                          libdirs      = mod_obj.libdir,
+                                          libdir      = mod_obj.libdir,
                                           dependencies = mod_obj.dependencies,
                                           accelerators = mod_obj.accelerators,
                                           language = language,

@@ -96,14 +96,14 @@ def pyccel() -> None:
     group.add_argument('--include',
                         type=str,
                         nargs='*',
-                        dest='includes',
+                        dest='include',
                         default=(),
                         help='List of additional include directories.')
 
     group.add_argument('--libdir',
                         type=str,
                         nargs='*',
-                        dest='libdirs',
+                        dest='libdir',
                         default=(),
                         help='List of additional library directories.')
 
@@ -243,8 +243,8 @@ def pyccel() -> None:
                        compiler_family = compiler,
                        fflags          = args.flags,
                        wrapper_flags   = args.wrapper_flags,
-                       includes        = args.includes,
-                       libdirs         = args.libdirs,
+                       include        = args.include,
+                       libdir         = args.libdir,
                        modules         = (),
                        libs            = args.libs,
                        debug           = args.debug,

@@ -344,8 +344,8 @@ def epyccel_seq(function_class_or_module, *,
                            compiler_family = compiler,       # [YG, 16.06.2025] argument names do not match
                            fflags          = flags,          # [YG, 16.06.2025] argument names do not match
                            wrapper_flags   = wrapper_flags,
-                           includes        = include,        # [YG, 16.06.2025] argument names do not match
-                           libdirs         = libdir,         # [YG, 16.06.2025] argument names do not match
+                           include        = include,        # [YG, 16.06.2025] argument names do not match
+                           libdir         = libdir,         # [YG, 16.06.2025] argument names do not match
                            modules         = (),
                            libs            = libs,
                            debug           = debug,
