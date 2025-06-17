@@ -226,9 +226,9 @@ def epyccel_seq(function_class_or_module, *,
         Language of generated code (default: 'fortran').
     compiler : str, optional
         User-defined command for compiling generated source code.
-    flags : iterable of str, optional
+    flags : str, optional
         Compiler flags.
-    wrapper_flags : iterable of str, optional
+    wrapper_flags : str, optional
         Flags to be passed to the wrapper code generator.
     debug : bool, optional
         Whether the file should be compiled in debug mode.
