@@ -91,7 +91,7 @@ def pyccel() -> None:
                        help='Compiler flags for the wrapper.')
     group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
                         help='Compile the code with debug flags, or not.\n' \
-                        ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.') # pylint: disable=no-member
+                        ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
 
     group.add_argument('--include',
                         type=str,
