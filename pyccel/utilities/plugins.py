@@ -532,7 +532,7 @@ class Plugins(metaclass=Singleton):
 
         This method deregisters the provided instances from the specified plugins,
         or from all loaded plugins if none are specified. It removes all patches
-         applied to the instances by the plugins.
+        applied to the instances by the plugins.
 
         Parameters
         ----------
