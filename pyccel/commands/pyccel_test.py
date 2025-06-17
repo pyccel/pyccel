@@ -66,21 +66,23 @@ def pyccel_test():
     if test_dir is None:
         version = pyccel.__version__
         # Download the test files
-        from urllib.request import urlretrieve
+        import requests
         print("Downloading the test files from GitHub...")
         zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
-        zip_name = 'pyccel.zip'
-        zip_path, _ = urlretrieve(zip_url, filename=zip_name)
+        zip_path = 'pyccel.zip'
+        req = requests.get(zip_url)
+        with open(zip_path,'wb') as output_file:
+            output_file.write(req.content)
+
+        test_dir = f'pyccel-{version}/tests'
 
         # Unzip the test files
         import zipfile
         print("Unzipping the test files...")
         with zipfile.ZipFile(zip_path, 'r') as archive:
             for file in archive.namelist():
-                if file.startswith('pyccel-devel/tests'):
+                if file.startswith(test_dir):
                     archive.extract(file, path='.')
-
-        test_dir = 'pyccel-devel/tests'
 
     # Change into the test directory
     print("Changing into the test directory...")
