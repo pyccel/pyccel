@@ -76,19 +76,32 @@ def pyccel() -> None:
     # ...
 
     # ... backend compiler options
-    group = parser.add_argument_group('Backend compiler options')
+    group = parser.add_argument_group('Backend selection')
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.lower)
 
-    group.add_argument('--compiler', default = 'GNU',
-                       help='Compiler family {GNU,intel,PGI,nvidia,LLVM} or JSON file containing a compiler description (default: GNU).')
+    # ... Compiler options
+    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
+    compiler_group = group.add_mutually_exclusive_group(required=False)
+    compiler_group.add_argument('--compiler-family',
+                                type=str,
+                                default='GNU',
+                                metavar='FAMILY',
+                                help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
+    compiler_group.add_argument('--load-compiler-info',
+                                type=pathlib.Path,
+                                default=None,
+                                metavar='COMPILER.json',
+                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
 
+    # ... Additional compiler options
+    group = parser.add_argument_group('Additional compiler options')
     group.add_argument('--flags', type=str, \
-                       help='Compiler flags.')
+                       help='Additional compiler flags.')
     group.add_argument('--wrapper-flags', type=str, \
-                       help='Compiler flags for the wrapper.')
+                       help='Additional compiler flags for the wrapper.')
     group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
                         help='Compile the code with debug flags, or not.\n' \
                         ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
@@ -98,21 +111,21 @@ def pyccel() -> None:
                         nargs='*',
                         dest='include',
                         default=(),
-                        help='List of additional include directories.')
+                        help='Additional include directories.')
 
     group.add_argument('--libdir',
                         type=str,
                         nargs='*',
                         dest='libdir',
                         default=(),
-                        help='List of additional library directories.')
+                        help='Additional library directories.')
 
     group.add_argument('--libs',
                         type=str,
                         nargs='*',
                         dest='libs',
                         default=(),
-                        help='List of additional libraries to link with.')
+                        help='Additional libraries to link with.')
 
     group.add_argument('--output', type=pathlib.Path, default = None,\
                        help="Folder in which the output is stored (default: FILE's folder).")
@@ -154,7 +167,7 @@ def pyccel() -> None:
 
     # ...
     filename = args.filename
-    compiler = args.compiler
+    compiler = args.load_compiler_info or args.compiler_family
     mpi      = args.mpi
     openmp   = args.openmp
     openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
@@ -240,7 +253,7 @@ def pyccel() -> None:
                        verbose         = args.verbose,
                        time_execution  = args.time_execution,
                        language        = args.language,
-                       compiler_family = compiler,
+                       compiler_family = str(compiler) if compiler is not None else None,
                        flags           = args.flags,
                        wrapper_flags   = args.wrapper_flags,
                        include         = args.include,
@@ -249,7 +262,7 @@ def pyccel() -> None:
                        libs            = args.libs,
                        debug           = args.debug,
                        accelerators    = accelerators,
-                       folder          = str(output),
+                       folder          = str(output) if output is not None else None,
                        compiler_export_file = compiler_export_file,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
