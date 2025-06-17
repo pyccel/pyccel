@@ -109,7 +109,7 @@ def pyccel() -> None:
                         nargs='*',
                         dest='libdirs',
                         default=(),
-                        help='List of library directories.')
+                        help='List of additional library directories.')
 
     group.add_argument('--libs',
                         type=str,
