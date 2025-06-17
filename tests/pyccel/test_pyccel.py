@@ -1114,11 +1114,11 @@ def test_inline_import(language):
 @pytest.mark.xdist_incompatible
 def test_json():
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compiler-info test.json')
+            pyccel_commands='--export-compiler-config test.json')
     with open(get_abs_path('scripts/test.json'), 'r') as f:
         dict_1 = json.load(f)
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-        pyccel_commands='--compiler-config test.json --export-compiler-info test2.json')
+        pyccel_commands='--compiler-config test.json --export-compiler-config test2.json')
     with open(get_abs_path('scripts/test2.json'), 'r') as f:
         dict_2 = json.load(f)
 
@@ -1127,7 +1127,7 @@ def test_json():
 @pytest.mark.xdist_incompatible
 def test_json_relative_path():
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compiler-info test.json')
+            pyccel_commands='--export-compiler-config test.json')
     shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 

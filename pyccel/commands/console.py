@@ -93,7 +93,7 @@ def pyccel() -> None:
     compiler_group.add_argument('--compiler-config',
                                 type=pathlib.Path,
                                 default=None,
-                                metavar='COMPILER.json',
+                                metavar='CONFIG.json',
                                 help='Load all compiler information from a JSON file with the given path (relative or absolute).')
 
     # ... Additional compiler options
@@ -149,7 +149,7 @@ def pyccel() -> None:
                         help='Print the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='Show internal messages.')
-    group.add_argument('--export-compiler-info', metavar='COMPILER.json', type=pathlib.Path, default = None, \
+    group.add_argument('--export-compiler-config', metavar='CONFIG.json', type=pathlib.Path, default = None, \
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
