@@ -142,7 +142,6 @@ class OmpNode(PyccelAstNode):
         """
         return {
             'position': self.position,
-            # 'line': self.line,
             'raw': self.raw,
         }
 
@@ -394,7 +393,13 @@ class OmpClause(OmpNode):
 
     Examples
     --------
-    >>> clause = OmpClause(name="private", omp_exprs=(),
+    >>> from pyccel.ast.datatypes import PythonNativeInt
+    >>> from pyccel.ast.core import Variable
+    >>> x = Variable(PythonNativeInt(), 'x')
+    >>> y = Variable(PythonNativeInt(), 'y')
+    >>> x = = OmpScalarExpr(value=x, raw="x", position=(12, 13))
+    >>> y = = OmpScalarExpr(value=y, raw="y", position=(15, 16))
+    >>> clause = OmpClause(name="private", omp_exprs=(tuple(x,y)),
     ...                   raw="private(x, y)", position=(4, 17))
     """
 
@@ -491,7 +496,7 @@ class OmpExpr(OmpNode):
     >>> expr = OmpExpr(value=n, raw="n", position=(10, 11))
     """
 
-    _attribute_nodes = ()
+    _attribute_nodes = ("_value",)
 
     def __init__(self, value, raw, position, **kwargs):
         self._value = value
@@ -536,7 +541,7 @@ class OmpScalarExpr(OmpExpr):
 
     Examples
     --------
-    >>> from pyccel.ast.datatypes import PythonNativeInt, PythonNativeFloat
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.core import Variable
     >>> n = Variable(PythonNativeInt(), 'n')
     >>> expr = OmpScalarExpr(value=n, raw="n", position=(10, 11))
@@ -603,7 +608,7 @@ class OmpIntegerExpr(OmpExpr):
 
     Examples
     --------
-    >>> from pyccel.ast.datatypes import PythonNativeInt, PythonNativeFloat
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.core import Variable
     >>> n = Variable(PythonNativeInt(), 'n')
     >>> int_expr = OmpIntegerExpr(value=n, raw="n", position=(10, 11))
@@ -639,7 +644,7 @@ class OmpList(OmpExpr):
     >>> from pyccel.ast.core import Variable
     >>> n = Variable(PythonNativeInt(), 'n')
     >>> m = Variable(PythonNativeInt(), 'm')
-    >>> omp_list = OmpList(value=tuple(n,m), raw="(n)", position=(10, 13))
+    >>> omp_list = OmpList(value=tuple(n,m), raw="(n, m)", position=(10, 13))
     """
 
     @property
