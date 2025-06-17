@@ -181,7 +181,7 @@ def pyccel() -> None:
     # ...
 
     # ...
-    compiler_export_file = args.export_compiler_info
+    compiler_export_file = args.export_compiler_config
 
     # ... report error
     if filename.is_file():
