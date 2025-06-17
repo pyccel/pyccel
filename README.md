@@ -53,35 +53,48 @@ Alternative installation methods such as installing from source, or installing w
 It is good practice to test that Pyccel works as intended on the machine where it is installed.
 To this end Pyccel provides an extended test suite which can be downloaded from the official repository.
 Assuming the Python virtual environment is in the directory `<ENV-PATH>`, we activate it with
+
 ```sh
 source <ENV-PATH>/bin/activate
 ```
+
 and install the `test` component of the Pyccel package:
+
 ```sh
 pip install "pyccel[test]"
 ```
+
 This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
 Now we can download the source code for a specific release, and with it the tests
+
 ```sh
 curl -JLO "https://github.com/pyccel/pyccel/archive/refs/tags/v1.12.1.zip"
 unzip pyccel-1.12.1.zip
 cd pyccel-1.12.1/tests
 ```
+
 or, in the case of `devel` branch on GitHub:
+
 ```sh
 curl -JLO "https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip"
 unzip pyccel-devel.zip
 cd pyccel-devel/tests
 ```
+
 We start by running in parallel (with as many threads as possible) the single-process tests which do not create conflicts with other tests (this is very fast):
+
 ```sh
 pytest -ra -m "not parallel and not xdist_incompatible" -n auto
 ```
+
 Next, we proceed with running the single-process tests which cannot run in parallel with other tests (this takes some time):
+
 ```sh
 pytest -ra -m "not parallel and xdist_incompatible"
 ```
+
 Finally, we make sure that the `epyccel` command can be run from an MPI-parallel Python program:
+
 ```sh
 mpirun -n 4 pytest epyccel/test_parallel_epyccel.py
 ```
