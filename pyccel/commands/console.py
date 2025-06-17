@@ -102,7 +102,7 @@ def pyccel() -> None:
                         nargs='*',
                         dest='includes',
                         default=(),
-                        help='List of include directories.')
+                        help='List of additional include directories.')
 
     group.add_argument('--libdir',
                         type=str,
