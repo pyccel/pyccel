@@ -308,9 +308,9 @@ def execute_pyccel(fname, *,
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
-            includes     = includes,
+            include      = includes,
             libs         = compile_libs,
-            libdirs      = libdirs,
+            libdir       = libdirs,
             dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj

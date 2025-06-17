@@ -382,9 +382,9 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
                                           compiler     = compiler,
-                                          includes     = mod_obj.includes,
+                                          includes     = mod_obj.include,
                                           libs         = mod_obj.libs,
-                                          libdirs      = mod_obj.libdirs,
+                                          libdirs      = mod_obj.libdir,
                                           dependencies = mod_obj.dependencies,
                                           accelerators = mod_obj.accelerators,
                                           language = language,
