@@ -2,7 +2,7 @@
 
 ## Using header files
 
-A header file in Pyccel is a Python stub file with a name ending with `.pyi`, which contains function/variable declarations, macro definitions, and metavariable declarations.
+A header file in Pyccel is a Python stub file with a name ending with `.pyi`, which contains function/variable declarations and metavariable declarations.
 Header files serve two purposes:
 
 -   Link external libraries in the targeted languages by providing their function declarations;

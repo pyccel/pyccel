@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
@@ -243,8 +244,11 @@ All notable changes to this project will be documented in this file.
 -   #1487 : Remove support for `#$ header` syntax.
 -   #1812 : Stop allowing multiple main blocks inside a module.
 -   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
--   #2339 : Deprecated `const` type modifier which cannot be used in objects such as `TypeVar`.
+-   #2339 : Remove `const` type modifier in favour of `typing.TypeVar`.
 -   #1287 : Remove unused method `BasicParser.copy()`.
+-   #2345 : Remove undocumented macro syntax in favour of inline methods.
+-   #2345 : Break support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
+-   Remove undocumented, untested, obsolete Lua printer.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.

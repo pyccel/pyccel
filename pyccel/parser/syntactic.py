@@ -426,6 +426,8 @@ class SyntaxParser(BasicParser):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
+            if self._verbose > 2:
+                print(f">>>> Calling SyntaxParser.{syntax_method}")
             self._context.append(stmt)
             try:
                 result = getattr(self, syntax_method)(stmt)

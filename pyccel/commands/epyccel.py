@@ -234,8 +234,8 @@ def epyccel_seq(function_class_or_module, *,
     accelerators : iterable of str, optional
         Parallel multi-threading acceleration strategy
         (currently supported: 'mpi', 'openmp', 'openacc').
-    verbose : bool
-        Print additional information (default: False).
+    verbose : int, default=0
+        Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
         Time the execution of Pyccel's internal stages.
     debug : bool, optional

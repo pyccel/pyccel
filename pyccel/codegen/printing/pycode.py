@@ -78,6 +78,8 @@ class PythonCodePrinter(CodePrinter):
     ----------
     filename : str
         The name of the file being pyccelised.
+    verbose : int
+        The level of verbosity.
     """
     printmethod = "_pycode"
     language = "python"
@@ -86,9 +88,9 @@ class PythonCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, filename):
+    def __init__(self, filename, * , verbose):
         errors.set_target(filename)
-        super().__init__()
+        super().__init__(verbose)
         self._aliases = {}
         self._ignore_funcs = []
         self._tuple_assigns = []

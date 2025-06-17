@@ -16,10 +16,10 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
-    extensions = Plugins()
-    extensions.set_options({'accelerators':['openmp'], 'omp_version':4.5})
-    pyccel = Parser(f, output_folder=os.getcwd())
-    pyccel.parse()
+    plugins = Plugins()
+    plugins.set_options({'accelerators':['openmp'], 'omp_version':4.5})
+    pyccel = Parser(f, output_folder = os.getcwd())
+    pyccel.parse(verbose = 0)
     print(pyccel.fst)
 
     # reset Errors singleton

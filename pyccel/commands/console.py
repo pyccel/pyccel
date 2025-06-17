@@ -135,8 +135,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     # ... Other options
     group = parser.add_argument_group('Other options')
-    group.add_argument('--verbose', action='store_true', \
-                        help='enables verbose mode.')
+    group.add_argument('-v', '--verbose', action='count', default = 0,\
+                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output)')
     group.add_argument('--time_execution', action='store_true', \
                         help='prints the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \

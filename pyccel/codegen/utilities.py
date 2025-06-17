@@ -247,8 +247,8 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         Tool used to accelerate the code (e.g. openmp openacc).
     language : str
         The language in which code is being printed.
-    verbose : bool
-        Indicates whether additional information should be printed.
+    verbose : int
+        Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
 
@@ -265,7 +265,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         mod = import_node.source_module
         filename = os.path.join(pyccel_dirpath, import_key)+'.F90'
         folder = os.path.dirname(filename)
-        printer = printer_registry[language](filename)
+        printer = printer_registry[language](filename, verbose = verbose)
         code = printer.doprint(mod)
         if not os.path.exists(folder):
             os.mkdir(folder)
@@ -305,8 +305,8 @@ def recompile_object(compile_obj,
     language : str
         The language in which code is being printed.
 
-    verbose : bool
-        Indicates whether additional information should be printed.
+    verbose : int
+        Indicates the level of verbosity.
     """
 
     # compile library source files
@@ -343,8 +343,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         The object that we are aiming to copile.
     language : str
         The language in which code is being printed.
-    verbose : bool
-        Indicates whether additional information should be printed.
+    verbose : int
+        Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
     """

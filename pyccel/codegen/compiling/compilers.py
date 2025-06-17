@@ -199,13 +199,13 @@ class Compiler:
 
         Examples
         --------
-        >>> self._get_property("libs", ("-lmy_lib",), ())
+        >> self._get_property("libs", ("-lmy_lib",), ())
         dict_keys(['-lmy_lib', '-lm'])
 
-        >>> self._get_property("libs", ("-lmy_lib",), ("openmp",))
+        >> self._get_property("libs", ("-lmy_lib",), ("openmp",))
         dict_keys(['-lmy_lib', '-lm', 'gomp'])
 
-        >>> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
+        >> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
         dict_keys(['/home/user/homemade-install-dir/'])
         """
         # Use a dictionary instead of a set to ensure properties are ordered by insertion
@@ -277,6 +277,8 @@ class Compiler:
     @staticmethod
     def _insert_prefix_to_list(lst, prefix):
         """
+        Add a prefix into a list.
+
         Add a prefix into a list. E.g:
         >>> lst = [1, 2, 3]
         >>> _insert_prefix_to_list(lst, 'num:')
@@ -284,10 +286,15 @@ class Compiler:
 
         Parameters
         ----------
-        lst    : iterable
-                 The list into which the prefix is inserted
-        prefix : str
-                 The prefix
+        lst : iterable
+            This sequence is copied to a new list with `prefix` before each element.
+        prefix : Any
+            The prefix to be placed before each element of `lst`.
+
+        Returns
+        -------
+        list
+            The list with the prefix inserted.
         """
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]
@@ -337,7 +344,7 @@ class Compiler:
 
         return exec_cmd, inc_flags, libs_flags, libdirs_flags, m_code
 
-    def compile_module(self, compile_obj, output_folder, language, verbose = False):
+    def compile_module(self, compile_obj, output_folder, language, verbose):
         """
         Compile a module.
 
@@ -354,11 +361,14 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity.
         """
         if not compile_obj.has_target_file:
             return
+
+        if verbose:
+            print(">> Compiling :: ", compile_obj.module_target)
 
         self._language_info = self._compiler_info[language]
 
@@ -389,7 +399,7 @@ class Compiler:
 
         self._language_info = None
 
-    def compile_program(self, compile_obj, output_folder, language, verbose = False):
+    def compile_program(self, compile_obj, output_folder, language, verbose):
         """
         Compile a program.
 
@@ -406,14 +416,17 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity.
 
         Returns
         -------
         str
             The name of the generated executable.
         """
+        if verbose:
+            print(">> Compiling executable :: ", compile_obj.program_target)
+
         self._language_info = self._compiler_info[language]
 
         accelerators = compile_obj.accelerators
@@ -443,7 +456,7 @@ class Compiler:
 
         return compile_obj.program_target
 
-    def compile_shared_library(self, compile_obj, output_folder, language, verbose = False, sharedlib_modname=None):
+    def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
         """
         Compile a module to a shared library.
 
@@ -461,8 +474,8 @@ class Compiler:
         language : str
             Language that we are compiling.
 
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity.
 
         sharedlib_modname : str, optional
             The name of the library that should be generated. If none is provided then it
@@ -497,6 +510,9 @@ class Compiler:
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
+        if verbose:
+            print(">> Compiling shared library :: ", file_out)
+
         cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
@@ -520,8 +536,8 @@ class Compiler:
         ----------
         cmd : list of str
             The command to run.
-        verbose : bool
-            Indicates whether additional output should be shown.
+        verbose : int
+            Indicates the level of verbosity.
 
         Returns
         -------
@@ -534,7 +550,7 @@ class Compiler:
             Raises `RuntimeError` if the file does not compile.
         """
         cmd = [os.path.expandvars(c) for c in cmd]
-        if verbose:
+        if verbose > 1:
             print(' '.join(cmd))
 
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
