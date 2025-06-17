@@ -571,6 +571,7 @@ def test_generic_functions():
                     int, int])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_default_arguments(language):
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
