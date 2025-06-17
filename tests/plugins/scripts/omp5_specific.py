@@ -1,0 +1,18 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
+def parallel_if(n : int):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+    a = np.zeros(n)
+    th_id, nthrds =  np.int32(0), np.int32(0)
+    start, end = 0, 0
+
+    #$ omp parallel if(parallel:n > 10) private(th_id, nthrds, start, end) num_threads(4)
+    th_id = omp_get_thread_num()
+    nthrds = omp_get_num_threads()
+
+    start = int(th_id * n / nthrds)
+    end = int((th_id + 1) * n / nthrds)
+    for i in range(start, end):
+        a[i] = 2 * i
+    #$ omp end parallel
+    return a

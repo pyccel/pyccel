@@ -159,3 +159,10 @@ DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple ti
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
 NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'
+
+#openmp
+OMP_VERSION_NOT_SUPPORTED = "OpenMP {} is not supported. Defaulting to OpenMP {}."
+
+#plugins
+PLUGIN_DIRECTORY_NOT_FOUND = "Plugin directory not found: {}."
+

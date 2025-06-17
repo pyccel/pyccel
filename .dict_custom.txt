@@ -129,3 +129,5 @@ pythonic
 pre
 LLVM
 linter
+deregister
+deregistering

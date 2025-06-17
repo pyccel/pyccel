@@ -22,6 +22,7 @@ This documentation is designed to help developers get familiar with how Pyccel's
    developer_docs/scope
    developer_docs/tuples
    developer_docs/type_inference
+   developer_docs/plugins
 
 
 .. toctree::

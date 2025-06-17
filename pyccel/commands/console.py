@@ -84,6 +84,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI,nvidia}')
 
+    group.add_argument('--omp-version', choices=(4.5, 5.0), type=float, default=4.5, help='openmp version to use')
+
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
     group.add_argument('--wrapper-flags', type=str, \
@@ -287,7 +289,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        accelerators    = accelerators,
                        folder          = args.output,
                        compiler_export_file = compiler_export_file,
-                       conda_warnings  = args.conda_warnings)
+                       conda_warnings = args.conda_warnings,
+                       omp_version     = args.omp_version,)
     except PyccelError:
         sys.exit(1)
     finally:

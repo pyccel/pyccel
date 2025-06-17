@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
+import numpy as np
 
 from pyccel.stdlib.internal.openmp import omp_get_num_threads
 from pyccel.stdlib.internal.openmp import omp_get_max_threads
@@ -12,6 +13,7 @@ if __name__ == '__main__':
     max_threads = omp_get_max_threads()
     print("> maximum available threads : ", max_threads)
 
+    idx = np.int32(0)
     #$ omp parallel private(idx)
 
     idx = omp_get_thread_num()

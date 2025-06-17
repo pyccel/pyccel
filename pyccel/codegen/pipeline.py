@@ -24,6 +24,7 @@ from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
+from pyccel.utilities.plugins import Plugins
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
@@ -59,7 +60,8 @@ def execute_pyccel(fname, *,
                    output_name     = None,
                    compiler_export_file = None,
                    conda_warnings  = 'basic',
-                   context_dict    = None):
+                   context_dict    = None,
+                   omp_version = None):
     """
     Run Pyccel on the provided code.
 
@@ -117,8 +119,12 @@ def execute_pyccel(fname, *,
     context_dict : dict[str, object], optional
         A dictionary containing any variables that are available in the calling context.
         This can allow certain constants to be defined outside of the function passed to epyccel.
+    omp_version : float, optional
+        The version of OpenMP to use. Default is None.
     """
     start = time.time()
+    plugins = Plugins()
+    plugins.set_options({'accelerators':accelerators, 'omp_version':omp_version, 'language':language})
     timers = {}
     if fname.endswith('.pyh'):
         syntax_only = True
