@@ -278,6 +278,10 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
 
 #------------------------------------------------------------------------------
 def compare_pyth_fort_output( p_output, f_output, dtype=float, language=None):
+    print("compare_pyth_fort_output : ")
+    print(p_output)
+    print(f_output)
+    print(dtype)
 
     if isinstance(dtype, list):
         for d in dtype:
