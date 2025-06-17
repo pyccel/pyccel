@@ -124,8 +124,8 @@ def pyccel() -> None:
                        help='Use MPI.')
     group.add_argument('--openmp', action='store_true', \
                        help='Use OpenMP.')
-    group.add_argument('--openacc', action='store_true', \
-                       help='Use OpenACC.')
+#    group.add_argument('--openacc', action='store_true', \
+#                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
     # ...
 
     # ... Other options
@@ -157,7 +157,7 @@ def pyccel() -> None:
     compiler = args.compiler
     mpi      = args.mpi
     openmp   = args.openmp
-    openacc  = args.openacc
+    openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
     output   = args.output or filename.parent
 
     if not args.conda_warnings:

@@ -404,7 +404,7 @@ def epyccel(
     folder          = None,
     mpi             = False,
     openmp          = False,
-    openacc         = False,
+#    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
     verbose         = 0,
     time_execution  = False,
     developer_mode  = False,
@@ -454,8 +454,6 @@ def epyccel(
         If True, use MPI for parallel execution.
     openmp : bool, default=False
         If True, use OpenMP for parallel execution.
-    openacc : bool, default=False
-        If True, use OpenACC for parallel execution.
     verbose : int, default=0
         Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
@@ -535,7 +533,7 @@ def epyccel(
                     folder          = folder,
                     mpi             = True,
                     openmp          = openmp,
-                    openacc         = openacc,
+                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
                     verbose         = verbose,
                     time_execution  = time_execution,
                     debug           = debug,
@@ -599,7 +597,7 @@ def epyccel(
                     folder          = folder,
                     mpi             = mpi,
                     openmp          = openmp,
-                    openacc         = openacc,
+                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
                     verbose         = verbose,
                     time_execution  = time_execution,
                     debug           = debug,
