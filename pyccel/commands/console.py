@@ -172,11 +172,12 @@ def pyccel() -> None:
 
     # ... report error
     if filename.is_file():
-        if filename.suffix not in ['.py', '.pyi']:
+        fext = filename.suffix
+        if fext not in ['.py', '.pyi']:
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
-                            symbol=ext,
+                            symbol=fext,
                             severity='error')
             errors.check()
             sys.exit(1)
@@ -192,14 +193,14 @@ def pyccel() -> None:
     # ...
 
     if compiler_export_file is not None:
-        ext = compiler_export_file.suffix
-        if ext == '':
+        cext = compiler_export_file.suffix
+        if cext == '':
             compiler_export_file = compiler_export_file.with_suffix('.json')
-        elif ext != '.json':
+        elif cext != '.json':
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report('Wrong file extension. Expecting `json`, but found',
-                          symbol=ext,
+                          symbol=cext,
                           severity='error')
             errors.check()
             sys.exit(1)
