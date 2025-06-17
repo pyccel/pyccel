@@ -51,7 +51,7 @@ class Plugin(ABC):
 ### Required Methods
 
 1. `register(instances)` - Register instances with the plugin. This method should apply patches to the provided instances.
-2. `refresh()` - Refresh all registered targets. This method should reapply patches to all registered instances.
+2. `refresh()` - Refresh all registered targets. This method should reapply existing patches to registered targets and apply any new patches, if necessary.
 3. `deregister(instances)` - Deregister instances from the plugin. This method should remove all patches applied to the provided instances.
 4. `set_options(options)` - Set options for the plugin. This method should update the plugin's behaviour based on the provided options.
 
@@ -84,12 +84,6 @@ The `PatchRegistry` class manages all patches applied to a single target class:
 class PatchRegistry:
     target: Any
     patches: Dict[str, List[PatchInfo]] = field(default_factory=dict)
-    
-    def register_patch(self, method_name, patch_info):
-        """Register a patch for a method."""
-        if method_name not in self.patches:
-            self.patches[method_name] = []
-        self.patches[method_name].append(patch_info)
 ```
 
 - `target` - The target class or object to which patches will be applied
