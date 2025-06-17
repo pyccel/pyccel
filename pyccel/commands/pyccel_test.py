@@ -7,6 +7,7 @@
 import os
 #import subprocess
 from argparse import ArgumentParser
+from importlib.metadata import Distribution
 
 install_msg = """
 In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
@@ -53,35 +54,34 @@ def pyccel_test():
         print(install_msg)
         sys.exit(1)
 
-    # Find the path to the pyccel module
-    # TODO: verify, improve
-#    pyccel_path = os.path.dirname(os.path.abspath(pyccel.__file__))
+    # Determine the version of Pyccel that we are using
+    direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
+    pyccel_is_editable = json.loads(direct_url).get("dir_info", {}).get("editable", False)
 
-#    subprocess.run(['curl', '-JLO', 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'])
-#    subprocess.run(['unzip', '-o', 'pyccel-devel.zip'])
+    if pyccel_is_editable:
+        test_dir = direct_url["url"]
+    else:
+        version = pyccel.__version__
+        # Download the test files
+        from urllib.request import urlretrieve
+        print("Downloading the test files from GitHub...")
+        zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
+        zip_name = 'pyccel.zip'
+        zip_path, _ = urlretrieve(zip_url, filename=zip_name)
 
-    # TODO: Determine the version of Pyccel that we are using
-    version = pyccel.__version__
+        # Unzip the test files
+        import zipfile
+        print("Unzipping the test files...")
+        with zipfile.ZipFile(zip_path, 'r') as archive:
+            for file in archive.namelist():
+                if file.startswith('pyccel-devel/tests'):
+                    archive.extract(file, path='.')
 
-    # Download the test files
-    # TODO: use the correct version of the test files
-    from urllib.request import urlretrieve
-    print("Downloading the test files from GitHub...")
-    zip_url  = 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'
-    zip_name = 'pyccel.zip'
-    zip_path, _ = urlretrieve(zip_url, filename=zip_name)
-
-    # Unzip the test files
-    import zipfile
-    print("Unzipping the test files...")
-    with zipfile.ZipFile(zip_path, 'r') as archive:
-        for file in archive.namelist():
-            if file.startswith('pyccel-devel/tests'):
-                archive.extract(file, path='.')
+        test_dir = 'pyccel-devel/tests'
 
     # Change into the test directory
     print("Changing into the test directory...")
-    os.chdir('pyccel-devel/tests')
+    os.chdir(test_dir)
 
     print("Run the single-process tests which must be run one at a time... [all languages]")
     retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
