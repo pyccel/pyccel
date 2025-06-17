@@ -271,7 +271,7 @@ class Compiler:
         ----------
         libdir : iterable of str
             Any additional library directories requested by the user
-            / required by the file
+            / required by the file.
         accelerators : iterable or str
             Accelerators used by the code.
 
