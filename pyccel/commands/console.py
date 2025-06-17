@@ -8,6 +8,7 @@
 import sys
 import os
 import argparse
+import pathlib
 
 __all__ = ['MyParser', 'pyccel']
 
@@ -48,7 +49,7 @@ def pyccel() -> None:
 
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=str,
+    group.add_argument('filename', metavar='FILE', type=pathlib.Path,
                         help='Path (relative or absolute) to the Python file to be translated.')
     #...
 
@@ -113,7 +114,7 @@ def pyccel() -> None:
                         default=(),
                         help='List of additional libraries to link with.')
 
-    group.add_argument('--output', type=str, default = '',\
+    group.add_argument('--output', type=pathlib.Path, default = None,\
                        help="Folder in which the output is stored (default: FILE's folder).")
     # ...
 
@@ -135,7 +136,7 @@ def pyccel() -> None:
                         help='Print the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='Show internal messages.')
-    group.add_argument('--export-compile-info', metavar='COMPILER.json', type=str, default = None, \
+    group.add_argument('--export-compile-info', metavar='COMPILER.json', type=pathlib.Path, default = None, \
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
@@ -154,9 +155,10 @@ def pyccel() -> None:
     # ...
     filename = args.filename
     compiler = args.compiler
-    mpi = args.mpi
-    openmp = args.openmp
-    openacc = args.openacc
+    mpi      = args.mpi
+    openmp   = args.openmp
+    openacc  = args.openacc
+    output   = args.output or filename.parent
 
     if not args.conda_warnings:
         args.conda_warnings = 'basic'
@@ -169,11 +171,8 @@ def pyccel() -> None:
     compiler_export_file = args.export_compile_info
 
     # ... report error
-    if os.path.isfile(filename):
-        # we don't use is_valid_filename_py since it uses absolute path
-        # file extension
-        ext = filename.split('.')[-1]
-        if not(ext in ['py', 'pyi']):
+    if filename.is_file():
+        if filename.suffix not in ['.py', '.pyi']:
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
@@ -193,9 +192,9 @@ def pyccel() -> None:
     # ...
 
     if compiler_export_file is not None:
-        _, ext = os.path.splitext(compiler_export_file)
+        ext = compiler_export_file.suffix
         if ext == '':
-            compiler_export_file = compiler_export_file + '.json'
+            compiler_export_file = compiler_export_file.with_suffix('.json')
         elif ext != '.json':
             errors = Errors()
             # severity is error to avoid needing to catch exception
@@ -233,7 +232,7 @@ def pyccel() -> None:
 
     try:
         # TODO: prune options
-        execute_pyccel(filename,
+        execute_pyccel(str(filename),
                        syntax_only     = args.syntax_only,
                        semantic_only   = args.semantic_only,
                        convert_only    = args.convert_only,
@@ -249,7 +248,7 @@ def pyccel() -> None:
                        libs            = args.libs,
                        debug           = args.debug,
                        accelerators    = accelerators,
-                       folder          = args.output,
+                       folder          = str(output),
                        compiler_export_file = compiler_export_file,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
