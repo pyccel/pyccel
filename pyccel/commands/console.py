@@ -116,7 +116,7 @@ def pyccel() -> None:
                         nargs='*',
                         dest='libs',
                         default=(),
-                        help='List of libraries to link with.')
+                        help='List of additional libraries to link with.')
 
     group.add_argument('--output', type=str, default = '',\
                        help="Folder in which the output is stored (default: FILE's folder).")
