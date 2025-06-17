@@ -70,7 +70,7 @@ def pyccel_test():
         print("Downloading the test files from GitHub...")
         zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
         zip_path = 'pyccel.zip'
-        req = requests.get(zip_url)
+        req = requests.get(zip_url, timeout=5) # 5s timeout
         with open(zip_path,'wb') as output_file:
             output_file.write(req.content)
 
