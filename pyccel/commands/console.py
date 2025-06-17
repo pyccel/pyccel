@@ -44,7 +44,6 @@ def pyccel() -> None:
     """
 
     parser = MyParser(description="Pyccel's command line interface.",
-#                      formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                       add_help=False)
 
     # ... Positional arguments
