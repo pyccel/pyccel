@@ -57,9 +57,13 @@ def pyccel_test():
     # Determine the version of Pyccel that we are using
     direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
 
+    test_dir = None
     if direct_url:
-        test_dir = direct_url["url"]
-    else:
+        url = json.loads(direct_url)["url"]
+        if url.startswith('file://'):
+            test_dir = url.removeprefix('file://')
+
+    if test_dir is None:
         version = pyccel.__version__
         # Download the test files
         from urllib.request import urlretrieve
