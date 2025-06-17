@@ -520,7 +520,7 @@ class Compiler:
         accelerators.add('python')
 
         # Collect compile information
-        exec_cmd, include, libs_flags, libdir_flags, m_code = \
+        exec_cmd, _, libs_flags, libdir_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
