@@ -190,22 +190,22 @@ def get_unique_name(prefix, path):
 
 #==============================================================================
 def epyccel_seq(function_class_or_module, *,
-                language       = 'fortran',
-                compiler       = 'GNU',
-                flags          = None,
-                wrapper_flags  = None,
-                debug          = None,
-                include        = (),
-                libdir         = (),
-                libs           = (),
-                folder         = None,
-                mpi            = False,
-                openmp         = False,
-                openacc        = False,
-                verbose        = 0,
-                time_execution = False,
-                conda_warnings = 'basic',
-                context_dict   = None
+                language        = 'fortran',
+                compiler_family = 'GNU',
+                flags           = None,
+                wrapper_flags   = None,
+                debug           = None,
+                include         = (),
+                libdir          = (),
+                libs            = (),
+                folder          = None,
+                mpi             = False,
+                openmp          = False,
+                openacc         = False,
+                verbose         = 0,
+                time_execution  = False,
+                conda_warnings  = 'basic',
+                context_dict    = None
     ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -223,8 +223,8 @@ def epyccel_seq(function_class_or_module, *,
         file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
-    compiler : str, optional
-        User-defined command for compiling generated source code.
+    compiler_family : str, optional
+        Compiler family or JSON file containing a compiler description (default: 'GNU').
     flags : str, optional
         Compiler flags.
     wrapper_flags : str, optional
@@ -341,7 +341,7 @@ def epyccel_seq(function_class_or_module, *,
                            verbose         = verbose,
                            time_execution  = time_execution,
                            language        = language,
-                           compiler_family = compiler,       # [YG, 16.06.2025] argument names do not match
+                           compiler_family = compiler_family,
                            flags           = flags,
                            wrapper_flags   = wrapper_flags,
                            include         = include,
@@ -390,7 +390,7 @@ def epyccel(
     function_class_or_module,
     *,
     language        = 'fortran',
-    compiler        = 'GNU',
+    compiler_family = 'GNU',
     flags           = None,
     wrapper_flags   = None,
     debug           = None,
@@ -426,7 +426,7 @@ def epyccel(
         file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
-    compiler : str, optional
+    compiler_family : str, optional
         Compiler family or JSON file containing a compiler description (default: 'GNU').
     flags : iterable of str, optional
         Compiler flags.
@@ -513,7 +513,7 @@ def epyccel(
                 mod, obj = epyccel_seq(
                     function_class_or_module,
                     language        = language,
-                    compiler        = compiler,
+                    compiler_family = compiler_family,
                     flags           = flags,
                     wrapper_flags   = wrapper_flags,
                     include         = include,
@@ -576,7 +576,7 @@ def epyccel(
             mod, obj = epyccel_seq(
                     function_class_or_module,
                     language        = language,
-                    compiler        = compiler,
+                    compiler_family = compiler_family,
                     flags           = flags,
                     wrapper_flags   = wrapper_flags,
                     include         = include,
