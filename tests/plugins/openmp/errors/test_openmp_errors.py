@@ -27,13 +27,12 @@ def test_blockers(f):
 
     with pytest.raises(PyccelError):
         pyccel = Parser(f, output_folder=os.getcwd())
-        ast = pyccel.parse()
+        ast = pyccel.parse(verbose=0)
 
-        settings = {}
-        ast = pyccel.annotate(**settings)
+        ast = pyccel.annotate(verbose=0)
 
         name = os.path.basename(f)
         name = os.path.splitext(name)[0]
 
-        codegen = Codegen(ast, name, 'fortran')
+        codegen = Codegen(ast, name, 'fortran', verbose=0)
         codegen.printer.doprint(codegen.ast)

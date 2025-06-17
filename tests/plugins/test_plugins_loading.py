@@ -55,7 +55,7 @@ def test_unload():
 def test_register():
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     plugins.load_plugins()
-    parser = SyntaxParser(file)
+    parser = SyntaxParser(file, verbose=0)
     for plugin in plugins.get_plugins():
         assert plugin.is_registered(parser)
 
@@ -67,7 +67,7 @@ def test_openmp_resolve_version(mock_report):
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     ver = 5.1
     plugins.set_options({'accelerators': ['openmp'], 'omp_version': ver})
-    SyntaxParser(file)
+    SyntaxParser(file, verbose=0)
     mock_report.assert_called_with(
         OMP_VERSION_NOT_SUPPORTED.format(ver, Openmp.DEFAULT_VERSION),
         severity='warning')
@@ -92,13 +92,13 @@ def test_openmp_no_implementation():
 def test_openmp_register_deregister():
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     plugins.unload_plugins()
-    parser_ref = SyntaxParser(file)
+    parser_ref = SyntaxParser(file, verbose=0)
 
     plugins.load_plugins()
     omp_plugin = plugins.get_plugin('Openmp')
     plugins.set_plugins((omp_plugin,))
     plugins.set_options({'accelerators': ['openmp']})
-    parser = SyntaxParser(file)
+    parser = SyntaxParser(file, verbose=0)
 
     modified_methods = get_funcs(parser)
     reference_methods = get_funcs(parser_ref)
@@ -115,7 +115,7 @@ def test_openmp_register_refresh():
     plugins.load_plugins()
     file = os.path.join(path_dir, 'omp5_specific.py')
     plugins.set_options({'accelerators': ['openmp']})
-    parser = SyntaxParser(file)
+    parser = SyntaxParser(file, verbose=0)
     assert errors.has_warnings()
     errors.reset()
 
@@ -152,7 +152,7 @@ def test_openmp_same_version_refresh():
     plugins.load_plugins()
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     plugins.set_options({'accelerators': ['openmp']})
-    parser = SyntaxParser(file)
+    parser = SyntaxParser(file, verbose=0)
     parser.parse()
     with patch.object(plugins.get_plugin('Openmp'), '_apply_patches') as mock_apply_patches:
         plugins.set_options({'accelerators': ['openmp']}, refresh=True)
