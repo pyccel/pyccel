@@ -110,7 +110,7 @@ class OmpPatchRegistry(PatchRegistry):
 
         See Also
         --------
-        unregister_patches_for_version : Remove patches for a specific version.
+        deregister_patches_for_version : Remove patches for a specific version.
 
         Examples
         --------
@@ -131,7 +131,7 @@ class OmpPatchRegistry(PatchRegistry):
                            method_name, patch_list in self.patches.items()}
         return version_patches
 
-    def unregister_patches_for_version(self, version):
+    def deregister_patches_for_version(self, version):
         """
         Remove all patches for a specific OpenMP version.
 
@@ -159,7 +159,7 @@ class OmpPatchRegistry(PatchRegistry):
         >>> patch_info = OmpPatchInfo(obj.method, patched_method, "method", 4.5)
         >>> registry.register_patch("method", patch_info)
         >>> registry.loaded_versions.append(4.5)
-        >>> registry.unregister_patches_for_version(4.5)
+        >>> registry.deregister_patches_for_version(4.5)
         >>> 4.5 in registry.loaded_versions
         False
         >>> "method" in registry.patches
@@ -272,7 +272,7 @@ class Openmp(Plugin):
 
         See Also
         --------
-        unregister : Unregister instances from the OpenMP plugin.
+        deregister : Deregister instances from the OpenMP plugin.
         refresh : Refresh all registered targets with current options.
         _apply_patches : Apply patches from the specified version module.
         """
@@ -301,7 +301,7 @@ class Openmp(Plugin):
         See Also
         --------
         register : Register instances with the OpenMP plugin.
-        unregister : Unregister instances from the OpenMP plugin.
+        deregister : Deregister instances from the OpenMP plugin.
         set_options : Set options for the OpenMP plugin.
 
         Examples
@@ -322,9 +322,9 @@ class Openmp(Plugin):
         self.register(self.get_all_targets())
         self._refresh = False
 
-    def unregister(self, instances):
+    def deregister(self, instances):
         """
-        Unregister the provided instances from the OpenMP plugin.
+        Deregister the provided instances from the OpenMP plugin.
 
         This method removes the specified instances from the plugin by unloading
         all patches that were applied to them and removing their patch registries.
@@ -332,7 +332,7 @@ class Openmp(Plugin):
         Parameters
         ----------
         instances : list or object
-            The instances to unregister from the OpenMP plugin. Can be a single object
+            The instances to deregister from the OpenMP plugin. Can be a single object
             or a list of objects.
 
         See Also
@@ -454,7 +454,7 @@ class Openmp(Plugin):
         See Also
         --------
         _apply_patches : Apply patches from the specified version module.
-        unregister : Unregister instances from the OpenMP plugin.
+        deregister : Deregister instances from the OpenMP plugin.
         """
         parser = registry.target
         version_patches = registry.get_patches_for_version(version)
@@ -467,4 +467,4 @@ class Openmp(Plugin):
                     original = patch_info.original_method
                     if original:
                         setattr(parser, method_name, original)
-        registry.unregister_patches_for_version(version)
+        registry.deregister_patches_for_version(version)

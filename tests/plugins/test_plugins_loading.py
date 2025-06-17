@@ -89,7 +89,7 @@ def test_openmp_no_implementation():
 
 
 @pytest.mark.external
-def test_openmp_register_unregister():
+def test_openmp_register_deregister():
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     plugins.unload_plugins()
     parser_ref = SyntaxParser(file)
@@ -104,7 +104,7 @@ def test_openmp_register_unregister():
     reference_methods = get_funcs(parser_ref)
     assert modified_methods != reference_methods
 
-    plugins.unregister((parser,))
+    plugins.deregister((parser,))
     modified_methods = get_funcs(parser)
     reference_methods = get_funcs(parser_ref)
     assert modified_methods == reference_methods

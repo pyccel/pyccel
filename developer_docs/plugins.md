@@ -33,7 +33,7 @@ class Plugin(ABC):
         pass
         
     @abstractmethod
-    def unregister(self, instances):
+    def deregister(self, instances):
         """Deregister instances from this plugin."""
         pass
         
@@ -52,7 +52,7 @@ class Plugin(ABC):
 
 1. `register(instances)` - Register instances with the plugin. This method should apply patches to the provided instances.
 2. `refresh()` - Refresh all registered targets. This method should reapply patches to all registered instances.
-3. `unregister(instances)` - Deregister instances from the plugin. This method should remove all patches applied to the provided instances.
+3. `deregister(instances)` - Deregister instances from the plugin. This method should remove all patches applied to the provided instances.
 4. `set_options(options)` - Set options for the plugin. This method should update the plugin's behaviour based on the provided options.
 
 ## Patch System
@@ -114,7 +114,7 @@ class Plugins(metaclass=Singleton):
         """Register instances with plugins."""
         # ...
         
-    def unregister(self, instances, plugins=()):
+    def deregister(self, instances, plugins=()):
         """Deregister instances from plugins."""
         # ...
         
@@ -184,12 +184,12 @@ def register(self, registry):
     registry.register_patch('parse', patch_info)
 ```
 
-### Step 5: Implement Depatching Logic
+### Step 5: Implement Remove Patches Logic
 
-The `unregister` method should remove all patches applied to the target class:
+The `deregister` method should remove all patches applied to the target class:
 
 ```python
-def unregister(self, registry):
+def deregister(self, registry):
     """Remove patches from the target."""
     target = registry.target
     

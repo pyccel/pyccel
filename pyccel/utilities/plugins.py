@@ -173,7 +173,7 @@ class Plugin(ABC):
 
         See Also
         --------
-        unregister : Unregister instances from this plugin.
+        deregister : Deregister instances from this plugin.
         refresh : Refresh all registered targets.
         """
 
@@ -183,28 +183,28 @@ class Plugin(ABC):
         Refresh all registered targets.
 
         This method is called to refresh all targets that have been registered
-        with this plugin. It should reapply all patches to ensure that the
-        plugin's functionality is up to date.
+        with this plugin. It should reapply patches or apply new patches if necessary
+        to ensure that the plugin's functionality is up to date.
 
         See Also
         --------
         register : Register instances with this plugin.
-        unregister : Unregister instances from this plugin.
+        deregister : Deregister instances from this plugin.
         """
 
     @abstractmethod
-    def unregister(self, instances):
+    def deregister(self, instances):
         """
-        Unregister instances from this plugin.
+        Deregister instances from this plugin.
 
-        This method is called to unregister instances from the plugin.
+        This method is called to deregister instances from the plugin.
         Implementations should remove all patches applied to the
         provided instances.
 
         Parameters
         ----------
         instances : list or object
-            The instances to unregister from this plugin. Can be a single object
+            The instances to deregister from this plugin. Can be a single object
             or a list of objects.
 
         See Also
@@ -268,7 +268,7 @@ class Plugin(ABC):
         See Also
         --------
         register : Register instances with this plugin.
-        unregister : Unregister instances from this plugin.
+        deregister : Deregister instances from this plugin.
         get_all_targets : Get all objects targeted by the plugin.
         """
         return any(registry.target is target for registry in self._patch_registries)
@@ -290,7 +290,7 @@ class Plugin(ABC):
         --------
         is_registered : Check if a target is registered with this plugin.
         register : Register instances with this plugin.
-        unregister : Unregister instances from this plugin.
+        deregister : Deregister instances from this plugin.
         """
         return list(set(reg.target for reg in self._patch_registries))
 
@@ -304,7 +304,7 @@ class Plugins(metaclass=Singleton):
     one instance of the plugin manager throughout the application.
 
     The Plugins class provides methods for loading plugins from a directory,
-    registering and unregistering instances with plugins, and retrieving
+    registering and deregistering instances with plugins, and retrieving
     plugins by name.
 
     Parameters
@@ -469,16 +469,16 @@ class Plugins(metaclass=Singleton):
 
     def unload_plugins(self):
         """
-        Unload all plugins and unregister all their targets.
+        Unload all plugins and deregister all their targets.
 
-        This method unloads all currently loaded plugins and unregisters all
+        This method unloads all currently loaded plugins and deregisters all
         targets registered with those plugins. This effectively
         removes all patches applied by the plugins.
 
         See Also
         --------
         load_plugins : Discover and load all plugins from the plugins directory.
-        unregister : Unregister instances from plugins.
+        deregister : Deregister instances from plugins.
 
         Examples
         --------
@@ -488,7 +488,7 @@ class Plugins(metaclass=Singleton):
         >>> plugins.unload_plugins()
         """
         for plugin in self._plugins:
-            self.unregister(plugin.get_all_targets(), (plugin,))
+            self.deregister(plugin.get_all_targets(), (plugin,))
         self._plugins = []
 
     def register(self, instances, plugins = ()):
@@ -510,7 +510,7 @@ class Plugins(metaclass=Singleton):
 
         See Also
         --------
-        unregister : Unregister instances from plugins.
+        deregister : Deregister instances from plugins.
         Plugin.register : Register instances with a specific plugin.
         """
         if not plugins:
@@ -526,32 +526,32 @@ class Plugins(metaclass=Singleton):
                     severity='warning')
                 raise e
 
-    def unregister(self, instances, plugins = ()):
+    def deregister(self, instances, plugins = ()):
         """
-        Unregister the given instances from the given plugins.
+        Deregister the given instances from the given plugins.
 
-        This method unregisters the provided instances from the specified plugins,
+        This method deregisters the provided instances from the specified plugins,
         or from all loaded plugins if none are specified. It removes all patches
          applied to the instances by the plugins.
 
         Parameters
         ----------
         instances : list or object
-            The instances to unregister from the plugins. Can be a single object
+            The instances to deregister from the plugins. Can be a single object
             or a list of objects.
         plugins : tuple or list, optional
-            The plugins to unregister the instances from. If not provided, all
+            The plugins to deregister the instances from. If not provided, all
             loaded plugins will be used. Default is an empty tuple.
 
         See Also
         --------
         register : Register instances with plugins.
-        Plugin.unregister : Unregister instances from a specific plugin.
+        Plugin.deregister : Deregister instances from a specific plugin.
         """
         if not plugins:
             plugins = self._plugins
         for plugin in plugins:
-            plugin.unregister(instances)
+            plugin.deregister(instances)
 
     def get_plugin(self, name):
         """
@@ -612,7 +612,7 @@ class Plugins(metaclass=Singleton):
         --------
         get_plugins : Get all loaded plugins.
         load_plugins : Discover and load all plugins from the plugins directory.
-        unload_plugins : Unload all plugins and unregister all their targets.
+        unload_plugins : Unload all plugins and deregister all their targets.
         """
         self.unload_plugins()
         self._plugins = plugins
