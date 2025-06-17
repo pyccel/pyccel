@@ -191,7 +191,8 @@ def get_unique_name(prefix, path):
 #==============================================================================
 def epyccel_seq(function_class_or_module, *,
                 language        = 'fortran',
-                compiler_family = 'GNU',
+                compiler_family = None,
+                compiler_config = None,
                 flags           = None,
                 wrapper_flags   = None,
                 debug           = None,
@@ -212,7 +213,8 @@ def epyccel_seq(function_class_or_module, *,
 
     This function accelerates a Python function or module using Pyccel in "embedded" mode.
     It generates optimized code in the specified language (default is 'fortran')
-    and compiles it for improved performance.
+    and compiles it for improved performance. Please be aware that only one of
+    the parameters `compiler_family` and `compiler_config` may be provided.
 
     Parameters
     ----------
@@ -224,7 +226,9 @@ def epyccel_seq(function_class_or_module, *,
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
     compiler_family : str, optional
-        Compiler family or JSON file containing a compiler description (default: 'GNU').
+        Compiler family for which Pyccel uses a default configuration (default: 'GNU').
+    compiler_config : pathlib.Path | str, optional
+        Path to a JSON file containing a compiler configuration (overrides compiler_family).
     flags : str, optional
         Compiler flags.
     wrapper_flags : str, optional
@@ -308,6 +312,16 @@ def epyccel_seq(function_class_or_module, *,
     else:
         raise TypeError('> Expecting a FunctionType, type or a ModuleType')
 
+    if None not in (compiler_family, compiler_config):
+        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+
+    # execute_pyccel wants a unique string for the compiler family and the JSON file
+    # The default compiler family is 'GNU' and is handled by execute_pyccel
+    compiler_family_or_config = compiler_config or compiler_family
+    # Convert from pathlib.Path to string if not None
+    if compiler_family_or_config is not None:
+        compiler_family_or_config = str(compiler_family_or_config)
+
     # Store the accelerators options into a tuple of strings
     accelerators = []
     if mpi:
@@ -341,7 +355,7 @@ def epyccel_seq(function_class_or_module, *,
                            verbose         = verbose,
                            time_execution  = time_execution,
                            language        = language,
-                           compiler_family = compiler_family,
+                           compiler_family = compiler_family_or_config,
                            flags           = flags,
                            wrapper_flags   = wrapper_flags,
                            include         = include,
@@ -390,7 +404,8 @@ def epyccel(
     function_class_or_module,
     *,
     language        = 'fortran',
-    compiler_family = 'GNU',
+    compiler_family = None,
+    compiler_config = None,
     flags           = None,
     wrapper_flags   = None,
     debug           = None,
@@ -415,7 +430,8 @@ def epyccel(
 
     This function accelerates a Python function or module using Pyccel in "embedded" mode.
     It generates optimized code in the specified language (default is 'fortran')
-    and compiles it for improved performance.
+    and compiles it for improved performance. Please be aware that only one of
+    the parameters `compiler_family` and `compiler_config` may be provided.
 
     Parameters
     ----------
@@ -426,8 +442,10 @@ def epyccel(
         file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
-    compiler_family : str, optional
-        Compiler family or JSON file containing a compiler description (default: 'GNU').
+    compiler_family : {'GNU', 'intel', 'PGI', 'nvidia', 'LLVM'}, optional
+        Compiler family for which Pyccel uses a default configuration (default: 'GNU').
+    compiler_config : pathlib.Path | str, optional
+        Path to a JSON file containing a compiler configuration (overrides compiler_family).
     flags : iterable of str, optional
         Compiler flags.
     wrapper_flags : iterable of str, optional
@@ -491,6 +509,9 @@ def epyccel(
     """
     assert isinstance(function_class_or_module, (FunctionType, type, ModuleType, str))
 
+    if None not in (compiler_family, compiler_config):
+        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+
     err_mode = ErrorsMode()
     if developer_mode:
         err_mode.set_mode('developer')
@@ -514,6 +535,7 @@ def epyccel(
                     function_class_or_module,
                     language        = language,
                     compiler_family = compiler_family,
+                    compiler_config = compiler_config,
                     flags           = flags,
                     wrapper_flags   = wrapper_flags,
                     include         = include,
@@ -577,6 +599,7 @@ def epyccel(
                     function_class_or_module,
                     language        = language,
                     compiler_family = compiler_family,
+                    compiler_config = compiler_config,
                     flags           = flags,
                     wrapper_flags   = wrapper_flags,
                     include         = include,
