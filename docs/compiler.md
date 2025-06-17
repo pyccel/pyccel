@@ -48,15 +48,15 @@ Pyccel's compiler settings are described internally by a dictionary. This makes 
 -   `general_flags` : A list of flags used when compiling in any mode \[optional\]
 -   `standard_flags` : A list of flags used to impose the expected language standard \[optional\]
 -   `libs` : A list of libraries necessary for compiling \[optional\]
--   `libdirs` : A list of library directories necessary for compiling \[optional\]
--   `includes` : A list of include directories necessary for compiling \[optional\]
+-   `libdir` : A list of library directories necessary for compiling \[optional\]
+-   `include` : A list of include directories necessary for compiling \[optional\]
   
 In addition, for each accelerator (`mpi`/`openmp`/`openacc`/`python`) that you will use the JSON file must define the following:
   
 -   `flags` : A list of flags used to impose the expected language standard \[optional\]
 -   `libs` : A list of libraries necessary for compiling \[optional\]
--   `libdirs` : A list of library directories necessary for compiling \[optional\]
--   `includes` : A list of include directories necessary for compiling \[optional\]
+-   `libdir` : A list of library directories necessary for compiling \[optional\]
+-   `include` : A list of include directories necessary for compiling \[optional\]
 
 Python is considered to be an accelerator and must additionally specify `shared_suffix`.
 
