@@ -173,7 +173,7 @@ def pyccel() -> None:
         # we don't use is_valid_filename_py since it uses absolute path
         # file extension
         ext = filename.split('.')[-1]
-        if not(ext in ['py', 'pyh']):
+        if not(ext in ['py', 'pyi']):
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
