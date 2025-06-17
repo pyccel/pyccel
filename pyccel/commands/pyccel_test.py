@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing scripts to run the unit tests of Pyccel
 """
+import json
 import os
-#import subprocess
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
