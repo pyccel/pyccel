@@ -82,7 +82,7 @@ def pyccel() -> None:
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.lower)
 
-    group.add_argument('--compiler',
+    group.add_argument('--compiler', default = 'GNU',
                        help='Compiler family {GNU,intel,PGI,nvidia,LLVM} or JSON file containing a compiler description (default: GNU).')
 
     group.add_argument('--flags', type=str, \
