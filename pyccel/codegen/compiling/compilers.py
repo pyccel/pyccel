@@ -205,7 +205,7 @@ class Compiler:
         >> self._get_property("libs", ("-lmy_lib",), ("openmp",))
         dict_keys(['-lmy_lib', '-lm', 'gomp'])
 
-        >> self._get_property("includes", ("/home/user/homemade-install-dir/",), ("mpi",))
+        >> self._get_property("include", ("/home/user/homemade-install-dir/",), ("mpi",))
         dict_keys(['/home/user/homemade-install-dir/'])
         """
         # Use a dictionary instead of a set to ensure properties are ordered by insertion
@@ -219,47 +219,68 @@ class Compiler:
 
         return properties.keys()
 
-    def _get_includes(self, includes = (), accelerators = ()):
+    def _get_include(self, include = (), accelerators = ()):
         """
-        Collect necessary compile include directories
+        Collect necessary compile include directories.
+
+        Collect necessary compile include directories.
 
         Parameters
         ----------
-        includes     : iterable of str
+        include : iterable of str
                        Any additional include directories requested by the user
-                       / required by the file
+                       / required by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+                       Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the include folders.
         """
-        return self._get_property('includes', includes, accelerators)
+        return self._get_property('include', include, accelerators)
 
     def _get_libs(self, libs = (), accelerators = ()):
         """
-        Collect necessary compile libraries
+        Collect necessary compile libraries.
+
+        Collect necessary compile libraries.
 
         Parameters
         ----------
-        libs         : iterable of str
-                       Any additional libraries requested by the user
-                       / required by the file
+        libs : iterable of str
+            Any additional libraries requested by the user / required
+            by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the libraries.
         """
         return self._get_property('libs', libs, accelerators)
 
-    def _get_libdirs(self, libdirs = (), accelerators = ()):
+    def _get_libdir(self, libdir = (), accelerators = ()):
         """
-        Collect necessary compile library directories
+        Collect necessary compile library directories.
+
+        Collect necessary compile library directories.
 
         Parameters
         ----------
-        libdirs      : iterable of str
-                       Any additional library directories
-                       requested by the user / required by the file
+        libdir : iterable of str
+            Any additional library directories requested by the user
+            / required by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the folders containing libraries.
         """
-        return self._get_property('libdirs', libdirs, accelerators)
+        return self._get_property('libdir', libdir, accelerators)
 
     def _get_dependencies(self, dependencies = (), accelerators = ()):
         """
@@ -311,7 +332,7 @@ class Compiler:
         compile_obj : CompileObj
             Object containing all information about the object to be compiled.
         accelerators : iterable of str
-            Name of all tools used by the code which require additional flags/includes/etc.
+            Name of all tools used by the code which require additional flags/include/etc.
 
         Returns
         -------
@@ -321,15 +342,15 @@ class Compiler:
             The include directories required to compile.
         libs_flags : iterable of strs
             The libraries required to compile.
-        libdirs_flags : iterable of strs
+        libdir_flags : iterable of strs
             The directories containing libraries required to compile.
         m_code : iterable of strs
             The objects required to compile.
         """
 
-        # get includes
-        includes = self._get_includes(compile_obj.includes, accelerators)
-        inc_flags = self._insert_prefix_to_list(includes, '-I')
+        # get include
+        include = self._get_include(compile_obj.include, accelerators)
+        inc_flags = self._insert_prefix_to_list(include, '-I')
 
         # Get dependencies (.o/.a)
         m_code = self._get_dependencies(compile_obj.extra_modules, accelerators)
@@ -337,12 +358,12 @@ class Compiler:
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
         libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
-        libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
-        libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
+        libdir = self._get_libdir(compile_obj.libdir, accelerators)
+        libdir_flags = self._insert_prefix_to_list(libdir, '-L')
 
         exec_cmd = self._get_exec(accelerators)
 
-        return exec_cmd, inc_flags, libs_flags, libdirs_flags, m_code
+        return exec_cmd, inc_flags, libs_flags, libdir_flags, m_code
 
     def compile_module(self, compile_obj, output_folder, language, verbose):
         """
@@ -378,9 +399,9 @@ class Compiler:
         flags = self._get_flags(compile_obj.flags, accelerators)
         flags.append('-c')
 
-        # Get includes
-        includes  = self._get_includes(compile_obj.includes, accelerators)
-        inc_flags = self._insert_prefix_to_list(includes, '-I')
+        # Get include
+        include  = self._get_include(compile_obj.include, accelerators)
+        inc_flags = self._insert_prefix_to_list(include, '-I')
 
         # Get executable
         exec_cmd = self._get_exec(accelerators)
@@ -435,17 +456,17 @@ class Compiler:
         flags = self._get_flags(compile_obj.flags, accelerators)
 
         # Get compile options
-        exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
+        exec_cmd, include, libs_flags, libdir_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
+        linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
         if language == 'fortran':
             j_code = (self._language_info['module_output_flag'], output_folder)
         else:
             j_code = ()
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                 *linker_libdirs_flags, *m_code, compile_obj.source,
+        cmd = [exec_cmd, *flags, *include, *libdir_flags,
+                 *linker_libdir_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
@@ -499,9 +520,9 @@ class Compiler:
         accelerators.add('python')
 
         # Collect compile information
-        exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
+        exec_cmd, _, libs_flags, libdir_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
+        linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
         flags.insert(0,"-shared")
 
@@ -513,7 +534,7 @@ class Compiler:
         if verbose:
             print(">> Compiling shared library :: ", file_out)
 
-        cmd = [exec_cmd, *flags, *libdirs_flags, *linker_libdirs_flags,
+        cmd = [exec_cmd, *flags, *libdir_flags, *linker_libdir_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
