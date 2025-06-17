@@ -221,43 +221,64 @@ class Compiler:
 
     def _get_include(self, include = (), accelerators = ()):
         """
-        Collect necessary compile include directories
+        Collect necessary compile include directories.
+
+        Collect necessary compile include directories.
 
         Parameters
         ----------
         include : iterable of str
                        Any additional include directories requested by the user
-                       / required by the file
+                       / required by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+                       Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the include folders.
         """
         return self._get_property('include', include, accelerators)
 
     def _get_libs(self, libs = (), accelerators = ()):
         """
-        Collect necessary compile libraries
+        Collect necessary compile libraries.
+
+        Collect necessary compile libraries.
 
         Parameters
         ----------
-        libs         : iterable of str
-                       Any additional libraries requested by the user
-                       / required by the file
+        libs : iterable of str
+            Any additional libraries requested by the user / required
+            by the file.
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the libraries.
         """
         return self._get_property('libs', libs, accelerators)
 
     def _get_libdir(self, libdir = (), accelerators = ()):
         """
-        Collect necessary compile library directories
+        Collect necessary compile library directories.
+
+        Collect necessary compile library directories.
 
         Parameters
         ----------
-        libdir      : iterable of str
-                       Any additional library directories
-                       requested by the user / required by the file
+        libdir : iterable of str
+            Any additional library directories requested by the user
+            / required by the file
         accelerators : iterable or str
-                       Accelerators used by the code
+            Accelerators used by the code.
+
+        Returns
+        -------
+        list[str]
+            A list of the folders containing libraries.
         """
         return self._get_property('libdir', libdir, accelerators)
 
