@@ -44,7 +44,7 @@ def execute_pyccel(fname, *,
                    semantic_only   = False,
                    convert_only    = False,
                    verbose         = 0,
-                   show_timings    = False,
+                   time_execution    = False,
                    folder          = None,
                    language        = None,
                    compiler_family = None,
@@ -81,7 +81,7 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
     verbose : int, default=0
         Indicates the level of verbosity.
-    show_timings : bool, default=False
+    time_execution : bool, default=False
         Show the time spent in each of Pyccel's internal stages.
     folder : str, optional
         Path to the working directory. Default is the folder containing the file to be translated.
@@ -233,7 +233,7 @@ def execute_pyccel(fname, *,
 
     if syntax_only:
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -259,7 +259,7 @@ def execute_pyccel(fname, *,
 
     if semantic_only:
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -298,7 +298,7 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -339,7 +339,7 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -423,7 +423,7 @@ def execute_pyccel(fname, *,
     os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
 
-    if show_timings:
+    if time_execution:
         print_timers(start, timers)
 
 def print_timers(start, timers):
