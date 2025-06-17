@@ -95,7 +95,7 @@ def pyccel_test():
     print(f"refcode = {retcode}")
 
     print("Run the single-process tests which can be run in parallel... [language: Python]")
-    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and python', '-n', 'auto'])
+    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and python)', '-n', 'auto'])
     print(f"refcode = {retcode}")
 
     # TODO: run the parallel tests
