@@ -61,6 +61,7 @@ def pyccel_test():
 #    subprocess.run(['unzip', '-o', 'pyccel-devel.zip'])
 
     # TODO: Determine the version of Pyccel that we are using
+    version = pyccel.__version__
 
     # Download the test files
     # TODO: use the correct version of the test files
