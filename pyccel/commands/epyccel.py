@@ -198,7 +198,6 @@ def epyccel_seq(function_class_or_module, *,
                 include        = (),
                 libdir         = (),
                 libs           = (),
-                modules        = (),
                 folder         = None,
                 mpi            = False,
                 openmp         = False,
@@ -240,8 +239,6 @@ def epyccel_seq(function_class_or_module, *,
         Additional library directories for the compiler.
     libs : tuple, optional
         Additional libraries.
-    modules : tuple, optional
-        Additional modules to be imported.
     folder : str, optional
         Output folder for the compiled code.
     mpi : bool, default=False
@@ -349,7 +346,7 @@ def epyccel_seq(function_class_or_module, *,
                            wrapper_flags   = wrapper_flags,
                            includes        = include,        # [YG, 16.06.2025] argument names do not match
                            libdirs         = libdir,         # [YG, 16.06.2025] argument names do not match
-                           modules         = modules,
+                           modules         = (),
                            libs            = libs,
                            debug           = debug,
                            accelerators    = accelerators,
@@ -400,7 +397,6 @@ def epyccel(
     include         = (),
     libdir          = (),
     libs            = (),
-    modules         = (),
     folder          = None,
     mpi             = False,
     openmp          = False,
@@ -446,8 +442,6 @@ def epyccel(
         Additional library directories for the compiler.
     libs : tuple, optional
         Additional libraries to link with.
-    modules : tuple, optional
-        Additional modules to be imported.
     folder : str, optional
         Output folder for the compiled code.
     mpi : bool, default=False
@@ -529,7 +523,6 @@ def epyccel(
                     include         = include,
                     libdir          = libdir,
                     libs            = libs,
-                    modules         = modules,
                     folder          = folder,
                     mpi             = True,
                     openmp          = openmp,
@@ -593,7 +586,6 @@ def epyccel(
                     include         = include,
                     libdir          = libdir,
                     libs            = libs,
-                    modules         = modules,
                     folder          = folder,
                     mpi             = mpi,
                     openmp          = openmp,
