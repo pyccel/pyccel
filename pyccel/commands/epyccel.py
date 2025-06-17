@@ -507,10 +507,6 @@ def epyccel(
         assert isinstance(comm, MPI.Comm)
         assert isinstance(root, int)
 
-        # If no language is specified, use Fortran
-        if language is None:
-            language = 'fortran'
-
         # Master process calls epyccel
         if comm.rank == root:
             try:
