@@ -79,13 +79,11 @@ class OmpPatchRegistry(PatchRegistry):
     ...         return 1
     >>> obj = MyClass()
     >>> registry = OmpPatchRegistry(obj)
-    >>> def patched_method(self):
+    >>> def method(self):
     ...     return 2
-    >>> patch_info = OmpPatchInfo(obj.method, patched_method, "method", 4.5)
+    >>> patch_info = OmpPatchInfo(obj.method, method, "method", 4.5)
     >>> registry.register_patch("method", patch_info)
     >>> registry.loaded_versions.append(4.5)
-    >>> 4.5 in registry.loaded_versions
-    True
     """
     patches: Dict[str, List[OmpPatchInfo]] = field(default_factory=dict)
     loaded_versions: List[float] = field(default_factory=list)
@@ -119,9 +117,9 @@ class OmpPatchRegistry(PatchRegistry):
         ...         return 1
         >>> obj = MyClass()
         >>> registry = OmpPatchRegistry(obj)
-        >>> def patched_method(self):
+        >>> def method(self):
         ...     return 2
-        >>> patch_info = OmpPatchInfo(obj.method, patched_method, "method", 4.5)
+        >>> patch_info = OmpPatchInfo(obj.method, method, "method", 4.5)
         >>> registry.register_patch("method", patch_info)
         >>> patches = registry.get_patches_for_version(4.5)
         >>> len(patches["method"])
@@ -154,9 +152,9 @@ class OmpPatchRegistry(PatchRegistry):
         ...         return 1
         >>> obj = MyClass()
         >>> registry = OmpPatchRegistry(obj)
-        >>> def patched_method(self):
+        >>> def method(self):
         ...     return 2
-        >>> patch_info = OmpPatchInfo(obj.method, patched_method, "method", 4.5)
+        >>> patch_info = OmpPatchInfo(obj.method, method, "method", 4.5)
         >>> registry.register_patch("method", patch_info)
         >>> registry.loaded_versions.append(4.5)
         >>> registry.deregister_patches_for_version(4.5)
