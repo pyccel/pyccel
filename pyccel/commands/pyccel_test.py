@@ -56,9 +56,8 @@ def pyccel_test():
 
     # Determine the version of Pyccel that we are using
     direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
-    pyccel_is_editable = json.loads(direct_url).get("dir_info", {}).get("editable", False)
 
-    if pyccel_is_editable:
+    if direct_url:
         test_dir = direct_url["url"]
     else:
         version = pyccel.__version__
