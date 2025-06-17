@@ -251,7 +251,7 @@ def epyccel_seq(function_class_or_module, *,
         Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
         Time the execution of Pyccel's internal stages.
-    conda_warnings : {off, basic, verbose}
+    conda_warnings : {'off', 'basic', 'verbose'}
         Specify the level of Conda warnings to display (default: 'basic').
     context_dict : dict[str, obj], optional
         A dictionary containing any Python objects from the calling scope which should
