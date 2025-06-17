@@ -167,7 +167,7 @@ def pyccel() -> None:
 
     # ...
     filename = args.filename
-    compiler = args.load_compiler_info or args.compiler_family
+    compiler = args.compiler_config or args.compiler_family
     mpi      = args.mpi
     openmp   = args.openmp
     openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
