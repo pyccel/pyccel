@@ -44,14 +44,14 @@ def execute_pyccel(fname, *,
                    semantic_only   = False,
                    convert_only    = False,
                    verbose         = 0,
-                   time_execution    = False,
+                   time_execution  = False,
                    folder          = None,
                    language        = None,
                    compiler_family = None,
-                   fflags          = None,
+                   flags           = None,
                    wrapper_flags   = None,
-                   include        = (),
-                   libdir         = (),
+                   include         = (),
+                   libdir          = (),
                    modules         = (),
                    libs            = (),
                    debug           = None,
@@ -90,7 +90,7 @@ def execute_pyccel(fname, *,
     compiler_family : str, optional
         The compiler used to compile the generated files. Default is 'GNU'.
         This can also contain the name of a json file describing a compiler.
-    fflags : str, optional
+    flags : str, optional
         The flags passed to the compiler. Default is provided by the Compiler.
     wrapper_flags : str, optional
         The flags passed to the compiler to compile the C wrapper. Default is provided by the Compiler.
@@ -193,7 +193,7 @@ def execute_pyccel(fname, *,
     if compiler_family is None:
         compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
-    fflags = [] if fflags is None else fflags.split()
+    flags = [] if flags is None else flags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
@@ -307,7 +307,7 @@ def execute_pyccel(fname, *,
 
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
-            flags        = fflags,
+            flags        = flags,
             include      = include,
             libs         = compile_libs,
             libdir       = libdir,

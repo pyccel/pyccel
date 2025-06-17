@@ -241,7 +241,7 @@ def pyccel() -> None:
                        time_execution  = args.time_execution,
                        language        = args.language,
                        compiler_family = compiler,
-                       fflags          = args.flags,
+                       flags           = args.flags,
                        wrapper_flags   = args.wrapper_flags,
                        include         = args.include,
                        libdir          = args.libdir,

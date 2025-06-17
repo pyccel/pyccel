@@ -342,7 +342,7 @@ def epyccel_seq(function_class_or_module, *,
                            time_execution  = time_execution,
                            language        = language,
                            compiler_family = compiler,       # [YG, 16.06.2025] argument names do not match
-                           fflags          = flags,          # [YG, 16.06.2025] argument names do not match
+                           flags           = flags,
                            wrapper_flags   = wrapper_flags,
                            include         = include,
                            libdir          = libdir,
