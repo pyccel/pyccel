@@ -114,6 +114,8 @@ We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6h
 
 -   [Installation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md)
 
+-   [Testing](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md)
+
 -   [Contributing](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
 
 -   [C/Fortran Compilers](https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md)
