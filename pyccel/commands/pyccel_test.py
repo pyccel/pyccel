@@ -17,7 +17,7 @@ You can do this by running one of the following commands:
   3. Editable install, from sources: pip install ".[test]" --editable
 """
 
-def pyccel_test():
+def pyccel_test(*, dry_run, verbose):
     """
     Run the unit tests of Pyccel.
 
@@ -32,6 +32,21 @@ def pyccel_test():
     run in parallel are run. The function returns the return
     code of the pytest command.
 
+    If the user stops the tests with Ctrl+C, the function will
+    print a message and exit gracefully.
+
+    This function does not provide default values for its
+    parameters, because these have to be handled by the command
+    line parser.
+
+    Parameters
+    ----------
+    dry_run : bool
+        If True, the function will not run the tests, but will
+        print the commands that would be run.
+    verbose : int
+        The verbosity level of the output. The higher the number,
+        the more detailed the output will be.
     """
 
     import sys
@@ -56,6 +71,8 @@ def pyccel_test():
 
     # Determine the version of Pyccel that we are using
     direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
+    print(f"Using Pyccel version {pyccel.__version__} from {pyccel.__file__}")
+    print(f"Direct URL: {direct_url}")
 
     test_dir = None
     if direct_url:
@@ -86,25 +103,48 @@ def pyccel_test():
 
     # Change into the test directory
     print("Changing into the test directory...")
+    print(f"> cd {test_dir}")
     os.chdir(test_dir)
 
-    print("Run the single-process tests which must be run one at a time... [all languages]")
-    retcode = pytest.main(['-ra', '-m (not parallel and xdist_incompatible)'])
-    print(f"refcode = {retcode}")
+    # Descriptions of the tests:
+    desc_1 = "Run the single-process tests which must be run one at a time... [all languages]"
+    desc_2 = "Run the single-process tests which can be run in parallel... [language: C]"
+    desc_3 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
+    desc_4 = "Run the single-process tests which can be run in parallel... [language: Python]"
+    descriptions = [desc_1, desc_2, desc_3, desc_4]
 
-    print("Run the single-process tests which can be run in parallel... [language: C]")
-    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and c)', '-n', 'auto'])
-    print(f"refcode = {retcode}")
+    # Commands to run the tests:
+    cmd_1 = ['-ra', '-m (not parallel and xdist_incompatible)']
+    cmd_2 = ['-ra', '-m (not parallel and not xdist_incompatible and c)', '-n', 'auto']
+    cmd_3 = ['-ra', '-m (not parallel and not xdist_incompatible and not python and not c)', '-n', 'auto']
+    cmd_4 = ['-ra', '-m (not parallel and not xdist_incompatible and python)', '-n', 'auto']
+    commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
-    print("Run the single-process tests which can be run in parallel... [language: Fortran]")
-    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and not python and not c)', '-n', 'auto'])
-    print(f"refcode = {retcode}")
+    if verbose > 0:
+        verbose_flag = '-' + 'v' * verbose
+        for cmd in commands:
+            cmd.append(verbose_flag)
 
-    print("Run the single-process tests which can be run in parallel... [language: Python]")
-    retcode = pytest.main(['-ra', '-m (not parallel and not xdist_incompatible and python)', '-n', 'auto'])
-    print(f"refcode = {retcode}")
+    # Set the return code to OK by default
+    retcode = pytest.ExitCode.OK
+
+    # Run the tests in the specified order
+    for desc, cmd in zip(descriptions, commands):
+        print()
+        print(desc)
+        print(f'> pytest {" ".join(cmd)}')
+        if dry_run:
+            print("Dry run, not executing the tests.")
+        else:
+            retcode = pytest.main(cmd)
+            print(f"\nPytest return code: {retcode.name}")
+            if retcode == pytest.ExitCode.INTERRUPTED:
+                print("\nTest execution was interrupted by the user, exiting...\n")
+                return retcode
 
     # TODO: run the parallel tests
+
+    # Return the final return code
     return retcode
 
 
@@ -117,6 +157,17 @@ def pyccel_test_command():
     """
     parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
 
-    parser.parse_args()
+    parser.add_argument('--dry-run', action='store_true',
+        help='Run all steps without actually running the tests.')
 
-    return pyccel_test()
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+        help='Increase output verbosity (use -v, -vv for more detailed output).')
+
+    args = parser.parse_args()
+
+    print()
+    retcode = pyccel_test(**vars(args))
+    print()
+
+    return retcode
+
