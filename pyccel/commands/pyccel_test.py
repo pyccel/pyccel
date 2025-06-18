@@ -171,3 +171,6 @@ def pyccel_test_command():
 
     return retcode
 
+
+if __name__ == '__main__':
+    pyccel_test_command()
