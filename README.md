@@ -65,39 +65,11 @@ pip install "pyccel[test]"
 ```
 
 This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
-Now we can download the source code for a specific release, and with it the tests
 
-```sh
-curl -JLO "https://github.com/pyccel/pyccel/archive/refs/tags/v1.12.1.zip"
-unzip pyccel-1.12.1.zip
-cd pyccel-1.12.1/tests
-```
+The recommended way of running the unit tests is simply using the command line tool `pyccel-test` which is installed with Pyccel.
+This runs all unit tests using Pytest under the hood.
 
-or, in the case of `devel` branch on GitHub:
-
-```sh
-curl -JLO "https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip"
-unzip pyccel-devel.zip
-cd pyccel-devel/tests
-```
-
-We start by running in parallel (with as many threads as possible) the single-process tests which do not create conflicts with other tests (this is very fast):
-
-```sh
-pytest -ra -m "not parallel and not xdist_incompatible" -n auto
-```
-
-Next, we proceed with running the single-process tests which cannot run in parallel with other tests (this takes some time):
-
-```sh
-pytest -ra -m "not parallel and xdist_incompatible"
-```
-
-Finally, we make sure that the `epyccel` command can be run from an MPI-parallel Python program:
-
-```sh
-mpirun -n 4 pytest epyccel/test_parallel_epyccel.py
-```
+Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md).
 
 ## Contributing
 
