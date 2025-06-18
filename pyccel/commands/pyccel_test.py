@@ -82,14 +82,15 @@ def pyccel_test(*, dry_run, verbose):
 
     if test_dir is None:
         version = pyccel.__version__
+
         # Download the test files
-        import requests
+        from urllib.request import urlopen
         print("Downloading the test files from GitHub...")
         zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
         zip_path = 'pyccel.zip'
-        req = requests.get(zip_url, timeout=5) # 5s timeout
-        with open(zip_path,'wb') as output_file:
-            output_file.write(req.content)
+        with urlopen(zip_url, timeout=5) as response:
+            with open(zip_path, 'wb') as output_file:
+                output_file.write(response.read())
 
         test_dir = f'pyccel-{version}/tests'
 
