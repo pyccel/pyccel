@@ -3,8 +3,11 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+from pyccel.ast.core     import Assign, Declare
 from pyccel.ast.literals import Nil
+from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.variable import Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
@@ -44,6 +47,15 @@ class CppCodePrinter(CodePrinter):
         self._additional_imports = {}
         self._additional_code = ''
         self._in_header = False
+        self._declared_vars = []
+
+    def set_scope(self, scope):
+        self._declared_vars.append(set())
+        super().set_scope(scope)
+
+    def exit_scope(self):
+        super().exit_scope()
+        self._declared_vars.pop()
 
     def _indent_codestring(self, lines):
         tab = ' '*self._default_settings['tabwidth']
@@ -86,9 +98,15 @@ class CppCodePrinter(CodePrinter):
 
         args = ', '.join(self._print(a) for a in expr.arguments)
 
-        result = 'void' if result_var is Nil() else self._print(result_var)
+        result = 'void' if result_var is Nil() else self._print(result_var.class_type)
 
         return f'{result} {name}({args})'
+
+    def get_declare_type(self, var):
+        class_type = self._print(var.class_type)
+        const = ' const' if var.is_const else ''
+
+        return f'{class_type}{const}'
 
     #-----------------------------------------------------------------------
     #                              Print methods
@@ -164,3 +182,78 @@ class CppCodePrinter(CodePrinter):
 
     def _print_Pass(self, expr):
         return '// pass\n'
+
+    def _print_Return(self, expr):
+        if expr.stmt:
+            to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
+                                                        or isinstance(l, UnpackManagedMemory))]
+            assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
+            assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
+            prelude = ''.join(self._print(l) for l in to_print)
+        else:
+            assigns = {}
+            prelude = ''
+
+        if expr.expr is None:
+            return 'return;\n'
+
+        return_code = self._print(assigns.get(expr.expr, expr.expr))
+
+        return prelude + f'return {return_code};\n'
+
+    def _print_Assign(self, expr):
+        lhs = expr.lhs
+
+        prefix = ''
+        if lhs in self.scope.variables.values() and lhs not in self._declared_vars[-1]:
+            prefix = self.get_declare_type(lhs) + ' '
+            self._declared_vars[-1].add(lhs)
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(expr.rhs)
+        return f'{prefix}{lhs_code} = {rhs_code};\n'
+
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_Variable(self, expr):
+        name = expr.name
+        if expr.is_alias:
+            return f'(*{name})'
+        else:
+            return name
+
+    def _print_Declare(self, expr):
+        var = expr.variable
+
+        name = var.name
+        class_type = self._print(var.class_type)
+        const = ' const' if var.is_const else ''
+
+        return f'{class_type}{const} {name};\n'
+
+    def _print_Literal(self, expr):
+        #TODO: Ensure correct precision
+        return repr(expr.python_value)
+
+    def _print_PythonNativeBool(self, expr):
+        return 'bool'
+
+    def _print_PythonNativeInt(self, expr):
+        #TODO: Improve, wrong precision
+        return 'int'
+
+    def _print_PythonNativeFloat(self, expr):
+        return 'float'
+
+    def _print_PythonNativeComplex(self, expr):
+        return 'complex'
+
+    def _print_StringType(self, expr):
+        return 'str'
