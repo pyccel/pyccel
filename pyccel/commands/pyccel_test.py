@@ -6,6 +6,7 @@
 """
 import json
 import os
+import pathlib
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
@@ -17,7 +18,7 @@ You can do this by running one of the following commands:
   3. Editable install, from sources: pip install ".[test]" --editable
 """
 
-def pyccel_test(*, dry_run, verbose):
+def pyccel_test(*, folder, dry_run, verbose):
     """
     Run the unit tests of Pyccel.
 
@@ -41,6 +42,10 @@ def pyccel_test(*, dry_run, verbose):
 
     Parameters
     ----------
+    folder : pathlib.Path or None
+        The local folder where the tests are located. If None, the
+        function will first try to extract the tests from a local editable
+        installation, then download them from the official GitHub repository.
     dry_run : bool
         If True, the function will not run the tests, but will
         print the commands that would be run.
@@ -49,13 +54,16 @@ def pyccel_test(*, dry_run, verbose):
         the more detailed the output will be.
     """
 
+    assert isinstance(folder, (pathlib.Path, type(None)))
+    assert isinstance(dry_run, bool)
+    assert isinstance(verbose, int)
+
     import sys
 
     # Pyccel must be installed
     try:
         import pyccel
     except ImportError:
-        print()
         print('ERROR: It appears that Pyccel is not installed.')
         print(install_msg)
         sys.exit(1)
@@ -64,28 +72,40 @@ def pyccel_test(*, dry_run, verbose):
     try:
         import pytest
     except ImportError:
-        print()
         print('ERROR: It appears that pytest is not installed.')
         print(install_msg)
         sys.exit(1)
 
-    # Determine the version of Pyccel that we are using
-    direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
-    print(f"Using Pyccel version {pyccel.__version__} from {pyccel.__file__}")
-    print(f"Direct URL: {direct_url}")
+    # If a folder is provided, use it as the test directory
+    if folder is not None:
+        test_dir = folder.resolve()
+        if not test_dir.is_dir():
+            print(f"ERROR: The provided folder '{test_dir}' does not exist or is not a directory.")
+            sys.exit(1)
+        print(f"Using the provided folder as the test directory: {test_dir}")
+    else:
+        test_dir = None
 
-    test_dir = None
-    if direct_url:
-        url = json.loads(direct_url)["url"]
-        if url.startswith('file://'):
-            test_dir = url.removeprefix('file://')
+    if test_dir is None:
+        # Determine the version of Pyccel that we are using
+        direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
+#        print(f"Using Pyccel version {pyccel.__version__} from {pyccel.__file__}")
+#        print(f"Direct URL: {direct_url}")
+
+        # If a direct URL is provided, use it to determine the test directory
+        # Otherwise, download the test files from GitHub
+        if direct_url:
+            url = json.loads(direct_url)["url"]
+            if url.startswith('file://'):
+                test_dir = url.removeprefix('file://')
+                print(f"Using the local test directory from direct URL: {test_dir}")
 
     if test_dir is None:
         version = pyccel.__version__
 
         # Download the test files
         from urllib.request import urlopen
-        print("Downloading the test files from GitHub...")
+        print(f"Downloading the test files from GitHub for pyccel-v{version}...")
         zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
         zip_path = 'pyccel.zip'
         with urlopen(zip_url, timeout=5) as response:
@@ -164,6 +184,10 @@ def pyccel_test_command():
     parser.add_argument('-v', '--verbose', action='count', default=0,
         help='Increase output verbosity (use -v, -vv for more detailed output).')
 
+    parser.add_argument('--folder', type=pathlib.Path, default=None,
+        help="Run tests located in custom folder (default: use Pyccel's distribution).")
+
+    # Parse the command line arguments
     args = parser.parse_args()
 
     print()
