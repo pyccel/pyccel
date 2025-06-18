@@ -8,16 +8,18 @@ import os
 
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
+from pyccel.codegen.printing.cppcode import CppCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.utilities.stage import PyccelStage
 
-_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
+_extension_registry = {'fortran': 'f90', 'c':'c',  'cpp':'cpp', 'python':'py'}
+_header_extension_registry = {'fortran': None, 'c':'h', 'cpp':'hpp', 'python':None}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
+                        'cpp':CppCodePrinter,
                         'python':PythonCodePrinter
                       }
 

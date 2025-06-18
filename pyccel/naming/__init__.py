@@ -9,8 +9,10 @@ for different languages.
 """
 from .fortrannameclashchecker import FortranNameClashChecker
 from .cnameclashchecker import CNameClashChecker
+from .cppnameclashchecker import CppNameClashChecker
 from .pythonnameclashchecker import PythonNameClashChecker
 
 name_clash_checkers = {'fortran':FortranNameClashChecker(),
         'c':CNameClashChecker(),
+        'cpp':CppNameClashChecker(),
         'python':PythonNameClashChecker()}
