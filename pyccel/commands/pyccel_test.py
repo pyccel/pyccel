@@ -155,7 +155,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
     if language != 'all':
-        cmd_1.append(f'--language={language}')
+        cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
         relevant_language = [True,
                 *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
         descriptions = [desc for i, desc in enumerate(descriptions) if relevant_language[i]]
