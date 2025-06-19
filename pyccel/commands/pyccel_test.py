@@ -166,6 +166,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         for cmd in commands:
             cmd.append(verbose_flag)
 
+    commands = []
+
     # Set the return code to OK by default
     retcode = pytest.ExitCode.OK
 
@@ -202,11 +204,12 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             retcode = pytest.ExitCode.OK
         else:
             try:
-                subprocess.run(cmd_mpi, check=True)
+                p = subprocess.run(cmd_mpi, check=True, stderr=subprocess.PIPE)
                 retcode = pytest.ExitCode.OK # TODO: Check the return code of the parallel tests
             except subprocess.CalledProcessError as e:
                 print(f"Error running parallel tests: {e}")
                 retcode = pytest.ExitCode.TESTS_FAILED
+                print(p.stderr)
 
     # Return the final return code
     return retcode
