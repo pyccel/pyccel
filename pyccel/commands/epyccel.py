@@ -301,16 +301,15 @@ def epyccel_seq(function_class_or_module, *,
         context_dict = collected_context_dict
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
-    elif isinstance(function_class_or_module, ModuleType):
+    elif isinstance(function_class_or_module, str):
+        code = function_class_or_module
+        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
+
+    else: # ModuleType
         pymod = function_class_or_module
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
-
-    else:
-        assert isinstance(function_class_or_module, str)
-        code = function_class_or_module
-        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
     # execute_pyccel wants a unique string for the compiler family and the JSON file
     # The default compiler family is 'GNU' and is handled by execute_pyccel
