@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-module-docstring,missing-function-docstring
 
 def f():
     return 1, True

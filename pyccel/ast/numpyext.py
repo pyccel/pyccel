@@ -326,12 +326,17 @@ class NumpyInt(PythonInt):
     ----------
     arg : TypedAstNode
         The argument passed to the function.
+    base : TypedAstNode
+        The argument passed to the function to indicate the base in which
+        the integer is expressed.
     """
     __slots__ = ('_shape','_class_type')
     _static_type = numpy_precision_map[(PrimitiveIntegerType(), PythonInt._static_type.precision)]
     name = 'int'
 
     def __init__(self, arg=None, base=10):
+        if base != 10:
+            raise TypeError("numpy.int's base argument is not yet supported")
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order

@@ -277,9 +277,9 @@ class SetIntersection(SetMethod):
 
     Parameters
     ----------
-    set_obj : TypedAstNode
+    set_variable : TypedAstNode
         The set object which the method is called from.
-    *others : TypedAstNode
+    *args : TypedAstNode
         The iterables which will be combined (common elements) with this set.
     """
     __slots__ = ('_other','_class_type', '_shape')
