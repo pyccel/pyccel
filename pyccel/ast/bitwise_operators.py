@@ -8,7 +8,7 @@ These operators all have a precision as detailed here:
 https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
-from .builtins     import PythonInt
+from .builtins     import DtypePrecisionToCastFunction
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
 from .datatypes    import PythonNativeBool, PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
@@ -66,7 +66,8 @@ class PyccelInvert(PyccelUnaryOperator):
         dtype = PythonNativeInt()
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-        self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
+        self._args = (cast(arg) if arg.dtype is not dtype else arg,)
         return dtype
 
     def __repr__(self):
@@ -125,7 +126,8 @@ class PyccelBitOperator(PyccelBinaryOperator):
 
         assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
+        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
 
         return class_type
 
@@ -229,9 +231,9 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
 
         primitive_type = class_type.primitive_type
         assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
 
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
+        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
 
         return class_type
 
