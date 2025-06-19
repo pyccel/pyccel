@@ -52,7 +52,7 @@ from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType, ManagedM
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
