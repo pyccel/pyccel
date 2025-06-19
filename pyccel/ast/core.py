@@ -2399,8 +2399,15 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def is_external(self):
-        """ True if the function is exposed through a header file and coming
-        from a f77 module """
+        """
+        Indicates if the function is from an external library.
+
+        Indicates if the function is from an external library which has no
+        associated imports. Such functions must be declared locally to
+        satisfy the compiler. For example this method returns True if the
+        function is exposed through a pyi file and describes a method from
+        a f77 module.
+        """
         return self._is_external
 
     @is_external.setter
