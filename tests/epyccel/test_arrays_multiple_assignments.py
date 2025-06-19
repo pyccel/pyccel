@@ -187,7 +187,7 @@ def test_creation_in_if_heap_shape(language):
     assert f(c) == g(c)
 
 #==============================================================================
-def test_Reassign_to_Target():
+def test_Reassign_to_Target(language):
 
     def f():
         import numpy as np
@@ -201,7 +201,7 @@ def test_Reassign_to_Target():
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -214,7 +214,7 @@ def test_Reassign_to_Target():
 
 #==============================================================================
 
-def test_Assign_Between_Allocatables():
+def test_Assign_Between_Allocatables(language):
 
     def f():
         import numpy as np
@@ -229,7 +229,7 @@ def test_Assign_Between_Allocatables():
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -242,7 +242,7 @@ def test_Assign_Between_Allocatables():
 
 #==============================================================================
 
-def test_Assign_after_If():
+def test_Assign_after_If(language):
 
     def f(b : bool):
         import numpy as np
@@ -259,7 +259,7 @@ def test_Assign_after_If():
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f)
+    f2 = epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
