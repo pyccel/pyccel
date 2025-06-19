@@ -587,7 +587,7 @@ class SemanticParser(BasicParser):
             found_from_import_name = True
 
         if imp is not None:
-            if found_from_import_name or imp.source == source:
+            if found_from_import_name or imp.source_module.name == source:
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
