@@ -3112,7 +3112,11 @@ class FCodePrinter(CodePrinter):
         return f'IAND({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelInvert(self, expr):
-        return 'NOT({})'.format(self._print(expr.args[0]))
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'.not. ({arg})'
+        else:
+            return f'NOT({arg})'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
