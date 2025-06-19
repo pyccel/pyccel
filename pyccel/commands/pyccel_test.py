@@ -100,7 +100,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         # Otherwise, download the test files from GitHub
         if direct_url:
             url = json.loads(direct_url)["url"]
-            if url.startswith('file://'):
+            if url.startswith('file://') and url['dir_info']['editable']:
                 test_dir = pathlib.Path(url.removeprefix('file://')) / 'tests'
                 print(f"Using the local test directory from direct URL: {test_dir}")
 
