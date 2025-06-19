@@ -139,10 +139,10 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     descriptions = [desc_1, desc_2, desc_3, desc_4]
 
     # Commands to run the tests:
-    cmd_1 = ['-ra', '-m (not parallel and xdist_incompatible)']
-    cmd_2 = ['-ra', '-m (not parallel and not xdist_incompatible and c)', '-n', 'auto']
-    cmd_3 = ['-ra', '-m (not parallel and not xdist_incompatible and not python and not c)', '-n', 'auto']
-    cmd_4 = ['-ra', '-m (not parallel and not xdist_incompatible and python)', '-n', 'auto']
+    cmd_1 = ['-ra', '-m (xdist_incompatible)']
+    cmd_2 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
+    cmd_3 = ['-ra', '-m (not xdist_incompatible and not python and not c)', '-n', 'auto']
+    cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
     if language != 'all':
@@ -180,7 +180,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         import subprocess
 
         desc_mpi = "Run the parallel tests... [all languages]"
-        cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+        cmd_mpi = ['mpirun', '-n', '4', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
         if language != 'all':
             cmd_mpi.append(f'--language={language}')
         print()

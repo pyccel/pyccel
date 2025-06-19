@@ -26,7 +26,7 @@ def setup_module( module=None ):
 # UNIT TESTS
 #==============================================================================
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_np_sendrecv():
 
     rank = comm.Get_rank()
