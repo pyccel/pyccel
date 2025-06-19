@@ -156,6 +156,7 @@ def pyccel_test(*, folder, dry_run, verbose):
         print(f'> pytest {" ".join(cmd)}')
         if dry_run:
             print("Dry run, not executing the tests.")
+            retcode = pytest.ExitCode.OK
         else:
             retcode = pytest.main(cmd)
             print(f"\nPytest return code: {retcode.name}")
@@ -163,7 +164,24 @@ def pyccel_test(*, folder, dry_run, verbose):
                 print("\nTest execution was interrupted by the user, exiting...\n")
                 return retcode
 
-    # TODO: run the parallel tests
+    # Run the parallel tests
+    import subprocess
+
+    desc_mpi = "Run the parallel tests... [all languages]"
+    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+    print()
+    print(desc_mpi)
+    print(f'> {" ".join(cmd_mpi)}')
+    if dry_run:
+        print("Dry run, not executing the parallel tests.")
+        retcode = pytest.ExitCode.OK
+    else:
+        try:
+            subprocess.run(cmd_mpi, check=True)
+            retcode = pytest.ExitCode.OK # TODO: Check the return code of the parallel tests
+        except subprocess.CalledProcessError as e:
+            print(f"Error running parallel tests: {e}")
+            retcode = pytest.ExitCode.TESTS_FAILED
 
     # Return the final return code
     return retcode
