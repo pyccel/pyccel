@@ -21,7 +21,7 @@ def test_numpy_bit_and(language):
             epyc_f = epyccel(f, language=language)
 
             z = f(x,y)
-            epyc_z = f(x,y)
+            epyc_z = epyc_f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
 
@@ -37,7 +37,7 @@ def test_numpy_bit_or(language):
             epyc_f = epyccel(f, language=language)
 
             z = f(x,y)
-            epyc_z = f(x,y)
+            epyc_z = epyc_f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
 
@@ -53,7 +53,7 @@ def test_numpy_bit_xor(language):
             epyc_f = epyccel(f, language=language)
 
             z = f(x,y)
-            epyc_z = f(x,y)
+            epyc_z = epyc_f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
 
@@ -69,7 +69,7 @@ def test_numpy_bit_lshift(language):
             epyc_f = epyccel(f, language=language)
 
             z = f(x,y)
-            epyc_z = f(x,y)
+            epyc_z = epyc_f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
 
@@ -85,7 +85,7 @@ def test_numpy_bit_rshift(language):
             epyc_f = epyccel(f, language=language)
 
             z = f(x,y)
-            epyc_z = f(x,y)
+            epyc_z = epyc_f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
 
@@ -99,6 +99,6 @@ def test_numpy_bit_invert(language):
         epyc_f = epyccel(f, language=language)
 
         z = f(x)
-        epyc_z = f(x)
+        epyc_z = epyc_f(x)
         assert np.array_equal(epyc_z, z)
         assert z.dtype is epyc_z.dtype
