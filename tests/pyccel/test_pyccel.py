@@ -637,7 +637,8 @@ def test_import_syntax( test_file, language ):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
                                         "scripts/import_syntax/from_mod_import_as_user.py",
-                                        "scripts/import_syntax/collisions2.py"
+                                        "scripts/import_syntax/collisions2.py",
+                                        "scripts/runtest_import_mod_project_as.py",
                                         ] )
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
