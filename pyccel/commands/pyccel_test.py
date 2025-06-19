@@ -56,6 +56,16 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         The target language Pyccel is translating to. Default is 'all'.
     run_mpi : bool
         If True, the function will not run the parallel tests.
+
+    Returns
+    -------
+    retcode : pytest.ExitCode
+        The return code of the pytest command. If the tests were
+        interrupted by the user, the return code will be
+        pytest.ExitCode.INTERRUPTED. If the tests failed, the
+        return code will be pytest.ExitCode.TESTS_FAILED.
+        If the tests passed, the return code will be
+        pytest.ExitCode.OK.
     """
 
     assert isinstance(folder, (pathlib.Path, type(None)))
@@ -217,6 +227,10 @@ def pyccel_test_command():
 
     A wrapper around the pyccel_test function which allows
     command line arguments to be passed to the function.
+
+    Returns
+    -------
+    retcode : pytest.ExitCode
     """
     parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
 
