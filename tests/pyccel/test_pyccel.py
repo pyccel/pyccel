@@ -571,13 +571,14 @@ def test_generic_functions():
                     int, int])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_default_arguments(language):
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int, int, float, float, float,
                 float, float, float, float, bool, bool, bool,
-                float, float, float, float, float, float,
-                float, float],
+                float, float, float, float, int, int,
+                float, float, float, float],
             language=language)
 
 #------------------------------------------------------------------------------
@@ -623,15 +624,23 @@ def test_hope_benchmarks( test_file, language ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
-                                        "scripts/import_syntax/collisions3.py",
                                         "scripts/import_syntax/collisions5.py",
                                         ] )
-@pytest.mark.parametrize( "language", (
+def test_import_syntax(test_file, language):
+    pyccel_test(test_file, language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize("test_file", ["scripts/import_syntax/collisions3.py"])
+@pytest.mark.parametrize("language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
-def test_import_syntax( test_file, language ):
+def test_import_syntax_cfail(test_file, language):
     pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
@@ -643,6 +652,10 @@ def test_import_syntax( test_file, language ):
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
 @pytest.mark.xdist_incompatible
@@ -658,19 +671,18 @@ def test_import_syntax_user_as( test_file, language ):
                                         "scripts/import_syntax/import_mod_user_func.py",
                                         "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-    )
-)
 @pytest.mark.xdist_incompatible
-def test_import_syntax_user( test_file, language ):
+def test_import_syntax_user(test_file, language):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
 @pytest.mark.xdist_incompatible

@@ -246,14 +246,6 @@ pip install --user -e ".[test]"
 
 Most of the unit tests can also be run in parallel.
 
-## Testing
-
-To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
-
-Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Adevel>
-
-Most of the unit tests can also be run in parallel.
-
 ## Pyccel Container Images
 
 Pyccel container images are available through both Docker Hub (<docker.io>) and the GitHub Container Registry (<ghcr.io>).
