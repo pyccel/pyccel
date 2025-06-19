@@ -92,6 +92,7 @@ class PyccelBitOperator(PyccelBinaryOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+    __slots__ = ()
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
