@@ -191,7 +191,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         import subprocess
 
         desc_mpi = "Run the parallel tests... [all languages]"
-        cmd_mpi = ['mpirun', '-n', '4', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
+        cmd_mpi = ['mpirun', '-n', '4', '--oversubscribe', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
         if verbose:
             cmd_mpi += ['-' + 'v' * verbose]
         if language != 'all':

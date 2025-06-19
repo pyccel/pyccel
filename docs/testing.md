@@ -37,6 +37,6 @@ pytest -ra -m "xdist_incompatible"
 Finally, we make sure that the `epyccel` command can be run from an MPI-parallel Python program:
 
 ```sh
-mpirun -n 4 pytest --with-mpi -ra epyccel/test_parallel_epyccel.py
+mpirun -n 4 --oversubscribe pytest --with-mpi -ra epyccel/test_parallel_epyccel.py
 ```
 
