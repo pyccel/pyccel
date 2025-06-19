@@ -12,6 +12,7 @@ from .builtins     import DtypePrecisionToCastFunction
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
 from .datatypes    import PythonNativeBool, PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
+from .numpytypes   import NumpyInt8Type
 
 __all__ = (
     'PyccelBitComparisonOperator',
@@ -63,7 +64,10 @@ class PyccelInvert(PyccelUnaryOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        class_type = arg.class_type.switch_basic_type(PythonNativeInt())
+        if arg.class_type.shape:
+            class_type = arg.class_type
+        else:
+            class_type = arg.class_type.switch_basic_type(PythonNativeInt())
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
@@ -88,7 +92,6 @@ class PyccelBitOperator(PyccelBinaryOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    __slots__ = ('_class_type',)
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -184,7 +187,10 @@ class PyccelRShift(PyccelBitOperator):
         """
         class_type = arg1.class_type + arg2.class_type
         if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            class_type = class_type.switch_basic_type(PythonNativeInt())
+            if class_type.shape:
+                class_type = class_type.switch_basic_type(NumpyInt8Type())
+            else:
+                class_type = class_type.switch_basic_type(PythonNativeInt())
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
         self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
@@ -241,7 +247,10 @@ class PyccelLShift(PyccelBitOperator):
         """
         class_type = arg1.class_type + arg2.class_type
         if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            class_type = class_type.switch_basic_type(PythonNativeInt())
+            if class_type.shape:
+                class_type = class_type.switch_basic_type(NumpyInt8Type())
+            else:
+                class_type = class_type.switch_basic_type(PythonNativeInt())
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
         self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
