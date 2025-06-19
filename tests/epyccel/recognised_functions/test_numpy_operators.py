@@ -5,7 +5,7 @@ import numpy as np
 
 from pyccel import epyccel
 
-int_types = (bool, int, np.int8, np.int16, np.int32, np.int64)
+int_types = (bool, np.int8, np.int32, np.int64)
 IT = TypeVar('IT', *int_types)
 IT2 = TypeVar('IT2', *int_types)
 
