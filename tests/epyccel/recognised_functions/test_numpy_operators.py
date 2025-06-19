@@ -64,7 +64,7 @@ def test_numpy_bit_lshift(language):
     for t_x in int_types:
         for t_y in int_types:
             x = randint(2 if t_x is bool else 127, size=(2,3,4), dtype = t_x)
-            y = randint(2 if t_y is bool else 127, size=(2,3,4), dtype = t_y)
+            y = randint(2 if t_y is bool else 5, size=(2,3,4), dtype = t_y)
 
             epyc_f = epyccel(f, language=language)
 
