@@ -18,7 +18,7 @@ You can do this by running one of the following commands:
   3. Editable install, from sources: pip install ".[test]" --editable
 """
 
-def pyccel_test(*, folder, dry_run, verbose, language):
+def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     """
     Run the unit tests of Pyccel.
 
@@ -54,6 +54,8 @@ def pyccel_test(*, folder, dry_run, verbose, language):
         the more detailed the output will be.
     language : str
         The target language Pyccel is translating to. Default is 'all'.
+    run_mpi : bool
+        If True, the function will not run the parallel tests.
     """
 
     assert isinstance(folder, (pathlib.Path, type(None)))
@@ -173,26 +175,27 @@ def pyccel_test(*, folder, dry_run, verbose, language):
                 print("\nTest execution was interrupted by the user, exiting...\n")
                 return retcode
 
-    # Run the parallel tests
-    import subprocess
+    if run_mpi:
+        # Run the parallel tests
+        import subprocess
 
-    desc_mpi = "Run the parallel tests... [all languages]"
-    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
-    if language != 'all':
-        cmd_mpi.append(f'--language={language}')
-    print()
-    print(desc_mpi)
-    print(f'> {" ".join(cmd_mpi)}')
-    if dry_run:
-        print("Dry run, not executing the parallel tests.")
-        retcode = pytest.ExitCode.OK
-    else:
-        try:
-            subprocess.run(cmd_mpi, check=True)
-            retcode = pytest.ExitCode.OK # TODO: Check the return code of the parallel tests
-        except subprocess.CalledProcessError as e:
-            print(f"Error running parallel tests: {e}")
-            retcode = pytest.ExitCode.TESTS_FAILED
+        desc_mpi = "Run the parallel tests... [all languages]"
+        cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+        if language != 'all':
+            cmd_mpi.append(f'--language={language}')
+        print()
+        print(desc_mpi)
+        print(f'> {" ".join(cmd_mpi)}')
+        if dry_run:
+            print("Dry run, not executing the parallel tests.")
+            retcode = pytest.ExitCode.OK
+        else:
+            try:
+                subprocess.run(cmd_mpi, check=True)
+                retcode = pytest.ExitCode.OK # TODO: Check the return code of the parallel tests
+            except subprocess.CalledProcessError as e:
+                print(f"Error running parallel tests: {e}")
+                retcode = pytest.ExitCode.TESTS_FAILED
 
     # Return the final return code
     return retcode
@@ -219,6 +222,9 @@ def pyccel_test_command():
     parser.add_argument('--language', choices=('fortran', 'c', 'python', 'all'), default='all',
                        help='Target language for translation, i.e. the main language of the generated code (default: all).',
                        type=str.lower)
+
+    parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
+        help="Don't the parallel tests.")
 
     # Parse the command line arguments
     args = parser.parse_args()
