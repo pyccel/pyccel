@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 -   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
 -   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   #2293 : Add `pyccel-test` command to run unit tests. Improve docs.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
 -   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
