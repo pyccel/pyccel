@@ -232,11 +232,11 @@ def pyccel_test_command():
         help="Run tests located in custom folder (default: use Pyccel's distribution).")
 
     parser.add_argument('--language', choices=('fortran', 'c', 'python', 'all'), default='all',
-                       help='Target language for translation, i.e. the main language of the generated code (default: all).',
-                       type=str.lower)
+        help='Target language for translation, i.e. the main language of the generated code (default: all).',
+        type=str.lower)
 
     parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
-        help="Don't the parallel tests.")
+        help="Do not run the parallel tests.")
 
     # Parse the command line arguments
     args = parser.parse_args()
