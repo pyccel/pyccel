@@ -4,29 +4,29 @@ import numpy as np
 import pytest
 
 from pyccel import epyccel
-from modules        import mpi_collective as pmod
+from modules import mpi_collective as pmod
 
 #==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
 #==============================================================================
 
-def setup_module( module=None ):
+def setup_module(language, module=None):
 
     comm = MPI.COMM_WORLD
-    fmod = epyccel( pmod, comm=comm )
+    fmod = epyccel(pmod, language=language, comm=comm)
 
     if module:
         module.comm = comm
         module.fmod = fmod
     else:
-        globals().update( locals() )
+        globals().update(locals())
 
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
-def test_np_allreduce( ne=15 ):
+def test_np_allreduce(language, ne=15 ):
     """
     Initialize a 1D integer array with the process rank, and sum across
     all processes using an MPI_SUM global reduction operation.
@@ -62,7 +62,7 @@ def test_np_allreduce( ne=15 ):
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
-def test_np_bcast( ne=15 ):
+def test_np_bcast(language, ne=15 ):
 
     root  = 0
     exact = np.arange( ne, dtype='i' )
@@ -86,7 +86,7 @@ def test_np_bcast( ne=15 ):
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
-def test_np_gather():
+def test_np_gather(language):
 
     root = 0
     nval = 10 * comm.size
@@ -118,7 +118,7 @@ def test_np_gather():
 # CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 #==============================================================================
 
-def teardown_module():
+def teardown_module(language):
 
     comm = MPI.COMM_WORLD
 
@@ -138,10 +138,12 @@ def teardown_module():
 
 if __name__ == '__main__':
 
-    setup_module()
+    l = 'fortran'
 
-    test_np_allreduce()
-    test_np_bcast()
-    test_np_gather()
+    setup_module(l)
 
-    teardown_module()
+    test_np_allreduce(l)
+    test_np_bcast(l)
+    test_np_gather(l)
+
+    teardown_module(l)
