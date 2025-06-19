@@ -161,7 +161,17 @@ class Codegen:
         return self._language
 
     def get_printer_imports(self):
-        """return the imports of the current codeprinter"""
+        """
+        Get the objects that were imported by the current codeprinter.
+
+        Get the objects that were imported by the current codeprinter.
+        These imports may affect the necessary compiler commands.
+
+        Returns
+        -------
+        dict[str, Import]
+            A dictionary mapping the include strings to the import module.
+        """
         additional_imports = self._printer.get_additional_imports().copy()
         if self._parser.metavars['printer_imports']:
             for i in self._parser.metavars['printer_imports'].split(','):
