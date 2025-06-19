@@ -63,12 +63,12 @@ class PyccelInvert(PyccelUnaryOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        dtype = PythonNativeInt()
+        class_type = arg.class_type.switch_dtype(PythonNativeInt())
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
-        self._args = (cast(arg) if arg.dtype is not dtype else arg,)
-        return dtype
+        self._args = (cast(arg) if arg.dtype is not class_type else arg,)
+        return class_type
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
