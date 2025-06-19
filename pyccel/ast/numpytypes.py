@@ -321,13 +321,10 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     @lru_cache
     def __and__(self, other):
         elem_type = self.element_type
-        out_type = NumpyNDArrayType(elem_type, self.rank, self.order)
         if isinstance(other, FixedSizeNumericType):
-            out_type.switch_basic_type(elem_type and other)
-            return out_type
+            return self.switch_basic_type(elem_type and other)
         elif isinstance(other, NumpyNDArrayType):
-            out_type.switch_basic_type(elem_type and other.element_type)
-            return out_type
+            return self.switch_basic_type(elem_type and other.element_type)
         else:
             return NotImplemented
 
