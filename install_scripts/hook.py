@@ -22,7 +22,7 @@ class CustomBuildHook(BuildHookInterface):
         See hatch docs.
     """
 
-    def __init__(self, *args, **kwargs): #pylint: disable=W0246
+    def __init__(self, *args, **kwargs): #pylint: disable=useless-parent-delegation
         super().__init__(*args, **kwargs)
 
     def initialize(self, version, build_data):
