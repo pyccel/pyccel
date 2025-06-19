@@ -149,8 +149,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         cmd_1.append(f'--language={language}')
         relevant_language = [True,
                 *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
-        descriptions = [desc for desc in descriptions if relevant_language]
-        commands = [cmd for cmd in commands if relevant_language]
+        descriptions = [desc for i, desc in enumerate(descriptions) if relevant_language[i]]
+        commands = [cmd for i, cmd in enumerate(commands) if relevant_language[i]]
 
     if verbose > 0:
         verbose_flag = '-' + 'v' * verbose
