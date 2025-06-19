@@ -193,7 +193,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         if verbose:
             cmd_mpi += ['-' + 'v' * verbose]
         if language != 'all':
-            cmd_mpi.append(f'--language={language}')
+            cmd_mpi.append(f'-m={language}')
         print()
         print(desc_mpi)
         print(f'> {" ".join(cmd_mpi)}')
