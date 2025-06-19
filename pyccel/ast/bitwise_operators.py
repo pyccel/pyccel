@@ -64,7 +64,7 @@ class PyccelInvert(PyccelUnaryOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        if arg.class_type.shape:
+        if arg.class_type.rank:
             class_type = arg.class_type
         else:
             class_type = arg.class_type.switch_basic_type(PythonNativeInt())
@@ -187,7 +187,7 @@ class PyccelRShift(PyccelBitOperator):
         """
         class_type = arg1.class_type + arg2.class_type
         if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            if class_type.shape:
+            if class_type.rank:
                 class_type = class_type.switch_basic_type(NumpyInt8Type())
             else:
                 class_type = class_type.switch_basic_type(PythonNativeInt())
@@ -247,7 +247,7 @@ class PyccelLShift(PyccelBitOperator):
         """
         class_type = arg1.class_type + arg2.class_type
         if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            if class_type.shape:
+            if class_type.rank:
                 class_type = class_type.switch_basic_type(NumpyInt8Type())
             else:
                 class_type = class_type.switch_basic_type(PythonNativeInt())
