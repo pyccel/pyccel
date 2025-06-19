@@ -23,18 +23,20 @@ cd pyccel-devel/tests
 We start by running in parallel (with as many threads as possible) the single-process tests which do not create conflicts with other tests (this is very fast):
 
 ```sh
-pytest -ra -m "not parallel and not xdist_incompatible" -n auto
+pytest -n auto -ra -m "not xdist_incompatible and c"
+pytest -n auto -ra -m "not xdist_incompatible and not python and not c"
+pytest -n auto -ra -m "not xdist_incompatible and python"
 ```
 
 Next, we proceed with running the single-process tests which cannot run in parallel with other tests (this takes some time):
 
 ```sh
-pytest -ra -m "not parallel and xdist_incompatible"
+pytest -ra -m "xdist_incompatible"
 ```
 
 Finally, we make sure that the `epyccel` command can be run from an MPI-parallel Python program:
 
 ```sh
-mpirun -n 4 pytest epyccel/test_parallel_epyccel.py
+mpirun -n 4 pytest --with-mpi -ra epyccel/test_parallel_epyccel.py
 ```
 
