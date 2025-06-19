@@ -88,3 +88,17 @@ def test_numpy_bit_rshift(language):
             epyc_z = f(x,y)
             assert np.array_equal(epyc_z, z)
             assert z.dtype is epyc_z.dtype
+
+def test_numpy_bit_invert(language):
+    def f(a : 'IT[:,:,:]'):
+        return ~a
+
+    for t_x in int_types:
+        x = randint(2 if t_x is bool else 127, size=(2,3,4), dtype = t_x)
+
+        epyc_f = epyccel(f, language=language)
+
+        z = f(x)
+        epyc_z = f(x)
+        assert np.array_equal(epyc_z, z)
+        assert z.dtype is epyc_z.dtype
