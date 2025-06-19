@@ -4,7 +4,6 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing scripts to run the unit tests of Pyccel
 """
-import json
 import os
 import pathlib
 from argparse import ArgumentParser
@@ -90,28 +89,36 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     else:
         test_dir = None
 
+    version = pyccel.__version__
+    zip_url = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
+    download_location = f'pyccel-v{version}'
+
     if test_dir is None:
         # Determine the version of Pyccel that we are using
         direct_url = Distribution.from_name("pyccel").read_text("direct_url.json")
-#        print(f"Using Pyccel version {pyccel.__version__} from {pyccel.__file__}")
-#        print(f"Direct URL: {direct_url}")
 
         # If a direct URL is provided, use it to determine the test directory
         # Otherwise, download the test files from GitHub
         if direct_url:
-            direct_url_json = json.loads(direct_url)
-            url = direct_url_json["url"]
-            if url.startswith('file://') and direct_url_json['dir_info'].get('editable', False):
-                test_dir = pathlib.Path(url.removeprefix('file://')) / 'tests'
-                print(f"Using the local test directory from direct URL: {test_dir}")
+            url = direct_url_json["url"].loads(direct_url)
+            if url.startswith("file://"):
+                test_dir = pathlib.Path(url.removeprefix("file://")) / "tests"
+                if test_dir.exists():
+                    print(f"Using the local test directory from direct URL: {test_dir}")
+                else:
+                    print(f"Pyccel was installed from source but the source directory {test_dir} has been deleted.")
+                    print(("Tests will be downloaded from the devel branch but this may lead to "
+                           "failures if the branch does not match or has been updated since the "
+                           "last installation")
+
+                    zip_url = 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'
+                    download_location = "Pyccel's devel branch"
 
     if test_dir is None:
-        version = pyccel.__version__
 
         # Download the test files
         from urllib.request import urlopen
-        print(f"Downloading the test files from GitHub for pyccel-v{version}...")
-        zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
+        print(f"Downloading the test files from GitHub for {download_location}...")
         zip_path = 'pyccel.zip'
         with urlopen(zip_url, timeout=5) as response: # nosec urllib_urlopen
             with open(zip_path, 'wb') as output_file:
