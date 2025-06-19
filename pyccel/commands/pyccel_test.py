@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing scripts to run the unit tests of Pyccel
 """
+import json
 import os
 import pathlib
 from argparse import ArgumentParser
@@ -100,7 +101,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         # If a direct URL is provided, use it to determine the test directory
         # Otherwise, download the test files from GitHub
         if direct_url:
-            url = direct_url_json["url"].loads(direct_url)
+            url = json.loads(direct_url)["url"]
             if url.startswith("file://"):
                 test_dir = pathlib.Path(url.removeprefix("file://")) / "tests"
                 if test_dir.exists():
