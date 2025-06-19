@@ -109,7 +109,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
                     print(f"Pyccel was installed from source but the source directory {test_dir} has been deleted.")
                     print(("Tests will be downloaded from the devel branch but this may lead to "
                            "failures if the branch does not match or has been updated since the "
-                           "last installation")
+                           "last installation"))
 
                     zip_url = 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'
                     download_location = "Pyccel's devel branch"
