@@ -335,7 +335,6 @@ def epyccel_seq(function_class_or_module, *,
     # Try is necessary to ensure lock is released
     try:
         pymod_filename = '{}.py'.format(module_name)
-        pymod_filepath = os.path.join(dirpath, pymod_filename)
         # ...
 
         # Create new directories if not existing

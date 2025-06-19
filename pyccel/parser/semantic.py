@@ -10,7 +10,6 @@ See the developer docs for more details
 from itertools import chain, product
 import os
 from types import ModuleType, BuiltinFunctionType
-import sys
 import typing
 import warnings
 
