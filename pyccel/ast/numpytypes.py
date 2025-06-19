@@ -322,9 +322,9 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     def __and__(self, other):
         elem_type = self.element_type
         if isinstance(other, FixedSizeNumericType):
-            return self.switch_basic_type(elem_type and other)
+            return self.switch_basic_type(elem_type & other)
         elif isinstance(other, NumpyNDArrayType):
-            return self.switch_basic_type(elem_type and other.element_type)
+            return self.switch_basic_type(elem_type & other.element_type)
         else:
             return NotImplemented
 
