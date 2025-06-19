@@ -5,7 +5,7 @@ SymPy expression into a Pyccel-accelerated function.
 import sympy as sp
 from packaging import version
 
-from pyccel.commands.epyccel import epyccel
+from pyccel.commands.epyccel  import epyccel
 from pyccel.utilities.strings import random_string
 from pyccel.errors.errors     import PyccelError
 

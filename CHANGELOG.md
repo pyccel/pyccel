@@ -110,12 +110,9 @@ All notable changes to this project will be documented in this file.
 -   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
 -   #1821 : Ensure an error is raised when creating an ambiguous interface.
 -   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
--   #1853 : Fix translation of a file whose name conflicts with Fortran keywords.
 -   Link and mention `devel` branch, not `master`.
 -   #1913 : Fix function calls to renamed functions.
--   #1927 : Improve error Message for missing target language compiler in Pyccel
 -   #1930 : Preserve ordering of import targets.
--   #1951 : Fix return type for class whose argument cannot be wrapped.
 -   #1892 : Fix implementation of list function when an iterable is passed as parameter.
 -   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
 -   #1972 : Simplified `printf` statement for Literal String.
@@ -212,8 +209,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
--   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
--   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 -   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 -   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
 -   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
@@ -238,7 +233,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
 -   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
 
-
 ### Deprecated
 
 -   #2008 : Remove support for Python 3.8.
@@ -257,7 +251,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 -   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
--   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 -   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
 -   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.

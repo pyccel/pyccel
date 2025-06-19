@@ -7,9 +7,6 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
-from packaging.version import Version
-
-import numpy as np
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -18,7 +15,6 @@ from .datatypes import PythonNativeInt, PrimitiveIntegerType, SymbolicType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 __all__ = (
     'Iterable',

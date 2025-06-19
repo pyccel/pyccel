@@ -532,11 +532,11 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             for index_depth in range(-rank, 0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
-                if rank+index >= len(indices):
-                    indices.append(new_index(PythonNativeInt(),'i'))
-                index_var = indices[rank+index]
-                new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
+                if rank+index_depth >= len(indices):
+                    indices.append(new_index(PythonNativeInt(), 'i'))
+                index = indices[rank+index_depth]
+                new_vars = [insert_index(v, index_depth, index) for v in new_vars]
+                handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
                 if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
@@ -586,7 +586,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     loop_len.append(lhs.shape[0])
                     # If an index exists at the same depth, reuse it if not create one
                     if index_depth >= len(indices):
-                        indices.append(new_index('int', 'i'))
+                        indices.append(new_index(PythonNativeInt(), 'i'))
                     index = indices[index_depth]
                     lhs = insert_index(lhs, index_depth, index)
                 block = collect_loops([Assign(lhs, rhs)], indices, new_index, language_has_vectors)

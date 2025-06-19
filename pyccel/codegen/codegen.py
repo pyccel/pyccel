@@ -229,8 +229,7 @@ class Codegen:
         # print module
         code = self._printer.doprint(self.ast)
         with open(filename, 'w', encoding="utf-8") as f:
-            for line in code:
-                f.write(line)
+            f.write(code)
 
         module_header = ModuleHeader(self.ast)
         # print module header
