@@ -169,8 +169,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Set the return code to OK by default
     retcode = pytest.ExitCode.OK
 
-    commands = []
-
     # Run the tests in the specified order
     for desc, cmd in zip(descriptions, commands):
         print()
