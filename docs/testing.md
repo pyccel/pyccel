@@ -37,3 +37,4 @@ Finally, we make sure that the `epyccel` command can be run from an MPI-parallel
 ```sh
 mpirun -n 4 pytest epyccel/test_parallel_epyccel.py
 ```
+
