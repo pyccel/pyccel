@@ -26,13 +26,12 @@ from sympy import ceiling
 from textx.exceptions import TextXSyntaxError
 
 #==============================================================================
-from pyccel.utilities.strings import random_string
-from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
 
 from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift, PyccelBitAnd
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
@@ -160,8 +159,6 @@ from pyccel.utilities.stage import PyccelStage
 
 import pyccel.decorators as def_decorators
 
-if sys.version_info >= (3, 10):
-    from types import UnionType
 #==============================================================================
 
 errors = Errors()
