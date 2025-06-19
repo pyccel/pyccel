@@ -59,7 +59,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
 
     Returns
     -------
-    retcode : pytest.ExitCode
+    pytest.ExitCode
         The return code of the pytest command. If the tests were
         interrupted by the user, the return code will be
         pytest.ExitCode.INTERRUPTED. If the tests failed, the
@@ -230,7 +230,8 @@ def pyccel_test_command():
 
     Returns
     -------
-    retcode : pytest.ExitCode
+    pytest.ExitCode
+        The pytest return code.
     """
     parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
 
