@@ -108,7 +108,7 @@ def pyccel_test(*, folder, dry_run, verbose):
         print(f"Downloading the test files from GitHub for pyccel-v{version}...")
         zip_url  = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
         zip_path = 'pyccel.zip'
-        with urlopen(zip_url, timeout=5) as response:
+        with urlopen(zip_url, timeout=5) as response: # nosec urllib_urlopen
             with open(zip_path, 'wb') as output_file:
                 output_file.write(response.read())
 
