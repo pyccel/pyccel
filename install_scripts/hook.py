@@ -1,10 +1,8 @@
 """ A script to provide a hook which allows artifacts to be generated during installation of the package.
 """
-import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -20,9 +18,12 @@ class CustomBuildHook(BuildHookInterface):
     ----------
     *args : tuple
         See hatch docs.
-    **kwds : dict
+    **kwargs : dict
         See hatch docs.
     """
+
+    def __init__(self, *args, **kwargs): #pylint: disable=W0246
+        super().__init__(*args, **kwargs)
 
     def initialize(self, version, build_data):
         """
