@@ -307,7 +307,8 @@ def epyccel_seq(function_class_or_module, *,
         code = ''.join(lines)
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
-    elif isinstance(function_class_or_module, str):
+    else:
+        assert isinstance(function_class_or_module, str)
         code = function_class_or_module
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
