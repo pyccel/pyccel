@@ -97,7 +97,7 @@ def pyccel_test(*, folder, dry_run, verbose):
         if direct_url:
             url = json.loads(direct_url)["url"]
             if url.startswith('file://'):
-                test_dir = url.removeprefix('file://')
+                test_dir = pathlib.Path(url.removeprefix('file://')) / 'tests'
                 print(f"Using the local test directory from direct URL: {test_dir}")
 
     if test_dir is None:
@@ -168,7 +168,7 @@ def pyccel_test(*, folder, dry_run, verbose):
     import subprocess
 
     desc_mpi = "Run the parallel tests... [all languages]"
-    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'tests/epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
     print()
     print(desc_mpi)
     print(f'> {" ".join(cmd_mpi)}')
