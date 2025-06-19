@@ -17,8 +17,6 @@ on:
         type: string
   push:
     branches: [devel, main]
-  pull_request:
-    branches: [devel]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
