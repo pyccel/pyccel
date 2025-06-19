@@ -321,7 +321,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     @lru_cache
     def __and__(self, other):
         elem_type = self.element_type
-        assert isinstance(elem_type, PythonNativeBool)
         out_type = NumpyNDArrayType(elem_type, self.rank, self.order)
         if isinstance(other, FixedSizeNumericType):
             out_type.switch_basic_type(elem_type and other)
