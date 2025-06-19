@@ -168,7 +168,7 @@ def pyccel_test(*, folder, dry_run, verbose):
     import subprocess
 
     desc_mpi = "Run the parallel tests... [all languages]"
-    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+    cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'tests/epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
     print()
     print(desc_mpi)
     print(f'> {" ".join(cmd_mpi)}')
