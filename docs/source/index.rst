@@ -16,6 +16,7 @@ Welcome to Pyccel's documentation!
 
    docs/quickstart
    docs/installation
+   docs/testing
    docs/CONTRIBUTING
 
 .. toctree::

@@ -29,6 +29,7 @@ test = [
     "mpi4py >= 3.0.0",
     "pytest >= 7.0",
     "pytest-xdist >= 1.16",
+    "pytest-mpi",
     "scipy >= 1.5.0",
     "tblib >= 1.7.0",
     "numpydoc >= 1.8.0",
@@ -37,6 +38,7 @@ test = [
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel"
 pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
+pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
