@@ -18,7 +18,7 @@ You can do this by running one of the following commands:
   3. Editable install, from sources: pip install ".[test]" --editable
 """
 
-def pyccel_test(*, folder, dry_run, verbose):
+def pyccel_test(*, folder, dry_run, verbose, language):
     """
     Run the unit tests of Pyccel.
 
@@ -52,6 +52,8 @@ def pyccel_test(*, folder, dry_run, verbose):
     verbose : int
         The verbosity level of the output. The higher the number,
         the more detailed the output will be.
+    language : str
+        The target language Pyccel is translating to. Default is 'all'.
     """
 
     assert isinstance(folder, (pathlib.Path, type(None)))
@@ -141,6 +143,13 @@ def pyccel_test(*, folder, dry_run, verbose):
     cmd_4 = ['-ra', '-m (not parallel and not xdist_incompatible and python)', '-n', 'auto']
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
+    if language != 'all':
+        cmd_1.append(f'--language={language}')
+        relevant_language = [True,
+                *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
+        descriptions = [desc for desc in descriptions if relevant_language]
+        commands = [cmd for cmd in commands if relevant_language]
+
     if verbose > 0:
         verbose_flag = '-' + 'v' * verbose
         for cmd in commands:
@@ -169,6 +178,8 @@ def pyccel_test(*, folder, dry_run, verbose):
 
     desc_mpi = "Run the parallel tests... [all languages]"
     cmd_mpi = ['mpirun', '-n', '4', 'pytest', '-ra', 'epyccel/test_parallel_epyccel.py'] + ['-' + 'v' * verbose]
+    if language != 'all':
+        cmd_mpi.append(f'--language={language}')
     print()
     print(desc_mpi)
     print(f'> {" ".join(cmd_mpi)}')
@@ -204,6 +215,10 @@ def pyccel_test_command():
 
     parser.add_argument('--folder', type=pathlib.Path, default=None,
         help="Run tests located in custom folder (default: use Pyccel's distribution).")
+
+    parser.add_argument('--language', choices=('fortran', 'c', 'python', 'all'), default='all',
+                       help='Target language for translation, i.e. the main language of the generated code (default: all).',
+                       type=str.lower)
 
     # Parse the command line arguments
     args = parser.parse_args()
