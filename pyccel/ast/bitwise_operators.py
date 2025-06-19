@@ -11,7 +11,7 @@ They also have specific rules to determine the datatype, rank, shape
 from .builtins     import PythonInt
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
 from .datatypes    import PythonNativeBool, PythonNativeInt
-from .operators    import PyccelUnaryOperator, PyccelOperator
+from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
 
 __all__ = (
     'PyccelBitComparisonOperator',
@@ -74,7 +74,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
 #==============================================================================
 
-class PyccelBitOperator(PyccelOperator):
+class PyccelBitOperator(PyccelBinaryOperator):
     """
     Abstract superclass representing a Python bitwise operator with two arguments.
 
@@ -87,7 +87,6 @@ class PyccelBitOperator(PyccelOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    _shape = None
     __slots__ = ('_class_type',)
 
     def __init__(self, arg1, arg2):
@@ -129,14 +128,6 @@ class PyccelBitOperator(PyccelOperator):
         self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
 
         return class_type
-
-    def _set_shape(self):
-        """
-        Set the shape of the resulting object.
-
-        Set the shape of the resulting object. For a PyccelBitOperator,
-        the shape is a class attribute so nothing needs to be done.
-        """
 
     def __repr__(self):
         return f'{self.args[0]} {self.op} {self.args[1]}' # pylint: disable=no-member
