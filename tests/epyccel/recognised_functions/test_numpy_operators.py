@@ -3,6 +3,7 @@ import os
 from typing import TypeVar
 from numpy.random import randint
 import numpy as np
+import pytest
 
 from pyccel import epyccel
 
