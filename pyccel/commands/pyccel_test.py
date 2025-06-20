@@ -211,7 +211,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             print("Dry run, not executing the parallel tests.")
             retcode = pytest.ExitCode.OK
         else:
-            p = subprocess.run(cmd_mpi, check=False, stderr=subprocess.PIPE)
+            p = subprocess.run(cmd_mpi, check=False, capture_output=True)
+            print(p.stdout)
             if p.returncode != 0:
                 print("Error running parallel tests")
                 print(p.stderr)
