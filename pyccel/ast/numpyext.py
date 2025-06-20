@@ -2759,6 +2759,7 @@ class NumpyNDArray(PyccelFunction):
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
+    PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
     NumpyInt16Type()      : NumpyInt16,
     NumpyInt32Type()      : NumpyInt32,
