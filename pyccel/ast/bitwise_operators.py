@@ -125,10 +125,8 @@ class PyccelBitOperator(PyccelBinaryOperator):
         """
         class_type = arg1.class_type + arg2.class_type
         if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            if class_type.rank:
-                class_type = class_type.switch_basic_type(NumpyInt8Type())
-            else:
-                class_type = class_type.switch_basic_type(PythonNativeInt())
+            assert class_type.rank > 0
+            class_type = class_type.switch_basic_type(NumpyInt8Type())
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
         self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
