@@ -64,6 +64,12 @@ class GitHubAPIInteractions:
 
     A helper class which exposes the GitHub API in a readable
     manner.
+
+    Parameters
+    ----------
+    repo : str
+        A string which identifies the repository where the requests
+        should be made (e.g. 'pyccel/pyccel')
     """
     def __init__(self, repo):
         repo = repo or os.environ["GITHUB_REPOSITORY"]
