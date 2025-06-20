@@ -69,7 +69,7 @@ class GitHubAPIInteractions:
     ----------
     repo : str
         A string which identifies the repository where the requests
-        should be made (e.g. 'pyccel/pyccel')
+        should be made (e.g. 'pyccel/pyccel').
     """
     def __init__(self, repo):
         repo = repo or os.environ["GITHUB_REPOSITORY"]
