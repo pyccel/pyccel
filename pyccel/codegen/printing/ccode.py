@@ -2516,7 +2516,11 @@ class CCodePrinter(CodePrinter):
         return ' & '.join(args)
 
     def _print_PyccelInvert(self, expr):
-        return '~{}'.format(self._print(expr.args[0]))
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'!{arg}'
+        else:
+            return f'~{arg}'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))

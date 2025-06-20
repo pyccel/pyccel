@@ -3086,28 +3086,37 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelRShift(self, expr):
-        return 'RSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'RSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelLShift(self, expr):
-        return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'LSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitXor(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .neqv. '.join(self._print(a) for a in expr.args)
-        return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IEOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitOr(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .or. '.join(self._print(a) for a in expr.args)
-        return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitAnd(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .and. '.join(self._print(a) for a in expr.args)
-        return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IAND({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelInvert(self, expr):
-        return 'NOT({})'.format(self._print(expr.args[0]))
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'.not. ({arg})'
+        else:
+            return f'NOT({arg})'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))

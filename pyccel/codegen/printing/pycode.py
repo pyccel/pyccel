@@ -24,7 +24,7 @@ from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
-from pyccel.ast.numpyext   import NumpyNDArray
+from pyccel.ast.numpyext   import NumpyNDArray, NumpyBool
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
@@ -179,6 +179,8 @@ class PythonCodePrinter(CodePrinter):
             cls = expr
         else:
             cls = type(expr)
+        if cls is NumpyBool:
+            return 'bool'
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
         if name == type_name and cls not in (PythonBool, PythonInt, PythonFloat, PythonComplex):
