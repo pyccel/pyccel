@@ -13,7 +13,7 @@ import numpy
 
 from .builtins     import DtypePrecisionToCastFunction
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
-from .datatypes    import PythonNativeBool, PythonNativeInt
+from .datatypes    import PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
 from .numpytypes   import NumpyInt8Type
 
