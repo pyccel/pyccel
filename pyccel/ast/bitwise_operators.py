@@ -123,12 +123,12 @@ class PyccelBitOperator(PyccelBinaryOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        try:
-            class_type = arg1.class_type + arg2.class_type
-        except NotImplementedError as err:
-            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
-
-        assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
+        class_type = arg1.class_type + arg2.class_type
+        if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
+            if class_type.rank:
+                class_type = class_type.switch_basic_type(NumpyInt8Type())
+            else:
+                class_type = class_type.switch_basic_type(PythonNativeInt())
 
         cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
         self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
@@ -163,41 +163,6 @@ class PyccelRShift(PyccelBitOperator):
     _precedence = 11
     op = ">>"
 
-    def _calculate_type(self, arg1, arg2):
-        """
-        Get the type of the result of the function.
-
-        If one argument is a string then all arguments must be strings.
-
-        If the arguments are numeric then the datatype
-        matches the broadest type.
-        e.g.
-            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
-
-        Parameters
-        ----------
-        arg1 : TypedAstNode
-            The first argument passed to the operator.
-        arg2 : TypedAstNode
-            The second argument passed to the operator.
-
-        Returns
-        -------
-        DataType
-            The  datatype of the result of the operation.
-        """
-        class_type = arg1.class_type + arg2.class_type
-        if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            if class_type.rank:
-                class_type = class_type.switch_basic_type(NumpyInt8Type())
-            else:
-                class_type = class_type.switch_basic_type(PythonNativeInt())
-
-        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
-        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
-
-        return class_type
-
 #==============================================================================
 
 class PyccelLShift(PyccelBitOperator):
@@ -222,41 +187,6 @@ class PyccelLShift(PyccelBitOperator):
     __slots__ = ()
     _precedence = 11
     op = "<<"
-
-    def _calculate_type(self, arg1, arg2):
-        """
-        Get the type of the result of the function.
-
-        If one argument is a string then all arguments must be strings.
-
-        If the arguments are numeric then the datatype
-        matches the broadest type.
-        e.g.
-            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
-
-        Parameters
-        ----------
-        arg1 : TypedAstNode
-            The first argument passed to the operator.
-        arg2 : TypedAstNode
-            The second argument passed to the operator.
-
-        Returns
-        -------
-        DataType
-            The  datatype of the result of the operation.
-        """
-        class_type = arg1.class_type + arg2.class_type
-        if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
-            if class_type.rank:
-                class_type = class_type.switch_basic_type(NumpyInt8Type())
-            else:
-                class_type = class_type.switch_basic_type(PythonNativeInt())
-
-        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
-        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
-
-        return class_type
 
 #==============================================================================
 
