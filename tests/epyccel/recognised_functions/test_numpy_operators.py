@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 from typing import TypeVar
 from numpy.random import randint
 import numpy as np
@@ -185,6 +186,8 @@ def test_numpy_bit_rshift(language):
             assert np.array_equal(epyc_z3, z3)
             assert z3.dtype is epyc_z3.dtype
 
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'intel',
+        reason="Intel's invert implementation does not seem to match.")
 def test_numpy_bit_invert(language):
     def f(a : 'IT[:,:,:]'):
         return ~a
