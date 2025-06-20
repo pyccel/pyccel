@@ -55,6 +55,7 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py markdown_lint
       - name: Markdownlint
+        id: md_test
         uses: DavidAnson/markdownlint-cli2-action@v19
         with:
           config: './.markdownlint.json'
@@ -62,4 +63,4 @@ jobs:
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request'
         run:
-          python ci_tools/complete_check_run.py ${{ steps.spelling.outcome }} ${{ steps.manual_spelling.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.md_test.outcome }}
