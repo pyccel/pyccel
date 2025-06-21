@@ -43,6 +43,7 @@ jobs:
           CURRENT_VERSION=$(grep -oe "[0-9\.]*" pyccel/version.py)
           TEST_VERSION=${CURRENT_VERSION}.dev$(date +%Y%m%d%H%M%S)
           sed -i "s/${CURRENT_VERSION}/${TEST_VERSION}/g" pyccel/version.py
+          echo "TEST_VERSION=${TEST_VERSION}" >> $GITHUB_ENV
           python3 -m build
           ls dist/*
           python -m twine check --strict dist/*
@@ -55,6 +56,6 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         timeout-minutes: 60
         run: |
-          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyccel[test]
+          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyccel[test]=="${TEST_VERSION}"
           pyccel-test
         shell: bash
