@@ -7,7 +7,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    branches: [devel, main]
+    branches: [main]
 
 jobs:
   deployTest:
