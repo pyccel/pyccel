@@ -41,14 +41,14 @@ class CustomBuildHook(BuildHookInterface):
         """
         # Build gFTL for installation
         pyccel_root = Path(__file__).parent.parent
-        p = subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=False, capture_output=True)
-        print(pyccel_root)
-        print(p.stdout)
-        print(p.stderr)
-        assert p.returncode == 0
         gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
-        subprocess.run([shutil.which('git'), 'clean', '-fd'], cwd = gFTL_folder, check=True)
+        if not gFTL_folder.exists():
+            try:
+                p = subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
+            except subprocess.CalledProcessError:
+                raise RuntimeError("Trying to build in an isolated environment but submodules are not available. Please call 'git submodule update --init'")
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
+        shutil.rmtree(gFTL_folder / 'install', ignore_errors = True)
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
                         f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}'], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
