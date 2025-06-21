@@ -38,7 +38,7 @@ jobs:
       - name: Build and deploy
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          echo ${{ github.event.workflow_run.head_branch }}
+          git log -1
           python3 -m build
           ls dist/*
           python3 -m twine upload --repository testpypi dist/* --non-interactive
