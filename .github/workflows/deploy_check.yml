@@ -48,6 +48,7 @@ jobs:
           ls dist/*
           python -m twine check --strict dist/*
           python -m twine upload --repository testpypi dist/* --non-interactive --verbose
+          sleep 60
         shell: bash
         env:
           TWINE_USERNAME: '__token__'
