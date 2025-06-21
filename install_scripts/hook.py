@@ -40,8 +40,9 @@ class CustomBuildHook(BuildHookInterface):
             See hatch documentation.
         """
         # Build gFTL for installation
-        subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], check=True)
-        gFTL_folder = (Path(__file__).parent.parent / 'pyccel' / 'extensions' / 'gFTL').absolute()
+        pyccel_root = Path(__file__).parent.parent
+        subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
+        gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
         subprocess.run([shutil.which('git'), 'clean', '-fd'], cwd = gFTL_folder, check=True)
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
