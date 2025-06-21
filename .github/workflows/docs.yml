@@ -113,6 +113,10 @@ jobs:
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
           export PYTHONPATH=ci_tools
+          ls
+          git status
+          python3 -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
+          python -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
           while read line; do
             echo "python -m numpydoc validate $line"
             python -m numpydoc validate $line 2>&1 | tee -a report.txt || true
