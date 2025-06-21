@@ -26,7 +26,7 @@ on:
       - ready_for_review
 
 env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
+  COMMIT: ${{ inputs.ref || github.event.pull_request.head.sha }}
   PEM: ${{ secrets.BOT_PEM }}
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
