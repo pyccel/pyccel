@@ -1,0 +1,56 @@
+name: Deploy new version to PyPi
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - [main]
+
+jobs:
+  deployTest:
+    runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
+    steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**"]'
+      - name: Checkout repository
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          ref: main
+          fetch-depth: 2
+      - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: ./.github/actions/linux_install
+      - name: Update build
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build
+          python -m pip install --upgrade twine
+      - name: Build and deploy
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          echo ${{ github.event.workflow_run.head_branch }}
+          python3 -m build
+          ls dist/*
+          python3 -m twine upload --repository testpypi dist/* --non-interactive
+        shell: bash
+        env:
+          TWINE_USERNAME: '__token__'
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Check pyccel package
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        timeout-minutes: 60
+        run: |
+          python -m pip install --index-url https://test.pypi.org/simple/ pyccel[test]
+          pyccel-test
+        shell: bash
