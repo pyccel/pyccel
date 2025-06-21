@@ -1,4 +1,4 @@
-name: Deploy new version to PyPi
+name: Check deployment of new version to PyPi
 
 on:
   pull_request:
