@@ -113,8 +113,11 @@ jobs:
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
           export PYTHONPATH=ci_tools
-          ls
           git status
+          ls
+          ls ci_tools
+          ls ci_tools/bot_tools
+          python3 -c "from ci_tools.bot_tools import github_api_interactions"
           python3 -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
           python -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
           while read line; do
