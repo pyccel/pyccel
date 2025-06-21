@@ -41,7 +41,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           CURRENT_VERSION=$(grep -oe "[0-9\.]*" pyccel/version.py)
-          TEST_VERSION=${CURRENT_VERSION}.dev$(date +%Y%m%d%H%M%S).$(git log -1 --pretty=%H)
+          TEST_VERSION=${CURRENT_VERSION}.dev$(date +%Y%m%d%H%M%S)
           sed -i "s/${CURRENT_VERSION}/${TEST_VERSION}/g" pyccel/version.py
           python3 -m build
           ls dist/*
