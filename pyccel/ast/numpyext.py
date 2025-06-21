@@ -24,7 +24,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice

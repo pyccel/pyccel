@@ -5,13 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 from ..errors.errors    import Errors
-from .basic             import PyccelAstNode, iterable
-from .core              import Assign, FunctionCallArgument
-from .core              import FunctionCall
-from .internals         import PyccelSymbol, Slice
-from .type_annotations  import SyntacticTypeAnnotation, UnionTypeAnnotation
-from .variable          import DottedName, DottedVariable
-from .variable          import Variable
+from .basic             import PyccelAstNode
 
 __all__ = (
     'Header',

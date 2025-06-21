@@ -18,7 +18,6 @@ from .core          import (AsName, Import, FunctionCall,
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple, PythonSet)
-from .bind_c        import BindCVariable
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
 from .datatypes     import StringType
