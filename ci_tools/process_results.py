@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 else:
                     errors[file_name].append(msg)
                 parsing_errors.append(line)
-            elif code not in warning_codes:
+            elif code in warning_codes:
                 continue
             else:
                 level = None
