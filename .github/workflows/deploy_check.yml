@@ -48,7 +48,7 @@ jobs:
           sed -i "s/${CURRENT_VERSION}/${TEST_VERSION}/g" pyccel/version.py
           python3 -m build
           ls dist/*
-          python3 -m twine check dist/*
+          python3 -m twine check --strict dist/*
           python3 -m twine upload --repository testpypi dist/* --non-interactive --verbose
         shell: bash
         env:
