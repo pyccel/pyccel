@@ -41,7 +41,10 @@ class CustomBuildHook(BuildHookInterface):
         """
         # Build gFTL for installation
         pyccel_root = Path(__file__).parent.parent
-        subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
+        p = subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=False, capture_output=True)
+        print(p.stdout)
+        print(p.stderr)
+        assert p.returncode == 0
         gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
         subprocess.run([shutil.which('git'), 'clean', '-fd'], cwd = gFTL_folder, check=True)
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
