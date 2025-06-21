@@ -55,6 +55,6 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         timeout-minutes: 60
         run: |
-          python -m pip install --index-url https://test.pypi.org/simple/ pyccel[test]
+          python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyccel[test]
           pyccel-test
         shell: bash
