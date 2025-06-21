@@ -39,6 +39,7 @@ jobs:
           git log -1
           python3 -m build
           ls dist/*
+          python3 -m twine check dist/*
           python3 -m twine upload --repository testpypi dist/* --non-interactive
         shell: bash
         env:
