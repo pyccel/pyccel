@@ -99,7 +99,7 @@ All notable changes to this project will be documented in this file.
 -   \[DEVELOPER\] Add an improved traceback to the developer-mode errors for errors in function calls.
 -   \[DEVELOPER\] Add an environment variable to globally activate developer-mode for errors.
 -   \[DEVELOPER\] Add a spell checker for the code itself.
--   \[DEVELOPER\] Add a test to main CI to check if deployment to PyPI is working correctly.
+-   \[DEVELOPER\] Add a test to main CI to check if deployment to TestPyPI is working correctly.
 
 ### Fixed
 
