@@ -44,9 +44,9 @@ class CustomBuildHook(BuildHookInterface):
         gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
         if next(gFTL_folder.iterdir(), None) is None:
             try:
-                p = subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
-            except subprocess.CalledProcessError:
-                raise RuntimeError("Trying to build in an isolated environment but submodules are not available. Please call 'git submodule update --init'")
+                subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError("Trying to build in an isolated environment but submodules are not available. Please call 'git submodule update --init'") from e
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
         shutil.rmtree(gFTL_folder / 'install', ignore_errors = True)
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
