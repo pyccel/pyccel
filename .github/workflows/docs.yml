@@ -26,7 +26,7 @@ on:
       - ready_for_review
 
 env:
-  COMMIT: ${{ inputs.ref || github.event.pull_request.head.sha }}
+  COMMIT: ${{ inputs.ref || github.event.ref }}
   PEM: ${{ secrets.BOT_PEM }}
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
@@ -68,14 +68,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: "Setup check run"
-        if: github.event_name != 'pull_request'
-        id: token
-        run: |
-          pip install jwt requests
-          cd compare
-          python ../base/ci_tools/setup_check_run.py docs
-          cd ..
       - name: Install python CI dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
@@ -83,7 +75,15 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
+          python -m pip install jwt requests # Required to parse ci_tools folder
         shell: bash
+      - name: "Setup check run"
+        if: github.event_name != 'pull_request'
+        id: token
+        run: |
+          cd compare
+          python ../base/ci_tools/setup_check_run.py docs
+          cd ..
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./compare/.github/actions/linux_install
@@ -113,13 +113,6 @@ jobs:
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
           export PYTHONPATH=ci_tools
-          git status
-          ls
-          ls ci_tools
-          ls ci_tools/bot_tools
-          python3 -c "from ci_tools.bot_tools import github_api_interactions"
-          python3 -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
-          python -m numpydoc validate ci_tools.bot_tools.github_api_interactions.GitHubAPIInteractions
           while read line; do
             echo "python -m numpydoc validate $line"
             python -m numpydoc validate $line 2>&1 | tee -a report.txt || true
