@@ -1,0 +1,80 @@
+name: Check deployment of new version to PyPi
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches: [main]
+
+jobs:
+  deployTest:
+    runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
+    steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**"]'
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Checkout repository
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: ./.github/actions/linux_install
+      - name: Update build
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build
+          python -m pip install --upgrade twine
+      - name: Build and deploy
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          CURRENT_VERSION=$(grep -oe "[0-9\.]*" pyccel/version.py)
+          TEST_VERSION=${CURRENT_VERSION}.dev$(date +%Y%m%d%H%M%S)
+          sed -i "s/${CURRENT_VERSION}/${TEST_VERSION}/g" pyccel/version.py
+          echo "TEST_VERSION=${TEST_VERSION}" >> $GITHUB_ENV
+          python -m build
+          ls dist/*
+          python -m twine check --strict dist/*
+          python -m twine upload --repository testpypi dist/* --non-interactive --verbose
+          sleep 60
+        shell: bash
+        env:
+          TWINE_USERNAME: '__token__'
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - name: Check pyccel package
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        timeout-minutes: 60
+        run: |
+          WAIT=20
+          SUCCESS=0
+          for i in {1..5}; do
+            echo "Attempt $i: Installing pyccel==${TEST_VERSION}..."""
+            if python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyccel[test]=="${TEST_VERSION}"
+            then
+              SUCCESS=1
+              break
+            else
+              echo "Install failed. Retrying in $WAIT seconds..."
+              sleep $WAIT
+            fi
+          done
+
+          # Final check
+          if [ "$SUCCESS" -ne 1 ]; then
+            echo "ERROR: Failed to install pyccel==${TEST_VERSION}."
+            exit 1
+          fi
+          pyccel-test --folder tests
+        shell: bash

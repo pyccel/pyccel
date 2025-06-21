@@ -92,13 +92,14 @@ All notable changes to this project will be documented in this file.
 -   #2293 : Add `pyccel-test` command to run unit tests. Improve docs.
 -   #2358 : Add support for bitwise operators with NumPy arrays.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
--   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Add `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
--   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
--   \[DEVELOPER\] Added a spell checker for the code itself.
+-   \[DEVELOPER\] Add an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Add an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Add a spell checker for the code itself.
+-   \[DEVELOPER\] Add a test to main CI to check if deployment to TestPyPI is working correctly.
 
 ### Fixed
 

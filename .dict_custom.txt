@@ -25,6 +25,7 @@ deallocations
 deallocating
 conda
 PyPI
+TestPyPI
 CentOS
 RHEL
 executables
