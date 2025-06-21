@@ -7,7 +7,7 @@ name = "pyccel"
 dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENCE"]
+license-files = ["LICENSE"]
 requires-python = ">= 3.9"
 authors = [
     { name = "Pyccel development team" },
