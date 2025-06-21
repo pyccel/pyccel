@@ -4,7 +4,7 @@ from numpy.random import random
 import pytest
 
 import modules.augassign as mod
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 # += tests
 RTOL = 1e-12
@@ -216,7 +216,7 @@ def test_augassign_div_2d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -256,3 +256,15 @@ def test_augassign_array_func(language):
     func_epyc(x_epyc,y)
 
     assert np.allclose(x, x_epyc, rtol=RTOL, atol=ATOL)
+
+def test_augassign_floor_div(language):
+    func = mod.augassign_floor_div
+    func_epyc = epyccel(func, language = language)
+
+    x1_float = random((5,))*10
+    x2_float = x1_float.copy()
+
+    func(x1_float)
+    func_epyc(x2_float)
+
+    assert np.allclose(x1_float, x2_float, rtol=RTOL, atol=ATOL)

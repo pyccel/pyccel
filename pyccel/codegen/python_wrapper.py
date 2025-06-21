@@ -8,20 +8,16 @@ import os
 import time
 
 from pyccel.ast.core                             import ModuleHeader
-from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+from pyccel.codegen.compiling.basic              import CompileObj
 from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
 from pyccel.codegen.printing.fcode               import FCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
-from pyccel.codegen.utilities                    import recompile_object
-from pyccel.codegen.utilities                    import copy_internal_library
-from pyccel.codegen.utilities                    import internal_libs
+from pyccel.codegen.utilities                    import manage_dependencies
+from pyccel.errors.errors                        import Errors
 from pyccel.naming                               import name_clash_checkers
 from pyccel.parser.scope                         import Scope
 from pyccel.utilities.stage                      import PyccelStage
-from .compiling.basic                            import CompileObj
-
-from pyccel.errors.errors import Errors
 
 errors = Errors()
 
@@ -32,13 +28,13 @@ __all__ = ['create_shared_library']
 #==============================================================================
 def create_shared_library(codegen,
                           main_obj,
+                          *,
                           language,
                           wrapper_flags,
                           pyccel_dirpath,
-                          src_compiler,
-                          wrapper_compiler,
+                          compiler,
                           sharedlib_modname=None,
-                          verbose = False):
+                          verbose):
     """
     Create a shared library which can be called from Pyccel.
 
@@ -69,22 +65,15 @@ def create_shared_library(codegen,
     pyccel_dirpath : str
         The path to the directory where the files are created and compiled.
 
-    src_compiler : pyccel.codegen.compiling.compilers.Compiler
+    compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the library.
-
-    wrapper_compiler : pyccel.codegen.compiling.compilers.Compiler
-        The compiler which should be used to compile the wrapper.
-        Often this is the same as src_compiler but it may be different
-        when the language is not C to ensure that src_compiler can link
-        the appropriate language-specific libraries.
 
     sharedlib_modname : str, default: None
         The name of the shared library. The default is the name of the
         module printed by the printer.
 
-    verbose : bool, default: False
-        Indicates if the compiling should be done with verbosity to show the
-        compiler commands.
+    verbose : int
+        Indicates the level of verbosity.
 
     Returns
     -------
@@ -120,14 +109,18 @@ def create_shared_library(codegen,
 
     if language == 'fortran':
         start_bind_c_wrapping = time.time()
+        if verbose:
+            print(">> Building Fortran-C interface :: ", module_name)
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-        wrapper = FortranToCWrapper()
+        wrapper = FortranToCWrapper(verbose)
         bind_c_mod = wrapper.wrap(codegen.ast)
         timings['Bind C wrapping'] = time.time() - start_bind_c_wrapping
 
-        start_bind_c_printing = time.time()
-        bind_c_code = FCodePrinter(bind_c_mod.name).doprint(bind_c_mod)
         bind_c_filename = f'{bind_c_mod.name}.f90'
+        if verbose:
+            print(">> Printing :: ", bind_c_filename)
+        start_bind_c_printing = time.time()
+        bind_c_code = FCodePrinter(bind_c_mod.name, verbose=verbose).doprint(bind_c_mod)
 
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
@@ -139,8 +132,9 @@ def create_shared_library(codegen,
                 flags  = main_obj.flags,
                 dependencies = (main_obj,))
         wrapper_compile_obj.add_dependencies(bind_c_obj)
-        src_compiler.compile_module(compile_obj=bind_c_obj,
+        compiler.compile_module(compile_obj=bind_c_obj,
                 output_folder=pyccel_dirpath,
+                language=language,
                 verbose=verbose)
         timings['Bind C wrapping'] = time.time() - start_bind_c_compiling
         c_ast = bind_c_mod
@@ -148,36 +142,20 @@ def create_shared_library(codegen,
         c_ast = codegen.ast
 
     #---------------------------------------
-    #     Compile cwrapper from stdlib
-    #---------------------------------------
-    start_compile_libs = time.time()
-    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
-                                extra_files = {'numpy_version.h' :
-                                                get_numpy_max_acceptable_version_file()})
-
-    cwrapper_lib = internal_libs["cwrapper"][1]
-    cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
-
-    # get the include folder path and library files
-    recompile_object(cwrapper_lib,
-                      compiler = wrapper_compiler,
-                      verbose  = verbose)
-    timings['Dependency compilation'] = time.time() - start_compile_libs
-
-    wrapper_compile_obj.add_dependencies(cwrapper_lib)
-
-    #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
-    module_old_name = codegen.ast.name
-    wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
+    wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language, verbose=verbose)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper = CToPythonWrapper(base_dirpath)
+    wrapper = CToPythonWrapper(base_dirpath, verbose)
 
+    if verbose:
+        print(">> Building C-Python interface :: ", c_ast.name)
     start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
+    if verbose:
+        print(">> Printing :: ", wrapper_filename)
     start_print_cwrapper = time.time()
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)
@@ -197,33 +175,23 @@ def create_shared_library(codegen,
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
     start_compile_libs = time.time()
-    for lib_name in ("ndarrays", "cwrapper_ndarrays"):
-        if lib_name in wrapper_codegen.get_additional_imports():
-            stdlib_folder, stdlib = internal_libs[lib_name]
-
-            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
-
-            # Pylint determines wrong type
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-            # get the include folder path and library files
-            recompile_object(stdlib,
-                              compiler = wrapper_compiler,
-                              verbose  = verbose)
-
-            wrapper_compile_obj.add_dependencies(stdlib)
-    timings['Dependency compilation'] += (time.time() - start_compile_libs)
+    manage_dependencies(wrapper_codegen.get_additional_imports(), compiler,
+            pyccel_dirpath, wrapper_compile_obj, 'c', verbose)
+    timings['Dependency compilation'] = (time.time() - start_compile_libs)
 
     #---------------------------------------
     #         Compile code
     #---------------------------------------
     start_compile_wrapper = time.time()
-    wrapper_compiler.compile_module(wrapper_compile_obj,
-                                output_folder = pyccel_dirpath,
-                                verbose = verbose)
+    compiler.compile_module(wrapper_compile_obj,
+                            output_folder = pyccel_dirpath,
+                            language='c',
+                            verbose = verbose)
 
-    sharedlib_filepath = src_compiler.compile_shared_library(wrapper_compile_obj,
+    sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_obj,
                                                     output_folder = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
+                                                    language = language,
                                                     verbose = verbose)
     timings['Wrapper compilation'] = time.time() - start_compile_wrapper
 

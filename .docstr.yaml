@@ -1,6 +1,8 @@
 skip_magic: True
 skip_init: True
 fail_under: 0
+exclude:
+  ".*/pyccel/extensions"
 ignore_patterns:
   "syntactic":
     - "_visit_.*"
@@ -8,3 +10,6 @@ ignore_patterns:
     - "_visit_.*"
   ".*code":
     - "_print_.*"
+  ".*_wrapper":
+    - "_extract_.*_FunctionDefArgument"
+    - "_extract_.*_FunctionDefResult"

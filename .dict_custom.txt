@@ -12,6 +12,8 @@ LAPACK
 MPI
 OpenMP
 Fortran
+Lua
+Fortran's
 pyccelise
 pyccelised
 pyccelising
@@ -23,6 +25,7 @@ deallocations
 deallocating
 conda
 PyPI
+TestPyPI
 CentOS
 RHEL
 executables
@@ -76,7 +79,6 @@ booleans
 quicksort
 iterm
 textx
-traceback
 tracebacks
 pytest
 docstring
@@ -113,3 +115,18 @@ subclasses
 oneAPI
 getter
 setter
+bitwise
+datatyping
+datatypes
+indexable
+traceback
+STC
+gFTL
+STC's
+gFTL's
+CMake
+suboptimal
+pythonic
+pre
+LLVM
+linter

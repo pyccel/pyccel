@@ -3,8 +3,9 @@ from mpi4py import MPI
 import numpy as np
 import pytest
 
-from pyccel.epyccel import epyccel
-from modules        import mpi_point_to_point as pmod
+from modules import mpi_point_to_point as pmod
+
+from pyccel import epyccel
 
 #==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
@@ -25,7 +26,7 @@ def setup_module( module=None ):
 # UNIT TESTS
 #==============================================================================
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_np_sendrecv():
 
     rank = comm.Get_rank()

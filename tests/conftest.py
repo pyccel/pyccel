@@ -21,6 +21,15 @@ if github_debugging:
 def language(request):
     return request.param
 
+@pytest.fixture( params=[
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ],
+    scope = "session"
+)
+def stc_language(request):
+    return request.param
+
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):
         for name in files:
@@ -35,9 +44,8 @@ def pytest_runtest_teardown(item, nextitem):
     xdist_plugin = config.pluginmanager.getplugin("xdist")
     if xdist_plugin is None or "PYTEST_XDIST_WORKER_COUNT" not in os.environ \
             or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
-        print("Tearing down!")
         marks = [m.name for m in item.own_markers ]
-        if 'parallel' not in marks:
+        if 'mpi' not in marks:
             pyccel_clean(path_dir, remove_shared_libs = True)
         else:
             comm = MPI.COMM_WORLD
@@ -52,8 +60,7 @@ def pytest_addoption(parser):
 def pytest_sessionstart(session):
     # setup_stuff
     if session.config.option.developer_mode:
-        from pyccel.errors.errors import ErrorsMode
-        ErrorsMode().set_mode('developer')
+        os.environ['PYCCEL_ERROR_MODE'] = 'developer'
 
     if github_debugging:
         logging.basicConfig()
@@ -66,5 +73,12 @@ def pytest_sessionstart(session):
     xdist_plugin = config.pluginmanager.getplugin("xdist")
     if xdist_plugin is None:
         marks = [m.name for m in session.own_markers ]
-        if 'parallel' not in marks:
+        if 'mpi' not in marks:
             pyccel_clean(path_dir)
+
+def pytest_runtest_setup(item):
+    # Skip on `skip_llvm` marker and environment variable
+    if 'skip_llvm' in item.keywords:
+        if os.environ.get('PYCCEL_DEFAULT_COMPILER', '').lower() == 'llvm':
+            pytest.skip("Skipping test because PYCCEL_DEFAULT_COMPILER=LLVM")
+

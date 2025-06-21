@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -102,7 +102,7 @@ def test_f5(language):
 def test_f6(language):
     import modules.Module_4 as mod
 
-    modnew = epyccel(mod, language = language, verbose=True)
+    modnew = epyccel(mod, language = language)
 
     # ...
     assert mod.call_optional_1() == modnew.call_optional_1()

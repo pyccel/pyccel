@@ -7,6 +7,7 @@
 #define         PYC_MATH_C_H
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <complex.h>
 
 /*
@@ -26,14 +27,16 @@ inline double       pyc_degrees(double radians)
 {
     return radians * (180.0 / M_PI);
 }
-inline int64_t      pyc_modulo(int64_t a, int64_t b){
+inline int64_t      pyc_modulo(int64_t a, int64_t b)
+{
         int64_t modulo = a % b;
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
             return modulo;
         else
             return modulo + b;
 }
-inline double        pyc_fmodulo(double a, double b){
+inline double        pyc_fmodulo(double a, double b)
+{
         double modulo = fmod(a, b);
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
             return modulo;
@@ -45,5 +48,28 @@ long long int isign(long long int x);
 double fsign(double x);
 double complex csgn(double complex x);
 double complex csign(double complex x);
+
+double fpyc_bankers_round(double arg, int64_t ndigits);
+int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
+
+#define PY_FLOOR_DIV_TYPE(TYPE)                         \
+    static inline TYPE py_floor_div_##TYPE(TYPE x, TYPE y) { \
+        return (TYPE)(x / y - ((x % y != 0) && ((x < 0) ^ (y < 0)))); \
+    }
+
+PY_FLOOR_DIV_TYPE(int8_t)
+PY_FLOOR_DIV_TYPE(int16_t)
+PY_FLOOR_DIV_TYPE(int32_t)
+PY_FLOOR_DIV_TYPE(int64_t)
+
+inline double complex complex_min(double complex a, double complex b) {
+    bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
+    return lt ? a : b;
+}
+
+inline double complex complex_max(double complex a, double complex b) {
+    bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
+    return lt ? b : a;
+}
 
 #endif

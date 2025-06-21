@@ -5,7 +5,7 @@ SymPy expression into a Pyccel-accelerated function.
 import sympy as sp
 from packaging import version
 
-from pyccel.epyccel           import epyccel
+from pyccel.commands.epyccel  import epyccel
 from pyccel.utilities.strings import random_string
 from pyccel.errors.errors     import PyccelError
 
@@ -15,8 +15,7 @@ else:
     from sympy.printing.pycode import NumPyPrinter
 
 def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             templates : 'dict[str, list[str]]' = None, use_out = False,
-             **kwargs):
+             use_out = False, **kwargs):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 
@@ -32,20 +31,14 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
         A dictionary of the arguments of the function being created.
         The keys are variables representing the arguments that will be
         passed to the function. The values are the the type annotations
-        for those functions.
+        for those functions. To use more complex objects (e.g. TypeVars)
+        please use the epyccel keyword argument `context_dicts`.
     result_type : str, optional
         The type annotation for the result of the function. This argument
         is optional but it is recommended to provide it as SymPy
         expressions do not always evaluate to the expected type. For
         example if the SymPy expression simplifies to 0 then the default
         type will be int even if the arguments are floats.
-    templates : dict[str, list[str]], optional
-        A description of any templates that should be added to the
-        function. The keys are the symbols which can be used as type
-        specifiers, the values are a list of the type annotations which
-        are valid types for the symbol. See
-        <https://github.com/pyccel/pyccel/blob/devel/docs/templates.md>
-        for more details.
     use_out : bool, default=False
         If true the function will modify an argument called 'out' instead
         of returning a newly allocated array. If this argument is set then
@@ -100,15 +93,6 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
                    f"     {result_type}"))
     else:
         signature = f'def {func_name}({args_code}):'
-    if templates:
-        if not (isinstance(templates, dict) and all(isinstance(k, str) and hasattr(v, '__iter__') for k,v in templates.items()) \
-                and all(all(isinstance(type_annot, str) for type_annot in v) for v in templates.values())):
-            raise TypeError("Argument 'templates': Expected a dictionary mapping strings describing type specifiers to lists of string type annotations.")
-
-        decorators = '\n'.join(f'@template("{key}", ['+', '.join(f'"{annot}"' for annot in annotations)+'])' \
-                for key, annotations in templates.items())
-    else:
-        decorators = ''
     if use_out:
         code = f'    out[:] = {expr}'
     else:
@@ -117,7 +101,7 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
 
     docstring += '\n    """'
 
-    func = '\n'.join((numpy_import, decorators, signature, docstring, code))
+    func = '\n'.join((numpy_import, signature, docstring, code))
     try:
         package = epyccel(func, **kwargs)
     except PyccelError as e:

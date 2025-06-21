@@ -6,6 +6,7 @@ from pyccel.errors.errors   import Errors
 
 from pyccel.ast.basic       import PyccelAstNode
 from pyccel.ast.core        import Assign, Return, FunctionDef, AugAssign, FunctionDefArgument
+from pyccel.ast.datatypes   import PythonNativeInt
 from pyccel.ast.literals    import LiteralInteger
 from pyccel.ast.operators   import PyccelOperator, PyccelAdd, PyccelMinus, PyccelMul
 from pyccel.ast.variable    import Variable
@@ -14,16 +15,15 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 def get_functions(filename):
-    pyccel = Parser(filename)
+    pyccel = Parser(filename, output_folder = os.getcwd())
     errors = Errors()
 
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
     # Assert syntactic success
     assert not errors.has_errors()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     # Assert semantic success
     assert not errors.has_errors()
@@ -38,12 +38,12 @@ def test_get_attribute_nodes():
 
     assert all(isinstance(a, Variable) for a in atts)
 
-    expected = [Variable('int', 'a'),
-                Variable('int', 'b'),
-                Variable('int', 'c'),
-                Variable('int', 'd'),
-                Variable('int', 'e'),
-                Variable('int', 'g')]
+    expected = [Variable(PythonNativeInt(), 'a'),
+                Variable(PythonNativeInt(), 'b'),
+                Variable(PythonNativeInt(), 'c'),
+                Variable(PythonNativeInt(), 'd'),
+                Variable(PythonNativeInt(), 'e'),
+                Variable(PythonNativeInt(), 'g')]
 
     for e in expected:
         assert e in atts
@@ -60,15 +60,15 @@ def test_get_attribute_nodes_exclude():
     minus = atts[0]
     assert isinstance(minus, PyccelMinus)==1
 
-    a = Variable('int', 'a')
-    b = Variable('int', 'b')
+    a = Variable(PythonNativeInt(), 'a')
+    b = Variable(PythonNativeInt(), 'b')
     assert minus.args[0] == a
     assert minus.args[1] == b
 
 def test_get_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'a')
+    interesting_var = Variable(PythonNativeInt(), 'a')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))
@@ -85,7 +85,7 @@ def test_get_user_nodes():
 def test_get_user_nodes_excluded():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'a')
+    interesting_var = Variable(PythonNativeInt(), 'a')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))
@@ -99,7 +99,7 @@ def test_get_user_nodes_excluded():
 def test_get_all_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'b')
+    interesting_var = Variable(PythonNativeInt(), 'b')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))
@@ -116,7 +116,7 @@ def test_get_all_user_nodes():
 def test_get_direct_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'a')
+    interesting_var = Variable(PythonNativeInt(), 'a')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))
@@ -133,8 +133,8 @@ def test_get_direct_user_nodes():
 def test_substitute():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'a')
-    new_var = Variable('int', 'Z')
+    interesting_var = Variable(PythonNativeInt(), 'a')
+    new_var = Variable(PythonNativeInt(), 'Z')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))
@@ -155,8 +155,8 @@ def test_substitute():
 def test_substitute_exclude():
     filename = os.path.join(path_dir, "math.py")
 
-    interesting_var = Variable('int', 'a')
-    new_var = Variable('int', 'Z')
+    interesting_var = Variable(PythonNativeInt(), 'a')
+    new_var = Variable(PythonNativeInt(), 'Z')
 
     fst = get_functions(filename)[0]
     atts = set(fst.get_attribute_nodes(Variable))

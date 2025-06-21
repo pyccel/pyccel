@@ -7,7 +7,7 @@
 """
 Module handling classes for compiler information relevant to a given object
 """
-import os
+from pathlib import Path
 import sys
 from filelock import FileLock
 
@@ -30,13 +30,13 @@ class CompileObj:
     flags : str
         Any non-default flags passed to the compiler.
 
-    includes : iterable of strs
+    include : iterable of strs
         Include directories paths.
 
     libs : iterable of strs
         Required libraries.
 
-    libdirs : iterable of strs
+    libdir : iterable of strs
         Paths to directories containing the required libraries.
 
     dependencies : iterable of CompileObjs
@@ -56,47 +56,44 @@ class CompileObj:
     """
     compilation_in_progress = FileLock('.lock_acquisition.lock')
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
-                 '_lock_target','_lock_source','_flags','_includes','_libs',
-                 '_libdirs','_accelerators','_dependencies','_has_target_file')
+                 '_lock_target','_lock_source','_flags','_include','_libs',
+                 '_libdir','_accelerators','_dependencies','_has_target_file')
     def __init__(self,
                  file_name,
                  folder,
                  flags        = (),
-                 includes     = (),
+                 include     = (),
                  libs         = (),
-                 libdirs      = (),
+                 libdir      = (),
                  dependencies = (),
                  accelerators = (),
                  has_target_file = True,
                  prog_target  = None):
 
-        self._file = os.path.join(folder, file_name)
+        folder = Path(folder)
         self._folder = folder
+        self._file = folder / file_name
 
-        self._module_name = os.path.splitext(file_name)[0]
-        rel_mod_name = os.path.join(folder, self._module_name)
-        self._module_target = rel_mod_name+'.o'
+        self._module_name = Path(file_name).stem
+        rel_mod_name = folder / self._module_name
+        self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
-            self._prog_target = os.path.join(folder, prog_target)
+            self._prog_target = folder / prog_target
         else:
             self._prog_target = rel_mod_name
         if sys.platform == "win32":
-            self._prog_target += '.exe'
+            self._prog_target = self._prog_target.with_suffix('.exe')
 
-        self._prog_target   = self._prog_target
-        self._module_target = self._module_target
-
-        self._lock_target  = FileLock(self.module_target+'.lock')
-        self._lock_source  = FileLock(self.source+'.lock')
+        self._lock_target  = FileLock(str(self.module_target.with_suffix(
+                                            self.module_target.suffix + '.lock')))
+        self._lock_source  = FileLock(str(self.source.with_suffix(
+                                            self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        if has_target_file:
-            self._includes     = set([folder, *includes])
-        else:
-            self._includes = set(includes)
+        self._include     = {folder, *(Path(i) for i in include)}
         self._libs         = list(libs)
-        self._libdirs      = set(libdirs)
+        self._libdir      = set(libdir)
         self._accelerators = set(accelerators)
         self._dependencies = {a.module_target:a for a in dependencies}
         self._has_target_file = has_target_file
@@ -117,23 +114,25 @@ class CompileObj:
         folder : str
             The new folder where the source file can be found.
         """
-        if self.has_target_file:
-            self._includes.remove(self._folder)
-            self._includes.add(folder)
+        folder = Path(folder)
+        self._include.remove(self._folder)
+        self._include.add(folder)
 
-        self._file = os.path.join(folder, os.path.basename(self._file))
-        self._lock_source  = FileLock(self.source+'.lock')
+        self._file = folder / self._file.name
+        self._lock_source  = FileLock(self.source.with_suffix(
+                                        self.source.suffix+'.lock'))
         self._folder = folder
-        self._includes.add(self._folder)
+        self._include.add(self._folder)
 
-        rel_mod_name = os.path.join(folder, self._module_name)
-        self._module_target = rel_mod_name+'.o'
+        rel_mod_name = folder / self._module_name
+        self._module_target = rel_mod_name.with_suffix('.o')
 
         self._prog_target = rel_mod_name
         if sys.platform == "win32":
-            self._prog_target += '.exe'
+            self._prog_target.with_suffix('.exe')
 
-        self._lock_target         = FileLock(self.module_target+'.lock')
+        self._lock_target = FileLock(self.module_target.with_suffix(
+                                        self.module_target.suffix+'.lock'))
 
     @property
     def source(self):
@@ -172,14 +171,14 @@ class CompileObj:
         return self._flags
 
     @property
-    def includes(self):
+    def include(self):
         """
         Get the additional include directories required to compile the file.
 
         Return a set containing all the directories which must be passed to the
         compiler via the include flag `-I`.
         """
-        return self._includes.union([di for d in self._dependencies.values() for di in d.includes])
+        return self._include.union([di for d in self._dependencies.values() for di in d.include])
 
     @property
     def libs(self):
@@ -192,7 +191,7 @@ class CompileObj:
         return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
 
     @property
-    def libdirs(self):
+    def libdir(self):
         """
         Get the additional library directories required to compile the file.
 
@@ -200,7 +199,7 @@ class CompileObj:
         compiler via the library directory flag `-L` so that the necessary
         libraries can be correctly located.
         """
-        return self._libdirs.union([dld for d in self._dependencies.values() for dld in d.libdirs])
+        return self._libdir.union([dld for d in self._dependencies.values() for dld in d.libdir])
 
     @property
     def extra_modules(self):
@@ -300,7 +299,7 @@ class CompileObj:
         Return a set containing the name of all accelerators required
         to compile the file. An accelerator is a tool used to add a new
         capacity to the code. Such an addition requires multiple flags
-        (includes/libs/libdirs/etc) and is therefore specified separately
+        (include/libs/libdir/etc) and is therefore specified separately
         in the compiler configuration file. Examples of 'accelerators' are:
         openmp, openacc, python.
         """

@@ -5,65 +5,10 @@ Header:
 HeaderStmt: '#$' 'header' stmt=Statement;
 
 Statement:
-    FunctionMacroStmt 
-  | VariableHeaderStmt
-  | FunctionHeaderStmt
-  | MetavarHeaderStmt
-  | TemplateStmt
-  | InterfaceStmt
+    MetavarHeaderStmt
 ;
-
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
-
-FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
-;
-
-TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
-
-FunctionKind: 'function' | 'method';
-Static: 'static';
-HeaderResults: 'results' '(' decs+=TypeHeader[','] ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
 
-InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
-
-// **** macros ****
-
-StringStmt: arg=STRING;
-MacroArg: arg=Args ('=' value=MacroValue)?;
-MacroValue: MacroStmt | INT | NUMBER | ID| StringStmt;
-Args: ID|MacroList;
-//TODO INT|NUMBER error
-MacroList : Leftopen ls+=MacroArg[','] Rightclose ;
-Leftopen : '['|'(' ;
-Rightclose : ']'|')';
-
-MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
-MacroParameter: INT|ID ;
-
-AvailableMacro: 
-    'shape'
-  | 'dtype'
-  | 'count'
-  
-;
-
-
-// TODO shall we add also results to the master call?
-
-ShapeElement: MacroValue | ':';
-
-ShapedID: name=ID ('(' shape+=ShapeElement[','] ')')?;
-
-FunctionMacroStmt: 
-  'macro' ('(' results*=ShapedID[','] ')' ',')?
-  dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
-  ':='
-  master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
-;
-
-// ****************
 

@@ -1,5 +1,268 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
+
+## \[2.0.0\] - 2025-06-21
+
+### Added
+
+-   #1720 : Add support for `Ellipsis` as the only index for an array.
+-   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
+-   #1656 : Ensure gFTL is installed with Pyccel.
+-   #1694 : Add Python support for list method `extend()`.
+-   #1700 : Add Python support for list method `sort()`.
+-   #1696 : Add Python support for list method `copy()`.
+-   #1693 : Add Python support for list method `remove()`.
+-   #1895 : Add Python support for dict initialisation with `{}`.
+-   #1895 : Add Python support for dict initialisation with `dict()`.
+-   #1881 : Add Python support for dict method `copy()`.
+-   #1888 : Add Python support for dict method `setdefault()`.
+-   #1885 : Add Python and C support for dict method `get()`.
+-   #1844 : Add line numbers and code to errors from built-in function calls.
+-   #1655 : Add the appropriate C language equivalent for declaring a Python `list` container using the STC library.
+-   #1659 : Add the appropriate C language equivalent for declaring a Python `set` container using the STC library.
+-   #1944 : Add the appropriate C language equivalent for declaring a Python `dict` container using the STC library.
+-   #1657 : Add the appropriate Fortran language equivalent for declaring a Python `list` container using the gFTL library.
+-   #1658 : Add the appropriate Fortran language equivalent for declaring a Python `set` container using the gFTL library.
+-   #1944 : Add the appropriate Fortran language equivalent for declaring a Python `dict` container using the gFTL library.
+-   #2009 : Add support for `in` operator for `list`, `set`, `dict` and class containers.
+-   #1874 : Add C and Fortran support for the `len()` function for the `list` container.
+-   #1875 : Add C and Fortran support for the `len()` function for the `set` container.
+-   #1908 : Add C and Fortran support for the `len()` function for the `dict` container.
+-   #1665 : Add C and Fortran support for returning lists from functions.
+-   #1663 : Add C and Fortran support for lists as arguments.
+-   #1689 : Add C and Fortran support for list method `append()`.
+-   #1876 : Add C support for indexing lists.
+-   #1690 : Add C and Fortran support for list method `pop()`.
+-   #1695 : Add C and Fortran support for list method `reverse()`.
+-   #2256 : Add C and Fortran support for list method `clear()`.
+-   #2259 : Add C and Fortran support for list method `insert()`.
+-   #2298 : Add support for `list.__eq__`.
+-   #1663 : Add C and Fortran support for sets as arguments.
+-   #1664 : Add C and Fortran support for returning sets from functions.
+-   #2023 : Add support for iterating over a `set`.
+-   #1893 : Add support for set initialisation with `set()`.
+-   #1877 : Add C and Fortran Support for set method `pop()`.
+-   #1917 : Add C and Fortran support for set method `add()`.
+-   #1918 : Add support for set method `clear()`.
+-   #1918 : Add support for set method `copy()`.
+-   #1743 : Add support for set method `discard()`.
+-   #1750 : Add support for set method `remove()`.
+-   #1753 : Add support for set method `union()`.
+-   #1754 : Add support for set method `update()`.
+-   #1744 : Add support for set method `intersection()`.
+-   #1745 : Add support for set method `intersection_update()`.
+-   #1745 : Add support for set method `isdisjoint()`.
+-   #2059 : Add C and Fortran support for returning dictionaries from functions.
+-   #2164 : Add support for dict indexing.
+-   #1880 : Add support for dict method `clear()`.
+-   #1884 : Add support for dict method `items()`.
+-   #1884 : Add support for dict method `keys()`.
+-   #1884 : Add support for dict method `values()`.
+-   #1886 : Add support for dict method `pop()`.
+-   #1887 : Add support for dict method `popitem()`.
+-   #1936 : Add missing C output for inline decorator example in documentation
+-   #1937 : Optimise `pyccel.ast.basic.PyccelAstNode.substitute` method.
+-   #1544 : Add support for `typing.TypeAlias`.
+-   #1583 : Allow inhomogeneous tuples in classes.
+-   #738 : Add support for homogeneous tuples with scalar elements as arguments.
+-   Add a warning about containers in lists.
+-   #2016 : Add support for translating arithmetic magic methods.
+-   #2106 : Add support for `__len__` magic method.
+-   #1980 : Extend The C support for min and max to more than two variables
+-   #2081 : Add support for multi operator expressions
+-   #2061 : Add C support for string declarations.
+-   Add support for inhomogeneous tuple annotations.
+-   #1834 : Add support for `@property` decorator.
+-   #2099 : Fix translation of modules containing `__all__`.
+-   #983 : Add support for built-in function `round`.
+-   Add support for `type` as a type annotation.
+-   #2182 : Add support for `isinstance`.
+-   #2183 : Add compile time analysis of if block conditions.
+-   #2139 : Add support for `__getitem__`
+-   #337 : Add support for returning tuples from functions.
+-   #2194 : Add support for strings as arguments.
+-   #2192 : Add support for the floor division assignment operator.
+-   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
+-   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
+-   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   #2253 : Add multiple levels of verbosity.
+-   Generate stub files to allow double compilation to potentially be bypassed.
+-   Add `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   #2293 : Add `pyccel-test` command to run unit tests. Improve docs.
+-   #2358 : Add support for bitwise operators with NumPy arrays.
+-   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
+-   \[INTERNALS\] Add `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
+-   \[INTERNALS\] Allow the use of magic methods to describe container methods.
+-   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
+-   \[DEVELOPER\] Add an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Add an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Add a spell checker for the code itself.
+-   \[DEVELOPER\] Add a test to main CI to check if deployment to TestPyPI is working correctly.
+
+### Fixed
+
+-   #2025 : Optimise min/max to avoid unnecessary temporary variables.
+-   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+-   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
+-   Fix some cases where a Python built-in type is returned in place of a NumPy type.
+-   Stop printing numbers with more decimal digits than their precision.
+-   Allow printing the result of a function returning multiple objects of different types.
+-   #1732 : Fix multidimensional list indexing in Python.
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+-   #1821 : Ensure an error is raised when creating an ambiguous interface.
+-   #1842 : Fix homogeneous tuples incorrectly identified as inhomogeneous.
+-   Link and mention `devel` branch, not `master`.
+-   #1913 : Fix function calls to renamed functions.
+-   #1930 : Preserve ordering of import targets.
+-   #1892 : Fix implementation of list function when an iterable is passed as parameter.
+-   #1979 : Fix memory leaks in C due to homogeneous container redefinition.
+-   #1972 : Simplified `printf` statement for Literal String.
+-   #2026 : Fix missing loop in slice assignment.
+-   #2008 : Ensure list/set/dict assignment is recognised as a reference.
+-   #2039 : Ensure any expressions in the iterable of a for loop are calculated before the loop.
+-   #2013 : Stop limiting the length of strings to 128 characters.
+-   #2078 : Fix translation of classes containing comments.
+-   #2041 : Include all type extension methods by default.
+-   #2082 : Allow the use of a list comprehension to initialise an array.
+-   #2094 : Fix slicing of array allocated in an if block.
+-   #2085 : Fix calling class methods before they are defined.
+-   #2111 : Fix declaration of class attributes with name conflicts using type annotations.
+-   #2115 : Fix integer handling with NumPy 2.0 on Windows.
+-   Fix handling of union `typing.TypeAlias` objects as type hints.
+-   #2141 : Fix error when removing `test_node`.
+-   #2148 : Fix error due to missing file `numpy_version.h`.
+-   #2001 : Ensure all memory is correctly deallocated in the Python interface in a way that is compatible with all compilers.
+-   #2153 : Fix missing line information when an unknown class method is called.
+-   #2149 : Fix multi-line expressions in `if` conditions.
+-   #2181 : Allow saving an array result of a function to a slice but raise a warning about suboptimal performance.
+-   #2190 : Fix missing error for list pointer assignment.
+-   #2198 : Fix saving an empty string in Fortran.
+-   #2195 : Fix string comparisons.
+-   Fixed returning strings from functions.
+-   #2197 : Allow strings as dictionary keys in C.
+-   #2104 : Add support for Pythonic swapping and raise errors for expressions which are too complex.
+-   Lifted the restriction on ndarrays limiting them to rank<15.
+-   #2175 : Fix the shape of multi-level containers.
+-   Catch all internal errors arising in the syntactic, semantic, printing or code generation stages.
+-   #2206 : Fix returning an array of unknown literal size.
+-   #2112 : Improve floor division.
+-   #2220 : Fix premature `stc/cspan` import.
+-   #2214 : Fix returning a local variable from an inline function.
+-   #1321 : Fix use of tuples returned from functions in a non-assign statement.
+-   #2229 : Fix annotation of variables that are returned in a function whose result type is annotated.
+-   #2238 : Fix incorrect memory handling for temporary variable.
+-   #2239 : Fix missing library directory for Python shared library.
+-   #1410 : Fix conditional statement not working inside of a list comprehension.
+-   #1297 : Fix iteration over an `enumerate`, `map` or `zip` in a list comprehension.
+-   #2098 : Fix using multiple list comprehensions.
+-   #1948 : Fix list comprehension does not work in C.
+-   #2245 : Fix internal error when an inhomogeneous tuple appears as an indexed element.
+-   #2258 : Fix missing errors for bad pointer handling in the case of containers with mutable elements.
+-   #2274 : Do not pass include flags to linker (they are useless).
+-   #2274 : Always use the C compiler to build the C wrapper for NumPy arrays (fixes Intel failures).
+-   #2285 : Reduce number of warnings in unit tests.
+-   #2295 : Fix wrapper handling of constant array arguments.
+-   #2097 : Fix printing of an empty list.
+-   #2235 : Fix negative numbers in slice indices when translating to C.
+-   #2144 : Fix accidental imports due to modules making their contents public by default.
+-   #2312 : Fix rounding direction for negative integer elements in `np.linspace`.
+-   #2125 : Fix missing type check for argument of known type in a function with arguments whose type can be one of several types.
+-   #2042 : Fix missing index in loop unravelling for loop of length 1.
+-   #2093 : Fix scoping issue preventing class methods from sharing a name with locals in another class method.
+-   #1814 : Fix class method visitation order to correctly access the global scope from methods.
+-   #1668 : Fix handling of `is not None` check to ensure it is always checked before accessing the variable.
+-   #802 : Add if blocks in Python output to ensure support for implementations that differ for different types.
+-   #2286 : Fix warnings due to non-existent include directories.
+-   Fix casting of arrays in Python translation.
+-   #2167 : Stop modifying variables to add `Final` annotation.
+-   #2216 : Ensure compilation dependencies added by Pyccel are indicated for compilation of files which import the module.
+-   #2261 : Add LLVM compilers.
+-   #2344 : Allow language to be set using a capitalised name (Fortran, C, Python).
+-   #2322 : Fix inline functions calling inline functions with their own local variables.
+
+### Changed
+
+-   #2282 : Change the order of the function arguments (out arguments are now first).
+-   #2008 : Remove dependency on `astunparse` package.
+-   #1920 : Add a maximum version for NumPy.
+-   #1836 : Move `epyccel` module to `pyccel.commands.epyccel` and add support for shortcut import `from pyccel import epyccel`.
+-   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
+-   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   #1964 : Improve the error message when the wrong type is passed as a NumPy array argument.
+-   #1941 : Rename "target" in `AsName` to `local_alias` to better illustrate its use in the local context.
+-   #1961 : Use STC's `cspan` to describe `np.ndarray` in C. This results in a large speed-up for pathological cases.
+-   #2187 : Removed use of pickle.
+-   #2234 : Print all constant C variables with `const` specifier.
+-   #2249 : Improve installation docs and recommend virtual environment.
+-   #2242 : Change format of compiler info files.
+-   #2302 : Print the deallocation in a 1 line if statement.
+-   #2125 : Add information about received data type to type errors when calling a function with the wrong type.
+-   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
+-   #2330 : Inline functions in the semantic stage.
+-   #2322 : Stop raising an error when checking if non-optional variable is `None`.
+-   #2348 : Improve parameters of `pyccel` command and `epyccel` function.
+-   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
+-   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
+-   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
+-   \[INTERNALS\] Rewrite datatyping system. See #1722.
+-   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Moved rank from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
+-   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+-   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
+-   \[INTERNALS\] Remove the `order` argument from the `pyccel.ast.core.Allocate` constructor.
+-   \[INTERNALS\] Remove `rank` and `order` arguments from `pyccel.ast.variable.Variable` constructor.
+-   \[INTERNALS\] Ensure `SemanticParser.infer_type` returns all documented information.
+-   \[INTERNALS\] Enforce correct value for `pyccel_staging` property of `PyccelAstNode`.
+-   \[INTERNALS\] Allow visiting objects containing both syntactic and semantic elements in `SemanticParser`.
+-   \[INTERNALS\] Rename `pyccel.ast.internals.PyccelInternalFunction` to `pyccel.ast.internals.PyccelFunction`.
+-   \[INTERNALS\] All internal classes which can be generated from `FunctionCall`s must inherit from `PyccelFunction`.
+-   \[INTERNALS\] `PyccelFunction` objects which do not represent objects in memory have the type `SymbolicType`.
+-   \[INTERNALS\] Rename `_visit` functions called from a `FunctionCall` which don't match the documented naming pattern to `_build` functions.
+-   \[INTERNALS\] Remove unnecessary argument `kind` to `Errors.set_target`.
+-   \[INTERNALS\] Handle STC imports with Pyccel objects.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to call Fortran code.
+-   \[INTERNALS\] Stop using ndarrays as an intermediate step to return arrays from Fortran code.
+-   \[INTERNALS\] Unify the strategy for handling additional imports in the printing stage for different languages.
+-   \[INTERNALS\] Make `Iterable` into a super-class instead of a storage class.
+-   \[INTERNALS\] Change the order of the constructor arguments of `FunctionDef`.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefResult` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Rename `BindCVariable`->`BindCModuleVariable`.
+-   \[INTERNALS\] Save a shape whose length is limited to the container length.
+-   \[INTERNALS\] Restrict use of `FunctionDefResult` to one instance per function.
+-   \[INTERNALS\] Use `_extract_X_FunctionDefArgument` methods in Fortran-to-C wrapper.
+-   \[INTERNALS\] Replace internal `.pyh` header files with `.pyi` files.
+
+### Deprecated
+
+-   #2008 : Remove support for Python 3.8.
+-   #1786 : Remove support for `real` and `integer` as type annotations.
+-   #1487 : Remove support for `@template` decorator.
+-   #1487 : Remove support for `@types` decorator.
+-   #1487 : Remove support for `#$ header` syntax.
+-   #1812 : Stop allowing multiple main blocks inside a module.
+-   Removed `templates` argument from `lambdify`. Replaced with `context_dict`.
+-   #2339 : Remove `const` type modifier in favour of `typing.TypeVar`.
+-   #1287 : Remove unused method `BasicParser.copy()`.
+-   #2345 : Remove undocumented macro syntax in favour of inline methods.
+-   #2345 : Break support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
+-   Remove undocumented, untested, obsolete Lua printer.
+-   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
+-   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
+-   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
+-   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
+-   \[INTERNALS\] Remove `pyccel.ast.utilities.builtin_functions`.
+-   \[INTERNALS\] Remove unused/unnecessary functions in `pyccel.parser.utilities` : `read_file`, `header_statement`, `accelerator_statement`, `get_module_name`, `view_tree`.
+-   \[INTERNALS\] Remove unused functions `Errors.unset_target`, and `Errors.reset_target`.
+-   \[INTERNALS\] Remove unused classes `SymbolicAssign` and `SymbolicPrint`.
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefResult` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove `ast.bind_c.BindCFunctionDefArgument` (replaced by `ast.bind_c.BindCArrayType` and `ast.bind_c.BindCResultVariable`).
+-   \[INTERNALS\] Remove unused class `ast.core.FuncAddressDeclare`.
+-   \[INTERNALS\] Remove unnecessary function `ast.utilities.flatten_tuple_var` (replaced by calls to `Scope.collect_all_tuple_elements`).
 
 ## \[1.12.1\] - 2024-10-01
 
@@ -53,6 +316,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused and undocumented function `get_function_from_ast`.
 -   \[INTERNALS\] Remove function `Module.set_name`.
 -   \[INTERNALS\] Remove unused `assign_to` argument of `CodePrinter.doprint`.
+-   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.11.2\] - 2024-03-05
 
@@ -66,6 +330,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
+-   #1749 : Add Python support for set method `pop()`.
 
 ### Fixed
 
@@ -299,6 +564,7 @@ All notable changes to this project will be documented in this file.
 ## \[1.8.0\] - 2023-06-20
 
 ### Added
+
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 
 ### Fixed

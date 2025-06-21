@@ -6,8 +6,8 @@
 """ Module containing objects from the sys module understood by pyccel
 """
 from .core import PyccelFunctionDef, Module
-from .internals import PyccelInternalFunction
-from .datatypes import NativeVoid
+from .internals import PyccelFunction
+from .datatypes import VoidType
 from .internals import LiteralInteger
 
 __all__ = (
@@ -17,23 +17,22 @@ __all__ = (
     'sys_mod',
 )
 
-class SysExit(PyccelInternalFunction):
-    """Represents a call to  sys.exit
+class SysExit(PyccelFunction):
+    """
+    Represents a call to sys.exit.
+
+    Represents a call to sys.exit.
 
     Parameters
     ----------
-
-    arg : TypedAstNode (optional)
-        if arg.dtype is NativeInteger it will be used as the exit_code
-        else the arg will be printed to the stderror
+    status : TypedAstNode, optional
+        If status.dtype is NativeInteger it will be used as the exit_code,
+        else the status will be printed to the stderror.
     """
     __slots__ = ()
     name      = 'exit'
-    _dtype     = NativeVoid()
-    _precision = -1
-    _rank      = 0
+    _class_type     = VoidType()
     _shape     = None
-    _order     = None
 
     def __init__(self, status=LiteralInteger(0)):
         super().__init__(status)

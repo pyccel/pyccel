@@ -8,8 +8,8 @@ Module describing the base code-wrapping class : Wrapper.
 """
 
 from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 __all__ = ["Wrapper"]
 
@@ -23,12 +23,19 @@ class Wrapper:
     The base class for any classes designed to create a wrapper around code.
     Such wrappers are necessary to create an interface between two different
     languages.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
     """
     start_language = None
     target_language = None
 
-    def __init__(self):
+    def __init__(self, verbose):
         self._scope = None
+        self._current_ast_node = None
+        self._verbose = verbose
 
     @property
     def scope(self):
@@ -96,11 +103,28 @@ class Wrapper:
             The AST which describes the object that lets you
             access the expression.
         """
+        current_ast = self._current_ast_node
+        if getattr(expr,'python_ast', None) is not None:
+            self._current_ast_node = expr.python_ast
+
         classes = type(expr).mro()
         for cls in classes:
             wrap_method = '_wrap_' + cls.__name__
             if hasattr(self, wrap_method):
-                return getattr(self, wrap_method)(expr)
+                if self._verbose > 2:
+                    print(f">>>> Calling {type(self).__name__}.{wrap_method}")
+                try:
+                    obj = getattr(self, wrap_method)(expr)
+                except (PyccelError, NotImplementedError) as err:
+                    raise err
+                except Exception as err: #pylint: disable=broad-exception-caught
+                    if ErrorsMode().value == 'user':
+                        errors.report(PYCCEL_INTERNAL_ERROR,
+                                symbol = self._current_ast_node, severity='fatal')
+                    else:
+                        raise err
+                self._current_ast_node = current_ast
+                return obj
 
         return self._wrap_not_supported(expr)
 

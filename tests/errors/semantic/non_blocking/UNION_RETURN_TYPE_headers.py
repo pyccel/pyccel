@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeAlias
 
-#$ header function f(int, int) results(int)
-#$ header function f(float, float) results(float)
+T : TypeAlias = 'int | float'
 
-def f(a, b):
+def f(a : T, b : T) -> T:
     return a+b

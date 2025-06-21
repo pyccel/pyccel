@@ -2,7 +2,7 @@
 import gc
 import sys
 import numpy as np
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 def test_return_pointer(language):
     def return_pointer(x : 'float[:]'):

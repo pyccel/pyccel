@@ -3,7 +3,7 @@ from mpi4py import MPI
 import numpy as np
 import pytest
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules        import mpi_collective as pmod
 
 #==============================================================================
@@ -25,7 +25,7 @@ def setup_module( module=None ):
 # UNIT TESTS
 #==============================================================================
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_np_allreduce( ne=15 ):
     """
     Initialize a 1D integer array with the process rank, and sum across
@@ -61,7 +61,7 @@ def test_np_allreduce( ne=15 ):
 
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_np_bcast( ne=15 ):
 
     root  = 0
@@ -85,7 +85,7 @@ def test_np_bcast( ne=15 ):
 
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_np_gather():
 
     root = 0

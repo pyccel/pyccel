@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import sys
 import numpy as np
-from pyccel.epyccel import epyccel
+import pytest
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -141,8 +143,6 @@ def test_module_7(language):
         assert np.array_equal(mod_att, modnew_att)
         assert mod_att.dtype == modnew_att.dtype
 
-    assert np.array_equal(mod.F, modnew.F)
-
     modnew.update_a()
     mod.update_a()
 
@@ -171,6 +171,25 @@ def test_module_7(language):
     mod.reset_c()
     mod.reset_e()
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="List wrapper is not implemented yet, related issue #1911"),
+            pytest.mark.fortran]
+            ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="List indexing is not yet supported in C, related issue #1876"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_module_8(language):
+    import modules.list_comprehension as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert np.array_equal(mod.A, modnew.A)
+
 def test_awkward_names(language):
     import modules.awkward_names as mod
 
@@ -182,3 +201,60 @@ def test_awkward_names(language):
     assert mod.function() == modnew.function()
     assert mod.pure() == modnew.pure()
     assert mod.allocate(1) == modnew.allocate(1)
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP613 (TypeAlias) implemented in Python 3.10")
+def test_module_type_alias(language):
+    import modules.Module_9 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="PEP695 (type statement) implemented in Python 3.12")
+def test_module_type_alias_expression(language):
+    import modules.Module_10 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
+
+def test_module_11(language):
+    import modules.Module_11 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    len_pyt = mod.update_multiple()
+    len_pyc = modnew.update_multiple()
+
+    assert len_pyt == len_pyc
+
+    len_pyt = mod.set_union()
+    len_pyc = modnew.set_union()
+
+    assert len_pyt == len_pyc

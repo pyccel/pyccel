@@ -4,31 +4,60 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module representing object address.
+Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
 
-from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import DataType
+from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
+from .datatypes import CharType
+from .internals import PyccelFunction
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
+           'CNativeInt',
            'CStackArray',
+           'CStrStr',
            'CStringExpression',
            'ObjectAddress',
            'PointerCast')
 
 #------------------------------------------------------------------------------
 
-class CStackArray(DataType, metaclass=Singleton):
+class CNativeInt(FixedSizeNumericType):
+    """
+    Class representing C's native integer type.
+
+    Class representing C's native integer type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PrimitiveIntegerType()
+    _precision = None
+
+#------------------------------------------------------------------------------
+
+class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     """
     A data type representing an array allocated on the stack.
 
     A data type representing an array allocated on the stack.
     E.g. `float a[4];`
+
+    Parameters
+    ----------
+    element_type : FixedSizeType
+        The type of the elements inside the array.
     """
-    __slots__ = ()
+    __slots__ = ('_element_type',)
     _name = 'c_stackarray'
+    _container_rank = 1
+    _order = None
+
+    def __init__(self, element_type):
+        assert isinstance(element_type, FixedSizeType)
+        self._element_type = element_type
+        super().__init__()
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
@@ -47,24 +76,20 @@ class ObjectAddress(TypedAstNode):
 
     Examples
     --------
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a')))
     '&a'
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a', memory_handling='alias')))
     'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')
+    __slots__ = ('_obj', '_shape', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         self._obj        = obj
-        self._rank       = obj.rank
         self._shape      = obj.shape
-        self._precision  = obj.precision
-        self._dtype      = obj.dtype
-        self._order      = obj.order
         self._class_type = obj.class_type
         super().__init__()
 
@@ -100,8 +125,7 @@ class PointerCast(TypedAstNode):
     cast_type : TypedAstNode
         A TypedAstNode describing the object resulting from the cast.
     """
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order',
-            '_class_type', '_cast_type')
+    __slots__ = ('_obj', '_shape', '_class_type', '_cast_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj, cast_type):
@@ -109,12 +133,8 @@ class PointerCast(TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         assert getattr(obj, 'is_alias', False)
         self._obj        = obj
-        self._rank       = cast_type.rank
         self._shape      = cast_type.shape
-        self._precision  = cast_type.precision
-        self._dtype      = cast_type.dtype
         self._class_type = cast_type.class_type
-        self._order      = cast_type.order
         self._cast_type  = cast_type
         super().__init__()
 
@@ -316,3 +336,32 @@ class CMacro(PyccelAstNode):
         """ The string containing macro name
         """
         return self._macro
+
+#-------------------------------------------------------------------
+#                         String functions
+#-------------------------------------------------------------------
+class CStrStr(PyccelFunction):
+    """
+    A class which extracts a const char* from a literal string.
+
+    A class which extracts a const char* from a literal string. This
+    is useful for calling C functions which were not designed for
+    STC.
+
+    Parameters
+    ----------
+    arg : TypedAstNode | CMacro
+        The object which should be passed as a const char*.
+    """
+    __slots__ = ()
+    _class_type = CharType()
+    _shape = (None,)
+
+    def __new__(cls, arg):
+        if isinstance(arg, CMacro):
+            return arg
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg):
+        super().__init__(arg)

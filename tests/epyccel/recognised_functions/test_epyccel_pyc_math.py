@@ -4,7 +4,7 @@ import pytest
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -35,7 +35,7 @@ def test_call_factorial(language):
     f = epyccel(call_factorial, language=language)
     x = randint(10)
 
-    assert(f(x) == call_factorial(x))
+    assert f(x) == call_factorial(x)
 
 # -----------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@ import numpy as np
 from numpy import iinfo, finfo
 from numpy.random import randint, uniform
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 from modules        import arrays
 
 RTOL = 1e-12
@@ -27,7 +27,7 @@ def check_array_equal(a, b):
 #==============================================================================
 
 def test_array_assigned_dtype(language):
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
+    integer   = randint(low = iinfo('int32').min,   high = iinfo('int32').max)
     integer8  = randint(low = iinfo('int8').min,  high = iinfo('int8').max,  dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
@@ -320,9 +320,12 @@ def test_array_int_1d_initialization_1(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Array initialisation from non-literal list not yet supported."),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Lists not yet supported"),
+            pytest.mark.skip(reason="Array initialisation from non-literal list not yet supported."),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
@@ -342,6 +345,13 @@ def test_array_int_1d_initialization_3(language):
     f2 = epyccel( f1 , language = language)
 
     assert f1() == f2()
+
+def test_array_int_1d_initialization_4(language):
+
+    f1 = arrays.array_int_1d_initialization_4
+    f2 = epyccel( f1 , language = language)
+
+    check_array_equal(f1(), f2())
 
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
@@ -1734,7 +1744,6 @@ def test_array_float_4d_F_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
 
     f1 = arrays.array_float_4d_F_array_initialization_mixed_ordering
@@ -2185,7 +2194,6 @@ def test_array_kwargs_ones(language):
 #==============================================================================
 
 def test_constant_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
     f2 = epyccel( f1 , language = language)
@@ -2193,7 +2201,6 @@ def test_constant_negative_index(language):
 
 
 def test_almost_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
     f2 = epyccel( f1 , language = language)
@@ -2201,7 +2208,6 @@ def test_almost_negative_index(language):
 
 
 def test_var_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     idx = randint(-n,0)
     f1 = arrays.var_negative_index
@@ -2210,7 +2216,6 @@ def test_var_negative_index(language):
 
 
 def test_expr_negative_index(language):
-    from numpy.random import randint
     n = randint(2, 10)
     idx1 = randint(-n,2*n)
     idx2 = randint(idx1,idx1+n+1)
@@ -2240,6 +2245,15 @@ def test_multiple_negative_index_3(language):
     assert f1(-1, -1, -3) == f2(-1, -1, -3)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_1(language):
     a = arrays.a_1d
 
@@ -2248,6 +2262,15 @@ def test_argument_negative_index_1(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
@@ -2256,16 +2279,34 @@ def test_argument_negative_index_2(language):
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_c_order_argument_negative_index(language):
-    a = np.random.randint(20, size=(3,4))
+    a = np.array(np.random.randint(20, size=(3,4)), dtype=int)
 
     f1 = arrays.test_c_order_argument_negative_index
     f2 = epyccel(f1, language = language)
     assert f1(a, a) == f2(a, a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_f_order_argument_negative_index(language):
-    a = np.array(np.random.randint(20, size=(3,4)), order='F')
+    a = np.array(np.random.randint(20, size=(3,4)), order='F', dtype=int)
 
     f1 = arrays.test_f_order_argument_negative_index
     f2 = epyccel(f1, language = language)
@@ -2292,7 +2333,6 @@ def test_array_random_size(language):
 def test_array_variable_size(language):
     f1 = arrays.array_variable_size
     f2 = epyccel( f1 , language = language)
-    from numpy.random import randint
     n = randint(1, 10)
     m = randint(11,20)
     s1, s2 = f2(n,m)
@@ -2383,13 +2423,6 @@ def test_array_1d_slice_9(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_10(language):
     a = arrays.a_1d
 
@@ -2399,13 +2432,6 @@ def test_array_1d_slice_10(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_11(language):
     a = arrays.a_1d
 
@@ -2415,13 +2441,6 @@ def test_array_1d_slice_11(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
@@ -2594,13 +2613,6 @@ def test_array_2d_F_slice_20(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_21(language):
     a = arrays.a_2d_f
 
@@ -2609,13 +2621,6 @@ def test_array_2d_F_slice_21(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_22(language):
     a = arrays.a_2d_f
 
@@ -2624,13 +2629,6 @@ def test_array_2d_F_slice_22(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_23(language):
     a = arrays.a_2d_f
 
@@ -2802,13 +2800,6 @@ def test_array_2d_C_slice_20(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_21(language):
     a = arrays.a_2d_c
 
@@ -2817,13 +2808,6 @@ def test_array_2d_C_slice_21(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_22(language):
     a = arrays.a_2d_c
 
@@ -2832,13 +2816,6 @@ def test_array_2d_C_slice_22(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_23(language):
     a = arrays.a_2d_c
 
@@ -2860,7 +2837,7 @@ def test_array_1d_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2881,6 +2858,15 @@ def test_array_1d_slice_stride_3(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_4(language):
     a = arrays.a_1d
 
@@ -2899,7 +2885,7 @@ def test_array_1d_slice_stride_5(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2922,7 +2908,7 @@ def test_array_1d_slice_stride_7(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2945,7 +2931,7 @@ def test_array_1d_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2968,7 +2954,7 @@ def test_array_1d_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2991,7 +2977,7 @@ def test_array_1d_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3006,7 +2992,7 @@ def test_array_1d_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3029,7 +3015,7 @@ def test_array_1d_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3044,7 +3030,7 @@ def test_array_1d_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3067,7 +3053,7 @@ def test_array_1d_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3082,7 +3068,7 @@ def test_array_1d_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3103,6 +3089,15 @@ def test_array_1d_slice_stride_22(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
 
@@ -3124,7 +3119,7 @@ def test_array_2d_F_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3139,7 +3134,7 @@ def test_array_2d_F_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3160,6 +3155,15 @@ def test_array_2d_F_slice_stride_4(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
 
@@ -3176,6 +3180,15 @@ def test_array_2d_F_slice_stride_6(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
 
@@ -3192,6 +3205,15 @@ def test_array_2d_F_slice_stride_8(language):
     assert f1(a) == f2(a)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Negative strides in slices are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
@@ -3202,7 +3224,7 @@ def test_array_2d_F_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3217,7 +3239,7 @@ def test_array_2d_F_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3232,7 +3254,7 @@ def test_array_2d_F_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3247,7 +3269,7 @@ def test_array_2d_F_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3262,7 +3284,7 @@ def test_array_2d_F_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3277,7 +3299,7 @@ def test_array_2d_F_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3292,7 +3314,7 @@ def test_array_2d_F_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3307,7 +3329,7 @@ def test_array_2d_F_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3322,7 +3344,7 @@ def test_array_2d_F_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3337,7 +3359,7 @@ def test_array_2d_F_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3352,7 +3374,7 @@ def test_array_2d_F_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3367,7 +3389,7 @@ def test_array_2d_F_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3382,7 +3404,7 @@ def test_array_2d_F_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3397,7 +3419,7 @@ def test_array_2d_F_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3423,7 +3445,7 @@ def test_array_2d_C_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3438,7 +3460,7 @@ def test_array_2d_C_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3461,7 +3483,7 @@ def test_array_2d_C_slice_stride_4(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3484,7 +3506,7 @@ def test_array_2d_C_slice_stride_6(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3507,7 +3529,7 @@ def test_array_2d_C_slice_stride_8(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3522,7 +3544,7 @@ def test_array_2d_C_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3537,7 +3559,7 @@ def test_array_2d_C_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3552,7 +3574,7 @@ def test_array_2d_C_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3567,7 +3589,7 @@ def test_array_2d_C_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3582,7 +3604,7 @@ def test_array_2d_C_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3597,7 +3619,7 @@ def test_array_2d_C_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3612,7 +3634,7 @@ def test_array_2d_C_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3627,7 +3649,7 @@ def test_array_2d_C_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3642,7 +3664,7 @@ def test_array_2d_C_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3657,7 +3679,7 @@ def test_array_2d_C_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3672,7 +3694,7 @@ def test_array_2d_C_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3687,7 +3709,7 @@ def test_array_2d_C_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3702,7 +3724,7 @@ def test_array_2d_C_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3717,7 +3739,7 @@ def test_array_2d_C_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3796,46 +3818,38 @@ def test_copy_to_slice_4(language):
 def test_arrs_similar_shapes_0(language):
     f1 = arrays.arrs_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_similar_shapes_1(language):
     f1 = arrays.arrs_similar_shapes_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_uncertain_shape_1(language):
     f1 = arrays.arrs_uncertain_shape_1
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
-
+    check_array_equal(f1(), f2())
 
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
 def test_arrs_2d_different_shapes_0(language):
     f1 = arrays.arrs_2d_different_shapes_0
     f2 = epyccel(f1, language = language)
-    assert f1() == f2()
+    check_array_equal(f1(), f2())
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Negative start of range does not work in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
@@ -3860,19 +3874,9 @@ def test_arrs_1d_int64_index(language):
     assert f1() == f2()
 
 
-def test_arr_tuple_slice_index(language):
-    f1 = arrays.arr_tuple_slice_index
-    f2 = epyccel(f1, language = language)
-
-    r_python = f1(arrays.a_2d_c)
-    r_pyccel = f2(arrays.a_2d_c)
-
-    check_array_equal(r_python, r_pyccel)
-
-
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
+            pytest.mark.skip(reason="Negative strides in slices are not handled in C. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3889,17 +3893,20 @@ def test_arrs_1d_negative_step_positive_step(language):
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
+
+def test_arr_tuple_slice_index(language):
+    f1 = arrays.arr_tuple_slice_index
+    f2 = epyccel(f1, language = language)
+
+    r_python = f1(arrays.a_2d_c)
+    r_pyccel = f2(arrays.a_2d_c)
+
+    check_array_equal(r_python, r_pyccel)
 
 #==============================================================================
 # TEST : NUMPY ARANGE
@@ -4027,7 +4034,18 @@ def test_array_float_nested_C_array_initialization_3(language):
 #==============================================================================
 # NUMPY SUM
 #==============================================================================
-
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Lists of lists are not yet supported in Fortran, related issue #2210"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Lists of lists are not yet supported in C, related issue #2210"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_arr_bool_sum(language):
     f1 = arrays.arr_bool_sum
     f2 = epyccel(f1, language = language)
@@ -4102,6 +4120,23 @@ def test_array_float_nested_F_array_initialization_3(language):
 
     f1(a, e, x1)
     f2(a, e, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_float_nested_F_array_initialization_mixed(language):
+    f1 = arrays.array_float_nested_F_array_initialization_mixed
+    f2 = epyccel(f1, language = language)
+
+    x  = np.array(np.random.random((3,2,4)), order="F")
+    y  = np.array(np.random.random((2,4)), order="F")
+    z  = np.array(np.random.random((2,4)), order="F")
+    a  = np.array([x, [y, z, z], x], order="F")
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
 
     assert np.array_equal(x1, x2)
 
@@ -4202,7 +4237,10 @@ def test_array_view_steps_F_2D_3(language):
 #==============================================================================
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4217,7 +4255,7 @@ def test_array_ndmin_1(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4228,7 +4266,10 @@ def test_array_ndmin_1(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4243,7 +4284,7 @@ def test_array_ndmin_2(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4254,7 +4295,10 @@ def test_array_ndmin_2(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4269,7 +4313,7 @@ def test_array_ndmin_4(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4280,7 +4324,10 @@ def test_array_ndmin_4(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template makes interface ambiguous")),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
@@ -4295,7 +4342,7 @@ def test_array_ndmin_2_order(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    d = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max, size=(2,3,4)), dtype=int)
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -4308,21 +4355,13 @@ def test_array_ndmin_2_order(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_bool_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4359,7 +4398,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
     integer8   = randint(low = iinfo('int8').min,   high = iinfo('int8').max, size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
@@ -4397,8 +4436,8 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4435,8 +4474,8 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4473,8 +4512,8 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4505,21 +4544,13 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_float32_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4549,21 +4580,13 @@ def test_dtype_conversion_to_float32_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_float64_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4593,20 +4616,12 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4635,21 +4650,13 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cfloat(cmplx128)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_complex128_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4686,7 +4693,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
     integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
@@ -4718,21 +4725,13 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_dtype_conversion_to_pyfloat_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
-    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer   = np.array(randint(low = iinfo('int32').min,   high = iinfo('int32').max, size = size), dtype=int)
+    integer8  = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
@@ -4764,20 +4763,12 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -4848,9 +4839,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -4921,9 +4912,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -4993,9 +4984,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5066,9 +5057,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5135,20 +5126,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5214,20 +5197,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5293,20 +5268,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5371,20 +5338,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5455,9 +5414,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5525,20 +5484,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5606,20 +5557,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5690,9 +5633,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5763,9 +5706,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5836,9 +5779,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5909,9 +5852,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -5978,20 +5921,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6057,20 +5992,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6136,20 +6063,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6214,20 +6133,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6298,9 +6209,9 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6368,20 +6279,12 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
-                      pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 
-    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
-    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_1 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_2 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
+    integer_3 = np.array(randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size), dtype=int)
 
     integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
     integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
@@ -6459,10 +6362,10 @@ def test_iterate_slice(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
                       pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason=("Slicing code differs between types. Fixed by #1756")),
-            pytest.mark.python]),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
+                      pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_unpacking(language):
@@ -6509,3 +6412,12 @@ def test_unpacking_2D_of_known_size(language):
     f1 = arrays.unpack_array_2D_of_known_size
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+##==============================================================================
+## TEST INDEXING
+##==============================================================================
+
+def test_multi_layer_index(language):
+    f1 = arrays.multi_layer_index
+    f2 = epyccel(f1, language = language)
+    assert f1(arrays.a_1d, 3, 18, 5, 2) == f2(arrays.a_1d, 3, 18, 5, 2)

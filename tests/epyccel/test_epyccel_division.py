@@ -2,7 +2,7 @@
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pyccel import epyccel
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -126,9 +126,9 @@ def test_call_fdiv_i_i_8(language):
     def fdiv_i_i(x : 'int8', y : 'int8'):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = epyccel(fdiv_i_i, language=language, flags=flags)
     x = randint(120, dtype='int8')
     y = randint(low=1, high= 100, dtype='int8')
 
@@ -139,9 +139,9 @@ def test_call_fdiv_i_i_16(language):
     def fdiv_i_i(x : 'int16', y : 'int16'):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = epyccel(fdiv_i_i, language=language, flags=flags)
     x = randint(32000, dtype='int16')
     y = randint(low=1, high= 30000, dtype='int16')
 
@@ -155,9 +155,9 @@ def test_call_fdiv_i_i_32(language):
     def fdiv_i_i(x : 'int32', y : 'int32'):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = epyccel(fdiv_i_i, language=language, flags=flags)
     x = randint(1e4, dtype='int32')
     y = randint(low=1, high= 1e2, dtype='int32')
 
@@ -171,9 +171,9 @@ def test_call_fdiv_i_i_i(language):
     def fdiv_i_i_i(x : int, y : int, z : int):
         return x // y // z
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i_i, language=language, fflags=fflags)
+    f = epyccel(fdiv_i_i_i, language=language, flags=flags)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
     z = randint(low=1, high= 1e2)
@@ -184,13 +184,26 @@ def test_call_fdiv_i_i_i(language):
     assert (f(-x, -y, z) == fdiv_i_i_i(-x, -y, z))
     assert isinstance(f(x, y, z), type(fdiv_i_i_i(x, y, z)))
 
+def test_call_fdiv_b_b(language):
+    def fdiv_b_b(x : 'bool', y : 'bool'):
+        return x // y
+
+    flags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_b_b, language=language, flags=flags)
+    assert (f(True, True) == fdiv_b_b(True, True))
+    assert (f(False, True) == fdiv_b_b(False, True))
+    assert isinstance(f(True, True), type(fdiv_b_b(True, True)))
+
+
+
 def test_call_fdiv_i_r(language):
     def fdiv_i_r(x : int, y : 'float'):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_r, language=language, fflags=fflags)
+    f = epyccel(fdiv_i_r, language=language, flags=flags)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert (f(x, y) == fdiv_i_r(x, y))
@@ -203,9 +216,9 @@ def test_call_fdiv_r_i(language):
     def fdiv_r_i(x : 'float', y : int):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_i, language=language, fflags=fflags)
+    f = epyccel(fdiv_r_i, language=language, flags=flags)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert (f(x, y) == fdiv_r_i(x, y))
@@ -218,9 +231,9 @@ def test_call_fdiv_r_r(language):
     def fdiv_r_r(x : 'float', y : 'float'):
         return x // y
 
-    fflags = "-Werror -Wconversion"
+    flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_r, language=language, fflags=fflags)
+    f = epyccel(fdiv_r_r, language=language, flags=flags)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert (f(x, y) == fdiv_r_r(x, y))

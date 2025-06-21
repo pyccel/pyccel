@@ -10,18 +10,65 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
-from pyccel.ast.internals import PyccelInternalFunction
-
+from pyccel.ast.datatypes import VoidType
+from pyccel.ast.internals import PyccelFunction
 
 __all__ = ('ListAppend',
            'ListClear',
+           'ListCopy',
+           'ListExtend',
            'ListInsert',
+           'ListMethod',
            'ListPop',
+           'ListRemove',
+           'ListReverse',
+           'ListSort'
            )
 
 #==============================================================================
-class ListAppend(PyccelInternalFunction):
+class ListMethod(PyccelFunction):
+    """
+    Abstract class for list method calls.
+
+    A subclass of this base class represents calls to a specific list
+    method.
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The object which the method is called from.
+    
+    *args : TypedAstNode
+        The arguments passed to list methods.
+    """
+    __slots__ = ("_list_obj",)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ("_list_obj",)
+    name = None
+    def __init__(self, list_obj, *args):
+        self._list_obj = list_obj
+        super().__init__(*args)
+
+    @property
+    def list_obj(self):
+        """
+        Get the object representing the list.
+
+        Get the object representing the list.
+        """
+        return self._list_obj
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return (self._list_obj,)
+
+#==============================================================================
+class ListAppend(ListMethod):
     """
     Represents a call to the .append() method.
 
@@ -36,56 +83,25 @@ class ListAppend(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : Variable
-        The variable representing the list.
+    list_obj : TypedAstNode
+        The list object which the method is called from.
     
     new_elem : TypedAstNode
         The argument passed to append() method.
     """
-    __slots__ = ("_list_variable", "_append_arg")
-    _attribute_nodes = ("_list_variable", "_append_arg")
-    _dtype = NativeVoid()
+    __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
-    _precision = -1
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'append'
 
-    def __init__(self, list_variable, new_elem) -> None:
-        is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_variable.dtype is not NativeGeneric() and
-            list_variable.dtype == new_elem.dtype and
-            list_variable.precision == new_elem.precision and
-            list_variable.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._list_variable = list_variable
-        self._append_arg = new_elem
-        super().__init__()
-
-    @property
-    def list_variable(self):
-        """
-        Get the variable representing the list.
-
-        Get the variable representing the list.
-        """
-        return self._list_variable
-
-    @property
-    def append_argument(self):
-        """
-        Get the argument which is passed to append().
-
-        Get the argument which is passed to append().
-        """
-        return self._append_arg
+    def __init__(self, list_obj, new_elem) -> None:
+        expected_type = list_obj.class_type.element_type
+        if new_elem.class_type != expected_type:
+            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
+        super().__init__(list_obj, new_elem)
 
 #==============================================================================
-class ListPop(PyccelInternalFunction) :
+class ListPop(ListMethod) :
     """
     Represents a call to the .pop() method.
     
@@ -93,49 +109,37 @@ class ListPop(PyccelInternalFunction) :
     removes the item at the specified index. 
     The method also returns the removed item.
 
+    >>> [1, 2].pop()
+    2
+
     Parameters
     ----------
-    list_variable : TypedAstNode
-        The name of the list.
+    list_obj : TypedAstNode
+        The list object which the method is called from.
 
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_dtype','_precision', '_index','_list_variable')
-    _attribute_nodes = ('_index','_list_variable')
-    _rank = 0
-    _order = None
-    _shape = None
-    _class_type = NativeHomogeneousList()
+    __slots__ = ('_class_type', '_shape')
     name = 'pop'
 
-    def __init__(self, list_variable, index_element=None):
-        self._index = index_element
-        self._list_variable = list_variable
-        self._dtype = list_variable.dtype
-        self._precision = list_variable.precision
-        super().__init__()
+    def __init__(self, list_obj, index_element=None) -> None:
+        self._class_type = list_obj.class_type.element_type
+        rank = self._class_type.rank
+        self._shape = None if rank == 0 else (None,)*rank
+        super().__init__(list_obj, index_element)
 
     @property
-    def pop_index(self):
+    def index_element(self):
         """
         The current index value for the element to be popped.
 
         The current index value for the element to be popped.
         """
-        return self._index
-
-    @property
-    def list_variable(self):
-        """
-        Provide the name of the list as the return value.
-        
-        Provide the name of the list as the return value.
-        """
-        return self._list_variable
+        return self._args[0]
 
 #==============================================================================
-class ListClear(PyccelInternalFunction) :
+class ListClear(ListMethod) :
     """
     Represents a call to the .clear() method.
     
@@ -143,36 +147,26 @@ class ListClear(PyccelInternalFunction) :
     effectively turning it into an empty list.
     Note that the .clear() method doesn't return any value.
 
+    >>> a = [1, 2]
+    >>> a.clear()
+    >>> print(a)
+    []
+
     Parameters
     ----------
-    list_variable : TypedAstNode
-        The name of the list.
+    list_obj : TypedAstNode
+        The list object which the method is called from.
     """
-    __slots__ = ('_list_variable',)
-    _attribute_nodes = ('_list_variable',)
-    _dtype = NativeVoid()
-    _precision = -1
-    _rank = 0
-    _order = None
+    __slots__ = ()
     _shape = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
-    def __init__(self, list_variable):
-        self._list_variable = list_variable
-        super().__init__()
-
-    @property
-    def list_variable(self):
-        """
-        Provide the name of the list as the return value.
-
-        Provide the name of the list as the return value.
-        """
-        return self._list_variable
+    def __init__(self, list_obj) -> None:
+        super().__init__(list_obj)
 
 #==============================================================================
-class ListInsert(PyccelInternalFunction):
+class ListInsert(ListMethod):
     """
     Represents a call to the .insert() method.
 
@@ -188,8 +182,8 @@ class ListInsert(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : Variable
-        The variable representing the list.
+    list_obj : TypedAstNode
+        The list object which the method is called from.
 
     index : TypedAstNode
         The index value for the element to be added.
@@ -197,54 +191,208 @@ class ListInsert(PyccelInternalFunction):
     new_elem : TypedAstNode
         The argument passed to insert() method.
     """
-    __slots__ = ("_index", "_list_variable", "_insert_arg")
-    _attribute_nodes = ("_index", "_list_variable", "_insert_arg")
-    _dtype = NativeVoid()
+    __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
-    _precision = -1
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'insert'
 
-    def __init__(self, list_variable, index, new_elem) -> None:
-        is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_variable.dtype is not NativeGeneric() and
-            list_variable.dtype == new_elem.dtype and
-            list_variable.precision == new_elem.precision and
-            list_variable.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
+    def __init__(self, list_obj, index, new_elem) -> None:
+        if new_elem.class_type != list_obj.class_type.element_type:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._index = index
-        self._list_variable = list_variable
-        self._insert_arg = new_elem
-        super().__init__()
+        super().__init__(list_obj, index, new_elem)
 
     @property
     def index(self):
         """
-        Index in which the element will be added.
+        The index of the object after insertion in the list.
 
-        Index in which the element will be added.
+        The index of the object after insertion in the list.
         """
-        return self._index
-
-    @property
-    def list_variable(self):
-        """
-        Get the variable representing the list.
-
-        Get the variable representing the list.
-        """
-        return self._list_variable
+        return self._args[0]
 
     @property
-    def insert_argument(self):
+    def object(self):
         """
-        Get the argument which is passed to insert().
+        The object to insert into the list.
 
-        Get the argument which is passed to insert().
+        The object to insert into the list.
         """
-        return self._insert_arg
+        return self._args[1]
+
+#==============================================================================
+class ListExtend(ListMethod):
+    """
+    Represents a call to the .extend() method.
+
+    Represents a call to the .extend() method of an object with a list type,
+    which adds items of an iterable (list, tuple, dictionary, etc) at the end
+    of a list.
+    This method is handled through the call to `_build_ListExtend` in
+    the semantic stage. It then attempts to construct a `For` loop node with
+    a body that calls `append()`, or direct `append()` nodes depending on
+    the type of the iterable passed to `extend()`.
+    This class should never be instantiated; it's only purpose is to help
+    construct the annotation_method `_build_ListExtend`. 
+    The extend method is called as follows:
+
+    >>> a = [1, 2, 3]
+    >>> a.extend(range(4, 8))
+    >>> print(a)
+    [1, 2, 3, 4, 5, 6, 7]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    iterable : TypedAstNode
+        The argument passed to extend() method.
+    """
+    __slots__ = ()
+    name = 'extend'
+
+    def __init__(self, list_obj, iterable) -> None:
+        super().__init__(list_obj, iterable)
+
+#==============================================================================
+class ListRemove(ListMethod) :
+    """
+    Represents a call to the .remove() method.
+    
+    Represents a call to the .remove() method which removes the first
+    occurrence of a given element from the list.
+    Note that the .remove() method doesn't return any value.
+
+    >>> a = [[1, 2], [3, 4]]
+    >>> a.remove([1, 2])
+    >>> print(a)
+    [[3, 4]]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    removed_obj : TypedAstNode
+        The object to be removed from the list.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'remove'
+
+    def __init__(self, list_obj, removed_obj) -> None:
+        if removed_obj.class_type != list_obj.class_type.element_type:
+            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
+        super().__init__(list_obj, removed_obj)
+
+#==============================================================================
+class ListCopy(ListMethod) :
+    """
+    Represents a call to the .copy() method.
+    
+    Represents a call to the .copy() method which is used to create a shallow
+    copy of a list, meaning that any modification in the new list will be
+    reflected in the original list.
+    The method returns a list.
+
+    >>> a = [1, 2, 3, 4]
+    >>> b = a.copy()
+    >>> print(a, b)
+    [1, 2, 3, 4]
+    [1, 2, 3, 4]
+    >>> a[0] = 0
+    >>> a[1] = 0
+    >>> print(a, b)
+    [0, 0, 3, 4]
+    [0, 0, 3, 4]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ('_class_type', '_shape')
+    name = 'copy'
+
+    def __init__(self, list_obj) -> None:
+        self._shape = list_obj.shape
+        self._class_type = list_obj.class_type
+        super().__init__(list_obj)
+
+    @property
+    def modified_args(self):
+        """
+        Return a tuple of all the arguments which may be modified by this function.
+
+        Return a tuple of all the arguments which may be modified by this function.
+        This is notably useful in order to determine the constness of arguments.
+        """
+        return ()
+
+#==============================================================================
+class ListSort(ListMethod) :
+    """
+    Represents a call to the .sort() method.
+
+    Represents a call to the `.sort()` method, which sorts the elements of the
+    list in ascending order and modifies the original list in place. This means
+    that the elements of the original list are rearranged to be in sorted order.
+    Optional parameters are not supported, therefore they should not be provided. 
+    Note that the .sort() method doesn't return any value.
+    
+    >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+    >>> a.sort()
+    >>> print(a)
+    [1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    reverse : TypedAstNode, optional
+        Argument mimicking sort's reverse parameter. This argument is 
+        unsupported so it should not be provided.
+
+    key : FunctionDef, optional
+        A function to specify the sorting criteria(s). This argument is 
+        unsupported so it should not be provided.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'sort'
+
+    def __init__(self, list_obj, reverse=None, key=None) -> None:
+        if reverse is not None or key is not None:
+            raise TypeError("Optional Parameters are not supported for sort() method.")
+        super().__init__(list_obj, reverse, key)
+
+#==============================================================================
+class ListReverse(ListMethod):
+    """
+    Represents a call to the .reverse() method.
+
+    Represents a call to the `.reverse()` method, which reverses the elements of the
+    list in place. This means that the elements of the original list are rearranged
+    in reverse order. The .reverse() method does not return any value and does not
+    accept any optional parameters.
+
+    >>> a = [1, 2, 3, 4, 5]
+    >>> a.reverse()
+    >>> print(a)
+    [5, 4, 3, 2, 1]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ()
+    _shape = None
+    _class_type = VoidType()
+    name = 'reverse'
+
+    def __init__(self, list_obj) -> None:
+        super().__init__(list_obj)

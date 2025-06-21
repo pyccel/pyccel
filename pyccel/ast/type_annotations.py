@@ -11,18 +11,26 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
 
-from .core import FunctionDefArgument
+from .bitwise_operators import PyccelBitOr
+
+from .core import FunctionDefArgument, FunctionDefResult
+
+from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
+from .datatypes import VoidType, GenericType, StringType, PyccelType
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
         'FunctionTypeAnnotation',
         'SyntacticTypeAnnotation',
-        'VariableTypeAnnotation',
         'UnionTypeAnnotation',
+        'VariableTypeAnnotation',
+        'typenames_to_dtypes',
         )
 
 pyccel_stage = PyccelStage()
+
+#==============================================================================
 
 class VariableTypeAnnotation(PyccelAstNode):
     """
@@ -33,49 +41,19 @@ class VariableTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    datatype : DataType
-        The requested internal data type.
-
-    class_type : DataType
-        The Python type of the variable. In the case of scalars this is equivalent to
-        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
-        this is the type of the container.
-
-    precision : int
-        The precision of the internal datatype.
-
-    rank : int
-        The rank of the variable.
-
-    order : str
-        The order of the variable.
+    class_type : PyccelType
+        The requested Python type of the variable.
 
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_datatype', '_class_type', '_precision', '_rank',
-                 '_order', '_is_const')
+    __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, datatype : 'DataType', class_type : 'DataType', precision : int = -1,
-            rank : int = 0, order : str = None, is_const : bool = False):
-        self._datatype = datatype
+    def __init__(self, class_type : PyccelType, is_const : bool = False):
         self._class_type = class_type
-        self._precision = precision
-        self._rank = rank
-        self._order = order
         self._is_const = is_const
 
         super().__init__()
-
-    @property
-    def datatype(self):
-        """
-        Get the basic datatype of the object.
-
-        Get the basic datatype of the object. For objects with rank>0 this is the
-        type of one of the elements of the object.
-        """
-        return self._datatype
 
     @property
     def class_type(self):
@@ -89,40 +67,14 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._class_type
 
     @property
-    def precision(self):
-        """
-        Get the precision of the object.
-
-        Get the precision of the object. For objects with rank>0 this is the
-        precision of one of the elements of the object.
-        """
-        return self._precision
-
-    @property
     def rank(self):
         """
-        Get the rank of the object.
+        Number of dimensions of the object.
 
-        Get the rank of the object that should be created. The rank indicates the
-        number of dimensions.
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
         """
-        return self._rank
-
-    @property
-    def order(self):
-        """
-        Get the order of the object.
-
-        Get the order in which the memory will be laid out in the object. For objects
-        with rank > 1 this is either 'C' or 'F'. 
-        """
-        return self._order
-
-    @order.setter
-    def order(self, order):
-        if order not in ('C', 'F', None):
-            raise ValueError("Order must be C, F, or None")
-        self._order = order
+        return self.class_type.rank
 
     @property
     def is_const(self):
@@ -141,21 +93,19 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = val
 
     def __hash__(self):
-        return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
+        return hash(self.class_type)
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
-            return self.datatype == other.datatype and \
-                   self.class_type == other.class_type and \
-                   self.precision == other.precision and \
-                   self.rank == other.rank and \
-                   self.order == other.order
+            return self.class_type == other.class_type
         else:
             return False
 
     def __repr__(self):
-        return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
+        return repr(self._class_type)
+
+#==============================================================================
 
 class FunctionTypeAnnotation(PyccelAstNode):
     """
@@ -172,26 +122,28 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
 
-    results : list of SyntacticTypeAnnotation | UnionTypeAnnotation
-        The type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+    result : SyntacticTypeAnnotation | UnionTypeAnnotation
+        The type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
 
     is_const : bool, default=True
         True if the function pointer cannot be modified, false otherwise.
     """
-    __slots__ = ('_args', '_results', '_is_const')
-    _attribute_nodes = ('_args', '_results', '_is_const')
+    __slots__ = ('_args', '_result', '_is_const')
+    _attribute_nodes = ('_args', '_result', '_is_const')
 
-    def __init__(self, args, results, is_const = True):
+    def __init__(self, args, result, is_const = True):
         if pyccel_stage == 'syntactic':
             self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
-            self._results = [FunctionDefArgument(AnnotatedPyccelSymbol('_', r), annotation = r) \
-                            for i, r in enumerate(results)]
+            if result:
+                self._result = FunctionDefResult(AnnotatedPyccelSymbol('_', result), annotation = result)
+            else:
+                self._result = FunctionDefResult(result)
         else:
             self._args = args
-            self._results = results
+            self._result = result
 
         self._is_const = is_const
 
@@ -209,15 +161,15 @@ class FunctionTypeAnnotation(PyccelAstNode):
         return self._args
 
     @property
-    def results(self):
+    def result(self):
         """
-        Get the type annotations describing the results of the function address.
+        Get the type annotation describing the result of the function address.
 
-        Get the type annotations describing the results of the function address.
-        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
-        In the semantic stage these objects are of type UnionTypeAnnotation.
+        Get the type annotation describing the result of the function address.
+        In the syntactic stage this object is of type SyntacticTypeAnnotation.
+        In the semantic stage this object is of type UnionTypeAnnotation.
         """
-        return self._results
+        return self._result
 
     def __repr__(self):
         return f'func({repr(self.args)}) -> {repr(self.results)}'
@@ -238,6 +190,8 @@ class FunctionTypeAnnotation(PyccelAstNode):
             raise TypeError("Is const value should be a boolean")
         self._is_const = val
 
+#==============================================================================
+
 class UnionTypeAnnotation(PyccelAstNode):
     """
     A class which holds multiple possible type annotations.
@@ -254,7 +208,8 @@ class UnionTypeAnnotation(PyccelAstNode):
 
     def __init__(self, *type_annotations):
         annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
-        self._type_annotations = tuple(set(annots))
+        # Strip out repeats
+        self._type_annotations = tuple({a: None for a in annots}.keys())
 
         super().__init__()
 
@@ -291,6 +246,8 @@ class UnionTypeAnnotation(PyccelAstNode):
     def __str__(self):
         return '|'.join(str(t) for t in self._type_annotations)
 
+#==============================================================================
+
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.
@@ -302,22 +259,30 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : PyccelSymbol | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName
         The dtype named in the type annotation.
 
     order : str | None
         The order requested in the type annotation.
     """
     __slots__ = ('_dtype', '_order')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_dtype',)
+
+    def __new__(cls, dtype = None, order = None):
+        if isinstance(dtype, PyccelBitOr):
+            return UnionTypeAnnotation(*[SyntacticTypeAnnotation(d) for d in dtype.args])
+        else:
+            return super().__new__(cls)
+
     def __init__(self, dtype, order = None):
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
-            raise ValueError("Syntactic datatypes should be strings")
+            raise ValueError(f"Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")
         self._dtype = dtype
         self._order = order
         super().__init__()
+        assert self.pyccel_staging == 'syntactic'
 
     @property
     def dtype(self):
@@ -348,3 +313,20 @@ class SyntacticTypeAnnotation(PyccelAstNode):
                     self.order == o.order
         else:
             return False
+
+    def __str__(self):
+        order_str = f'(order={self.order})' if self.order else ''
+        return f'{self.dtype}{order_str}'
+
+#==============================================================================
+
+typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
+                        'double'  : PythonNativeFloat(),
+                        'complex' : PythonNativeComplex(),
+                        'int'     : PythonNativeInt(),
+                        'bool'    : PythonNativeBool(),
+                        'b1'      : PythonNativeBool(),
+                        'void'    : VoidType(),
+                        '*'       : GenericType(),
+                        'str'     : StringType(),
+                        }

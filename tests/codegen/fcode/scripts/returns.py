@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-#$ header max_(double, double)
-def max_(x, y):
+def max_(x : float, y : float):
     if x>y:
         z = x
         return z

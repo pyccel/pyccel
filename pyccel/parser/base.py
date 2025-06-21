@@ -10,21 +10,16 @@ Module containing aspects of a parser which are in common over all stages.
 
 import importlib
 import os
+import pathlib
 import re
 import warnings
-from filelock import FileLock
 
 #==============================================================================
 from pyccel.version import __version__
 
-from pyccel.ast.builtins import Lambda
-
-from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
-
-from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import DottedName
 
@@ -47,86 +42,124 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module, input_folder=''):
+def get_filename_from_import(module_name, input_folder_name, output_folder_name):
     """
-    Get the absolute path of a module, searching in a given folder.
+    Get the absolute path of a module_name, searching in a given folder.
 
     Return a valid filename with an absolute path, that corresponds to the
-    definition of module.
-    The priority order is:
-        - header files (extension == pyh)
-        - python files (extension == py)
+    definition of module_name.
+    When searching for files in a folder, the order of priority is:
+
+    - python files (extension == .py)
+    - header files (extension == .pyi)
+
+    In the Pyccel folder the priority is inverted as .py files are sometimes
+    provided alongside .pyi files to spoof the functionalities so user code
+    relying on these methods can be run in Python.
 
     Parameters
     ----------
-    module : str | AsName
-        Name of the module of interest.
+    module_name : str | AsName
+        Name of the module_name of interest.
 
-    input_folder : str
-        Relative path of the folder which should be searched for the module.
+    input_folder_name : str | Path
+        Relative path of the folder which should be searched for the module_name.
+
+    output_folder_name : str | Path
+        The name of the folder where the output of the translation of the module
+        from which we are searching was printed.
 
     Returns
     -------
-    str
-        Absolute path of the given module.
+    filename : pathlib.Path
+        Absolute path to the Python file being imported.
+    stashed_filename : pathlib.Path
+        Absolute path to the .pyi version of the Python file being imported.
+        If none exists then the absolute path to the Python file being imported.
 
     Raises
     ------
     PyccelError
-        Error raised when the module cannot be found.
+        Error raised when the module_name cannot be found.
+        Error raised when the file imports a file that has not been translated.
+        Error raised when the file imports a file that has been changed since its last translation.
     """
 
-    if (isinstance(module, AsName)):
-        module = str(module.name)
+    if (isinstance(module_name, AsName)):
+        module_name = str(module_name.name)
 
-    # Remove first '.' as it doesn't represent a folder change
-    if module[0] == '.':
-        module = module[1:]
-    filename = module.replace('.','/')
+    relative_project_path = module_name[0] == '.'
+    in_project = '.' in module_name
 
-    # relative imports
-    folder_above = '../'
-    while filename.startswith('/'):
-        filename = folder_above + filename[1:]
+    input_folder = pathlib.Path(input_folder_name)
 
-    filename_pyh = '{}.pyh'.format(filename)
-    filename_py  = '{}.py'.format(filename)
+    if relative_project_path:
+        project_depth = next(i for i, c in enumerate(module_name) if c != '.')
+        if project_depth == 1:
+            project_dir = input_folder
+        else:
+            project_dir = input_folder.parents[project_depth-2]
+        module_path = module_name[project_depth:].split('.')
+        filename_stem = project_dir.joinpath(*module_path)
+    elif in_project:
+        filename_stem = input_folder.joinpath(*module_name.split('.')).with_suffix('.py')
+        if not filename_stem.exists():
+            module_name_parts = module_name.split('.')
+            package = None
+            for i in range(len(module_name_parts)):
+                try:
+                    package = importlib.import_module('.'.join(module_name_parts[:len(module_name_parts)-i]))
+                    break
+                except ImportError:
+                    pass
+            if package is None:
+                errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
+                                severity='fatal')
+            filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
+    else:
+        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
 
-    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
-    poss_filename_py  = os.path.join( input_folder, filename_py  )
-    if is_valid_filename_pyh(poss_filename_pyh):
-        return os.path.abspath(poss_filename_pyh)
-    if is_valid_filename_py(poss_filename_py):
-        return os.path.abspath(poss_filename_py)
+    pyccel_folder = pathlib.Path(__file__).parent.parent
+    filename_py = filename_stem.with_suffix('.py')
+    filename_pyi = filename_stem.with_suffix('.pyi')
+    filename_pyh = filename_stem.with_suffix('.pyh')
 
-    source = module
-    if len(module.split(""".""")) > 1:
-
-        # we remove the last entry, since it can be a pyh file
-
-        source = """.""".join(i for i in module.split(""".""")[:-1])
-        _module = module.split(""".""")[-1]
-        filename_pyh = '{}.pyh'.format(_module)
-        filename_py = '{}.py'.format(_module)
-
-    try:
-        package = importlib.import_module(source)
-        package_dir = str(package.__path__[0])
-    except ImportError:
-        errors = Errors()
-        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
+    # Look for .pyi or .pyh files in pyccel
+    # Header files take priority in case .py files exist so files can run in Python
+    if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
+        abs_pyi_fname = filename_pyi.absolute()
+        return abs_pyi_fname, abs_pyi_fname
+    elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
+        abs_pyh_fname = filename_pyh.absolute()
+        return abs_pyh_fname, abs_pyh_fname
+    elif filename_py.exists() and pyccel_folder in filename_pyh.parents:
+        # External files are pure Python
+        abs_py_fname = filename_py.absolute()
+        return abs_py_fname, abs_py_fname
+    # Look for Python files which should have been translated once
+    elif filename_py.exists():
+        rel_path = os.path.relpath(filename_py.parent, input_folder_name)
+        pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+        stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
+        if not stashed_file.exists():
+            errors.report("Imported files must be pyccelised before they can be used.",
+                    symbol=module_name, severity='fatal')
+        if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
+            errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
+                    symbol=module_name, severity='fatal')
+        return filename_py.absolute(), stashed_file.resolve()
+    # Look for user-defined .pyi or .pyh files
+    elif filename_pyi.exists():
+        abs_pyi_fname = filename_pyi.absolute()
+        return abs_pyi_fname, abs_pyi_fname
+    elif filename_pyh.exists():
+        warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
+                "Please use a .pyi file instead.", FutureWarning)
+        abs_pyh_fname = filename_pyh.absolute()
+        return abs_pyh_fname, abs_pyh_fname
+    else:
+        raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')
-
-    filename_pyh = os.path.join(package_dir, filename_pyh)
-    filename_py = os.path.join(package_dir, filename_py)
-    if os.path.isfile(filename_pyh):
-        return filename_pyh
-    elif os.path.isfile(filename_py):
-        return filename_py
-
-    errors = Errors()
-    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
-                  severity='fatal')
 
 #==============================================================================
 class BasicParser(object):
@@ -134,6 +167,11 @@ class BasicParser(object):
     Class for a basic parser.
 
     This class contains functions and properties which are common to SyntacticParser and SemanticParser.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
 
     See Also
     --------
@@ -147,17 +185,18 @@ class BasicParser(object):
     >>> result = parser.parse("1 + 2")
     """
 
-    def __init__(self):
+    def __init__(self, verbose):
         self._code = None
         self._fst = None
         self._ast = None
+        self._verbose = verbose
 
         self._filename = None
         self._metavars = {}
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_function_name = None
+        self._current_function_name = []
         self._current_function = []
 
         # the following flags give us a status on the parsing stage
@@ -173,24 +212,6 @@ class BasicParser(object):
         # TODO ERROR must be passed to the Parser __init__ as argument
 
         self._blocking = error_mode.value == 'developer'
-
-        self._created_from_pickle = False
-
-    def __setstate__(self, state):
-        copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
-                '_metavars', '_scope', '_current_function',
-                '_syntax_done', '_semantic_done', '_current_ast_node')
-
-        self.__dict__.update({s : state[s] for s in copy_slots})
-
-        if not isinstance(self.scope, Scope):
-            # self.scope as set, deprecated in PR 1089
-            raise AttributeError("Scope should be a Scope (Type was previously set in syntactic parser)")
-
-        # Error related flags. Should not be influenced by pickled file
-        self._blocking = ErrorsMode().value == 'developer'
-
-        self._created_from_pickle = True
 
     @property
     def scope(self):
@@ -226,10 +247,10 @@ class BasicParser(object):
         """
         Full syntax tree.
 
-        Get the full syntax tree describing the code. This object contains `PyccelAstNode`s
-        and is generated by the semantic stage. The full syntax tree is similar to the
-        abstract syntax tree, but additionally contains information about the types of the
-        objects etc.
+        Get the full syntax tree describing the code. This object contains `PyccelAstNode`
+        objects and is generated by the semantic stage. The full syntax tree is similar
+        to the abstract syntax tree, but additionally contains information about the types
+        of the objects etc.
         """
         return self._fst
 
@@ -238,10 +259,10 @@ class BasicParser(object):
         """
         Abstract syntax tree.
 
-        Get the abstract syntax tree describing the code. This object contains `PyccelAstNode`s
-        and is generated by the syntactic stage. The abstract syntax tree is similar to the
-        full syntax tree, but only contains infomation about the syntax, there is no semantic
-        data (e.g. the types of variables are unknown).
+        Get the abstract syntax tree describing the code. This object contains `PyccelAstNode`
+        objects and is generated by the syntactic stage. The abstract syntax tree is similar
+        to the full syntax tree, but only contains information about the syntax, there is no
+        semantic data (e.g. the types of variables are unknown).
         """
         if self._ast is None:
             self._ast = self.parse()
@@ -256,9 +277,14 @@ class BasicParser(object):
         return self._metavars
 
     @property
-    def current_function(self):
-        """Name of current function, if any."""
-        return self._current_function
+    def current_function_name(self):
+        """
+        The name of the function currently being visited.
+
+        The name of the function currently being visited or None if we are not in
+        a function.
+        """
+        return self._current_function_name[-1] if self._current_function_name else None
 
     @property
     def syntax_done(self):
@@ -270,10 +296,16 @@ class BasicParser(object):
 
     @property
     def is_header_file(self):
-        """Returns True if we are treating a header file."""
+        """
+        Indicate if the file being translated is a header file.
+
+        Indicate if the file being translated is a header file.
+        A file is a header file if it does not include the implementation of the
+        methods. This is the case for .pyi files.
+        """
 
         if self.filename:
-            return self.filename.split(""".""")[-1] == 'pyh'
+            return self.filename.suffix in ('.pyi', '.pyh')
         else:
             return False
 
@@ -294,14 +326,37 @@ class BasicParser(object):
     def blocking(self):
         return self._blocking
 
-    def insert_function(self, func):
-        """."""
+    def insert_function(self, func, scope = None):
+        """
+        Insert a function into the current scope or a specified scope.
+
+        Insert a function into a scope under the final name by which it
+        will be known in the generated code. The scope is the current
+        scope unless another scope is provided. This is notably the
+        case when dealing with class methods which are not inserted into
+        the enclosing scope.
+
+        Parameters
+        ----------
+        func : FunctionDef | SympyFunction | Interface | FunctionAddress
+            The function to be inserted into the scope.
+
+        scope : Scope, optional
+            The scope where the function should be inserted.
+        """
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.scope.functions
-            container[func.name] = func
+            scope = scope or self.scope
+            container = scope.functions
+            if func.pyccel_staging == 'syntactic':
+                container[self.scope.get_expected_name(func.name)] = func
+            else:
+                name = func.name
+                container[name] = func
+                if self._current_function_name and name == self._current_function_name[-1]:
+                    self._current_function.append(func)
         else:
             raise TypeError('Expected a Function definition')
 
@@ -311,83 +366,20 @@ class BasicParser(object):
         container = self.scope.symbolic_functions
         if isinstance(func, SympyFunction):
             container[func.name] = func
-        elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
-                Lambda):
-            container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
 
-    def insert_import(self, expr):
-        """."""
-
-        # this method is only used in the syntatic stage
-
-        if not isinstance(expr, Import):
-            raise TypeError('Expecting Import expression')
-        container = self.scope.imports['imports']
-
-        # if source is not specified, imported things are treated as sources
-        if len(expr.target) == 0:
-            if isinstance(expr.source, AsName):
-                name   = expr.source
-                source = expr.source.name
-            else:
-                name   = str(expr.source)
-                source = name
-
-            if not recognised_source(source):
-                container[name] = []
-        else:
-            source = str(expr.source)
-            if not recognised_source(source):
-                if not source in container.keys():
-                    container[source] = []
-                container[source] += expr.target
-
-    def create_new_function_scope(self, name, **kwargs):
-        """
-        Create a new Scope object for a Python function with the given name,
-        and attach any decorators' information to the scope. The new scope is
-        a child of the current one, and can be accessed from the dictionary of
-        its children using the function name as key.
-
-        Before returning control to the caller, the current scope (stored in
-        self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
-
-        Parameters
-        ----------
-        name : str
-            Function's name, used as a key to retrieve the new scope.
-
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
-
-        """
-        child = self.scope.new_child_scope(name, **kwargs)
-
-        self._scope = child
-        if self._current_function:
-            name = DottedName(self._current_function, name)
-        self._current_function = name
-
-        return child
-
     def exit_function_scope(self):
-        """ Exit the function scope and return to the encasing scope
+        """
+        Exit the function scope and return to the enclosing scope.
+
+        Exit the function scope and return to the enclosing scope.
         """
 
         self._scope = self._scope.parent_scope
-        if isinstance(self._current_function, DottedName):
-
-            name = self._current_function.name[:-1]
-            if len(name)>1:
-                name = DottedName(*name)
-            else:
-                name = name[0]
-        else:
-            name = None
-        self._current_function = name
+        func_name = self._current_function_name.pop()
+        if self._current_function and self._current_function[-1].name == func_name:
+            self._current_function.pop()
 
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop
@@ -402,6 +394,8 @@ class BasicParser(object):
 
     def create_new_class_scope(self, name, **kwargs):
         """
+        Create a new scope for a Python class.
+
         Create a new Scope object for a Python class with the given name,
         and attach any decorators' information to the scope. The new scope is
         a child of the current one, and can be accessed from the dictionary of
@@ -409,13 +403,20 @@ class BasicParser(object):
 
         Before returning control to the caller, the current scope (stored in
         self._scope) is changed to the one just created, and the function's
-        name is stored in self._current_function.
+        name is stored in self._current_function_name.
 
         Parameters
         ----------
         name : str
             Function's name, used as a key to retrieve the new scope.
 
+        **kwargs : dict
+            A dictionary containing any additional arguments of the new scope.
+
+        Returns
+        -------
+        Scope
+            The scope for the class.
         """
         child = self.scope.new_child_scope(name, **kwargs)
         self._scope = child
@@ -426,131 +427,6 @@ class BasicParser(object):
         """ Exit the class scope and return to the encasing scope
         """
         self._scope = self._scope.parent_scope
-
-    def dump(self, filename=None):
-        """
-        Dump the current ast using Pickle.
-
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
-        """
-        if self._created_from_pickle:
-            return
-
-        if not filename:
-            if not self.filename:
-                raise ValueError('Expecting a filename to load the ast')
-
-            path , name  = os.path.split(self.filename)
-
-            name, ext = os.path.splitext(name)
-            if ext != '.pyh':
-                return
-
-            name     = '{}.pyccel'.format(name)
-            filename = os.path.join(path, name)
-        # check extension
-
-        if os.path.splitext(filename)[1] != '.pyccel':
-            raise ValueError('Expecting a .pyccel extension')
-
-        import pickle
-        import hashlib
-
-#        print('>>> home = ', os.environ['HOME'])
-        # ...
-
-        # we are only exporting the AST.
-        try:
-            with FileLock(filename+'.lock'):
-                try:
-                    code = self.code.encode('utf-8')
-                    hs   = hashlib.md5(code)
-                    with open(filename, 'wb') as f:
-                        pickle.dump((hs.hexdigest(), __version__, self), f)
-                    print("Created pickle file : ", filename)
-                except (FileNotFoundError, pickle.PickleError):
-                    pass
-        except PermissionError:
-            warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
-
-    def load(self, filename=None):
-        """ Load the current ast using Pickle.
-
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
-        """
-
-        # ...
-
-        if not filename:
-            if not self.filename:
-                raise ValueError('Expecting a filename to load the ast')
-
-            path , name = os.path.split(self.filename)
-
-            name, ext = os.path.splitext(name)
-
-            if ext != '.pyh':
-                return
-
-            name     = '{}.pyccel'.format(name)
-            filename = os.path.join(path, name)
-
-        if not filename.split(""".""")[-1] == 'pyccel':
-            raise ValueError('Expecting a .pyccel extension')
-
-        import pickle
-
-        possible_pickle_errors = (FileNotFoundError, PermissionError,
-                pickle.PickleError, AttributeError)
-
-        try:
-            with FileLock(filename+'.lock'):
-                try:
-                    with open(filename, 'rb') as f:
-                        hs, version, parser = pickle.load(f)
-                    self._created_from_pickle = True
-                except possible_pickle_errors:
-                    return
-        except PermissionError:
-            # read/write problems don't need to be avoided on a read-only system
-            try:
-                with open(filename, 'rb') as f:
-                    hs, version, parser = pickle.load(f)
-                self._created_from_pickle = True
-            except possible_pickle_errors:
-                return
-
-        import hashlib
-        code = self.code.encode('utf-8')
-        if hashlib.md5(code).hexdigest() == hs and __version__ == version:
-            self.copy(parser)
-
-    def copy(self, parser):
-        """
-        Copy the parser attributes in self
-
-          Parameters
-          ----------
-          parser : BasicParser
-
-        """
-        self._fst = parser.fst
-        self._ast = parser.ast
-
-        self._metavars = parser.metavars
-        self._scope    = parser.scope
-
-        # the following flags give us a status on the parsing stage
-        self._syntax_done   = parser.syntax_done
-        self._semantic_done = parser.semantic_done
 
 
 #==============================================================================

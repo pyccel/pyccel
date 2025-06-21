@@ -15,9 +15,14 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
+failing_files = {'ListComprehension.py': 'Lists of tuples not yet implemented with gFTL',
+                 'lists.py': 'List slicing not yet implemented with gFTL',
+                 'Functional_Stmts.py': 'List slicing not yet implemented with gFTL',
+                 'complex_numbers.py': 'List slicing not yet implemented with gFTL',
+                 }
 files = [os.path.join(path_dir,f) \
-         #if f not in failing_files \
-         #else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
+         if f not in failing_files \
+         else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
          for f in files \
          if f.endswith(".py") \
         ]
@@ -29,26 +34,25 @@ def test_codegen(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
-    ast = pyccel.parse()
+    pyccel = Parser(f, output_folder = os.getcwd())
+    ast = pyccel.parse(verbose = 0)
 
     # Assert syntactic success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     # Assert semantic success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'fortran')
+    codegen = Codegen(ast, name, 'fortran', verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
 ######################
 if __name__ == '__main__':

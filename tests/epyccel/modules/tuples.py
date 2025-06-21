@@ -2,19 +2,24 @@
 from pyccel.decorators import pure
 
 __all__ = [
-        'homogenous_tuple_int',
-        'homogenous_tuple_bool',
-        'homogenous_tuple_float',
-        'homogenous_tuple_string',
-        'homogenous_tuple_math',
-        'inhomogenous_tuple_1',
-        'inhomogenous_tuple_2',
-        'inhomogenous_tuple_3',
-        'inhomogenous_tuple_2_levels_1',
-        'inhomogenous_tuple_2_levels_2',
+        'homogeneous_tuple_int',
+        'homogeneous_tuple_bool',
+        'homogeneous_tuple_float',
+        'homogeneous_tuple_string',
+        'homogeneous_tuple_math',
+        'homogeneous_tuple_containing_var',
+        'homogeneous_tuple_of_arrays',
+        'inhomogeneous_tuple_1',
+        'inhomogeneous_tuple_2',
+        'inhomogeneous_tuple_3',
+        'inhomogeneous_tuple_2_levels_1',
+        'inhomogeneous_tuple_2_levels_2',
         'homogeneous_tuple_2_levels',
         'tuple_unpacking_1',
         'tuple_unpacking_2',
+        'tuple_unpacking_3',
+        'tuple_unpacking_4',
+        'tuple_unpacking_5',
         'tuple_name_clash',
         'tuples_as_indexing_basic',
         'tuples_as_indexing_var',
@@ -59,6 +64,7 @@ __all__ = [
         'tuple_variable_slice',
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
+        'inhomogeneous_tuple_var_negative_slice',
         'tuple_index',
         'tuple_homogeneous_int',
         'tuple_homogeneous_bool',
@@ -68,50 +74,66 @@ __all__ = [
         'tuple_inhomogeneous_1',
         'tuple_inhomogeneous_2',
         'tuple_inhomogeneous_3',
-        'test_tuple_homogeneous',
-        'test_tuple_inhomogeneous',
-        'tuple_different_ranks',
+        'tuple_homogeneous',
+        'tuple_inhomogeneous',
+        'tuple_multilevel_inhomogeneous',
+        'annotated_tuple_inhomog_return',
+        'annotated_tuple_homog_return',
+        'tuple_return_unknown_length',
+        'tuple_assignment',
+        'return_1_elem_inhomog_tuple',
         ]
 
-def homogenous_tuple_int():
+def homogeneous_tuple_int():
     ai = (1,4,5)
-    return ai[0], ai[1], ai[2]
+    i = 1
+    return ai[0], ai[i], ai[2]
 
-def homogenous_tuple_bool():
+def homogeneous_tuple_bool():
     ai = (False, True)
-    return ai[0], ai[1]
+    i = 1
+    return ai[0], ai[i]
 
-def homogenous_tuple_float():
+def homogeneous_tuple_float():
     ai = (1.5, 4.3, 5.2, 7.2, 9.999)
-    return ai[0], ai[1], ai[2], ai[3], ai[4]
+    i = 1
+    return ai[0], ai[i], ai[2], ai[3], ai[4]
 
-def homogenous_tuple_string():
+def homogeneous_tuple_string():
     ai = ('hello', 'tuple', 'world', '!!')
-    return ai[0], ai[1], ai[2], ai[3]
+    i = 1
+    return ai[0], ai[i], ai[2], ai[3]
 
-def homogenous_tuple_math():
+def homogeneous_tuple_math():
     ai = (4+5,3*9, 2**3)
-    return ai[0], ai[1], ai[2]
+    i = 1
+    return ai[0], ai[i], ai[2]
 
-def inhomogenous_tuple_1():
+def homogeneous_tuple_containing_var():
+    elem = 4
+    ai = (1, elem, 5)
+    i = 1
+    return ai[0], ai[i], ai[2]
+
+def inhomogeneous_tuple_1():
     ai = (0, False, 3+1j)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_2():
+def inhomogeneous_tuple_2():
     ai = (0, False, 3)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_3():
+def inhomogeneous_tuple_3():
     ai = (0, 1.0, 3)
     return ai[0], ai[1], ai[2]
 
-def inhomogenous_tuple_2_levels_1():
+def inhomogeneous_tuple_2_levels_1():
     # TODO [EB 15.06.21] Put back original test when strings are supported in C
     #ai = ((1,2), (4,False), (3.0, 'boo'))
     ai = ((1,2), (4,False), (3.0, True))
     return ai[0][0], ai[0][1], ai[1][0], ai[1][1], ai[2][0]
 
-def inhomogenous_tuple_2_levels_2():
+def inhomogeneous_tuple_2_levels_2():
     ai = ((0,1,2), (True,False,True))
     return ai[0][0], ai[0][1] ,ai[0][2], ai[1][0], ai[1][1], ai[1][2]
 
@@ -133,6 +155,11 @@ def tuple_unpacking_3(x : 'int[:,:]'):
 
 def tuple_unpacking_4(x : 'int[:,:]'):
     x[:,0], x[0,:] = 2, 3
+
+def tuple_unpacking_5():
+    ai = (1,2,3)
+    a,b,c = ai
+    return a,b,c
 
 def tuple_name_clash():
     ai = (1+2j, False, 10.4)
@@ -262,23 +289,27 @@ def tuples_inhomogeneous_copies_have_pointers():
 def tuples_mul_homogeneous():
     a = (1,2,3)
     b = a*2
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous2():
     a = (1,2,3)
     b = 2*a
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous3():
     a = (1,2,3)
     s = 2
     b = a*s
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous4():
     s = 2
     b = (1,2,3)*s
-    return b[0], b[1], b[2], b[3], b[4], b[5]
+    i = 1
+    return b[0], b[i], b[2], b[3], b[4], b[5]
 
 def tuples_mul_homogeneous5():
     import numpy as np
@@ -318,23 +349,27 @@ def tuples_mul_inhomogeneous_2d():
 
 def tuples_add_homogeneous():
     a = (1,2,3) + (4,5,6)
-    return a[0], a[1], a[2], a[3], a[4], a[5]
+    i = 1
+    return a[0], a[i], a[2], a[3], a[4], a[5]
 
 def tuples_add_homogeneous_variables():
     a = (1,2,3)
     b = (4,5,6)
     c = a + b
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_homogeneous_with_variables():
     a = (1,2,3)
     c = a + (4,5,6)
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_homogeneous_with_variables2():
     a = (1,2,3)
     c = (4,5,6) + a
-    return c[0], c[1], c[2], c[3], c[4], c[5]
+    i = 1
+    return c[0], c[i], c[2], c[3], c[4], c[5]
 
 def tuples_add_inhomogeneous():
     a = (1,2,True) + (False,5,6)
@@ -374,7 +409,8 @@ def tuples_add_mixed_homogeneous_with_variables():
 def tuples_2d_sum():
     a = ((1,2), (3,4))
     b = a + ((5,6),)
-    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]
+    i = 1
+    return b[0][0], b[0][i], b[1][0], b[i][i], b[2][0], b[2][1]
 
 def tuples_func():
     def my_tup():
@@ -404,29 +440,39 @@ def inhomogeneous_tuple_negative_slice():
     a,b = (1,False,3)[:-1]
     return a,b
 
+def inhomogeneous_tuple_var_negative_slice():
+    c = (1,False,3)
+    a,b = c[:-1]
+    return a,b
+
 def tuple_index():
     a = (1,2,3,False)[2]
     return a
 
 def tuple_homogeneous_int():
     a = tuple((1, 2, 3))
-    return a[0], a[1], a[2], len(a)
+    i = 1
+    return a[0], a[i], a[2], len(a)
 
 def tuple_homogeneous_bool():
     a = tuple((False, True))
-    return a[0], a[1], len(a)
+    i = 1
+    return a[0], a[i], len(a)
 
 def tuple_homogeneous_float():
     a = tuple((1.5, 4.3, 5.2, 7.2, 9.999))
-    return a[0], a[1], a[2], a[3], a[4], len(a)
+    i = 1
+    return a[0], a[i], a[2], a[3], a[4], len(a)
 
 def tuple_homogeneous_string():
     a = tuple(('hello', 'tuple', 'world', '!!'))
-    return a[0], a[1], a[2], a[3], len(a)
+    i = 1
+    return a[0], a[i], a[2], a[3], len(a)
 
 def tuple_homogeneous_math():
     a = tuple((4 + 5, 3 * 9, 2 ** 3))
-    return a[0], a[1], a[2], len(a)
+    i = 1
+    return a[0], a[i], a[2], len(a)
 
 def tuple_inhomogeneous_1():
     a = tuple((0, False, 3 + 1j))
@@ -440,16 +486,54 @@ def tuple_inhomogeneous_3():
     a = tuple((0, 1.0, 3))
     return a[0], a[1], a[2], len(a)
 
-def test_tuple_homogeneous():
+def tuple_homogeneous():
     b = (10, 20, 30, 40)
     a = tuple(b)
     return a[0], a[1], a[2], a[3], len(a)
 
-def test_tuple_inhomogeneous():
+def tuple_inhomogeneous():
     b = ( 42, True, 3.14)
     a = tuple(b)
     return a[0], a[1], a[2], len(a)
 
-def tuple_different_ranks():
-    a = (1,(2,3))
-    return a[0], a[1][0], a[1][1]
+def tuple_multilevel_inhomogeneous():
+    a = (1,(2,(3,4)))
+    return a[0], a[1][0], a[1][1][0], a[1][1][1]
+
+def homogeneous_tuple_of_arrays():
+    from numpy import array, empty
+    x = array(((1,2), (3,4)), order='F')
+    y = array(((5,4), (7,8)), order='F')
+    z = array(((9,10), (11,12)), order='F')
+    a = (x, y, z)
+    b = empty((3,2,2))
+    for j in range(2):
+        for k in range(2):
+            b[0,j,k] = a[0][j,k]
+            b[1,j,k] = a[1][j,k]
+            b[2,j,k] = a[2][j,k]
+    return b
+
+def annotated_tuple_inhomog_return() -> 'tuple[int,int]':
+    return 1,2
+
+def annotated_tuple_homog_return() -> 'tuple[int,...]':
+    return 1,2
+
+def tuple_return_unknown_length():
+    b = False
+    a = 1
+    if b:
+        return (a,)
+    else:
+        c = 2
+        return (a, c)
+
+def tuple_assignment():
+    a : 'tuple[int,int]' = (1,2)
+    b : 'tuple[int,...]' = a
+    return b[0], b[1]
+
+def return_1_elem_inhomog_tuple():
+    a : 'tuple[int]' = (1,)
+    return a

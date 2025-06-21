@@ -6,7 +6,7 @@ Pyccel can be installed on virtually any machine that provides Python 3, the pip
 Some advanced features of Pyccel require additional non-Python libraries to be installed, for which we provide detailed instructions below.
 
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
-For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
+For more information, please read the section on [Pyccel container images](#pyccel-container-images).
 
 It is possible to use Pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
 Support is provided for anaconda on linux/macOS.
@@ -46,6 +46,8 @@ We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require additional packages which are installed as optional dependencies with pip, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
 
+In order to install Pyccel from source, CMake (>=3.13) is additionally required to build the gFTL dependence.
+
 ### Linux Debian-Ubuntu-Mint
 
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool:
@@ -57,6 +59,7 @@ sudo apt install gfortran
 sudo apt install libblas-dev liblapack-dev
 sudo apt install libopenmpi-dev openmpi-bin
 sudo apt install libomp-dev libomp5
+sudo apt install cmake
 ```
 
 ### Linux Fedora-CentOS-RHEL
@@ -71,6 +74,7 @@ dnf install gfortran
 dnf install blas-devel lapack-devel
 dnf install openmpi-devel
 dnf install libgomp
+dnf install cmake
 exit
 ```
 
@@ -87,6 +91,7 @@ brew install openblas
 brew install lapack
 brew install open-mpi
 brew install libomp
+brew install cmake
 ```
 
 This requires that the Command Line Tools (CLT) for Xcode are installed.
@@ -101,6 +106,7 @@ In an Administrator prompt install git-bash (if needed), a Python3 distribution,
 choco install git
 choco install python3
 choco install mingw
+choco install cmake
 ```
 
 Download x64 BLAS and LAPACK DLLs from <https://icl.cs.utk.edu/lapack-for-windows/lapack/>:
@@ -155,6 +161,7 @@ cd -
 ```
 
 On Windows it is important that all locations containing DLLs are on the PATH. If you have added any variables to locations which are not on the PATH then you need to add them:
+
 ```sh
 echo $PATH
 export PATH=$LIBRARY_DIR;$PATH
@@ -162,6 +169,7 @@ export PATH=$LIBRARY_DIR;$PATH
 
 [As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell Python which directories contain trusted DLLs. In order to use Pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to Python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
 E.g:
+
 ```python
 import os
 os.add_dll_directory(C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')
@@ -171,62 +179,62 @@ os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64
 These commands must be run every time a Python instance is opened which will import a Pyccel-generated library.
 
 If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [Python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
+
 ```sh
 echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
 ```
+
 (The command may need adapting for your installation locations)
 
 ## Installation
 
-On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of Pyccel below.
-
-### From PyPI
-
-Simply run, for a user-specific installation:
+We recommend creating a clean Python virtual environment using [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment):
 
 ```sh
-pip3 install --user pyccel
+python3 -m venv <ENV-PATH>
 ```
 
-or:
+where `<ENV-PATH>` is the location to create the virtual environment.
+(A new directory will be created at the required location.)
+
+In order to activate the environment from a new terminal session just run the command
 
 ```sh
-sudo pip3 install pyccel
+source <ENV-PATH>/bin/activate
 ```
 
-for a system-wide installation.
+At this point Pyccel may be installed in **standard mode**, which copies the relevant files to the correct locations of the virtual environment, or in **editable mode**, which only installs symbolic links to the Pyccel directory.
+The latter mode allows one to affect the behaviour of Pyccel by modifying the source files.
 
-### From sources
+In both cases we use **`pip`** to install a _Python_ library **`pyccel`** and two _binary files_ called **`pyccel`**, and **`pyccel-clean`**.
+The **`pyccel`** command translates the given Python file to a Fortran or C file, and then compiles the generated code to a Python C extension module or a simple executable.
+The **`pyccel-clean`** command is a user helper tool which cleans up the environment of the temporary files generated by Pyccel.
 
--   **Standard mode**:
+### Standard install from PyPI
 
-    ```sh
-    git clone git@github.com:pyccel/pyccel.git
-    cd pyccel
-    pip3 install --user .
-    ```
+In order to install the latest release of Pyccel on PyPI, the Python package index, just run
 
--   **Development mode**:
-
-    ```sh
-    git clone git@github.com:pyccel/pyccel.git
-    cd pyccel
-    pip3 install --user -e ".[test]"
-    ```
-
-this will install a _Python_ library **Pyccel** and a _binary_ called **`pyccel`**.
-Any required Python packages will be installed automatically from PyPI.
-
-### On a read-only system
-
-If the folder where Pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
 ```sh
-sudo pyccel-init
+source <ENV-PATH>/bin/activate
+pip install pyccel
 ```
 
-This step is necessary in order to [pickle header files](./header-files.md#Pickling-header-files).
-If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./openmp.md) or other supported external packages.
-A warning, reminding the user to execute this command, will be printed to the screen when pyccelising files which rely on these packages if the pickling step has not been executed.
+Pip automatically downloads any required Python packages from PyPI and installs them.
+The flags `--upgrade` and `--force-reinstall` may be needed in order to overwrite a pre-existing installation of Pyccel.
+It is also possible to install a specific release of Pyccel, for example `pip install pyccel==1.11.2`.
+
+### Editable install from sources
+
+For those who want to have the most recent version ("trunk") of Pyccel, and possibly modify its source code, the following commands clone our Git repository from GitHub, checkout the `devel` branch, and install symbolic links to the `pyccel` directory:
+
+```sh
+source <ENV-PATH>/bin/activate
+git clone --recurse-submodules https://github.com/pyccel/pyccel.git
+cd pyccel
+pip install --editable ".[test]"
+```
+
+This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
 
 ## Additional packages
 
@@ -237,12 +245,6 @@ pip install --user -e ".[test]"
 ```
 
 Most of the unit tests can also be run in parallel.
-
-## Testing
-
-To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
-
-Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Adevel>
 
 ## Pyccel Container Images
 

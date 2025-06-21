@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-#$ header function funct_c(const int, int)
-def funct_c( x, a ):
+from typing import Final
+
+def funct_c(x : Final[int], a  : int):
     x += a
     return x

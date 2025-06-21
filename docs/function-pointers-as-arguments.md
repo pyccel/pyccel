@@ -309,9 +309,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a)) deallocate(a)
 
 end program prog_prog_boo
 ```
@@ -414,9 +412,7 @@ program prog_prog_boo
   a = 1_i64
   b = 4_i64
   Dummy_0001 = func1(a, b, foo)
-  if (allocated(a)) then
-    deallocate(a)
-  end if
+  if (allocated(a))  deallocate(a)
 
 end program prog_prog_boo
 ```
@@ -426,7 +422,7 @@ end program prog_prog_boo
 If you face problems with Pyccel, please take the following steps:
 
 1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
-2.  Send an email message to pyccel@googlegroups.com;
+2.  Send an email message to <pyccel@googlegroups.com>;
 3.  Open an issue on GitHub.
 
 Thank you!

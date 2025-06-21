@@ -5,11 +5,13 @@
 
 """
 This module contains classes from which all pyccel nodes inherit. They are:
+
 - PyccelAstNode, which provides a base class for our Python AST nodes;
 - TypedAstNode, which inherits from PyccelAstNode and provides a base class for
   AST nodes requiring type descriptors.
 """
 import ast
+from types import GeneratorType
 
 from pyccel.utilities.stage   import PyccelStage
 
@@ -35,7 +37,7 @@ def iterable(x):
     bool
         True if object is iterable for a PyccelAstNode.
     """
-    return isinstance(x, (list, tuple, dict_keys, dict_values, set))
+    return isinstance(x, (list, tuple, dict_keys, dict_values, set, GeneratorType))
 
 pyccel_stage = PyccelStage()
 
@@ -119,8 +121,10 @@ class PyccelAstNode:
             if self._ignore(c):
                 continue
             elif isinstance(c, tuple):
-                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci)]
-            else:
+                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci) \
+                        and ci.pyccel_staging == self.pyccel_staging]
+            elif c.pyccel_staging == self.pyccel_staging:
+                # Pyccel stage can change for basic objects with no attributes (e.g. Literal, Pass, etc)
                 c.remove_user_node(self)
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
@@ -255,7 +259,8 @@ class PyccelAstNode:
         node.toggle_recursion()
         return False
 
-    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
+    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True,
+            is_equivalent = None):
         """
         Substitute object 'original' for object 'replacement' in the code.
 
@@ -273,17 +278,34 @@ class PyccelAstNode:
         invalidate : bool
                     Indicates whether the removed object should
                     be invalidated.
+        is_equivalent : function, optional
+                    A function that compares the original object to the object
+                    in the PyccelAstNode to determine if it is the object that
+                    we are searching for. Usually this is an equality in the
+                    syntactic stage and an identity comparison in the semantic
+                    stage, but occasionally a different choice may be useful.
         """
         if self._recursion_in_progress:
             return
         self._recursion_in_progress = True
 
+        if not original:
+            assert not replacement
+            self._recursion_in_progress = False
+            return
+
         if iterable(original):
-            assert(iterable(replacement))
-            assert(len(original) == len(replacement))
+            assert iterable(replacement)
+            assert len(original) == len(replacement)
         else:
             original = (original,)
             replacement = (replacement,)
+
+        if is_equivalent is None:
+            if self.pyccel_staging == 'syntactic':
+                is_equivalent = lambda x, y: x == y #pylint:disable=unnecessary-lambda-assignment
+            else:
+                is_equivalent = lambda x, y: x is y #pylint:disable=unnecessary-lambda-assignment
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
@@ -305,7 +327,7 @@ class PyccelAstNode:
             if isinstance(v, excluded_nodes):
                 continue
 
-            elif any(v is oi for oi in original):
+            elif any(is_equivalent(v, oi) for oi in original):
                 setattr(self, n, prepare_sub(v))
 
             elif isinstance(v, tuple):
@@ -313,17 +335,17 @@ class PyccelAstNode:
                 for vi in v:
                     new_vi = vi
                     if not isinstance(vi, excluded_nodes):
-                        if any(vi is oi for oi in original):
+                        if any(is_equivalent(vi, oi) for oi in original):
                             new_vi = prepare_sub(vi)
                         elif not self._ignore(vi):
-                            vi.substitute(original, replacement, excluded_nodes, invalidate)
+                            vi.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self._ignore(v):
-                v.substitute(original, replacement, excluded_nodes, invalidate)
+                v.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
         self._recursion_in_progress = False
 
     @property
@@ -406,15 +428,26 @@ class PyccelAstNode:
         return self._user_nodes
 
     def get_direct_user_nodes(self, condition):
-        """ For an object with multiple user nodes
-        Get the objects which satisfy a given
-        condition
+        """
+        Get the direct user nodes which satisfy the condition.
+
+        This function returns all the direct user nodes which satisfy the
+        provided condition. A "direct" user node is a node which uses the
+        instance directly (e.g. a `FunctionCall` uses a `FunctionDef` directly
+        while a `FunctionDef` uses a `Variable` indirectly via a `FunctionDefArgument`
+        or a `CodeBlock`). Most objects only have 1 direct user node so
+        this function only makes sense for an object with multiple user nodes.
+        E.g. a `Variable`, or a `FunctionDef`.
 
         Parameters
         ----------
         condition : lambda
-                    The condition which the user nodes
-                    must satisfy to be returned
+            The condition which the user nodes must satisfy to be returned.
+
+        Returns
+        -------
+        list
+            The user nodes which satisfy the condition.
         """
         return [p for p in self._user_nodes if condition(p)]
 
@@ -442,19 +475,23 @@ class PyccelAstNode:
         self._user_nodes = [u for u in self._user_nodes if u.pyccel_staging != 'syntactic']
 
     def remove_user_node(self, user_node, invalidate = True):
-        """ Indicate that the current node is no longer used
-        by the user_node. This function is usually called by
-        the substitute method
+        """
+        Remove the specified user node from the AST tree.
+
+        Indicate that the current node is no longer used by the user_node.
+        This function is usually called by the substitute method. It removes
+        the specified user node from the user nodes internal property
+        meaning that the node cannot appear in the results when searching
+        through the tree.
 
         Parameters
         ----------
         user_node : PyccelAstNode
-                    Node which previously used the current node
+            Node which previously used the current node.
         invalidate : bool
-                    Indicates whether the removed object should
-                    be invalidated
+            Indicates whether the removed object should be invalidated.
         """
-        assert(user_node in self._user_nodes)
+        assert user_node in self._user_nodes
         self._user_nodes.remove(user_node)
         if self.is_unused and invalidate:
             self.invalidate_node()
@@ -499,7 +536,7 @@ class TypedAstNode(PyccelAstNode):
     The class from which all objects which can be described with type information
     must inherit. Objects with type information are objects which take up memory
     in a running program (e.g. a variable or the result of a function call).
-    Each typed object is described by an underlying datatype, a precision, a rank,
+    Each typed object is described by an underlying datatype, a rank,
     a shape, and a data layout ordering.
     """
     __slots__  = ()
@@ -522,7 +559,7 @@ class TypedAstNode(PyccelAstNode):
         Number of dimensions of the object. If the object is a scalar then
         this is equal to 0.
         """
-        return self._rank # pylint: disable=no-member
+        return self.class_type.rank
 
     @property
     def dtype(self):
@@ -534,20 +571,7 @@ class TypedAstNode(PyccelAstNode):
         containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
         of the container.
         """
-        return self._dtype # pylint: disable=no-member
-
-    @property
-    def precision(self):
-        """
-        Precision of the datatype of the object.
-
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
-        """
-        return self._precision # pylint: disable=no-member
+        return self.class_type.datatype
 
     @property
     def order(self):
@@ -558,7 +582,7 @@ class TypedAstNode(PyccelAstNode):
         ('F') format. This is only relevant if rank > 1. When it is not relevant
         this function returns None.
         """
-        return self._order # pylint: disable=no-member
+        return self.class_type.order
 
     @property
     def class_type(self):
@@ -572,65 +596,7 @@ class TypedAstNode(PyccelAstNode):
         return self._class_type # pylint: disable=no-member
 
     @classmethod
-    def static_rank(cls):
-        """
-        Number of dimensions of the object.
-
-        Number of dimensions of the object. If the object is a scalar then
-        this is equal to 0.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined rank.
-        """
-        return cls._rank # pylint: disable=no-member
-
-    @classmethod
-    def static_dtype(cls):
-        """
-        Datatype of the object.
-
-        The underlying datatype of the object. In the case of scalars this is
-        equivalent to the type of the object in Python. For objects in (homogeneous)
-        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
-        of the container.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined datatype.
-        """
-        return cls._dtype # pylint: disable=no-member
-
-    @classmethod
-    def static_precision(cls):
-        """
-        Precision of the datatype of the object.
-
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined precision.
-        """
-        return cls._precision # pylint: disable=no-member
-
-    @classmethod
-    def static_order(cls):
-        """
-        The data layout ordering in memory.
-
-        Indicates whether the data is stored in row-major ('C') or column-major
-        ('F') format. This is only relevant if rank > 1. When it is not relevant
-        this function returns None.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined order.
-        """
-        return cls._order # pylint: disable=no-member
-
-    @classmethod
-    def static_class_type(cls):
+    def static_type(cls):
         """
         The type of the object.
 
@@ -641,14 +607,14 @@ class TypedAstNode(PyccelAstNode):
         This function is static and will return an AttributeError if the
         class does not have a predetermined order.
         """
-        return cls._class_type # pylint: disable=no-member
+        return cls._static_type # pylint: disable=no-member
 
     def copy_attributes(self, x):
         """
         Copy the attributes describing a TypedAstNode into this node.
 
         Copy the attributes which describe the TypedAstNode passed as
-        argument (dtype, precision, shape, rank, order) into this node
+        argument (dtype, shape, rank, order) into this node
         so that the two nodes can be stored in the same object.
 
         Parameters
@@ -657,10 +623,6 @@ class TypedAstNode(PyccelAstNode):
             The node from which the attributes should be copied.
         """
         self._shape      = x.shape
-        self._rank       = x.rank
-        self._dtype      = x.dtype
-        self._precision  = x.precision
-        self._order      = x.order
         self._class_type = x.class_type
 
 

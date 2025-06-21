@@ -20,7 +20,10 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/calls.py'):['unused-variable'],
-                            re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'] # ignore Codacy bad pylint call
+                            re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'], # ignore Codacy bad pylint call
+                            re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import'],
+                            re.compile('tests/stc_containers/leaks_check.py'):['unused-variable'],
+                            re.compile('tests/macro/*'):['undefined-variable', 'unused-import'], # Ignore old macro tests to be removed with macros
                            }
 
 def run_pylint(file, flag, messages):
@@ -159,11 +162,6 @@ if __name__ == '__main__':
                 for item in updated_disabled:
                     statements, num = item
                     strings_list = list(statements)
-                    if 'reimported' in strings_list:
-                        strings_list.remove('reimported')
-                        disabled.discard(item)
-                        if strings_list:
-                            disabled.update([(tuple(strings_list), num)])
         if disabled:
             first_iteration = True
             if file_changed:

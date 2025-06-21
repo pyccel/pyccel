@@ -44,11 +44,7 @@ if __name__ == '__main__':
                     errors[file_name].append(msg)
                 parsing_errors.append(line)
             elif code in warning_codes:
-                level = 'warning'
-                if file_name not in warnings:
-                    warnings[file_name] = [msg]
-                else:
-                    warnings[file_name].append(msg)
+                continue
             else:
                 level = None
                 parsing_errors.append(line)
@@ -63,10 +59,12 @@ if __name__ == '__main__':
                         lines = code_file.readlines()[start-1:end+2]
                     lines = [l.strip() for l in lines]
                     doc_openings = []
+                    str_opening = None
                     for i,l in enumerate(lines):
-                        if l.startswith('"""'):
+                        if l.startswith('"""') or l.startswith("'''"):
                             doc_openings.append(i)
-                        if l != '"""' and l.endswith('"""'):
+                            str_opening = l[:3]
+                        if str_opening and l != str_opening and l.endswith(str_opening):
                             doc_openings.append(i)
                     lines = lines[doc_openings[0]:doc_openings[1]+1]
                     end = start + doc_openings[1]
@@ -120,11 +118,6 @@ if __name__ == '__main__':
     for file_name, errs in errors.items():
         print_to_string(f'#### {file_name}', text=summary)
         print_to_string(''.join(f'- {err}' for err in errs), text=summary)
-    if len(warnings) > 0:
-        print_to_string('### WARNINGS!', text=summary)
-    for file_name, warns in warnings.items():
-        print_to_string(f'#### {file_name}', text=summary)
-        print_to_string(''.join(f'- {warn}' for warn in warns), text=summary)
     if len(parsing_errors) > 0:
         print_to_string('### PARSING ERRORS!', text=summary)
         parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]

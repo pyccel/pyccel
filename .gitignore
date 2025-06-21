@@ -7,6 +7,9 @@
 # Unignore all dirs
 !*/
 
+# Unignore Makefiles
+!Makefile
+
 ################
 *.pyc
 *.pyo
@@ -16,6 +19,7 @@
 __pycache__
 __pyccel__
 __epyccel__
+__epyccel__*
 .DS_Store
 .vscode
 
@@ -68,3 +72,6 @@ tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
 
 benchmarks/tmp/*
+
+docs/source/**/*.md
+docs/source/api

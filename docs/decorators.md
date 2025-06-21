@@ -1,4 +1,4 @@
-# Decorators
+# Pyccel Decorators To Improve Performance
 
 As Pyccel converts a dynamically typed language (Python) to statically typed languages, it has some *decorators* which the user can add in the code to provide access to low level optimisations. Here are the available decorators.
 
@@ -9,7 +9,7 @@ on the stack.
 
 In order to store the array on the stack it is important that the size be known at the declaration.
 In Fortran all declarations must occur at the start of the function.
-As a result, Pyccel requires that the size of the stack array object is expressed as a function of arguments and [pure](#Pure) function results only.
+As a result, Pyccel requires that the size of the stack array object is expressed as a function of arguments and [pure](#pure) function results only.
 
 This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack_array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
@@ -33,39 +33,29 @@ def fun1():
 This the C generated code:
 
 ```C
-#include "boo.h"
-#include <stdlib.h>
-#include "ndarrays.h"
-#include <stdint.h>
-#include <string.h>
-
-
 /*........................................*/
 void fun1(void)
 {
-    int64_t array_dummy_0003[3];
-    t_ndarray array_in_stack = (t_ndarray){
-        .nd_int64=array_dummy_0003,
-        .shape=(int64_t[]){3},
-        .strides=(int64_t[1]){0},
-        .nd=1,
-        .type=nd_int64,
-        .is_view=false
-    };
-    stack_array_init(&array_in_stack);
-    t_ndarray array_in_heap;
+    int64_t array_in_stack_ptr[INT64_C(3)];
+    array_int64_1d array_in_stack = cspan_md_layout(c_ROWMAJOR, array_in_stack_ptr, INT64_C(3));
+    array_int64_1d array_in_heap = {0};
+    int64_t* array_in_heap_ptr;
     /*/////////////////////////*/
     /*array stored in the stack*/
     /*////////////////////////*/
-    int64_t array_dummy_0001[] = {1, 2, 3};
-    memcpy(array_in_stack.nd_int64, array_dummy_0001, array_in_stack.buffer_size);
+    (*cspan_at(&array_in_stack, INT64_C(0))) = INT64_C(1);
+    (*cspan_at(&array_in_stack, INT64_C(1))) = INT64_C(2);
+    (*cspan_at(&array_in_stack, INT64_C(2))) = INT64_C(3);
     /*////////////////////////*/
     /*array stored in the heap*/
     /*////////////////////////*/
-    array_in_heap = array_create(1, (int64_t[]){3}, nd_int64);
-    int64_t array_dummy_0002[] = {1, 2, 3};
-    memcpy(array_in_heap.nd_int64, array_dummy_0002, array_in_heap.buffer_size);
-    free_array(array_in_heap);
+    array_in_heap_ptr = malloc(sizeof(int64_t) * (INT64_C(3)));
+    array_in_heap = (array_int64_1d)cspan_md_layout(c_ROWMAJOR, array_in_heap_ptr, INT64_C(3));
+    (*cspan_at(&array_in_heap, INT64_C(0))) = INT64_C(1);
+    (*cspan_at(&array_in_heap, INT64_C(1))) = INT64_C(2);
+    (*cspan_at(&array_in_heap, INT64_C(2))) = INT64_C(3);
+    free(array_in_heap.data);
+    array_in_heap.data = NULL;
 }
 /*........................................*/
 ```
@@ -98,9 +88,7 @@ module boo
     !////////////////////////
     allocate(array_in_heap(0:2_i64))
     array_in_heap = [1_i64, 2_i64, 3_i64]
-    if (allocated(array_in_heap)) then
-      deallocate(array_in_heap)
-    end if
+    if (allocated(array_in_heap)) deallocate(array_in_heap)
 
   end subroutine fun1
   !........................................
@@ -136,31 +124,37 @@ def fun1(i : int, j : int):
 This is the generated C code:
 
 ```C
-#include "boo.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include "ndarrays.h"
-
-
 /*........................................*/
 void fun1(int64_t i, int64_t j)
 {
-    t_ndarray a;
-    t_ndarray b;
+    array_int64_1d a = {0};
+    array_int64_1d b = {0};
+    int64_t* a_ptr;
+    int64_t* b_ptr;
     /*////////negative indexing allowed////////*/
-    a = array_create(1, (int64_t[]){6}, nd_int64);
-    int64_t array_dummy_0001[] = {1, 2, 3, 4, 5, 6};
-    memcpy(a.nd_int64, array_dummy_0001, a.buffer_size);
-    printf("%ld\n", GET_ELEMENT(a, nd_int64, i - j < 0 ? 6 + (i - j) : i - j));
-    /*////////negative indexing disallowed. the generated can cause a crash/compilation error.////////*/
-    b = array_create(1, (int64_t[]){6}, nd_int64);
-    int64_t array_dummy_0002[] = {1, 2, 3, 4, 5, 6};
-    memcpy(b.nd_int64, array_dummy_0002, b.buffer_size);
-    printf("%ld\n", GET_ELEMENT(b, nd_int64, i - j));
-    free_array(a);
-    free_array(b);
+    a_ptr = malloc(sizeof(int64_t) * (INT64_C(6)));
+    a = (array_int64_1d)cspan_md_layout(c_ROWMAJOR, a_ptr, INT64_C(6));
+    (*cspan_at(&a, INT64_C(0))) = INT64_C(1);
+    (*cspan_at(&a, INT64_C(1))) = INT64_C(2);
+    (*cspan_at(&a, INT64_C(2))) = INT64_C(3);
+    (*cspan_at(&a, INT64_C(3))) = INT64_C(4);
+    (*cspan_at(&a, INT64_C(4))) = INT64_C(5);
+    (*cspan_at(&a, INT64_C(5))) = INT64_C(6);
+    printf("%"PRId64"\n", (*cspan_at(&a, i - j < INT64_C(0) ? INT64_C(6) + (i - j) : i - j)));
+    /*////////negative indexing disallowed. the generated code can cause a crash/compilation error.////////*/
+    b_ptr = malloc(sizeof(int64_t) * (INT64_C(6)));
+    b = (array_int64_1d)cspan_md_layout(c_ROWMAJOR, b_ptr, INT64_C(6));
+    (*cspan_at(&b, INT64_C(0))) = INT64_C(1);
+    (*cspan_at(&b, INT64_C(1))) = INT64_C(2);
+    (*cspan_at(&b, INT64_C(2))) = INT64_C(3);
+    (*cspan_at(&b, INT64_C(3))) = INT64_C(4);
+    (*cspan_at(&b, INT64_C(4))) = INT64_C(5);
+    (*cspan_at(&b, INT64_C(5))) = INT64_C(6);
+    printf("%"PRId64"\n", (*cspan_at(&b, i - j)));
+    free(b.data);
+    b.data = NULL;
+    free(a.data);
+    a.data = NULL;
 }
 /*........................................*/
 ```
@@ -194,12 +188,8 @@ module boo
     allocate(b(0:5_i64))
     b = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64]
     print *, b(i - j)
-    if (allocated(a)) then
-      deallocate(a)
-    end if
-    if (allocated(b)) then
-      deallocate(b)
-    end if
+    if (allocated(a)) deallocate(a)
+    if (allocated(b)) deallocate(b)
 
   end subroutine fun1
   !........................................
@@ -233,12 +223,6 @@ def square_in_array():
 The generated C code:
 
 ```C
-#include "boo.h"
-#include "ndarrays.h"
-#include <stdlib.h>
-#include <stdint.h>
-
-
 /*........................................*/
 double square(double x)
 {
@@ -250,18 +234,26 @@ double square(double x)
 /*........................................*/
 void square_in_array(void)
 {
-    t_ndarray a;
-    t_ndarray Dummy_0001;
-    int64_t i_0001;
-    a = array_create(1, (int64_t[]){5}, nd_double);
-    array_fill((double)1.0, a);
-    Dummy_0001 = array_create(1, (int64_t[]){5}, nd_double);
-    for (i_0001 = 0; i_0001 < 5; i_0001 += 1)
-    {
-        GET_ELEMENT(Dummy_0001, nd_double, i_0001) = square(GET_ELEMENT(a, nd_double, i_0001));
+    array_double_1d a = {0};
+    array_double_1d Dummy_0000 = {0};
+    int64_t i;
+    double* a_ptr;
+    double* Dummy_0000_ptr;
+    a_ptr = malloc(sizeof(double) * (INT64_C(5)));
+    a = (array_double_1d)cspan_md_layout(c_ROWMAJOR, a_ptr, INT64_C(5));
+    c_foreach(Dummy_0001, array_double_1d, a) {
+        *(Dummy_0001.ref) = 1.0;
     }
-    free_array(a);
-    free_array(Dummy_0001);
+    Dummy_0000_ptr = malloc(sizeof(double) * (INT64_C(5)));
+    Dummy_0000 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, Dummy_0000_ptr, INT64_C(5));
+    for (i = INT64_C(0); i < INT64_C(5); i += INT64_C(1))
+    {
+        (*cspan_at(&Dummy_0000, i)) = square((*cspan_at(&a, i)));
+    }
+    free(Dummy_0000.data);
+    Dummy_0000.data = NULL;
+    free(a.data);
+    a.data = NULL;
 }
 /*........................................*/
 ```
@@ -304,12 +296,8 @@ module boo
     a = 1.0_f64
     allocate(Dummy_0001(0:4_i64))
     Dummy_0001 = square(a)
-    if (allocated(a)) then
-      deallocate(a)
-    end if
-    if (allocated(Dummy_0001)) then
-      deallocate(Dummy_0001)
-    end if
+    if (allocated(a)) deallocate(a)
+    if (allocated(Dummy_0001)) deallocate(Dummy_0001)
 
   end subroutine square_in_array
   !........................................
@@ -364,10 +352,13 @@ end module boo
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
+Functions with the `@inline` decorator will not be exposed to the user in the shared library.
+They are only parsed when encountered in a function call. As a result, type annotations are optional for functions with the `@inline` decorator.
 
 ### Basic Example
 
 Here is a simple usage example:
+
 ```python
 def f():
     @inline
@@ -378,6 +369,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -404,6 +396,7 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
 #include <stdlib.h>
@@ -443,6 +436,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -473,9 +467,7 @@ module boo
     end do
     pi = 3.14_f64
     print *, a, pi
-    if (allocated(a)) then
-      deallocate(a)
-    end if
+    if (allocated(a)) deallocate(a)
 
   end subroutine f
   !........................................
@@ -484,37 +476,37 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
 #include "boo.h"
-#include "ndarrays.h"
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 
 /*........................................*/
 void f(void)
 {
-    t_ndarray a = {.shape = NULL};
+    array_double_1d a = {0};
     double pi;
-    double pi_0001;
-    int64_t i_0002;
-    int64_t i_0003;
-    a = array_create(1, (int64_t[]){4}, nd_double);
-    pi_0001 = 3.14159;
-    for (i_0002 = 0; i_0002 < a.shape[0]; i_0002 += 1)
+    double* a_ptr;
+    double Dummy_0000;
+    int64_t Dummy_0001;
+    int64_t i;
+    a_ptr = malloc(sizeof(double) * (INT64_C(4)));
+    a = (array_double_1d)cspan_md_layout(c_ROWMAJOR, a_ptr, INT64_C(4));
+    Dummy_0000 = 3.14159;
+    for (Dummy_0001 = INT64_C(0); Dummy_0001 < a.shape[INT64_C(0)]; Dummy_0001 += INT64_C(1))
     {
-        GET_ELEMENT(a, nd_double, i_0002) = pi_0001;
+        (*cspan_at(&a, Dummy_0001)) = Dummy_0000;
     }
     pi = 3.14;
-    printf("%s", "[");
-    for (i_0003 = 0; i_0003 < 3; i_0003 += 1)
+    printf("[");
+    for (i = INT64_C(0); i < INT64_C(3); i += INT64_C(1))
     {
-        printf("%.12lf ", GET_ELEMENT(a, nd_double, i_0003));
+        printf("%.15lf ", (*cspan_at(&a, i)));
     }
-    printf("%.12lf]", GET_ELEMENT(a, nd_double, 3));
-    printf("%.12lf\n", pi);
-    free_array(a);
+    printf("%.15lf]", (*cspan_at(&a, INT64_C(3))));
+    printf("%.15lf\n", pi);
+    free(a.data);
+    a.data = NULL;
 }
 /*........................................*/
 ```
@@ -522,6 +514,7 @@ void f(void)
 ### Example with Optional Variables
 
 Finally we present an example with optional variables:
+
 ```python
 @inline
 def get_val(x : int = None , y : int = None):
@@ -544,6 +537,7 @@ def f():
 ```
 
 The generated Fortran code:
+
 ```fortran
 module boo
 
@@ -566,26 +560,26 @@ module boo
     integer(i64), intent(out) :: c
     integer(i64), intent(out) :: d
     integer(i64) :: a_0001
+    integer(i64) :: b_0001
+    integer(i64) :: a_0002
     integer(i64) :: b_0002
     integer(i64) :: a_0003
+    integer(i64) :: b_0003
+    integer(i64) :: a_0004
     integer(i64) :: b_0004
-    integer(i64) :: a_0005
-    integer(i64) :: b_0006
-    integer(i64) :: a_0007
-    integer(i64) :: b_0008
 
     a_0001 = 2_i64
-    b_0002 = 4_i64
-    a = a_0001 + b_0002
-    a_0003 = 3_i64
-    b_0004 = 5_i64
-    b = a_0003 + b_0004
-    a_0005 = 6_i64
-    b_0006 = 4_i64
-    c = a_0005 + b_0006
-    a_0007 = 3_i64
-    b_0008 = 5_i64
-    d = a_0007 + b_0008
+    b_0001 = 4_i64
+    a = a_0001 + b_0001
+    a_0002 = 3_i64
+    b_0002 = 5_i64
+    b = a_0002 + b_0002
+    a_0003 = 6_i64
+    b_0003 = 5_i64
+    c = a_0003 + b_0003
+    a_0004 = 3_i64
+    b_0004 = 4_i64
+    d = a_0004 + b_0004
     return
 
   end subroutine f
@@ -595,7 +589,48 @@ end module boo
 ```
 
 The generated C code:
+
 ```c
+#include "boo.h"
+
+
+/*........................................*/
+int64_t f(int64_t* a, int64_t* b, int64_t* c, int64_t* d)
+{
+    int64_t Dummy_0000;
+    int64_t Dummy_0001;
+    int64_t Dummy_0002;
+    int64_t Dummy_0003;
+    int64_t Dummy_0004;
+    int64_t Dummy_0005;
+    int64_t Dummy_0006;
+    int64_t Dummy_0007;
+    Dummy_0000 = INT64_C(2);
+    Dummy_0001 = INT64_C(4);
+    (*a) = Dummy_0000 + Dummy_0001;
+    Dummy_0002 = INT64_C(3);
+    Dummy_0003 = INT64_C(5);
+    (*b) = Dummy_0002 + Dummy_0003;
+    Dummy_0004 = INT64_C(6);
+    Dummy_0005 = INT64_C(5);
+    (*c) = Dummy_0004 + Dummy_0005;
+    Dummy_0006 = INT64_C(3);
+    Dummy_0007 = INT64_C(4);
+    (*d) = Dummy_0006 + Dummy_0007;
+    return 0;
+}
+/*........................................*/
+
+```
+
+### Import Error when imported from the shared library
+
+Using the previous example, if we import the function `get_val`, we get this error:
+
+```none
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)
 ```
 
 ## Getting Help
@@ -603,7 +638,7 @@ The generated C code:
 If you face problems with Pyccel, please take the following steps:
 
 1.  Consult our documentation in the tutorial directory;
-2.  Send an email message to pyccel@googlegroups.com;
+2.  Send an email message to <pyccel@googlegroups.com>;
 3.  Open an issue on GitHub.
 
 Thank you!

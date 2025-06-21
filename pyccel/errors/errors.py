@@ -88,7 +88,7 @@ class ErrorInfo:
     Parameters
     ----------
     stage : str
-        The Pyccel stage when the error occured.
+        The Pyccel stage when the error occurred.
 
     filename : str
         The file where the error was detected.
@@ -105,8 +105,9 @@ class ErrorInfo:
     severity : str, optional
         The severity of the error. This is one of : [warning/error/fatal].
 
-    symbol : pyccel.ast.basic.PyccelAstNode, optional
-        The PyccelAstNode object which caused the error to need to be raised.
+    symbol : str, optional
+        A string representation of the PyccelAstNode object which caused
+        the error to need to be raised.
         This object is printed in the error message.
 
     traceback : str, optional
@@ -163,17 +164,18 @@ class ErrorInfo:
                 info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            if self.traceback:
-                info['symbol'] = ' ({})'.format(repr(self.symbol))
-            else:
-                info['symbol'] = ' ({})'.format(self.symbol)
+            info['symbol'] = f' ({self.symbol})'
 
         return pattern.format(**info)
 
 
 class ErrorsMode(metaclass = Singleton):
-    """Developper or User mode.
-    pyccel command line will set it.
+    """
+    The mode for the error output.
+
+    The mode for the error output. This is either 'developer' or 'user'.
+    In developer mode the errors are more verbose and include a traceback
+    this helps developers debug errors.
     """
     def __init__(self):
         self._mode = 'user'
@@ -183,7 +185,17 @@ class ErrorsMode(metaclass = Singleton):
         return self._mode
 
     def set_mode(self, mode):
-        assert(mode in ['user', 'developer'])
+        """
+        Set the error mode.
+
+        Set the error mode to either 'developer' or 'user'.
+
+        Parameters
+        ----------
+        mode : str
+            The new error mode.
+        """
+        assert mode in ['user', 'developer']
         self._mode = mode
 
 
@@ -211,32 +223,39 @@ class Errors(metaclass = Singleton):
         return self._mode.value
 
     def initialize(self):
+        """
+        Initialise the Errors singleton.
+
+        Initialise the Errors singleton. This function is necessary so
+        the singleton can be reinitialised using the `reset` function.
+        """
         self.error_info_map = OrderedDict()
 
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        self._target = None
 
     def reset(self):
+        """
+        Reset the Errors singleton.
+
+        Reset the Errors singleton. This removes any information about
+        previously generated errors or warnings. This method should be
+        called before starting a new translation.
+        """
         self.initialize()
 
-    def set_target(self, target, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
-        self._target[kind] = target
+    def set_target(self, target):
+        """
+        Set the current translation target.
 
-    def unset_target(self, kind):
-        assert(kind in ['file', 'module', 'function', 'class'])
-        self._target[kind] = None
+        Set the current translation target which describes the location
+        from which the error is being raised.
 
-    def reset_target(self):
-        """."""
-        self._target = {}
-        self._target['file'] = None
-        self._target['module'] = None
-        self._target['function'] = None
-        self._target['class'] = None
+        Parameters
+        ----------
+        target : str
+            The name of the file being translated.
+        """
+        self._target = target
 
     def report(self,
                message,
@@ -246,8 +265,7 @@ class Errors(metaclass = Singleton):
                severity = 'error',
                symbol = None,
                filename = None,
-               traceback = None,
-               verbose = False):
+               traceback = None):
         """
         Report an error.
 
@@ -283,16 +301,13 @@ class Errors(metaclass = Singleton):
 
         traceback : types.TracebackType
             The traceback that was raised when the error appeared.
-
-        verbose : bool, default=False
-            Flag to add verbosity.
         """
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
             return
 
         if filename is None:
-            filename = self.target['file']
+            filename = self.target
 
         # TODO improve. it is assumed here that tl and br have the same line
         if bounding_box:
@@ -304,12 +319,14 @@ class Errors(metaclass = Singleton):
         if symbol is not None:
             if isinstance(symbol, ast.AST):
                 ast_node = symbol
-                if sys.version_info < (3, 9):
-                    symbol = ast.dump(ast_node)
-                else:
-                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
+                symbol = ast.unparse(ast_node)
             elif isinstance(symbol, PyccelAstNode):
                 ast_node = symbol.python_ast
+
+            if self.mode == 'developer':
+                symbol = repr(symbol)
+            else:
+                symbol = str(symbol)
 
         if ast_node:
             if line is None:
@@ -333,8 +350,6 @@ class Errors(metaclass = Singleton):
                          severity=severity,
                          symbol=symbol,
                          traceback=traceback)
-
-        if verbose: print(info)
 
         self.add_error_info(info)
 

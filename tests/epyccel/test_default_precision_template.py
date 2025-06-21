@@ -1,19 +1,19 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-
+from typing import TypeVar
 from numpy.random import randint
 from numpy import isclose
 import numpy as np
 
-from pyccel.epyccel import epyccel
-from pyccel.decorators import template
+from pyccel import epyccel
 
 RTOL = 1e-12
 ATOL = 1e-16
 
+T = TypeVar('T', 'int[:]', 'float[:]', 'complex[:]')
+
 def test_default_precision_template(language):
 
-    @template('T', ['int[:]', 'float[:]', 'complex[:]'])
-    def return_array_element(array : 'T'):
+    def return_array_element(array : T):
         return array[0]
 
     test_types = ['int', 'float', 'complex']

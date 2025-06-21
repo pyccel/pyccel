@@ -34,7 +34,7 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "version=3.9" >> $GITHUB_ENV
+        echo "version=3.13" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
@@ -53,10 +53,20 @@ jobs:
     needs: Python_version_picker
 
     steps:
+      - id: duplicate_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/**/*.py", "tests/**/*.py"]'
+          paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '["push"]'
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
         uses: actions/setup-python@v5
         with:
@@ -68,25 +78,34 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py macosx
       - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/macos_install
       - name: Install Pyccel with tests
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
       - name: Fortran/C tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
       - name: "Post completed"
-        if: always() && github.event_name != 'push'
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
+      - name: "Post completed"
+        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
+        run:
+          python ci_tools/complete_check_run.py 'success'

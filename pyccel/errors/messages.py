@@ -21,7 +21,7 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
                               "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
 
 INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Variable has already been defined with type '{}'. Type '{}' in assignment is incompatible"
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Object has already been defined with type '{}'. Type '{}' in assignment is incompatible"
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
 INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
@@ -33,13 +33,11 @@ UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure t
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"
 UNSUPPORTED_POINTER_RETURN_VALUE = "A pointer can only be returned from a function if it points at one of the arguments."
-UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
 INVALID_TUPLE_INDEX_TYPE = 'Invalid tuple index type'
 TUPLE_INDEX_OUT_OF_RANGE = 'Tuple index out of range'
-ITERABLE_EXPECTED = 'Iterable expected'
 INVALID_SLICE_INDEX = 'Slice index must be an integer or None'
 CANNOT_INFER_LAMBDA_TYPE = 'Cannot infer type of lambda'
 CANNOT_INFER_ITEM_TYPE = 'Cannot infer iterable item type'
@@ -77,7 +75,7 @@ INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
 INCOMPATIBLE_TYPEVAR_TO_FUNC = 'TypeError: ufunc "{}" not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule \'safe\''
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
 WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
-INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
+INDEXED_TUPLE = 'Inhomogeneous tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
 UNUSED_DECORATORS = 'Decorator(s) not used'
@@ -113,6 +111,8 @@ PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list c
 PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
 PYCCEL_RESTRICTION_INHOMOG_SET = 'Inhomogeneous Sets are not supported by Pyccel'
 
+PYCCEL_INTERNAL_ERROR = '[INTERNAL ERROR] Pyccel has raised an internal error. Please check that your code executes correctly without raising any errors in Python. If this is the case then please create an issue at https://github.com/pyccel/pyccel/issues and include the traceback generated when running pyccel with the --developer-mode flag (or epyccel with developer_mode=True). If possible please provide a small example of your problem.'
+
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
 FORTRAN_RANDINT_ALLOCATABLE_IN_EXPRESSION = "Numpy's randint function does not have a fortran equivalent. It can be expressed as '(high-low)*rand(size)+low' using numpy's rand, however allocatable function cannot be used in an expression"
@@ -120,7 +120,6 @@ FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = 'Elemental functions are defined as scalar o
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
-MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 FOUND_DUPLICATED_IMPORT = 'Duplicated import '
 PYCCEL_UNEXPECTED_IMPORT = 'Pyccel has not correctly handled "import module" statement. Try again with "from module import function" syntax'
@@ -140,11 +139,11 @@ REDEFINING_VARIABLE = 'Variable already defined'
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
 
 INVALID_FILE_DIRECTORY = 'No file or directory of this name'
-INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyh`, but found'
+INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyi`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
-ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Containers (arrays, lists, etc) which own their data cannot become views on other containers'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
 ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
@@ -154,11 +153,9 @@ INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
-ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtime'
+ARRAY_REALLOCATION = '{class_type} redefinition may cause memory reallocation at runtime'
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
-TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
-INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
 NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'

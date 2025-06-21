@@ -17,7 +17,6 @@ from pyccel import __version__ as pyccel_version
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
-              'language': 'fortran',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
@@ -32,39 +31,35 @@ gfort_info = {'exec' : 'gfortran',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'GNU',
               }
 
 if sys.platform == "win32":
     gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gfort_info['mpi']['libs']     = ('msmpi',)
-    gfort_info['mpi']['includes'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gfort_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+    gfort_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
+    gfort_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
-              'language': 'fortran',
               'module_output_flag': '-module',
-              'debug_flags': ("-check=bounds","-g","-O0"),
+              'debug_flags': ("-check", "bounds","-g","-O0"),
               'release_flags': ("-O3","-funroll-loops",),
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
-                  'flags' : ('-fopenmp','-nostandard-realloc-lhs'),
+                  'flags' : ('-qopenmp','-nostandard-realloc-lhs'),
                   'libs'  : ('iomp5',),
                   },
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
-              'family': 'intel',
               }
 
 #------------------------------------------------------------
 pgfortran_info = {'exec' : 'pgfortran',
               'mpi_exec' : 'pgfortran',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -76,13 +71,11 @@ pgfortran_info = {'exec' : 'pgfortran',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'PGI',
               }
 
 #------------------------------------------------------------
 nvfort_info = {'exec' : 'nvfort',
               'mpi_exec' : 'mpifort',
-              'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
               'release_flags': ("-O3","-Munroll",),
@@ -94,13 +87,11 @@ nvfort_info = {'exec' : 'nvfort',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'nvidia',
               }
 
 #------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
@@ -114,8 +105,42 @@ gcc_info = {'exec' : 'gcc',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'GNU',
             }
+
+#------------------------------------------------------------
+clang_info = {'exec': 'clang',
+            'mpi_exec': 'mpicc',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=c99",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
+            },
+            }
+
+#------------------------------------------------------------
+flang_info = {
+            'exec': 'flang',
+            'mpi_exec': 'mpif90',
+            'module_output_flag': '-J',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3",),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("-std=f2003",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
+            },
+            }
+
 
 if sys.platform == "darwin":
     p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
@@ -124,38 +149,35 @@ if sys.platform == "darwin":
 
     gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
     gcc_info['openmp']['libs']     = ('omp',)
-    gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
-    gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
+    gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
+    gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
 
 elif sys.platform == "win32":
 
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gcc_info['mpi']['libs']     = ('msmpi',)
-    gcc_info['mpi']['includes'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gcc_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+    gcc_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
+    gcc_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpiicx',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
-                'flags' : ('-fopenmp',),
+                'flags' : ('-qopenmp',),
                 },
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
-            'family': 'intel',
             }
 
 #------------------------------------------------------------
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -166,13 +188,11 @@ pgcc_info = {'exec' : 'pgcc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'PGI',
             }
 
 #------------------------------------------------------------
 nvc_info = {'exec' : 'nvc',
             'mpi_exec' : 'mpicc',
-            'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
@@ -183,7 +203,6 @@ nvc_info = {'exec' : 'nvc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'nvidia',
             }
 
 #------------------------------------------------------------
@@ -225,7 +244,7 @@ python_info = {
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
-            'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
+            'include' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             "shared_suffix" : config_vars['EXT_SUFFIX'],
             }
         }
@@ -238,7 +257,7 @@ if sys.platform == "win32":
         python_info['python']['dependencies'] = tuple(python_libs)
     else:
         python_info['python']['libs'] = (f'python{version}',)
-        python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
+        python_info['python']['libdir'] = config_vars.get("installed_base","").split()
 
 else:
     # Collect library according to python config file
@@ -253,7 +272,7 @@ else:
     possible_static_lib = [l for l in python_shared_libs if '.a' in l]
 
     # Prefer saving the library as a dependency where possible to avoid
-    # unnecessary libdirs which may lead to the wrong versions being linked
+    # unnecessary libdir which may lead to the wrong versions being linked
     # for other libraries
     # Prefer a shared library as it requires less memory
     if possible_shared_lib:
@@ -263,6 +282,7 @@ else:
                 possible_shared_lib = preferred_lib
 
         python_info['python']['dependencies'] = (possible_shared_lib[0],)
+        python_info['python']['libdir'] = (os.path.dirname(possible_shared_lib[0]),)
     elif possible_static_lib:
         if len(possible_static_lib)>1:
             preferred_lib = [l for l in possible_static_lib if l.endswith('.a')]
@@ -276,7 +296,7 @@ else:
                         config_vars.get("LDSHARED","").split() + \
                         config_vars.get("LIBRARY","").split()[1:]]
         python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
-        python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
+        python_info['python']['libdir'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
                             config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
 
 #------------------------------------------------------------
@@ -288,14 +308,30 @@ pgcc_info.update(python_info)
 pgfortran_info.update(python_info)
 nvc_info.update(python_info)
 nvfort_info.update(python_info)
+clang_info.update(python_info)
+flang_info.update(python_info)
 
-available_compilers = {('GNU', 'c') : gcc_info,
-                       ('GNU', 'fortran') : gfort_info,
-                       ('intel', 'c') : icc_info,
-                       ('intel', 'fortran') : ifort_info,
-                       ('PGI', 'c') : pgcc_info,
-                       ('PGI', 'fortran') : pgfortran_info,
-                       ('nvidia', 'c') : nvc_info,
-                       ('nvidia', 'fortran') : nvfort_info}
+available_compilers = {
+                        'GNU': {
+                            'c' : gcc_info,
+                            'fortran' : gfort_info
+                            },
+                        'intel': {
+                            'c' : icc_info,
+                            'fortran' : ifort_info
+                            },
+                        'PGI': {
+                            'c' : pgcc_info,
+                            'fortran' : pgfortran_info
+                            },
+                        'nvidia': {
+                           'c' : nvc_info,
+                            'fortran' : nvfort_info
+                            },
+                        'LLVM': {
+                            'c': clang_info,
+                            'fortran': flang_info
+                            },
+                        }
 
-vendors = ('GNU','intel','PGI','nvidia')
+vendors = ('GNU','intel','PGI','nvidia','LLVM')

@@ -13,4 +13,4 @@ def fn():
     lst = [a, b, c]
     lst.insert(0, d)
     lst.insert(1, e)
-    return lst
+    return len(lst)

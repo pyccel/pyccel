@@ -1,0 +1,66 @@
+name: Markdown lint
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      check_run_id:
+        required: false
+        type: string
+      pr_repo:
+        required: false
+        type: string
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
+
+jobs:
+  Markdown:
+    name: Markdown format check
+    runs-on: ubuntu-latest
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: "Setup"
+        if: github.event_name != 'pull_request'
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py markdown_lint
+      - name: Markdownlint
+        id: md_test
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          config: './.markdownlint.json'
+          globs: '**/*.md'
+      - name: "Post completed"
+        if: always() && github.event_name != 'pull_request'
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.md_test.outcome }}

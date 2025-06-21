@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import platform
-from pyccel.epyccel import epyccel
+import pytest
+from pyccel import epyccel
 
 def test_or_boolean(language):
     def or_bool(a : 'bool', b : 'bool'):
@@ -12,9 +13,9 @@ def test_or_boolean(language):
         return c
     epyc_or_bool = epyccel(or_bool, language=language)
 
-    assert(epyc_or_bool(True,True)==or_bool(True,True))
-    assert(epyc_or_bool(True,False)==or_bool(True,False))
-    assert(epyc_or_bool(False,False)==or_bool(False,False))
+    assert epyc_or_bool(True,True)==or_bool(True,True)
+    assert epyc_or_bool(True,False)==or_bool(True,False)
+    assert epyc_or_bool(False,False)==or_bool(False,False)
 
 def test_real_greater_bool(language):
     def real_greater_bool(x0 : 'float', x1 : 'float'):
@@ -25,22 +26,24 @@ def test_real_greater_bool(language):
 
     epyc_real_greater_bool = epyccel(real_greater_bool, language=language)
 
-    assert(real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0))
-    assert(real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2))
+    assert real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0)
+    assert real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2)
 
+# Skip test if PYCCEL_DEFAULT_COMPILER=LLVM
+@pytest.mark.skip_llvm
 def test_input_output_matching_types(language):
     def add_real(a : 'float', b : 'float'):
         c = a+b
         return c
 
-    fflags="-Werror -Wconversion"
+    flags="-Werror -Wconversion"
     if language=="fortran":
-        fflags=fflags+"-extra"
+        flags=flags+"-extra"
     if platform.system() == 'Darwin' and language=='c': # If macosx
-        fflags=fflags+" -Wno-error=unused-command-line-argument"
-    epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
+        flags=flags+" -Wno-error=unused-command-line-argument"
+    epyc_add_real = epyccel(add_real, flags=flags, language=language)
 
-    assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
+    assert add_real(1.0,2.0)==epyc_add_real(1.0,2.0)
 
 def test_output_types_1(language):
     def cast_to_int(a : 'float'):
@@ -64,5 +67,5 @@ def test_output_types_3(language):
         return b
 
     f = epyccel(cast_to_bool, language=language)
-    assert(cast_to_bool(1) == f(1))
+    assert cast_to_bool(1) == f(1)
 
