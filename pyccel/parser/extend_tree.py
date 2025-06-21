@@ -7,12 +7,13 @@
 ===========================================================
 
 """
-from io import StringIO
+from ast import AST, If as IfNode, parse
 
 from numpy import array, logical_and, where
-from ast   import AST, If as IfNode, parse
-from pyccel.errors.errors import Errors
+
+from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import INVALID_PYTHON_SYNTAX
+
 
 class CommentLine(AST):
     """"New AST node representing a comment line"""

@@ -16,7 +16,6 @@ from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTu
 from pyccel.ast.datatypes import StringType
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
-from pyccel.ast.numpytypes import NumpyNDArrayType
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
 from pyccel.utilities.metaclasses import Singleton

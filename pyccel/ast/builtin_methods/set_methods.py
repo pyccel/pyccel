@@ -11,7 +11,6 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 from pyccel.ast.datatypes import VoidType, PythonNativeBool
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.basic import TypedAstNode
 
 __all__ = (
     'SetAdd',

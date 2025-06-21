@@ -9,8 +9,6 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
-from .bind_c            import BindCPointer
-
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType, CharType
 
 from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry, pytype_parse_registry
