@@ -12,11 +12,10 @@ import re
 import sys
 import typing
 import os
-
-from filelock import FileLock, Timeout
-
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
+
+from filelock import FileLock, Timeout
 
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
@@ -169,7 +168,7 @@ def get_unique_name(prefix, path):
     tag = random_string(12)
     module_name = module_import_prefix + tag
 
-    while module_name in sys.modules.keys():
+    while module_name in sys.modules:
         tag = random_string(12)
         module_name = module_import_prefix + tag
 
@@ -182,7 +181,7 @@ def get_unique_name(prefix, path):
     lock = FileLock(os.path.join(path, module_name) + '.lock')
     try:
         lock.acquire(timeout=0.1)
-        if module_name in sys.modules.keys():
+        if module_name in sys.modules:
             raise Timeout("Newly created collision")
     except Timeout:
         return get_unique_name(prefix, path)
@@ -272,17 +271,23 @@ def epyccel_seq(function_class_or_module, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
+    # Check if function_class_or_module is a valid type
+    allowed_types = (FunctionType, type, str, ModuleType)
+    if not isinstance(function_class_or_module, allowed_types):
+        raise TypeError('> Expecting a FunctionType, type, str, or a ModuleType')
+
+    # Check if compiler_family and compiler_config are mutually exclusive
+    if None not in (compiler_family, compiler_config):
+        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+
+    # Get the directory path of the function or module
     if isinstance(function_class_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
-
-    elif isinstance(function_class_or_module, ModuleType):
+    else: # ModuleType
         dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
-    if folder is None:
-        folder = dirpath
-    else:
-        folder = os.path.abspath(folder)
+    folder = dirpath if folder is None else os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
@@ -294,26 +299,17 @@ def epyccel_seq(function_class_or_module, *,
         if context_dict:
             collected_context_dict.update(context_dict)
         context_dict = collected_context_dict
-
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
-
-    elif isinstance(function_class_or_module, ModuleType):
-        pymod = function_class_or_module
-        lines = inspect.getsourcelines(pymod)[0]
-        code = ''.join(lines)
-
-        module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     elif isinstance(function_class_or_module, str):
         code = function_class_or_module
-
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
-    else:
-        raise TypeError('> Expecting a FunctionType, type or a ModuleType')
-
-    if None not in (compiler_family, compiler_config):
-        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+    else: # ModuleType
+        pymod = function_class_or_module
+        lines = inspect.getsourcelines(pymod)[0]
+        code = ''.join(lines)
+        module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     # execute_pyccel wants a unique string for the compiler family and the JSON file
     # The default compiler family is 'GNU' and is handled by execute_pyccel
@@ -334,8 +330,7 @@ def epyccel_seq(function_class_or_module, *,
 
     # Try is necessary to ensure lock is released
     try:
-        pymod_filename = '{}.py'.format(module_name)
-        pymod_filepath = os.path.join(dirpath, pymod_filename)
+        pymod_filename = f'{module_name}.py'
         # ...
 
         # Create new directories if not existing
@@ -346,7 +341,7 @@ def epyccel_seq(function_class_or_module, *,
         os.chdir(epyccel_dirpath)
 
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
-        with open(pymod_filename, 'w') as f:
+        with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
         try:

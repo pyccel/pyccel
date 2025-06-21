@@ -15,14 +15,14 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
-from .builtins  import PythonBool, PythonTuple, PythonList
+from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
-                        PythonNativeBool, InhomogeneousTupleType, TupleType, SymbolicType)
+from .datatypes import (PyccelType, CustomDataType,
+                        PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
 
-from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
+from .literals  import Nil, LiteralFalse, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod

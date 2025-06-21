@@ -68,14 +68,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: "Setup check run"
-        if: github.event_name != 'pull_request'
-        id: token
-        run: |
-          pip install jwt requests
-          cd compare
-          python ../base/ci_tools/setup_check_run.py docs
-          cd ..
       - name: Install python CI dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
@@ -83,7 +75,15 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
+          python -m pip install jwt requests # Required to parse ci_tools folder
         shell: bash
+      - name: "Setup check run"
+        if: github.event_name != 'pull_request'
+        id: token
+        run: |
+          cd compare
+          python ../base/ci_tools/setup_check_run.py docs
+          cd ..
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./compare/.github/actions/linux_install

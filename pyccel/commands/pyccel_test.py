@@ -179,21 +179,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Set the return code to OK by default
     retcode = pytest.ExitCode.OK
 
-    # Run the tests in the specified order
-    for desc, cmd in zip(descriptions, commands):
-        print()
-        print(desc)
-        print(f'> pytest {" ".join(cmd)}')
-        if dry_run:
-            print("Dry run, not executing the tests.")
-            retcode = pytest.ExitCode.OK
-        else:
-            retcode = pytest.main(cmd)
-            print(f"\nPytest return code: {retcode.name}")
-            if retcode == pytest.ExitCode.INTERRUPTED:
-                print("\nTest execution was interrupted by the user, exiting...\n")
-                return retcode
-
     if run_mpi:
         # Run the parallel tests
         import subprocess
@@ -211,11 +196,27 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             print("Dry run, not executing the parallel tests.")
             retcode = pytest.ExitCode.OK
         else:
-            p = subprocess.run(cmd_mpi, check=False, stderr=subprocess.PIPE)
+            p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
+            print(p.stdout)
             if p.returncode != 0:
-                print("Error running parallel tests")
+                print(f"Error running parallel tests. Failed with error code {p.returncode}")
                 print(p.stderr)
                 retcode = pytest.ExitCode.TESTS_FAILED
+
+    # Run the tests in the specified order
+    for desc, cmd in zip(descriptions, commands):
+        print()
+        print(desc)
+        print(f'> pytest {" ".join(cmd)}')
+        if dry_run:
+            print("Dry run, not executing the tests.")
+            retcode = pytest.ExitCode.OK
+        else:
+            retcode = pytest.main(cmd)
+            print(f"\nPytest return code: {retcode.name}")
+            if retcode == pytest.ExitCode.INTERRUPTED:
+                print("\nTest execution was interrupted by the user, exiting...\n")
+                return retcode
 
     # Return the final return code
     return retcode

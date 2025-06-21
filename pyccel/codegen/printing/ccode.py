@@ -23,7 +23,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
-from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
+from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Deallocate, If, IfSection
 from pyccel.ast.core      import FunctionAddress
@@ -31,7 +31,7 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
@@ -41,7 +41,7 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, Ho
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
@@ -57,7 +57,6 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
-from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 

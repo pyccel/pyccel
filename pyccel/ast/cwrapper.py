@@ -35,7 +35,7 @@ from .c_concepts import ObjectAddress, CNativeInt
 
 from .internals import PyccelFunction
 
-from .literals  import LiteralString, LiteralInteger, Nil
+from .literals  import LiteralInteger, Nil
 
 from .variable  import Variable
 
