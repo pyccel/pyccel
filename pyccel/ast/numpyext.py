@@ -799,6 +799,11 @@ class NumpyArray(NumpyNewArray):
 
     @property
     def arg(self):
+        """
+        The data from which the array is initialised.
+
+        A PyccelAstNode describing the data from which the array is initialised.
+        """
         return self._arg
 
 #==============================================================================
