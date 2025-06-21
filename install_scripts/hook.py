@@ -42,7 +42,7 @@ class CustomBuildHook(BuildHookInterface):
         # Build gFTL for installation
         pyccel_root = Path(__file__).parent.parent
         gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
-        if not gFTL_folder.exists():
+        if next(gFTL_folder.iterdir(), None) is None:
             try:
                 p = subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
             except subprocess.CalledProcessError:
