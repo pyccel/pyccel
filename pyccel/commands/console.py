@@ -264,7 +264,6 @@ def pyccel() -> None:
                        debug           = args.debug,
                        accelerators    = accelerators,
                        folder          = str(output) if output is not None else None,
-                       compiler_export_file = compiler_export_file,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
