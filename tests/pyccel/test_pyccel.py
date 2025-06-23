@@ -1126,10 +1126,11 @@ def test_inline_import(language):
 #------------------------------------------------------------------------------
 def test_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
+    assert dict_1['c']['exec'] == 'icx'
     cmd = [shutil.which("pyccel"),
            '--compiler-config',
            f'{output_dir}/test.json',
