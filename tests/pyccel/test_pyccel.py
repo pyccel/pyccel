@@ -1146,7 +1146,7 @@ def test_json_relative_path():
     output_dir = insert_pyccel_folder('scripts/')
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
-    shutil.move(get_abs_path('{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
+    shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
