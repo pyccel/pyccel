@@ -24,7 +24,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice
@@ -326,12 +326,17 @@ class NumpyInt(PythonInt):
     ----------
     arg : TypedAstNode
         The argument passed to the function.
+    base : TypedAstNode
+        The argument passed to the function to indicate the base in which
+        the integer is expressed.
     """
     __slots__ = ('_shape','_class_type')
     _static_type = numpy_precision_map[(PrimitiveIntegerType(), PythonInt._static_type.precision)]
     name = 'int'
 
     def __init__(self, arg=None, base=10):
+        if base != 10:
+            raise TypeError("numpy.int's base argument is not yet supported")
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order
@@ -794,6 +799,11 @@ class NumpyArray(NumpyNewArray):
 
     @property
     def arg(self):
+        """
+        The data from which the array is initialised.
+
+        A PyccelAstNode describing the data from which the array is initialised.
+        """
         return self._arg
 
 #==============================================================================
@@ -2754,6 +2764,7 @@ class NumpyNDArray(PyccelFunction):
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
+    PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
     NumpyInt16Type()      : NumpyInt16,
     NumpyInt32Type()      : NumpyInt32,

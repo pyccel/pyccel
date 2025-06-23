@@ -15,14 +15,14 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
 from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
 
-from .builtins  import PythonBool, PythonTuple, PythonList
+from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, HomogeneousTupleType, VoidType, CustomDataType,
-                        PythonNativeBool, InhomogeneousTupleType, TupleType, SymbolicType)
+from .datatypes import (PyccelType, CustomDataType,
+                        PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
 
-from .literals  import Nil, LiteralFalse, LiteralInteger, LiteralString
+from .literals  import Nil, LiteralFalse, LiteralString
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -2398,8 +2398,15 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def is_external(self):
-        """ True if the function is exposed through a header file and coming
-        from a f77 module """
+        """
+        Indicates if the function is from an external library.
+
+        Indicates if the function is from an external library which has no
+        associated imports. Such functions must be declared locally to
+        satisfy the compiler. For example this method returns True if the
+        function is exposed through a pyi file and describes a method from
+        a f77 module.
+        """
         return self._is_external
 
     @is_external.setter

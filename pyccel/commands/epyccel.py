@@ -12,11 +12,10 @@ import re
 import sys
 import typing
 import os
-
-from filelock import FileLock, Timeout
-
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
+
+from filelock import FileLock, Timeout
 
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
@@ -169,7 +168,7 @@ def get_unique_name(prefix, path):
     tag = random_string(12)
     module_name = module_import_prefix + tag
 
-    while module_name in sys.modules.keys():
+    while module_name in sys.modules:
         tag = random_string(12)
         module_name = module_import_prefix + tag
 
@@ -182,7 +181,7 @@ def get_unique_name(prefix, path):
     lock = FileLock(os.path.join(path, module_name) + '.lock')
     try:
         lock.acquire(timeout=0.1)
-        if module_name in sys.modules.keys():
+        if module_name in sys.modules:
             raise Timeout("Newly created collision")
     except Timeout:
         return get_unique_name(prefix, path)
@@ -190,68 +189,73 @@ def get_unique_name(prefix, path):
 
 #==============================================================================
 def epyccel_seq(function_class_or_module, *,
-                language      = None,
-                compiler      = None,
-                fflags        = None,
-                wrapper_flags = None,
-                accelerators  = (),
-                verbose       = False,
+                language        = 'fortran',
+                compiler_family = None,
+                compiler_config = None,
+                flags           = None,
+                wrapper_flags   = None,
+                debug           = None,
+                include         = (),
+                libdir          = (),
+                libs            = (),
+                folder          = None,
+                mpi             = False,
+                openmp          = False,
+                openacc         = False,
+                verbose         = 0,
                 time_execution  = False,
-                debug         = None,
-                includes      = (),
-                libdirs       = (),
-                modules       = (),
-                libs          = (),
-                folder        = None,
-                conda_warnings= 'basic',
-                context_dict  = None,
-                comm          = None,
-                root          = None,
-                bcast         = None):
+                conda_warnings  = 'basic',
+                context_dict    = None
+    ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
     This function accelerates a Python function or module using Pyccel in "embedded" mode.
     It generates optimized code in the specified language (default is 'fortran')
-    and compiles it for improved performance.
+    and compiles it for improved performance. Please be aware that only one of
+    the parameters `compiler_family` and `compiler_config` may be provided.
 
     Parameters
     ----------
     function_class_or_module : function | class | module | str
-        Python function or module to be accelerated.
+        Python function, class, or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
         file so it must include any necessary import statements.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
-    compiler : str, optional
-        User-defined command for compiling generated source code.
-    fflags : iterable of str, optional
+    compiler_family : str, optional
+        Compiler family for which Pyccel uses a default configuration (default: 'GNU').
+    compiler_config : pathlib.Path | str, optional
+        Path to a JSON file containing a compiler configuration (overrides compiler_family).
+    flags : str, optional
         Compiler flags.
-    wrapper_flags : iterable of str, optional
+    wrapper_flags : str, optional
         Flags to be passed to the wrapper code generator.
-    accelerators : iterable of str, optional
-        Parallel multi-threading acceleration strategy
-        (currently supported: 'mpi', 'openmp', 'openacc').
-    verbose : bool
-        Print additional information (default: False).
-    time_execution : bool
-        Time the execution of Pyccel's internal stages.
     debug : bool, optional
-        Enable debug mode. The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
+        Whether the file should be compiled in debug mode.
+        The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
         If no such environment variable exists then the default is False.
-    includes : tuple, optional
+    include : tuple, optional
         Additional include directories for the compiler.
-    libdirs : tuple, optional
+    libdir : tuple, optional
         Additional library directories for the compiler.
-    modules : tuple, optional
-        Additional modules to be imported.
     libs : tuple, optional
         Additional libraries.
     folder : str, optional
         Output folder for the compiled code.
-    conda_warnings : {off, basic, verbose}
-        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    mpi : bool, default=False
+        If True, use MPI for parallel execution.
+    openmp : bool, default=False
+        If True, use OpenMP for parallel execution.
+    openacc : bool, default=False
+        If True, use OpenACC for parallel execution.
+    verbose : int, default=0
+        Set the level of verbosity to see additional information about the Pyccel process.
+    time_execution : bool
+        Time the execution of Pyccel's internal stages.
+    conda_warnings : {'off', 'basic', 'verbose'}
+        Specify the level of Conda warnings to display (default: 'basic').
     context_dict : dict[str, obj], optional
         A dictionary containing any Python objects from the calling scope which should
         be made available to the translated code. By default any objects that are used
@@ -263,30 +267,27 @@ def epyccel_seq(function_class_or_module, *,
     -------
     object
         Return accelerated Python module and function.
-
-    Other Parameters
-    ----------------
-    comm : mpi4py.MPI.Comm, optional
-        MPI communicator for calling Pyccel in parallel mode (default: None) (for parallel mode).
-    root : int, optional
-        MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
-    bcast : {True, False}
-        If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
     """
     # Store current directory
     base_dirpath = os.getcwd()
 
+    # Check if function_class_or_module is a valid type
+    allowed_types = (FunctionType, type, str, ModuleType)
+    if not isinstance(function_class_or_module, allowed_types):
+        raise TypeError('> Expecting a FunctionType, type, str, or a ModuleType')
+
+    # Check if compiler_family and compiler_config are mutually exclusive
+    if None not in (compiler_family, compiler_config):
+        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+
+    # Get the directory path of the function or module
     if isinstance(function_class_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
-
-    elif isinstance(function_class_or_module, ModuleType):
+    else: # ModuleType
         dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
-    if folder is None:
-        folder = dirpath
-    else:
-        folder = os.path.abspath(folder)
+    folder = dirpath if folder is None else os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
     epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
@@ -298,28 +299,38 @@ def epyccel_seq(function_class_or_module, *,
         if context_dict:
             collected_context_dict.update(context_dict)
         context_dict = collected_context_dict
-
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
-
-    elif isinstance(function_class_or_module, ModuleType):
-        pymod = function_class_or_module
-        lines = inspect.getsourcelines(pymod)[0]
-        code = ''.join(lines)
-
-        module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     elif isinstance(function_class_or_module, str):
         code = function_class_or_module
-
         module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
-    else:
-        raise TypeError('> Expecting a FunctionType, type or a ModuleType')
+    else: # ModuleType
+        pymod = function_class_or_module
+        lines = inspect.getsourcelines(pymod)[0]
+        code = ''.join(lines)
+        module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
+
+    # execute_pyccel wants a unique string for the compiler family and the JSON file
+    # The default compiler family is 'GNU' and is handled by execute_pyccel
+    compiler_family_or_config = compiler_config or compiler_family
+    # Convert from pathlib.Path to string if not None
+    if compiler_family_or_config is not None:
+        compiler_family_or_config = str(compiler_family_or_config)
+
+    # Store the accelerators options into a tuple of strings
+    accelerators = []
+    if mpi:
+        accelerators.append("mpi")
+    if openmp:
+        accelerators.append("openmp")
+    if openacc:
+        accelerators.append("openacc")
+    accelerators = tuple(accelerators)
 
     # Try is necessary to ensure lock is released
     try:
         pymod_filename = f'{module_name}.py'
-        pymod_filepath = os.path.join(dirpath, pymod_filename)
         # ...
 
         # Create new directories if not existing
@@ -330,21 +341,21 @@ def epyccel_seq(function_class_or_module, *,
         os.chdir(epyccel_dirpath)
 
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
-        with open(pymod_filename, 'w') as f:
+        with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
         try:
             # Generate shared library
             execute_pyccel(pymod_filename,
                            verbose         = verbose,
-                           show_timings    = time_execution,
+                           time_execution  = time_execution,
                            language        = language,
-                           compiler_family = compiler,
-                           fflags          = fflags,
+                           compiler_family = compiler_family_or_config,
+                           flags           = flags,
                            wrapper_flags   = wrapper_flags,
-                           includes        = includes,
-                           libdirs         = libdirs,
-                           modules         = modules,
+                           include         = include,
+                           libdir          = libdir,
+                           modules         = (),
                            libs            = libs,
                            debug           = debug,
                            accelerators    = accelerators,
@@ -384,28 +395,100 @@ def epyccel_seq(function_class_or_module, *,
     return package, func
 
 #==============================================================================
-def epyccel( python_function_class_or_module, **kwargs ):
+def epyccel(
+    function_class_or_module,
+    *,
+    language        = 'fortran',
+    compiler_family = None,
+    compiler_config = None,
+    flags           = None,
+    wrapper_flags   = None,
+    debug           = None,
+    include         = (),
+    libdir          = (),
+    libs            = (),
+    folder          = None,
+    mpi             = False,
+    openmp          = False,
+#    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
+    verbose         = 0,
+    time_execution  = False,
+    developer_mode  = False,
+    conda_warnings  = 'basic',
+    context_dict    = None,
+    comm            = None,
+    root            = 0,
+    bcast           = True,
+    ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
     This function accelerates a Python function or module using Pyccel in "embedded" mode.
     It generates optimized code in the specified language (default is 'fortran')
-    and compiles it for improved performance
+    and compiles it for improved performance. Please be aware that only one of
+    the parameters `compiler_family` and `compiler_config` may be provided.
 
     Parameters
     ----------
-    python_function_class_or_module : function | class | module | str
-        Python function or module to be accelerated.
+    function_class_or_module : function | class | module | str
+        Python function, class, or module to be accelerated.
         If a string is passed then it is assumed to be the code from a module which
-        should be accelerated.
-    **kwargs :
-        Additional keyword arguments for configuring the compilation and acceleration process.
-        Available options are defined in epyccel_seq.
+        should be accelerated. The module must be capable of running as a standalone
+        file so it must include any necessary import statements.
+    language : {'fortran', 'c', 'python'}
+        Language of generated code (default: 'fortran').
+    compiler_family : {'GNU', 'intel', 'PGI', 'nvidia', 'LLVM'}, optional
+        Compiler family for which Pyccel uses a default configuration (default: 'GNU').
+    compiler_config : pathlib.Path | str, optional
+        Path to a JSON file containing a compiler configuration (overrides compiler_family).
+    flags : iterable of str, optional
+        Compiler flags.
+    wrapper_flags : iterable of str, optional
+        Compiler flags for the wrapper.
+    debug : bool, optional
+        Indicates whether the file should be compiled in debug mode.
+        The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
+        If no such environment variable exists then the default is False.
+    include : tuple, optional
+        Additional include directories for the compiler.
+    libdir : tuple, optional
+        Additional library directories for the compiler.
+    libs : tuple, optional
+        Additional libraries to link with.
+    folder : str, optional
+        Output folder for the compiled code.
+    mpi : bool, default=False
+        If True, use MPI for parallel execution.
+    openmp : bool, default=False
+        If True, use OpenMP for parallel execution.
+    verbose : int, default=0
+        Set the level of verbosity to see additional information about the Pyccel process.
+    time_execution : bool
+        Time the execution of Pyccel's internal stages.
+    developer_mode : bool, default=False
+        If True, set error mode to developer.
+    conda_warnings : {'off', 'basic', 'verbose'}
+        Specify the level of Conda warnings to display (default: 'basic').
+    context_dict : dict[str, obj], optional
+        A dictionary containing any Python objects from the calling scope which should
+        be made available to the translated code. By default any objects that are used
+        in the body of the function are made available, as well as any global objects.
+        If the argument is provided then these objects will be treated as additional
+        to the default arguments.
 
     Returns
     -------
     object
         Accelerated function, class or module.
+
+    Other Parameters
+    ----------------
+    comm : mpi4py.MPI.Comm, optional
+        MPI communicator for calling Pyccel in parallel mode (default: None) (for parallel mode).
+    root : int, optional
+        MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
+    bcast : {True, False}
+        If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
 
     See Also 
     -------- 
@@ -415,19 +498,17 @@ def epyccel( python_function_class_or_module, **kwargs ):
     Examples
     --------
     >>> def one(): return 1
-    >>> from pyccel.epyccel import epyccel
+    >>> from pyccel import epyccel
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
     """
-    assert isinstance( python_function_class_or_module, (FunctionType, type, ModuleType, str) )
+    assert isinstance(function_class_or_module, (FunctionType, type, ModuleType, str))
 
-    comm  = kwargs.pop('comm', None)
-    root  = kwargs.pop('root', 0)
-    bcast = kwargs.pop('bcast', True)
-    # This will initialize the singleton ErrorsMode
-    # making this setting available everywhere
+    if None not in (compiler_family, compiler_config):
+        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+
     err_mode = ErrorsMode()
-    if kwargs.pop('developer_mode', None):
+    if developer_mode:
         err_mode.set_mode('developer')
     else:
         err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
@@ -439,20 +520,35 @@ def epyccel( python_function_class_or_module, **kwargs ):
         from tblib  import pickling_support   # [YG, 27.10.2020] We use tblib to
         pickling_support.install()            # pickle tracebacks, which allows
                                               # mpi4py to broadcast exceptions
-        assert isinstance( comm, MPI.Comm )
-        assert isinstance( root, int      )
-
-        kwargs.setdefault('accelerators', [])
-        if 'mpi' not in kwargs['accelerators']:
-            kwargs['accelerators'] = [*kwargs['accelerators'], 'mpi']
+        assert isinstance(comm, MPI.Comm)
+        assert isinstance(root, int)
 
         # Master process calls epyccel
         if comm.rank == root:
             try:
-                mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
+                mod, obj = epyccel_seq(
+                    function_class_or_module,
+                    language        = language,
+                    compiler_family = compiler_family,
+                    compiler_config = compiler_config,
+                    flags           = flags,
+                    wrapper_flags   = wrapper_flags,
+                    include         = include,
+                    libdir          = libdir,
+                    libs            = libs,
+                    folder          = folder,
+                    mpi             = True,
+                    openmp          = openmp,
+                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
+                    verbose         = verbose,
+                    time_execution  = time_execution,
+                    debug           = debug,
+                    conda_warnings  = conda_warnings,
+                    context_dict    = context_dict
+                )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
-                obj_name = python_function_class_or_module.__name__ if obj else None
+                obj_name = function_class_or_module.__name__ if obj else None
                 success  = True
             # error handling carried out after broadcast to prevent deadlocks
             except PyccelError as e:
@@ -475,10 +571,9 @@ def epyccel( python_function_class_or_module, **kwargs ):
             raise comm.bcast(exc_info, root=root)
 
         if bcast:
-            # Broadcast Fortran module path/name and function name to all processes
-            mod_path = comm.bcast( mod_path, root=root )
-            mod_name = comm.bcast( mod_name, root=root )
-            obj_name = comm.bcast( obj_name, root=root )
+            mod_path = comm.bcast(mod_path, root=root)
+            mod_name = comm.bcast(mod_name, root=root)
+            obj_name = comm.bcast(obj_name, root=root)
 
             # Non-master processes import Fortran module directly from its path
             # and extract function if its name is given
@@ -495,9 +590,28 @@ def epyccel( python_function_class_or_module, **kwargs ):
     # Serial version
     else:
         try:
-            mod, obj = epyccel_seq( python_function_class_or_module, **kwargs )
+            mod, obj = epyccel_seq(
+                    function_class_or_module,
+                    language        = language,
+                    compiler_family = compiler_family,
+                    compiler_config = compiler_config,
+                    flags           = flags,
+                    wrapper_flags   = wrapper_flags,
+                    include         = include,
+                    libdir          = libdir,
+                    libs            = libs,
+                    folder          = folder,
+                    mpi             = mpi,
+                    openmp          = openmp,
+                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
+                    verbose         = verbose,
+                    time_execution  = time_execution,
+                    debug           = debug,
+                    conda_warnings  = conda_warnings,
+                    context_dict    = context_dict
+                )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 
-    # Return Fortran function (if any), otherwise module
+    # Return accelerated function or class (if any), otherwise module
     return obj or mod

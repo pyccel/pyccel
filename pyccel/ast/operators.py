@@ -16,7 +16,7 @@ from ..errors.errors        import Errors, PyccelSemanticError
 from .basic                 import TypedAstNode
 
 from .datatypes             import PythonNativeBool, PythonNativeFloat
-from .datatypes             import StringType, FixedSizeNumericType, ContainerType
+from .datatypes             import StringType, FixedSizeNumericType
 from .datatypes             import PrimitiveBooleanType, PrimitiveIntegerType
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex

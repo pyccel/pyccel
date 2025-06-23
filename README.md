@@ -48,6 +48,29 @@ pip install pyccel
 will download the latest release of Pyccel from [PyPI](https://pypi.org/project/pyccel/), the Python package index.
 Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
 
+## Testing
+
+It is good practice to test that Pyccel works as intended on the machine where it is installed.
+To this end Pyccel provides an extended test suite which can be downloaded from the official repository.
+Assuming the Python virtual environment is in the directory `<ENV-PATH>`, we activate it with
+
+```sh
+source <ENV-PATH>/bin/activate
+```
+
+and install the `test` component of the Pyccel package:
+
+```sh
+pip install "pyccel[test]"
+```
+
+This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
+
+The recommended way of running the unit tests is simply using the command line tool `pyccel-test` which is installed with Pyccel.
+This runs all unit tests using Pytest under the hood.
+
+Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md).
+
 ## Contributing
 
 We welcome any and all contributions.
@@ -62,6 +85,8 @@ We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6h
 -   [Quick-start Guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md)
 
 -   [Installation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md)
+
+-   [Testing](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md)
 
 -   [Contributing](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
 

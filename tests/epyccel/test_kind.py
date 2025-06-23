@@ -36,12 +36,12 @@ def test_input_output_matching_types(language):
         c = a+b
         return c
 
-    fflags="-Werror -Wconversion"
+    flags="-Werror -Wconversion"
     if language=="fortran":
-        fflags=fflags+"-extra"
+        flags=flags+"-extra"
     if platform.system() == 'Darwin' and language=='c': # If macosx
-        fflags=fflags+" -Wno-error=unused-command-line-argument"
-    epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
+        flags=flags+" -Wno-error=unused-command-line-argument"
+    epyc_add_real = epyccel(add_real, flags=flags, language=language)
 
     assert add_real(1.0,2.0)==epyc_add_real(1.0,2.0)
 

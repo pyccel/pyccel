@@ -31,13 +31,12 @@ def test_codegen(f):
     errors.reset()
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse()
+    ast = pyccel.parse(verbose = 0)
 
     # Assert syntactic success
     assert not errors.has_errors()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(verbose = 0)
 
     # Assert semantic success
     assert not errors.has_errors()
@@ -45,7 +44,7 @@ def test_codegen(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'c')
+    codegen = Codegen(ast, name, 'c', verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success

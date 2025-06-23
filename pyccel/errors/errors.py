@@ -265,8 +265,7 @@ class Errors(metaclass = Singleton):
                severity = 'error',
                symbol = None,
                filename = None,
-               traceback = None,
-               verbose = False):
+               traceback = None):
         """
         Report an error.
 
@@ -302,9 +301,6 @@ class Errors(metaclass = Singleton):
 
         traceback : types.TracebackType
             The traceback that was raised when the error appeared.
-
-        verbose : bool, default=False
-            Flag to add verbosity.
         """
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
@@ -354,8 +350,6 @@ class Errors(metaclass = Singleton):
                          severity=severity,
                          symbol=symbol,
                          traceback=traceback)
-
-        if verbose: print(info)
 
         self.add_error_info(info)
 

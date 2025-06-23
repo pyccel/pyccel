@@ -104,15 +104,17 @@ class CToPythonWrapper(Wrapper):
     file_location : str
         The folder where the translated code is located and where the generated .so file will
         be located.
+    verbose : int
+        The level of verbosity.
     """
-    def __init__(self, file_location):
+    def __init__(self, file_location, verbose):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
         self._file_location = file_location
-        super().__init__()
+        super().__init__(verbose)
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
         """
@@ -1502,7 +1504,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(res, func_args[0].var))
             body.append(Py_INCREF(res))
         else:
-            wrapped_results = self._extract_FunctionDefResult(expr.results.var, is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(python_results.var, is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [ca for a in wrapped_args for ca in a['args']]

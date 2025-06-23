@@ -24,7 +24,7 @@ from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgumen
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
 from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
-from pyccel.ast.datatypes import HomogeneousTupleType, TupleType
+from pyccel.ast.datatypes import TupleType
 from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import Slice
@@ -46,11 +46,16 @@ class FortranToCWrapper(Wrapper):
     A class which provides all necessary functions for wrapping different AST
     objects such that the resulting AST is C-compatible. This new AST is
     printed as an intermediary layer.
+
+    Parameters
+    ----------
+    verbose : int
+        The level of verbosity.
     """
-    def __init__(self):
+    def __init__(self, verbose):
         self._additional_exprs = []
         self._wrapper_names_dict = {}
-        super().__init__()
+        super().__init__(verbose)
 
     def _get_function_def_body(self, func, wrapped_args, results, handled = ()):
         """

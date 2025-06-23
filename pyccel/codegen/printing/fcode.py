@@ -7,7 +7,6 @@
 www.fortran90.org as much as possible."""
 
 import ast
-import functools
 import string
 import sys
 import re
@@ -34,10 +33,10 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall, ClassDef
+from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import FunctionAddress, Interface
-from pyccel.ast.core import Return, Module, For, If, IfSection
+from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
@@ -257,6 +256,8 @@ class FCodePrinter(CodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
+    verbose : int
+        The level of verbosity.
     prefix_module : str
             A prefix to be added to the name of the module.
     """
@@ -268,11 +269,11 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, filename, prefix_module = None):
+    def __init__(self, filename, *, verbose, prefix_module = None):
 
         errors.set_target(filename)
 
-        super().__init__()
+        super().__init__(verbose)
         self._constantImports = {}
         self._current_class    = None
 
@@ -1958,7 +1959,6 @@ class FCodePrinter(CodePrinter):
         optionalstr    = ''
         privatestr     = ''
         externalstr    = ''
-        is_string = isinstance(var.class_type, StringType)
 
         # Compute intent string
         if intent:
@@ -3029,38 +3029,43 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelRShift(self, expr):
-        arg1 = self._print(expr.args[0])
-        arg2 = self._print(expr.args[1])
-        return f'RSHIFT({arg1}, {arg2})'
+        arg0, arg1 = expr.args
+        return f'RSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelLShift(self, expr):
-        arg1 = self._print(expr.args[0])
-        arg2 = self._print(expr.args[1])
-        return f'LSHIFT({arg1}, {arg2})'
+        arg0, arg1 = expr.args
+        return f'LSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitXor(self, expr):
         arg1 = self._print(expr.args[0])
         arg2 = self._print(expr.args[1])
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
-            return f'{arg1} .neqv. {arg2}'
-        return f'IEOR({arg1}, {arg2})'
+            return ' .neqv. '.join(self._print(a) for a in expr.args)
+        arg0, arg1 = expr.args
+        return f'IEOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitOr(self, expr):
         arg1 = self._print(expr.args[0])
         arg2 = self._print(expr.args[1])
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
-            return f'{arg1} .or. {arg2}'
-        return f'IOR({arg1}, {arg2})'
+            return ' .or. '.join(self._print(a) for a in expr.args)
+        arg0, arg1 = expr.args
+        return f'IOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitAnd(self, expr):
         arg1 = self._print(expr.args[0])
         arg2 = self._print(expr.args[1])
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
-            return f'{arg1} .and. {arg2}'
-        return f'IAND({arg1}, {arg2})'
+            return ' .and. '.join(self._print(a) for a in expr.args)
+        arg0, arg1 = expr.args
+        return f'IAND({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelInvert(self, expr):
-        return f'NOT({self._print(expr.args[0])})'
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'.not. ({arg})'
+        else:
+            return f'NOT({arg})'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '(' + self._print(expr.args[0]) + ')'

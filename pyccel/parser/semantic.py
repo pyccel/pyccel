@@ -10,7 +10,6 @@ See the developer docs for more details
 from itertools import chain, product
 import os
 from types import ModuleType, BuiltinFunctionType
-import sys
 import typing
 import warnings
 
@@ -26,13 +25,12 @@ from sympy import ceiling
 from textx.exceptions import TextXSyntaxError
 
 #==============================================================================
-from pyccel.utilities.strings import random_string
-from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
 
 from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift, PyccelBitAnd
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
@@ -160,8 +158,6 @@ from pyccel.utilities.stage import PyccelStage
 
 import pyccel.decorators as def_decorators
 
-if sys.version_info >= (3, 10):
-    from types import UnionType
 #==============================================================================
 
 errors = Errors()
@@ -587,7 +583,7 @@ class SemanticParser(BasicParser):
             found_from_import_name = True
 
         if imp is not None:
-            if found_from_import_name or imp.source == source:
+            if found_from_import_name or source in (imp.source, getattr(imp.source_module, 'name', '')):
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
@@ -2634,6 +2630,8 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             try:
                 if hasattr(self, annotation_method):
+                    if self._verbose > 2:
+                        print(f">>>> Calling SemanticParser.{annotation_method}")
                     obj = getattr(self, annotation_method)(expr)
                     if isinstance(obj, PyccelAstNode) and self.current_ast_node:
                         obj.set_current_ast(self.current_ast_node)
@@ -3864,7 +3862,7 @@ class SemanticParser(BasicParser):
             elif expr.lhs.is_temp:
                 return rhs
             else:
-                errors.report("Cannot assign result of a function without a return",
+                raise errors.report("Cannot assign result of a function without a return",
                         severity='fatal', symbol=expr)
 
             if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):

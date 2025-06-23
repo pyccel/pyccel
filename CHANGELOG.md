@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+## \[2.0.0\] - 2025-06-21
+
+### Added
+
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.
@@ -86,16 +96,20 @@ All notable changes to this project will be documented in this file.
 -   #2279 : Allow scalar literals (including Type hints) and recognised modules to be deduced from a function's context.
 -   #2210 : Add preliminary support for containers of containers (e.g. lists of lists).
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
+-   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
--   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   Add `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   #2293 : Add `pyccel-test` command to run unit tests. Improve docs.
+-   #2358 : Add support for bitwise operators with NumPy arrays.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
--   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Add `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
--   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
--   \[DEVELOPER\] Added a spell checker for the code itself.
+-   \[DEVELOPER\] Add an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Add an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Add a spell checker for the code itself.
+-   \[DEVELOPER\] Add a test to main CI to check if deployment to TestPyPI is working correctly.
 
 ### Fixed
 
@@ -198,6 +212,7 @@ All notable changes to this project will be documented in this file.
 -   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   #2330 : Inline functions in the semantic stage.
 -   #2322 : Stop raising an error when checking if non-optional variable is `None`.
+-   #2348 : Improve parameters of `pyccel` command and `epyccel` function.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
@@ -244,6 +259,7 @@ All notable changes to this project will be documented in this file.
 -   #1287 : Remove unused method `BasicParser.copy()`.
 -   #2345 : Remove undocumented macro syntax in favour of inline methods.
 -   #2345 : Break support for `scipy.linalg.lapack.dgbtrf`, `scipy.linalg.lapack.dgbtrs`, `scipy.linalg.lapack.dgetrf`, and `scipy.linalg.lapack.dgetrs`.
+-   Remove undocumented, untested, obsolete Lua printer.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.

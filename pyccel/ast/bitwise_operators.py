@@ -8,10 +8,16 @@ These operators all have a precision as detailed here:
 https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
-from .builtins     import PythonInt
+from packaging.version import Version
+import numpy
+
+from .builtins     import DtypePrecisionToCastFunction
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
-from .datatypes    import PythonNativeBool, PythonNativeInt
-from .operators    import PyccelUnaryOperator, PyccelOperator
+from .datatypes    import PythonNativeInt
+from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
+from .numpytypes   import NumpyInt8Type
+
+numpy_v1 = Version(numpy.__version__) < Version("2.0.0")
 
 __all__ = (
     'PyccelBitComparisonOperator',
@@ -63,18 +69,22 @@ class PyccelInvert(PyccelUnaryOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        dtype = PythonNativeInt()
+        if arg.class_type.rank:
+            class_type = arg.class_type
+        else:
+            class_type = arg.class_type.switch_basic_type(PythonNativeInt())
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-        self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
-        return dtype
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
+        self._args = (cast(arg) if arg.dtype is not class_type else arg,)
+        return class_type
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
 
 #==============================================================================
 
-class PyccelBitOperator(PyccelOperator):
+class PyccelBitOperator(PyccelBinaryOperator):
     """
     Abstract superclass representing a Python bitwise operator with two arguments.
 
@@ -87,8 +97,7 @@ class PyccelBitOperator(PyccelOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    _shape = None
-    __slots__ = ('_class_type',)
+    __slots__ = ()
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -119,24 +128,15 @@ class PyccelBitOperator(PyccelOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        try:
-            class_type = arg1.class_type + arg2.class_type
-        except NotImplementedError as err:
-            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
+        class_type = arg1.class_type + arg2.class_type
+        if isinstance(getattr(class_type, 'primitive_type', None), PrimitiveBooleanType):
+            assert class_type.rank > 0
+            class_type = class_type.switch_basic_type(NumpyInt8Type())
 
-        assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
-
-        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
+        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
 
         return class_type
-
-    def _set_shape(self):
-        """
-        Set the shape of the resulting object.
-
-        Set the shape of the resulting object. For a PyccelBitOperator,
-        the shape is a class attribute so nothing needs to be done.
-        """
 
     def __repr__(self):
         return f'{self.args[0]} {self.op} {self.args[1]}' # pylint: disable=no-member
@@ -231,16 +231,28 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        try:
-            class_type = arg1.class_type & arg2.class_type
-        except NotImplementedError as err:
-            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
+        class_type = None
+        if numpy_v1:
+            if arg1.rank > 0 and arg2.rank == 0:
+                class_type = arg1.class_type.switch_basic_type(arg2.class_type) \
+                                if isinstance(arg1.class_type.primitive_type, PrimitiveBooleanType) \
+                                else arg1.class_type
+            elif arg1.rank == 0 and arg2.rank > 0:
+                class_type = arg2.class_type.switch_basic_type(arg1.class_type) \
+                                if isinstance(arg2.class_type.primitive_type, PrimitiveBooleanType) \
+                                else arg2.class_type
+
+        if class_type is None:
+            try:
+                class_type = arg1.class_type & arg2.class_type
+            except NotImplementedError as err:
+                raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
 
         primitive_type = class_type.primitive_type
         assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))
+        cast = DtypePrecisionToCastFunction[getattr(class_type, 'element_type', class_type)]
 
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
+        self._args = [cast(a) if a.dtype is not class_type else a for a in (arg1, arg2)]
 
         return class_type
 

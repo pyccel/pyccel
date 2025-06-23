@@ -11,7 +11,6 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 from pyccel.ast.datatypes import VoidType, PythonNativeBool
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.basic import TypedAstNode
 
 __all__ = (
     'SetAdd',
@@ -278,9 +277,9 @@ class SetIntersection(SetMethod):
 
     Parameters
     ----------
-    set_obj : TypedAstNode
+    set_variable : TypedAstNode
         The set object which the method is called from.
-    *others : TypedAstNode
+    *args : TypedAstNode
         The iterables which will be combined (common elements) with this set.
     """
     __slots__ = ('_other','_class_type', '_shape')

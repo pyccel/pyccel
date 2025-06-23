@@ -28,12 +28,13 @@ __all__ = ['create_shared_library']
 #==============================================================================
 def create_shared_library(codegen,
                           main_obj,
+                          *,
                           language,
                           wrapper_flags,
                           pyccel_dirpath,
                           compiler,
                           sharedlib_modname=None,
-                          verbose = False):
+                          verbose):
     """
     Create a shared library which can be called from Pyccel.
 
@@ -71,9 +72,8 @@ def create_shared_library(codegen,
         The name of the shared library. The default is the name of the
         module printed by the printer.
 
-    verbose : bool, default: False
-        Indicates if the compiling should be done with verbosity to show the
-        compiler commands.
+    verbose : int
+        Indicates the level of verbosity.
 
     Returns
     -------
@@ -109,14 +109,18 @@ def create_shared_library(codegen,
 
     if language == 'fortran':
         start_bind_c_wrapping = time.time()
+        if verbose:
+            print(">> Building Fortran-C interface :: ", module_name)
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-        wrapper = FortranToCWrapper()
+        wrapper = FortranToCWrapper(verbose)
         bind_c_mod = wrapper.wrap(codegen.ast)
         timings['Bind C wrapping'] = time.time() - start_bind_c_wrapping
 
-        start_bind_c_printing = time.time()
-        bind_c_code = FCodePrinter(bind_c_mod.name).doprint(bind_c_mod)
         bind_c_filename = f'{bind_c_mod.name}.f90'
+        if verbose:
+            print(">> Printing :: ", bind_c_filename)
+        start_bind_c_printing = time.time()
+        bind_c_code = FCodePrinter(bind_c_mod.name, verbose=verbose).doprint(bind_c_mod)
 
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
@@ -140,14 +144,18 @@ def create_shared_library(codegen,
     #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
-    wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
+    wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language, verbose=verbose)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper = CToPythonWrapper(base_dirpath)
+    wrapper = CToPythonWrapper(base_dirpath, verbose)
 
+    if verbose:
+        print(">> Building C-Python interface :: ", c_ast.name)
     start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
+    if verbose:
+        print(">> Printing :: ", wrapper_filename)
     start_print_cwrapper = time.time()
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)

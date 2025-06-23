@@ -17,10 +17,9 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 def test_semantic(f):
 
     pyccel = Parser(f, output_folder = os.getcwd())
-    pyccel.parse()
+    pyccel.parse(verbose = 0)
 
-    settings = {}
-    pyccel.annotate(**settings)
+    pyccel.annotate(verbose = 0)
 
     # reset Errors singleton
     errors = Errors()

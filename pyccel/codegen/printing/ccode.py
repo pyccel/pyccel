@@ -23,7 +23,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
-from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
+from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Deallocate, If, IfSection
 from pyccel.ast.core      import FunctionAddress
@@ -31,7 +31,7 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
@@ -41,7 +41,7 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, Ho
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
@@ -52,12 +52,11 @@ from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType, ManagedM
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
-from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
@@ -283,6 +282,8 @@ class CCodePrinter(CodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
+    verbose : int
+        The level of verbosity.
     prefix_module : str
             A prefix to be added to the name of the module.
     """
@@ -315,11 +316,11 @@ class CCodePrinter(CodePrinter):
                       (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
                       }
 
-    def __init__(self, filename, prefix_module = None):
+    def __init__(self, filename, *, verbose, prefix_module = None):
 
         errors.set_target(filename)
 
-        super().__init__()
+        super().__init__(verbose)
         self.prefix_module = prefix_module
         self._additional_imports = {'stdlib':c_imports['stdlib']}
         self._additional_code = ''
@@ -2509,7 +2510,11 @@ class CCodePrinter(CodePrinter):
         return ' & '.join(args)
 
     def _print_PyccelInvert(self, expr):
-        return f'~{self._print(expr.args[0])}'
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'!{arg}'
+        else:
+            return f'~{arg}'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return f'({self._print(expr.args[0])})'
