@@ -1129,7 +1129,7 @@ def test_json():
     print(output_dir)
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f'{output_dir}/test.json'), 'r') as f:
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
     cmd = [shutil.which("pyccel"),
            '--compiler-config',
@@ -1137,7 +1137,7 @@ def test_json():
            '--export-compiler-config',
            f'{output_dir}/test2.json']
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f'{output_dir}/test2.json'), 'r') as f:
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
