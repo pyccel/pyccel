@@ -149,7 +149,7 @@ def pyccel() -> None:
                         help='Print the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='Show internal messages.')
-    group.add_argument('--export-compiler-config', metavar='CONFIG.json', type=pathlib.Path, default = None, \
+    group.add_argument('--export-compiler-config', action='store_true', \
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
@@ -176,12 +176,26 @@ def pyccel() -> None:
     if not args.conda_warnings:
         args.conda_warnings = 'basic'
 
-    if args.convert_only or args.syntax_only or args.semantic_only:
-        compiler = None
     # ...
+    if args.export_compiler_config:
+        cext = filename.suffix
+        if cext == '':
+            filename = filename.with_suffix('.json')
+        elif cext != '.json':
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report('Wrong file extension. Expecting `json`, but found',
+                          symbol=cext,
+                          severity='error')
+            errors.check()
+            sys.exit(1)
+
+        execute_pyccel('', compiler_export_file = filename)
+        sys.exit(0)
 
     # ...
-    compiler_export_file = args.export_compiler_config
+    if args.convert_only or args.syntax_only or args.semantic_only:
+        compiler = None
 
     # ... report error
     if filename.is_file():
@@ -204,19 +218,6 @@ def pyccel() -> None:
         errors.check()
         sys.exit(1)
     # ...
-
-    if compiler_export_file is not None:
-        cext = compiler_export_file.suffix
-        if cext == '':
-            compiler_export_file = compiler_export_file.with_suffix('.json')
-        elif cext != '.json':
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Wrong file extension. Expecting `json`, but found',
-                          symbol=cext,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
 
     accelerators = []
     if mpi:
