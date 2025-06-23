@@ -559,7 +559,6 @@ class CodeBlock(PyccelAstNode):
     __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
 
-
     def __init__(self, body, unravelled = False):
         ls = []
         for i in body:
@@ -3671,7 +3670,7 @@ class Import(PyccelAstNode):
         if len(self.target) == 0:
             return f'import {source}'
         else:
-            target = ', '.join([str(i) for i in self.target])
+            target = ', '.join(str(i) for i in self.target)
             return f'from {source} import {target}'
 
     def define_target(self, new_target):
