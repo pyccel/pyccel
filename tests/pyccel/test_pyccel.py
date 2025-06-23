@@ -1124,15 +1124,20 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_json():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compiler-config test.json')
-    with open(get_abs_path('scripts/test.json'), 'r') as f:
+    output_dir = insert_pyccel_folder('scripts/')
+    print(output_dir)
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r') as f:
         dict_1 = json.load(f)
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-        pyccel_commands='--compiler-config test.json --export-compiler-config test2.json')
-    with open(get_abs_path('scripts/test2.json'), 'r') as f:
+    cmd = [shutil.which("pyccel"),
+           '--compiler-config',
+           f'{output_dir}/test.json',
+           '--export-compiler-config',
+           f'{output_dir}/test2.json']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r') as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
