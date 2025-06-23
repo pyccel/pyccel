@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2364 : Fix the use of the `--export-compiler-config` flag.
+
 ### Changed
 
 ### Deprecated
