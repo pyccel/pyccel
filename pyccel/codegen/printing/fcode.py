@@ -2078,28 +2078,6 @@ class FCodePrinter(CodePrinter):
                 code += f'{l_c} = {e_c}\n'
             return code
 
-        if isinstance(rhs, ConstructorCall):
-            func = rhs.func
-            name = str(func.name)
-
-            # TODO uncomment later
-
-#            # we don't print the constructor call if iterable object
-#            if this.dtype.is_iterable:
-#                return ''
-#
-#            # we don't print the constructor call if with construct object
-#            if this.dtype.is_with_construct:
-#                return ''
-
-            if name == "__init__":
-                name = "create"
-            rhs_code = self._print(name)
-            rhs_code = f'{lhs_code} % {rhs_code}'
-
-            code_args = ', '.join(self._print(i) for i in rhs.arguments)
-            return f'call {rhs_code}({code_args})\n'
-
         if (isinstance(lhs, Variable) and
               isinstance(lhs.dtype, SymbolicType)):
             return ''

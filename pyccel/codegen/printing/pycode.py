@@ -538,10 +538,6 @@ class PythonCodePrinter(CodePrinter):
                 f'{body}\n')
         dec = self._handle_decorators(expr.decorators)
         code = f'{dec}{code}'
-        headers = expr.headers
-        if headers:
-            headers = self._print(headers)
-            code = f'{headers}\n{code}'
 
         self.exit_scope()
 

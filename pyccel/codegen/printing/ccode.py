@@ -2454,8 +2454,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelMinus(self, expr):
         args = [self._print(a) for a in expr.args]
-        if len(args) == 1:
-            return '-{args[0]}'
         return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
