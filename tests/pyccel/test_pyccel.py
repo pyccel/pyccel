@@ -1125,7 +1125,7 @@ def test_inline_import(language):
 
 #------------------------------------------------------------------------------
 def test_json():
-    output_dir = insert_pyccel_folder('scripts/')
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
@@ -1143,7 +1143,7 @@ def test_json():
 
 @pytest.mark.xdist_incompatible
 def test_json_relative_path():
-    output_dir = insert_pyccel_folder('scripts/')
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
