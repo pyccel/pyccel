@@ -190,7 +190,9 @@ def pyccel() -> None:
             errors.check()
             sys.exit(1)
 
-        execute_pyccel('', compiler_export_file = filename)
+        execute_pyccel('',
+                       compiler_family = str(compiler) if compiler is not None else None,
+                       compiler_export_file = filename)
         sys.exit(0)
 
     # ...
