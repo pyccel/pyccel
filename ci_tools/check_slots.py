@@ -138,7 +138,7 @@ if __name__ == '__main__':
                 # Get all tuple elements including comments
                 all_code = '\n'.join(lines[start_line:end_line])
                 all_keys = [li.strip(' ,\'"') for l in all_code.strip().rstrip(')').lstrip('__all__').strip().lstrip('= (').split(',') \
-                                for li in l.split('\n') if not li.isspace()]
+                                for li in l.split('\n') if li and not li.isspace()]
 
                 # Split unsorted keys into groups according to comments
                 groups = {l.strip('# -'): [] for l in all_keys if l.startswith('#')}
