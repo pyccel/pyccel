@@ -51,7 +51,7 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
-tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
+tests_with_base = ('coverage', 'docs', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
