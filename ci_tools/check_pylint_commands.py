@@ -62,7 +62,7 @@ def run_pylint(file, flag, messages):
         })
         messages.append(output_item)
 
-def check_expected_pylint_disable(file, disabled, flag, messages, file_changed):
+def check_expected_pylint_disable(file, disabled, flag, messages):
     """
     Check for an expected pylint disable flag.
 
@@ -81,8 +81,6 @@ def check_expected_pylint_disable(file, disabled, flag, messages, file_changed):
         The name of the flag being investigated.
     messages : list
         The list of messages which should be printed.
-    file_changed : bool
-        Indicates whether the file was changed in this diff.
     """
     disabled_copy = disabled.copy()
     if disabled:
@@ -92,23 +90,17 @@ def check_expected_pylint_disable(file, disabled, flag, messages, file_changed):
                 disabled.remove((flags, line_number))
                 if new_flags:
                     disabled.add((new_flags, line_number))
-            elif file_changed:
+            else:
                 run_pylint(file, flag, messages)
-    elif file_changed:
+    else:
         run_pylint(file, flag, messages)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
     parser.add_argument('folder', type=str,
                             help='The folder to be analysed')
-    parser.add_argument('diffFile', metavar='diffFile', type=str,
-                            help='File containing the git diff output')
-    parser.add_argument('output', metavar='output', type=str,
-                            help='File where the markdown output will be printed')
 
     args = parser.parse_args()
-
-    diff = get_diff_as_json(args.diffFile)
 
     folder = args.folder
 
@@ -137,13 +129,12 @@ if __name__ == '__main__':
                             disabled.discard(item)
                             if strings_list:
                                 disabled.update([(tuple(strings_list), num)])
-        file_changed = f in diff
         p = pathlib.Path(f)
         if p.parts[0] == 'tests':
             msg = []
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg, file_changed)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg, file_changed)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg, file_changed)
+            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
+            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
+            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
             first_iteration = True
             for item in msg:
                 if first_iteration:
@@ -164,14 +155,9 @@ if __name__ == '__main__':
                     strings_list = list(statements)
         if disabled:
             first_iteration = True
-            if file_changed:
-                summary_template = f"-  New unexpected pylint disables found in `{f}`: "
-                annotation_level = "failure"
-                annotation_message = "[ERROR] New unexpected pylint disables: "
-            else:
-                summary_template = f"-  Unexpected pylint disables found in `{f}`: "
-                annotation_level = "warning"
-                annotation_message = "Unexpected pylint disables: "
+            summary_template = f"-  New unexpected pylint disables found in `{f}`: "
+            annotation_level = "failure"
+            annotation_message = "[ERROR] New unexpected pylint disables: "
             first_iteration = True
             for value, key in disabled:
                 for v in value:
@@ -197,7 +183,6 @@ if __name__ == '__main__':
                                 'message':f"{annotation_message}{v}"})
             if not first_iteration:
                 messages['summary'] += '\n\n'
-            success &= (not file_changed)
 
     if not messages['summary'] and success:
         messages['summary'] = "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
