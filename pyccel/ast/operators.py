@@ -37,7 +37,7 @@ __all__ = (
     'PyccelOperator',
     'PyccelUnaryOperator',
     # --- Operator classes ---
-    'IfTernaryOperator'
+    'IfTernaryOperator',
     'PyccelAdd',
     'PyccelAnd',
     'PyccelAssociativeParenthesis',
