@@ -102,9 +102,6 @@ def sort_key(name : str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-    parser.add_argument('output', metavar='output', type=str,
-                            help='File where the markdown output will be printed')
-
     args = parser.parse_args()
 
     # Get ast modules
@@ -228,10 +225,9 @@ if __name__ == '__main__':
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump(messages, json_file)
 
-    with open(args.output, "w", encoding="utf-8") as md_file:
-        # Report error
-        md_file.write("# " + messages['title'] + '\n\n')
-        md_file.write(messages['summary'])
+    # Report error
+    print("# " + messages['title'] + '\n')
+    print(messages['summary'])
 
     failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
               bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or
