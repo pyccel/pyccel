@@ -15,9 +15,9 @@ from pyccel.ast.variable  import Constant
 __all__ = (
     # --- Base classes ---
     'MathFunctionBase',
+    'MathFunctionBool',
     'MathFunctionFloat',
     'MathFunctionInt',
-    'MathFunctionBool',
     # --- Functions in Math module ---
     'MathAcos',
     'MathAcosh',
@@ -39,7 +39,7 @@ __all__ = (
     'MathFactorial',
     'MathFloor',
     'MathFmod',
-    'MathFrexp', # TODO
+    'MathFrexp',
     'MathFsum',
     'MathGamma',
     'MathGcd',
@@ -55,7 +55,7 @@ __all__ = (
     'MathLog10',
     'MathLog1p',
     'MathLog2',
-    'MathModf',  # TODO
+    'MathModf',
     'MathPow',
     'MathRadians',
     'MathSin',
