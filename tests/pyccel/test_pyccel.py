@@ -1124,24 +1124,48 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_json():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compiler-config test.json')
-    with open(get_abs_path('scripts/test.json'), 'r') as f:
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-        pyccel_commands='--compiler-config test.json --export-compiler-config test2.json')
-    with open(get_abs_path('scripts/test2.json'), 'r') as f:
+    assert dict_1['c']['exec'] == 'icx'
+    cmd = [shutil.which("pyccel"),
+           '--compiler-config',
+           f'{output_dir}/test.json',
+           '--export-compiler-config',
+           f'{output_dir}/test2.json']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
+        dict_2 = json.load(f)
+
+    assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_ambiguous_json():
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
+        dict_1 = json.load(f)
+    cmd = [shutil.which("pyccel"),
+           '--compiler-config',
+           f'{output_dir}/test.json',
+           '--export-compiler-config',
+           f'{output_dir}/test2']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
 
 @pytest.mark.xdist_incompatible
 def test_json_relative_path():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compiler-config test.json')
-    shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    subprocess.run(cmd, check=True)
+    shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------

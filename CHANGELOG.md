@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+### Fixed
+
+-   #2364 : Fix the use of the `--export-compiler-config` flag.
+
+### Changed
+
+### Deprecated
+
 ## \[2.0.0\] - 2025-06-21
 
 ### Added
