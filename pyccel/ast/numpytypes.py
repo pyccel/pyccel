@@ -26,11 +26,11 @@ __all__ = (
         'NumpyFloat32Type',
         'NumpyFloat64Type',
         'NumpyFloat128Type',
-        'NumpyIntType',
         'NumpyInt8Type',
         'NumpyInt16Type',
         'NumpyInt32Type',
         'NumpyInt64Type',
+        'NumpyIntType',
         'NumpyNDArrayType',
         'NumpyNumericType',
         )
