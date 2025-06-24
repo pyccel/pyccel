@@ -15,7 +15,7 @@ from types import GeneratorType
 
 from pyccel.utilities.stage   import PyccelStage
 
-__all__ = ('PyccelAstNode', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
+__all__ = ('Immutable', 'PyccelAstNode', 'ScopedAstNode', 'TypedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
