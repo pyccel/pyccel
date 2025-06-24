@@ -29,36 +29,38 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    # --- Base classes ---
     'PyccelOperator',
     'PyccelArithmeticOperator',
     'PyccelBinaryOperator',
     'PyccelBooleanOperator',
     'PyccelComparisonOperator',
     'PyccelUnaryOperator',
-    'PyccelPow',
+    # ---
+    'IfTernaryOperator'
     'PyccelAdd',
-    'PyccelMinus',
-    'PyccelMul',
-    'PyccelDiv',
-    'PyccelMod',
-    'PyccelFloorDiv',
-    'PyccelEq',
-    'PyccelNe',
-    'PyccelLt',
-    'PyccelLe',
-    'PyccelGt',
-    'PyccelGe',
     'PyccelAnd',
+    'PyccelAssociativeParenthesis',
+    'PyccelDiv',
+    'PyccelEq',
+    'PyccelFloorDiv',
+    'PyccelGe',
+    'PyccelGt',
+    'PyccelLe',
+    'PyccelLt',
+    'PyccelMinus',
+    'PyccelMod',
+    'PyccelMul',
+    'PyccelNe',
     'PyccelOr',
     'PyccelNot',
-    'PyccelAssociativeParenthesis',
+    'PyccelPow',
     'PyccelUnary',
     'PyccelUnarySub',
-    'Relational',
+    'PyccelIn',
     'PyccelIs',
     'PyccelIsNot',
-    'PyccelIn',
-    'IfTernaryOperator'
+    'Relational',
 )
 
 #==============================================================================

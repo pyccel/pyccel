@@ -13,14 +13,12 @@ from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.variable  import Constant
 
 __all__ = (
-    'math_mod',
-    'math_constants',
-    # ---
+    # --- Base classes ---
     'MathFunctionBase',
     'MathFunctionFloat',
     'MathFunctionInt',
     'MathFunctionBool',
-    # ---
+    # --- Functions in Math module ---
     'MathAcos',
     'MathAcosh',
     'MathAsin',
@@ -28,6 +26,7 @@ __all__ = (
     'MathAtan',
     'MathAtan2',
     'MathAtanh',
+    'MathCeil',
     'MathCopysign',
     'MathCos',
     'MathCosh',
@@ -37,16 +36,26 @@ __all__ = (
     'MathExp',
     'MathExpm1',
     'MathFabs',
+    'MathFactorial',
+    'MathFloor',
     'MathFmod',
+    'MathFrexp', # TODO
     'MathFsum',
     'MathGamma',
+    'MathGcd',
     'MathHypot',
+    'MathIsclose',
+    'MathIsfinite',
+    'MathIsinf',
+    'MathIsnan',
+    'MathLcm',
     'MathLdexp',
     'MathLgamma',
     'MathLog',
     'MathLog10',
     'MathLog1p',
     'MathLog2',
+    'MathModf',  # TODO
     'MathPow',
     'MathRadians',
     'MathSin',
@@ -54,22 +63,11 @@ __all__ = (
     'MathSqrt',
     'MathTan',
     'MathTanh',
-    'MathRemainder',
-    # ---
-    'MathCeil',
-    'MathFactorial',
-    'MathFloor',
-    'MathGcd',
-    'MathLcm',
     'MathTrunc',
-    # ---
-    'MathIsclose',
-    'MathIsfinite',
-    'MathIsinf',
-    'MathIsnan',
-    # ---
-    'MathFrexp', # TODO
-    'MathModf',  # TODO
+    'MathRemainder',
+    # --- Import tools ---
+    'math_constants',
+    'math_mod',
 )
 
 #==============================================================================

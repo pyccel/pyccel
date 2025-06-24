@@ -20,17 +20,17 @@ from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
+        'NumpyComplex64Type',
+        'NumpyComplex128Type',
+        'NumpyComplex256Type',
+        'NumpyFloat32Type',
+        'NumpyFloat64Type',
+        'NumpyFloat128Type',
         'NumpyIntType',
         'NumpyInt8Type',
         'NumpyInt16Type',
         'NumpyInt32Type',
         'NumpyInt64Type',
-        'NumpyFloat32Type',
-        'NumpyFloat64Type',
-        'NumpyFloat128Type',
-        'NumpyComplex64Type',
-        'NumpyComplex128Type',
-        'NumpyComplex256Type',
         'NumpyNDArrayType',
         'NumpyNumericType',
         )
