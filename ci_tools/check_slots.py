@@ -105,6 +105,8 @@ if __name__ == '__main__':
 
     error_collection = {
         'missing_all':[],
+        'badly_grouped_all': [],
+        'bad_all_group': [],
         'non_alphabetical_all':[],
         'missing_slots':[],
         'overridden_slots':[],
@@ -118,20 +120,55 @@ if __name__ == '__main__':
         if all_attr:
             sorted_all = list(all_attr)
             sorted_all.sort()
+            # If not already sorted
             if sorted_all != list(all_attr):
+                # Get relevant lines
                 lines = inspect.getsource(mod).splitlines()
                 start_line = -1
                 end_line = -1
                 for line_num, line in enumerate(lines):
                     if '__all__' in line:
-                        start_line = line_num + 1
+                        start_line = line_num
                         while ')' not in line:
                             line_num += 1
                             line = lines[line_num]
-                            end_line = line_num + 1
-                        error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", f"pyccel.ast.{mod_name}",
-                            inspect.getfile(mod), start_line, end_line, "warning", f"Sort the __all__ attribute of `{mod_name}`"))
+                        end_line = line_num + 1
                         break
+
+                # Get all tuple elements including comments
+                all_code = '\n'.join(lines[start_line:end_line])
+                all_keys = [li.strip(' ,\'"') for l in all_code.strip().rstrip(')').lstrip('__all__').strip().lstrip('= (').split(',') \
+                                for li in l.split('\n') if not li.isspace()]
+
+                # Split unsorted keys into groups according to comments
+                groups = {l.strip('# -'): [] for l in all_keys if l.startswith('#')}
+                if len(set(groups)) < len(groups):
+                    error_collection['badly_grouped_all'].append(fill_dictionary("`__all__` split into multiple groups with the same name", f"pyccel.ast.{mod_name}",
+                        inspect.getfile(mod), start_line, end_line, "failure", f"Fix the groups in the __all__ attribute of `{mod_name}`"))
+                if any(len(g) == 0 for g in groups):
+                    error_collection['bad_all_group'].append(fill_dictionary("`__all__` is split into unlabelled groups", f"pyccel.ast.{mod_name}",
+                        inspect.getfile(mod), start_line, end_line, "failure", f"Fix the groups in the __all__ attribute of `{mod_name}`"))
+
+                if not all_keys[0].startswith('#'):
+                    groups['start'] = []
+                    current_group = 'start'
+
+                for l in all_keys:
+                    if l.startswith('#'):
+                        current_group = l.strip('# -')
+                    else:
+                        groups[current_group].append(l)
+
+                # Check if keys are sorted within each group
+                for n, g in groups.items():
+                    o_g = list(g)
+                    g.sort()
+                    if g != o_g:
+                        name = f"pyccel.ast.{mod_name}"
+                        if n != 'start':
+                            name += f'[{n}]'
+                        error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", name,
+                            inspect.getfile(mod), start_line, end_line, "failure", f"Sort the __all__ attribute of `{mod_name}`"))
         else:
             error_collection['missing_all'].append(fill_dictionary("Missing `__all__`", f"pyccel.ast.{mod_name}",
                 inspect.getfile(mod), 1, 1, "failure", f"Missing __all__ attribute in: `{mod_name}`"))
