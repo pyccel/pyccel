@@ -84,6 +84,22 @@ def fill_dictionary(title, message, file, start_line, end_line, annotation_level
     }
     return filled_dict
 
+def sort_key(name : str):
+    """
+    A method to split a string into numeric and non-numeric sections for improved sorting.
+    """
+    sections = []
+    n = len(name)
+    while n > 0:
+        if name[0].isdigit():
+            i = next((i for i,s in enumerate(name) if not s.isdigit()), n)
+            sections.append(int(name[:i]))
+        else:
+            i = next((i for i,s in enumerate(name) if s.isdigit()), n)
+            sections.append(name[:i])
+        n -= i
+    return tuple(sections)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
     parser.add_argument('output', metavar='output', type=str,
@@ -119,7 +135,7 @@ if __name__ == '__main__':
         all_attr = getattr(mod, '__all__', None)
         if all_attr:
             sorted_all = list(all_attr)
-            sorted_all.sort()
+            sorted_all.sort(key=sort_key)
             # If not already sorted
             if sorted_all != list(all_attr):
                 # Get relevant lines
@@ -162,8 +178,10 @@ if __name__ == '__main__':
                 # Check if keys are sorted within each group
                 for n, g in groups.items():
                     o_g = list(g)
-                    g.sort()
+                    g.sort(key=sort_key)
                     if g != o_g:
+                        print(g)
+                        print(o_g)
                         name = f"pyccel.ast.{mod_name}"
                         if n != 'start':
                             name += f'[{n}]'
