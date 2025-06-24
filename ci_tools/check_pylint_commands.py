@@ -200,8 +200,7 @@ if __name__ == '__main__':
             slots_data.update({'annotations': messages['annotations']})
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump(slots_data, json_file)
-    with open(args.output, mode='a', encoding="utf-8") as md_file:
-        md_file.write(messages['summary'])
+    print(messages['summary'])
 
     if not success:
         sys.exit(1)
