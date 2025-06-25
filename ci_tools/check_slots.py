@@ -87,6 +87,18 @@ def fill_dictionary(title, message, file, start_line, end_line, annotation_level
 def sort_key(name : str):
     """
     A method to split a string into numeric and non-numeric sections for improved sorting.
+
+    A method to split a string into numeric and non-numeric sections for improved sorting.
+
+    Parameters
+    ----------
+    name : str
+        The string from the list being sorted.
+
+    Results
+    -------
+    tuple[str|int]
+        The key by which the string should be sorted.
     """
     sections = []
     n = len(name)
