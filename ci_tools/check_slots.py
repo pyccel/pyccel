@@ -1,4 +1,11 @@
-""" Script to check that Pyccel coding conventions concerning slots are correctly followed in the AST
+"""
+Script to check that Pyccel coding conventions are correctly followed in the AST.
+The coding conventions are:
+    - `__all__` must be specified
+    - `__all__` must be sorted alphabetically or split into sorted groups with a comment to explain the grouping
+    - `__slots__` must be provided for all classes in the AST
+    - `_attribute_nodes` must be provided for all classes in the AST
+    - Classes in the AST must appear in the `__all__` variable of their module.
 """
 import argparse
 import importlib
@@ -113,7 +120,7 @@ def sort_key(name : str):
     return tuple(sections)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
+    parser = argparse.ArgumentParser(description='Check that Pyccel coding conventions are respected.')
     args = parser.parse_args()
 
     # Get ast modules

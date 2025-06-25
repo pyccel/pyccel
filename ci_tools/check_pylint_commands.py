@@ -1,4 +1,5 @@
-""" Script to check that Pyccel coding conventions concerning Pylint are correctly followed
+"""
+Script to check that pylint errors are not globally deactivated.
 """
 import argparse
 import os
@@ -23,7 +24,6 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'], # ignore Codacy bad pylint call
                             re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import'],
                             re.compile('tests/stc_containers/leaks_check.py'):['unused-variable'],
-                            re.compile('tests/macro/*'):['undefined-variable', 'unused-import'], # Ignore old macro tests to be removed with macros
                            }
 
 def run_pylint(file, flag, messages):
@@ -96,15 +96,12 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
         run_pylint(file, flag, messages)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-    parser.add_argument('folder', type=str,
-                            help='The folder to be analysed')
-
+    parser = argparse.ArgumentParser(description='Check that pylint errors are not globally deactivated')
     args = parser.parse_args()
 
-    folder = args.folder
-
-    files = [os.path.relpath(os.path.join(root,f)) for root, dirs, filenames in os.walk(folder) for f in filenames if os.path.splitext(f)[1] == '.py']
+    folder = pathlib.Path(__file__).parent.parent
+    files = [os.path.relpath(os.path.join(root,f)) for root, dirs, filenames in os.walk(folder) \
+            for f in filenames if os.path.splitext(f)[1] == '.py']
 
     success = True
 
