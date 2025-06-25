@@ -17,7 +17,10 @@ if __name__ == '__main__':
     files = []
 
     root = Path(__file__).parent.parent
-    for f_pattern in yaml.safe_load(open(root / '.pyspelling.yml'))['matrix'][0]['sources']:
+    with open(root / '.pyspelling.yml', 'r', encoding='utf-8') as f:
+        spelling_config = yaml.safe_load(f)
+
+    for f_pattern in spelling_config['matrix'][0]['sources']:
         files.extend(root.glob(f_pattern))
 
     python_regex = re.compile(r'[^a-zA-Z]python[^a-zA-Z]')
