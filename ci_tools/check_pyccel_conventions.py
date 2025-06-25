@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     messages = extract_dict_elements(error_collection)
     if not messages['annotations']:
-        messages['summary'] = "Check Slots\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
+        messages['summary'] = "Pyccel Coding Conventions\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
         messages.pop('annotations')
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump(messages, json_file)
