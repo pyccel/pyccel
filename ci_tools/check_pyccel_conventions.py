@@ -102,7 +102,7 @@ def sort_key(name : str):
     name : str
         The string from the list being sorted.
 
-    Results
+    Returns
     -------
     tuple[str|int]
         The key by which the string should be sorted.
