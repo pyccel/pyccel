@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2364 : Fix the use of the `--export-compiler-config` flag.
+-   \[INTERNALS\] Fix unsorted `__all__` variables.
+-   \[INTERNALS\] Allow CI scripts `check_slots.py` and `check_pylint_commands.py` to be called easily locally.
 
 ### Changed
 
