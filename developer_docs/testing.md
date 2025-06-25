@@ -42,7 +42,7 @@ Other than this one exception ignoring errors globally is discouraged. Please fi
 
 We have a small number of additional rules that we enforce in Pyccel but which do not appear in Pylint. These tests can be run locally with:
 
-```
+```bash
 python3 ci_tools/check_pyccel_conventions.py
 ```
 
@@ -52,7 +52,7 @@ We use 2 tools to check the spelling. The first is designed to check spelling ex
 
 If the necessary dictionaries are installed, the first test can be run locally with:
 
-```
+```bash
 pip3 install pyspelling
 python3 -m pyspelling
 ```
@@ -84,7 +84,7 @@ Currently documentation is incomplete, so tests only check documentation for new
 
 The following command:
 
-```
+```bash
 docstr-coverage --config=.docstr.yaml pyccel ci_tools
 ```
 
@@ -92,14 +92,14 @@ Checks the docstring coverage for the project.
 
 Individual docstrings can be checked using:
 
-```
-python -m numpydoc validate <FUNC_TO_CHECK>
+```bash
+python3 -m numpydoc validate <FUNC_TO_CHECK>
 ```
 
 E.g:
 
-```
-python -m numpydoc validate pyccel.ast.basic.PyccelAstNode.get_user_nodes
+```bash
+python3 -m numpydoc validate pyccel.ast.basic.PyccelAstNode.get_user_nodes
 ```
 
 The script `ci_tools/list_docs_tovalidate.py` determines which functions will be checked using a `git diff`.
@@ -108,7 +108,7 @@ Finally the documentation website is generated to ensure that no warnings are ra
 
 This can be done locally with:
 
-```
+```bash
 pip3 install -r docs/requirements.txt
 make -C docs html
 ```
