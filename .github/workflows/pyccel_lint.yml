@@ -76,8 +76,8 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: lint
         run: |
-          python ci_tools/check_slots.py 2>&1 | tee $GITHUB_STEP_SUMMARY
-          python ci_tools/check_pylint_commands.py .  2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python ci_tools/check_pyccel_conventions.py 2>&1 | tee $GITHUB_STEP_SUMMARY
+          python ci_tools/check_pylint_commands.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
           cat $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
