@@ -9,6 +9,7 @@ Module handling everything related to the compilers used to compile the various 
 """
 import json
 import os
+import pathlib
 import shutil
 import subprocess
 import platform
@@ -589,7 +590,7 @@ class Compiler:
 
         return cmd
 
-    def export_compiler_info(self, compiler_export_file):
+    def export_compiler_info(self, compiler_export_filename):
         """
         Export the compiler configuration to a json file.
 
@@ -601,10 +602,13 @@ class Compiler:
 
         Parameters
         ----------
-        compiler_export_file : str
+        compiler_export_filename : str | Path
             The name of the file where the compiler configuration
             should be printed.
         """
+        compiler_export_file = pathlib.Path(compiler_export_filename)
+        folder = compiler_export_file.parent
+        os.makedirs(folder, exist_ok=True)
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
             print(json.dumps(self._compiler_info, indent=4),
                     file=out_file)
