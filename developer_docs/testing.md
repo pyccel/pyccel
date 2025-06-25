@@ -28,9 +28,9 @@ The static analysis tests check that the code follows the expected coding conven
 
 ### Python Linting
 
-We use [pylint](https://docs.pylint.org/run.html) to ensure that the code follows good practice for Python. Pylint can be installed using pip. If it is run from the root directory it should automatically find the configuration file `.pylintrc` which specifies the rules that we enforce in Pyccel.
+We use [Pylint](https://docs.pylint.org/run.html) to ensure that the code follows good practice for Python. Pylint can be installed using pip. If it is run from the root directory it should automatically find the configuration file `.pylintrc` which specifies the rules that we enforce in Pyccel.
 
-Pylint errors can be ignored locally or globally. In the `tests/` folder we do not enforce documentation of test code so feel free to globally disable pylint commands related to this by adding the following line to the top of any new files:
+Pylint errors can be ignored locally or globally. In the `tests/` folder we do not enforce documentation of test code so feel free to globally disable Pylint commands related to this by adding the following line to the top of any new files:
 
 ```python
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
