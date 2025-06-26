@@ -462,6 +462,6 @@ def test_container_interface(language):
         return len(a)
 
     epyc_f = epyccel(f, language=language)
-    assert f([1,2]) == f([1,2])
-    assert f({1,2}) == f({1,2})
-    assert f(np.array([1,2])) == f(np.array([1,2]))
+    assert f([1,2]) == epyc_f([1,2])
+    assert f({1,2}) == epyc_f({1,2})
+    assert f(np.array([1,2])) == epyc_f(np.array([1,2]))
