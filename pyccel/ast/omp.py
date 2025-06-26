@@ -12,23 +12,25 @@ https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md
 
 from .basic import PyccelAstNode
 
-__all__ = ('OmpAnnotatedComment',
-           'OMP_For_Loop',
-           'OMP_Simd_Construct',
-           'OMP_TaskLoop_Construct',
-           'OMP_Distribute_Construct',
-           'OMP_Parallel_Construct',
-           'OMP_Task_Construct',
-           'OMP_Single_Construct',
-           'OMP_Critical_Construct',
-           'OMP_Master_Construct',
-           'OMP_Masked_Construct',
-           'OMP_Cancel_Construct',
-           'OMP_Target_Construct',
-           'OMP_Teams_Construct',
-           'OMP_Sections_Construct',
-           'OMP_Section_Construct',
-           'Omp_End_Clause')
+__all__ = (
+        'OMP_Cancel_Construct',
+        'OMP_Critical_Construct',
+        'OMP_Distribute_Construct',
+        'OMP_For_Loop',
+        'OMP_Masked_Construct',
+        'OMP_Master_Construct',
+        'OMP_Parallel_Construct',
+        'OMP_Section_Construct',
+        'OMP_Sections_Construct',
+        'OMP_Simd_Construct',
+        'OMP_Single_Construct',
+        'OMP_Target_Construct',
+        'OMP_TaskLoop_Construct',
+        'OMP_Task_Construct',
+        'OMP_Teams_Construct',
+        'OmpAnnotatedComment',
+        'Omp_End_Clause',
+)
 
 class OmpAnnotatedComment(PyccelAstNode):
 
