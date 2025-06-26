@@ -447,6 +447,14 @@ def test_wrong_argument_combination_in_interface(language):
     with pytest.raises(TypeError):
         epyc_f(3.5, 4)
 
+@pytest.mark.parametrize('language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param("c", marks = pytest.mark.c),
+    pytest.param('python', marks = [
+        pytest.mark.skip(reason="Cannot differentiate between list/set in Python as dtype cannot be checked"),
+        pytest.mark.python]
+    ))
+)
 def test_container_interface(language):
     T = TypeVar('T', 'int[:]', list[int], set[int])
 
