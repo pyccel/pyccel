@@ -477,18 +477,16 @@ class CToPythonWrapper(Wrapper):
         for i, py_arg in enumerate(args):
             # Get the relevant typed arguments from the original functions
             interface_args = [func.arguments[i].var for func in orig_funcs]
-            # Get the type key
-            interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
-            type_to_example_arg = dict(zip(interface_types, interface_args))
+            type_to_example_arg = {a.class_type : a for a in interface_args}
             # Get a list of unique keys
             possible_types = list(type_to_example_arg.keys())
 
             n_possible_types = len(possible_types)
             if n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
-                for func, t in zip(funcs, interface_types):
-                    index = possible_types.index(t)*step
+                for func, a in zip(funcs, interface_args):
+                    index = next(i for i, p_t in enumerate(possible_types) if p_t is a.class_type)*step
                     argument_type_flags[func] += index
 
                 # Create the type checks and incrementation of the type_indicator

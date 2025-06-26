@@ -329,6 +329,49 @@ class PythonCodePrinter(CodePrinter):
         self.add_import(Import('typing', [AsName(TypingTypeVar, 'TypeVar')]))
         return ''.join(f"{n} = TypeVar('{n}', {t})\n" for n,t in zip(type_vars_in_scope, type_var_constraints))
 
+    def get_type_checks(self, arg_code, class_type):
+        """
+        Get the code to check if an argument has the expected type.
+
+        Get the code to check if an argument has the expected type. This is used in an
+        if block to select the right code to run.
+
+        Parameters
+        ----------
+        arg_code : str
+            The code describing the argument being checked.
+        class_type : PyccelType
+            The expected type.
+
+        Returns
+        -------
+        list[str]
+            A list containing the checks that must be satisfied for the type to be
+            considered matching.
+        """
+        if isinstance(class_type, NumpyNDArrayType):
+            ndarray = self._get_numpy_name(NumpyNDArray)
+            dtype = self._get_numpy_name(NumpyResultType)
+            check_option = []
+            check_option.append(f'isinstance({arg_code}, {ndarray})')
+            check_option.append(f'{arg_code}.dtype is {dtype}({self._print(class_type.element_type)})')
+            check_option.append(f'{arg_code}.ndim == {class_type.rank}')
+            if class_type.order:
+                check_option.append(f"{arg_code}.flags['{class_type.order}_CONTIGUOUS']")
+            return ' and '.join(check_option)
+        elif isinstance(class_type, FixedSizeNumericType):
+            return f'isinstance({arg_code}, {self._get_numpy_name(DtypePrecisionToCastFunction[class_type])})'
+        elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType, HomogeneousTupleType)):
+            check_option = []
+            check_option.append(f'isinstance({arg_code}, {class_type.name})')
+            element_type = class_type.element_type
+            tmp_var_code = self._print(self.scope.get_temporary_variable(element_type))
+            elem_check = self.get_type_checks(tmp_var_code, element_type)
+            check_option.append(f'all({elem_check} for {tmp_var_code} in {arg_code})')
+            return ' and '.join(check_option)
+        else:
+            raise NotImplementedError(f"Can't print a Python interface for type {class_type}")
+
     #----------------------------------------------------------------------
 
     def _print_dtype_argument(self, expr, init_dtype):
@@ -477,19 +520,7 @@ class PythonCodePrinter(CodePrinter):
                 code += '    if ' if i == 0 else '    elif '
                 checks = []
                 for a_t in arg_types:
-                    check_option = []
-                    for a,t in zip(arg_names, a_t):
-                        if isinstance(t, NumpyNDArrayType):
-                            ndarray = self._get_numpy_name(NumpyNDArray)
-                            dtype = self._get_numpy_name(NumpyResultType)
-                            check_option.append(f'isinstance({a}, {ndarray})')
-                            check_option.append(f'{a}.dtype is {dtype}({self._print(t.element_type)})')
-                            check_option.append(f'{a}.ndim == {t.rank}')
-                            if t.order:
-                                check_option.append(f"{a}.flags['{t.order}_CONTIGUOUS']")
-                        else:
-                            check_option.append(f'isinstance({a}, {self._get_numpy_name(DtypePrecisionToCastFunction[t])})')
-                    checks.append(' and '.join(check_option))
+                    checks.append(' and '.join(self.get_type_checks(a,t) for a,t in zip(arg_names, a_t)))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
                 else:
