@@ -51,6 +51,8 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
+# Tests which require the base argument to be described in the workflow dispatch
+# These tests only check the state of new code
 tests_with_base = ('coverage', 'docs', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
