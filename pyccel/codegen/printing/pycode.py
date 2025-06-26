@@ -487,8 +487,10 @@ class PythonCodePrinter(CodePrinter):
                             check_option.append(f'{a}.ndim == {t.rank}')
                             if t.order:
                                 check_option.append(f"{a}.flags['{t.order}_CONTIGUOUS']")
-                        else:
+                        elif isinstance(t, FixedSizeNumericType):
                             check_option.append(f'isinstance({a}, {self._get_numpy_name(DtypePrecisionToCastFunction[t])})')
+                        else:
+                            raise NotImplementedError(f"Can't print a Python interface for type {t}")
                     checks.append(' and '.join(check_option))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
