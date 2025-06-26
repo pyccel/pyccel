@@ -57,6 +57,12 @@ pip3 install pyspelling
 python3 -m pyspelling
 ```
 
+The necessary dictionaries can be installed using the following command:
+
+```bash
+sudo apt install aspell aspell-en
+```
+
 When run from the root folder it should automatically detect the configuration file `.pyspelling.yml`.
 
 This test can raise false positives. If you are sure that this is a false positive then you can fix the error by adding the word to the custom dictionary `.dict_custom.txt`. Before doing this please think about the following considerations:
