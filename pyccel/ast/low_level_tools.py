@@ -12,11 +12,11 @@ from .datatypes import PyccelType
 from .variable import Variable
 
 __all__ = ('IteratorType',
-           'PairType',
            'MacroDefinition',
            'MacroUndef',
            'ManagedMemory',
            'MemoryHandlerType',
+           'PairType',
            'UnpackManagedMemory')
 
 #------------------------------------------------------------------------------

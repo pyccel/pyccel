@@ -48,7 +48,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**/*.py"]'
+          paths: '["pyccel/**/*.py", "ci_tools/**/*.py", "**/*.md"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
@@ -75,6 +75,8 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
+      - name: Install python dependencies # Needed for skipped and not skipped
+        run: |
           python -m pip install jwt requests # Required to parse ci_tools folder
         shell: bash
       - name: "Setup check run"

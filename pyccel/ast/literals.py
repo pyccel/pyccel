@@ -14,7 +14,6 @@ from .datatypes import PrimitiveIntegerType, PrimitiveFloatingPointType, Primiti
 from .datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 __all__ = (
-    'convert_to_literal',
     'Literal',
     'LiteralComplex',
     'LiteralEllipsis',
@@ -26,6 +25,7 @@ __all__ = (
     'LiteralTrue',
     'Nil',
     'NilArgument',
+    'convert_to_literal',
 )
 
 #------------------------------------------------------------------------------

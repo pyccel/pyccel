@@ -32,14 +32,14 @@ errors = Errors()
 __all__ = (
     #--------- DATATYPES ---------
     'PyccelPyArrayObject',
-    #------- CAST FUNCTIONS ------
-    'pyarray_to_ndarray',
     #-------HELPERS ------
+    'PyArray_SetBaseObject',
     'array_get_c_step',
     'array_get_f_step',
-    'PyArray_SetBaseObject',
     #-------OTHERS--------
     'get_numpy_max_acceptable_version_file',
+    #------- CAST FUNCTIONS ------
+    'pyarray_to_ndarray',
 )
 
 class PyccelPyArrayObject(FixedSizeType):
