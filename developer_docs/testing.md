@@ -59,7 +59,7 @@ python3 -m pyspelling
 
 When run from the root folder it should automatically detect the configuration file `.pyspelling.yml`.
 
-This test can raise false positives. If you are sure that this is a false positive then you an fix the error by adding the word to the custom dictionary `.dict_custom.txt`. Before doing this please think about the following considerations:
+This test can raise false positives. If you are sure that this is a false positive then you can fix the error by adding the word to the custom dictionary `.dict_custom.txt`. Before doing this please think about the following considerations:
 
 - False positives are often raised for external libraries such as CuPy, SymPy, BLAS. When adding such libraries to the dictionary please ensure that the capitalisation matches that used in their documentation.
 - Pyccel uses UK English, if a common word is flagged this may simply be due to a US spelling.
