@@ -486,7 +486,7 @@ class CToPythonWrapper(Wrapper):
             if n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
                 for func, t in zip(funcs, type_to_example_arg):
-                    index = possible_types.index(t)*step
+                    index = next(i for i, p_t in enumerate(possible_types) if p_t is t)*step
                     argument_type_flags[func] += index
 
                 # Create the type checks and incrementation of the type_indicator
