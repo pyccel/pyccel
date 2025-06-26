@@ -254,6 +254,7 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
  * 	Parameters	:
  *		a 	  : python array object
  *      rank  : desired rank
+ *      allow_empty : Indicate if the array can be empty (empty arrays raise an error in STC).
  * 	Returns		:
  *		return NULL if no error occurred otherwise it will return the
  *      message to be reported in a TypeError exception
@@ -261,7 +262,7 @@ static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
  */
-static char* _check_pyarray_rank(PyArrayObject *a, int rank)
+static char* _check_pyarray_rank(PyArrayObject *a, int rank, bool allow_empty)
 {
     int current_rank;
 
@@ -275,12 +276,14 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank)
         return error;
     }
 
-    npy_intp* np_shape = PyArray_SHAPE(a);
-    for (int i = 0; i < rank; ++i) {
-        if (np_shape[i] == 0) {
-            char* error = (char *)malloc(200);
-            sprintf(error, "Array has size 0 in dimension %d", i);
-            return error;
+    if (!allow_empty) {
+        npy_intp* np_shape = PyArray_SHAPE(a);
+        for (int i = 0; i < rank; ++i) {
+            if (np_shape[i] == 0) {
+                char* error = (char *)malloc(200);
+                sprintf(error, "Array has size 0 in dimension %d", i);
+                return error;
+            }
         }
     }
 
@@ -358,10 +361,11 @@ static char* _check_pyarray_type(PyObject *a)
  *      dtype : desired data type enum
  *		rank  : desired rank
  *		flag  : desired order flag
+ *      allow_empty : Indicate if the array can be empty (empty arrays raise an error in STC).
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag, bool allow_empty)
 {
     char* array_type = _check_pyarray_type(o);
 	if (array_type != NULL) {
@@ -384,7 +388,7 @@ bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag)
         correct_type = false;
     }
 
-    char* array_rank = _check_pyarray_rank(a, rank);
+    char* array_rank = _check_pyarray_rank(a, rank, allow_empty);
     if (array_rank != NULL) {
         if (!correct_type)
             strcat(error, ", ");
@@ -410,7 +414,7 @@ bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag)
     return correct_type;
 }
 
-bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag, bool allow_empty)
 {
     char* array_type = _check_pyarray_type(o);
 	if (array_type != NULL) {
@@ -427,7 +431,7 @@ bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
         return false;
     }
 
-    char* array_rank = _check_pyarray_rank(a, rank);
+    char* array_rank = _check_pyarray_rank(a, rank, allow_empty);
 	if(array_rank != NULL) {
         free(array_rank);
         return false;
