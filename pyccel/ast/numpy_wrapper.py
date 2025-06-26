@@ -132,7 +132,8 @@ pyarray_check = FunctionDef(
                         FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
-                        FunctionDefArgument(Variable(CNativeInt(), 'flag'))
+                        FunctionDefArgument(Variable(CNativeInt(), 'flag')),
+                        FunctionDefArgument(Variable(PythonNativeBool(), 'allow_empty'))
                     ],
                 body      = [],
                 results   = FunctionDefResult(Variable(PythonNativeBool(), 'b')))
@@ -143,7 +144,8 @@ is_numpy_array = FunctionDef(
                         FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
                         FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
                         FunctionDefArgument(Variable(CNativeInt(), 'rank')),
-                        FunctionDefArgument(Variable(CNativeInt(), 'flag'))
+                        FunctionDefArgument(Variable(CNativeInt(), 'flag')),
+                        FunctionDefArgument(Variable(PythonNativeBool(), 'allow_empty'))
                     ],
                 body      = [],
                 results   = FunctionDefResult(Variable(PythonNativeBool(), 'b')))
