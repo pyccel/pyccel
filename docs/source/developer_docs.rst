@@ -13,6 +13,7 @@ This documentation is designed to help developers get familiar with how Pyccel's
    developer_docs/how_to_solve_an_issue
    developer_docs/tips_and_tricks
    developer_docs/review_process
+   developer_docs/testing
    developer_docs/syntactic_stage
    developer_docs/semantic_stage
    developer_docs/codegen_stage

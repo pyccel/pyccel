@@ -2,21 +2,26 @@
 """
 import argparse
 import json
-import os
+from pathlib import Path
 import re
 import sys
+import yaml
 
 from annotation_helpers import locate_code_blocks, is_text, print_to_string
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('output', metavar='output', type=str,
-                            help='File where the markdown output will be printed')
-    parser.add_argument('files', nargs='*', help='Files to be parsed')
     p_args = parser.parse_args()
 
-    files = p_args.files
+    files = []
+
+    root = Path(__file__).parent.parent
+    with open(root / '.pyspelling.yml', 'r', encoding='utf-8') as f:
+        spelling_config = yaml.safe_load(f)
+
+    for f_pattern in spelling_config['matrix'][0]['sources']:
+        files.extend(root.glob(f_pattern))
 
     python_regex = re.compile(r'[^a-zA-Z]python[^a-zA-Z]')
 
@@ -55,7 +60,7 @@ if __name__ == '__main__':
             print_to_string("", text = output[f])
 
     # Temporary if to be removed when spelling test outputs errors
-    if os.path.exists('test_json_result.json'):
+    if Path('test_json_result.json').exists():
         with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
             messages = json.load(json_file)
     else:
@@ -63,11 +68,10 @@ if __name__ == '__main__':
     if annotations:
         messages['summary'] += "# Python should be capitalised\n"
         messages.setdefault('annotations', []).extend(annotations)
-    with open(p_args.output, mode='a', encoding="utf-8") as md_file:
-        for l in output.values():
-            text = ''.join(l)
-            md_file.write(text)
-            messages['summary'] += text
+    for l in output.values():
+        text = ''.join(l)
+        print(text)
+        messages['summary'] += text
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump(messages, json_file)
 
