@@ -108,7 +108,7 @@ E.g:
 python3 -m numpydoc validate pyccel.ast.basic.PyccelAstNode.get_user_nodes
 ```
 
-The script `ci_tools/list_docs_tovalidate.py` determines which functions will be checked using a `git diff`.
+The CI automatically runs this command for all functions that have been modified.
 
 Finally the documentation website is generated to ensure that no warnings are raised.
 
