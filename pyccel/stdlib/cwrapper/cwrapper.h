@@ -225,8 +225,8 @@ static inline bool    PyIs_Complex64(PyObject *o)
 
 
 /* arrays checkers and helpers */
-bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag);
-bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag);
+bool	pyarray_check(const char* name, PyObject *o, int dtype, int rank, int flag, bool allow_empty);
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag, bool allow_empty);
 
 /*
  * Functions : Numpy array handling functions
