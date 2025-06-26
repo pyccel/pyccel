@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2364 : Fix the use of the `--export-compiler-config` flag.
 -   \[INTERNALS\] Fix unsorted `__all__` variables.
--   \[INTERNALS\] Allow CI scripts `check_slots.py`, `check_pylint_commands.py`, and `ci_tools/check_python_capitalisation.py` to be called easily locally.
+-   \[INTERNALS\] Allow CI scripts `check_pyccel_conventions.py`, `check_pylint_commands.py`, and `ci_tools/check_python_capitalisation.py` to be called easily locally.
 
 ### Changed
 
