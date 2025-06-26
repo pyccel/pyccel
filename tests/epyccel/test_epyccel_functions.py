@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 import sys
-from typing import TypeVar
+from typing import TypeVar, Final
 
 import pytest
 import numpy as np
@@ -447,9 +447,13 @@ def test_wrong_argument_combination_in_interface(language):
     with pytest.raises(TypeError):
         epyc_f(3.5, 4)
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    clean_test()
+def test_container_interface(language):
+    T = TypeVar('T', 'int[:]', list[int], set[int])
+
+    def f(a : Final[T]):
+        return len(a)
+
+    epyc_f = epyccel(f, language=language)
+    assert f([1,2]) == f([1,2])
+    assert f({1,2}) == f({1,2})
+    assert f(np.array([1,2])) == f(np.array([1,2]))
