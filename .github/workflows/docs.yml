@@ -75,6 +75,8 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
+      - name: Install python dependencies # Needed for skipped and not skipped
+        run: |
           python -m pip install jwt requests # Required to parse ci_tools folder
         shell: bash
       - name: "Setup check run"
