@@ -1,6 +1,6 @@
 # Developer Setup
 
-Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../docs/installation.md#editable-install-from-source). If this step is not followed then any changes made to source will not be used when `pyccel` or `epyccel` are used.
+Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../docs/installation.md#editable-install-from-sources). If this step is not followed then any changes made to source will not be used when `pyccel` or `epyccel` are used.
 
 ## Overview
 
