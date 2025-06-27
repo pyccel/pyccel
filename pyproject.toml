@@ -43,6 +43,10 @@ pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
+Documentation = "https://pyccel.github.io/pyccel/"
+Source = "https://github.com/pyccel/pyccel"
+Tracker = "https://github.com/pyccel/pyccel/issues"
+Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
 
 [tool.hatch.version]
 path = "pyccel/version.py"

@@ -1,4 +1,11 @@
-""" Script to check that Pyccel coding conventions concerning slots are correctly followed in the AST
+"""
+Script to check that Pyccel coding conventions are correctly followed in the AST.
+The coding conventions are:
+    - `__all__` must be specified
+    - `__all__` must be sorted alphabetically or split into sorted groups with a comment to explain the grouping
+    - `__slots__` must be provided for all classes in the AST
+    - `_attribute_nodes` must be provided for all classes in the AST
+    - Classes in the AST must appear in the `__all__` variable of their module.
 """
 import argparse
 import importlib
@@ -84,11 +91,36 @@ def fill_dictionary(title, message, file, start_line, end_line, annotation_level
     }
     return filled_dict
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-    parser.add_argument('output', metavar='output', type=str,
-                            help='File where the markdown output will be printed')
+def sort_key(name : str):
+    """
+    A method to split a string into numeric and non-numeric sections for improved sorting.
 
+    A method to split a string into numeric and non-numeric sections for improved sorting.
+
+    Parameters
+    ----------
+    name : str
+        The string from the list being sorted.
+
+    Returns
+    -------
+    tuple[str|int]
+        The key by which the string should be sorted.
+    """
+    sections = []
+    n = len(name)
+    while n > 0:
+        if name[0].isdigit():
+            i = next((i for i,s in enumerate(name) if not s.isdigit()), n)
+            sections.append(int(name[:i]))
+        else:
+            i = next((i for i,s in enumerate(name) if s.isdigit()), n)
+            sections.append(name[:i])
+        n -= i
+    return tuple(sections)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check that Pyccel coding conventions are respected.')
     args = parser.parse_args()
 
     # Get ast modules
@@ -105,6 +137,8 @@ if __name__ == '__main__':
 
     error_collection = {
         'missing_all':[],
+        'badly_grouped_all': [],
+        'bad_all_group': [],
         'non_alphabetical_all':[],
         'missing_slots':[],
         'overridden_slots':[],
@@ -117,21 +151,58 @@ if __name__ == '__main__':
         all_attr = getattr(mod, '__all__', None)
         if all_attr:
             sorted_all = list(all_attr)
-            sorted_all.sort()
+            sorted_all.sort(key=sort_key)
+            # If not already sorted
             if sorted_all != list(all_attr):
+                # Get relevant lines
                 lines = inspect.getsource(mod).splitlines()
                 start_line = -1
                 end_line = -1
                 for line_num, line in enumerate(lines):
                     if '__all__' in line:
-                        start_line = line_num + 1
+                        start_line = line_num
                         while ')' not in line:
                             line_num += 1
                             line = lines[line_num]
-                            end_line = line_num + 1
-                        error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", f"pyccel.ast.{mod_name}",
-                            inspect.getfile(mod), start_line, end_line, "warning", f"Sort the __all__ attribute of `{mod_name}`"))
+                        end_line = line_num + 1
                         break
+
+                # Get all tuple elements including comments
+                all_code = '\n'.join(lines[start_line:end_line])
+                all_keys = [li.strip(' ,\'"') for l in all_code.strip().rstrip(')').removeprefix('__all__').strip().lstrip('= (').split(',') \
+                                for li in l.split('\n') if li and not li.isspace()]
+
+                # Split unsorted keys into groups according to comments
+                groups = {l.strip('# -'): [] for l in all_keys if l.startswith('#')}
+                if len(set(groups)) < len(groups):
+                    error_collection['badly_grouped_all'].append(fill_dictionary("`__all__` split into multiple groups with the same name", f"pyccel.ast.{mod_name}",
+                        inspect.getfile(mod), start_line, end_line, "failure", f"Fix the groups in the __all__ attribute of `{mod_name}`"))
+                if any(len(g) == 0 for g in groups):
+                    error_collection['bad_all_group'].append(fill_dictionary("`__all__` is split into unlabelled groups", f"pyccel.ast.{mod_name}",
+                        inspect.getfile(mod), start_line, end_line, "failure", f"Fix the groups in the __all__ attribute of `{mod_name}`"))
+
+                if not all_keys[0].startswith('#'):
+                    groups['start'] = []
+                    current_group = 'start'
+
+                for l in all_keys:
+                    if l.startswith('#'):
+                        current_group = l.strip('# -')
+                    else:
+                        groups[current_group].append(l)
+
+                # Check if keys are sorted within each group
+                for n, g in groups.items():
+                    o_g = list(g)
+                    g.sort(key=sort_key)
+                    if g != o_g:
+                        print(g)
+                        print(o_g)
+                        name = f"pyccel.ast.{mod_name}"
+                        if n != 'start':
+                            name += f'[{n}]'
+                        error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", name,
+                            inspect.getfile(mod), start_line, end_line, "failure", f"Sort the __all__ attribute of `{mod_name}`"))
         else:
             error_collection['missing_all'].append(fill_dictionary("Missing `__all__`", f"pyccel.ast.{mod_name}",
                 inspect.getfile(mod), 1, 1, "failure", f"Missing __all__ attribute in: `{mod_name}`"))
@@ -168,15 +239,14 @@ if __name__ == '__main__':
 
     messages = extract_dict_elements(error_collection)
     if not messages['annotations']:
-        messages['summary'] = "Check Slots\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
+        messages['summary'] = "Pyccel Coding Conventions\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
         messages.pop('annotations')
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump(messages, json_file)
 
-    with open(args.output, "w", encoding="utf-8") as md_file:
-        # Report error
-        md_file.write("# " + messages['title'] + '\n\n')
-        md_file.write(messages['summary'])
+    # Report error
+    print("# " + messages['title'] + '\n')
+    print(messages['summary'])
 
     failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
               bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or

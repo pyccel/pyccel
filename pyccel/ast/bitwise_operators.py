@@ -20,9 +20,9 @@ from .numpytypes   import NumpyInt8Type
 numpy_v1 = Version(numpy.__version__) < Version("2.0.0")
 
 __all__ = (
+    'PyccelBitAnd',
     'PyccelBitComparisonOperator',
     'PyccelBitOperator',
-    'PyccelBitAnd',
     'PyccelBitOr',
     'PyccelBitXor',
     'PyccelInvert',
