@@ -46,7 +46,7 @@ Homepage = "https://github.com/pyccel/pyccel"
 Documentation = "https://pyccel.github.io/pyccel/"
 Source = "https://github.com/pyccel/pyccel"
 Tracker = "https://github.com/pyccel/pyccel/issues"
-"Release notes" = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
+Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
 
 [tool.hatch.version]
 path = "pyccel/version.py"
