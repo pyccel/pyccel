@@ -23,7 +23,7 @@ default_python_versions = {
         'check_install': '3.9',
         'editable_check_install': '3.9',
         'pyccel_lint': '3.11',
-        'markdown_lint': '3.11',
+        'markdown_lint': '3.12',
         'pylint': '3.9',
         'spelling': '3.12',
         'windows': '3.11'
@@ -316,7 +316,6 @@ class Bot:
                     current_conclusion = check_runs[key]['conclusion']
                     if current_conclusion:
                         workflow_id = int(check_runs[key]['details_url'].split('/')[-1])
-                        force_run = not self._GAI.has_valid_artifacts(workflow_id)
                     if key in already_triggered_names and not force_run:
                         states.append(check_runs[key]['conclusion'])
                         continue
