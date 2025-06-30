@@ -48,6 +48,25 @@ contains
 
   end subroutine __IDENTITY(Set)_intersection_update
 
+  subroutine __IDENTITY(Set)_difference_update(this, other_set)
+    class(Set), intent(inout) :: this
+    class(Set), intent(in) :: other_set
+
+    type(SetIterator) :: iter
+    type(SetIterator) :: last
+
+    iter = this%begin()
+    last = this%end()
+    do while (iter /= last)
+      if (other_set % count(iter%of()) == 0) then
+        call iter%next()
+      else
+        iter = this%erase(iter)
+      end if
+    end do
+
+  end subroutine __IDENTITY(Set)_difference_update
+
   function __IDENTITY(Set)_is_disjoint(this, other_set) result(Out)
     use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL
     class(Set), target, intent(in) :: this

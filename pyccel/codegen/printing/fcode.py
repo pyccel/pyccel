@@ -1383,6 +1383,16 @@ class FCodePrinter(CodePrinter):
         return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
                 for arg in expr.args)
 
+    def _print_SetDifferenceUpdate(self, expr):
+        var = expr.set_variable
+        expr_type = var.class_type
+        var_code = self._print(expr.set_variable)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
+        return ''.join(f'call {type_name}_difference_update({var_code}, {self._print(arg)})\n' \
+                for arg in expr.args)
+
     def _print_SetDiscard(self, expr):
         var = self._print(expr.set_variable)
         val = self._print(expr.args[0])
