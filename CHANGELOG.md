@@ -6,7 +6,6 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-
 ### Fixed
 
 -   #2306 : Fix Python containers as arguments to interface functions.
