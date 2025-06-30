@@ -181,8 +181,8 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('__or__', func_class = SetUnion),
             PyccelFunctionDef('__and__', func_class = SetIntersection),
             PyccelFunctionDef('__iand__', func_class = SetIntersectionUpdate),
-            PyccelFunctionDef('__minus__', func_class = SetDifference),
-            PyccelFunctionDef('__iminus__', func_class = SetDifferenceUpdate),
+            PyccelFunctionDef('__sub__', func_class = SetDifference),
+            PyccelFunctionDef('__isub__', func_class = SetDifferenceUpdate),
             PyccelFunctionDef('__ior__', func_class = SetUpdate),
         ])
 
