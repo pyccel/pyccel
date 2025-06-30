@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1741 : Add support for set method `difference()`.
+-   #1742 : Add support for set method `difference_update()`.
 
 ### Fixed
 
