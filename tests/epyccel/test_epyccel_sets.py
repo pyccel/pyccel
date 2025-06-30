@@ -863,7 +863,7 @@ def test_set_difference_multiple_update(language):
     def difference_int():
         a = {1,2,3,4,8}
         b = {5,2,3,7,8}
-        c = {10,2,20}
+        c = {10,4,20}
         a.difference_update(b, c)
         return len(a), a.pop()
 
