@@ -58,6 +58,24 @@ static inline void _c_MEMB(_intersection_update)(Self* self, Self* other) {
 }
 
 /**
+ * This function represents a call to the .difference_update() method.
+ * @param self : The set instance to modify.
+ * @param other : The other set in which elements must be found.
+ */
+static inline void _c_MEMB(_difference_update)(Self* self, Self* other) {
+    _c_MEMB(_iter) itr = _c_MEMB(_begin)(self);
+    while (itr.ref)
+    {
+        i_key val = (*itr.ref);
+        if (_c_MEMB(_contains)(other, val)) {
+            itr = _c_MEMB(_erase_at)(self, itr);
+        } else {
+            _c_MEMB(_next)(&itr);
+        }
+    }
+}
+
+/**
  * This function represents a call to the .isdisjoint() method.
  * @param self : The set instance on which the function is called.
  * @param other : The other set which may or may not be disjoint.
