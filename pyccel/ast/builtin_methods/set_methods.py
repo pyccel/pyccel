@@ -369,7 +369,7 @@ class SetDifference(SetMethod):
     ----------
     set_variable : TypedAstNode
         The set object which the method is called from.
-    *others : TypedAstNode
+    *args : TypedAstNode
         The sets whose elements should not appear in the final set.
     """
     __slots__ = ()
