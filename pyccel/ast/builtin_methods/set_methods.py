@@ -17,6 +17,8 @@ __all__ = (
     'SetClear',
     'SetCopy',
     'SetDiscard',
+    'SetDifference',
+    'SetDifferenceUpdate',
     'SetIntersection',
     'SetIntersectionUpdate',
     'SetIsDisjoint',
