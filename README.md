@@ -23,7 +23,7 @@ Pyccel's acceleration capabilities lead to much faster code. Comparisons of Pyth
 The results for the `devel` branch currently show the following performance on Python 3.10:
 ![Pyccel execution times for devel branch](https://raw.githubusercontent.com/pyccel/pyccel-benchmarks/main/version_specific_results/devel_performance_310_execution.svg)
 
-If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md).
+If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://pyccel.github.io/pyccel/docs/quickstart.html).
 
 ## Citing Pyccel
 
@@ -36,7 +36,7 @@ The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/
 ## Installation
 
 Pyccel has a few system requirements to ensure that the system where it is installed is capable of compiling Fortran code.
-These requirements are detailed in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+These requirements are detailed in the [documentation](https://pyccel.github.io/pyccel/docs/installation.html).
 Once all requirements are satisfied, we recommend installing Pyccel into a Python virtual environment, which can be created with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment).
 Once the Python virtual environment is ready and activated, Pyccel can be easily installed using [pip](https://github.com/pypa/pip?tab=readme-ov-file#pip---the-python-package-installer), the Python package installer.
 The simple command
@@ -46,7 +46,7 @@ pip install pyccel
 ```
 
 will download the latest release of Pyccel from [PyPI](https://pypi.org/project/pyccel/), the Python package index.
-Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+Alternative installation methods such as installing from source, or installing with a docker, are described in the [documentation](https://pyccel.github.io/pyccel/docs/installation.html).
 
 ## Testing
 
@@ -69,52 +69,13 @@ This installs a few additional Python packages which are necessary for running t
 The recommended way of running the unit tests is simply using the command line tool `pyccel-test` which is installed with Pyccel.
 This runs all unit tests using Pytest under the hood.
 
-Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md).
+Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://pyccel.github.io/pyccel/docs/testing.html).
 
 ## Contributing
 
 We welcome any and all contributions.
 
 There are many ways to help with the Pyccel project which are more or less involved.
-A summary can be found in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md).
+A summary can be found in the [documentation](https://pyccel.github.io/pyccel/docs/CONTRIBUTING.html).
 
 We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6hwjfFVb).
-
-## User Documentation
-
--   [Quick-start Guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md)
-
--   [Installation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md)
-
--   [Testing](https://github.com/pyccel/pyccel/blob/devel/docs/testing.md)
-
--   [Contributing](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
-
--   [C/Fortran Compilers](https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md)
-
--   [Decorators](https://github.com/pyccel/pyccel/blob/devel/docs/decorators.md)
-
--   [Header Files](https://github.com/pyccel/pyccel/blob/devel/docs/header-files.md)
-
--   [Templates](https://github.com/pyccel/pyccel/blob/devel/docs/templates.md)
-
--   [N-dimensional Arrays](https://github.com/pyccel/pyccel/blob/devel/docs/ndarrays.md)
-
--   [Function-pointers as arguments](https://github.com/pyccel/pyccel/blob/devel/docs/function-pointers-as-arguments.md)
-
--   [Const keyword](https://github.com/pyccel/pyccel/blob/devel/docs/const_keyword.md)
-
--   Supported libraries/APIs
-    -   [OpenMP](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md)
-    -   [NumPy](https://github.com/pyccel/pyccel/blob/devel/docs/numpy-functions.md)
-
-## Developer Documentation
-
--   [Overview](https://github.com/pyccel/pyccel/blob/devel/developer_docs/overview.md)
--   [How to solve an issue](https://github.com/pyccel/pyccel/blob/devel/developer_docs/how_to_solve_an_issue.md)
--   [Review Process](https://github.com/pyccel/pyccel/blob/devel/developer_docs/review_process.md)
--   [Development Conventions](https://github.com/pyccel/pyccel/blob/devel/developer_docs/development_conventions.md)
--   [Tips and Tricks](https://github.com/pyccel/pyccel/blob/devel/developer_docs/tips_and_tricks.md)
--   [Scope](https://github.com/pyccel/pyccel/blob/devel/developer_docs/scope.md)
--   [Type Inference](https://github.com/pyccel/pyccel/blob/devel/developer_docs/type_inference.md)
--   [Array Ordering](https://github.com/pyccel/pyccel/blob/devel/developer_docs/order_docs.md)
