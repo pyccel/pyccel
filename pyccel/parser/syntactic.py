@@ -533,6 +533,10 @@ class SyntaxParser(BasicParser):
 
     def _visit_Assign(self, stmt):
 
+        rhs = self._visit(stmt.value)
+        if isinstance(rhs, FunctionDef):
+            return rhs
+
         self._in_lhs_assign = True
         lhs = self._visit(stmt.targets)
         self._in_lhs_assign = False
@@ -540,8 +544,6 @@ class SyntaxParser(BasicParser):
             lhs = lhs[0]
         else:
             lhs = PythonTuple(*lhs)
-
-        rhs = self._visit(stmt.value)
 
         expr = Assign(lhs, rhs)
 
@@ -1376,11 +1378,25 @@ class SyntaxParser(BasicParser):
         return Continue()
 
     def _visit_Lambda(self, stmt):
+        assign_node = self._context[-2]
+        name_lst = self._visit(assign_node.targets)
 
-        expr = self._visit(stmt.body)
+        assert len(name_lst) == 1
+        name = name_lst[0]
+
+        self.scope.insert_symbol(name)
+        new_name = self.scope.get_expected_name(name)
+        scope = self.create_new_function_scope(name,
+                used_symbols = {name: new_name},
+                original_symbols = {new_name: name})
+
         args = self._visit(stmt.args)
+        return_expr = Return(self._visit(stmt.body))
+        return_expr.set_current_ast(stmt)
 
-        return Lambda(tuple(args), expr)
+        self.exit_function_scope()
+
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars
