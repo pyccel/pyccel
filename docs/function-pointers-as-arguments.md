@@ -414,12 +414,3 @@ program prog_prog_boo
 
 end program prog_prog_boo
 ```
-
-## Getting Help
-
-If you face problems with Pyccel, please take the following steps:
-
-1.  Consult our documentation at <https://pyccel.github.io/pyccel>;
-2.  Open an issue on GitHub.
-
-Thank you!

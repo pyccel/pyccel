@@ -554,8 +554,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
-2.  Send an email message to <pyccel@googlegroups.com>;
-3.  Open an issue on GitHub.
+1.  Consult our documentation at <https://pyccel.github.io/pyccel>;
+2.  Open an issue on GitHub.
 
 Thank you!
