@@ -99,8 +99,8 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`add`** | **Yes** |
 | **`clear`** | **Yes** |
 | **`copy`** | **Yes** |
-| `difference` | No |
-| `difference_update` | No |
+| **`difference`** | **Yes** |
+| **`difference_update`** | **Yes** |
 | **`discard`** | **Yes** |
 | **`intersection`** | **Yes** |
 | **`intersection_update`** | **Yes** |
