@@ -3037,27 +3037,27 @@ class CCodePrinter(CodePrinter):
     #================== Set methods ==================
 
     def _print_SetPop(self, expr):
-        dtype = expr.set_variable.class_type
+        dtype = expr.set_obj.class_type
         var_type = self.get_c_type(dtype)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(dtype), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetAdd(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg = self._print(expr.args[0])
         return f'{var_type}_push({set_var}, {arg});\n'
 
     def _print_SetCopy(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(expr.set_variable)
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(expr.set_obj)
         return f'{var_type}_clone({set_var})'
 
     def _print_SetUnion(self, expr):
@@ -3065,41 +3065,41 @@ class CCodePrinter(CodePrinter):
         if not assign_base:
             errors.report("The result of the union call must be saved into a variable",
                     severity='error', symbol=expr)
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_union({set_var}, {args})'
 
     def _print_SetIntersectionUpdate(self, expr):
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
     def _print_SetDifferenceUpdate(self, expr):
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_difference_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
     def _print_SetDiscard(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
 
     def _print_SetIsDisjoint(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg_val = self._print(ObjectAddress(expr.args[0]))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'
