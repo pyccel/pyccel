@@ -3083,10 +3083,10 @@ class CCodePrinter(CodePrinter):
                 for a in expr.args)
 
     def _print_SetDifferenceUpdate(self, expr):
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_difference_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)

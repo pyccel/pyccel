@@ -367,7 +367,7 @@ class SetDifference(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set object which the method is called from.
     *args : TypedAstNode
         The sets whose elements should not appear in the final set.
