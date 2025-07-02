@@ -34,7 +34,6 @@ from .variable  import IndexedElement, Variable
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'Lambda',
     'PythonAbs',
     'PythonBool',
     'PythonComplex',
@@ -1543,51 +1542,6 @@ class PythonMin(PyccelFunction):
         else:
             self._class_type = sum(x.class_type, start=GenericType())
         super().__init__(x)
-
-#==============================================================================
-class Lambda(PyccelAstNode):
-    """
-    Represents a call to Python's lambda for temporary functions.
-
-    Represents a call to Python's built-in function `lambda` for temporary functions.
-
-    Parameters
-    ----------
-    variables : tuple of symbols
-        The arguments to the lambda expression.
-    expr : TypedAstNode
-        The expression carried out when the lambda function is called.
-    """
-    __slots__ = ('_variables', '_expr')
-    _attribute_nodes = ('_variables', '_expr')
-    def __init__(self, variables, expr):
-        if not isinstance(variables, (list, tuple)):
-            raise TypeError("Lambda arguments must be a tuple or list")
-        self._variables = tuple(variables)
-        self._expr = expr
-        super().__init__()
-
-    @property
-    def variables(self):
-        """ The arguments to the lambda function
-        """
-        return self._variables
-
-    @property
-    def expr(self):
-        """ The expression carried out when the lambda function is called
-        """
-        return self._expr
-
-    def __call__(self, *args):
-        """ Returns the expression with the arguments replaced with
-        the calling arguments
-        """
-        assert len(args) == len(self.variables)
-        return self.expr.subs(self.variables, args)
-
-    def __str__(self):
-        return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
 class PythonType(PyccelFunction):

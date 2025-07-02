@@ -54,7 +54,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
-from pyccel.ast.builtins import PythonPrint, Lambda
+from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
