@@ -6337,7 +6337,7 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : DottedName
-            The syntactic DottedName node that represents the call to `.intersection()`.
+            The syntactic DottedName node that represents the call to `.difference()`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
