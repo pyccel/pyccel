@@ -1319,37 +1319,37 @@ class FCodePrinter(CodePrinter):
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         insert_obj = self._print(expr.args[0])
         return f'call {var} % insert( {insert_obj} )\n'
 
     def _print_SetClear(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         return f'call {var} % clear()\n'
 
     def _print_SetPop(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return f'{type_name}_pop({var_code})'
 
     def _print_SetCopy(self, expr):
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr.class_type)
         return f'{type_name}({var_code})'
 
     def _print_SetUnion(self, expr):
         assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
-        var = expr.set_variable
+        var = expr.set_obj
         if not assign_base:
             result = self._print(self.scope.get_temporary_variable(var))
         else:
             result = self._print(assign_base[0].lhs)
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         args_insert = []
@@ -1374,9 +1374,9 @@ class FCodePrinter(CodePrinter):
             return result
 
     def _print_SetIntersectionUpdate(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
@@ -1384,15 +1384,15 @@ class FCodePrinter(CodePrinter):
                 for arg in expr.args)
 
     def _print_SetDiscard(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         val = self._print(expr.args[0])
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
     def _print_SetIsDisjoint(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         arg_code = self._print(expr.args[0])
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))

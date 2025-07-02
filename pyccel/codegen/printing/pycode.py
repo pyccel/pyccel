@@ -1240,7 +1240,7 @@ class PythonCodePrinter(CodePrinter):
         return '...'
 
     def _print_SetMethod(self, expr):
-        set_var = self._print(expr.set_variable)
+        set_var = self._print(expr.set_obj)
         name = expr.name
         args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)
