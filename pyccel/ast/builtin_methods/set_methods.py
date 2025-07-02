@@ -17,6 +17,8 @@ __all__ = (
     'SetClear',
     'SetCopy',
     'SetDiscard',
+    'SetDifference',
+    'SetDifferenceUpdate',
     'SetIntersection',
     'SetIntersectionUpdate',
     'SetIsDisjoint',
@@ -274,6 +276,8 @@ class SetIntersection(SetMethod):
     Represents a call to the set method .intersection. This method builds a new set
     by including all elements which appear in "both" of the iterables
     (the set object and the arguments).
+    This class is used to recognise the call but should not be instantiated
+    at the printing stage. Instead SetIntersectionUpdate should be preferred.
 
     Parameters
     ----------
@@ -282,7 +286,7 @@ class SetIntersection(SetMethod):
     *args : TypedAstNode
         The iterables which will be combined (common elements) with this set.
     """
-    __slots__ = ('_other','_class_type', '_shape')
+    __slots__ = ()
     name = 'intersection'
 
 #==============================================================================
@@ -348,3 +352,54 @@ class SetIsDisjoint(SetMethod):
         This is notably useful in order to determine the constness of arguments.
         """
         return ()
+
+#==============================================================================
+
+class SetDifference(SetMethod):
+    """
+    Represents a call to the set method .difference().
+
+    Represents a call to the set method .difference(). This method builds a
+    new set by including elements which appear in this set and none of the
+    arguments.
+    This class is used to recognise the call but should not be instantiated
+    at the printing stage. Instead SetDifferenceUpdate should be preferred.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set object which the method is called from.
+    *args : TypedAstNode
+        The sets whose elements should not appear in the final set.
+    """
+    __slots__ = ()
+    name = 'difference'
+
+#==============================================================================
+
+class SetDifferenceUpdate(SetMethod):
+    """
+    Represents a call to the set method .difference_update().
+
+    Represents a call to the set method .difference_update(). This method
+    updates this set by removing all elements which appear in one of the
+    arguments.
+
+    Parameters
+    ----------
+    set_obj : TypedAstNode
+        The set object which the method is called from.
+    *others : TypedAstNode
+        The sets whose elements should not appear in the final set.
+    """
+    __slots__ = ()
+    name = 'difference_update'
+    _class_type = VoidType()
+    _shape = None
+
+    def __init__(self, set_obj, *others):
+        class_type = set_obj.class_type
+        for o in others:
+            if class_type != o.class_type:
+                raise TypeError(f"Only arguments of type {class_type} are supported for the functions intersection and .intersection_update")
+        super().__init__(set_obj, *others)
