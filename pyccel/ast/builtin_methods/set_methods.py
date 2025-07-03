@@ -37,26 +37,26 @@ class SetMethod(PyccelFunction):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set on which the method will operate.
 
     *args : TypedAstNode
         The arguments passed to the function call.
     """
-    __slots__ = ('_set_variable',)
-    _attribute_nodes = PyccelFunction._attribute_nodes + ('_set_variable',)
-    def __init__(self,  set_variable, *args):
-        self._set_variable = set_variable
+    __slots__ = ('_set_obj',)
+    _attribute_nodes = PyccelFunction._attribute_nodes + ('_set_obj',)
+    def __init__(self,  set_obj, *args):
+        self._set_obj = set_obj
         super().__init__(*args)
 
     @property
-    def set_variable(self):
+    def set_obj(self):
         """
         Get the variable representing the set.
 
         Get the variable representing the set.
         """
-        return self._set_variable
+        return self._set_obj
 
     @property
     def modified_args(self):
@@ -66,7 +66,7 @@ class SetMethod(PyccelFunction):
         Return a tuple of all the arguments which may be modified by this function.
         This is notably useful in order to determine the constness of arguments.
         """
-        return (self._set_variable,)
+        return (self._set_obj,)
 
 #==============================================================================
 class SetAdd(SetMethod) :
@@ -79,7 +79,7 @@ class SetAdd(SetMethod) :
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set on which the method will operate.
 
     new_elem : TypedAstNode
@@ -90,10 +90,10 @@ class SetAdd(SetMethod) :
     _class_type = VoidType()
     name = 'add'
 
-    def __init__(self, set_variable, new_elem) -> None:
-        if set_variable.class_type.element_type != new_elem.class_type:
+    def __init__(self, set_obj, new_elem) -> None:
+        if set_obj.class_type.element_type != new_elem.class_type:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
-        super().__init__(set_variable, new_elem)
+        super().__init__(set_obj, new_elem)
 
 #==============================================================================
 class SetClear(SetMethod):
@@ -105,7 +105,7 @@ class SetClear(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set on which the method will operate.
     """
     __slots__ = ()
@@ -113,8 +113,8 @@ class SetClear(SetMethod):
     _class_type = VoidType()
     name = 'clear'
 
-    def __init__(self, set_variable):
-        super().__init__(set_variable)
+    def __init__(self, set_obj):
+        super().__init__(set_obj)
 
 #==============================================================================
 class SetCopy(SetMethod):
@@ -126,16 +126,16 @@ class SetCopy(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set on which the method will operate.
     """
     __slots__ = ("_shape", "_class_type",)
     name = 'copy'
 
-    def __init__(self, set_variable):
-        self._shape = set_variable._shape
-        self._class_type = set_variable._class_type
-        super().__init__(set_variable)
+    def __init__(self, set_obj):
+        self._shape = set_obj._shape
+        self._class_type = set_obj._class_type
+        super().__init__(set_obj)
 
     @property
     def modified_args(self):
@@ -160,16 +160,16 @@ class SetPop(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The name of the set.
     """
     __slots__ = ('_class_type',)
     _shape = None
     name = 'pop'
 
-    def __init__(self, set_variable):
-        self._class_type = set_variable.class_type.element_type
-        super().__init__(set_variable)
+    def __init__(self, set_obj):
+        self._class_type = set_obj.class_type.element_type
+        super().__init__(set_obj)
 
 #==============================================================================
 class SetDiscard(SetMethod):
@@ -182,7 +182,7 @@ class SetDiscard(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The name of the set.
 
     item : TypedAstNode
@@ -193,10 +193,10 @@ class SetDiscard(SetMethod):
     _class_type = VoidType()
     name = 'discard'
 
-    def __init__(self, set_variable, item) -> None:
-        if set_variable.class_type.element_type != item.class_type:
+    def __init__(self, set_obj, item) -> None:
+        if set_obj.class_type.element_type != item.class_type:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
-        super().__init__(set_variable, item)
+        super().__init__(set_obj, item)
 
 #==============================================================================
 class SetUpdate(SetMethod):
@@ -281,7 +281,7 @@ class SetIntersection(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set object which the method is called from.
     *args : TypedAstNode
         The iterables which will be combined (common elements) with this set.
@@ -367,7 +367,7 @@ class SetDifference(SetMethod):
 
     Parameters
     ----------
-    set_variable : TypedAstNode
+    set_obj : TypedAstNode
         The set object which the method is called from.
     *args : TypedAstNode
         The sets whose elements should not appear in the final set.

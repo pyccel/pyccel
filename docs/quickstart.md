@@ -133,7 +133,7 @@ Such type annotations are compatible with mypy and as such are recommended for u
 
 Pyccel's official releases can be downloaded and installed from PyPI (the Python Package Index) using `pip`.
 To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `devel` branch.
-Detailed installation instructions are found [here](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+Detailed installation instructions are found [here](installation.md).
 
 ### Command Line Usage
 
@@ -554,8 +554,7 @@ This tool removes all folders whose name begins with `__pyccel__` or `__epyccel_
 
 If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
-2.  Send an email message to <pyccel@googlegroups.com>;
-3.  Open an issue on GitHub.
+1.  Consult our documentation at <https://pyccel.github.io/pyccel>;
+2.  Open an issue on GitHub.
 
 Thank you!

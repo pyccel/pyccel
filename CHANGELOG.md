@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
+
 ### Deprecated
 
 ## \[2.0.1\] - 2025-06-27
