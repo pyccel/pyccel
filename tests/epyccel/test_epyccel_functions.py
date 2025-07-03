@@ -479,3 +479,41 @@ def test_lambda_2(language):
     val = randint(20)
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
+
+def test_lambda_usage(language):
+    f = lambda x: x+1
+
+    def g(a : 'int[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,))
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Function in function is not implemented yet in C language"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_func_usage(language):
+    def f(x : int):
+        return x+1
+
+    def g(a : 'int[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,))
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)
