@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import argparse
+import glob
 import sys
 from pathlib import Path
 
@@ -27,12 +28,12 @@ def pyccel_make_command():
     # ...
     group = parser.add_argument_group('File specification',
             description = "One of the below methods can be used to specify which files should be translated."
-            ).add_mutually_exclusive_group()
+            ).add_mutually_exclusive_group(required=True)
     group.add_argument('-f', '--files', nargs='+', type=Path,
             help="A list of files to be translated as a project.")
-    group.add_argument('-g', '--glob', nargs=1, type=str,
+    group.add_argument('-g', '--glob', type=str,
             help="A glob that should be used to recognise files to be translated as a project.")
-    group.add_argument('-d', '--file-descr', nargs=1, type=Path,
+    group.add_argument('-d', '--file-descr', type=Path,
             help="A file containing a list of all the files to be translated as a project.")
 
     # ... compiler syntax, semantic and codegen
@@ -94,3 +95,15 @@ def pyccel_make_command():
     # ...
     # ...
     args = parser.parse_args()
+
+    if args.files:
+        files = args.files
+    elif args.glob:
+        files = list(glob.glob(args.glob))
+    elif args.file_descr:
+        with open(args.file_descr, 'r', encoding='utf-8') as f:
+            files = f.readlines()
+    else:
+        raise NotImplementedError("No file specified")
+
+    print(files)
