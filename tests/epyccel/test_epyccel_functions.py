@@ -461,8 +461,8 @@ def test_container_interface(language):
 
 def test_lambda(language):
     def f(a : int):
-        f1 = lambda x: x**2 + 1
-        g1 = lambda x: f1(x)**2 + 1
+        f1 = lambda x: x**2 + 1 # pylint: disable=unnecessary-lambda-assignment
+        g1 = lambda x: f1(x)**2 + 1 # pylint: disable=unnecessary-lambda-assignment
         return g1(a)
 
     epyc_f = epyccel(f, language=language)
@@ -472,7 +472,7 @@ def test_lambda(language):
 
 def test_lambda_2(language):
     def f(a : int):
-        f2 = lambda x,y: x**2 + y**2 + 1
+        f2 = lambda x,y: x**2 + y**2 + 1 # pylint: disable=unnecessary-lambda-assignment
         return f2(a, 3*a)
 
     epyc_f = epyccel(f, language=language)
