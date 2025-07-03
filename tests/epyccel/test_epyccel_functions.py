@@ -5,6 +5,7 @@ from typing import TypeVar, Final
 
 import pytest
 import numpy as np
+from numpy.random import randint
 
 from pyccel import epyccel
 
@@ -457,3 +458,24 @@ def test_container_interface(language):
     assert f([1,2]) == epyc_f([1,2])
     assert f({1,2}) == epyc_f({1,2})
     assert f(np.array([1,2])) == epyc_f(np.array([1,2]))
+
+def test_lambda(language):
+    def f(a : int):
+        f1 = lambda x: x**2 + 1
+        g1 = lambda x: f1(x)**2 + 1
+        return g1(a)
+
+    epyc_f = epyccel(f, language=language)
+    val = randint(20)
+    assert f(val) == epyc_f(val)
+    assert isinstance(epyc_f(val), type(epyc_f(val)))
+
+def test_lambda_2(language):
+    def f(a : int):
+        f2 = lambda x,y: x**2 + y**2 + 1
+        return f2(a, 3*a)
+
+    epyc_f = epyccel(f, language=language)
+    val = randint(20)
+    assert f(val) == epyc_f(val)
+    assert isinstance(epyc_f(val), type(epyc_f(val)))
