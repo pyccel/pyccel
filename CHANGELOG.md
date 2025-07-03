@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
+-   #2381 : Allow functions to be called from a function being translated via epyccel.
 
 ### Fixed
 
