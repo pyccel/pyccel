@@ -105,7 +105,7 @@ def execute_pyccel_make(files, *,
 
     # Define working directory 'folder'
     if folder is None or folder == "":
-        folder = os.getcwd()
+        folder = Path(os.getcwd())
     else:
         folder = folder.absolute()
 
@@ -115,7 +115,7 @@ def execute_pyccel_make(files, *,
 
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
-    pyccel_dirpath = os.path.join(folder, pyccel_dirname)
+    pyccel_dirpath = folder / pyccel_dirname
 
     # Create new directories if not existing
     os.makedirs(folder, exist_ok=True)
@@ -145,12 +145,12 @@ def execute_pyccel_make(files, *,
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
 
-    parsers = {f.absolute(): Parser(f.absolute(), output_folder = folder) for f in files}
+    parsers = {f: Parser(f.absolute(), output_folder = folder) for f in files}
 
     for f, p in parsers.items():
         # Parse Python file
         try:
-            p.parse(verbose=verbose, d_parsers_by_filename = parsers.copy())
+            p.parse(verbose=verbose, d_parsers_by_filename = {f.absolute(): p for f, p in parsers.items()})
         except NotImplementedError as error:
             msg = str(error)
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -194,7 +194,8 @@ def execute_pyccel_make(files, *,
         # Generate .f90 file
         try:
             codegen = Codegen(semantic_parser, f, language, verbose)
-            fname = os.path.join(pyccel_dirpath, f)
+            fname = pyccel_dirpath / f
+            os.makedirs(fname.parent, exist_ok=True)
             fname, prog_name = codegen.export(fname)
         except NotImplementedError as error:
             msg = str(error)
