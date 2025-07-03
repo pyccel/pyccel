@@ -1379,7 +1379,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Lambda(self, stmt):
         assign_node = self._context[-2]
-        if not isinstance(assign_node, Assign):
+        if not isinstance(assign_node, ast.Assign):
             errors.report("Lambda functions are only supported in assign statements currently.",
                           severity='fatal', symbol=stmt)
         name_lst = self._visit(assign_node.targets)
