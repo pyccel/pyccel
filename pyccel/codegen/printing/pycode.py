@@ -594,7 +594,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
-        result_vars = [expr.expr] if isinstance(expr.expr, Variable) else expr.expr.get_attribute_nodes(Variable)
+        result_vars = self.scope.collect_all_tuple_elements(expr.expr)
 
         if expr.stmt:
             to_print = [l for l in expr.stmt.body \
