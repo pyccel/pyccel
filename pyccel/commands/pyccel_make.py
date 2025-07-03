@@ -99,11 +99,13 @@ def pyccel_make_command():
     if args.files:
         files = args.files
     elif args.glob:
-        files = list(glob.glob(args.glob))
+        files = [Path(f) for f in glob.glob(args.glob)]
     elif args.file_descr:
         with open(args.file_descr, 'r', encoding='utf-8') as f:
-            files = f.readlines()
+            files = [Path(fname.strip()) for fname in f.readlines()]
     else:
         raise NotImplementedError("No file specified")
 
-    print(files)
+    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+
+    execute_pyccel_make(files, verbose=args.verbose)
