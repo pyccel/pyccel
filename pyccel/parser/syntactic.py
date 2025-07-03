@@ -143,7 +143,9 @@ class SyntaxParser(BasicParser):
 
         self._code    = code
         self._context = []
-        self._context_dict = context_dict
+
+        # provides information about the calling context to collect constants and functions
+        self._context_dict = context_dict or {}
 
         tree                = extend_tree(code)
         self._fst           = tree
