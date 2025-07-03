@@ -594,9 +594,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
+        result_vars = [expr.expr] if isinstance(expr.expr, Variable) else expr.expr.get_attribute_nodes(Variable)
+
         if expr.stmt:
-            to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
-                                                        or isinstance(l, UnpackManagedMemory))]
+            to_print = [l for l in expr.stmt.body \
+                            if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
+                                     or isinstance(l, UnpackManagedMemory))]
             assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
             assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
             prelude = ''.join(self._print(l) for l in to_print)
