@@ -7,12 +7,15 @@
 """
 Module containing the Parser object
 """
-
+import os
 from pathlib import Path
 
+from pyccel.errors.errors    import Errors
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
+
+errors = Errors()
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
@@ -171,8 +174,8 @@ class Parser(object):
         if verbose:
             print ('>> Parsing :: ', self._filename)
 
-        parser             = SyntaxParser(self._filename, verbose = verbose)
-        self.syntax_parser = parser
+        self.syntax_parser = SyntaxParser(self._filename, verbose = verbose)
+        parser = self.syntax_parser
         parser.ast        = parser.ast
 
         if d_parsers_by_filename is None:
@@ -260,9 +263,22 @@ class Parser(object):
         dict
             The updated dictionary of parsed sons.
         """
+        to_parse = list(d_parsers_by_filename.keys())
+        for p in to_parse:
+            d_parsers_by_filename[p].parse(verbose=verbose, d_parsers_by_filename = d_parsers_by_filename)
 
         imports     = self.imports
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
+        for imp, (filename_py, stashed_file) in source_to_filename.items():
+            if filename_py in d_parsers_by_filename:
+                source_to_filename[imp] = (filename_py, filename_py)
+                continue
+            if not stashed_file.exists():
+                errors.report("Imported files must be pyccelised before they can be used.",
+                        symbol=imp, severity='fatal')
+            if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
+                errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
+                        symbol=imp, severity='fatal')
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:

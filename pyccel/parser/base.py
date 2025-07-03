@@ -141,12 +141,6 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
         rel_path = os.path.relpath(filename_py.parent, input_folder_name)
         pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
         stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
-        if not stashed_file.exists():
-            errors.report("Imported files must be pyccelised before they can be used.",
-                    symbol=module_name, severity='fatal')
-        if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
-            errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
-                    symbol=module_name, severity='fatal')
         return filename_py.absolute(), stashed_file.resolve()
     # Look for user-defined .pyi or .pyh files
     elif filename_pyi.exists():
