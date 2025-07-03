@@ -1111,7 +1111,8 @@ class SyntaxParser(BasicParser):
                 if func in self._context_dict and isinstance(self._context_dict[func], types.FunctionType) \
                         and not self.scope.symbol_in_use(func):
                     code_lines, _ = inspect.getsourcelines(self._context_dict[func])
-                    fst = extend_tree(''.join(code_lines))
+                    indent_length = len(code_lines[0])-len(code_lines[0].lstrip())
+                    fst = extend_tree(''.join(l[indent_length:] for l in code_lines))
                     assert len(fst.body) == 1
                     self._context_dict[func] = self._visit(fst.body[0])
                 func_call = FunctionCall(func, args)
