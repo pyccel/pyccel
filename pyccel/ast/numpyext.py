@@ -77,6 +77,7 @@ __all__ = (
     'NumpyArctanh',
     'NumpyCos',
     'NumpyCosh',
+    'NumpyDivide',
     'NumpyExp',
     'NumpyFabs',
     'NumpyFloor',
