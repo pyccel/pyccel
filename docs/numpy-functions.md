@@ -433,7 +433,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
 
     `sqrt`, `abs`, `sin`, `cos`, `exp`, `log`, `tan`, `arcsin`, `arccos`, `arctan`, `arctan2`, `sinh`, `cosh`, `tanh`, `arcsinh`, `arccosh` and
-    `arctanh`.
+    `arctanh`, `true_divide`, `divide`.
 
 -   Supported [logic functions](https://numpy.org/doc/stable/reference/routines.logic.html) (optional parameters are not supported):
 
