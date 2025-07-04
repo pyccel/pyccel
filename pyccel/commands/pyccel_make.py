@@ -52,6 +52,9 @@ def pyccel_make_command():
     group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.lower)
+    group.add_argument('--build-system', choices=('meson', 'cmake'), default='meson',
+                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
+                       type=str.lower)
 
     # ... Compiler options
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
