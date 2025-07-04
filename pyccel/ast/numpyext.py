@@ -2783,12 +2783,12 @@ class NumpyDivide(PyccelFunction):
         if x1.rank == 0:
             x1_type = x1.class_type
             x1_np_type = process_dtype(x1_type)
-            if x1_type != x1_np_type:
+            if x1_type is not x1_np_type:
                 x1 = DtypePrecisionToCastFunction[x1_np_type](x1)
         if x2.rank == 0:
             x2_type = x2.class_type
             x2_np_type = process_dtype(x2_type)
-            if x2_type != x2_np_type:
+            if x2_type is not x2_np_type:
                 x2 = DtypePrecisionToCastFunction[x2_np_type](x2)
         return PyccelDiv(x1, x2)
 
