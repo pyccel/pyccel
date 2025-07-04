@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
+-   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 
 ### Fixed
 
