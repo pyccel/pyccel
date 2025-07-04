@@ -6111,16 +6111,6 @@ def test_copy(language):
         assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
         assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.skip("NumpyDivide handles types in __new__ so it "
-                "cannot be used in a translated interface in python"),
-            pytest.mark.python]
-        ),
-    )
-)
 def test_true_divide(language):
     def basic_division(a : 'int | float | complex', b : 'int | float | complex'):
         from numpy import true_divide
@@ -6157,4 +6147,5 @@ def test_true_divide(language):
     assert np.allclose(basic_array_division(f_arr_1d,i), epyccel_basic_array_division(f_arr_1d,i), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
-    assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
+    if language != 'python':
+        assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
