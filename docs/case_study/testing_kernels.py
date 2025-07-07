@@ -1,0 +1,37 @@
+from numpy import linspace, exp
+
+# INTEGRATE_GRID
+
+def integrate_grid(nx : int, ny : int, x_start : float, x_end : float, y_start : float, y_end : float):
+    dx = (x_end - x_start) / nx
+    dy = (y_end - y_start) / ny
+    xs = linspace(x_start + 0.5*dx, x_end - 0.5*dx, nx)
+    ys = linspace(y_start + 0.5*dy, y_end - 0.5*dy, ny)
+
+    result = 0.0
+    for i in range(nx):
+        for j in range(ny):
+            # result += exp(-(xs[i]**2 + ys[j]**2)) * dx * dy
+            # result += exp(-(xs[i]**3 + ys[j]**2)) * dx * dy
+            # result += exp(-(xs[i]**2 + ys[j]**3)) * dx * dy
+            result += test_func(xs[i], ys[j]) * dx * dy
+    return result
+
+# END_INTEGRATE_GRID
+
+# COMPILE
+
+from pyccel import epyccel
+
+test_func = lambda x, y : exp(-(x**2 + y**2))
+compiled_integrator = epyccel(integrate_grid)
+
+# END COMPILE
+
+# TEST
+
+# area = integrate_grid(1000, 1000, -5., 5., -5., 5.)
+area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
+print(area)
+
+# END TEST
