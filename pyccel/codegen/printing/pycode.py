@@ -1164,6 +1164,11 @@ class PythonCodePrinter(CodePrinter):
 
         return "{}({})".format(name, arg)
 
+    def _print_NumpyDivide(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        name = self._get_numpy_name(type(expr))
+        return f'{name}({args})'
+
     def _print_ListMethod(self, expr):
         method_name = expr.name
         list_obj = self._print(expr.list_obj)
