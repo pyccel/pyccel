@@ -26,7 +26,7 @@ General integration routine
 
 .. literalinclude:: ./testing_kernels.py
    :language: python
-   :linenos: 1-16
+   :linenos:
    :start-after: # INTEGRATE_GRID
    :end-before: # END_INTEGRATE_GRID
 
@@ -40,7 +40,7 @@ If we define a local lambda with the expected name (`test_func`) we can now use 
 
 .. literalinclude:: ./testing_kernels.py
    :language: python
-   :linenos: 18-21
+   :linenos:
    :start-after: # COMPILE
    :end-before: # END_COMPILE
 
@@ -52,6 +52,6 @@ The compiled method can be used exactly as the original method was used:
 
 .. literalinclude:: ./testing_kernels.py
    :language: python
-   :linenos: 23-25
+   :linenos:
    :start-after: # TEST
    :end-before: # END_TEST

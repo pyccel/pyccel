@@ -26,7 +26,7 @@ from pyccel import epyccel
 test_func = lambda x, y : exp(-(x**2 + y**2))
 compiled_integrator = epyccel(integrate_grid)
 
-# END COMPILE
+# END_COMPILE
 
 # TEST
 
@@ -34,4 +34,4 @@ compiled_integrator = epyccel(integrate_grid)
 area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
 print(area)
 
-# END TEST
+# END_TEST
