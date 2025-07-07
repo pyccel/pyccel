@@ -617,7 +617,7 @@ class PythonCodePrinter(CodePrinter):
         def get_return_code(return_var):
             """ Recursive method which replaces any variables in a return statement whose
             definition is known (via the assigns dict) with the definition. A function is
-            required to handle the recursivity implied by an unknown depth of inhomogenous
+            required to handle the recursivity implied by an unknown depth of inhomogeneous
             tuples.
             """
             if isinstance(return_var.class_type, InhomogeneousTupleType):
