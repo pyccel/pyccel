@@ -7,22 +7,12 @@
 import os
 import time
 
-from pyccel.ast.core                             import ModuleHeader
 from pyccel.codegen.compiling.basic              import CompileObj
-from pyccel.codegen.printing.cwrappercode        import CWrapperCodePrinter
-from pyccel.codegen.printing.fcode               import FCodePrinter
-from pyccel.codegen.wrapper.fortran_to_c_wrapper import FortranToCWrapper
-from pyccel.codegen.wrapper.c_to_python_wrapper  import CToPythonWrapper
 from pyccel.codegen.wrappergen  import Wrappergen
 from pyccel.codegen.utilities                    import manage_dependencies
 from pyccel.errors.errors                        import Errors
-from pyccel.naming                               import name_clash_checkers
-from pyccel.parser.scope                         import Scope
-from pyccel.utilities.stage                      import PyccelStage
 
 errors = Errors()
-
-pyccel_stage = PyccelStage()
 
 __all__ = ['create_shared_library']
 
@@ -86,8 +76,6 @@ def create_shared_library(codegen,
     """
     timings = {}
 
-    pyccel_stage.set_stage('cwrapper')
-
     # Get module name
     module_name = codegen.name
 
@@ -109,6 +97,9 @@ def create_shared_library(codegen,
     gen.wrap()
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
+    if errors.has_errors():
+        return
+
     #-------------------------------------------
     #           Print wrapper code
     #-------------------------------------------
@@ -116,6 +107,9 @@ def create_shared_library(codegen,
     start_wrapper_printing = time.time()
     wrapper_files = gen.print()
     timings['Wrapper printing'] = time.time() - start_wrapper_printing
+
+    if errors.has_errors():
+        return
 
     printed_languages = gen.printed_languages
 

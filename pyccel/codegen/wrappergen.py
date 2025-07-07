@@ -14,6 +14,7 @@ from .printing.cwrappercode  import CWrapperCodePrinter
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from .wrapper.c_to_python_wrapper import CToPythonWrapper
 from ..ast.core import ModuleHeader
+from ..errors.errors                        import Errors
 from ..naming import name_clash_checkers
 from ..parser.scope import Scope
 from ..utilities.stage import PyccelStage
@@ -30,6 +31,8 @@ printer_registry = {
         }
 
 pyccel_stage = PyccelStage()
+
+errors = Errors()
 
 class Wrappergen:
     """
@@ -83,6 +86,9 @@ class Wrappergen:
 
             ast = wrapper.wrap(ast)
             self._wrapper_ast.append(ast)
+
+            if errors.has_errors():
+                break
 
         Scope.name_clash_checker = current_name_clash_checker
 
