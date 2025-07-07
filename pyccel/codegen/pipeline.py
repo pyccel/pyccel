@@ -323,8 +323,9 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
     try:
-        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
-                language, verbose, convert_only)
+        manage_dependencies(codegen.get_printer_imports(), pyccel_dirpath = pyccel_dirpath,
+                            language = language, verbose = verbose, compiler = compiler,
+                            mod_obj = mod_obj, convert_only = convert_only)
     except NotImplementedError as error:
         errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
             severity='error',

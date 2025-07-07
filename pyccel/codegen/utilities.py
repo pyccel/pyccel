@@ -325,7 +325,8 @@ def recompile_object(compile_obj,
                 verbose=verbose)
 
 #==============================================================================
-def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
+def manage_dependencies(pyccel_imports, *, pyccel_dirpath, language, verbose,
+                        compiler = None, mod_obj = None, convert_only = False):
     """
     Manage dependencies of the code to be compiled.
 
@@ -376,6 +377,9 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                              verbose  = verbose)
 
             mod_obj.add_dependencies(stdlib)
+
+    if convert_only:
+        return
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
