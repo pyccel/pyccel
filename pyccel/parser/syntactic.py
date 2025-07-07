@@ -3,7 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-
+from itertools import chain
 import os
 import re
 
@@ -54,7 +54,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
-from pyccel.ast.builtins import PythonPrint, Lambda
+from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -533,6 +533,10 @@ class SyntaxParser(BasicParser):
 
     def _visit_Assign(self, stmt):
 
+        rhs = self._visit(stmt.value)
+        if isinstance(rhs, FunctionDef):
+            return rhs
+
         self._in_lhs_assign = True
         lhs = self._visit(stmt.targets)
         self._in_lhs_assign = False
@@ -540,8 +544,6 @@ class SyntaxParser(BasicParser):
             lhs = lhs[0]
         else:
             lhs = PythonTuple(*lhs)
-
-        rhs = self._visit(stmt.value)
 
         expr = Assign(lhs, rhs)
 
@@ -1319,7 +1321,15 @@ class SyntaxParser(BasicParser):
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]
-            body = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+            functions = [l for l in body if isinstance(l, FunctionDef) and not l.is_inline]
+            classes = [l for l in body if isinstance(l, ClassDef)]
+            if classes:
+                errors.report("Classes should be declared in the module not in the program body",
+                              symbol = stmt, severity = 'error')
+            if any(not f.is_inline for f in functions):
+                errors.report("Functions should be declared in the module not in the program body",
+                              symbol = stmt, severity = 'error')
+            body = [l for l in body if l not in chain(imports, functions, classes)]
 
             return Program('__main__', (), CodeBlock(body), imports=imports, scope = scope)
         else:
@@ -1376,11 +1386,28 @@ class SyntaxParser(BasicParser):
         return Continue()
 
     def _visit_Lambda(self, stmt):
+        assign_node = self._context[-2]
+        if not isinstance(assign_node, ast.Assign):
+            errors.report("Lambda functions are only supported in assign statements currently.",
+                          severity='fatal', symbol=stmt)
+        name_lst = self._visit(assign_node.targets)
 
-        expr = self._visit(stmt.body)
+        assert len(name_lst) == 1
+        name = name_lst[0]
+
+        self.scope.insert_symbol(name)
+        new_name = self.scope.get_expected_name(name)
+        scope = self.create_new_function_scope(name,
+                used_symbols = {name: new_name},
+                original_symbols = {new_name: name})
+
         args = self._visit(stmt.args)
+        return_expr = Return(self._visit(stmt.body))
+        return_expr.set_current_ast(stmt)
 
-        return Lambda(tuple(args), expr)
+        self.exit_function_scope()
+
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars

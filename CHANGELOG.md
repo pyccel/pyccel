@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
+-   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 
 ### Fixed
@@ -19,6 +20,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 
 ### Deprecated
+
+-   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27
 
