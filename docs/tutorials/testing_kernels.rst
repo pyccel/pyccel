@@ -63,6 +63,8 @@ Generated code
 Using a lambda function for the kernel ensures that the method is inlined. For example the Pyccel-generated translation created by the call above is:
 
 .. code-block:: fortran
+   :linenos:
+
     result_0001 = 0.0_f64
     do i = 0_i64, nx - 1_i64
       do j = 0_i64, ny - 1_i64
