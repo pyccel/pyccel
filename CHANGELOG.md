@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
+-   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 
 ### Fixed
 
@@ -15,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 
 ### Deprecated
