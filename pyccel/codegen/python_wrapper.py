@@ -119,7 +119,7 @@ def create_shared_library(codegen,
 
     wrapper_compile_objs = [CompileObj(filepath,
                                        pyccel_dirpath,
-                                       flags        = wrapper_flags,
+                                       flags        = main_obj.flags,
                                        dependencies = (main_obj,))
                             for filepath in wrapper_files[:-1]] + \
                            [CompileObj(wrapper_files[-1],
