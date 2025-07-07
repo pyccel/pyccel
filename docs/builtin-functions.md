@@ -41,7 +41,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`isinstance`** | **Yes** |
 | `issubclass` | No |
 | `iter` | No |
-| **`lambda`** | **Yes** |
+| **`lambda`** | Yes (but not as function arguments) |
 | **`len`** | **Yes** |
 | *`list`* | Python-only |
 | `locals` | No |
