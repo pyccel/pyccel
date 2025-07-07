@@ -2779,7 +2779,7 @@ class NumpyDivide(PyccelDiv):
     """
     __slots__ = ()
     name = 'divide'
-    def __init__(cls, x1, x2):
+    def __init__(self, x1, x2):
         if x1.rank == 0:
             x1_type = x1.class_type
             x1_np_type = process_dtype(x1_type)
