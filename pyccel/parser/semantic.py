@@ -34,7 +34,7 @@ from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import Lambda, PythonMap, PythonBool
+from pyccel.ast.builtins import PythonMap, PythonBool
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
@@ -2973,6 +2973,9 @@ class SemanticParser(BasicParser):
         for b in expr.body:
             if isinstance(b, EmptyNode):
                 continue
+            if isinstance(b, InlineFunctionDef):
+                self.insert_function(b)
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
@@ -3505,31 +3508,6 @@ class SemanticParser(BasicParser):
         else:
             raise errors.report(f"In operator is not yet implemented for type {container_type}",
                     severity='fatal', symbol=expr)
-
-    def _visit_Lambda(self, expr):
-        errors.report("Lambda functions are not currently supported",
-                symbol=expr, severity='fatal')
-        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
-        var_names = map(str, expr.variables)
-        missing_vars = expr_names.difference(var_names)
-        if len(missing_vars) > 0:
-            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
-                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                severity='fatal')
-        funcs = expr.expr.get_attribute_nodes(FunctionCall)
-        for func in funcs:
-            name = _get_name(func)
-            f = self.scope.find(name, 'symbolic_functions')
-            if f is None:
-                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
-            else:
-
-                f = f(*func.args)
-                expr_new = expr.expr.subs(func, f)
-                expr = Lambda(tuple(expr.variables), expr_new)
-        return expr
 
     def _visit_FunctionCall(self, expr):
         name     = expr.funcdef
