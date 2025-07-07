@@ -138,10 +138,10 @@ def create_shared_library(codegen,
     #-------------------------------------------
 
     start_compile_wrapper = time.time()
-    for obj in wrapper_compile_objs:
+    for obj, wrapper_language in zip(wrapper_compile_objs, printed_languages):
         compiler.compile_module(compile_obj=obj,
                 output_folder=pyccel_dirpath,
-                language=language,
+                language=wrapper_language,
                 verbose=verbose)
 
     sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_objs[-1],
