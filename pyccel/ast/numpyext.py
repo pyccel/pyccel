@@ -77,6 +77,7 @@ __all__ = (
     'NumpyArctanh',
     'NumpyCos',
     'NumpyCosh',
+    'NumpyDivide',
     'NumpyExp',
     'NumpyFabs',
     'NumpyFloor',
@@ -2763,7 +2764,35 @@ class NumpyNDArray(PyccelFunction):
         return NumpyArray(*args, **kwargs)
 
 #==============================================================================
+class NumpyDivide(PyccelDiv):
+    """
+    Class representing a class to numpy.divide or numpy.true_divide in the user code.
 
+    Class representing a class to numpy.divide or numpy.true_divide in the user code.
+
+    Parameters
+    ----------
+    x1 : TypedAstNode
+        The dividend.
+    x2 : TypedAstNode
+        The divisor.
+    """
+    __slots__ = ()
+    name = 'divide'
+    def __init__(self, x1, x2):
+        if x1.rank == 0:
+            x1_type = x1.class_type
+            x1_np_type = process_dtype(x1_type)
+            if x1_type is not x1_np_type:
+                x1 = DtypePrecisionToCastFunction[x1_np_type](x1)
+        if x2.rank == 0:
+            x2_type = x2.class_type
+            x2_np_type = process_dtype(x2_type)
+            if x2_type is not x2_np_type:
+                x2 = DtypePrecisionToCastFunction[x2_np_type](x2)
+        super().__init__(x1, x2)
+
+#==============================================================================
 DtypePrecisionToCastFunction.update({
     PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
@@ -2837,6 +2866,8 @@ numpy_funcs = {
     'product'   : PyccelFunctionDef('product'   , NumpyProduct),
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
+    'divide'    : PyccelFunctionDef('divide'    , NumpyDivide),
+    'true_divide' : PyccelFunctionDef('true_divide', NumpyDivide),
     # ---
     'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
     'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),

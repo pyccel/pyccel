@@ -6110,3 +6110,41 @@ def test_copy(language):
         assert res_3d_pyt.dtype is res_3d_pyc.dtype
         assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
         assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous
+
+def test_true_divide(language):
+    def basic_division(a : 'int | float | complex', b : 'int | float | complex'):
+        from numpy import true_divide
+        return true_divide(a,b)
+    def basic_array_division(a : 'int[:] | float[:]', b : 'int | float | complex | int[:] | float[:]'):
+        from numpy import true_divide
+        return true_divide(a,b)
+
+    i = randint(1e6)
+    f = uniform(min_float/2, max_float/2)
+    c = uniform(min_float/2, max_float/2)+1j*uniform(min_float/2, max_float/2)
+    i_arr_1d = randint(min_int, max_int, size=5)
+    f_arr_1d = uniform(min_float/2, max_float/2, size=5)
+
+    epyccel_basic_division = epyccel(basic_division, language=language)
+    epyccel_basic_array_division = epyccel(basic_array_division, language=language)
+
+    assert np.isclose(basic_division(i,i), epyccel_basic_division(i,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(i,f), epyccel_basic_division(i,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(i,c), epyccel_basic_division(i,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,i), epyccel_basic_division(f,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,f), epyccel_basic_division(f,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,c), epyccel_basic_division(f,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,i), epyccel_basic_division(c,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,f), epyccel_basic_division(c,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,c), epyccel_basic_division(c,c), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,i_arr_1d), epyccel_basic_array_division(i_arr_1d,i_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,f_arr_1d), epyccel_basic_array_division(i_arr_1d,f_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,i), epyccel_basic_array_division(i_arr_1d,i), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,f), epyccel_basic_array_division(i_arr_1d,f), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,c), epyccel_basic_array_division(i_arr_1d,c), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,i_arr_1d), epyccel_basic_array_division(f_arr_1d,i_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,f_arr_1d), epyccel_basic_array_division(f_arr_1d,f_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,i), epyccel_basic_array_division(f_arr_1d,i), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
