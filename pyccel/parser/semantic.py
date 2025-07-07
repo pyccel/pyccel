@@ -2973,6 +2973,9 @@ class SemanticParser(BasicParser):
         for b in expr.body:
             if isinstance(b, EmptyNode):
                 continue
+            if isinstance(b, InlineFunctionDef):
+                self.insert_function(b)
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
