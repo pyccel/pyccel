@@ -44,8 +44,6 @@ class CWrapperCodePrinter(CCodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
-    target_language : str
-            The language which the code was translated to [fortran/c].
     **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
     """
