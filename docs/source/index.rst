@@ -39,6 +39,14 @@ Welcome to Pyccel's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials:
+   :hidden:
+
+   tutorials
+
+
+.. toctree::
+   :maxdepth: 2
    :caption: Developer Guide:
    :hidden:
 
