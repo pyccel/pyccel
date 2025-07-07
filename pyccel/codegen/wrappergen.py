@@ -7,7 +7,6 @@ from pathlib import Path
 
 from .codegen import _extension_registry, _header_extension_registry
 from .printing.fcode  import FCodePrinter
-from .printing.ccode  import CCodePrinter
 from .printing.cwrappercode  import CWrapperCodePrinter
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from .wrapper.c_to_python_wrapper import CToPythonWrapper
