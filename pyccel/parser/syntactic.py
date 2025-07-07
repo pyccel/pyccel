@@ -1321,7 +1321,15 @@ class SyntaxParser(BasicParser):
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]
-            body = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+            functions = [l for l in body if isinstance(l, FunctionDef) and not l.is_inline]
+            classes = [l for l in body if isinstance(l, ClassDef)]
+            if classes:
+                errors.report("Classes should be declared in the module not in the program body",
+                              symbol = stmt, severity = 'error')
+            if any(not f.is_inline for f in functions):
+                errors.report("Functions should be declared in the module not in the program body",
+                              symbol = stmt, severity = 'error')
+            body = [l for l in body if l not in (imports, functions, classes)]
 
             return Program('__main__', (), CodeBlock(body), imports=imports, scope = scope)
         else:
