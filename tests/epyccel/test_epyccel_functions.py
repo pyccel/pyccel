@@ -481,7 +481,7 @@ def test_lambda_2(language):
     assert isinstance(epyc_f(val), type(epyc_f(val)))
 
 def test_lambda_usage(language):
-    f = lambda x: x+1
+    f = lambda x: x+1 # pylint: disable=unnecessary-lambda-assignment
 
     def g(a : 'int[:]'):
         for i, ai in enumerate(a):
