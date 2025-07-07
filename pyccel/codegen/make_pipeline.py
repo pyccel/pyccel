@@ -18,15 +18,10 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
-from pyccel.codegen.python_wrapper import create_shared_library
+from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
-from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
-
-from .compiling.basic     import CompileObj
-from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
@@ -134,9 +129,6 @@ def execute_pyccel_make(files, *,
         compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     # Get compiler object
-    Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
-    compiler = Compiler(compiler_family, debug)
-
     Scope.name_clash_checker = name_clash_checkers[language]
 
     # Change working directory to 'folder'
