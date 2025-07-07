@@ -596,21 +596,30 @@ class PythonCodePrinter(CodePrinter):
 
         result_vars = self.scope.collect_all_tuple_elements(expr.expr)
 
+        if expr.expr is None:
+            return 'return\n'
+
         if expr.stmt:
+            # Get expressions that should be printed as they are. Assignments to result variables are not
+            # printed as the rhs can be inlined
             to_print = [l for l in expr.stmt.body \
                             if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
                                      or isinstance(l, UnpackManagedMemory))]
+            # Collect all assignments to easily inline the expressions
             assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
             assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
+            # Print all expressions that are required before the print
             prelude = ''.join(self._print(l) for l in to_print)
         else:
             assigns = {}
             prelude = ''
 
-        if expr.expr is None:
-            return 'return\n'
-
         def get_return_code(return_var):
+            """ Recursive method which replaces any variables in a return statement whose
+            definition is known (via the assigns dict) with the definition. A function is
+            required to handle the recursivity implied by an unknown depth of inhomogenous
+            tuples.
+            """
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
