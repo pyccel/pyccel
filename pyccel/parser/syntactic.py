@@ -121,6 +121,10 @@ class SyntaxParser(BasicParser):
         A string containing code or containing the name of a file whose code
         should be read.
 
+    context_dict : dict, optional
+        A dictionary describing any variables in the context where the translated
+        objected was defined.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
