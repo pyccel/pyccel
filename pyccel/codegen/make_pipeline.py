@@ -208,15 +208,7 @@ def execute_pyccel_make(files, *,
 
     timers["Codegen Stage"] = time.time() - start_codegen
 
-    #TODO : From HERE
-
     if language == 'python':
-        output_file = (output_name + '.py') if output_name else os.path.basename(fname)
-        new_location = os.path.join(folder, output_file)
-        if verbose:
-            print(f"cp {fname} {new_location}")
-        shutil.copyfile(fname, new_location)
-
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
@@ -226,6 +218,8 @@ def execute_pyccel_make(files, *,
 
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
                         verbose = verbose, convert_only = True)
+
+    # TODO: Generate build system files
 
     # Print all warnings now
     if errors.has_warnings():
