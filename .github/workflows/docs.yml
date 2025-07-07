@@ -48,7 +48,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**/*.py", "ci_tools/**/*.py", "**/*.md"]'
+          paths: '["pyccel/**/*.py", "ci_tools/**/*.py", "**/*.md", "**/*.rst"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
@@ -140,6 +140,7 @@ jobs:
         with:
           path: 'compare/docs/build/html'
       - name: Check tutorial code
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
         id: tutorial_check
         run: |
           FILES_TO_TEST=$(find tutorials/ -name '*.py')
