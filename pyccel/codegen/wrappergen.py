@@ -47,8 +47,6 @@ class Wrappergen:
         The printer which was used to print the translated code.
     name : str
         Name of the generated module or program.
-    dirpath : str | Path
-        The path to the directory where files should be printed.
     language : str
         The language which the printer should print to.
     verbose : int
@@ -61,28 +59,31 @@ class Wrappergen:
         self._language = language
         self._verbose  = verbose
         self._wrapper_ast = []
-        self._dirpath  = Path(dirpath)
 
         self._wrapper_types = wrapper_registry[language]
         self._printer_types = [printer_registry[w] for w in self._wrapper_types]
         self._additional_imports = [{} for _ in self._wrapper_types]
 
-    def wrap(self):
+    def wrap(self, outpath):
         """
         Wrap the code so it is accessible from Python.
 
         Generate the necessary AST objects describing the wrapper(s) which are required
         to call the low-level code from Python.
+
+        Parameters
+        ----------
+        so_output_dirpath : str
+            The folder where the generated .so file will be located.
         """
         current_name_clash_checker = Scope.name_clash_checker
-        dirpath = str(self._dirpath)
         ast = self._ast
         for Wrapper in self._wrapper_types:
             if self._verbose:
                 print(f">> Building {Wrapper.start_language}-{Wrapper.target_language} interface :: ", self._name)
 
             Scope.name_clash_checker = name_clash_checkers[Wrapper.start_language.lower()]
-            wrapper = Wrapper(dirpath, verbose = self._verbose)
+            wrapper = Wrapper(so_output_dirpath, verbose = self._verbose)
 
             ast = wrapper.wrap(ast)
             self._wrapper_ast.append(ast)
@@ -103,8 +104,11 @@ class Wrappergen:
         list[Path]
             A list of the source files printed by this function (this is not equivalent
             to all files printed by this function as headers are excluded).
+        dirpath : str | Path
+            The path to the directory where files should be printed.
         """
-        files = [self._dirpath / f'{ast.name}_wrapper.{_extension_registry[Wrapper.start_language.lower()]}'
+        dirpath = Path(dirpath)
+        files = [dirpath / f'{ast.name}_wrapper.{_extension_registry[Wrapper.start_language.lower()]}'
                  for ast, Wrapper in zip(self._wrapper_ast, self._wrapper_types)]
         for i, (filepath, ast, Printer) in enumerate(zip(files, self._wrapper_ast, self._printer_types)):
             header_ext = _header_extension_registry[Printer.language.lower()]
