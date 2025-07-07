@@ -1,8 +1,13 @@
+""" A test where the function integrated over a grid is varied. The integration is translated without rewriting the original function.
+"""
 from numpy import linspace, exp
 
 # INTEGRATE_GRID
 
 def integrate_grid(nx : int, ny : int, x_start : float, x_end : float, y_start : float, y_end : float):
+    """
+    Integrate the function test_func.
+    """
     dx = (x_end - x_start) / nx
     dy = (y_end - y_start) / ny
     xs = linspace(x_start + 0.5*dx, x_end - 0.5*dx, nx)
