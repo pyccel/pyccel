@@ -55,9 +55,8 @@ class CWrapperCodePrinter(CCodePrinter):
                       PyccelPyTypeObject() : 'PyTypeObject',
                       BindCPointer()  : 'void'}
 
-    def __init__(self, filename, target_language, **settings):
+    def __init__(self, filename, **settings):
         CCodePrinter.__init__(self, filename, **settings)
-        self._target_language = target_language
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._module_name = None
