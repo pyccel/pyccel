@@ -3,7 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-
+from itertools import chain
 import os
 import re
 
@@ -1329,7 +1329,7 @@ class SyntaxParser(BasicParser):
             if any(not f.is_inline for f in functions):
                 errors.report("Functions should be declared in the module not in the program body",
                               symbol = stmt, severity = 'error')
-            body = [l for l in body if l not in (imports, functions, classes)]
+            body = [l for l in body if l not in chain(imports, functions, classes)]
 
             return Program('__main__', (), CodeBlock(body), imports=imports, scope = scope)
         else:
