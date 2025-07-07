@@ -99,14 +99,14 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    gen = Wrappergen(codegen, module_name, language, verbose)
+    gen = Wrappergen(codegen, module_name, pyccel_dirpath, language, verbose)
 
     #-------------------------------------------
     #               Wrap code
     #-------------------------------------------
 
     start_wrapper_creation = time.time()
-    gen.wrap(pyccel_dirpath)
+    gen.wrap()
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
     #-------------------------------------------
@@ -114,7 +114,7 @@ def create_shared_library(codegen,
     #-------------------------------------------
 
     start_wrapper_printing = time.time()
-    wrapper_files = gen.print(pyccel_dirpath)
+    wrapper_files = gen.print()
     timings['Wrapper printing'] = time.time() - start_wrapper_printing
 
     printed_languages = gen.printed_languages
