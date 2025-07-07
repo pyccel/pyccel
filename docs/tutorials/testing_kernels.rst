@@ -55,3 +55,30 @@ The compiled method can be used exactly as the original method was used:
    :linenos:
    :start-after: # TEST
    :end-before: # END_TEST
+
+--------------
+Generated code
+--------------
+
+Using a lambda function for the kernel ensures that the method is inlined. For example the Pyccel-generated translation created by the call above is:
+
+.. code-block:: fortran
+    result_0001 = 0.0_f64
+    do i = 0_i64, nx - 1_i64
+      do j = 0_i64, ny - 1_i64
+        !result += exp(-(xs[i]**2 + ys[j]**2)) * dx * dy
+        !result += exp(-(xs[i]**3 + ys[j]**2)) * dx * dy
+        !result += exp(-(xs[i]**2 + ys[j]**3)) * dx * dy
+        Dummy_0000 = exp(-(xs(i) ** 2_i64 + ys(j) ** 2_i64))
+        result_0001 = result_0001 + Dummy_0000 * dx * dy
+      end do
+    end do
+
+This makes the resulting code faster but it means that `epyccel` will need to be called again to get an updated version if the lambda function `test_func` is modified.
+On the other hand this means that both versions co-exist and are usable simultaneously:
+
+.. literalinclude:: ./testing_kernels.py
+   :language: python
+   :linenos:
+   :start-after: # MULTIPLE_TESTS
+   :end-before: # END_MULTIPLE_TESTS

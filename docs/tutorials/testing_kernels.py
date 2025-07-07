@@ -40,3 +40,12 @@ area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
 print(area)
 
 # END_TEST
+
+# MULTIPLE_TESTS
+
+test_func = lambda x, y : exp(-(x**2 + y**2))
+integrate_test_1 = epyccel(integrate_grid)
+test_func = lambda x, y : exp(-(x**2 + y**2))
+integrate_test_2 = epyccel(integrate_grid)
+
+# END_MULTIPLE_TESTS
