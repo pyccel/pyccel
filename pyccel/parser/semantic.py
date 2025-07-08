@@ -1215,10 +1215,7 @@ class SemanticParser(BasicParser):
                 semantic_func = self._annotate_the_called_function_def(val, ())
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
-            if isinstance(val, StarredArguments):
-                args.extend([FunctionCallArgument(av) for av in val.args_var])
-            else:
-                args.append(a)
+            args.append(a)
         return args
 
     def _check_argument_compatibility(self, input_args, func_args, func, elemental, raise_error=True, error_type='error'):
@@ -1422,18 +1419,31 @@ class SemanticParser(BasicParser):
         """
         n_funcargs = len(func_args)
         n_posonly_args = next((i for i, a in enumerate(func_args) if not a.is_posonly), n_funcargs)
-        input_args = [a for a in args if a.keyword is None]
-        kwargs_start = len(input_args)
-        assert len(input_args) >= n_posonly_args
         n_possible_posargs = next((i for i, a in enumerate(func_args) if a.is_vararg), n_funcargs)
+        input_args = []
+        kwargs = {}
+        for i, a in enumerate(args):
+            if a.keyword is None:
+                if i < n_possible_posargs and isinstance(a, StarredArguments):
+                    input_args.extend(FunctionCallArgument(av) for av in a.args_var)
+                else:
+                    input_args.append(a)
+            else:
+                kwargs[a.keyword] = a
+        assert len(input_args) >= n_posonly_args
         if len(input_args) > n_possible_posargs:
-            vararg = FunctionCallArgument(PythonTuple(*[a.value for a in input_args[n_possible_posargs:]]), keyword='*args')
+            if len(input_args) == n_possible_posargs + 1 and isinstance(input_args[-1].value, StarredArguments):
+                vararg = FunctionCallArgument(input_args[-1].value.args_var, keyword='*args')
+            else:
+                remaining_input_args = [ai.value for a in input_args[n_possible_posargs:]
+                                        for ai in (a.args_var if isinstance(a, StarredArguments) else (a,))]
+                vararg = FunctionCallArgument(PythonTuple(*remaining_input_args), keyword='*args')
             input_args = input_args[:n_possible_posargs] + [vararg]
 
-        kwargs = {a.keyword: a for a in args[kwargs_start:]}
+        kwargs_start = len(input_args)
         for ka in func_args[len(input_args):]:
             if ka.is_vararg:
-                input_args.append(FunctionCallArgument(PythonTuple(), keyword='*args'))
+                input_args.append(FunctionCallArgument(PythonTuple(class_type = ka.var.class_type), keyword='*args'))
                 continue
             if not ka.is_kwarg:
                 input_args.append(kwargs.pop(ka.name, ka.default_call_arg))
@@ -5482,9 +5492,7 @@ class SemanticParser(BasicParser):
 
     def _visit_StarredArguments(self, expr):
         var = self._visit(expr.args_var)
-        assert var.rank==1
-        size = var.shape[0]
-        return StarredArguments([var[i] for i in range(size)])
+        return StarredArguments(var)
 
     def _visit_NumpyMatmul(self, expr):
         self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
