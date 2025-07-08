@@ -19,6 +19,7 @@ from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import manage_dependencies
+from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.parser.scope           import Scope
@@ -180,6 +181,7 @@ def execute_pyccel_make(files, *,
 
     # -------------------------------------------------------------------------
 
+    codegens = []
     printer_imports = {}
     for f, p in parsers.items():
         semantic_parser = p.semantic_parser
@@ -204,6 +206,7 @@ def execute_pyccel_make(files, *,
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
 
+        codegens.append(codegen)
         printer_imports.update(codegen.get_printer_imports())
 
     timers["Codegen Stage"] = time.time() - start_codegen
@@ -218,6 +221,19 @@ def execute_pyccel_make(files, *,
 
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
                         verbose = verbose, convert_only = True)
+
+    wrappergens = [Wrappergen(c, c.name, language, verbose) for c in codegens]
+
+    start_wrapper_creation = time.time()
+    for gen in wrappergens:
+        gen.wrap(base_dirpath)
+    timers['Wrapper creation'] = time.time() - start_wrapper_creation
+
+    wrapper_files = []
+    start_wrapper_printing = time.time()
+    for gen in wrappergens:
+        wrapper_files.append(gen.print(pyccel_dirpath))
+    timers['Wrapper printing'] = time.time() - start_wrapper_printing
 
     # TODO: Generate build system files
 
