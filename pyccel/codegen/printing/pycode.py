@@ -215,13 +215,18 @@ class PythonCodePrinter(CodePrinter):
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
+                if obj.is_vararg:
+                    return self._get_type_annotation(obj.var[0])
+                if obj.is_kwarg:
+                    type_annotation = self._print(obj.var.class_type.value_type)
+                    return f"'{type_annotation}'"
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, FunctionDefResult):
             if obj.var is Nil():
                 return ''
             else:
                 return self._get_type_annotation(obj.var)
-        elif isinstance(obj, Variable):
+        elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
             if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
                 self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
@@ -261,7 +266,11 @@ class PythonCodePrinter(CodePrinter):
             overload = ''
 
         self.set_scope(func.scope)
-        args = ', '.join(self._print(a) for a in func.arguments)
+        arguments = func.arguments
+        arg_code = [self._print(i) for i in arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        args   = ', '.join(arg_code)
         result = func.results
         body = '...'
         if result:
@@ -558,10 +567,10 @@ class PythonCodePrinter(CodePrinter):
         body    = self._indent_codestring(body)
 
         arguments = expr.arguments
-        arg_code = [self._print(i) for i in expr.arguments]
+        arg_code = [self._print(i) for i in arguments]
         if arguments and arguments[0].is_posonly:
             arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
-        args    = ', '.join(arg_code)
+        args = ', '.join(arg_code)
 
         imports    = self._indent_codestring(imports)
         functions  = self._indent_codestring(functions)
