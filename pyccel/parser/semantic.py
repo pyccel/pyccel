@@ -1420,17 +1420,29 @@ class SemanticParser(BasicParser):
         list[FunctionCallArgument]
             The sorted and complete call arguments.
         """
+        n_funcargs = len(func_args)
+        n_posonly_args = next((i for i, a in enumerate(func_args) if not a.is_posonly), n_funcargs)
         input_args = [a for a in args if a.keyword is None]
-        nargs = len(input_args)
-        for ka in func_args[nargs:]:
-            key = ka.name
-            relevant_args = [a for a in args[nargs:] if a.keyword == key]
-            n_relevant_args = len(relevant_args)
-            assert n_relevant_args <= 1
-            if n_relevant_args == 0 and ka.has_default:
-                input_args.append(ka.default_call_arg)
-            elif n_relevant_args == 1:
-                input_args.append(relevant_args[0])
+        kwargs_start = len(input_args)
+        assert len(input_args) >= n_posonly_args
+        n_possible_posargs = next((i for i, a in enumerate(func_args) if a.is_vararg), n_funcargs)
+        if len(input_args) > n_possible_posargs:
+            vararg = FunctionCallArgument(PythonTuple(*[a.value for a in input_args[n_possible_posargs:]]), keyword='*args')
+            input_args = input_args[:n_possible_posargs] + [vararg]
+
+        kwargs = {a.keyword: a for a in args[kwargs_start:]}
+        for ka in func_args[len(input_args):]:
+            if ka.is_vararg:
+                input_args.append(FunctionCallArgument(PythonTuple(), keyword='*args'))
+                continue
+            if not ka.is_kwarg:
+                input_args.append(kwargs.pop(ka.name, ka.default_call_arg))
+
+        if kwargs:
+            assert func_args[-1].is_kwarg
+            keys = [LiteralString(k) for k in kwargs]
+            values = [ka.value for ka in kwargs.values()]
+            input_args.append(FunctionCallArgument(PythonDict(keys, values), keyword='**kwargs'))
 
         return input_args
 
@@ -3560,7 +3572,8 @@ class SemanticParser(BasicParser):
             if not func.is_semantic:
                 # Correct func_args keyword names
                 func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
-                            annotation=a.annotation, value=a.value, posonly=a.is_posonly, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                            annotation=a.annotation, value=a.value, posonly=a.is_posonly, kwonly=a.is_kwonly,
+                            bound_argument=a.bound_argument, is_vararg = a.is_vararg, is_kwarg = a.is_kwarg)
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
 
