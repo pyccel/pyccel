@@ -6125,6 +6125,10 @@ def test_true_divide(language):
     i_arr_1d = randint(min_int, max_int, size=5)
     f_arr_1d = uniform(min_float/2, max_float/2, size=5)
 
+    # Avoid overflow on macOS
+    if sys.platform == 'darwin' and language=='c':
+        c *= np.sqrt(2) / 2
+
     epyccel_basic_division = epyccel(basic_division, language=language)
     epyccel_basic_array_division = epyccel(basic_array_division, language=language)
 
