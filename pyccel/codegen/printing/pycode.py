@@ -9,7 +9,7 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple, PythonDict
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
@@ -463,7 +463,20 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
-            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+            if expr.keyword.startswith('**'):
+                val = expr.value
+                assert isinstance(val, PythonDict)
+                assert all(isinstance(k, LiteralString) for k in val.keys)
+                keys = [k.python_value for k in val.keys]
+                args = [self._print(v) for v in val.values]
+                return ', '.join(f'{k} = {a}' for k,a in zip(keys, args))
+            elif expr.keyword.startswith('*'):
+                val = self._print(expr.value)
+                assert val.startswith('(') and val.endswith(')')
+                return val[1:-1].strip(',')
+            else:
+                val = self._print(expr.value)
+                return f'{expr.keyword} = {val}'
         else:
             return self._print(expr.value)
 
