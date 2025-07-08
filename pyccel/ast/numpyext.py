@@ -79,6 +79,7 @@ __all__ = (
     'NumpyCosh',
     'NumpyDivide',
     'NumpyExp',
+    'NumpyExpm1',
     'NumpyFabs',
     'NumpyFloor',
     'NumpyHypot',
@@ -1953,6 +1954,10 @@ class NumpyExp     (NumpyUfuncUnary):
     """Represent a call to the exp function in the Numpy library"""
     __slots__ = ()
     name = 'exp'
+class NumpyExpm1   (NumpyUfuncUnary):
+    """Represent a call to the expm1 function in the Numpy library"""
+    __slots__ = ()
+    name = 'expm1'
 class NumpyLog     (NumpyUfuncUnary):
     """Represent a call to the log function in the Numpy library"""
     __slots__ = ()
@@ -2878,6 +2883,7 @@ numpy_funcs = {
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
     'fabs'      : PyccelFunctionDef('fabs'      , NumpyFabs),
     'exp'       : PyccelFunctionDef('exp'       , NumpyExp),
+    'expm1'     : PyccelFunctionDef('expm1'     , NumpyExpm1),
     'log'       : PyccelFunctionDef('log'       , NumpyLog),
     'sqrt'      : PyccelFunctionDef('sqrt'      , NumpySqrt),
     # ---
