@@ -2937,7 +2937,10 @@ class SemanticParser(BasicParser):
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
         value = None if expr.value is None else self._visit(expr.value)
+        posonly = expr.is_posonly
         kwonly = expr.is_kwonly
+        is_vararg = expr.is_vararg
+        is_kwarg = expr.is_kwarg
         is_optional = isinstance(value, Nil)
         bound_argument = expr.bound_argument
 
@@ -2960,11 +2963,13 @@ class SemanticParser(BasicParser):
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
-                                        value = value, kwonly = kwonly, annotation = expr.annotation))
+                                        value = value, posonly = posonly, kwonly = kwonly, annotation = expr.annotation,
+                                        is_vararg = is_vararg, is_kwarg = is_kwarg))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
-                                is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
-                                value = value, kwonly = kwonly, annotation = expr.annotation))
+                                is_posonly = posonly, is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
+                                value = value, annotation = expr.annotation,
+                                is_vararg = is_vararg, is_kwarg = is_kwarg))
         return args
 
     def _visit_CodeBlock(self, expr):
@@ -3555,7 +3560,7 @@ class SemanticParser(BasicParser):
             if not func.is_semantic:
                 # Correct func_args keyword names
                 func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
-                            annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                            annotation=a.annotation, value=a.value, posonly=a.is_posonly, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
 
@@ -4756,6 +4761,11 @@ class SemanticParser(BasicParser):
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
+        if any(a.annotation is None for a in expr.arguments):
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='fatal',
+                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
