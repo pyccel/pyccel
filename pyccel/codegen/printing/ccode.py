@@ -95,6 +95,7 @@ numpy_ufunc_to_c_float = {
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
+    'NumpyExpm1' : 'expm1',
     'NumpyLog' : 'log',
     'NumpySqrt': 'sqrt',
     # ---
