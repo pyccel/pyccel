@@ -1,5 +1,5 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""
-Prototying Compiled Functions with Inlined Callables
+Prototyping Compiled Functions with Inlined Callables
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 
 ============
