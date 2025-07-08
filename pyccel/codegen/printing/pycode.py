@@ -434,6 +434,11 @@ class PythonCodePrinter(CodePrinter):
             name = self._print(expr.name)
         default = ''
 
+        if expr.is_vararg:
+            name = f'*{name}'
+        if expr.is_kwarg:
+            name = f'**{name}'
+
         if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
@@ -551,7 +556,12 @@ class PythonCodePrinter(CodePrinter):
         functions  = ''.join(self._print(f) for f in functions)
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
-        args    = ', '.join(self._print(i) for i in expr.arguments)
+
+        arguments = expr.arguments
+        arg_code = [self._print(i) for i in expr.arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        args    = ', '.join(arg_code)
 
         imports    = self._indent_codestring(imports)
         functions  = self._indent_codestring(functions)
