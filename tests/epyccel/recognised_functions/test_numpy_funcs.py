@@ -6120,8 +6120,8 @@ def test_true_divide(language):
         return true_divide(a,b)
 
     i = randint(1e6)
-    f = uniform(min_float/2, max_float/2)
-    c = uniform(min_float/2, max_float/2)+1j*uniform(min_float/2, max_float/2)
+    f = max_float / 2
+    c = max_float / 2 * (1 + 1j)
     i_arr_1d = randint(min_int, max_int, size=5)
     f_arr_1d = uniform(min_float/2, max_float/2, size=5)
 
