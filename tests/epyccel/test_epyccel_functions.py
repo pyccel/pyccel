@@ -492,3 +492,15 @@ def test_argument_types():
     args = (7, 14, 21)
     kwargs = {'d': 11, 'f': 13}
     assert f(a, b, *args, c=c, **kwargs) == epyc_f(a, b, *args, c=c, **kwargs)
+
+def test_positional_only_arguments(language):
+    def f(a : int, /, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b) == epyc_f(a, b)
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a=a, b=b)
