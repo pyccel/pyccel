@@ -504,3 +504,14 @@ def test_positional_only_arguments(language):
     assert f(a, b=b) == epyc_f(a, b=b)
     with pytest.raises(TypeError):
         epyc_f(a=a, b=b)
+
+def test_keyword_only_arguments(language):
+    def f(a : int, *, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a, b)

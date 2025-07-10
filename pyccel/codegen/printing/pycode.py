@@ -270,6 +270,8 @@ class PythonCodePrinter(CodePrinter):
         arg_code = [self._print(i) for i in arguments]
         if arguments and arguments[0].is_posonly:
             arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
         args   = ', '.join(arg_code)
         result = func.results
         body = '...'
@@ -583,6 +585,8 @@ class PythonCodePrinter(CodePrinter):
         arg_code = [self._print(i) for i in arguments]
         if arguments and arguments[0].is_posonly:
             arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
         args = ', '.join(arg_code)
 
         imports    = self._indent_codestring(imports)
