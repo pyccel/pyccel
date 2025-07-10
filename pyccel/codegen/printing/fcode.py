@@ -74,7 +74,7 @@ from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
-from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type, NumpyFloat64Type, NumpyComplex128Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -3290,6 +3290,21 @@ class FCodePrinter(CodePrinter):
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
             abs_result = self._print(self._apply_cast(expr.dtype, PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
+
+    def _print_NumpyExpm1(self, expr):
+        arg = expr.arg
+        if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
+            if not isinstance(arg.dtype, NumpyComplex128Type):
+                arg = self._apply_cast(NumpyComplex128Type(), arg)
+        else:
+            if not isinstance(arg.dtype, NumpyFloat64Type):
+                arg = self._apply_cast(NumpyFloat64Type(), arg)
+
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+
+        arg_code = self._print(arg)
+
+        return f'expm1({arg_code})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
