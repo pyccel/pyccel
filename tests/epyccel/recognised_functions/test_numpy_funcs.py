@@ -801,9 +801,29 @@ def test_expm1_call_c(language):
 
     f1 = epyccel(expm1_call_c, language = language)
     x = uniform(high=1e2) + uniform(high=1e2)*1j
-    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
-    assert isclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_c(x))
+
+def test_expm1_call_cast_f(language):
+    def expm1_call_f(x : 'float32'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = np.float32(uniform(high=1e2))
+    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), expm1_call_f(x))
+
+def test_expm1_call_cast_c(language):
+    def expm1_call_c(x : 'complex64'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = np.complex64(uniform(high=1e2) + uniform(high=1e2)*1j)
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), expm1_call_c(x))
 
 def test_expm1_phrase_i_i(language):
     def expm1_phrase_i_i(x : 'int', y : 'int'):
