@@ -36,16 +36,6 @@ def pyccel_make_command():
     group.add_argument('-d', '--file-descr', type=Path,
             help="A file containing a list of all the files to be translated as a project.")
 
-    # ... compiler syntax, semantic and codegen
-    group = parser.add_argument_group('Pyccel compiling stages')
-    group.add_argument('-x', '--syntax-only', action='store_true',
-                       help='Stop Pyccel after syntactic parsing, before semantic analysis or code generation.')
-    group.add_argument('-e', '--semantic-only', action='store_true',
-                       help='Stop Pyccel after semantic analysis, before code generation.')
-    group.add_argument('-t', '--convert-only', action='store_true',
-                       help='Stop Pyccel after translation to the target language, before build.')
-    # ...
-
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
 
