@@ -778,7 +778,7 @@ def test_expm1_call_i(language):
         return expm1(x)
 
     f1 = epyccel(expm1_call_i, language = language)
-    x = randint(1e2)
+    x = randint(100)
     assert isclose(f1(x), expm1_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_i(x))
@@ -789,7 +789,7 @@ def test_expm1_call_f(language):
         return expm1(x)
 
     f1 = epyccel(expm1_call_f, language = language)
-    x = uniform(high=1e2)
+    x = uniform(high=100)
     assert isclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_f(x))
@@ -800,7 +800,7 @@ def test_expm1_call_c(language):
         return expm1(x)
 
     f1 = epyccel(expm1_call_c, language = language)
-    x = uniform(high=1e2) + uniform(high=1e2)*1j
+    x = uniform(high=100) + uniform(high=100)*1j
     assert isclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_c(x))
@@ -811,7 +811,7 @@ def test_expm1_call_cast_f(language):
         return expm1(x)
 
     f1 = epyccel(expm1_call_f, language = language)
-    x = np.float32(uniform(high=1e2))
+    x = np.float32(uniform(high=30))
     assert isclose(f1(x), expm1_call_f(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), expm1_call_f(x))
 
@@ -821,7 +821,7 @@ def test_expm1_call_cast_c(language):
         return expm1(x)
 
     f1 = epyccel(expm1_call_c, language = language)
-    x = np.complex64(uniform(high=1e2) + uniform(high=1e2)*1j)
+    x = np.complex64(uniform(high=15) + uniform(high=15)*1j)
     assert isclose(f1(x), expm1_call_c(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), expm1_call_c(x))
 
@@ -832,8 +832,8 @@ def test_expm1_phrase_i_i(language):
         return a
 
     f2 = epyccel(expm1_phrase_i_i, language = language)
-    x = randint(1e2)
-    y = randint(1e2)
+    x = randint(100)
+    y = randint(100)
     assert isclose(f2(x,y), expm1_phrase_i_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,-y), expm1_phrase_i_i(-x,-y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,y), expm1_phrase_i_i(-x,y), rtol=RTOL, atol=ATOL)
@@ -846,8 +846,8 @@ def test_expm1_phrase_f_f(language):
         return a
 
     f2 = epyccel(expm1_phrase_f_f, language = language)
-    x = uniform(high=1e2)
-    y = uniform(high=1e2)
+    x = uniform(high=100)
+    y = uniform(high=100)
     assert isclose(f2(x,y), expm1_phrase_f_f(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,-y), expm1_phrase_f_f(-x,-y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,y), expm1_phrase_f_f(-x,y), rtol=RTOL, atol=ATOL)
@@ -860,8 +860,8 @@ def test_expm1_phrase_i_f(language):
         return a
 
     f2 = epyccel(expm1_phrase_i_f, language = language)
-    x = randint(1e2)
-    y = uniform(high=1e2)
+    x = randint(100)
+    y = uniform(high=100)
     assert isclose(f2(x,y), expm1_phrase_i_f(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,-y), expm1_phrase_i_f(-x,-y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x,y), expm1_phrase_i_f(-x,y), rtol=RTOL, atol=ATOL)
@@ -874,8 +874,8 @@ def test_expm1_phrase_f_i(language):
         return a
 
     f2 = epyccel(expm1_phrase_f_i, language = language)
-    x = uniform(high=1e2)
-    y = randint(1e2)
+    x = uniform(high=100)
+    y = randint(100)
     assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
