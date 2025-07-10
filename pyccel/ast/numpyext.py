@@ -1955,7 +1955,16 @@ class NumpyExp     (NumpyUfuncUnary):
     __slots__ = ()
     name = 'exp'
 class NumpyExpm1   (NumpyUfuncUnary):
-    """Represent a call to the expm1 function in the Numpy library"""
+    """
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Parameters
+    ----------
+    x : PyccelAstType
+        The argument of the unary function.
+    """
     __slots__ = ()
     name = 'expm1'
 class NumpyLog     (NumpyUfuncUnary):
