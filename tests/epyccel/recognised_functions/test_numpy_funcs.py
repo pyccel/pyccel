@@ -881,6 +881,20 @@ def test_expm1_phrase_f_i(language):
     assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x,-y), expm1_phrase_f_i(x,-y), rtol=RTOL, atol=ATOL)
 
+def test_expm1_phrase_i_c(language):
+    def expm1_phrase_i_c(x : int, y : complex):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_c, language = language)
+    x = randint(100)
+    y = uniform(high=100) + uniform(high=100)*1j
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_c(x,-y), rtol=RTOL, atol=ATOL)
+
 #--------------------------------- log function ------------------------------#
 def test_log_call_i(language):
     def log_call_i(x : 'int'):
