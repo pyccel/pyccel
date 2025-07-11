@@ -484,7 +484,7 @@ elemental pure function pyc_expm1_c64(x) result(Out_0001)
 
     real(f64) :: a
 
-    a = sin(aimag(x) / 2._f64)
+    a = sin(aimag(x) * 0.5_f64)
     Out_0001 = (c_expm1(real(x)) * cos(aimag(x)) - 2._f64 * a * a) + &
                (exp(real(x)) * sin(aimag(x))) * cmplx(0,1, kind = c64)
 
