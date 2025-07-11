@@ -128,7 +128,7 @@ class Wrappergen:
 
             # print module header
             if header_ext is not None:
-                header_filename = f'{ast.name}_wrapper.{header_ext}'
+                header_filename = dirpath / f'{ast.name}_wrapper.{header_ext}'
                 module_header = ModuleHeader(ast)
                 if self._verbose:
                     print ('>>> Printing :: ', header_filename)
