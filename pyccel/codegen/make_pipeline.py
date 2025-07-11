@@ -18,6 +18,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
+from pyccel.codegen.compiling.project import CompileTarget
 from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
@@ -181,16 +182,23 @@ def execute_pyccel_make(files, *,
 
     # -------------------------------------------------------------------------
 
+    timers["Codegen Stage"] = 0
+    timers['Wrapper creation'] = 0
+    timers['Wrapper printing'] = 0
+
     codegens = []
+    wrappergens = []
     printer_imports = {}
+    targets = []
     for f, p in parsers.items():
         semantic_parser = p.semantic_parser
         start_codegen = time.time()
-        # Generate .f90 file
+        # Generate low-level code file
+        codegen = Codegen(semantic_parser, f, language, verbose)
+        fname = pyccel_dirpath / f
+        output_dir = fname.parent
+        os.makedirs(output_dir, exist_ok=True)
         try:
-            codegen = Codegen(semantic_parser, f, language, verbose)
-            fname = pyccel_dirpath / f
-            os.makedirs(fname.parent, exist_ok=True)
             fname, prog_name = codegen.export(fname)
         except NotImplementedError as error:
             msg = str(error)
@@ -206,10 +214,27 @@ def execute_pyccel_make(files, *,
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
 
-        codegens.append(codegen)
-        printer_imports.update(codegen.get_printer_imports())
+        timers["Codegen Stage"] += time.time() - start_codegen
 
-    timers["Codegen Stage"] = time.time() - start_codegen
+        codegens.append(codegen)
+
+        if language != 'python':
+            start_wrapper_creation = time.time()
+            wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+            wrappergen.wrap(base_dirpath)
+            timers['Wrapper creation'] += time.time() - start_wrapper_creation
+
+            start_wrapper_printing = time.time()
+            wrapper_files = wrappergen.print(output_dir)
+            timers['Wrapper printing'] += time.time() - start_wrapper_printing
+
+            wrappergens.append(wrappergen)
+            printer_imports.update(codegen.get_printer_imports())
+
+            targets.append(CompileTarget(fname, *wrapper_files, is_exe = False))
+            if codegen.is_program:
+                targets.append(CompileTarget(fname, prog_name, is_exe = True))
+
 
     if language == 'python':
         # Change working directory back to starting point
@@ -221,21 +246,6 @@ def execute_pyccel_make(files, *,
 
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
                         verbose = verbose, convert_only = True)
-
-    wrappergens = [Wrappergen(c, c.name, language, verbose) for c in codegens]
-
-    start_wrapper_creation = time.time()
-    for gen in wrappergens:
-        gen.wrap(base_dirpath)
-    timers['Wrapper creation'] = time.time() - start_wrapper_creation
-
-    wrapper_files = []
-    start_wrapper_printing = time.time()
-    for gen in wrappergens:
-        wrapper_files.append(gen.print(pyccel_dirpath))
-    timers['Wrapper printing'] = time.time() - start_wrapper_printing
-
-    # TODO: Generate build system files
 
     # Print all warnings now
     if errors.has_warnings():
