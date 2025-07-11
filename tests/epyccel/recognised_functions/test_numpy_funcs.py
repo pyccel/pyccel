@@ -805,6 +805,26 @@ def test_expm1_call_c(language):
     assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_c(x))
 
+def test_expm1_call_f_array(language):
+    def expm1_call_f(x : 'float[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = uniform(high=100, size=5)
+    assert np.allclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+
+def test_expm1_call_c_array(language):
+    def expm1_call_c(x : 'complex[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = uniform(high=100, size=5) + uniform(high=100, size=5)*1j
+    assert np.allclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+
 def test_expm1_call_cast_f(language):
     def expm1_call_f(x : 'float32'):
         from numpy import expm1
