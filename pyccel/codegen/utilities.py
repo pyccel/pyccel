@@ -43,7 +43,7 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",folder="math", libs = ('m',))),
     "pyc_math_c"       : (stdlib_path / "math", "math", CompileObj("pyc_math_c.c",folder="math")),
     "pyc_tools_f90"    : (stdlib_path / "tools", "tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
     "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
