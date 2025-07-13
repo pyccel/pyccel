@@ -92,7 +92,7 @@ def pyccel_make_command():
     if args.files:
         files = args.files
     elif args.glob:
-        files = [Path(f) for f in glob.glob(args.glob)]
+        files = [Path(f) for f in glob.glob(args.glob, recursive=True)]
     elif args.file_descr:
         with open(args.file_descr, 'r', encoding='utf-8') as f:
             files = [Path(fname.strip()) for fname in f.readlines()]
