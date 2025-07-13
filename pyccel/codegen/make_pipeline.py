@@ -195,7 +195,7 @@ def execute_pyccel_make(files, *,
         start_codegen = time.time()
         # Generate low-level code file
         codegen = Codegen(semantic_parser, f, language, verbose)
-        fname = pyccel_dirpath / f
+        fname = (pyccel_dirpath / f).with_suffix('')
         output_dir = fname.parent
         os.makedirs(output_dir, exist_ok=True)
         try:
@@ -231,9 +231,7 @@ def execute_pyccel_make(files, *,
             wrappergens.append(wrappergen)
             printer_imports.update(codegen.get_printer_imports())
 
-            targets.append(CompileTarget(fname, *wrapper_files, is_exe = False))
-            if codegen.is_program:
-                targets.append(CompileTarget(fname, prog_name, is_exe = True))
+            targets.append(CompileTarget(f.stem, fname, wrapper_files, prog_name))
 
 
     if language == 'python':
