@@ -1,10 +1,9 @@
+from .build_gen import BuildSystemHandler
+
+class CMakeHandler(BuildSystemHandler):
 
 
-class CMakeGen:
-    def __init__(self):
-        pass
-
-    def build_CompileTarget(self, expr):
+    def _build_CompileTarget(self, expr):
         kernel_lib = '{expr.name}_kernel'
         args = ',\n    '.join([kernel_lib, 'OBJECT', expr.file])
         lib_cmd = 'add_library({args})\n'
