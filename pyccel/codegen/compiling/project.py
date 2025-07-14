@@ -7,103 +7,205 @@
 Module providing objects that are useful for describing the compilation of a project
 via the pyccel-make command.
 """
-import pathlib
+from pathlib import Path
+from pyccel.errors.errors  import Errors
+
+errors = Errors()
 
 class CompileTarget:
-    #__slots__ = ('_name', '_file', '_wrapper_files', '_program_file', '_targets')
+    """
+    Class describing a compilation target.
+
+    Class describing the compilation target of a translated Python file.
+    The class contains all the information necessary to create the
+    necessary targets in a build system (e.g. CMake, meson).
+
+    Parameters
+    ----------
+    name : str
+        The unique identifier for the target.
+    pyfile : Path
+        The absolute path to the Python file that was translated.
+    file : str | Path
+        The absolute path to the low-level translation of the Python file.
+    wrapper_files : list[Path]
+        The absolute path to the generated wrapper files.
+    program_file : str | Path, optional
+        The absolute path to the low-level translation of the program found
+        in the Python file (if the file contained a program).
+    stdlib_deps : iterable[str]
+        An iterable containing the names of the stdlib targets of this object.
+    """
+    __slots__ = ('_name', '_pyfile', '_file', '_wrapper_files',
+                 '_program_file', '_dependencies', '_stdlib_deps')
     def __init__(self, name, pyfile, file, wrapper_files, program_file, stdlib_deps):
         self._name = name
         self._pyfile = pyfile
-        self._file = pathlib.Path(file)
+        self._file = Path(file)
         self._wrapper_files = wrapper_files
-        self._program_file = pathlib.Path(program_file) if program_file is not None else program_file
+        self._program_file = Path(program_file) if program_file is not None else program_file
         self._dependencies = []
         self._stdlib_deps = list(stdlib_deps)
 
     @property
     def name(self):
+        """
+        The unique identifier for the target.
+
+        The unique identifier for the target.
+        """
         return self._name
 
     @property
     def pyfile(self):
+        """
+        The absolute path to the Python file that was translated.
+
+        The absolute path to the Python file that was translated.
+        """
         return self._pyfile
 
     @property
     def file(self):
+        """
+        The absolute path to the low-level translation of the Python file.
+
+        The absolute path to the low-level translation of the Python file.
+        """
         return self._file
 
     @property
     def wrapper_files(self):
+        """
+        The absolute path to the generated wrapper files.
+
+        The absolute path to the generated wrapper files.
+        """
         return self._wrapper_files
 
     @property
     def program_file(self):
+        """
+        The absolute path to the low-level translation of the program.
+
+        The absolute path to the low-level translation of the program found
+        in the Python file (if the file contained a program).
+        """
         return self._program_file
 
     @property
     def is_exe(self):
+        """
+        Indicates if an executable should be created from this target.
+
+        Indicates if an executable should be created from this target.
+        """
         return self._program_file is not None
 
     def add_dependencies(self, dependencies_iterable):
+        """
+        Add dependencies to the target.
+
+        Add dependencies to the target. A dependency is something that
+        is imported by the file and must therefore be compiled before
+        this object.
+
+        Parameters
+        ----------
+        dependencies_iterable : iterable[CompileTarget]
+            The dependencies that should be added.
+        """
         self._dependencies.extend(dependencies_iterable)
 
     @property
     def dependencies(self):
+        """
+        Get the dependencies of the target.
+
+        Get all CompileTarget objects describing targets which are imported
+        by the file and must therefore be compiled before this object.
+        """
         return self._dependencies
 
     @property
     def stdlib_dependencies(self):
+        """
+        Get the stdlib dependencies of the target.
+
+        Get a list of strings containing the name of the targets from Pyccel's
+        standard library which are required to compile this object.
+        """
         return self._dependencies
 
     def __repr__(self):
-        return f'CompileTarget({self.name})'
-
-    @property
-    def path_parts(self):
-        return self.pyfile.parts
-
-    @property
-    def path(self):
-        return self.pyfile
+        return f'CompileTarget({self.pyfile})'
 
 class DirTarget:
+    """
+    Class describing a folder containing compilation targets.
 
+    Class describing a folder containing compilation targets. This class sorts
+    the compilation targets to ensure that they all objects are printed before
+    they are used.
+
+    Parameters
+    ----------
+    folder : Path
+        The absolute path to the folder containing the generated code.
+    compile_targets : list[CompileTarget]
+        A list of the CompileTarget objects which are found in this directory.
+    """
+    __slots__ = ('_folder', '_targets', '_dependencies')
     def __init__(self, folder, compile_targets : list[CompileTarget]):
+        # Group compile targets by subdirectory
         dirs = {}
         for c in compile_targets:
-            dir_info = pathlib.Path(c.pyfile).relative_to(folder).parent.parts
+            dir_info = Path(c.pyfile).relative_to(folder).parent.parts
             dirname = dir_info[0] if dir_info else '.'
             dirs.setdefault(folder / dirname, []).append(c)
-
-        deps = {}
-        if folder in dirs:
-            for f in dirs[folder]:
-                deps[f] = []
-                for c in f.dependencies:
-                    if c.pyfile.parent == folder:
-                        deps[f].append(c.pyfile)
-                    elif folder in c.pyfile.parents:
-                        deps[f].append(folder / c.pyfile.relative_to(folder).parts[0])
 
         for n, c in dirs.items():
             if n == folder:
                 continue
-            dir_target = DirTarget(n, c)
-            deps[dir_target] = []
-            for d in dir_target.dependencies:
-                assert isinstance(d, CompileTarget)
-                if d.pyfile.parent == folder:
-                    deps[dir_target].append(d.pyfile)
-                elif folder in d.pyfile.parents:
-                    deps[dir_target].append(folder / d.pyfile.relative_to(folder).parts[0])
+            dirs[n] = [DirTarget(n, c)]
 
+        # Find dependencies to calculate the order in which folders should be included
+        deps = {}
+        for current_folder, compile_objs in dirs.items():
+            for f in compile_objs:
+                deps[f] = set()
+                for c in f.dependencies:
+                    if c.pyfile.parent == current_folder:
+                        deps[f].add(c.pyfile)
+                    elif folder in c.pyfile.parents:
+                        deps[f].add(folder / c.pyfile.relative_to(folder).parts[0])
+
+        # Sort folders
         placed = []
         targets = []
         while deps:
-            new_target = next(c for (c, d) in deps.items() if all(di in placed for di in d))
+            new_target = next((c for (c, d) in deps.items() if all(di in placed for di in d)), None)
+            if new_target is None:
+                break
             deps.pop(new_target)
             targets.append(new_target)
-            placed.append(new_target.path)
+            if isinstance(new_target, CompileTarget):
+                placed.append(new_target.pyfile)
+            else:
+                placed.append(new_target.folder)
+
+        # If the sorting failed print an error showing the circular dependency
+        if deps:
+            cycle = [next(c for c in deps)]
+            while len(cycle) < 2 or cycle[-1] != cycle[0]:
+                c = cycle[-1]
+                unfulfilled_dep = next(d for d in deps[c] if d not in placed)
+                cycle.append(next(c for c in deps if getattr(c, 'pyfile', getattr(c, 'folder')) == unfulfilled_dep))
+
+            cycle_example = ' -> '.join(str(getattr(c, 'pyfile', c.folder)) for c in cycle)
+
+            errors.report(f"Found circular dependencies between directories: {cycle_example}",
+                         severity='fatal')
 
         self._folder = folder
         self._targets = targets
@@ -127,17 +229,12 @@ class DirTarget:
         else:
             return self.folder in other.folder.parents
 
-    @property
-    def path_parts(self):
-        return self.folder.parts
-
-    @property
-    def path(self):
-        return self.folder
+    def __repr__(self):
+        return f'DirTarget({self.folder})'
 
 class BuildProject:
     def __init__(self, root_dir, compile_targets, languages, stdlib_deps):
-        self._root_dir = pathlib.Path(root_dir)
+        self._root_dir = Path(root_dir)
 
         self._dir_info = DirTarget(self._root_dir, compile_targets)
 
