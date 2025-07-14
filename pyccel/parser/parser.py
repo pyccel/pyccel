@@ -48,7 +48,7 @@ class Parser(object):
 
     def __init__(self, filename, *, output_folder, context_dict = None, original_filename = None, **kwargs):
 
-        filename = Path(filename)
+        filename = Path(filename).absolute()
         self._filename = filename
         self._kwargs   = kwargs
 
