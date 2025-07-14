@@ -17,9 +17,11 @@ from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
+from pyccel.codegen.build_generation.cmake_gen import CMakeHandler
+from pyccel.codegen.build_generation.meson_gen import MesonHandler
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.compiling.project import CompileTarget
-from pyccel.codegen.utilities      import manage_dependencies
+from pyccel.codegen.compiling.project import CompileTarget, BuildProject
+from pyccel.codegen.utilities      import manage_dependencies, internal_libs
 from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -28,6 +30,9 @@ from pyccel.parser.scope           import Scope
 pyccel_stage = PyccelStage()
 
 __all__ = ['execute_pyccel']
+
+build_system_handler = {'cmake': CMakeHandler,
+                        'meson': MesonHandler}
 
 #==============================================================================
 # NOTE:
@@ -42,6 +47,7 @@ def execute_pyccel_make(files, *,
                    folder          = None,
                    language        = None,
                    compiler_family = None,
+                   build_system    = None,
                    debug           = None,
                    accelerators    = (),
                    conda_warnings  = 'basic'):
@@ -141,7 +147,12 @@ def execute_pyccel_make(files, *,
 
     parsers = {f: Parser(f.absolute(), output_folder = folder) for f in files}
 
+    to_remove = []
     for f, p in parsers.items():
+        # Filter out empty __init__.py files
+        if f.stem == '__init__' and len(p.fst.body) == 0:
+            to_remove.append(f)
+            continue
         # Parse Python file
         try:
             p.parse(verbose=verbose, d_parsers_by_filename = {f.absolute(): p for f, p in parsers.items()})
@@ -156,6 +167,9 @@ def execute_pyccel_make(files, *,
         if errors.has_errors():
             handle_error('parsing (syntax)')
             raise PyccelSyntaxError('Syntax step failed')
+
+    for r in to_remove:
+        parsers.pop(r)
 
     timers["Syntactic Stage"] = time.time() - start_syntax
 
@@ -188,8 +202,10 @@ def execute_pyccel_make(files, *,
 
     codegens = []
     wrappergens = []
-    printer_imports = {}
-    targets = []
+    printer_imports = {'cwrapper': None}
+    targets = {}
+    printed_languages = set()
+    has_conflicting_modules = len({p.stem for p in parsers}) != len(parsers)
     for f, p in parsers.items():
         semantic_parser = p.semantic_parser
         start_codegen = time.time()
@@ -230,9 +246,14 @@ def execute_pyccel_make(files, *,
 
             wrappergens.append(wrappergen)
             printer_imports.update(codegen.get_printer_imports())
+            printed_languages.update(wrappergen.printed_languages)
 
-            targets.append(CompileTarget(f.stem, fname, wrapper_files, prog_name))
-
+            relative_name = Path(fname).relative_to(pyccel_dirpath).with_suffix('')
+            target_name = '__'.join(relative_name.parts) if has_conflicting_modules \
+                          else relative_name.stem
+            targets[f.absolute()] = CompileTarget('__'.join(relative_name.parts),
+                                                  f.absolute(), fname, wrapper_files,
+                                                  prog_name, codegen.get_printer_imports())
 
     if language == 'python':
         # Change working directory back to starting point
@@ -242,8 +263,35 @@ def execute_pyccel_make(files, *,
             print_timers(start, timers)
         return
 
+    for f, p in parsers.items():
+        targets[f.absolute()].add_dependencies(targets[s.filename] for s in p.sons)
+
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
                         verbose = verbose, convert_only = True)
+
+    stdlib_deps = {l: internal_libs[l][1] for l in printer_imports}
+    build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
+                                 stdlib_deps)
+
+    build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, verbose, debug)
+
+    try:
+        build_sys.generate(build_project)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+    except PyccelError:
+        handle_error('code generation')
+        # Raise a new error to avoid a large traceback
+        raise PyccelCodegenError('Code generation failed') from None
+
+    if errors.has_errors():
+        handle_error('build system generation')
+        raise PyccelCodegenError('Build system generation failed')
+
+    build_sys.compile()
 
     # Print all warnings now
     if errors.has_warnings():
