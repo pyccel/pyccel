@@ -270,12 +270,12 @@ def execute_pyccel_make(files, *,
                         verbose = verbose, convert_only = True)
 
     stdlib_deps = {l: internal_libs[l][1] for l in printer_imports}
-    build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
-                                 stdlib_deps)
-
-    build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, verbose, debug)
-
     try:
+        build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
+                                     stdlib_deps)
+
+        build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, verbose, debug)
+
         build_sys.generate(build_project)
     except NotImplementedError as error:
         msg = str(error)
