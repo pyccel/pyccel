@@ -7,6 +7,7 @@
 
 import argparse
 import glob
+import os
 import sys
 from pathlib import Path
 
@@ -83,7 +84,7 @@ def pyccel_make_command():
                         help='Print the time spent in each section of the execution.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='Show internal messages.')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
     # ...
@@ -99,6 +100,38 @@ def pyccel_make_command():
     else:
         raise NotImplementedError("No file specified")
 
-    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+    accelerators = []
+    if args.mpi:
+        accelerators.append("mpi")
+    if args.openmp:
+        accelerators.append("openmp")
+    #if args.openacc:
+    #    accelerators.append("openacc")
 
-    execute_pyccel_make(files, verbose=args.verbose)
+    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import ErrorsMode
+
+    # ...
+    # this will initialize the singleton ErrorsMode
+    # making this settings available everywhere
+    err_mode = ErrorsMode()
+    if args.developer_mode:
+        err_mode.set_mode('developer')
+    else:
+        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
+    # ...
+
+    try:
+        execute_pyccel_make(files,
+                            verbose = args.verbose,
+                            time_execution = args.time_execution,
+                            folder = args.output,
+                            language = args.language,
+                            compiler_family = args.compiler_family,
+                            build_system = args.build_system,
+                            debug = args.debug,
+                            accelerators = accelerators,
+                            conda_warnings  = args.conda_warnings)
+    except PyccelError:
+        sys.exit(1)
