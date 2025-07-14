@@ -9,5 +9,5 @@ target_include_directories(cwrapper
 
 target_link_libraries(cwrapper
     PUBLIC
-    Python3::NumPy
+    Python::NumPy
 )
