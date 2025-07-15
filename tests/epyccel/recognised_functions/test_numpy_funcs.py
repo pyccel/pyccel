@@ -771,6 +771,150 @@ def test_exp_phrase_r_i(language):
     assert isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x,-y), exp_phrase_r_i(x,-y), rtol=RTOL, atol=ATOL)
 
+#--------------------------------- expm1 function ------------------------------#
+def test_expm1_call_i(language):
+    def expm1_call_i(x : 'int'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_i, language = language)
+    x = randint(100)
+    assert isclose(f1(x), expm1_call_i(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_i(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_i(x))
+
+def test_expm1_call_f(language):
+    def expm1_call_f(x : 'float'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = uniform(high=100)
+    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_f(x))
+
+def test_expm1_call_c(language):
+    def expm1_call_c(x : complex):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = uniform(high=100) + uniform(high=100)*1j
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_c(x))
+
+def test_expm1_call_f_array(language):
+    def expm1_call_f(x : 'float[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = uniform(high=100, size=5)
+    assert np.allclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+
+def test_expm1_call_c_array(language):
+    def expm1_call_c(x : 'complex[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = uniform(high=100, size=5) + uniform(high=100, size=5)*1j
+    assert np.allclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+
+def test_expm1_call_cast_f(language):
+    def expm1_call_f(x : 'float32'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = np.float32(uniform(high=30))
+    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), expm1_call_f(x))
+
+def test_expm1_call_cast_c(language):
+    def expm1_call_c(x : 'complex64'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = np.complex64(uniform(high=15) + uniform(high=15)*1j)
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), expm1_call_c(x))
+
+def test_expm1_phrase_i_i(language):
+    def expm1_phrase_i_i(x : 'int', y : 'int'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_i, language = language)
+    x = randint(100)
+    y = randint(100)
+    assert isclose(f2(x,y), expm1_phrase_i_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_i_i(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_i_i(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_i(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_f_f(language):
+    def expm1_phrase_f_f(x : 'float', y : 'float'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_f_f, language = language)
+    x = uniform(high=100)
+    y = uniform(high=100)
+    assert isclose(f2(x,y), expm1_phrase_f_f(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_f_f(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_f_f(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_f_f(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_i_f(language):
+    def expm1_phrase_i_f(x : 'int', y : 'float'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_f, language = language)
+    x = randint(100)
+    y = uniform(high=100)
+    assert isclose(f2(x,y), expm1_phrase_i_f(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_i_f(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_i_f(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_f(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_f_i(language):
+    def expm1_phrase_f_i(x : 'float', y : 'int'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_f_i, language = language)
+    x = uniform(high=100)
+    y = randint(100)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_f_i(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_i_c(language):
+    def expm1_phrase_i_c(x : int, y : complex):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_c, language = language)
+    x = randint(100)
+    y = uniform(high=100) + uniform(high=100)*1j
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_c(x,-y), rtol=RTOL, atol=ATOL)
+
 #--------------------------------- log function ------------------------------#
 def test_log_call_i(language):
     def log_call_i(x : 'int'):
