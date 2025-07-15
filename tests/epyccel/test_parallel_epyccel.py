@@ -9,7 +9,7 @@ RTOL = 2e-14
 ATOL = 1e-15
 
 #==============================================================================
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_module_1(language):
     import modules.Module_1 as mod
 
@@ -29,7 +29,7 @@ def test_module_1(language):
     # ...
 
 #==============================================================================
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_module_2(language):
     import modules.Module_2 as mod
 
@@ -48,7 +48,7 @@ def test_module_2(language):
     # ...
 
 #==============================================================================
-@pytest.mark.parallel
+@pytest.mark.mpi
 def test_function(language):
     from modules.Module_1 import f, g, h
 

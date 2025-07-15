@@ -571,13 +571,14 @@ def test_generic_functions():
                     int, int])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_default_arguments(language):
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int, int, float, float, float,
                 float, float, float, float, bool, bool, bool,
-                float, float, float, float, float, float,
-                float, float],
+                float, float, float, float, int, int,
+                float, float, float, float],
             language=language)
 
 #------------------------------------------------------------------------------
@@ -623,25 +624,38 @@ def test_hope_benchmarks( test_file, language ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
-                                        "scripts/import_syntax/collisions3.py",
                                         "scripts/import_syntax/collisions5.py",
                                         ] )
-@pytest.mark.parametrize( "language", (
+def test_import_syntax(test_file, language):
+    pyccel_test(test_file, language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize("test_file", ["scripts/import_syntax/collisions3.py"])
+@pytest.mark.parametrize("language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
-def test_import_syntax( test_file, language ):
+def test_import_syntax_cfail(test_file, language):
     pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
                                         "scripts/import_syntax/from_mod_import_as_user.py",
-                                        "scripts/import_syntax/collisions2.py"
+                                        "scripts/import_syntax/collisions2.py",
+                                        "scripts/runtest_import_mod_project_as.py",
                                         ] )
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
 @pytest.mark.xdist_incompatible
@@ -657,19 +671,18 @@ def test_import_syntax_user_as( test_file, language ):
                                         "scripts/import_syntax/import_mod_user_func.py",
                                         "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-    )
-)
 @pytest.mark.xdist_incompatible
-def test_import_syntax_user( test_file, language ):
+def test_import_syntax_user(test_file, language):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
     )
 )
 @pytest.mark.xdist_incompatible
@@ -1111,25 +1124,49 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_json():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compile-info test.json')
-    with open(get_abs_path('scripts/test.json'), 'r') as f:
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-        pyccel_commands='--compiler test.json --export-compile-info test2.json')
-    with open(get_abs_path('scripts/test2.json'), 'r') as f:
+    assert dict_1['c']['exec'] == 'icx'
+    cmd = [shutil.which("pyccel"),
+           '--compiler-config',
+           f'{output_dir}/test.json',
+           '--export-compiler-config',
+           f'{output_dir}/test2.json']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
+        dict_2 = json.load(f)
+
+    assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_ambiguous_json():
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
+        dict_1 = json.load(f)
+    cmd = [shutil.which("pyccel"),
+           '--compiler-config',
+           f'{output_dir}/test.json',
+           '--export-compiler-config',
+           f'{output_dir}/test2']
+    subprocess.run(cmd, check=True)
+    with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
 
 @pytest.mark.xdist_incompatible
 def test_json_relative_path():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
-            pyccel_commands='--export-compile-info test.json')
-    shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
-    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler test.json')
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    subprocess.run(cmd, check=True)
+    shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
+    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
 def test_reserved_file_name():
@@ -1188,7 +1225,7 @@ def test_time_execution_flag():
 
     cwd = get_abs_path("scripts")
 
-    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time_execution"]
+    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time-execution"]
     with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         result, _ = p.communicate()

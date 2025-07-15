@@ -7,7 +7,6 @@
 www.fortran90.org as much as possible."""
 
 import ast
-import functools
 import string
 import sys
 import re
@@ -34,10 +33,10 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall, ClassDef
+from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import FunctionAddress, Interface
-from pyccel.ast.core import Return, Module, For, If, IfSection
+from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
@@ -75,7 +74,7 @@ from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
-from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type, NumpyFloat64Type, NumpyComplex128Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -1320,37 +1319,37 @@ class FCodePrinter(CodePrinter):
     #========================== Set Methods ================================#
 
     def _print_SetAdd(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         insert_obj = self._print(expr.args[0])
         return f'call {var} % insert( {insert_obj} )\n'
 
     def _print_SetClear(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         return f'call {var} % clear()\n'
 
     def _print_SetPop(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return f'{type_name}_pop({var_code})'
 
     def _print_SetCopy(self, expr):
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr.class_type)
         return f'{type_name}({var_code})'
 
     def _print_SetUnion(self, expr):
         assign_base = expr.get_direct_user_nodes(lambda n: isinstance(n, Assign))
-        var = expr.set_variable
+        var = expr.set_obj
         if not assign_base:
             result = self._print(self.scope.get_temporary_variable(var))
         else:
             result = self._print(assign_base[0].lhs)
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         args_insert = []
@@ -1375,25 +1374,35 @@ class FCodePrinter(CodePrinter):
             return result
 
     def _print_SetIntersectionUpdate(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
         # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
         return ''.join(f'call {type_name}_intersection_update({var_code}, {self._print(arg)})\n' \
                 for arg in expr.args)
 
+    def _print_SetDifferenceUpdate(self, expr):
+        var = expr.set_obj
+        expr_type = var.class_type
+        var_code = self._print(expr.set_obj)
+        type_name = self._print(expr_type)
+        self.add_import(self._build_gFTL_extension_module(expr_type))
+        # See pyccel/stdlib/gFTL_functions/Set_extensions.inc for the definition
+        return ''.join(f'call {type_name}_difference_update({var_code}, {self._print(arg)})\n' \
+                for arg in expr.args)
+
     def _print_SetDiscard(self, expr):
-        var = self._print(expr.set_variable)
+        var = self._print(expr.set_obj)
         val = self._print(expr.args[0])
         success = self.scope.get_temporary_variable(PythonNativeInt())
         return f'{success} = {var} % erase_value({val})\n'
 
     def _print_SetIsDisjoint(self, expr):
-        var = expr.set_variable
+        var = expr.set_obj
         expr_type = var.class_type
-        var_code = self._print(expr.set_variable)
+        var_code = self._print(expr.set_obj)
         arg_code = self._print(expr.args[0])
         type_name = self._print(expr_type)
         self.add_import(self._build_gFTL_extension_module(expr_type))
@@ -1973,7 +1982,6 @@ class FCodePrinter(CodePrinter):
         optionalstr    = ''
         privatestr     = ''
         externalstr    = ''
-        is_string = isinstance(var.class_type, StringType)
 
         # Compute intent string
         if intent:
@@ -3060,28 +3068,37 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelRShift(self, expr):
-        return 'RSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'RSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelLShift(self, expr):
-        return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'LSHIFT({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitXor(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .neqv. '.join(self._print(a) for a in expr.args)
-        return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IEOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitOr(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .or. '.join(self._print(a) for a in expr.args)
-        return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IOR({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelBitAnd(self, expr):
         if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .and. '.join(self._print(a) for a in expr.args)
-        return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        arg0, arg1 = expr.args
+        return f'IAND({self._print(arg0)}, {self._print(arg1)})'
 
     def _print_PyccelInvert(self, expr):
-        return 'NOT({})'.format(self._print(expr.args[0]))
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'.not. ({arg})'
+        else:
+            return f'NOT({arg})'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
@@ -3247,6 +3264,21 @@ class FCodePrinter(CodePrinter):
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
             abs_result = self._print(self._apply_cast(expr.dtype, PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
+
+    def _print_NumpyExpm1(self, expr):
+        arg = expr.arg
+        if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
+            if not isinstance(arg.dtype, NumpyComplex128Type):
+                arg = self._apply_cast(NumpyComplex128Type(), arg)
+        else:
+            if not isinstance(arg.dtype, NumpyFloat64Type):
+                arg = self._apply_cast(NumpyFloat64Type(), arg)
+
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+
+        arg_code = self._print(arg)
+
+        return f'expm1({arg_code})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var

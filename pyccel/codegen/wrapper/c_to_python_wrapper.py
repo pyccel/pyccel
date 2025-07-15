@@ -276,7 +276,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.update(dict(zip(results, collect_results)))
         return collect_results
 
-    def _get_type_check_condition(self, py_obj, arg, raise_error, body):
+    def _get_type_check_condition(self, py_obj, arg, raise_error, body, allow_empty_arrays):
         """
         Get the condition which checks if an argument has the expected type.
 
@@ -300,6 +300,10 @@ class CToPythonWrapper(Wrapper):
             A list describing code where the type check will occur. This allows any necessary code
             to be inserted into the code block. E.g. code which should be run before the condition
             can be checked.
+
+        allow_empty_arrays : bool
+            A boolean indicating whether empty arrays are authorised. This is necessary as STC
+            does not handle empty arrays.
 
         Returns
         -------
@@ -345,11 +349,13 @@ class CToPythonWrapper(Wrapper):
             else:
                 flag = numpy_flag_c_contig
 
+            allow_empty = convert_to_literal(allow_empty_arrays)
+
             if raise_error:
                 type_check_condition = pyarray_check(CStrStr(LiteralString(arg.name)), py_obj, type_ref,
-                                 LiteralInteger(rank), flag)
+                                 LiteralInteger(rank), flag, allow_empty)
             else:
-                type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag)
+                type_check_condition = is_numpy_array(py_obj, type_ref, LiteralInteger(rank), flag, allow_empty)
 
         elif isinstance(arg.class_type, HomogeneousContainerType):
             # Create type check result variable
@@ -381,7 +387,8 @@ class CToPythonWrapper(Wrapper):
             iter_assign = AliasAssign(iter_obj, PyObject_GetIter(py_obj))
             indexed_init = AliasAssign(indexed_py_obj, PyIter_Next(iter_obj))
             for_body = [indexed_init]
-            internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False, for_body)
+            internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, arg[0], False,
+                                                                              for_body, allow_empty_arrays)
             for_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
             internal_type_check = For((idx,), PythonRange(size_var), for_body, scope = for_scope)
 
@@ -458,6 +465,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
         type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
+        is_bind_c = isinstance(funcs[0], BindCFunctionDef)
 
         # Initialise the argument_type_flags
         argument_type_flags = {func : 0 for func in funcs}
@@ -469,31 +477,31 @@ class CToPythonWrapper(Wrapper):
         for i, py_arg in enumerate(args):
             # Get the relevant typed arguments from the original functions
             interface_args = [func.arguments[i].var for func in orig_funcs]
-            # Get the type key
-            interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
-            type_to_example_arg = dict(zip(interface_types, interface_args))
+            type_to_example_arg = {a.class_type : a for a in interface_args}
             # Get a list of unique keys
             possible_types = list(type_to_example_arg.keys())
 
             n_possible_types = len(possible_types)
             if n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
-                for func, t in zip(funcs, interface_types):
-                    index = possible_types.index(t)*step
+                for func, a in zip(funcs, interface_args):
+                    index = next(i for i, p_t in enumerate(possible_types) if p_t is a.class_type)*step
                     argument_type_flags[func] += index
 
                 # Create the type checks and incrementation of the type_indicator
                 if_blocks = []
                 for index, t in enumerate(possible_types):
-                    check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body)
+                    check_func_call, _ = self._get_type_check_condition(py_arg, type_to_example_arg[t], False, body,
+                                allow_empty_arrays = is_bind_c)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
                 body.append(If(*if_blocks, IfSection(LiteralTrue(),
                             [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
                                 arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
             elif not orig_funcs[0].arguments[i].has_default:
-                check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body)
+                check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body,
+                                allow_empty_arrays = is_bind_c)
                 err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
                 if_sec = IfSection(PyccelNot(check_func_call), err_body)
                 body.append(If(if_sec))
@@ -1504,7 +1512,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(res, func_args[0].var))
             body.append(Py_INCREF(res))
         else:
-            wrapped_results = self._extract_FunctionDefResult(expr.results.var, is_bind_c_function_def, expr)
+            wrapped_results = self._extract_FunctionDefResult(python_results.var, is_bind_c_function_def, expr)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [ca for a in wrapped_args for ca in a['args']]
@@ -1632,11 +1640,13 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body,
+                    allow_empty_arrays = is_bind_c_argument)
             body.append(If( IfSection(PyccelIsNot(collect_arg, Py_None), [
                                 If(IfSection(check_func, cast), IfSection(LiteralTrue(), [*err, Return(self._error_exit_code)]))])))
         elif not (in_interface or bound_argument):
-            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body)
+            check_func, err = self._get_type_check_condition(collect_arg, orig_var, True, body,
+                    allow_empty_arrays = is_bind_c_argument)
             body.append(If( IfSection(PyccelNot(check_func), [*err, Return(self._error_exit_code)])))
             body.extend(cast)
         else:

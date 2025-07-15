@@ -10,7 +10,6 @@ See the developer docs for more details
 from itertools import chain, product
 import os
 from types import ModuleType, BuiltinFunctionType
-import sys
 import typing
 import warnings
 
@@ -26,22 +25,21 @@ from sympy import ceiling
 from textx.exceptions import TextXSyntaxError
 
 #==============================================================================
-from pyccel.utilities.strings import random_string
-from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
 
 from pyccel.ast.bitwise_operators import PyccelBitOr, PyccelLShift, PyccelRShift, PyccelBitAnd
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict, PythonDictFunction, PythonListFunction
+from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import Lambda, PythonMap, PythonBool
+from pyccel.ast.builtins import PythonMap, PythonBool
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetUnion, SetCopy, SetIntersectionUpdate
-from pyccel.ast.builtin_methods.set_methods  import SetPop
+from pyccel.ast.builtin_methods.set_methods  import SetPop, SetDifferenceUpdate
 from pyccel.ast.builtin_methods.dict_methods  import DictGetItem, DictGet, DictPop, DictPopitem
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
@@ -157,8 +155,6 @@ from pyccel.utilities.stage import PyccelStage
 
 import pyccel.decorators as def_decorators
 
-if sys.version_info >= (3, 10):
-    from types import UnionType
 #==============================================================================
 
 errors = Errors()
@@ -584,7 +580,7 @@ class SemanticParser(BasicParser):
             found_from_import_name = True
 
         if imp is not None:
-            if found_from_import_name or imp.source == source:
+            if found_from_import_name or source in (imp.source, getattr(imp.source_module, 'name', '')):
                 imp.define_target(target)
             else:
                 errors.report(IMPORTING_EXISTING_IDENTIFIED,
@@ -2974,6 +2970,9 @@ class SemanticParser(BasicParser):
         for b in expr.body:
             if isinstance(b, EmptyNode):
                 continue
+            if isinstance(b, InlineFunctionDef):
+                self.insert_function(b)
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
@@ -3460,31 +3459,6 @@ class SemanticParser(BasicParser):
             raise errors.report(f"In operator is not yet implemented for type {container_type}",
                     severity='fatal', symbol=expr)
 
-    def _visit_Lambda(self, expr):
-        errors.report("Lambda functions are not currently supported",
-                symbol=expr, severity='fatal')
-        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
-        var_names = map(str, expr.variables)
-        missing_vars = expr_names.difference(var_names)
-        if len(missing_vars) > 0:
-            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
-                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                severity='fatal')
-        funcs = expr.expr.get_attribute_nodes(FunctionCall)
-        for func in funcs:
-            name = _get_name(func)
-            f = self.scope.find(name, 'symbolic_functions')
-            if f is None:
-                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
-            else:
-
-                f = f(*func.args)
-                expr_new = expr.expr.subs(func, f)
-                expr = Lambda(tuple(expr.variables), expr_new)
-        return expr
-
     def _visit_FunctionCall(self, expr):
         name     = expr.funcdef
         try:
@@ -3816,7 +3790,7 @@ class SemanticParser(BasicParser):
             elif expr.lhs.is_temp:
                 return rhs
             else:
-                errors.report("Cannot assign result of a function without a return",
+                raise errors.report("Cannot assign result of a function without a return",
                         severity='fatal', symbol=expr)
 
             if isinstance(results.class_type, NumpyNDArrayType) and isinstance(lhs, IndexedElement):
@@ -6278,3 +6252,50 @@ class SemanticParser(BasicParser):
                 and not isinstance(new_elem, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, new_elem, expr)
         return semantic_node
+
+    def _build_SetDifference(self, expr, function_call_args):
+        """
+        Method to visit a SetDifference node.
+
+        The purpose of this `_build` method is to construct multiple nodes to represent
+        the single DottedName node representing the call to SetDifference. It
+        replaces the call with a call to copy followed by multiple calls to
+        SetDifferenceUpdate.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represents the call to `.difference()`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing SetCopy and SetDifferenceUpdate objects.
+        """
+        start_set = function_call_args[0].value
+        set_args = [self._visit(a.value) for a in function_call_args[1:]]
+        assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+        d_var = self._infer_type(start_set)
+        if isinstance(start_set, PythonSet):
+            rhs = start_set
+        else:
+            rhs = SetCopy(start_set)
+        body = []
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, rhs, body)
+        body.append(Assign(lhs, rhs, python_ast = expr.python_ast))
+        try:
+            body += [SetDifferenceUpdate(lhs, s) for s in set_args]
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
+        if assign:
+            return CodeBlock(body)
+        else:
+            self._additional_exprs[-1].extend(body)
+            return lhs

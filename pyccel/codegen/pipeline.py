@@ -45,14 +45,14 @@ def execute_pyccel(fname, *,
                    semantic_only   = False,
                    convert_only    = False,
                    verbose         = 0,
-                   show_timings    = False,
+                   time_execution  = False,
                    folder          = None,
                    language        = None,
                    compiler_family = None,
-                   fflags          = None,
+                   flags           = None,
                    wrapper_flags   = None,
-                   includes        = (),
-                   libdirs         = (),
+                   include         = (),
+                   libdir          = (),
                    modules         = (),
                    libs            = (),
                    debug           = None,
@@ -83,7 +83,7 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
     verbose : int, default=0
         Indicates the level of verbosity.
-    show_timings : bool, default=False
+    time_execution : bool, default=False
         Show the time spent in each of Pyccel's internal stages.
     folder : str, optional
         Path to the working directory. Default is the folder containing the file to be translated.
@@ -92,13 +92,13 @@ def execute_pyccel(fname, *,
     compiler_family : str, optional
         The compiler used to compile the generated files. Default is 'GNU'.
         This can also contain the name of a json file describing a compiler.
-    fflags : str, optional
+    flags : str, optional
         The flags passed to the compiler. Default is provided by the Compiler.
     wrapper_flags : str, optional
         The flags passed to the compiler to compile the C wrapper. Default is provided by the Compiler.
-    includes : list, optional
+    include : list, optional
         List of include directory paths.
-    libdirs : list, optional
+    libdir : list, optional
         List of paths to directories containing the required libraries.
     modules : list, optional
         List of files that must be compiled in order to compile this module.
@@ -141,8 +141,8 @@ def execute_pyccel(fname, *,
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
     # Copy list arguments to local lists to avoid unexpected behavior
-    includes = [os.path.abspath(i) for i in includes]
-    libdirs  = [os.path.abspath(l) for l in libdirs]
+    include = [os.path.abspath(i) for i in include]
+    libdir  = [os.path.abspath(l) for l in libdir]
     modules  = [*modules]
     libs     = [*libs]
 
@@ -199,7 +199,7 @@ def execute_pyccel(fname, *,
     if compiler_family is None:
         compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
-    fflags = [] if fflags is None else fflags.split()
+    flags = [] if flags is None else flags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
@@ -239,7 +239,7 @@ def execute_pyccel(fname, *,
 
     if syntax_only:
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -265,7 +265,7 @@ def execute_pyccel(fname, *,
 
     if semantic_only:
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -304,7 +304,7 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -313,10 +313,10 @@ def execute_pyccel(fname, *,
 
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
-            flags        = fflags,
-            includes     = includes,
+            flags        = flags,
+            include      = include,
             libs         = compile_libs,
-            libdirs      = libdirs,
+            libdir       = libdir,
             dependencies = modules + list(deps.values()),
             accelerators = accelerators)
     parser.compile_obj = mod_obj
@@ -345,7 +345,7 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
-        if show_timings:
+        if time_execution:
             print_timers(start, timers)
         return
 
@@ -429,7 +429,7 @@ def execute_pyccel(fname, *,
     os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
 
-    if show_timings:
+    if time_execution:
         print_timers(start, timers)
 
 def print_timers(start, timers):

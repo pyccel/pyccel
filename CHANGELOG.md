@@ -6,6 +6,45 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1741 : Add support for set method `difference()`.
+-   #1742 : Add support for set method `difference_update()`.
+-   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
+-   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
+-   #2390 : Add support for `np.expm1`.
+
+### Fixed
+
+-   #2306 : Fix Python containers as arguments to interface functions.
+
+### Changed
+
+-   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
+
+### Deprecated
+
+-   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
+
+## \[2.0.1\] - 2025-06-27
+
+### Added
+
+-   \[INTERNALS\] Added developer documentation about tests.
+
+### Fixed
+
+-   #2364 : Fix the use of the `--export-compiler-config` flag.
+-   #2372 : Fix passing arrays of size 0 to Fortran translations.
+-   \[INTERNALS\] Fix unsorted `__all__` variables.
+-   \[INTERNALS\] Allow CI scripts `check_pyccel_conventions.py`, `check_pylint_commands.py`, and `ci_tools/check_python_capitalisation.py` to be called easily locally.
+
+### Changed
+
+-   \[INTERNALS\] Rename `check_slots.py` -> `check_pyccel_conventions.py`.
+
+## \[2.0.0\] - 2025-06-21
+
+### Added
+
 -   #2338 : Support multiple OpenMP versions.
 -   #2338 : Separate OpenMP from Pyccel's core functionalities and connect it as a Plugin.
 -   #2338 : Add preliminary plugin functionalities.
@@ -91,15 +130,18 @@ All notable changes to this project will be documented in this file.
 -   #2132 : Add support for `typing.TypeVar` to replace `@template`.
 -   #2253 : Add multiple levels of verbosity.
 -   Generate stub files to allow double compilation to potentially be bypassed.
--   Added `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   Add `context_dict` argument to `epyccel` for passing non-global `typing.TypeVar` objects.
+-   #2293 : Add `pyccel-test` command to run unit tests. Improve docs.
+-   #2358 : Add support for bitwise operators with NumPy arrays.
 -   \[INTERNALS\] Add abstract class `SetMethod` to handle calls to various set methods.
--   \[INTERNALS\] Added `container_rank` property to `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Add `container_rank` property to `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Add a `__call__` method to `FunctionDef` to create `FunctionCall` instances.
 -   \[INTERNALS\] Allow the use of magic methods to describe container methods.
 -   \[INTERNALS\] Add a simplify method to `PyccelGt` for literals.
--   \[DEVELOPER\] Added an improved traceback to the developer-mode errors for errors in function calls.
--   \[DEVELOPER\] Added an environment variable to globally activate developer-mode for errors.
--   \[DEVELOPER\] Added a spell checker for the code itself.
+-   \[DEVELOPER\] Add an improved traceback to the developer-mode errors for errors in function calls.
+-   \[DEVELOPER\] Add an environment variable to globally activate developer-mode for errors.
+-   \[DEVELOPER\] Add a spell checker for the code itself.
+-   \[DEVELOPER\] Add a test to main CI to check if deployment to TestPyPI is working correctly.
 
 ### Fixed
 
@@ -202,6 +244,7 @@ All notable changes to this project will be documented in this file.
 -   #297 : Parse generated `.pyi` files instead of `.py` files when importing to speed up translation.
 -   #2330 : Inline functions in the semantic stage.
 -   #2322 : Stop raising an error when checking if non-optional variable is `None`.
+-   #2348 : Improve parameters of `pyccel` command and `epyccel` function.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.

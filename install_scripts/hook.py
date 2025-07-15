@@ -1,10 +1,8 @@
 """ A script to provide a hook which allows artifacts to be generated during installation of the package.
 """
-import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -20,9 +18,12 @@ class CustomBuildHook(BuildHookInterface):
     ----------
     *args : tuple
         See hatch docs.
-    **kwds : dict
+    **kwargs : dict
         See hatch docs.
     """
+
+    def __init__(self, *args, **kwargs): #pylint: disable=useless-parent-delegation
+        super().__init__(*args, **kwargs)
 
     def initialize(self, version, build_data):
         """
@@ -39,7 +40,15 @@ class CustomBuildHook(BuildHookInterface):
             See hatch documentation.
         """
         # Build gFTL for installation
-        gFTL_folder = (Path(__file__).parent.parent / 'pyccel' / 'extensions' / 'gFTL').absolute()
+        pyccel_root = Path(__file__).parent.parent
+        gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
+        if next(gFTL_folder.iterdir(), None) is None:
+            try:
+                subprocess.run([shutil.which('git'), 'submodule', 'update', '--init'], cwd = pyccel_root, check=True)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError("Trying to build in an isolated environment but submodules are not available. Please call 'git submodule update --init'") from e
+        shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
+        shutil.rmtree(gFTL_folder / 'install', ignore_errors = True)
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
                         f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}'], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)

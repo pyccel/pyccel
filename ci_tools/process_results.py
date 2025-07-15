@@ -44,11 +44,7 @@ if __name__ == '__main__':
                     errors[file_name].append(msg)
                 parsing_errors.append(line)
             elif code in warning_codes:
-                level = 'warning'
-                if file_name not in warnings:
-                    warnings[file_name] = [msg]
-                else:
-                    warnings[file_name].append(msg)
+                continue
             else:
                 level = None
                 parsing_errors.append(line)
@@ -122,11 +118,6 @@ if __name__ == '__main__':
     for file_name, errs in errors.items():
         print_to_string(f'#### {file_name}', text=summary)
         print_to_string(''.join(f'- {err}' for err in errs), text=summary)
-    if len(warnings) > 0:
-        print_to_string('### WARNINGS!', text=summary)
-    for file_name, warns in warnings.items():
-        print_to_string(f'#### {file_name}', text=summary)
-        print_to_string(''.join(f'- {warn}' for warn in warns), text=summary)
     if len(parsing_errors) > 0:
         print_to_string('### PARSING ERRORS!', text=summary)
         parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]

@@ -20,17 +20,17 @@ from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
-        'NumpyIntType',
+        'NumpyComplex64Type',
+        'NumpyComplex128Type',
+        'NumpyComplex256Type',
+        'NumpyFloat32Type',
+        'NumpyFloat64Type',
+        'NumpyFloat128Type',
         'NumpyInt8Type',
         'NumpyInt16Type',
         'NumpyInt32Type',
         'NumpyInt64Type',
-        'NumpyFloat32Type',
-        'NumpyFloat64Type',
-        'NumpyFloat128Type',
-        'NumpyComplex64Type',
-        'NumpyComplex128Type',
-        'NumpyComplex256Type',
+        'NumpyIntType',
         'NumpyNDArrayType',
         'NumpyNumericType',
         )
@@ -322,9 +322,9 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     def __and__(self, other):
         elem_type = self.element_type
         if isinstance(other, FixedSizeNumericType):
-            return NumpyNDArrayType(elem_type and other)
+            return self.switch_basic_type(elem_type & other)
         elif isinstance(other, NumpyNDArrayType):
-            return NumpyNDArrayType(elem_type+other.element_type)
+            return self.switch_basic_type(elem_type & other.element_type)
         else:
             return NotImplemented
 

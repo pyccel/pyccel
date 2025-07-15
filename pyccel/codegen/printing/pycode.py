@@ -24,7 +24,7 @@ from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
-from pyccel.ast.numpyext   import NumpyNDArray
+from pyccel.ast.numpyext   import NumpyNDArray, NumpyBool
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
@@ -179,6 +179,8 @@ class PythonCodePrinter(CodePrinter):
             cls = expr
         else:
             cls = type(expr)
+        if cls is NumpyBool:
+            return 'bool'
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
         if name == type_name and cls not in (PythonBool, PythonInt, PythonFloat, PythonComplex):
@@ -326,6 +328,49 @@ class PythonCodePrinter(CodePrinter):
         type_var_constraints = [", ".join(f"'{self._print(ti)}'" for ti in t.type_list) for t in type_vars_in_scope.values()]
         self.add_import(Import('typing', [AsName(TypingTypeVar, 'TypeVar')]))
         return ''.join(f"{n} = TypeVar('{n}', {t})\n" for n,t in zip(type_vars_in_scope, type_var_constraints))
+
+    def get_type_checks(self, arg_code, class_type):
+        """
+        Get the code to check if an argument has the expected type.
+
+        Get the code to check if an argument has the expected type. This is used in an
+        if block to select the right code to run.
+
+        Parameters
+        ----------
+        arg_code : str
+            The code describing the argument being checked.
+        class_type : PyccelType
+            The expected type.
+
+        Returns
+        -------
+        list[str]
+            A list containing the checks that must be satisfied for the type to be
+            considered matching.
+        """
+        if isinstance(class_type, NumpyNDArrayType):
+            ndarray = self._get_numpy_name(NumpyNDArray)
+            dtype = self._get_numpy_name(NumpyResultType)
+            check_option = []
+            check_option.append(f'isinstance({arg_code}, {ndarray})')
+            check_option.append(f'{arg_code}.dtype is {dtype}({self._print(class_type.element_type)})')
+            check_option.append(f'{arg_code}.ndim == {class_type.rank}')
+            if class_type.order:
+                check_option.append(f"{arg_code}.flags['{class_type.order}_CONTIGUOUS']")
+            return ' and '.join(check_option)
+        elif isinstance(class_type, FixedSizeNumericType):
+            return f'isinstance({arg_code}, {self._get_numpy_name(DtypePrecisionToCastFunction[class_type])})'
+        elif isinstance(class_type, (HomogeneousListType, HomogeneousSetType, HomogeneousTupleType)):
+            check_option = []
+            check_option.append(f'isinstance({arg_code}, {class_type.name})')
+            element_type = class_type.element_type
+            tmp_var_code = self._print(self.scope.get_temporary_variable(element_type))
+            elem_check = self.get_type_checks(tmp_var_code, element_type)
+            check_option.append(f'all({elem_check} for {tmp_var_code} in {arg_code})')
+            return ' and '.join(check_option)
+        else:
+            raise NotImplementedError(f"Can't print a Python interface for type {class_type}")
 
     #----------------------------------------------------------------------
 
@@ -475,19 +520,7 @@ class PythonCodePrinter(CodePrinter):
                 code += '    if ' if i == 0 else '    elif '
                 checks = []
                 for a_t in arg_types:
-                    check_option = []
-                    for a,t in zip(arg_names, a_t):
-                        if isinstance(t, NumpyNDArrayType):
-                            ndarray = self._get_numpy_name(NumpyNDArray)
-                            dtype = self._get_numpy_name(NumpyResultType)
-                            check_option.append(f'isinstance({a}, {ndarray})')
-                            check_option.append(f'{a}.dtype is {dtype}({self._print(t.element_type)})')
-                            check_option.append(f'{a}.ndim == {t.rank}')
-                            if t.order:
-                                check_option.append(f"{a}.flags['{t.order}_CONTIGUOUS']")
-                        else:
-                            check_option.append(f'isinstance({a}, {self._get_numpy_name(DtypePrecisionToCastFunction[t])})')
-                    checks.append(' and '.join(check_option))
+                    checks.append(' and '.join(self.get_type_checks(a,t) for a,t in zip(arg_names, a_t)))
                 if len(checks) > 1:
                     code += ' or '.join(f'({c})' for c in checks)
                 else:
@@ -561,20 +594,32 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
+        result_vars = self.scope.collect_all_tuple_elements(expr.expr)
+
+        if expr.expr is None:
+            return 'return\n'
+
         if expr.stmt:
-            to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
-                                                        or isinstance(l, UnpackManagedMemory))]
+            # Get expressions that should be printed as they are. Assignments to result variables are not
+            # printed as the rhs can be inlined
+            to_print = [l for l in expr.stmt.body \
+                            if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
+                                     or isinstance(l, UnpackManagedMemory))]
+            # Collect all assignments to easily inline the expressions
             assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
             assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
+            # Print all expressions that are required before the print
             prelude = ''.join(self._print(l) for l in to_print)
         else:
             assigns = {}
             prelude = ''
 
-        if expr.expr is None:
-            return 'return\n'
-
         def get_return_code(return_var):
+            """ Recursive method which replaces any variables in a return statement whose
+            definition is known (via the assigns dict) with the definition. A function is
+            required to handle the recursivity implied by an unknown depth of inhomogeneous
+            tuples.
+            """
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
@@ -1131,6 +1176,11 @@ class PythonCodePrinter(CodePrinter):
 
         return "{}({})".format(name, arg)
 
+    def _print_NumpyDivide(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        name = self._get_numpy_name(type(expr))
+        return f'{name}({args})'
+
     def _print_ListMethod(self, expr):
         method_name = expr.name
         list_obj = self._print(expr.list_obj)
@@ -1207,7 +1257,7 @@ class PythonCodePrinter(CodePrinter):
         return '...'
 
     def _print_SetMethod(self, expr):
-        set_var = self._print(expr.set_variable)
+        set_var = self._print(expr.set_obj)
         name = expr.name
         args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)

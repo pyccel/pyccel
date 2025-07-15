@@ -23,7 +23,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict,
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
-from pyccel.ast.core      import Declare, For, CodeBlock, ClassDef
+from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Deallocate, If, IfSection
 from pyccel.ast.core      import FunctionAddress
@@ -31,7 +31,7 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
@@ -41,7 +41,7 @@ from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, Ho
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelFunction
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
@@ -52,12 +52,11 @@ from pyccel.ast.low_level_tools import IteratorType, MemoryHandlerType, ManagedM
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
-from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
@@ -2142,6 +2141,20 @@ class CCodePrinter(CodePrinter):
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
+    def _print_NumpyExpm1(self, expr):
+        arg, = expr.args
+        if expr.dtype.primitive_type is PrimitiveComplexType():
+            self.add_import(c_imports['pyc_math_c'])
+            arg_code = self._print(arg)
+            return f'cpyc_expm1({arg_code})'
+        else:
+            self.add_import(c_imports['math'])
+            if arg.dtype.primitive_type is not PrimitiveFloatingPointType():
+                arg_code = self._print(NumpyFloat(arg))
+            else :
+                arg_code = self._print(arg)
+            return f'expm1({arg_code})'
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
@@ -2516,7 +2529,11 @@ class CCodePrinter(CodePrinter):
         return ' & '.join(args)
 
     def _print_PyccelInvert(self, expr):
-        return '~{}'.format(self._print(expr.args[0]))
+        arg = self._print(expr.args[0])
+        if expr.dtype is PythonNativeBool():
+            return f'!{arg}'
+        else:
+            return f'~{arg}'
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
@@ -3009,27 +3026,27 @@ class CCodePrinter(CodePrinter):
     #================== Set methods ==================
 
     def _print_SetPop(self, expr):
-        dtype = expr.set_variable.class_type
+        dtype = expr.set_obj.class_type
         var_type = self.get_c_type(dtype)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(dtype), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_pop({set_var})'
 
     def _print_SetClear(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         return f'{var_type}_clear({set_var});\n'
 
     def _print_SetAdd(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg = self._print(expr.args[0])
         return f'{var_type}_push({set_var}, {arg});\n'
 
     def _print_SetCopy(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(expr.set_variable)
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(expr.set_obj)
         return f'{var_type}_clone({set_var})'
 
     def _print_SetUnion(self, expr):
@@ -3037,32 +3054,41 @@ class CCodePrinter(CodePrinter):
         if not assign_base:
             errors.report("The result of the union call must be saved into a variable",
                     severity='error', symbol=expr)
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         args = ', '.join([str(len(expr.args)), *(self._print(ObjectAddress(a)) for a in expr.args)])
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_union({set_var}, {args})'
 
     def _print_SetIntersectionUpdate(self, expr):
-        class_type = expr.set_variable.class_type
+        class_type = expr.set_obj.class_type
         var_type = self.get_c_type(class_type)
         self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        set_var = self._print(ObjectAddress(expr.set_obj))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return ''.join(f'{var_type}_intersection_update({set_var}, {self._print(ObjectAddress(a))});\n' \
                 for a in expr.args)
 
+    def _print_SetDifferenceUpdate(self, expr):
+        class_type = expr.set_obj.class_type
+        var_type = self.get_c_type(class_type)
+        self.add_import(Import('stc/hset', AsName(VariableTypeAnnotation(class_type), var_type)))
+        set_var = self._print(ObjectAddress(expr.set_obj))
+        # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
+        return ''.join(f'{var_type}_difference_update({set_var}, {self._print(ObjectAddress(a))});\n' \
+                for a in expr.args)
+
     def _print_SetDiscard(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg_val = self._print(expr.args[0])
         return f'{var_type}_erase({set_var}, {arg_val});\n'
 
     def _print_SetIsDisjoint(self, expr):
-        var_type = self.get_c_type(expr.set_variable.class_type)
-        set_var = self._print(ObjectAddress(expr.set_variable))
+        var_type = self.get_c_type(expr.set_obj.class_type)
+        set_var = self._print(ObjectAddress(expr.set_obj))
         arg_val = self._print(ObjectAddress(expr.args[0]))
         # See pyccel/stdlib/STC_Extensions/Set_extensions.h for the definition
         return f'{var_type}_is_disjoint({set_var}, {arg_val});\n'

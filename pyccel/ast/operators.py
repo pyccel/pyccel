@@ -16,7 +16,7 @@ from ..errors.errors        import Errors, PyccelSemanticError
 from .basic                 import TypedAstNode
 
 from .datatypes             import PythonNativeBool, PythonNativeFloat
-from .datatypes             import StringType, FixedSizeNumericType, ContainerType
+from .datatypes             import StringType, FixedSizeNumericType
 from .datatypes             import PrimitiveBooleanType, PrimitiveIntegerType
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
@@ -29,36 +29,38 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'PyccelOperator',
+    # --- Base classes ---
     'PyccelArithmeticOperator',
     'PyccelBinaryOperator',
     'PyccelBooleanOperator',
     'PyccelComparisonOperator',
+    'PyccelOperator',
     'PyccelUnaryOperator',
-    'PyccelPow',
+    # --- Operator classes ---
+    'IfTernaryOperator',
     'PyccelAdd',
-    'PyccelMinus',
-    'PyccelMul',
-    'PyccelDiv',
-    'PyccelMod',
-    'PyccelFloorDiv',
-    'PyccelEq',
-    'PyccelNe',
-    'PyccelLt',
-    'PyccelLe',
-    'PyccelGt',
-    'PyccelGe',
     'PyccelAnd',
-    'PyccelOr',
-    'PyccelNot',
     'PyccelAssociativeParenthesis',
+    'PyccelDiv',
+    'PyccelEq',
+    'PyccelFloorDiv',
+    'PyccelGe',
+    'PyccelGt',
+    'PyccelIn',
+    'PyccelIs',
+    'PyccelIsNot',
+    'PyccelLe',
+    'PyccelLt',
+    'PyccelMinus',
+    'PyccelMod',
+    'PyccelMul',
+    'PyccelNe',
+    'PyccelNot',
+    'PyccelOr',
+    'PyccelPow',
     'PyccelUnary',
     'PyccelUnarySub',
     'Relational',
-    'PyccelIs',
-    'PyccelIsNot',
-    'PyccelIn',
-    'IfTernaryOperator'
 )
 
 #==============================================================================

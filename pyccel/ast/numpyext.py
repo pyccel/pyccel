@@ -24,7 +24,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
 
 from .internals      import PyccelFunction, Slice
@@ -47,83 +47,86 @@ numpy_v2_1 = Version(numpy.__version__) >= Version("2.1.0")
 
 __all__ = (
     'process_shape',
-    # ---
+    # --- Base classes ---
     'NumpyAutoFill',
+    'NumpyNewArray',
     'NumpyUfuncBase',
     'NumpyUfuncBinary',
     'NumpyUfuncUnary',
-    # ---
-    'NumpyAbs',
-    'NumpyFloor',
-    'NumpySign',
-    # ---
-    'NumpySqrt',
-    'NumpySin',
-    'NumpyCos',
-    'NumpyExp',
-    'NumpyLog',
-    'NumpyTan',
-    'NumpyArcsin',
-    'NumpyArccos',
-    'NumpyArctan',
-    'NumpyArctan2',
-    'NumpySinh',
-    'NumpyCosh',
-    'NumpyTanh',
-    'NumpyArcsinh',
-    'NumpyArccosh',
-    'NumpyArctanh',
-    # ---
-    'NumpyAmax',
-    'NumpyAmin',
+    # --- Array allocation ---
     'NumpyArange',
     'NumpyArray',
-    'NumpySize',
+    'NumpyEmpty',
+    'NumpyEmptyLike',
+    'NumpyFull',
+    'NumpyFullLike',
+    'NumpyLinspace',
+    'NumpyNonZeroElement',
+    'NumpyOnes',
+    'NumpyOnesLike',
+    'NumpyZeros',
+    'NumpyZerosLike',
+    # --- Unary functions ---
+    'NumpyAbs',
+    'NumpyArccos',
+    'NumpyArccosh',
+    'NumpyArcsin',
+    'NumpyArcsinh',
+    'NumpyArctan',
+    'NumpyArctan2',
+    'NumpyArctanh',
+    'NumpyCos',
+    'NumpyCosh',
+    'NumpyDivide',
+    'NumpyExp',
+    'NumpyExpm1',
+    'NumpyFabs',
+    'NumpyFloor',
+    'NumpyHypot',
+    'NumpyIsFinite',
+    'NumpyIsInf',
+    'NumpyIsNan',
+    'NumpyLog',
+    'NumpySign',
+    'NumpySin',
+    'NumpySinh',
+    'NumpySqrt',
+    'NumpyTan',
+    'NumpyTanh',
+    'NumpyTranspose',
+    # --- Cast methods ---
     'NumpyBool',
-    'NumpyCountNonZero',
     'NumpyComplex',
     'NumpyComplex64',
     'NumpyComplex128',
-    'NumpyConjugate',
-    'NumpyEmpty',
-    'NumpyEmptyLike',
-    'NumpyFabs',
     'NumpyFloat',
     'NumpyFloat32',
     'NumpyFloat64',
-    'NumpyFull',
-    'NumpyFullLike',
-    'NumpyImag',
-    'NumpyHypot',
     'NumpyInt',
     'NumpyInt8',
     'NumpyInt16',
     'NumpyInt32',
     'NumpyInt64',
-    'NumpyLinspace',
+    # --- Other NumPy functions ---
+    'NumpyAmax',
+    'NumpyAmin',
+    'NumpyConjugate',
+    'NumpyCountNonZero',
+    'NumpyImag',
     'NumpyMatmul',
-    'NumpyNewArray',
     'NumpyMod',
-    'NumpyNonZero',
-    'NumpyNonZeroElement',
-    'NumpyNorm',
-    'NumpySum',
-    'NumpyOnes',
-    'NumpyOnesLike',
     'NumpyNDArray',
+    'NumpyNonZero',
+    'NumpyNorm',
     'NumpyProduct',
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
     'NumpyResultType',
-    'NumpyTranspose',
-    'NumpyWhere',
-    'NumpyZeros',
-    'NumpyZerosLike',
     'NumpyShape',
-    'NumpyIsInf',
-    'NumpyIsFinite',
-    'NumpyIsNan',
+    'NumpySize',
+    'NumpySum',
+    'NumpyWhere',
 )
 
 dtype_registry.update({
@@ -326,12 +329,17 @@ class NumpyInt(PythonInt):
     ----------
     arg : TypedAstNode
         The argument passed to the function.
+    base : TypedAstNode
+        The argument passed to the function to indicate the base in which
+        the integer is expressed.
     """
     __slots__ = ('_shape','_class_type')
     _static_type = numpy_precision_map[(PrimitiveIntegerType(), PythonInt._static_type.precision)]
     name = 'int'
 
     def __init__(self, arg=None, base=10):
+        if base != 10:
+            raise TypeError("numpy.int's base argument is not yet supported")
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order
@@ -794,6 +802,11 @@ class NumpyArray(NumpyNewArray):
 
     @property
     def arg(self):
+        """
+        The data from which the array is initialised.
+
+        A PyccelAstNode describing the data from which the array is initialised.
+        """
         return self._arg
 
 #==============================================================================
@@ -1941,6 +1954,19 @@ class NumpyExp     (NumpyUfuncUnary):
     """Represent a call to the exp function in the Numpy library"""
     __slots__ = ()
     name = 'exp'
+class NumpyExpm1   (NumpyUfuncUnary):
+    """
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Parameters
+    ----------
+    x : PyccelAstType
+        The argument of the unary function.
+    """
+    __slots__ = ()
+    name = 'expm1'
 class NumpyLog     (NumpyUfuncUnary):
     """Represent a call to the log function in the Numpy library"""
     __slots__ = ()
@@ -2752,8 +2778,37 @@ class NumpyNDArray(PyccelFunction):
         return NumpyArray(*args, **kwargs)
 
 #==============================================================================
+class NumpyDivide(PyccelDiv):
+    """
+    Class representing a class to numpy.divide or numpy.true_divide in the user code.
 
+    Class representing a class to numpy.divide or numpy.true_divide in the user code.
+
+    Parameters
+    ----------
+    x1 : TypedAstNode
+        The dividend.
+    x2 : TypedAstNode
+        The divisor.
+    """
+    __slots__ = ()
+    name = 'divide'
+    def __init__(self, x1, x2):
+        if x1.rank == 0:
+            x1_type = x1.class_type
+            x1_np_type = process_dtype(x1_type)
+            if x1_type is not x1_np_type:
+                x1 = DtypePrecisionToCastFunction[x1_np_type](x1)
+        if x2.rank == 0:
+            x2_type = x2.class_type
+            x2_np_type = process_dtype(x2_type)
+            if x2_type is not x2_np_type:
+                x2 = DtypePrecisionToCastFunction[x2_np_type](x2)
+        super().__init__(x1, x2)
+
+#==============================================================================
 DtypePrecisionToCastFunction.update({
+    PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
     NumpyInt16Type()      : NumpyInt16,
     NumpyInt32Type()      : NumpyInt32,
@@ -2825,6 +2880,8 @@ numpy_funcs = {
     'product'   : PyccelFunctionDef('product'   , NumpyProduct),
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
+    'divide'    : PyccelFunctionDef('divide'    , NumpyDivide),
+    'true_divide' : PyccelFunctionDef('true_divide', NumpyDivide),
     # ---
     'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
     'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),
@@ -2835,6 +2892,7 @@ numpy_funcs = {
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
     'fabs'      : PyccelFunctionDef('fabs'      , NumpyFabs),
     'exp'       : PyccelFunctionDef('exp'       , NumpyExp),
+    'expm1'     : PyccelFunctionDef('expm1'     , NumpyExpm1),
     'log'       : PyccelFunctionDef('log'       , NumpyLog),
     'sqrt'      : PyccelFunctionDef('sqrt'      , NumpySqrt),
     # ---

@@ -5,6 +5,7 @@ in the function arguments.
 # pylint: disable=missing-function-docstring
 from typing import TypeVar, Final
 import numpy as np
+import pytest
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
@@ -146,4 +147,22 @@ def test_array_final(language):
 
     d = randint(1, 15)
     x1 = uniform(np.finfo(float).max, size=(d))
+    assert f1(x1) == f2(x1)
+
+@pytest.mark.parametrize('language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c', marks = [
+        pytest.mark.skip(reason="STC does not handle arrays of size 0"),
+        pytest.mark.c]
+    ),
+    pytest.param('python', marks = pytest.mark.python))
+)
+def test_array_empty(language):
+    def array_empty(x : 'float[:,:]'):
+        return x.size
+
+    f1 = array_empty
+    f2 = epyccel(f1, language=language)
+
+    x1 = uniform(np.finfo(float).max, size=(0,3))
     assert f1(x1) == f2(x1)

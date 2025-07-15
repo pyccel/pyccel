@@ -37,8 +37,8 @@ if sys.platform == "win32":
     gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gfort_info['mpi']['libs']     = ('msmpi',)
-    gfort_info['mpi']['includes'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gfort_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+    gfort_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
+    gfort_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
@@ -149,16 +149,16 @@ if sys.platform == "darwin":
 
     gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
     gcc_info['openmp']['libs']     = ('omp',)
-    gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
-    gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
+    gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
+    gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
 
 elif sys.platform == "win32":
 
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gcc_info['mpi']['libs']     = ('msmpi',)
-    gcc_info['mpi']['includes'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gcc_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+    gcc_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
+    gcc_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
@@ -244,7 +244,7 @@ python_info = {
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
-            'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
+            'include' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             "shared_suffix" : config_vars['EXT_SUFFIX'],
             }
         }
@@ -257,7 +257,7 @@ if sys.platform == "win32":
         python_info['python']['dependencies'] = tuple(python_libs)
     else:
         python_info['python']['libs'] = (f'python{version}',)
-        python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
+        python_info['python']['libdir'] = config_vars.get("installed_base","").split()
 
 else:
     # Collect library according to python config file
@@ -272,7 +272,7 @@ else:
     possible_static_lib = [l for l in python_shared_libs if '.a' in l]
 
     # Prefer saving the library as a dependency where possible to avoid
-    # unnecessary libdirs which may lead to the wrong versions being linked
+    # unnecessary libdir which may lead to the wrong versions being linked
     # for other libraries
     # Prefer a shared library as it requires less memory
     if possible_shared_lib:
@@ -282,7 +282,7 @@ else:
                 possible_shared_lib = preferred_lib
 
         python_info['python']['dependencies'] = (possible_shared_lib[0],)
-        python_info['python']['libdirs'] = (os.path.dirname(possible_shared_lib[0]),)
+        python_info['python']['libdir'] = (os.path.dirname(possible_shared_lib[0]),)
     elif possible_static_lib:
         if len(possible_static_lib)>1:
             preferred_lib = [l for l in possible_static_lib if l.endswith('.a')]
@@ -296,7 +296,7 @@ else:
                         config_vars.get("LDSHARED","").split() + \
                         config_vars.get("LIBRARY","").split()[1:]]
         python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
-        python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
+        python_info['python']['libdir'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
                             config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
 
 #------------------------------------------------------------

@@ -1,7 +1,5 @@
 # Function-pointers as arguments
 
-Note: before reading this you should have read [Installation and Command Line Usage](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#installation)
-
 In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments, Pyccel needs the user to define the type of the passed function-pointers. This can be done by using the syntax `def function_name(func1_name : '(func1_return_type)(func1_arguments_types)', func2_name : '(func2_return_type)(func2_arguments_types)', ..., arg1, arg2, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
 
 In this example we will use short syntax for this feature:
@@ -416,13 +414,3 @@ program prog_prog_boo
 
 end program prog_prog_boo
 ```
-
-## Getting Help
-
-If you face problems with Pyccel, please take the following steps:
-
-1.  Consult our documentation in the  [`docs/`](https://github.com/pyccel/pyccel/blob/devel/docs) directory;
-2.  Send an email message to <pyccel@googlegroups.com>;
-3.  Open an issue on GitHub.
-
-Thank you!
