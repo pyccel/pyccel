@@ -99,3 +99,15 @@ class PythonCodePrinter(openmp_4_5.PythonCodePrinter):
     """
 
     _version = 5.0
+
+class CompileObj(openmp_4_5.CompileObj):
+    """
+    OpenMP 5.0 compilation information class.
+
+    This class provides additional configuration for compiling code with OpenMP 5.0 support.
+
+    See Also
+    --------
+    pyccel.codegen.compiling.basic.CompileObj : Base compilation configuration class.
+    """
+    _version = 5.0

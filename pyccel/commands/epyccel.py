@@ -200,13 +200,12 @@ def epyccel_seq(function_class_or_module, *,
                 libs            = (),
                 folder          = None,
                 mpi             = False,
-                openmp          = False,
                 openacc         = False,
                 verbose         = 0,
                 time_execution  = False,
                 conda_warnings  = 'basic',
                 context_dict    = None,
-                omp_version = None
+                **kwargs,
     ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -247,8 +246,6 @@ def epyccel_seq(function_class_or_module, *,
         Output folder for the compiled code.
     mpi : bool, default=False
         If True, use MPI for parallel execution.
-    openmp : bool, default=False
-        If True, use OpenMP for parallel execution.
     openacc : bool, default=False
         If True, use OpenACC for parallel execution.
     verbose : int, default=0
@@ -263,8 +260,8 @@ def epyccel_seq(function_class_or_module, *,
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    omp_version : float, optional
-        The version of OpenMP to use. Default is None.
+    **kwargs: dict
+        Options to be passed to the Plugins.
 
     Returns
     -------
@@ -325,8 +322,6 @@ def epyccel_seq(function_class_or_module, *,
     accelerators = []
     if mpi:
         accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
     if openacc:
         accelerators.append("openacc")
     accelerators = tuple(accelerators)
@@ -365,7 +360,7 @@ def epyccel_seq(function_class_or_module, *,
                            output_name     = module_name,
                            conda_warnings  = conda_warnings,
                            context_dict    = context_dict,
-                           omp_version     = omp_version)
+                           **kwargs)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
@@ -413,7 +408,6 @@ def epyccel(
     libs            = (),
     folder          = None,
     mpi             = False,
-    openmp          = False,
 #    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
     verbose         = 0,
     time_execution  = False,
@@ -423,7 +417,7 @@ def epyccel(
     comm            = None,
     root            = 0,
     bcast           = True,
-    omp_version     = None,
+    **kwargs,
     ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -464,8 +458,6 @@ def epyccel(
         Output folder for the compiled code.
     mpi : bool, default=False
         If True, use MPI for parallel execution.
-    openmp : bool, default=False
-        If True, use OpenMP for parallel execution.
     verbose : int, default=0
         Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
@@ -480,8 +472,8 @@ def epyccel(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    omp_version : float, optional
-        The version of OpenMP to use. Default is None.
+    **kwargs: dict
+        Options to be passed to the Plugins.
 
     Returns
     -------
@@ -545,14 +537,13 @@ def epyccel(
                     libs            = libs,
                     folder          = folder,
                     mpi             = True,
-                    openmp          = openmp,
                     openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
                     verbose         = verbose,
                     time_execution  = time_execution,
                     debug           = debug,
                     conda_warnings  = conda_warnings,
                     context_dict    = context_dict,
-                    omp_version     = omp_version
+                    **kwargs,
                 )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
@@ -610,13 +601,13 @@ def epyccel(
                     libs            = libs,
                     folder          = folder,
                     mpi             = mpi,
-                    openmp          = openmp,
                     openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
                     verbose         = verbose,
                     time_execution  = time_execution,
                     debug           = debug,
                     conda_warnings  = conda_warnings,
-                    context_dict    = context_dict
+                    context_dict    = context_dict,
+                    **kwargs,
                 )
         except PyccelError as e:
             raise type(e)(str(e)) from None

@@ -2,6 +2,7 @@
 import importlib.util
 import inspect
 import os
+import argparse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Any
@@ -11,6 +12,8 @@ from pyccel.utilities.metaclasses import Singleton
 from pyccel.errors.messages import PLUGIN_DIRECTORY_NOT_FOUND
 
 __all__ = (
+    "add_plugin_arguments",
+    "collect_plugin_options",
     "PatchInfo",
     "PatchRegistry",
     "Plugin",
@@ -19,6 +22,73 @@ __all__ = (
 
 errors = Errors()
 
+
+def add_plugin_arguments(parser):
+    """
+    Discover and add plugin arguments to the parser.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The argument parser to add plugin arguments to.
+
+    Returns
+    -------
+    list[Plugin]
+        A list of all plugin option names that were added.
+    """
+    added_options = []
+
+    plugins_manager = Plugins()
+    plugins = plugins_manager.get_plugins()
+
+    for plugin in plugins:
+        if hasattr(plugin.__class__, 'CLI_OPTIONS'):
+            options = plugin.__class__.CLI_OPTIONS
+            plugin_name = plugin.name
+
+            group = parser.add_argument_group(f'{plugin_name} Options')
+            for option_name, option_config in options.items():
+                if option_name in added_options:
+                    errors.report(
+                        f"Option '{option_name}' already added by another plugin, skipping for plugin {plugin_name}",
+                        severity='warning')
+                    continue
+
+                flag = f'--{option_name.replace("_", "-")}'
+                try:
+                    group.add_argument(flag, dest=option_name, **option_config)
+                    added_options.append(option_name)
+                except argparse.ArgumentError as e:
+                    errors.report(
+                        f"Argument conflict for '{flag}' in plugin {plugin_name}: {e}",
+                        severity='warning')
+
+    return added_options
+
+
+def collect_plugin_options(args, plugin_option_names):
+    """
+    Collect all plugin options from parsed arguments into a single dictionary.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Parsed command line arguments.
+    plugin_option_names : list
+        List of plugin option names to collect.
+
+    Returns
+    -------
+    dict
+        A dictionary containing all plugin options.
+    """
+    options = {}
+
+    for option_name in plugin_option_names:
+        if hasattr(args, option_name):
+            options[option_name] = getattr(args, option_name)
+    return options
 
 @dataclass
 class PatchInfo:

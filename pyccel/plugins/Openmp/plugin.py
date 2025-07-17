@@ -181,7 +181,7 @@ class Openmp(Plugin):
     It supports different versions of the OpenMP standard and applies appropriate patches
     to parser classes to handle OpenMP-specific syntax and semantics. The plugin can be
     configured to use different OpenMP versions and can be enabled or disabled through
-    the accelerators option.
+    the openmp option.
 
     Attributes
     ----------
@@ -202,7 +202,7 @@ class Openmp(Plugin):
     --------
     >>> from pyccel.plugins.Openmp.plugin import Openmp
     >>> plugin = Openmp()
-    >>> plugin.set_options({'omp_version': 4.5, 'accelerators': ['openmp']})
+    >>> plugin.set_options({'omp_version': 4.5, 'openmp': True})
     >>> 
     >>> # Register a parser with the plugin
     >>> class Parser:
@@ -212,6 +212,20 @@ class Openmp(Plugin):
     >>> plugin.register(parser)
     """
     __slots__ = ("_options",)
+
+    CLI_OPTIONS = {
+        'omp_version': {
+            'choices': [4.5, 5.0],
+            'type': float,
+            'default': 4.5,
+            'help': 'OpenMP version to use'
+        },
+        'openmp': {
+            'action': 'store_true',
+            'help': 'Enable OpenMP support'
+        }
+    }
+
     DEFAULT_VERSION = 4.5
 
     VERSION_MODULES = {
@@ -247,7 +261,7 @@ class Openmp(Plugin):
         Examples
         --------
         >>> plugin = Openmp()
-        >>> plugin.set_options({'omp_version': 4.5, 'accelerators': ['openmp']})
+        >>> plugin.set_options({'omp_version': 4.5, 'openmp': True})
         """
         assert isinstance(options, dict)
         self._options.clear()
@@ -280,7 +294,7 @@ class Openmp(Plugin):
         if self._refresh:
             new_patch_regs = self._patch_registries
         version = self._resolve_version()
-        if 'openmp' not in self._options.get('accelerators', []):
+        if not self._options.get('openmp', False):
             return
         for reg in new_patch_regs:
             if version in reg.loaded_versions:
@@ -296,7 +310,7 @@ class Openmp(Plugin):
         plugin options. It is useful when options have been changed and the changes
         need to be propagated to all targets.
 
-        See Also
+        See Alsggo
         --------
         register : Register instances with the OpenMP plugin.
         deregister : Deregister instances from the OpenMP plugin.
@@ -309,10 +323,10 @@ class Openmp(Plugin):
         ...         return code
         >>> parser = Parser()
         >>> plugin = Openmp()
-        >>> plugin.set_options({'accelerators': ['openmp'], 'omp_version': 4.5})
+        >>> plugin.set_options({'openmp': True, 'omp_version': 4.5})
         >>> plugin.register(parser)
         >>> # Change options
-        >>> plugin.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
+        >>> plugin.set_options({'openmp': True, 'omp_version': 5.0})
         >>> # Refresh to apply new options
         >>> plugin.refresh()
         """

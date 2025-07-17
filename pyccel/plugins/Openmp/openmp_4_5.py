@@ -84,14 +84,14 @@ class ConfigMixin:
         --------
         >>> def my_openmp_func(expr, **kwargs):
         >>>     pass
-        >>> options = {'omp_version': 4.5, 'accelerators': ['openmp']}
+        >>> options = {'omp_version': 4.5, 'openmp': True}
         >>> wrapped_func = ConfigMixin.helper_check_config(my_openmp_func, options, None)
         """
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             """method wrapper to check configuration"""
-            if cls._version != options.get('omp_version') or not 'openmp' in options.get('accelerators', []):
+            if cls._version != options.get('omp_version') or not options.get('openmp', False):
                 if method:
                     return method(*args[1:], **kwargs)
                 else:
@@ -515,7 +515,7 @@ class SemanticParser(ConfigMixin):
 
 class CCodePrinter(ConfigMixin):
     """
-    Openmp 4.5 C code printer parser.
+    Openmp 4.5 C code printer.
 
     This class is responsible for printing OpenMP 4.5 directives and constructs
     as C code. It converts the AST nodes into C syntax according to the OpenMP 4.5
@@ -553,7 +553,7 @@ class CCodePrinter(ConfigMixin):
 
 class FCodePrinter(ConfigMixin):
     """
-    Openmp 4.5 fortran code printer parser.
+    Openmp 4.5 fortran code printer.
 
     This class is responsible for printing OpenMP 4.5 directives and constructs
     as Fortran code. It converts the AST nodes into Fortran syntax according to 
@@ -678,7 +678,7 @@ class FCodePrinter(ConfigMixin):
 
 class PythonCodePrinter(ConfigMixin):
     """
-    Openmp 4.5 python code printer parser.
+    Openmp 4.5 python code printer.
 
     This class is responsible for printing OpenMP 4.5 directives and constructs
     as Python code comments.
@@ -710,3 +710,32 @@ class PythonCodePrinter(ConfigMixin):
     @staticmethod
     def _print_OmpEndDirective(instance, expr, cls=None, method=None):
         return f"#$ omp end {expr.raw}\n"
+
+class CompileObj:
+    """
+    OpenMP 4.5 compilation information class.
+
+    This class provides additional configuration for compiling code with OpenMP 4.5 support.
+
+    See Also
+    --------
+    pyccel.codegen.compiling.basic.CompileObj : Base compilation configuration class.
+    """
+    _version = 4.5
+
+    @classmethod
+    def setup(cls, options, target):
+        """
+        Enable OpenMP support during compilation.
+
+        This method configures CompileObj instances by adding 'openmp' to the accelerator set, enabling
+        OpenMP support during compilation.
+
+        Parameters
+        ----------
+        options : dict
+            Configuration options for OpenMP.
+        target : CompileObj
+            Instance to be configured with OpenMP support.
+        """
+        target._accelerators.add('openmp')

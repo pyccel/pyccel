@@ -66,7 +66,7 @@ def test_openmp_resolve_version(mock_report):
     errors.reset()
     file = os.path.join(path_dir, 'any_omp4_specific.py')
     ver = 5.1
-    plugins.set_options({'accelerators': ['openmp'], 'omp_version': ver})
+    plugins.set_options({'openmp': True, 'omp_version': ver})
     SyntaxParser(file, verbose=0)
     mock_report.assert_called_with(
         OMP_VERSION_NOT_SUPPORTED.format(ver, Openmp.DEFAULT_VERSION),
@@ -80,7 +80,7 @@ def test_openmp_no_implementation():
             pass
 
     plugins.load_plugins()
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp': True})
     ins = NoImp()
     reference_methods = get_funcs(ins)
     plugins.register((ins,))
@@ -97,7 +97,7 @@ def test_openmp_register_deregister():
     plugins.load_plugins()
     omp_plugin = plugins.get_plugin('Openmp')
     plugins.set_plugins((omp_plugin,))
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp': True})
     parser = SyntaxParser(file, verbose=0)
 
     modified_methods = get_funcs(parser)
@@ -114,32 +114,32 @@ def test_openmp_register_deregister():
 def test_openmp_register_refresh():
     plugins.load_plugins()
     file = os.path.join(path_dir, 'omp5_specific.py')
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp': True})
     parser = SyntaxParser(file, verbose=0)
     assert errors.has_warnings()
     errors.reset()
 
     # refresh is needed to patch with openmp 5.0
-    plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
+    plugins.set_options({'openmp': True, 'omp_version': 5.0})
     parser._syntax_done = False
     parser.parse()
     assert errors.has_warnings()
     errors.reset()
 
-    plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0}, refresh=True)
+    plugins.set_options({'openmp': True, 'omp_version': 5.0}, refresh=True)
     parser._syntax_done = False
     parser.parse()
     assert not errors.has_warnings()
     errors.reset()
 
-    plugins.set_options({'accelerators': ['openmp'], 'omp_version': 4.5})
+    plugins.set_options({'openmp': True, 'omp_version': 4.5})
     parser._syntax_done = False
     parser.parse()
     assert errors.has_warnings()
     errors.reset()
 
     # no refresh is needed since openmp 5.0 is already patched with
-    plugins.set_options({'accelerators': ['openmp'], 'omp_version': 5.0})
+    plugins.set_options({'openmp': True, 'omp_version': 5.0})
     parser._syntax_done = False
     parser.parse()
     assert not errors.has_warnings()
@@ -151,9 +151,9 @@ def test_openmp_same_version_refresh():
     plugins.unload_plugins()
     plugins.load_plugins()
     file = os.path.join(path_dir, 'any_omp4_specific.py')
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp': True})
     parser = SyntaxParser(file, verbose=0)
     parser.parse()
     with patch.object(plugins.get_plugin('Openmp'), '_apply_patches') as mock_apply_patches:
-        plugins.set_options({'accelerators': ['openmp']}, refresh=True)
+        plugins.set_options({'openmp': True}, refresh=True)
         assert mock_apply_patches.call_count == 0
