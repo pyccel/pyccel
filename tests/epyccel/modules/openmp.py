@@ -218,7 +218,7 @@ def test_omp_target_teams_distribute_parallel_for(x : 'float'):
 def test_omp_get_set_schedule():
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
     func_result = np.int32(0)
-    i : int
+    i : int # pylint: disable=unused-variable
     #$ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))
     _, chunk_size = omp_get_schedule()

@@ -27,11 +27,21 @@ def add_plugin_arguments(parser):
     """
     Discover and add plugin arguments to the parser.
 
+    This function iterates through all registered plugins in the PluginManager
+    and adds their command-line interface options to the provided argument parser.
+    Each plugin can define its CLI options through a class attribute called
+    'CLI_OPTIONS', which should be a dictionary mapping option names to their
+    configuration.
+
     Parameters
     ----------
     parser : argparse.ArgumentParser
         The argument parser to add plugin arguments to.
 
+    See Also
+    --------
+    collect_plugin_options : Function to collect plugin options from parsed arguments
+    PluginManager : Manager for discovering and registering plugins
     """
     added_options = []
 
@@ -64,15 +74,27 @@ def collect_plugin_options(args):
     """
     Collect all plugin options from parsed arguments into a single dictionary.
 
+    This function extracts plugin-specific command-line options from the parsed
+    arguments and returns them as a dictionary. It works in conjunction with
+    `add_plugin_arguments`.
+
     Parameters
     ----------
     args : argparse.Namespace
-        Parsed command line arguments.
+        Parsed command line arguments, typically the result of
+        `argparse.ArgumentParser.parse_args()`.
 
     Returns
     -------
     dict
-        A dictionary containing all plugin options.
+        A dictionary containing all plugin options, where:
+        - Keys are option names as defined in the plugins' CLI_OPTIONS
+        - Values are the corresponding values from the parsed arguments
+
+    See Also
+    --------
+    add_plugin_arguments : Function to add plugin arguments to the parser
+    PluginManager : Manager for discovering and registering plugins
     """
     options = {}
     option_names = []
