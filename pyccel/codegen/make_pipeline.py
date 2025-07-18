@@ -269,7 +269,7 @@ def execute_pyccel_make(files, *,
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
                         verbose = verbose, convert_only = True)
 
-    stdlib_deps = {l: internal_libs[l][1] for l in printer_imports}
+    stdlib_deps = {l: internal_libs[l][1] for l in printer_imports if l in internal_libs}
     try:
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
                                      stdlib_deps)
