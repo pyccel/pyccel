@@ -108,6 +108,9 @@ def pyccel_make_command():
             if not f.exists():
                 errors.report(f"File not found : {f}", severity='error')
 
+        cwd = os.getcwd()
+        files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
+
         errors.check()
 
         if errors.has_errors():
