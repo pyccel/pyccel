@@ -49,16 +49,15 @@ def add_plugin_arguments(parser):
                     errors.report(
                         f"Option '{option_name}' already added by another plugin, skipping for plugin {plugin_name}",
                         severity='warning')
-                    continue
-
-                flag = f'--{option_name.replace("_", "-")}'
-                try:
-                    group.add_argument(flag, dest=option_name, **option_config)
-                    added_options.append(option_name)
-                except argparse.ArgumentError as e:
-                    errors.report(
-                        f"Argument conflict for '{flag}' in plugin {plugin_name}: {e}",
-                        severity='warning')
+                else:
+                    flag = f'--{option_name.replace("_", "-")}'
+                    try:
+                        group.add_argument(flag, dest=option_name, **option_config)
+                        added_options.append(option_name)
+                    except argparse.ArgumentError as e:
+                        errors.report(
+                            f"Argument conflict for '{flag}' in plugin {plugin_name}: {e}",
+                            severity='warning')
 
 
 def collect_plugin_options(args):
