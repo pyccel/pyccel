@@ -12,10 +12,10 @@ Specify the OpenMP version during compilation using the `--omp-version` flag:
 --omp-version=5.0
 ```
 
-Or when using `epyccel`, configure OpenMP through the accelerators' parameter:
+Or when using `epyccel`, configure OpenMP through the openmp parameter:
 
 ```python
-accelerators=['openmp']
+openmp=True
 ```
 
 Or set a default OpenMP version system-wide:
@@ -23,6 +23,8 @@ Or set a default OpenMP version system-wide:
 ```bash
 export PYCCEL_OMP_VERSION=5.0
 ```
+
+The default OpenMP version is 4.5 if not specified otherwise
 
 ## Version Compatibility
 
