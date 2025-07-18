@@ -22,7 +22,7 @@ def test_syntax(f):
     errors = Errors()
     errors.reset()
     extensions = PluginManager()
-    extensions.set_options({'accelerators':['openmp'], 'omp_version':4.5})
+    extensions.set_options({'openmp':True, 'omp_version':4.5})
 
     pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse(verbose = 0)

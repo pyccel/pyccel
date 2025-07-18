@@ -311,7 +311,7 @@ class CompileObj:
         return self._accelerators.union([da for d in self._dependencies.values() for da in d.accelerators])
 
     def __eq__(self, other):
-        return self.module_target == other.module_target
+        return isinstance(other, CompileObj) and self.module_target == other.module_target
 
     def __hash__(self):
         return hash(self.module_target)

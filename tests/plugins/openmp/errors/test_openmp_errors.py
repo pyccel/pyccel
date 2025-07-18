@@ -21,7 +21,7 @@ def get_files_from_folder(folder_name):
 @pytest.mark.parametrize("f",get_files_from_folder("blockers"))
 def test_blockers(f):
     plugins = PluginManager()
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp':True})
     errors = Errors()
     errors.reset()
 

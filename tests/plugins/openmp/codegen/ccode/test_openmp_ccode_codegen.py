@@ -20,7 +20,7 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
     plugins = PluginManager()
-    plugins.set_options({'accelerators': ['openmp']})
+    plugins.set_options({'openmp': True})
     # reset Errors singleton
     errors = Errors()
     errors.reset()
