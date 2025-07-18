@@ -1,4 +1,7 @@
 
 pyc_math_f90 = library('pyc_math_f90', 'pyc_math_f90.f90')
 
-pyc_math_c = library('pyc_math_c', 'pyc_math_c.c')
+cc = meson.get_compiler('c')
+m_dep = cc.find_library('m', required : true)
+
+pyc_math_c = library('pyc_math_c', 'pyc_math_c.c', dependencies: m_dep)
