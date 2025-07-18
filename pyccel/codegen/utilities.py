@@ -278,8 +278,9 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                             libs=libs, libdir=libdir,
                             dependencies=(*dependencies, internal_libs['gFTL'][2]),
                             extra_compilation_tools=extra_compilation_tools))
-        manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
-                language, verbose, convert_only)
+        manage_dependencies({'gFTL':None}, copmiler = compiler, pyccel_dirpath = pyccel_dirpath,
+                            mod_obj = new_dependencies[-1], language = language, verbose = verbose,
+                            convert_only = convert_only)
 
     return new_dependencies
 
@@ -362,7 +363,8 @@ def manage_dependencies(pyccel_imports, *, pyccel_dirpath, language, verbose,
             # Pylint thinks stdlib is a str
             if stdlib.dependencies: # pylint: disable=E1101
                 manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies}, # pylint: disable=E1101
-                        compiler, pyccel_dirpath, stdlib, language, verbose, convert_only)
+                        compiler = compiler, pyccel_dirpath = pyccel_dirpath, mod_obj = stdlib,
+                        language = language, verbose = verbose, convert_only = convert_only)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
