@@ -9,7 +9,7 @@ The Pyccel plugin system allows Pyccel's functionality to be extended through pl
 The plugin system is built around the following key components:
 
 1. `Plugin` - Abstract base class that all plugins must implement
-2. `Plugins` - Singleton manager that handles loading, registering, and deregistering plugins
+2. `PluginManager` - Singleton manager that handles loading, registering, and deregistering plugins
 3. `PatchInfo` - Class that stores information about a single method patch
 4. `PatchRegistry` - Class that manages all patches applied to a single target class
 
@@ -91,10 +91,10 @@ class PatchRegistry:
 
 ## Plugin Manager
 
-The `Plugins` class is a singleton that manages all plugins in Pyccel:
+The `PluginManager` class is a singleton that manages all plugins in Pyccel:
 
 ```python
-class Plugins(metaclass=Singleton):
+class PluginManager(metaclass=Singleton):
     def __init__(self, plugins_dir=None):
         self._plugins = []
         self._options = {}

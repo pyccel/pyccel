@@ -218,7 +218,7 @@ class Plugin(ABC):
     --------
     PatchRegistry : Registry for all patches applied to a single class.
     PatchInfo : Store information about a single patch.
-    Plugins : Manager for Pyccel plugins.
+    PluginManager : Manager for Pyccel plugins.
     """
 
     def __init__(self):
@@ -307,11 +307,11 @@ class Plugin(ABC):
 
         This property returns the name of the plugin, which by default is the
         name of the plugin class. This can be used to identify the plugin in
-        logs or when retrieving it from the Plugins manager.
+        logs or when retrieving it from the PluginManager.
 
         See Also
         --------
-        Plugins.get_plugin : Get a plugin by name.
+        PluginManager.get_plugin : Get a plugin by name.
         """
         return self.__class__.__name__
 
@@ -371,7 +371,7 @@ class PluginManager(metaclass=Singleton):
     for Pyccel. It is implemented as a singleton to ensure that there is only
     one instance of the plugin manager throughout the application.
 
-    The Plugins class provides methods for loading plugins from a directory,
+    The PluginManager class provides methods for loading plugins from a directory,
     registering and deregistering instances with plugins, and retrieving
     plugins by name.
 
