@@ -156,7 +156,7 @@ def pyccel() -> None:
     # ...
 
     # ... Plugins options
-    plugin_options = add_plugin_arguments(parser)
+    add_plugin_arguments(parser)
     # ...
 
     # ...
@@ -268,7 +268,7 @@ def pyccel() -> None:
                        accelerators    = accelerators,
                        folder          = str(output) if output is not None else None,
                        conda_warnings  = args.conda_warnings,
-                       **collect_plugin_options(args, plugin_options))
+                       **collect_plugin_options(args))
     except PyccelError:
         sys.exit(1)
     finally:

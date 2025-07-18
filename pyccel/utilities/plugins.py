@@ -32,10 +32,6 @@ def add_plugin_arguments(parser):
     parser : argparse.ArgumentParser
         The argument parser to add plugin arguments to.
 
-    Returns
-    -------
-    list[Plugin]
-        A list of all plugin option names that were added.
     """
     added_options = []
 
@@ -64,10 +60,8 @@ def add_plugin_arguments(parser):
                         f"Argument conflict for '{flag}' in plugin {plugin_name}: {e}",
                         severity='warning')
 
-    return added_options
 
-
-def collect_plugin_options(args, plugin_option_names):
+def collect_plugin_options(args):
     """
     Collect all plugin options from parsed arguments into a single dictionary.
 
@@ -75,8 +69,6 @@ def collect_plugin_options(args, plugin_option_names):
     ----------
     args : argparse.Namespace
         Parsed command line arguments.
-    plugin_option_names : list
-        List of plugin option names to collect.
 
     Returns
     -------
@@ -84,8 +76,14 @@ def collect_plugin_options(args, plugin_option_names):
         A dictionary containing all plugin options.
     """
     options = {}
+    option_names = []
+    plugins_manager = Plugins()
+    plugins = plugins_manager.get_plugins()
+    for plugin in plugins:
+        if hasattr(plugin.__class__, 'CLI_OPTIONS'):
+            option_names.extend(plugin.__class__.CLI_OPTIONS.keys())
 
-    for option_name in plugin_option_names:
+    for option_name in option_names:
         if hasattr(args, option_name):
             options[option_name] = getattr(args, option_name)
     return options
