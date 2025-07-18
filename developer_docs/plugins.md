@@ -4,7 +4,7 @@ This document provides an overview of the Pyccel plugin system and a guide on ho
 
 ## Overview
 
-The Pyccel plugin system allows for extending Pyccel's functionality through plugins. Plugins can modify the behaviour of existing classes by patching their methods or adding new methods. This is particularly useful for adding support for new language features, optimisations, or code generation targets without modifying the core codebase.
+The Pyccel plugin system allows Pyccel's functionality to be extended through plugins. Plugins can modify the behaviour of existing classes by patching their methods or adding new methods. This is particularly useful for adding support for new language features, optimisations, or code generation targets without modifying the core codebase.
 
 The plugin system is built around the following key components:
 
