@@ -236,11 +236,7 @@ class SyntaxParser(BasicParser):
         expr = Comment(txt)
         if line.startswith('#$'):
             env = line[2:].lstrip()
-            if env.startswith('omp'):
-                errors.report("OpenMP support is disabled. To enable it, please re-run the program with the --openmp flag (or epyccel with accelerators=['openmp']).",
-                              symbol = stmt,
-                              severity='warning')
-            elif env.startswith('acc'):
+            if env.startswith('acc'):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -262,6 +258,11 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
+            else:
+                errors.report(
+                    "Unexpected pragma detected. To enable support, please re-run the program with the appropriate accelerator flag.",
+                    symbol=stmt,
+                    severity='warning')
         expr.set_current_ast(stmt)
         return expr
 
