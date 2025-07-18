@@ -80,8 +80,6 @@ class OmpNode(PyccelAstNode):
     position : tuple
         The start and end positions of the OpenMP syntax in the source code, 
         used to print errors.
-    **kwargs : dict
-        Additional keyword arguments to be passed to the parent class.
 
     See Also
     --------
@@ -97,7 +95,7 @@ class OmpNode(PyccelAstNode):
 
     _attribute_nodes = ()
 
-    def __init__(self, raw, position, **kwargs):
+    def __init__(self, raw, position):
         super().__init__()
         self._raw = raw
         self._position = position
