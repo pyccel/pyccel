@@ -5,7 +5,7 @@ import pytest
 from pyccel.errors.errors import Errors
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
-from pyccel.utilities.plugins import Plugins
+from pyccel.utilities.pluginmanager import PluginManager
 from pyccel.errors.errors import PyccelError
 
 def get_files_from_folder(folder_name):
@@ -20,7 +20,7 @@ def get_files_from_folder(folder_name):
 @pytest.mark.external
 @pytest.mark.parametrize("f",get_files_from_folder("blockers"))
 def test_blockers(f):
-    plugins = Plugins()
+    plugins = PluginManager()
     plugins.set_options({'accelerators': ['openmp']})
     errors = Errors()
     errors.reset()

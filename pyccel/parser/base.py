@@ -28,14 +28,14 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
-from pyccel.utilities.plugins import Plugins
+from pyccel.utilities.pluginmanager import PluginManager
 
 #==============================================================================
 
 errors = Errors()
 error_mode = ErrorsMode()
 
-plugins = Plugins()
+plugins = PluginManager()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')

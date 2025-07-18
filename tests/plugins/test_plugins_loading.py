@@ -9,11 +9,11 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED, PLUGIN_DIRECTORY_NOT_FOUND
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.plugins.Openmp.plugin import Openmp
-from pyccel.utilities.plugins import Plugins
+from pyccel.utilities.pluginmanager import PluginManager
 
 errors = Errors()
 errors.reset()
-plugins = Plugins()
+plugins = PluginManager()
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -35,7 +35,7 @@ def get_funcs(obj):
 
 @pytest.mark.external
 @patch('pyccel.plugins.Openmp.plugin.errors.report')
-@patch('pyccel.utilities.plugins.os.path.isdir')
+@patch('pyccel.utilities.pluginmanager.os.path.isdir')
 def test_load(mock_isdir, mock_report):
     errors.reset()
     mock_isdir.return_value = False

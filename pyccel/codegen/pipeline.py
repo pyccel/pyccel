@@ -24,7 +24,7 @@ from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
-from pyccel.utilities.plugins import Plugins
+from pyccel.utilities.pluginmanager import PluginManager
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
@@ -121,7 +121,7 @@ def execute_pyccel(fname, *,
         This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
-    plugins = Plugins()
+    plugins = PluginManager()
     plugins.set_options(kwargs)
     timers = {}
     if fname.endswith('.pyh'):

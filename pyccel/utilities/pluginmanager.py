@@ -17,7 +17,7 @@ __all__ = (
     "PatchInfo",
     "PatchRegistry",
     "Plugin",
-    "Plugins",
+    "PluginManager",
 )
 
 errors = Errors()
@@ -35,7 +35,7 @@ def add_plugin_arguments(parser):
     """
     added_options = []
 
-    plugins_manager = Plugins()
+    plugins_manager = PluginManager()
     plugins = plugins_manager.get_plugins()
 
     for plugin in plugins:
@@ -77,7 +77,7 @@ def collect_plugin_options(args):
     """
     options = {}
     option_names = []
-    plugins_manager = Plugins()
+    plugins_manager = PluginManager()
     plugins = plugins_manager.get_plugins()
     for plugin in plugins:
         if hasattr(plugin.__class__, 'CLI_OPTIONS'):
@@ -363,7 +363,7 @@ class Plugin(ABC):
         return list(set(reg.target for reg in self._patch_registries))
 
 
-class Plugins(metaclass=Singleton):
+class PluginManager(metaclass=Singleton):
     """
     Manager for Pyccel plugins.
 
@@ -418,7 +418,7 @@ class Plugins(metaclass=Singleton):
 
         Examples
         --------
-        >>> plugins = Plugins()
+        >>> plugins = PluginManager()
         >>> plugins.load_plugins()
         >>> plugins.set_options({"option1": "value1", "option2": True}, refresh=True)
         """
@@ -452,7 +452,7 @@ class Plugins(metaclass=Singleton):
 
         Examples
         --------
-        >>> plugins = Plugins()
+        >>> plugins = PluginManager()
         >>> plugins.load_plugins("/path/to/plugins")
         """
         self.unload_plugins()
@@ -550,7 +550,7 @@ class Plugins(metaclass=Singleton):
 
         Examples
         --------
-        >>> plugins = Plugins()
+        >>> plugins = PluginManager()
         >>> plugins.load_plugins()
         >>> # Do some work with plugins
         >>> plugins.unload_plugins()

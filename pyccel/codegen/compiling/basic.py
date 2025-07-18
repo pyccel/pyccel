@@ -11,9 +11,9 @@ from pathlib import Path
 import sys
 from filelock import FileLock
 
-from pyccel.utilities.plugins import Plugins
+from pyccel.utilities.pluginmanager import PluginManager
 
-plugins = Plugins()
+plugins = PluginManager()
 
 class CompileObj:
     """

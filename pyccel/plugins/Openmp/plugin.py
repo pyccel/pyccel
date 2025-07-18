@@ -9,7 +9,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import OMP_VERSION_NOT_SUPPORTED
 from pyccel.plugins.Openmp import openmp_4_5
 from pyccel.plugins.Openmp import openmp_5_0
-from pyccel.utilities.plugins import Plugin, PatchRegistry, PatchInfo
+from pyccel.utilities.pluginmanager import Plugin, PatchRegistry, PatchInfo
 
 __all__ = (
     "OmpPatchInfo",

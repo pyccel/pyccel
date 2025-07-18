@@ -10,7 +10,7 @@ import os
 import argparse
 import pathlib
 
-from pyccel.utilities.plugins import add_plugin_arguments, collect_plugin_options
+from pyccel.utilities.pluginmanager import add_plugin_arguments, collect_plugin_options
 
 __all__ = ['MyParser', 'pyccel']
 
