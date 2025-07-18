@@ -178,7 +178,7 @@ def register(self, registry):
     registry.register_patch('parse', patch_info)
 ```
 
-### Step 5: Implement Remove Patches Logic
+### Step 5: Implement Remove Patch Logic
 
 The `deregister` method should remove all patches applied to the target class:
 
