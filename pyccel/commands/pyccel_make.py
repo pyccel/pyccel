@@ -90,6 +90,12 @@ def pyccel_make_command():
     # ...
     args = parser.parse_args()
 
+    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import ErrorsMode
+
+    errors = Errors()
+
     if args.files:
         files = args.files
     elif args.glob:
@@ -97,6 +103,15 @@ def pyccel_make_command():
     elif args.file_descr:
         with open(args.file_descr, 'r', encoding='utf-8') as f:
             files = [Path(fname.strip()) for fname in f.readlines()]
+
+        for f in files:
+            if not f.exists():
+                errors.report(f"File not found : {f}", severity='error')
+
+        errors.check()
+
+        if errors.has_errors():
+            sys.exit(1)
     else:
         raise NotImplementedError("No file specified")
 
@@ -107,10 +122,6 @@ def pyccel_make_command():
         accelerators.append("openmp")
     #if args.openacc:
     #    accelerators.append("openacc")
-
-    from pyccel.codegen.make_pipeline  import execute_pyccel_make
-    from pyccel.errors.errors     import Errors, PyccelError
-    from pyccel.errors.errors     import ErrorsMode
 
     # ...
     # this will initialize the singleton ErrorsMode
