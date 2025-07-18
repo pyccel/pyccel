@@ -62,7 +62,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**/*.py", "tests/**/*.py"]'
+          paths: '["pyccel/**/*.py", "tests/**/*.py", ".github/workflows/linux_pyccel-test_cmd.yml", ".github/actions/linux_install.yml"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '["push"]'
 
