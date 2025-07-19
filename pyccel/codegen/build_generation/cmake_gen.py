@@ -28,15 +28,18 @@ class CMakeHandler(BuildSystemHandler):
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
 
-        wrap_args = '\n    '.join([mod_name, 'MODULE', 'WITH_SOABI',
+        wrap_args = '\n    '.join([f'{kernel_target}_so', 'MODULE', 'WITH_SOABI',
                                     *[w.name for w in expr.wrapper_files]])
         cmds.append(f'Python_add_library({wrap_args})\n')
 
+        target_args = '\n    '.join([f'{kernel_target}_so', 'PROPERTIES', 'OUTPUT_NAME', mod_name])
+        cmds.append(f'set_target_properties({target_args})')
+
         to_link.append('cwrapper')
-        link_args = '\n    '.join([mod_name, 'PUBLIC', *to_link, 'cwrapper'])
+        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', *to_link, 'cwrapper'])
         cmds.append(f"target_link_libraries({link_args})\n")
 
-        args = '\n    '.join(['TARGETS', mod_name, 'DESTINATION', str(out_folder)])
+        args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', str(out_folder)])
         cmds.append(f"install({args})\n")
 
         if expr.is_exe:
