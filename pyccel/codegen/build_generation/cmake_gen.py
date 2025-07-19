@@ -8,7 +8,7 @@ from pyccel.codegen.compiling.project import DirTarget
 class CMakeHandler(BuildSystemHandler):
 
     def _generate_CompileTarget(self, expr):
-        kernel_target = f'{expr.name}_kernel'
+        kernel_target = expr.name
         mod_name = expr.pyfile.stem
 
         out_folder = expr.pyfile.parent
@@ -16,7 +16,7 @@ class CMakeHandler(BuildSystemHandler):
         args = '\n    '.join([kernel_target, 'STATIC', expr.file.name])
         cmds = [f'add_library({args})\n']
 
-        to_link = {f"{t.name}_kernel" for t in expr.dependencies}
+        to_link = {t.name for t in expr.dependencies}
         to_link.update(expr.stdlib_dependencies)
         if to_link:
             link_args = '\n    '.join([kernel_target, 'PUBLIC', *to_link])
