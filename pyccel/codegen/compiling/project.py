@@ -135,7 +135,7 @@ class CompileTarget:
         Get a list of strings containing the name of the targets from Pyccel's
         standard library which are required to compile this object.
         """
-        return self._dependencies
+        return self._stdlib_deps
 
     def __repr__(self):
         return f'CompileTarget({self.pyfile})'
