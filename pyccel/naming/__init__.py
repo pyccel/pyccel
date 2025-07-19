@@ -9,8 +9,13 @@ for different languages.
 """
 from .fortrannameclashchecker import FortranNameClashChecker
 from .cnameclashchecker import CNameClashChecker
+from .cmakenameclashchecker import CMakeNameClashChecker
+from .mesonnameclashchecker import MesonNameClashChecker
 from .pythonnameclashchecker import PythonNameClashChecker
 
-name_clash_checkers = {'fortran':FortranNameClashChecker(),
-        'c':CNameClashChecker(),
-        'python':PythonNameClashChecker()}
+name_clash_checkers = {'fortran' : FortranNameClashChecker(),
+                       'c' : CNameClashChecker(),
+                       'python' : PythonNameClashChecker(),
+                       'cmake' : CMakeNameClashChecker(),
+                       'meson' : MesonNameClashChecker(),
+                       }
