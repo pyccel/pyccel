@@ -16,15 +16,15 @@ class CMakeHandler(BuildSystemHandler):
         args = '\n    '.join([kernel_target, 'STATIC', expr.file.name])
         cmds = [f'add_library({args})\n']
 
-        to_link = [f"{t.name}_kernel" for t in expr.dependencies]
+        to_link = {f"{t.name}_kernel" for t in expr.dependencies}
+        to_link.update(expr.stdlib_dependencies)
         if to_link:
             link_args = '\n    '.join([kernel_target, 'PUBLIC', *to_link])
             cmds.append(f"target_link_libraries({link_args})\n")
 
-        if expr.file.suffix == '.c':
-            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
-            cmds.append(f'target_include_directories({args})\n')
-        elif expr.file.suffix == '.f90':
+        args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
+        cmds.append(f'target_include_directories({args})\n')
+        if expr.file.suffix == '.f90':
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
 
@@ -35,9 +35,11 @@ class CMakeHandler(BuildSystemHandler):
         target_args = '\n    '.join([f'{kernel_target}_so', 'PROPERTIES', 'OUTPUT_NAME', mod_name])
         cmds.append(f'set_target_properties({target_args})')
 
-        to_link.append('cwrapper')
-        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', *to_link, 'cwrapper'])
+        to_link.add('cwrapper')
+        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', *to_link])
         cmds.append(f"target_link_libraries({link_args})\n")
+        args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
+        cmds.append(f'target_include_directories({args})\n')
 
         args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', str(out_folder)])
         cmds.append(f"install({args})\n")
