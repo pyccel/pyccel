@@ -260,7 +260,7 @@ def epyccel_seq(function_class_or_module, *,
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    kwargs: dict
+    **kwargs : dict
         Options to be passed to the PluginManager.
 
     Returns
@@ -472,7 +472,7 @@ def epyccel(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    kwargs: dict
+    **kwargs : dict
         Options to be passed to the PluginManager.
 
     Returns

@@ -40,8 +40,8 @@ def add_plugin_arguments(parser):
 
     See Also
     --------
-    collect_plugin_options : Function to collect plugin options from parsed arguments
-    PluginManager : Manager for discovering and registering plugins
+    collect_plugin_options : Function to collect plugin options from parsed arguments.
+    PluginManager : Manager for discovering and registering plugins.
     """
     added_options = []
 
@@ -88,13 +88,13 @@ def collect_plugin_options(args):
     -------
     dict
         A dictionary containing all plugin options, where:
-        - Keys are option names as defined in the plugins' CLI_OPTIONS
-        - Values are the corresponding values from the parsed arguments
+        - Keys are option names as defined in the plugins' CLI_OPTIONS.
+        - Values are the corresponding values from the parsed arguments.
 
     See Also
     --------
-    add_plugin_arguments : Function to add plugin arguments to the parser
-    PluginManager : Manager for discovering and registering plugins
+    add_plugin_arguments : Function to add plugin arguments to the parser.
+    PluginManager : Manager for discovering and registering plugins.
     """
     options = {}
     option_names = []
