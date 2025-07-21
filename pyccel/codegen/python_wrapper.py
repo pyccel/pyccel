@@ -160,7 +160,7 @@ def create_shared_library(codegen,
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
-        return
+        return '', {}
 
     with open(wrapper_filename, 'w', encoding="utf-8") as f:
         f.writelines(wrapper_code)
