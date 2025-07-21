@@ -286,14 +286,22 @@ class Compiler:
 
     def _get_dependencies(self, dependencies = (), extra_compilation_tools = ()):
         """
-        Collect necessary dependencies
+        Collect necessary dependencies.
+
+        Collect necessary object or static libraries that should be included to compile
+        this object.
 
         Parameters
         ----------
         dependencies : iterable of str
-                       Any additional dependencies required by the file
+            Any additional dependencies required by the file.
         extra_compilation_tools : iterable or str
             Tools used which require additional compilation flags/include dirs/libs/etc.
+
+        Returns
+        -------
+        list[str]
+            A list of the necessary dependencies.
         """
         return self._get_property('dependencies', dependencies, extra_compilation_tools)
 
