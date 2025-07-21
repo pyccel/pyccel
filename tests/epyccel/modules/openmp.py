@@ -528,15 +528,15 @@ def parallel_if(n : int):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
     a = np.zeros(n)
     th_id, nthrds =  np.int32(0), np.int32(0)
-    start, end = 0, 0
+    l_start, l_end = 0, 0
 
-    #$ omp parallel if(parallel:n > 10) private(th_id, nthrds, start, end) num_threads(4)
+    #$ omp parallel if(parallel:n > 10) private(th_id, nthrds, l_start, l_end) num_threads(4)
     th_id = omp_get_thread_num()
     nthrds = omp_get_num_threads()
 
-    start = int(th_id * n / nthrds)
-    end = int((th_id + 1) * n / nthrds)
-    for i in range(start, end):
+    l_start = int(th_id * n / nthrds)
+    l_end = int((th_id + 1) * n / nthrds)
+    for i in range(l_start, l_end):
         a[i] = 2 * i
     #$ omp end parallel
     return a

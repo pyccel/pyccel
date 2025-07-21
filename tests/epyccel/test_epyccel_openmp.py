@@ -540,14 +540,6 @@ def test_potential_internal_race_condition(language):
     f2 = openmp.potential_internal_data_race_condition
     assert (f1() == f2()).all()
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="syntax not supported by current fortran compiler"),
-            pytest.mark.fortran]
-        )
-    )
-)
 @pytest.mark.external
 def test_parallel_if(language):
     f1 = epyccel(openmp.parallel_if, flags = '-Wall', openmp=True, language=language, omp_version=5.0)
