@@ -2988,7 +2988,8 @@ class SemanticParser(BasicParser):
                                         is_vararg = is_vararg, is_kwarg = is_kwarg))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
-                                is_posonly = posonly, is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
+                                is_argument = True), posonly = posonly, kwonly = kwonly,
+                                bound_argument = bound_argument,
                                 value = value, annotation = expr.annotation,
                                 is_vararg = is_vararg, is_kwarg = is_kwarg))
         return args
