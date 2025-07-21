@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #2390 : Add support for `np.expm1`.
 -   Add support for positional arguments.
 -   Add support for keyword-only arguments.
+-   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
 
 ### Fixed
 
