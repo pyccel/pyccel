@@ -51,14 +51,14 @@ Pyccel's compiler settings are described internally by a dictionary. This makes 
 -   `libdir` : A list of library directories necessary for compiling \[optional\]
 -   `include` : A list of include directories necessary for compiling \[optional\]
   
-In addition, for each accelerator (`mpi`/`openmp`/`openacc`/`python`) that you will use the JSON file must define the following:
+In addition, for each tool used that requires additional compilation information (e.g. `mpi`/`openmp`/`openacc`/`python`), the JSON file must define the following:
   
 -   `flags` : A list of flags used to impose the expected language standard \[optional\]
 -   `libs` : A list of libraries necessary for compiling \[optional\]
 -   `libdir` : A list of library directories necessary for compiling \[optional\]
 -   `include` : A list of include directories necessary for compiling \[optional\]
 
-Python is considered to be an accelerator and must additionally specify `shared_suffix`.
+Python must additionally specify `shared_suffix`.
 
 The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `--export-compiler-config` flag and provide a target file name.
 E.g.
