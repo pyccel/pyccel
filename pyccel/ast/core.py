@@ -17,7 +17,7 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, CustomDataType,
+from .datatypes import (PyccelType, CustomDataType, TupleType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
@@ -1564,7 +1564,7 @@ class FunctionDefArgument(TypedAstNode):
         if pyccel_stage != "syntactic":
             if isinstance(self.var, Variable):
                 self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
-                        and not self.var.is_const
+                        and not self.var.is_const and not isinstance(self.var.class_type, TupleType)
             else:
                 # If var is not a Variable it is a FunctionAddress
                 self._inout = False
