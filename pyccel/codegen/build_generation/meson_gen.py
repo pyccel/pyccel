@@ -14,7 +14,8 @@ class MesonHandler(BuildSystemHandler):
 
         args = [mod_name, f"'{expr.file.name}'"]
 
-        to_link = [f"{t.name}_dep" for t in expr.dependencies]
+        to_link = {f"{t.name}_dep" for t in expr.dependencies}
+        to_link.update(expr.stdlib_dependencies)
         if to_link:
             link_args = ', '.join(to_link)
             args.append(f"link_with: [{link_args}]")
@@ -22,15 +23,24 @@ class MesonHandler(BuildSystemHandler):
         files = ',\n    '.join(args)
         lib_cmd = f'{kernel_dep} = library({files})\n'
 
-        wrap_args = ',\n    '.join([mod_name,
-                                    *(f"'{w.name}'" for w in expr.wrapper_files),
-                                    f'dependencies : [cwrapper_dep]',
-                                    f'link_with: {kernel_dep}',
-                                    "install: true",
-                                    f"install_dir: {out_folder}"])
-        wrap_cmd = f'py.extension_module({wrap_args})\n'
+        wrap_args = [mod_name,
+                     *(f"'{w.name}'" for w in expr.wrapper_files),
+                     f'dependencies : [cwrapper_dep]',
+                     f'link_with: {kernel_dep}',
+                     "install: true",
+                     f"install_dir: {out_folder}"]
+        extra_inc_dirs = [f"{t.name}_inc_dir" for t in expr.dependencies if t.file.suffix == '.f90']
+        if extra_inc_dirs:
+            extra_inc_dirs_code = ', '.join(extra_inc_dirs)
+            wrap_args.insert(-2, f'include_directories: [{extra_inc_dirs_code}]')
+        wrap_args_code = ',\n    '.join(wrap_args)
+        wrap_cmd = f'py.extension_module({wrap_args_code})\n'
 
         cmds = [lib_cmd, wrap_cmd]
+
+        if expr.file.suffix == '.f90':
+            wrap_incdir = f"{expr.name}_inc_dir = include_directories('.')\n"
+            cmds.append(wrap_incdir)
 
         if expr.is_exe:
             link_args = ', '.join([kernel_dep, *to_link])
