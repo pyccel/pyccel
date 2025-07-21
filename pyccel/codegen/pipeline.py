@@ -55,7 +55,7 @@ def execute_pyccel(fname, *,
                    modules         = (),
                    libs            = (),
                    debug           = None,
-                   accelerators    = (),
+                   extra_compilation_tools    = (),
                    output_name     = None,
                    compiler_export_file = None,
                    conda_warnings  = 'basic',
@@ -106,8 +106,8 @@ def execute_pyccel(fname, *,
         Indicates whether the file should be compiled in debug mode.
         The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
         If no such environment variable exists then the default is False.
-    accelerators : iterable, optional
-        Tool used to accelerate the code (e.g., OpenMP, OpenACC).
+    extra_compilation_tools : iterable, optional
+        Tools used which require additional compilation flags/include dirs/libs/etc.
     output_name : str, optional
         Name of the generated module. Default is the same name as the translated file.
     compiler_export_file : str, optional
@@ -312,7 +312,7 @@ def execute_pyccel(fname, *,
             libs         = compile_libs,
             libdir       = libdir,
             dependencies = modules + list(deps.values()),
-            accelerators = accelerators)
+            extra_compilation_tools = extra_compilation_tools)
     parser.compile_obj = mod_obj
 
     #------------------------------------------------------

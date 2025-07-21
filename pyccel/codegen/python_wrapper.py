@@ -105,7 +105,7 @@ def create_shared_library(codegen,
             pyccel_dirpath,
             flags        = wrapper_flags,
             dependencies = (main_obj,),
-            accelerators = ('python',))
+            extra_compilation_tools = ('python',))
 
     if language == 'fortran':
         start_bind_c_wrapping = time.time()

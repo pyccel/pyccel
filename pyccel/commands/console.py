@@ -34,8 +34,8 @@ def pyccel() -> None:
 
     The command line interface requires a Python file to be specified, and it
     supports various options such as specifying the output language (C,
-    Fortran, or Python), compiler settings, and flags for accelerators like
-    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
+    Fortran, or Python), compiler settings, and flags for extra compilation
+    tools like MPI, OpenMP, and OpenACC. It also includes options for verbosity,
     debugging, and exporting compile information. Unless the user requires the
     process to stop after a specific stage, Pyccel will execute the full
     translation and compilation process until a C Python extension module is
@@ -221,13 +221,13 @@ def pyccel() -> None:
         sys.exit(1)
     # ...
 
-    accelerators = []
+    extra_compilation_tools = []
     if mpi:
-        accelerators.append("mpi")
+        extra_compilation_tools.append("mpi")
     if openmp:
-        accelerators.append("openmp")
+        extra_compilation_tools.append("openmp")
     if openacc:
-        accelerators.append("openacc")
+        extra_compilation_tools.append("openacc")
 
     # ...
 
@@ -264,7 +264,7 @@ def pyccel() -> None:
                        modules         = (),
                        libs            = args.libs,
                        debug           = args.debug,
-                       accelerators    = accelerators,
+                       extra_compilation_tools = extra_compilation_tools,
                        folder          = str(output) if output is not None else None,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
