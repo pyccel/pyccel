@@ -1254,6 +1254,7 @@ class SemanticParser(BasicParser):
         err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
+
             i_arg = i_arg.value
             f_arg = f_arg.var
             # Ignore types which cannot be compared
@@ -1424,8 +1425,9 @@ class SemanticParser(BasicParser):
         kwargs = {}
         for i, a in enumerate(args):
             if a.keyword is None:
-                if i < n_possible_posargs and isinstance(a, StarredArguments):
-                    input_args.extend(FunctionCallArgument(av) for av in a.args_var)
+                if isinstance(a.value, StarredArguments) and not func_args[len(input_args)].is_vararg:
+                    input_args.extend(FunctionCallArgument(self.scope.collect_tuple_element(av)) \
+                            for av in a.value.args_var)
                 else:
                     input_args.append(a)
             else:
@@ -3585,7 +3587,7 @@ class SemanticParser(BasicParser):
                             annotation=a.annotation, value=a.value, posonly=a.is_posonly, kwonly=a.is_kwonly,
                             bound_argument=a.bound_argument, is_vararg = a.is_vararg, is_kwarg = a.is_kwarg)
                             for a in func_args]
-            args      = self._sort_function_call_args(func_args, args)
+            args = self._sort_function_call_args(func_args, args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3641,6 +3643,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
 
+            args = self._sort_function_call_args(method.arguments, args)
             self._check_argument_compatibility(args, method.arguments,
                             method, method.is_elemental)
 
