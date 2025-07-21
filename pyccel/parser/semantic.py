@@ -1440,7 +1440,6 @@ class SemanticParser(BasicParser):
                 vararg = FunctionCallArgument(PythonTuple(*remaining_input_args), keyword='*args')
             input_args = input_args[:n_possible_posargs] + [vararg]
 
-        kwargs_start = len(input_args)
         for ka in func_args[len(input_args):]:
             if ka.is_vararg:
                 input_args.append(FunctionCallArgument(PythonTuple(class_type = ka.var.class_type), keyword='*args'))
