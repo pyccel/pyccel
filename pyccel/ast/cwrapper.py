@@ -250,6 +250,10 @@ class PyArg_ParseTupleNode(PyccelAstNode):
                 has_keyword = True
             self._flags += 'O'
 
+        if any(a.is_vararg or a.is_kwarg for a in c_func_args):
+            errors.report("Variadic arguments (*args, **kwargs) are not yet supported in the wrapper.",
+                          symbol=c_func_args, severity='error')
+
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
