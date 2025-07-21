@@ -1286,3 +1286,10 @@ def test_pyccel_generated_compilation_dependency(language):
             dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
             output_dtype = int,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_varargs(language):
+    pyccel_test("scripts/runtest_varargs.py",
+                compile_with_pyccel = False,
+                output_dtype = int,
+                language = language)
