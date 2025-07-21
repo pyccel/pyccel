@@ -2141,6 +2141,20 @@ class CCodePrinter(CodePrinter):
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
+    def _print_NumpyExpm1(self, expr):
+        arg, = expr.args
+        if expr.dtype.primitive_type is PrimitiveComplexType():
+            self.add_import(c_imports['pyc_math_c'])
+            arg_code = self._print(arg)
+            return f'cpyc_expm1({arg_code})'
+        else:
+            self.add_import(c_imports['math'])
+            if arg.dtype.primitive_type is not PrimitiveFloatingPointType():
+                arg_code = self._print(NumpyFloat(arg))
+            else :
+                arg_code = self._print(arg)
+            return f'expm1({arg_code})'
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
