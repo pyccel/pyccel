@@ -472,8 +472,6 @@ def epyccel(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    **kwargs : dict
-        Options to be passed to the PluginManager.
 
     Returns
     -------
@@ -488,6 +486,9 @@ def epyccel(
         MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True) (for parallel mode).
+    **kwargs : dict
+        Options to be passed to the PluginManager.
+
 
     See Also
     -------- 
