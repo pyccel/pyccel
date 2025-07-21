@@ -4277,14 +4277,31 @@ class If(PyccelAstNode):
         super().set_current_ast(ast_node)
 
 class StarredArguments(PyccelAstNode):
-    __slots__ = ('_starred_obj',)
+    """
+    A class representing unpacked arguments passed to a function call.
+
+    A class representing unpacked arguments passed to a function call.
+    E.g. `f(*my_arg)`.
+
+    Parameters
+    ----------
+    args : TypedAstNode
+        The object whose elements are unpacked.
+    """
+    __slots__ = ('_starred_obj')
     _attribute_nodes = ('_starred_obj',)
+
     def __init__(self, args):
         self._starred_obj = args
         super().__init__()
 
     @property
     def args_var(self):
+        """
+        The object whose elements are unpacked.
+
+        The object whose elements are unpacked.
+        """
         return self._starred_obj
 
 # ...
