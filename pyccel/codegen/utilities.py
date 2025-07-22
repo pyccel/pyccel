@@ -7,7 +7,7 @@
 """
 This file contains some useful functions to compile the generated fortran code
 """
-
+from itertools import chain
 import os
 from pathlib import Path
 import shutil
@@ -167,8 +167,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     pyccel_dirpath = Path(pyccel_dirpath)
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
-    for lib_name, stdlib in internal_libs.items():
-        if lib_name in pyccel_imports:
+    for lib_name, stdlib in chain(internal_libs.items(), external_libs.items()):
+        if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
             stdlib.install_to(pyccel_dirpath)
 
             if stdlib.compile_obj.dependencies:
