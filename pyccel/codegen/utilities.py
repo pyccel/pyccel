@@ -13,21 +13,14 @@ from pathlib import Path
 import shutil
 from filelock import FileLock
 
-import pyccel.stdlib as stdlib_folder
-import pyccel.extensions as ext_folder
 from pyccel.errors.errors import Errors
 
 from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
+from .compiling.library_config import internal_libs, external_libs
 from .compiling.file_locks import FileLockSet
-
-# get path to pyccel/stdlib/lib_name
-stdlib_path = Path(stdlib_folder.__file__).parent
-
-# get path to pyccel/extensions/lib_name
-ext_path = Path(ext_folder.__file__).parent
 
 # get path to pyccel/
 pyccel_root = Path(__file__).parent.parent
@@ -38,54 +31,6 @@ __all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
-
-#==============================================================================
-# map internal libraries to their folders inside pyccel/stdlib and their compile objects
-# The compile object folder will be in the pyccel dirpath
-internal_libs = {
-    "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",folder="math", libs = ('m',))),
-    "pyc_math_c"       : (stdlib_path / "math", "math", CompileObj("pyc_math_c.c",folder="math")),
-    "pyc_tools_f90"    : (stdlib_path / "tools", "tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
-    "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
-    "CSpan_extensions" : (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("CSpan_extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "stc" : (ext_path / "STC/include/stc", "STC/include/stc", CompileObj("stc", folder="STC/include", has_target_file = False)),
-    "gFTL" : (ext_path / "gFTL/install/GFTL-1.13/include/v2", "gFTL", CompileObj("gFTL", folder=".", has_target_file = False)),
-}
-internal_libs["STC_Extensions/Set_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Set_Extensions.h",
-                                                      folder="STC_Extensions",
-                                                      has_target_file = False,
-                                                      dependencies = (internal_libs['stc'][2],)))
-internal_libs["STC_Extensions/Dict_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Dict_Extensions.h",
-                                                     folder="STC_Extensions",
-                                                     has_target_file=False,
-                                                     dependencies=(internal_libs["stc"][2],)))
-internal_libs["STC_Extensions/List_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("List_Extensions.h",
-                                                      folder="STC_Extensions",
-                                                      has_target_file = False,
-                                                      dependencies = (internal_libs['stc'][2],)))
-internal_libs["STC_Extensions/Common_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Common_Extensions.h",
-                                                      folder="STC_Extensions",
-                                                      has_target_file = False,
-                                                      dependencies = (internal_libs['stc'][2],)))
-internal_libs["gFTL_functions/Set_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Set_Extensions.inc",
-                                                                     folder="gFTL_functions",
-                                                                     has_target_file = False,
-                                                                     dependencies = (internal_libs['gFTL'][2],)))
-internal_libs["gFTL_functions/Vector_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Vector_Extensions.inc",
-                                                                     folder="gFTL_functions",
-                                                                     has_target_file = False,
-                                                                     dependencies = (internal_libs['gFTL'][2],)))
-internal_libs["gFTL_functions/Map_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Map_Extensions.inc",
-                                                                     folder="gFTL_functions",
-                                                                     has_target_file = False,
-                                                                     dependencies = (internal_libs['gFTL'][2],)))
-internal_libs["stc/cstr"] = (ext_path / "STC/src", "STC/src", CompileObj("cstr_core.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
-internal_libs["stc/cspan"] = (ext_path / "STC/src", "STC/src", CompileObj("cspan.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
-internal_libs["stc/algorithm"] = (ext_path / "STC/include/stc/", "STC/include/stc/", CompileObj("algorithm.h",
-                                    folder="STC/include",
-                                    has_target_file = False,
-                                    dependencies = (internal_libs['stc'][2],)))
-
 
 #==============================================================================
 
