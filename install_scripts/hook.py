@@ -41,6 +41,8 @@ class CustomBuildHook(BuildHookInterface):
         """
         # Build gFTL for installation
         pyccel_root = Path(__file__).parent.parent
+        extensions_install = pyccel_root / 'pyccel' / 'extensions_install'
+
         gFTL_folder = (pyccel_root / 'pyccel' / 'extensions' / 'gFTL').absolute()
         if next(gFTL_folder.iterdir(), None) is None:
             try:
@@ -50,9 +52,25 @@ class CustomBuildHook(BuildHookInterface):
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
         shutil.rmtree(gFTL_folder / 'install', ignore_errors = True)
         subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
-                        f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}'], cwd = gFTL_folder, check=True)
+                        f'-DCMAKE_INSTALL_PREFIX={extensions_install}'], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
 
-        build_data['artifacts'].extend((gFTL_folder / 'install' / 'GFTL-1.13' / 'include').glob('**/*'))
+        STC_folder = (pyccel_root / 'pyccel' / 'extensions' / 'STC').absolute()
+
+        with open(STC_folder / 'meson.build', 'a', encoding='utf-8') as meson_file:
+            meson_file.write(("pkgconfig = import('pkgconfig')\n\n"
+                              "pkgconfig.generate(\n"
+                              "  stc_lib,\n"
+                              "  name: meson.project_name(),\n"
+                              "  version: meson.project_version(),\n"
+                              ")\n"))
+
+        subprocess.run([shutil.which('meson'), 'setup', f'--prefix={extensions_install / STC}', 'build'], cwd = STC_folder, check=True)
+        subprocess.run([shutil.which('meson'), 'compile', '-C', 'build'], cwd = STC_folder, check=True)
+        subprocess.run([shutil.which('meson'), 'install', '-C', 'build'], cwd = STC_folder, check=True)
+        subprocess.run([shutil.which('git'), 'checkout', 'meson.build'], cwd = STC_folder, check=False)
+
+        build_data['artifacts'].extend((extensions_install / 'GFTL-1.13' / 'include').glob('**/*'))
+        build_data['artifacts'].extend((extensions_install / 'STC' / 'include').glob('**/*'))
 
