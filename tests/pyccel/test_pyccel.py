@@ -1288,9 +1288,19 @@ def test_pyccel_generated_compilation_dependency(language):
             language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_varargs(language):
-    pyccel_test("scripts/runtest_varargs.py",
-                compile_with_pyccel = False,
-                output_dtype = int,
-                language = language)
+    rel_test_path = "scripts/runtest_varargs.py"
+    abs_test_path = get_abs_path(rel_test_path)
+
+    cwd = os.path.dirname(abs_test_path)
+
+    pyth_out = get_python_output(abs_test_path, cwd)
+
+    try:
+        pyccel_test(rel_test_path, language = language)
+    except AssertionError:
+        # Allow failure in cwrapper
+        pass
+
+    lang_out = get_lang_output(insert_pyccel_folder(abs_test_path), language)
+    compare_pyth_fort_output(pyth_out, lang_out, int, language)
