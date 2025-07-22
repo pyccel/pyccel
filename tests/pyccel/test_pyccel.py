@@ -1312,20 +1312,6 @@ def test_varargs(language):
 #------------------------------------------------------------------------------
 @pytest.mark.python
 def test_varkwargs():
-    rel_test_path = "scripts/runtest_varkwargs.py"
-    abs_test_path = get_abs_path(rel_test_path)
-
-    language = 'python'
-
-    cwd = os.path.dirname(abs_test_path)
-
-    pyth_out = get_python_output(abs_test_path, cwd)
-
-    expected_output_exe = insert_pyccel_folder(abs_test_path)
-
-    pyccel_test(rel_test_path,
-                output_dir = os.path.dirname(expected_output_exe),
-                language = language)
-
-    lang_out = get_lang_output(expected_output_exe, language)
-    compare_pyth_fort_output(pyth_out, lang_out, str, language)
+    pyccel_test("scripts/runtest_varkwargs.py",
+                language = 'python',
+                output_dtype = str)
