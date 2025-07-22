@@ -1288,6 +1288,7 @@ def test_pyccel_generated_compilation_dependency(language):
             language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_varargs(language):
     pyccel_test("scripts/runtest_varargs.py",
                 compile_with_pyccel = False,
