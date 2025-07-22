@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f(*a : int):
+    print(len(a))
     for ai in a:
         print(ai)
 
@@ -16,3 +17,4 @@ if __name__ == '__main__':
     tup1 = (3, 4.50)
     tup2 = (3,4)
     g(*tup1, *tup2)
+    g(*tup1)
