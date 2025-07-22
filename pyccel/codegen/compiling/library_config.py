@@ -6,12 +6,18 @@
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
+from filelock import FileLock
 import filecmp
 import os
 from pathlib import Path
+import shutil
+
 from .basic import CompileObj
-import pyccel.stdlib as stdlib_folder
+
+from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+
 import pyccel.extensions_install as ext_folder
+import pyccel.stdlib as stdlib_folder
 
 #------------------------------------------------------------------------------------------
 
@@ -24,10 +30,13 @@ ext_path = Path(ext_folder.__file__).parent
 #------------------------------------------------------------------------------------------
 
 class StdlibCompileObj:
-    def __init__(self, file_name, folder, **kwargs):
+    def __init__(self, file_name, folder, include = (), libdir = (), **kwargs):
         self._src_dir = stdlib_path / folder
         self._file_name = file_name
-        self._compile_obj_kwargs = {'folder' : folder, **kwargs}
+        self._include = include
+        self._libdir = libdir
+        self._folder = folder
+        self._compile_obj_kwargs = {**kwargs}
 
     def install_to(self, pyccel_dirpath):
         """
@@ -42,9 +51,9 @@ class StdlibCompileObj:
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
         """
-        self._compile_obj = CompileObj(self._file_name, **self._compile_obj_kwargs)
-        lib_dest_path = pyccel_dirpath / self._compile_obj_kwargs['folder']
-        with FileLock(lib_dest_path + '.lock'):
+        lib_dest_path = pyccel_dirpath / self._folder
+        self._compile_obj = CompileObj(self._file_name, folder = lib_dest_path, **self._compile_obj_kwargs)
+        with FileLock(lib_dest_path.with_suffix('.lock')):
             # Check if folder exists
             if not lib_dest_path.exists():
                 to_copy = True
@@ -61,7 +70,18 @@ class StdlibCompileObj:
 
             if to_copy:
                 # Copy all files from the source to the destination
-                shutil.copytree(lib_path, lib_dest_path)
+                shutil.copytree(self._src_dir, lib_dest_path)
+
+    @property
+    def compile_obj(self):
+        return self._compile_obj
+
+class CWrapperCompileObj(StdlibCompileObj):
+    def install_to(self, pyccel_dirpath):
+        super().install_to(pyccel_dirpath)
+        numpy_file = self._compile_obj.source_folder / 'numpy_version.h'
+        with open(numpy_file, 'w') as f:
+            f.writelines(get_numpy_max_acceptable_version_file())
 
 #------------------------------------------------------------------------------------------
 
@@ -73,7 +93,7 @@ class ExternalCompileObj:
         folder = folder or src_dir
         include = tuple(self._src_dir / i for i in include)
         libdir = tuple(self._src_dir / i for i in libdir)
-        self._compile_obj = CompileObj(folder = self._src_dir, **kwargs, has_target_file = False,
+        self._compile_obj = CompileObj(dest_dir, folder = self._src_dir, **kwargs, has_target_file = False,
                                        include = include, libdir = libdir)
 
     @property
@@ -97,6 +117,10 @@ class ExternalCompileObj:
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
+    @property
+    def compile_obj(self):
+        return self._compile_obj
+
 #------------------------------------------------------------------------------------------
 
 external_libs = {
@@ -108,7 +132,7 @@ internal_libs = {
     "pyc_math_f90"   : StdlibCompileObj("pyc_math_f90.f90", "math", libs = ('m',)),
     "pyc_math_c"     : StdlibCompileObj("pyc_math_c.c", "math"),
     "pyc_tools_f90"  : StdlibCompileObj("pyc_tools_f90.f90", "tools"),
-    "cwrapper"       : StdlibCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
+    "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
     "STC_Extensions" : StdlibCompileObj(".*.h", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = (external_libs['stc'].dependency,)),
