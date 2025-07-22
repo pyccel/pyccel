@@ -1389,7 +1389,7 @@ class SemanticParser(BasicParser):
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
 
-            if None in new_expr.args:
+            if None in args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
