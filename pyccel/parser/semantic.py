@@ -3578,7 +3578,7 @@ class SemanticParser(BasicParser):
         if (isinstance(func, FunctionDef) and func.scope) or isinstance(func, Interface):
             scope = func.scope if isinstance(func, FunctionDef) else func.functions[0].scope
             args = [a if a.keyword is None else \
-                    FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
+                    FunctionCallArgument(a.value, scope.local_used_symbols.get(a.keyword, a.keyword)) \
                     for a in args]
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
             if not func.is_semantic:
