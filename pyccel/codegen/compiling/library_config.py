@@ -9,6 +9,7 @@ This module contains tools useful for handling the compilation of stdlib imports
 import filecmp
 import os
 from pathlib import Path
+from .basic import CompileObj
 import pyccel.stdlib as stdlib_folder
 import pyccel.extensions_install as ext_folder
 
