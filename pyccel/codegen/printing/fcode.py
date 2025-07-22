@@ -1153,7 +1153,17 @@ class FCodePrinter(CodePrinter):
         if len(shape)>1:
             shape    = ', '.join(self._print(i) for i in shape)
             return 'reshape(['+ elements + '], [' + shape + '])'
-        return f'[{elements}]'
+        if elements:
+            return f'[{elements}]'
+        else:
+            # Create an array of size 0 with elements of a known type
+            try:
+                default = self._print(convert_to_literal(0, expr.class_type.element_type))
+            except TypeError:
+                errors.report(f"Can't create an empty tuple with elements of type {expr.class_type.element_type}",
+                              severity='fatal', symbol=expr)
+            idx = self._print(self.scope.get_temporary_variable(PythonNativeInt()))
+            return f'[({default}, {idx}=1,0)]'
 
     def _print_PythonList(self, expr):
         if len(expr.args) == 0:
