@@ -474,8 +474,10 @@ class PythonCodePrinter(CodePrinter):
                 return ', '.join(f'{k} = {a}' for k,a in zip(keys, args))
             elif expr.keyword.startswith('*'):
                 val = self._print(expr.value)
-                assert val.startswith('(') and val.endswith(')')
-                return val[1:-1].strip(',')
+                if val.startswith('(') and val.endswith(')'):
+                    return val[1:-1].strip(',')
+                else:
+                    return f'*{val}'
             else:
                 val = self._print(expr.value)
                 return f'{expr.keyword} = {val}'
