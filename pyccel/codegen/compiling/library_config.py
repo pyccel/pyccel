@@ -91,8 +91,8 @@ class ExternalCompileObj:
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
         folder = folder or src_dir
-        include = tuple(self._src_dir / i for i in include)
-        libdir = tuple(self._src_dir / i for i in libdir)
+        include = tuple(i for d in include for i in self._src_dir.glob(d))
+        libdir = tuple(l for d in libdir for l in self._src_dir.glob(d))
         self._compile_obj = CompileObj(dest_dir, folder = self._src_dir, **kwargs, has_target_file = False,
                                        include = include, libdir = libdir)
 
@@ -124,8 +124,8 @@ class ExternalCompileObj:
 #------------------------------------------------------------------------------------------
 
 external_libs = {
-        "stc" : ExternalCompileObj("STC", include = "include", libdir = "lib/.*", libs = "libstc.a"),
-        "gFTL" : ExternalCompileObj("gFTL", src_dir = "GFTL-1.13", include = "include/v2/")
+        "stc" : ExternalCompileObj("STC", include = ("include",), libdir = ("lib/*",), libs = ("stc",)),
+        "gFTL" : ExternalCompileObj("gFTL", src_dir = "GFTL-1.13", include = ("include/v2/",))
         }
 
 internal_libs = {
