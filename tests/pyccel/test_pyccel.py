@@ -1299,7 +1299,9 @@ def test_varargs(language):
     expected_output_exe = insert_pyccel_folder(abs_test_path)
 
     try:
-        pyccel_test(rel_test_path, output_dir = os.path.dirname(expected_output_exe), language = language)
+        pyccel_test(rel_test_path,
+                    output_dir = os.path.dirname(expected_output_exe) if language == 'python' else None,
+                    language = language)
     except AssertionError:
         # Allow failure in cwrapper
         pass
