@@ -170,6 +170,11 @@ class CompileObj:
         """
         return self._flags
 
+    @flags.setter
+    def flags(self, flags):
+        assert isinstance(flags, list)
+        self._flags = flags
+
     @property
     def include(self):
         """
@@ -179,6 +184,11 @@ class CompileObj:
         compiler via the include flag `-I`.
         """
         return self._include.union([di for d in self._dependencies.values() for di in d.include])
+
+    @include.setter
+    def include(self, inc):
+        assert isinstance(inc, set)
+        self._include = inc
 
     @property
     def libs(self):
@@ -190,6 +200,11 @@ class CompileObj:
         """
         return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
 
+    @libs.setter
+    def libs(self, libs):
+        assert isinstance(libs, list)
+        self._libs = libs
+
     @property
     def libdir(self):
         """
@@ -200,6 +215,11 @@ class CompileObj:
         libraries can be correctly located.
         """
         return self._libdir.union([dld for d in self._dependencies.values() for dld in d.libdir])
+
+    @libdir.setter
+    def libdir(self, libdirs):
+        assert isinstance(libdirs, set)
+        self._libdir = libdirs
 
     @property
     def extra_modules(self):
