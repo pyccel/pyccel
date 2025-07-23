@@ -165,7 +165,7 @@ class STCCompileObj(ExternalCompileObj):
                     os.makedirs(install_dir)
                     os.makedirs(libdir)
                     os.makedirs(libdir / 'pkgconfig')
-                    subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                    subprocess.run([make, 'lib', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=True, cwd=pyccel_dirpath)
                     shutil.copytree(ext_path / 'STC' / 'include', incdir)
                     shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
