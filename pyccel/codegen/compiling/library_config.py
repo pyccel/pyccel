@@ -107,23 +107,23 @@ class ExternalCompileObj:
         if not pkg_config:
             return False
 
-        p = subprocess.run([pkg_config, pkg_name])
-        if p.error_code != 0:
+        p = subprocess.run([pkg_config, pkg_name], env = os.environ)
+        if p.returncode != 0:
             return False
 
-        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True)
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True, text = True)
         self._compile_obj.include = {i.removeprefix('-I') for i in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True)
-        self._compile_obj.flags = set(p.stdout.split())
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True, text = True)
+        self._compile_obj.flags = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True)
-        self._compile_obj.libdirs = {l.removeprefix('-L') for l in p.stdout.split()}
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True, text = True)
+        self._compile_obj.libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True)
-        self._compile_obj.libdirs = set(p.stdout.split())
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True, text = True)
+        self._compile_obj.libs = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True)
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True, text = True)
         assert p.stdout.strip() == ''
 
         return True
@@ -147,32 +147,42 @@ class STCCompileObj(ExternalCompileObj):
         meson = shutil.which('mesons')
         ninja = shutil.which('ninja')
         has_meson = meson is not None and ninja is not None
-        build_dir = pyccel_dirpath / 'STC' /'build'
+        build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
-        if has_meson:
-            buildtype = 'release'
-            subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                            check=True, cwd=self._src_dir)
-            subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
-            subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
-        else:
-            make = shutil.which('make')
-            sh = shutil.which('sh')
-            libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}{compiler_family}'
-            incdir = install_dir / 'include'
-            os.mkdir(install_dir)
-            os.mkdir(libdir)
-            os.mkdir(libdir / 'pkgconfig')
-            subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
-                           check=True, cwd=pyccel_dirpath)
-            shutil.copytree(ext_path / 'STC' / 'include', incdir)
-            shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
-            with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
-                f.write("Name: stc\n")
-                f.write("Libs: -L${libdir} -lstc -lm\n")
-                f.write("Cflags: -I${incdir}")
+        if not build_dir.exists():
+            if has_meson:
+                buildtype = 'release'
+                subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                                check=True, cwd=self._src_dir)
+                subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+                subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+            else:
+                make = shutil.which('make')
+                sh = shutil.which('sh')
+                libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
+                incdir = install_dir / 'include'
+                os.makedirs(install_dir)
+                os.makedirs(libdir)
+                os.makedirs(libdir / 'pkgconfig')
+                subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                               check=True, cwd=pyccel_dirpath)
+                shutil.copytree(ext_path / 'STC' / 'include', incdir)
+                shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
+                with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
+                    f.write("Name: stc\n")
+                    f.write("Description: stc\n")
+                    f.write("Version: 5.0-dev\n")
+                    f.write(f"Libs: -L{libdir} -lstc -lm\n")
+                    f.write(f"Cflags: -I{incdir}")
 
-        self._compile_obj.reset_folder(install_dir)
+        current_PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
+        if current_PKG_CONFIG_PATH:
+            current_PKG_CONFIG_PATH += ':'
+        libdir = (install_dir / 'lib').glob(f'*-{compiler_family}')
+        current_PKG_CONFIG_PATH += str(libdir / 'pkgconfig')
+        os.environ['PKG_CONFIG_PATH'] = current_PKG_CONFIG_PATH
+
+        assert self._check_for_package('stc')
 
 #------------------------------------------------------------------------------------------
 
