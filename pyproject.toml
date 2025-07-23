@@ -66,6 +66,9 @@ include = [
   "pyccel/stdlib/**/*.inc",
   "pyccel/extensions/STC/include",
   "pyccel/extensions/STC/src/*.c"
+  "pyccel/extensions/STC/Makefile"
+  "pyccel/extensions/STC/meson.build"
+  "pyccel/extensions/STC/meson_options.txt"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
