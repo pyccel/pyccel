@@ -1752,7 +1752,7 @@ class CCodePrinter(CodePrinter):
                 indices.append('{'+self._print(idx)+'}')
             indices_code = ', '.join(indices)
             base_code = self._print(ObjectAddress(base))
-            return f'cspan_slice({c_type}, {base_code}, {indices_code})'
+            return f'cspan_slice({base_code}, {c_type}, {indices_code})'
 
         for i, ind in enumerate(inds):
             if is_literal_integer(ind) and int(ind) < 0:
@@ -2596,7 +2596,7 @@ class CCodePrinter(CodePrinter):
                 rhs = self._print(rhs_address)
                 rhs_type = self.get_c_type(rhs_var.class_type)
                 slicing = ', '.join(['{c_ALL}']*lhs_var.rank)
-                code = f'{lhs} = cspan_slice({rhs_type}, {rhs}, {slicing});\n'
+                code = f'{lhs} = cspan_slice({rhs}, {rhs_type}, {slicing});\n'
                 if lhs_var.order != rhs_var.order:
                     code += f'cspan_transpose({lhs_ptr});\n'
                 return code
