@@ -6,11 +6,12 @@
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
-from filelock import FileLock
 import filecmp
 import os
 from pathlib import Path
 import shutil
+
+from filelock import FileLock
 
 from .basic import CompileObj
 
