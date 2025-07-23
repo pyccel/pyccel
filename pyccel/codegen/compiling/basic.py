@@ -79,7 +79,7 @@ class CompileObj:
         self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
-            self._prog_target = folder / prog_target
+            self._prog_target = prog_target
         else:
             self._prog_target = rel_mod_name
         if sys.platform == "win32":
