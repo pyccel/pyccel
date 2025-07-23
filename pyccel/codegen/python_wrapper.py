@@ -128,7 +128,7 @@ def create_shared_library(codegen,
 
         start_bind_c_compiling = time.time()
         bind_c_obj=CompileObj(file_name = bind_c_filename,
-                folder = pyccel_dirpath,
+                dirpath = pyccel_dirpath,
                 flags  = main_obj.flags,
                 dependencies = (main_obj,))
         wrapper_compile_obj.add_dependencies(bind_c_obj)

@@ -530,7 +530,7 @@ class Compiler:
         # Get name of file
         ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
-        file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
+        file_out = os.path.join(compile_obj.source_dirpath, sharedlib_modname+ext_suffix)
 
         if verbose:
             print(">> Compiling shared library :: ", file_out)

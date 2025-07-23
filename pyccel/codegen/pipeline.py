@@ -306,7 +306,7 @@ def execute_pyccel(fname, *,
     compile_libs.extend(libs)
 
     mod_obj = CompileObj(file_name = fname,
-            folder       = pyccel_dirpath,
+            dirpath      = pyccel_dirpath,
             flags        = flags,
             include      = include,
             libs         = compile_libs,
@@ -358,7 +358,7 @@ def execute_pyccel(fname, *,
     try:
         if codegen.is_program:
             prog_obj = CompileObj(file_name = prog_name,
-                    folder       = pyccel_dirpath,
+                    dirpath      = pyccel_dirpath,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
             generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
