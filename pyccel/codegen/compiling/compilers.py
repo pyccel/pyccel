@@ -461,15 +461,12 @@ class Compiler:
                 self._get_compile_components(compile_obj, accelerators)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
-        if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
-        else:
-            j_code = ()
+        prog_target = compile_obj.program_target
 
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
-                '-o', compile_obj.program_target,
-                *libs_flags, *j_code]
+                '-o', os.path.join(output_folder, compile_obj.program_target),
+                *libs_flags]
 
         with compile_obj:
             self.run_command(cmd, verbose)
@@ -530,7 +527,7 @@ class Compiler:
         # Get name of file
         ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
-        file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
+        file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
             print(">> Compiling shared library :: ", file_out)
