@@ -1247,7 +1247,7 @@ class CCodePrinter(CodePrinter):
                            AsName(VariableTypeAnnotation(class_type), container_type),
                            ignore_at_print=True))
 
-                decl_line = f'#define i_type {container_type}\n'
+                decl_line = f'#define T {container_type}\n'
                 if isinstance(class_type, DictType):
                     key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
                     val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
