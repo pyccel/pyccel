@@ -149,36 +149,37 @@ class STCCompileObj(ExternalCompileObj):
         has_meson = meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
-        if not build_dir.exists():
-            if has_meson:
-                buildtype = 'release'
-                subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                                check=True, cwd=self._src_dir)
-                subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
-                subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
-            else:
-                make = shutil.which('make')
-                sh = shutil.which('sh')
-                libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
-                incdir = install_dir / 'include'
-                os.makedirs(install_dir)
-                os.makedirs(libdir)
-                os.makedirs(libdir / 'pkgconfig')
-                subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
-                               check=True, cwd=pyccel_dirpath)
-                shutil.copytree(ext_path / 'STC' / 'include', incdir)
-                shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
-                with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
-                    f.write("Name: stc\n")
-                    f.write("Description: stc\n")
-                    f.write("Version: 5.0-dev\n")
-                    f.write(f"Libs: -L{libdir} -lstc -lm\n")
-                    f.write(f"Cflags: -I{incdir}")
+        with FileLock(install_dir.with_suffix('.lock')):
+            if not build_dir.exists():
+                if has_meson:
+                    buildtype = 'release'
+                    subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                                    check=True, cwd=self._src_dir)
+                    subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+                    subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+                else:
+                    make = shutil.which('make')
+                    sh = shutil.which('sh')
+                    libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
+                    incdir = install_dir / 'include'
+                    os.makedirs(install_dir)
+                    os.makedirs(libdir)
+                    os.makedirs(libdir / 'pkgconfig')
+                    subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                                   check=True, cwd=pyccel_dirpath)
+                    shutil.copytree(ext_path / 'STC' / 'include', incdir)
+                    shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
+                    with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
+                        f.write("Name: stc\n")
+                        f.write("Description: stc\n")
+                        f.write("Version: 5.0-dev\n")
+                        f.write(f"Libs: -L{libdir} -lstc -lm\n")
+                        f.write(f"Cflags: -I{incdir}")
 
         current_PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
         if current_PKG_CONFIG_PATH:
             current_PKG_CONFIG_PATH += ':'
-        libdir = (install_dir / 'lib').glob(f'*-{compiler_family}')
+        libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
         current_PKG_CONFIG_PATH += str(libdir / 'pkgconfig')
         os.environ['PKG_CONFIG_PATH'] = current_PKG_CONFIG_PATH
 
