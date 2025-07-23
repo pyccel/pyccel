@@ -119,7 +119,7 @@ class Codegen:
         return additional_imports
 
 
-    def export(self, filename):
+    def export(self, file_abspath_stem):
         """
         Export code to a file with the requested name.
 
@@ -134,60 +134,60 @@ class Codegen:
 
         Parameters
         ----------
-        filename : str
-            The base (i.e. no extensions) of the filename of the file where the
+        file_abspath_stem : str
+            The step (i.e. no extensions) of the absolute path to the file where the
             code should be printed to.
 
         Returns
         -------
-        filename : str
-            The name of the file where the source code was printed.
-        prog_filename : str
-            The name of the file where the source code for the program was printed.
+        file_abspath : str
+            The path to the file where the source code was printed.
+        prog_file_abspath : str
+            The path to the file where the source code for the program was printed.
         """
         ext = _extension_registry[self._language]
         header_ext = _header_extension_registry[self._language]
 
-        header_filename = f'{filename}.{header_ext}'
-        pyi_filename = f'{filename}.pyi'
-        filename = f'{filename}.{ext}'
+        header_file_abspath = f'{file_abspath_stem}.{header_ext}'
+        pyi_file_abspath = f'{file_abspath_stem}.pyi'
+        file_abspath = f'{file_abspath_stem}.{ext}'
 
         if self._verbose:
-            print ('>>> Printing :: ', filename)
+            print ('>>> Printing :: ', file_abspath)
         # print module
         code = self._printer.doprint(self.ast)
-        with open(filename, 'w', encoding="utf-8") as f:
+        with open(file_abspath, 'w', encoding="utf-8") as f:
             f.write(code)
 
         module_header = ModuleHeader(self.ast)
         # print module header
         if header_ext is not None:
             if self._verbose:
-                print ('>>> Printing :: ', header_filename)
+                print ('>>> Printing :: ', header_file_abspath)
             code = self._printer.doprint(module_header)
-            with open(header_filename, 'w', encoding="utf-8") as f:
+            with open(header_file_abspath, 'w', encoding="utf-8") as f:
                 f.write(code)
 
         if self._verbose:
-            print ('>>> Printing :: ', pyi_filename)
+            print ('>>> Printing :: ', pyi_file_abspath)
         code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
         if self._language != 'python':
             printer_imports = ', '.join(self.get_printer_imports().keys())
             if printer_imports:
                 code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
-        with open(pyi_filename, 'w', encoding="utf-8") as f:
+        with open(pyi_file_abspath, 'w', encoding="utf-8") as f:
             f.write(code)
 
         # print program
         prog_filename = None
         if self.is_program and self._language != 'python':
-            folder = os.path.dirname(filename)
-            fname  = os.path.basename(filename)
-            prog_filename = os.path.join(folder,"prog_"+fname)
+            dir_abspath = os.path.dirname(file_abspath)
+            file_stem = os.path.basename(file_abspath)
+            prog_file_abspath = os.path.join(dir_abspath, "prog_"+file_stem)
             if self._verbose:
-                print ('>>> Printing :: ', prog_filename)
+                print ('>>> Printing :: ', prog_file_abspath)
             code = self._printer.doprint(self.ast.program)
-            with open(prog_filename, 'w') as f:
+            with open(prog_file_abspath, 'w') as f:
                 f.write(code)
 
-        return filename, prog_filename
+        return file_abspath, prog_file_abspath
