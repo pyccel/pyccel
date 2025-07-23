@@ -81,7 +81,7 @@ class CompileObj:
         if prog_target:
             self._prog_target = prog_target
         else:
-            self._prog_target = rel_mod_name
+            self._prog_target = self._module_name
         if sys.platform == "win32":
             self._prog_target = self._prog_target.with_suffix('.exe')
 
