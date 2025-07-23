@@ -230,3 +230,5 @@ internal_libs = {
                                         has_target_file = False,
                                         dependencies = (external_libs['gFTL'].dependency,))
 }
+
+internal_libs['CSpan_extensions'] = internal_libs['STC_Extensions']
