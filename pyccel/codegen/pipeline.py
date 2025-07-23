@@ -312,7 +312,7 @@ def execute_pyccel(fname, *,
             libs         = compile_libs,
             libdir       = libdir,
             dependencies = modules + list(deps.values()),
-            accelerators = accelerators)
+            extra_compilation_tools = accelerators)
     parser.compile_obj = mod_obj
 
     #------------------------------------------------------
