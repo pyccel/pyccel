@@ -318,15 +318,15 @@ def epyccel_seq(function_class_or_module, *,
     if compiler_family_or_config is not None:
         compiler_family_or_config = str(compiler_family_or_config)
 
-    # Store the extra_compilation_tools options into a tuple of strings
-    extra_compilation_tools = []
+    # Store the accelerators options into a tuple of strings
+    accelerators = []
     if mpi:
-        extra_compilation_tools.append("mpi")
+        accelerators.append("mpi")
     if openmp:
-        extra_compilation_tools.append("openmp")
+        accelerators.append("openmp")
     if openacc:
-        extra_compilation_tools.append("openacc")
-    extra_compilation_tools = tuple(extra_compilation_tools)
+        accelerators.append("openacc")
+    accelerators = tuple(accelerators)
 
     # Try is necessary to ensure lock is released
     try:
@@ -358,7 +358,7 @@ def epyccel_seq(function_class_or_module, *,
                            modules         = (),
                            libs            = libs,
                            debug           = debug,
-                           extra_compilation_tools = extra_compilation_tools,
+                           accelerators    = accelerators,
                            output_name     = module_name,
                            conda_warnings  = conda_warnings,
                            context_dict    = context_dict)
