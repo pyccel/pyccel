@@ -9,7 +9,9 @@ This module contains tools useful for handling the compilation of stdlib imports
 import filecmp
 import os
 from pathlib import Path
+import platform
 import shutil
+import subprocess
 
 from filelock import FileLock
 
@@ -17,7 +19,7 @@ from .basic import CompileObj
 
 from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
 
-import pyccel.extensions_install as ext_folder
+import pyccel.extensions as ext_folder
 import pyccel.stdlib as stdlib_folder
 
 #------------------------------------------------------------------------------------------
@@ -87,19 +89,99 @@ class CWrapperCompileObj(StdlibCompileObj):
 #------------------------------------------------------------------------------------------
 
 class ExternalCompileObj:
-    def __init__(self, dest_dir, src_dir = None, folder = None, include = (), libdir = (), **kwargs):
+    def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
-        folder = folder or src_dir
-        include = tuple(i for d in include for i in self._src_dir.glob(d))
-        libdir = tuple(l for d in libdir for l in self._src_dir.glob(d))
-        self._compile_obj = CompileObj(dest_dir, folder = self._src_dir, **kwargs, has_target_file = False,
-                                       include = include, libdir = libdir)
 
     @property
     def dependency(self):
         return self._compile_obj
+
+    @property
+    def compile_obj(self):
+        return self._compile_obj
+
+    def _check_for_package(self, pkg_name):
+        pkg_config = shutil.which('pkg-config')
+        if not pkg_config:
+            return False
+
+        p = subprocess.run([pkg_config, pkg_name])
+        if p.error_code != 0:
+            return False
+
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True)
+        self._compile_obj.include = {i.removeprefix('-I') for i in p.stdout.split()}
+
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True)
+        self._compile_obj.flags = set(p.stdout.split())
+
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True)
+        self._compile_obj.libdirs = {l.removeprefix('-L') for l in p.stdout.split()}
+
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True)
+        self._compile_obj.libdirs = set(p.stdout.split())
+
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True)
+        assert p.stdout.strip() == ''
+
+        return True
+
+#------------------------------------------------------------------------------------------
+
+class STCCompileObj(ExternalCompileObj):
+    def __init__(self):
+        super().__init__("STC")
+        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
+                                       include = ("include",), libdir = ("lib/*",))
+
+
+    def install_to(self, pyccel_dirpath, is_debug = False, compiler = None):
+        if compiler is None:
+            compiler_family = 'gnu'
+
+        if self._check_for_package('stc'):
+            return
+
+        meson = shutil.which('mesons')
+        ninja = shutil.which('ninja')
+        has_meson = meson is not None and ninja is not None
+        build_dir = pyccel_dirpath / 'STC' /'build'
+        install_dir = pyccel_dirpath / 'STC' / 'install'
+        if has_meson:
+            buildtype = 'release'
+            subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                            check=True, cwd=self._src_dir)
+            subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+            subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
+        else:
+            make = shutil.which('make')
+            sh = shutil.which('sh')
+            libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}{compiler_family}'
+            incdir = install_dir / 'include'
+            os.mkdir(install_dir)
+            os.mkdir(libdir)
+            os.mkdir(libdir / 'pkgconfig')
+            subprocess.run([make, f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                           check=True, cwd=pyccel_dirpath)
+            shutil.copytree(ext_path / 'STC' / 'include', incdir)
+            shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
+            with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
+                f.write("Name: stc\n")
+                f.write("Libs: -L${libdir} -lstc -lm\n")
+                f.write("Cflags: -I${incdir}")
+
+        self._compile_obj.reset_folder(install_dir)
+
+#------------------------------------------------------------------------------------------
+
+class GFTLCompileObj(ExternalCompileObj):
+    def __init__(self):
+        super().__init__("gFTL", src_dir = "GFTL-1.13")
+        include = (self._src_dir / "include/v2/",)
+        self._compile_obj = CompileObj("gFTL", folder = self._src_dir, has_target_file = False,
+                                       include = include)
 
     def install_to(self, pyccel_dirpath):
         """
@@ -118,15 +200,11 @@ class ExternalCompileObj:
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
-    @property
-    def compile_obj(self):
-        return self._compile_obj
-
 #------------------------------------------------------------------------------------------
 
 external_libs = {
-        "stc" : ExternalCompileObj("STC", include = ("include",), libdir = ("lib/*",), libs = ("stc",)),
-        "gFTL" : ExternalCompileObj("gFTL", src_dir = "GFTL-1.13", include = ("include/v2/",))
+        "stc" : STCCompileObj(),
+        "gFTL" : GFTLCompileObj()
         }
 
 internal_libs = {
