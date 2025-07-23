@@ -184,7 +184,7 @@ class STCCompileObj(ExternalCompileObj):
         os.environ['PKG_CONFIG_PATH'] = current_PKG_CONFIG_PATH
 
         if not self._check_for_package('stc'):
-            self._compile_obj.includes = {install_dir / 'include'}
+            self._compile_obj.include = {install_dir / 'include'}
             self._compile_obj.libdir = {libdir}
             self._compile_obj.libs = ['-lstc', '-lm']
 
