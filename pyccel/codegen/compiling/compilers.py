@@ -461,8 +461,6 @@ class Compiler:
                 self._get_compile_components(compile_obj, accelerators)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
-        prog_target = compile_obj.program_target
-
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
                 '-o', os.path.join(output_folder, compile_obj.program_target),
