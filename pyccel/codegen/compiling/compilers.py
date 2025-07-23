@@ -447,7 +447,7 @@ class Compiler:
             The name of the generated executable.
         """
         if verbose:
-            print(">> Compiling executable :: ", compile_obj.program_target)
+            print("> Compiling executable :: ", compile_obj.program_target)
 
         self._language_info = self._compiler_info[language]
 
@@ -530,7 +530,7 @@ class Compiler:
         file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
-            print(">> Compiling shared library :: ", file_out)
+            print("> Compiling shared library :: ", file_out)
 
         cmd = [exec_cmd, *flags, *libdir_flags, *linker_libdir_flags,
                 compile_obj.module_target, *m_code,
