@@ -347,7 +347,7 @@ def execute_pyccel(fname, *,
     # Compile code to modules
     try:
         compiler.compile_module(compile_obj=mod_obj,
-                output_folder=pyccel_dirpath,
+                output_dirpath=pyccel_dirpath,
                 language=language,
                 verbose=verbose)
     except Exception:
@@ -362,7 +362,7 @@ def execute_pyccel(fname, *,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
             generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=pyccel_dirpath,
+                    output_dirpath=pyccel_dirpath,
                     language=language,
                     verbose=verbose)
 

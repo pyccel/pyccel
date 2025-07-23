@@ -320,7 +320,7 @@ def recompile_object(compile_obj,
             outdated = True
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
-                output_folder=compile_obj.source_dirpath,
+                output_dirpath=compile_obj.source_dirpath,
                 language=language,
                 verbose=verbose)
 

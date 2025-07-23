@@ -133,7 +133,7 @@ def create_shared_library(codegen,
                 dependencies = (main_obj,))
         wrapper_compile_obj.add_dependencies(bind_c_obj)
         compiler.compile_module(compile_obj=bind_c_obj,
-                output_folder=pyccel_dirpath,
+                output_dirpath=pyccel_dirpath,
                 language=language,
                 verbose=verbose)
         timings['Bind C wrapping'] = time.time() - start_bind_c_compiling
@@ -184,12 +184,12 @@ def create_shared_library(codegen,
     #---------------------------------------
     start_compile_wrapper = time.time()
     compiler.compile_module(wrapper_compile_obj,
-                            output_folder = pyccel_dirpath,
+                            output_dirpath = pyccel_dirpath,
                             language='c',
                             verbose = verbose)
 
     sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_obj,
-                                                    output_folder = pyccel_dirpath,
+                                                    output_dirpath = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
                                                     language = language,
                                                     verbose = verbose)

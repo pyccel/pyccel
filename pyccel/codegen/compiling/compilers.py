@@ -48,18 +48,18 @@ def get_condaless_search_path(conda_warnings = 'basic'):
     """
     path_sep = ';' if platform.system() == 'Windows' else ':'
     current_path = os.environ['PATH']
-    folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
-    conda_folder_names = ('conda', 'anaconda', 'miniconda',
+    dirpaths = {f: f.split(os.sep) for f in current_path.split(path_sep)}
+    conda_dirpath_names = ('conda', 'anaconda', 'miniconda',
                           'Conda', 'Anaconda', 'Miniconda')
-    conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
-    if conda_folders:
+    conda_dirpaths = [p for p,f in dirpaths.items() if any(con in f for con in conda_dirpath_names)]
+    if conda_dirpaths:
         if conda_warnings in ('basic', 'verbose'):
             message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md#utilising-pyccel-within-anaconda-environment for details"
             if conda_warnings == 'verbose':
                 message_warning = message_warning + "\nConda ignored PATH:\n"
-                message_warning = message_warning + ":".join(conda_folders)
+                message_warning = message_warning + ":".join(conda_dirpaths)
             warnings.warn(UserWarning(message_warning))
-    acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
+    acceptable_search_paths = path_sep.join(p for p in dirpaths.keys() if p not in conda_dirpaths and os.path.exists(p))
     return acceptable_search_paths
 
 #------------------------------------------------------------
@@ -179,7 +179,7 @@ class Compiler:
         """
         Collect necessary compile property.
 
-        Collect necessary compile properties such as include folders
+        Collect necessary compile properties such as include dirpaths
         or library directories.
 
         Parameters
@@ -237,7 +237,7 @@ class Compiler:
         Returns
         -------
         list[str]
-            A list of the include folders.
+            A list of the include dirpaths.
         """
         return self._get_property('include', include, accelerators)
 
@@ -279,7 +279,7 @@ class Compiler:
         Returns
         -------
         list[str]
-            A list of the folders containing libraries.
+            A list of the dirpaths containing libraries.
         """
         return self._get_property('libdir', libdir, accelerators)
 
@@ -366,7 +366,7 @@ class Compiler:
 
         return exec_cmd, inc_flags, libs_flags, libdir_flags, m_code
 
-    def compile_module(self, compile_obj, output_folder, language, verbose):
+    def compile_module(self, compile_obj, output_dirpath, language, verbose):
         """
         Compile a module.
 
@@ -377,8 +377,8 @@ class Compiler:
         compile_obj : CompileObj
             Object containing all information about the object to be compiled.
 
-        output_folder : str
-            The folder where the result should be saved.
+        output_dirpath : str
+            The dirpath where the result should be saved.
 
         language : str
             Language that we are compiling.
@@ -408,7 +408,7 @@ class Compiler:
         exec_cmd = self._get_exec(accelerators)
 
         if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
+            j_code = (self._language_info['module_output_flag'], output_dirpath)
         else:
             j_code = ()
 
@@ -421,7 +421,7 @@ class Compiler:
 
         self._language_info = None
 
-    def compile_program(self, compile_obj, output_folder, language, verbose):
+    def compile_program(self, compile_obj, output_dirpath, language, verbose):
         """
         Compile a program.
 
@@ -432,8 +432,8 @@ class Compiler:
         compile_obj : CompileObj
             Object containing all information about the object to be compiled.
 
-        output_folder : str
-            The folder where the result should be saved.
+        output_dirpath : str
+            The dirpath where the result should be saved.
 
         language : str
             Language that we are compiling.
@@ -462,7 +462,7 @@ class Compiler:
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
         if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
+            j_code = (self._language_info['module_output_flag'], output_dirpath)
         else:
             j_code = ()
 
@@ -478,7 +478,7 @@ class Compiler:
 
         return compile_obj.program_target
 
-    def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
+    def compile_shared_library(self, compile_obj, output_dirpath, language, verbose, sharedlib_modname=None):
         """
         Compile a module to a shared library.
 
@@ -490,8 +490,8 @@ class Compiler:
         compile_obj : CompileObj
             Object containing all information about the object to be compiled.
 
-        output_folder : str
-            The folder where the result should be saved.
+        output_dirpath : str
+            The dirpath where the result should be saved.
 
         language : str
             Language that we are compiling.
@@ -607,8 +607,8 @@ class Compiler:
             should be printed.
         """
         compiler_export_file = pathlib.Path(compiler_export_filename)
-        folder = compiler_export_file.parent
-        os.makedirs(folder, exist_ok=True)
+        dirpath = compiler_export_file.parent
+        os.makedirs(dirpath, exist_ok=True)
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
             print(json.dumps(self._compiler_info, indent=4),
                     file=out_file)
