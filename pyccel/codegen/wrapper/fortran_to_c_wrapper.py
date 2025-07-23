@@ -49,7 +49,7 @@ class FortranToCWrapper(Wrapper):
 
     Parameters
     ----------
-    so_output_dirpath : str
+    sharedlib_dirpath : str
         The folder where the generated .so file will be located.
     verbose : int
         The level of verbosity.
@@ -57,7 +57,7 @@ class FortranToCWrapper(Wrapper):
     target_language = 'C'
     start_language = 'Fortran'
 
-    def __init__(self, so_output_dirpath, verbose):
+    def __init__(self, sharedlib_dirpath, verbose):
         self._additional_exprs = []
         self._wrapper_names_dict = {}
         super().__init__(verbose)

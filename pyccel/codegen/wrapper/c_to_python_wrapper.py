@@ -101,7 +101,7 @@ class CToPythonWrapper(Wrapper):
 
     Parameters
     ----------
-    so_output_dirpath : str
+    sharedlib_dirpath : str
         The folder where the generated .so file will be located.
     verbose : int
         The level of verbosity.
@@ -109,13 +109,13 @@ class CToPythonWrapper(Wrapper):
     target_language = 'Python'
     start_language = 'C'
 
-    def __init__(self, so_output_dirpath, verbose):
+    def __init__(self, sharedlib_dirpath, verbose):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
-        self._so_output_dirpath = so_output_dirpath
+        self._sharedlib_dirpath = sharedlib_dirpath
         super().__init__(verbose)
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
@@ -839,7 +839,7 @@ class CToPythonWrapper(Wrapper):
                 AliasAssign(stash_path, PyList_GetItem(current_path, LiteralInteger(0, dtype=CNativeInt()))),
                 Py_INCREF(stash_path),
                 If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()),
-                                                PyUnicode_FromString(CStrStr(LiteralString(self._so_output_dirpath)))),
+                                                PyUnicode_FromString(CStrStr(LiteralString(self._sharedlib_dirpath)))),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),

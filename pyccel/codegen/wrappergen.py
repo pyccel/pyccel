@@ -64,7 +64,7 @@ class Wrappergen:
         self._printer_types = [printer_registry[w] for w in self._wrapper_types]
         self._additional_imports = [{} for _ in self._wrapper_types]
 
-    def wrap(self, so_output_dirpath):
+    def wrap(self, sharedlib_dirpath):
         """
         Wrap the code so it is accessible from Python.
 
@@ -73,7 +73,7 @@ class Wrappergen:
 
         Parameters
         ----------
-        so_output_dirpath : str
+        sharedlib_dirpath : str
             The folder where the generated .so file will be located.
         """
         current_name_clash_checker = Scope.name_clash_checker
@@ -83,7 +83,7 @@ class Wrappergen:
                 print(f">> Building {Wrapper.start_language}-{Wrapper.target_language} interface :: ", self._name)
 
             Scope.name_clash_checker = name_clash_checkers[Wrapper.start_language.lower()]
-            wrapper = Wrapper(so_output_dirpath, verbose = self._verbose)
+            wrapper = Wrapper(sharedlib_dirpath, verbose = self._verbose)
 
             ast = wrapper.wrap(ast)
             self._wrapper_ast.append(ast)
