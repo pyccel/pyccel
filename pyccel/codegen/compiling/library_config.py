@@ -178,8 +178,7 @@ class STCCompileObj(ExternalCompileObj):
 
 class GFTLCompileObj(ExternalCompileObj):
     def __init__(self):
-        super().__init__("gFTL", src_dir = "GFTL-1.13")
-        self._include = {self._src_dir / "include/v2/",}
+        super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
     def install_to(self, pyccel_dirpath):
         """
@@ -197,6 +196,8 @@ class GFTLCompileObj(ExternalCompileObj):
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
+
+        self._include = {dest_dir / 'include/v2'}
 
 #------------------------------------------------------------------------------------------
 
