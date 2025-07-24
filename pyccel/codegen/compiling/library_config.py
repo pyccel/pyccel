@@ -197,6 +197,8 @@ class GFTLCompileObj(ExternalCompileObj):
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
+        self._lock_source  = FileLock(str(pyccel_dirpath / 'gFTL.lock'))
+
         self._include = {dest_dir / 'include/v2'}
 
 #------------------------------------------------------------------------------------------
