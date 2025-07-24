@@ -226,7 +226,7 @@ internal_libs = {
     "pyc_math_c"     : StdlibCompileObj("pyc_math_c.c", "math"),
     "pyc_tools_f90"  : StdlibCompileObj("pyc_tools_f90.f90", "tools"),
     "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
-    "STC_Extensions" : StdlibCompileObj(".*.h", "STC_Extensions",
+    "STC_Extensions" : StdlibCompileObj("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = (external_libs['stc'].dependency,)),
     "gFTL_functions" : StdlibCompileObj("*.inc", "gFTL_functions",
