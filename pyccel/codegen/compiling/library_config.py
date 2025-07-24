@@ -96,7 +96,7 @@ class ExternalCompileObj(CompileObj):
         if not pkg_config:
             return False
 
-        p = subprocess.run([pkg_config, pkg_name], env = os.environ)
+        p = subprocess.run([pkg_config, pkg_name], env = os.environ, capture_output = True)
         if p.returncode != 0:
             return False
 
