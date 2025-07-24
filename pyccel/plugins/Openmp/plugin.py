@@ -310,7 +310,7 @@ class Openmp(Plugin):
         plugin options. It is useful when options have been changed and the changes
         need to be propagated to all targets.
 
-        See Alsggo
+        See Also
         --------
         register : Register instances with the OpenMP plugin.
         deregister : Deregister instances from the OpenMP plugin.
