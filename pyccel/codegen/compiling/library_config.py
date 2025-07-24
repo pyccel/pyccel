@@ -32,14 +32,14 @@ ext_path = Path(ext_folder.__file__).parent
 
 #------------------------------------------------------------------------------------------
 
-class StdlibCompileObj:
+class StdlibCompileObj(CompileObj):
     def __init__(self, file_name, folder, include = (), libdir = (), **kwargs):
         self._src_dir = stdlib_path / folder
         self._file_name = file_name
         self._include = include
         self._libdir = libdir
         self._folder = folder
-        self._compile_obj_kwargs = {**kwargs}
+        super().__init__(self._file_name, folder = folder, **kwargs)
 
     def install_to(self, pyccel_dirpath):
         """
@@ -55,7 +55,7 @@ class StdlibCompileObj:
             The path to the Pyccel working directory where the copy should be created.
         """
         lib_dest_path = pyccel_dirpath / self._folder
-        self._compile_obj = CompileObj(self._file_name, folder = lib_dest_path, **self._compile_obj_kwargs)
+        self.reset_folder(lib_dest_path)
         with FileLock(lib_dest_path.with_suffix('.lock')):
             # Check if folder exists
             if not lib_dest_path.exists():
@@ -75,32 +75,21 @@ class StdlibCompileObj:
                 # Copy all files from the source to the destination
                 shutil.copytree(self._src_dir, lib_dest_path)
 
-    @property
-    def compile_obj(self):
-        return self._compile_obj
-
 class CWrapperCompileObj(StdlibCompileObj):
     def install_to(self, pyccel_dirpath):
         super().install_to(pyccel_dirpath)
-        numpy_file = self._compile_obj.source_folder / 'numpy_version.h'
+        numpy_file = self.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
 
 #------------------------------------------------------------------------------------------
 
-class ExternalCompileObj:
-    def __init__(self, dest_dir, src_dir = None):
+class ExternalCompileObj(CompileObj):
+    def __init__(self, dest_dir, src_dir = None, **kwargs):
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
-
-    @property
-    def dependency(self):
-        return self._compile_obj
-
-    @property
-    def compile_obj(self):
-        return self._compile_obj
+        super().__init__(self._src_dir.stem, dest_dir, has_target_file = False, **kwargs)
 
     def _check_for_package(self, pkg_name):
         pkg_config = shutil.which('pkg-config')
@@ -112,16 +101,16 @@ class ExternalCompileObj:
             return False
 
         p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True, text = True)
-        self._compile_obj.include = {i.removeprefix('-I') for i in p.stdout.split()}
+        self._include = {i.removeprefix('-I') for i in p.stdout.split()}
 
         p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True, text = True)
-        self._compile_obj.flags = list(p.stdout.split())
+        self._flags = list(p.stdout.split())
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True, text = True)
-        self._compile_obj.libdir = {l.removeprefix('-L') for l in p.stdout.split()}
+        self._libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True, text = True)
-        self._compile_obj.libs = list(p.stdout.split())
+        self._libs = list(p.stdout.split())
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True, text = True)
         assert p.stdout.strip() == ''
@@ -176,26 +165,19 @@ class STCCompileObj(ExternalCompileObj):
                         f.write(f"Libs: -L{libdir} -lstc -lm\n")
                         f.write(f"Cflags: -I{incdir}")
 
-        current_PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
-        if current_PKG_CONFIG_PATH:
-            current_PKG_CONFIG_PATH += ':'
         libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
-        current_PKG_CONFIG_PATH += str(libdir / 'pkgconfig')
-        os.environ['PKG_CONFIG_PATH'] = current_PKG_CONFIG_PATH
 
         if not self._check_for_package('stc'):
-            self._compile_obj.include = {install_dir / 'include'}
-            self._compile_obj.libdir = {libdir}
-            self._compile_obj.libs = ['-lstc', '-lm']
+            self._include = {install_dir / 'include'}
+            self._libdir = {libdir}
+            self._libs = ['-lstc', '-lm']
 
 #------------------------------------------------------------------------------------------
 
 class GFTLCompileObj(ExternalCompileObj):
     def __init__(self):
         super().__init__("gFTL", src_dir = "GFTL-1.13")
-        include = (self._src_dir / "include/v2/",)
-        self._compile_obj = CompileObj("gFTL", folder = self._src_dir, has_target_file = False,
-                                       include = include)
+        self._include = {self._src_dir / "include/v2/",}
 
     def install_to(self, pyccel_dirpath):
         """
@@ -228,10 +210,10 @@ internal_libs = {
     "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
     "STC_Extensions" : StdlibCompileObj("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
-                                        dependencies = (external_libs['stc'].dependency,)),
+                                        dependencies = (external_libs['stc'],)),
     "gFTL_functions" : StdlibCompileObj("*.inc", "gFTL_functions",
                                         has_target_file = False,
-                                        dependencies = (external_libs['gFTL'].dependency,))
+                                        dependencies = (external_libs['gFTL'],))
 }
 
 internal_libs['CSpan_extensions'] = internal_libs['STC_Extensions']
