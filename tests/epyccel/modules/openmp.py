@@ -545,7 +545,7 @@ def stenc_2d(matrix: 'int[:,:]', n: 'int', m: 'int'):
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
     omp_set_num_threads(np.int32(4))
     #$ omp parallel
-    #$ omp for ordered(2) collapse(2)
+    #$ omp for ordered(2)
     for i in range(1, n):
         for j in range(1, m):
             #$ omp ordered depend(sink: i, j-1) depend(sink: i-1, j)
