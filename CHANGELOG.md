@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
+-   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 
 ### Deprecated
 

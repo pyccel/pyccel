@@ -46,7 +46,7 @@ internal_libs = {
     "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",folder="math", libs = ('m',))),
     "pyc_math_c"       : (stdlib_path / "math", "math", CompileObj("pyc_math_c.c",folder="math")),
     "pyc_tools_f90"    : (stdlib_path / "tools", "tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
-    "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+    "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",folder="cwrapper", extra_compilation_tools=('python',))),
     "CSpan_extensions" : (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("CSpan_extensions.h", folder="STC_Extensions", has_target_file = False)),
     "stc" : (ext_path / "STC/include/stc", "STC/include/stc", CompileObj("stc", folder="STC/include", has_target_file = False)),
     "gFTL" : (ext_path / "gFTL/install/GFTL-1.13/include/v2", "gFTL", CompileObj("gFTL", folder=".", has_target_file = False)),
@@ -217,7 +217,7 @@ def copy_internal_library(dst_folder, lib_path, pyccel_dirpath, *, extra_files =
 #==============================================================================
 def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                                compiler, include, libs, libdir, dependencies,
-                               accelerators, language, verbose, convert_only):
+                               extra_compilation_tools, language, verbose, convert_only):
     """
     Generate any new modules that describe extensions.
 
@@ -243,8 +243,8 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         Paths to directories containing the required libraries.
     dependencies : iterable of CompileObjs
         Objects which must also be compiled in order to compile this module/program.
-    accelerators : iterable of str
-        Tool used to accelerate the code (e.g. openmp openacc).
+    extra_compilation_tools : iterable of str
+        Tools used which require additional compilation flags/include dirs/libs/etc.
     language : str
         The language in which code is being printed.
     verbose : int
@@ -277,7 +277,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                             include=include,
                             libs=libs, libdir=libdir,
                             dependencies=(*dependencies, internal_libs['gFTL'][2]),
-                            accelerators=accelerators))
+                            extra_compilation_tools=extra_compilation_tools))
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
                 language, verbose, convert_only)
 
@@ -386,7 +386,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                                           libs         = mod_obj.libs,
                                           libdir      = mod_obj.libdir,
                                           dependencies = mod_obj.dependencies,
-                                          accelerators = mod_obj.accelerators,
+                                          extra_compilation_tools = mod_obj.extra_compilation_tools,
                                           language = language,
                                           verbose = verbose,
                                           convert_only = convert_only)

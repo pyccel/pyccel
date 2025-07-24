@@ -126,7 +126,7 @@ def create_shared_library(codegen,
                                        pyccel_dirpath,
                                        flags        = wrapper_flags,
                                        dependencies = (main_obj,),
-                                       accelerators = ('python',))]
+                                       extra_compilation_tools = ('python',))]
 
     for i, (obj, lang, imports) in enumerate(zip(wrapper_compile_objs, printed_languages, gen.get_additional_imports())):
         obj.add_dependencies(*wrapper_compile_objs[:i])
