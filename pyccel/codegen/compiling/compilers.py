@@ -455,9 +455,6 @@ class Compiler:
         str
             The name of the generated executable.
         """
-        if verbose:
-            print("> Compiling executable :: ", compile_obj.program_target)
-
         self._language_info = self._compiler_info[language]
 
         extra_compilation_tools = compile_obj.extra_compilation_tools
@@ -470,10 +467,14 @@ class Compiler:
                 self._get_compile_components(compile_obj, extra_compilation_tools)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
+        out_target = os.path.join(output_folder, compile_obj.program_target)
+
+        if verbose:
+            print("> Compiling executable :: ", out_target)
+
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
-                '-o', os.path.join(output_folder, compile_obj.program_target),
-                *libs_flags]
+                '-o', out_target, *libs_flags]
 
         with compile_obj:
             self.run_command(cmd, verbose)
