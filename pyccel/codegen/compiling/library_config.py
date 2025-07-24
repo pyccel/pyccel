@@ -56,17 +56,24 @@ class StdlibCompileObj(CompileObj):
         """
         lib_dest_path = pyccel_dirpath / self._folder
         self.reset_folder(lib_dest_path)
-        with FileLock(lib_dest_path.with_suffix('.lock')):
+        self._lock_source  = FileLock(str(lib_dest_path.with_suffix('.lock')))
+        with self._lock_source:
+            print("Check if folder exists")
             # Check if folder exists
             if not lib_dest_path.exists():
+                print("Doesn't exist")
                 to_copy = True
                 to_delete = False
             else:
+                print("If folder exists check if it needs updating")
                 # If folder exists check if it needs updating
                 src_files = list(self._src_dir.glob('*'))
                 match, mismatch, errs = filecmp.cmpfiles(self._src_dir, lib_dest_path, src_files)
                 to_copy = len(mismatch) != 0
                 to_delete = to_copy
+
+            print("to_copy : ", to_copy)
+            print("to_delete : ", to_delete)
 
             if to_delete:
                 os.rmtree(lib_dest_path)
