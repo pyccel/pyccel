@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
+-   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 
 ### Deprecated
 
