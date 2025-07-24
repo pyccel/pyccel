@@ -738,4 +738,4 @@ class CompileObj:
         target : CompileObj
             Instance to be configured with OpenMP support.
         """
-        target._accelerators.add('openmp')
+        target._extra_compilation_tools.add('openmp')
