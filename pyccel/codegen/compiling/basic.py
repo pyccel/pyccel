@@ -79,11 +79,11 @@ class CompileObj:
         self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
-            self._prog_target = folder / prog_target
+            self._prog_target = prog_target
         else:
-            self._prog_target = rel_mod_name
+            self._prog_target = self._module_name
         if sys.platform == "win32":
-            self._prog_target = self._prog_target.with_suffix('.exe')
+            self._prog_target = self._prog_target + '.exe'
 
         self._lock_target  = FileLock(str(self.module_target.with_suffix(
                                             self.module_target.suffix + '.lock')))

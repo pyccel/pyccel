@@ -455,9 +455,6 @@ class Compiler:
         str
             The name of the generated executable.
         """
-        if verbose:
-            print(">> Compiling executable :: ", compile_obj.program_target)
-
         self._language_info = self._compiler_info[language]
 
         extra_compilation_tools = compile_obj.extra_compilation_tools
@@ -470,22 +467,21 @@ class Compiler:
                 self._get_compile_components(compile_obj, extra_compilation_tools)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
-        if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
-        else:
-            j_code = ()
+        out_target = os.path.join(output_folder, compile_obj.program_target)
+
+        if verbose:
+            print(">> Compiling executable :: ", out_target)
 
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
-                '-o', compile_obj.program_target,
-                *libs_flags, *j_code]
+                '-o', out_target, *libs_flags]
 
         with compile_obj:
             self.run_command(cmd, verbose)
 
         self._language_info = None
 
-        return compile_obj.program_target
+        return out_target
 
     def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
         """
@@ -539,7 +535,7 @@ class Compiler:
         # Get name of file
         ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
-        file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
+        file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
             print(">> Compiling shared library :: ", file_out)

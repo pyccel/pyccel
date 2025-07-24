@@ -23,6 +23,7 @@ def create_shared_library(codegen,
                           language,
                           wrapper_flags,
                           pyccel_dirpath,
+                          output_dirpath,
                           compiler,
                           sharedlib_modname=None,
                           verbose):
@@ -55,6 +56,9 @@ def create_shared_library(codegen,
 
     pyccel_dirpath : str
         The path to the directory where the files are created and compiled.
+
+    output_dirpath : str
+        Path to the directory where the shared library should be outputted.
 
     compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the library.
@@ -145,7 +149,7 @@ def create_shared_library(codegen,
                 verbose=verbose)
 
     sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_objs[-1],
-                                                    output_folder = pyccel_dirpath,
+                                                    output_folder = output_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
                                                     language = language,
                                                     verbose = verbose)
