@@ -130,6 +130,8 @@ class STCCompileObj(ExternalCompileObj):
         if compiler is None:
             compiler_family = 'gnu'
 
+        self._lock_source  = FileLock(str(pyccel_dirpath / 'STC.lock'))
+
         if self._check_for_package('stc'):
             return
 
