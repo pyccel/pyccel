@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
+-   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 
 ### Fixed
 
@@ -19,6 +20,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   Update compiler commands to output the Python shared libraries and executables directly into the output directory.
+-   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 
