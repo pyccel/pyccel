@@ -44,8 +44,6 @@ class CWrapperCodePrinter(CCodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
-    target_language : str
-            The language which the code was translated to [fortran/c].
     **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
     """
@@ -55,9 +53,8 @@ class CWrapperCodePrinter(CCodePrinter):
                       PyccelPyTypeObject() : 'PyTypeObject',
                       BindCPointer()  : 'void'}
 
-    def __init__(self, filename, target_language, **settings):
+    def __init__(self, filename, **settings):
         CCodePrinter.__init__(self, filename, **settings)
-        self._target_language = target_language
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._module_name = None

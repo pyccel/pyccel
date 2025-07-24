@@ -338,8 +338,8 @@ $ tree .
 ├── mod.cpython-36m-x86_64-linux-gnu.so
 ├── mod.py
 └── __pyccel__
-    ├── bind_c_mod.f90
-    ├── bind_c_mod.o
+    ├── bind_c_mod_wrapper.f90
+    ├── bind_c_mod_wrapper.o
     ├── build
     │   ├── lib.linux-x86_64-3.6
     │   └── temp.linux-x86_64-3.6

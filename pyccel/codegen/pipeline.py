@@ -318,7 +318,7 @@ def execute_pyccel(fname, *,
             libs         = compile_libs,
             libdir       = libdir,
             dependencies = modules + list(deps.values()),
-            accelerators = accelerators)
+            extra_compilation_tools = accelerators)
     parser.compile_obj = mod_obj
 
     #------------------------------------------------------
@@ -368,7 +368,7 @@ def execute_pyccel(fname, *,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
             generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=pyccel_dirpath,
+                    output_folder=folder,
                     language=language,
                     verbose=verbose)
 
@@ -380,6 +380,7 @@ def execute_pyccel(fname, *,
                                                language = language,
                                                wrapper_flags = wrapper_flags,
                                                pyccel_dirpath = pyccel_dirpath,
+                                               output_dirpath = folder,
                                                compiler = compiler,
                                                sharedlib_modname = output_name,
                                                verbose = verbose)
@@ -403,22 +404,10 @@ def execute_pyccel(fname, *,
         handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation failed')
 
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    generated_filename = os.path.basename(generated_filepath)
-    target = os.path.join(folder, generated_filename)
-    shutil.move(generated_filepath, target)
-    generated_filepath = target
     if verbose:
         print( '> Shared library has been created: {}'.format(generated_filepath))
 
-    if codegen.is_program:
-        generated_program_filename = os.path.basename(generated_program_filepath)
-        target = os.path.join(folder, generated_program_filename)
-        shutil.move(generated_program_filepath, target)
-        generated_program_filepath = target
-
-        if verbose:
+        if codegen.is_program:
             print( '> Executable has been created: {}'.format(generated_program_filepath))
 
     # Print all warnings now
