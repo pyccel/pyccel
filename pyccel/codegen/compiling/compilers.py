@@ -470,7 +470,7 @@ class Compiler:
         out_target = os.path.join(output_folder, compile_obj.program_target)
 
         if verbose:
-            print("> Compiling executable :: ", out_target)
+            print(">> Compiling executable :: ", out_target)
 
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
@@ -481,7 +481,7 @@ class Compiler:
 
         self._language_info = None
 
-        return compile_obj.program_target
+        return out_target
 
     def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
         """
@@ -538,7 +538,7 @@ class Compiler:
         file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
-            print("> Compiling shared library :: ", file_out)
+            print(">> Compiling shared library :: ", file_out)
 
         cmd = [exec_cmd, *flags, *libdir_flags, *linker_libdir_flags,
                 compile_obj.module_target, *m_code,
