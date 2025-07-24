@@ -489,7 +489,6 @@ def epyccel(
     **kwargs : dict
         Options to be passed to the PluginManager.
 
-
     See Also
     -------- 
     epyccel_seq
