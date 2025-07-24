@@ -149,8 +149,9 @@ class Wrappergen:
 
         Returns
         -------
-        dict[str, Import]
-            A dictionary mapping the include strings to the import module.
+        list[dict[str, Import]]
+            A dictionary for each printed wrapper file,
+            mapping the include strings to the import module.
         """
         return self._additional_imports
 
