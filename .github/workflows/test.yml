@@ -1,0 +1,13 @@
+name: Investigations
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+          which ninja
+          which meson
+          which pkg-config
