@@ -167,7 +167,7 @@ class ExternalLibInstaller:
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
 
-    def _check_for_package(self, pkg_name):
+    def _check_for_package(self, pkg_name, options = ()):
         """
         Use pkg-config to search for a package.
 
@@ -178,6 +178,9 @@ class ExternalLibInstaller:
         ----------
         pkg_name : str
             The name of the package.
+        options : iterable[str], optional
+            Any additional options that should be passed to pkg-config to limit the search.
+            E.g. min/max version.
 
         Returns
         -------
@@ -189,25 +192,25 @@ class ExternalLibInstaller:
         if not pkg_config:
             return None
 
-        p = subprocess.run([pkg_config, pkg_name], env = os.environ, capture_output = True)
+        p = subprocess.run([pkg_config, pkg_name, *options], env = os.environ, capture_output = True)
         # If the package is not found then exit
         if p.returncode != 0:
             return None
 
         # If the package exists then query pkg-config to get the compilation information
-        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-I'], capture_output = True, text = True)
         include = {i.removeprefix('-I') for i in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-other'], capture_output = True, text = True)
         flags = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-L'], capture_output = True, text = True)
         libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-l'], capture_output = True, text = True)
         libs = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-other'], capture_output = True, text = True)
         assert p.stdout.strip() == ''
 
         return CompileObj(pkg_name, folder = "", has_target_file = False,
@@ -259,7 +262,8 @@ class STCInstaller(ExternalLibInstaller):
         compiler_family = compiler.compiler_family.lower()
 
         # Use pkg-config to try to locate an existing (system or user) installation
-        existing_installation = self._check_for_package('stc')
+        # with version >= 5.0 < 6
+        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
         if existing_installation:
             return existing_installation
 
