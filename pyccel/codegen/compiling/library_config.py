@@ -33,6 +33,12 @@ ext_path = Path(ext_folder.__file__).parent
 #------------------------------------------------------------------------------------------
 
 class StdlibInstaller:
+    """
+    A class describing how stdlib objects are installed.
+
+    A class describing how stdlib objects are installed. An Installer has a `install_to`
+    method which creates a CompileObj that can be used as a dependency in translations.
+    """
     def __init__(self, file_name, folder, dependencies = (), **kwargs):
         self._src_dir = stdlib_path / folder
         self._file_name = file_name
@@ -42,22 +48,34 @@ class StdlibInstaller:
         assert 'include' not in kwargs
         assert 'libdir' not in kwargs
 
-    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
+    def install_to(self, pyccel_dirpath, already_installed, compiler, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
         Install the files to the Pyccel dirpath so they can be easily located and analysed by
         users. This function copies the contents of the source folder unless the folder already
-        exists with the same contents.
+        exists with the same contents. It returns the CompileObj that describes these new
+        files.
 
         Parameters
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
+        already_installed : dict[str, CompileObj]
+            A dictionary describing all the libraries that have already been installed. This
+            ensures that new CompileObjs are not created if multiple objects share the same
+            library dependencies.
+        compiler : Compiler
+            A Compiler object in case the installed dependency needs compiling. This is
+            unused in this method.
+        is_debug : bool
+            Indicates if we are compiling in debug mode. This is unused in this method.
 
         Returns
         -------
         CompileObj
+            The object that should be added as a dependency to objects that depend on this
+            library.
         """
         lib_dest_path = pyccel_dirpath / self._folder
         lock  = FileLock(str(lib_dest_path.with_suffix('.lock')))
@@ -85,13 +103,50 @@ class StdlibInstaller:
             if d in already_installed:
                 dependencies.append(already_installed[d])
             else:
-                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, already_installed, compiler, is_debug))
+                new_dep = recognised_libs[d].install_to(pyccel_dirpath, already_installed, compiler, is_debug)
+                already_installed[d] = new_dep
+                dependencies.append(new_dep)
 
         return CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
 
 class CWrapperInstaller(StdlibInstaller):
+    """
+    A class describing how the cwrapper library is installed.
+
+    A class describing how the cwrapper library is installed. This class inherits from
+    StdlibInstaller. The specialisation is required to ensure that the file describing
+    the NumPy version is also created.
+    """
     def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
+        """
+        Install the files to the Pyccel dirpath.
+
+        Install the files to the Pyccel dirpath so they can be easily located and analysed by
+        users. This function copies the contents of the source folder unless the folder already
+        exists with the same contents. It returns the CompileObj that describes these new
+        files.
+
+        Parameters
+        ----------
+        pyccel_dirpath : str | Path
+            The path to the Pyccel working directory where the copy should be created.
+        already_installed : dict[str, CompileObj]
+            A dictionary describing all the libraries that have already been installed. This
+            ensures that new CompileObjs are not created if multiple objects share the same
+            library dependencies.
+        compiler : Compiler
+            A Compiler object in case the installed dependency needs compiling. This is
+            unused in this method.
+        is_debug : bool
+            Indicates if we are compiling in debug mode. This is unused in this method.
+
+        Returns
+        -------
+        CompileObj
+            The object that should be added as a dependency to objects that depend on this
+            library.
+        """
         compile_obj = super().install_to(pyccel_dirpath, already_installed, compiler, is_debug)
         numpy_file = compile_obj.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w') as f:
@@ -101,20 +156,45 @@ class CWrapperInstaller(StdlibInstaller):
 #------------------------------------------------------------------------------------------
 
 class ExternalCompileObj:
+    """
+    A class describing how external libraries used by Pyccel are installed.
+
+    A class describing how external libraries used by Pyccel are installed. An Installer
+    has a `install_to` method which creates a CompileObj that can be used as a dependency in translations.
+    """
     def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
 
     def _check_for_package(self, pkg_name):
+        """
+        Use pkg-config to search for a package.
+
+        Use pkg-config to search for a package. pkg-config can provide the compilation
+        information.
+
+        Parameters
+        ----------
+        pkg_name : str
+            The name of the package.
+
+        Returns
+        -------
+        CompileObj | None
+            A CompileObj describing the package if it is installed on the system.
+        """
         pkg_config = shutil.which('pkg-config')
+        # If pkg-config is not installed then exit
         if not pkg_config:
             return None
 
         p = subprocess.run([pkg_config, pkg_name], env = os.environ, capture_output = True)
+        # If the package is not found then exit
         if p.returncode != 0:
             return None
 
+        # If the package exists then query pkg-config to get the compilation information
         p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True, text = True)
         include = {i.removeprefix('-I') for i in p.stdout.split()}
 
@@ -137,6 +217,12 @@ class ExternalCompileObj:
 #------------------------------------------------------------------------------------------
 
 class STCInstaller(ExternalCompileObj):
+    """
+    A class describing how the external library STC is installed.
+
+    A class describing how the external library STC is installed. This specialisation allows
+    the installation procedure to be specialised for this library.
+    """
     def __init__(self):
         super().__init__("STC")
         self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
@@ -145,32 +231,59 @@ class STCInstaller(ExternalCompileObj):
 
     def install_to(self, pyccel_dirpath, already_installed, compiler, is_debug = False):
         """
+        Install the files to the Pyccel dirpath.
+
+        Install the files to the Pyccel dirpath so they can be easily located and analysed by
+        users. This function builds and installs the library if it is not already installed.
+        It returns the CompileObj that describes the new installation files.
+
+        Parameters
+        ----------
+        pyccel_dirpath : str | Path
+            The path to the Pyccel working directory where the copy should be created.
+        already_installed : dict[str, CompileObj]
+            A dictionary describing all the libraries that have already been installed. This
+            ensures that new CompileObjs are not created if multiple objects share the same
+            library dependencies.
+        compiler : Compiler
+            A Compiler object to compile STC if it is not already installed.
+        is_debug : bool
+            Indicates if we are compiling in debug mode.
+
         Returns
         -------
         CompileObj
+            The object that should be added as a dependency to objects that depend on this
+            library.
         """
-        compiler_family = compiler.compiler_family
+        compiler_family = compiler.compiler_family.lower()
 
-        self._lock_source  = FileLock(str(pyccel_dirpath / 'STC.lock'))
-
+        # Use pkg-config to try to locate an existing (system or user) installation
         existing_installation = self._check_for_package('stc')
         if existing_installation:
             return existing_installation
 
+        # Check if meson can be used to build
         meson = shutil.which('meson')
         ninja = shutil.which('ninja')
         has_meson = meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
+            # If the build dir already exists then we have already compiled these files
             if not build_dir.exists():
+                # Meson is the preferred build system
                 if has_meson:
                     buildtype = 'debug' if is_debug else 'release'
+                    env = os.environ.copy()
+                    env['CC'] = compiler.get_exec({}, "c")
                     subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                                   check=True, cwd=self._src_dir, env={'CC': compiler.get_exec({}, "c")})
+                                   check=True, cwd=self._src_dir, env = env)
                     subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
                     subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
                 else:
+                    # If meson is not available make is used as a fallback.
+                    # The makefile does not provide an install command so the installation steps are done manually
                     make = shutil.which('make')
                     sh = shutil.which('sh')
                     libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
@@ -182,6 +295,7 @@ class STCInstaller(ExternalCompileObj):
                                    check=True, cwd=pyccel_dirpath)
                     shutil.copytree(ext_path / 'STC' / 'include', incdir)
                     shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
+                    # Create a .pc file for pyccel-make (this can also be found by CMake)
                     with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
                         f.write("Name: stc\n")
                         f.write("Description: stc\n")
@@ -190,17 +304,21 @@ class STCInstaller(ExternalCompileObj):
                         f.write(f"Cflags: -I{incdir}")
 
         libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
-
-        include = {install_dir / 'include'}
-        libdir = {libdir}
         libs = ['-lstc', '-lm']
 
         return CompileObj("stc", folder = "", has_target_file = False,
-                          include = include, libdir = libdir, libs = libs)
+                          include = (install_dir / 'include',),
+                          libdir = (libdir, ), libs = libs)
 
 #------------------------------------------------------------------------------------------
 
 class GFTLInstaller(ExternalCompileObj):
+    """
+    A class describing how the external library gFTL is installed.
+
+    A class describing how the external library gFTL is installed. This specialisation allows
+    the installation procedure to be specialised for this library.
+    """
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
@@ -209,23 +327,33 @@ class GFTLInstaller(ExternalCompileObj):
         Install the files to the Pyccel dirpath.
 
         Install the files to the Pyccel dirpath so they can be easily located and analysed by
-        users. This function creates a symlink as the contents of this folder are not expected
-        to change.
+        users. This function creates a symlink to the Pyccel folder containing the code as
+        these files are not expected to be modified. The symlink makes it easier for users to
+        examine the code used. The CompileObj that describes the files is returned.
 
         Parameters
         ----------
         pyccel_dirpath : str | Path
-            The path to the Pyccel working directory where the link should be created.
+            The path to the Pyccel working directory where the copy should be created.
+        already_installed : dict[str, CompileObj]
+            A dictionary describing all the libraries that have already been installed. This
+            ensures that new CompileObjs are not created if multiple objects share the same
+            library dependencies.
+        compiler : Compiler
+            A Compiler object in case the installed dependency needs compiling. This is
+            unused in this method.
+        is_debug : bool
+            Indicates if we are compiling in debug mode. This is unused in this method.
 
         Returns
         -------
         CompileObj
+            The object that should be added as a dependency to objects that depend on this
+            library.
         """
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
-
-        self._lock_source  = FileLock(str(pyccel_dirpath / 'gFTL.lock'))
 
         return CompileObj("gFTL", folder = "gFTL", has_target_file = False,
                           include = (dest_dir / 'include/v2',))
