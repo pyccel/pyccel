@@ -149,7 +149,7 @@ class CWrapperInstaller(StdlibInstaller):
         """
         compile_obj = super().install_to(pyccel_dirpath, installed_libs, compiler, is_debug)
         numpy_file = compile_obj.source_folder / 'numpy_version.h'
-        with open(numpy_file, 'w') as f:
+        with open(numpy_file, 'w', encoding='utf-8') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
         return compile_obj
 
@@ -192,25 +192,30 @@ class ExternalLibInstaller:
         if not pkg_config:
             return None
 
-        p = subprocess.run([pkg_config, pkg_name, *options], env = os.environ, capture_output = True)
+        p = subprocess.run([pkg_config, pkg_name, *options], env = os.environ, capture_output = True, check = False)
         # If the package is not found then exit
         if p.returncode != 0:
             return None
 
         # If the package exists then query pkg-config to get the compilation information
-        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-I'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-I'], capture_output = True,
+                           text = True, check = True)
         include = {i.removeprefix('-I') for i in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-other'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-other'], capture_output = True,
+                           text = True, check = True)
         flags = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-L'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-L'], capture_output = True,
+                           text = True, check = True)
         libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-l'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-l'], capture_output = True,
+                           text = True, check = True)
         libs = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-other'], capture_output = True, text = True)
+        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-other'], capture_output = True,
+                           text = True, check = True)
         assert p.stdout.strip() == ''
 
         return CompileObj(pkg_name, folder = "", has_target_file = False,
