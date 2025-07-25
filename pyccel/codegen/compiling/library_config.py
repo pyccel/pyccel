@@ -324,7 +324,7 @@ class STCInstaller(ExternalLibInstaller):
                     env = os.environ.copy()
                     env['CC'] = compiler.get_exec({}, "c")
                     if verbose:
-                        print(">> Installing STC with meson"
+                        print(">> Installing STC with meson")
                     subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
                                    check = True, cwd = self._src_dir, env = env,
                                    capture_output = (verbose <= 1))
@@ -334,7 +334,7 @@ class STCInstaller(ExternalLibInstaller):
                                    capture_output = (verbose <= 1))
                 else:
                     if verbose:
-                        print(">> Installing STC with make"
+                        print(">> Installing STC with make")
                     # If meson is not available make is used as a fallback.
                     # The makefile does not provide an install command so the installation steps are done manually
                     make = shutil.which('make')
