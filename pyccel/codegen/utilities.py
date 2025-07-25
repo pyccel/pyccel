@@ -178,7 +178,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     # requires a library to be included.
     for lib_name, stdlib in recognised_libs.items():
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
-            stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, compiler)
+            stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, verbose, compiler)
 
             mod_obj.add_dependencies(stdlib_obj)
 
