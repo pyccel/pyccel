@@ -11,7 +11,9 @@ All notable changes to this project will be documented in this file.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
+-   Allow installed versions of gFTL and STC to be used if they can be discovered by `pkg-config`.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -22,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 -   Update compiler commands to output the Python shared libraries and executables directly into the output directory.
 -   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
+-   Install STC to use it as a library instead of selectively compiling.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 
