@@ -110,6 +110,9 @@ class Compiler:
         ----------
         extra_compilation_tools : str
             Specifies the compilation tools to be used.
+        language : str, optional
+            The language being compiled. This argument should be provided unless this method
+            is called from a method of this class after setting self._language_info.
 
         Returns
         -------
@@ -623,4 +626,10 @@ class Compiler:
 
     @property
     def compiler_family(self):
+        """
+        Get the compiler family.
+
+        Get an identifier for the compiler family. This is equal to the compiler-family
+        key in the default compilers or to the stem of the provided JSON compiler file.
+        """
         return self._compiler_family
