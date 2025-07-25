@@ -34,7 +34,7 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                                compiler, include, libs, libdir, dependencies,
                                extra_compilation_tools, language, verbose, convert_only,
-                               already_installed):
+                               installed_libs):
     """
     Generate any new modules that describe extensions.
 
@@ -68,7 +68,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
-    already_installed : dict[str, CompileObj]
+    installed_libs : dict[str, CompileObj]
         A dictionary containing all the CompileObj objects for all the libraries
         that have already been installed.
 
@@ -99,7 +99,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                             dependencies=dependencies,
                             extra_compilation_tools=extra_compilation_tools))
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
-                language, verbose, convert_only, already_installed = already_installed)
+                language, verbose, convert_only, installed_libs = installed_libs)
 
     return new_dependencies
 
@@ -146,7 +146,7 @@ def recompile_object(compile_obj,
 
 #==============================================================================
 def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False,
-                        already_installed = None):
+                        installed_libs = None):
     """
     Manage dependencies of the code to be compiled.
 
@@ -168,20 +168,19 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
-    already_installed : dict[str, CompileObj]
+    installed_libs : dict[str, CompileObj]
         A dictionary containing all the CompileObj objects for all the libraries
         that have already been installed.
     """
-    if already_installed is None:
-        already_installed = {}
+    if installed_libs is None:
+        installed_libs = {}
 
     pyccel_dirpath = Path(pyccel_dirpath)
     # Iterate over the recognised_libs list and determine if the printer
     # requires a library to be included.
     for lib_name, stdlib in recognised_libs.items():
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
-            stdlib_obj = stdlib.install_to(pyccel_dirpath, already_installed, compiler)
-            already_installed[lib_name] = stdlib_obj
+            stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, compiler)
 
             mod_obj.add_dependencies(stdlib_obj)
 
@@ -190,7 +189,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             if convert_only:
                 continue
 
-    for lib_obj in already_installed.values():
+    for lib_obj in installed_libs.values():
         # get the include folder path and library files
         recompile_object(lib_obj,
                          compiler = compiler,
@@ -210,7 +209,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                                           language = language,
                                           verbose = verbose,
                                           convert_only = convert_only,
-                                          already_installed = already_installed)
+                                          installed_libs = installed_libs)
         for d in deps:
             recompile_object(d,
                              compiler = compiler,

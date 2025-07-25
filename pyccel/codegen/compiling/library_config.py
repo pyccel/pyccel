@@ -48,7 +48,7 @@ class StdlibInstaller:
         assert 'include' not in kwargs
         assert 'libdir' not in kwargs
 
-    def install_to(self, pyccel_dirpath, already_installed, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, compiler, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -61,7 +61,7 @@ class StdlibInstaller:
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
-        already_installed : dict[str, CompileObj]
+        installed_libs : dict[str, CompileObj]
             A dictionary describing all the libraries that have already been installed. This
             ensures that new CompileObjs are not created if multiple objects share the same
             library dependencies.
@@ -100,15 +100,15 @@ class StdlibInstaller:
 
         dependencies = []
         for d in self._dependencies:
-            if d in already_installed:
-                dependencies.append(already_installed[d])
+            if d in installed_libs:
+                dependencies.append(installed_libs[d])
             else:
-                new_dep = recognised_libs[d].install_to(pyccel_dirpath, already_installed, compiler, is_debug)
-                already_installed[d] = new_dep
-                dependencies.append(new_dep)
+                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, compiler, is_debug))
 
-        return CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
+        new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
+        installed_libs[self._folder] = new_obj
+        return new_obj
 
 class CWrapperInstaller(StdlibInstaller):
     """
@@ -118,7 +118,7 @@ class CWrapperInstaller(StdlibInstaller):
     StdlibInstaller. The specialisation is required to ensure that the file describing
     the NumPy version is also created.
     """
-    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, compiler, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -131,7 +131,7 @@ class CWrapperInstaller(StdlibInstaller):
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
-        already_installed : dict[str, CompileObj]
+        installed_libs : dict[str, CompileObj]
             A dictionary describing all the libraries that have already been installed. This
             ensures that new CompileObjs are not created if multiple objects share the same
             library dependencies.
@@ -147,7 +147,7 @@ class CWrapperInstaller(StdlibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        compile_obj = super().install_to(pyccel_dirpath, already_installed, compiler, is_debug)
+        compile_obj = super().install_to(pyccel_dirpath, installed_libs, compiler, is_debug)
         numpy_file = compile_obj.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
@@ -232,7 +232,7 @@ class STCInstaller(ExternalLibInstaller):
                                        include = ("include",), libdir = ("lib/*",))
 
 
-    def install_to(self, pyccel_dirpath, already_installed, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, compiler, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -244,7 +244,7 @@ class STCInstaller(ExternalLibInstaller):
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
-        already_installed : dict[str, CompileObj]
+        installed_libs : dict[str, CompileObj]
             A dictionary describing all the libraries that have already been installed. This
             ensures that new CompileObjs are not created if multiple objects share the same
             library dependencies.
@@ -310,9 +310,11 @@ class STCInstaller(ExternalLibInstaller):
         libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
         libs = ['-lstc', '-lm']
 
-        return CompileObj("stc", folder = "", has_target_file = False,
+        new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
                           libdir = (libdir, ), libs = libs)
+        installed_libs['stc'] = new_obj
+        return new_obj
 
 #------------------------------------------------------------------------------------------
 
@@ -326,7 +328,7 @@ class GFTLInstaller(ExternalLibInstaller):
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
-    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, compiler, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -339,7 +341,7 @@ class GFTLInstaller(ExternalLibInstaller):
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
-        already_installed : dict[str, CompileObj]
+        installed_libs : dict[str, CompileObj]
             A dictionary describing all the libraries that have already been installed. This
             ensures that new CompileObjs are not created if multiple objects share the same
             library dependencies.
@@ -359,8 +361,10 @@ class GFTLInstaller(ExternalLibInstaller):
         if not dest_dir.exists():
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
-        return CompileObj("gFTL", folder = "gFTL", has_target_file = False,
+        new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
                           include = (dest_dir / 'include/v2',))
+        installed_libs['gFTL'] = new_obj
+        return new_obj
 
 #------------------------------------------------------------------------------------------
 
