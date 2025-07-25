@@ -358,7 +358,7 @@ class STCInstaller(ExternalLibInstaller):
                         f.write(f"Libs: -L{libdir} -lstc -lm\n")
                         f.write(f"Cflags: -I{incdir}")
 
-        libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
+        libdir = next((install_dir / 'lib').glob('*'))
         libs = ['-lstc', '-lm']
 
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
