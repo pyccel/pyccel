@@ -195,7 +195,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                          verbose  = verbose)
 
     # Iterate over the imports and determine if the printer
-    # requires an extesion module to be generated
+    # requires an extension module to be generated
     for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
                                           compiler     = compiler,

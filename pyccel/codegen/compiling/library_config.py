@@ -46,7 +46,7 @@ class StdlibInstaller:
     folder : str
         Name of the folder in the stdlib folder where the file is found.
     dependencies : iterable[str], optional
-        An iterable containg the names of all the (external or internal) libraries
+        An iterable containing the names of all the (external or internal) libraries
         on which this internal library depends.
     **kwargs : dict
         A dictionary of additional keyword arguments that will be used when creating
@@ -140,7 +140,7 @@ class CWrapperInstaller(StdlibInstaller):
     folder : str
         Name of the folder in the stdlib folder where the file is found.
     dependencies : iterable[str], optional
-        An iterable containg the names of all the (external or internal) libraries
+        An iterable containing the names of all the (external or internal) libraries
         on which this internal library depends.
     **kwargs : dict
         A dictionary of additional keyword arguments that will be used when creating
