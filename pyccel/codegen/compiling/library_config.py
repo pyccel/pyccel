@@ -343,7 +343,7 @@ class STCInstaller(ExternalLibInstaller):
                     os.makedirs(install_dir)
                     os.makedirs(libdir)
                     os.makedirs(libdir / 'pkgconfig')
-                    p = subprocess.run([make, 'lib', f'CC={compiler.get_exec({}, "c")}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                    p = subprocess.run([make, 'lib', f'CC={Path(compiler.get_exec({}, "c")).name}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
                     print(p.stdout)
                     print(p.stderr)
