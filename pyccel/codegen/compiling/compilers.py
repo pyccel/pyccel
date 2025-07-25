@@ -633,3 +633,12 @@ class Compiler:
         key in the default compilers or to the stem of the provided JSON compiler file.
         """
         return self._compiler_family
+
+    @property
+    def is_debug(self):
+        """
+        Check if debug mode is activated.
+
+        Check if debug mode is activated.
+        """
+        return self._debug

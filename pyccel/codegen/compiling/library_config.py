@@ -61,7 +61,7 @@ class StdlibInstaller:
         assert 'include' not in kwargs
         assert 'libdir' not in kwargs
 
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
 
@@ -83,8 +83,6 @@ class StdlibInstaller:
         compiler : Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
-        is_debug : bool
-            Indicates if we are compiling in debug mode. This is unused in this method.
 
         Returns
         -------
@@ -120,7 +118,7 @@ class StdlibInstaller:
             if d in installed_libs:
                 dependencies.append(installed_libs[d])
             else:
-                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, compiler, is_debug))
+                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, compiler))
 
         new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
@@ -148,7 +146,7 @@ class CWrapperInstaller(StdlibInstaller):
         A dictionary of additional keyword arguments that will be used when creating
         the CompileObj. See CompileObj for more details.
     """
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
 
@@ -170,8 +168,6 @@ class CWrapperInstaller(StdlibInstaller):
         compiler : Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
-        is_debug : bool
-            Indicates if we are compiling in debug mode. This is unused in this method.
 
         Returns
         -------
@@ -179,7 +175,7 @@ class CWrapperInstaller(StdlibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        compile_obj = super().install_to(pyccel_dirpath, installed_libs, verbose, compiler, is_debug)
+        compile_obj = super().install_to(pyccel_dirpath, installed_libs, verbose, compiler)
         numpy_file = compile_obj.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w', encoding='utf-8') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
@@ -278,7 +274,7 @@ class STCInstaller(ExternalLibInstaller):
                                        include = ("include",), libdir = ("lib/*",))
 
 
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
 
@@ -298,8 +294,6 @@ class STCInstaller(ExternalLibInstaller):
             The level of verbosity.
         compiler : Compiler
             A Compiler object to compile STC if it is not already installed.
-        is_debug : bool
-            Indicates if we are compiling in debug mode.
 
         Returns
         -------
@@ -326,7 +320,7 @@ class STCInstaller(ExternalLibInstaller):
             if not build_dir.exists():
                 # Meson is the preferred build system
                 if has_meson:
-                    buildtype = 'debug' if is_debug else 'release'
+                    buildtype = 'debug' if compiler.is_debug else 'release'
                     env = os.environ.copy()
                     env['CC'] = compiler.get_exec({}, "c")
                     if verbose:
