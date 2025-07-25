@@ -343,8 +343,11 @@ class STCInstaller(ExternalLibInstaller):
                     os.makedirs(install_dir)
                     os.makedirs(libdir)
                     os.makedirs(libdir / 'pkgconfig')
-                    subprocess.run([make, 'lib', f'CC={compiler.get_exec({}, "c")}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
-                                   check=True, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
+                    p = subprocess.run([make, 'lib', f'CC={compiler.get_exec({}, "c")}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                                   check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
+                    print(p.stdout)
+                    print(p.stderr)
+                    assert p.returncode == 0
                     shutil.copytree(ext_path / 'STC' / 'include', incdir)
                     shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
                     # Create a .pc file for pyccel-make (this can also be found by CMake)
