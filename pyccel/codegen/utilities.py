@@ -33,7 +33,8 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 #==============================================================================
 def generate_extension_modules(import_key, import_node, pyccel_dirpath,
                                compiler, include, libs, libdir, dependencies,
-                               extra_compilation_tools, language, verbose, convert_only):
+                               extra_compilation_tools, language, verbose, convert_only,
+                               already_installed):
     """
     Generate any new modules that describe extensions.
 
@@ -67,6 +68,9 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
+    already_installed : dict[str, CompileObj]
+        A dictionary containing all the CompileObj objects for all the libraries
+        that have already been installed.
 
     Returns
     -------
@@ -92,10 +96,10 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
                             include=include,
                             libs=libs, libdir=libdir,
-                            dependencies=(*dependencies, external_libs['gFTL']),
+                            dependencies=(*dependencies, already_installed['gFTL']),
                             extra_compilation_tools=extra_compilation_tools))
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
-                language, verbose, convert_only)
+                language, verbose, convert_only, already_installed = already_installed)
 
     return new_dependencies
 
@@ -164,20 +168,23 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         Indicates the level of verbosity.
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
+    already_installed : dict[str, CompileObj]
+        A dictionary containing all the CompileObj objects for all the libraries
+        that have already been installed.
     """
     if already_installed is None:
         already_installed = {}
 
     pyccel_dirpath = Path(pyccel_dirpath)
-    # Iterate over the internal_libs list and determine if the printer
-    # requires an internal lib to be included.
+    # Iterate over the recognised_libs list and determine if the printer
+    # requires a library to be included.
     for lib_name, stdlib in recognised_libs.items():
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
             stdlib_obj = stdlib.install_to(pyccel_dirpath, already_installed, compiler)
 
             if stdlib_obj.dependencies:
                 manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib_obj.dependencies},
-                        compiler, pyccel_dirpath, stdlib_obj, language, verbose, convert_only)
+                        compiler, pyccel_dirpath, stdlib_obj, language, verbose, convert_only, already_installed = already_installed)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
@@ -192,8 +199,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
 
             mod_obj.add_dependencies(stdlib_obj)
 
-    # Iterate over the external_libs list and determine if the printer
-    # requires an external lib to be included.
+    # Iterate over the imports and determine if the printer
+    # requires an extesion module to be generated
     for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
                                           compiler     = compiler,
@@ -204,7 +211,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                                           extra_compilation_tools = mod_obj.extra_compilation_tools,
                                           language = language,
                                           verbose = verbose,
-                                          convert_only = convert_only)
+                                          convert_only = convert_only,
+                                          already_installed = already_installed)
         for d in deps:
             recompile_object(d,
                              compiler = compiler,
