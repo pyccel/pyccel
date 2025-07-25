@@ -97,11 +97,6 @@ jobs:
       - name: Coverage install
         if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
         uses: ./.github/actions/coverage_install
-      - name: Test
-        run: |
-          pyccel --language=c Module_11.py -vv
-          pyccel-clean -p
-        working-directory: ./tests/epyccel/modules
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
         id: f_c_pytest
