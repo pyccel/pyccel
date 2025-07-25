@@ -157,7 +157,7 @@ class STCCompileObj(ExternalCompileObj):
         if existing_installation:
             return existing_installation
 
-        meson = shutil.which('mesons')
+        meson = shutil.which('meson')
         ninja = shutil.which('ninja')
         has_meson = meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
