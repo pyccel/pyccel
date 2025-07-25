@@ -247,7 +247,7 @@ def test_module_type_alias_expression(language):
 def test_module_11(language):
     import modules.Module_11 as mod
 
-    modnew = epyccel(mod, language=language, verbose=True)
+    modnew = epyccel(mod, language=language)
 
     len_pyt = mod.update_multiple()
     len_pyc = modnew.update_multiple()
