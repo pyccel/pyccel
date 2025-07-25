@@ -34,14 +34,14 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Test translation with make
-      run: python -m pytest -n auto -rX ${FLAGS} test_arrays.py 2>&1 | tee c_make_outfile.out
+      run: python -m pytest -n auto -rX ${FLAGS} -m c test_arrays.py 2>&1 | tee c_make_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests/epyccel
       id: pytest_c_arr_make
     - name: Test translation with meson
       run: |
         python -m pip install meson
-        python -m pytest -n auto -rX ${FLAGS} test_arrays.py 2>&1 | tee c_meson_outfile.out
+        python -m pytest -n auto -rX ${FLAGS} -m c test_arrays.py 2>&1 | tee c_meson_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests/epyccel
       id: pytest_c_arr_meson
