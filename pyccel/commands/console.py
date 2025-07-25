@@ -265,7 +265,7 @@ def pyccel() -> None:
                        libs            = args.libs,
                        debug           = args.debug,
                        accelerators    = accelerators,
-                       folder          = str(output) if output is not None else None,
+                       output_dirpath  = str(output) if output is not None else None,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
