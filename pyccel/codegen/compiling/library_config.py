@@ -38,6 +38,19 @@ class StdlibInstaller:
 
     A class describing how stdlib objects are installed. An Installer has a `install_to`
     method which creates a CompileObj that can be used as a dependency in translations.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of file that will be compiled.
+    folder : str
+        Name of the folder in the stdlib folder where the file is found.
+    dependencies : iterable[str], optional
+        An iterable containg the names of all the (external or internal) libraries
+        on which this internal library depends.
+    **kwargs : dict
+        A dictionary of additional keyword arguments that will be used when creating
+        the CompileObj. See CompileObj for more details.
     """
     def __init__(self, file_name, folder, dependencies = (), **kwargs):
         self._src_dir = stdlib_path / folder
@@ -117,6 +130,19 @@ class CWrapperInstaller(StdlibInstaller):
     A class describing how the cwrapper library is installed. This class inherits from
     StdlibInstaller. The specialisation is required to ensure that the file describing
     the NumPy version is also created.
+
+    Parameters
+    ----------
+    file_name : str
+        Name of file that will be compiled.
+    folder : str
+        Name of the folder in the stdlib folder where the file is found.
+    dependencies : iterable[str], optional
+        An iterable containg the names of all the (external or internal) libraries
+        on which this internal library depends.
+    **kwargs : dict
+        A dictionary of additional keyword arguments that will be used when creating
+        the CompileObj. See CompileObj for more details.
     """
     def install_to(self, pyccel_dirpath, installed_libs, compiler, is_debug = False):
         """
@@ -161,6 +187,15 @@ class ExternalLibInstaller:
 
     A class describing how external libraries used by Pyccel are installed. An Installer
     has a `install_to` method which creates a CompileObj that can be used as a dependency in translations.
+
+    Parameters
+    ----------
+    dest_dir : str
+        The name of the sub-folder into which the library should be installed. This
+        decides the name of the folder that will be created in the `__pyccel__` folder.
+    src_dir : str, optional
+        The name of the sub-folder where the library can be found in the extensions/ folder.
+        The default is to use the same as the `dest_dir` parameter.
     """
     def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
