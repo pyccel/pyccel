@@ -190,8 +190,6 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             if convert_only:
                 continue
 
-    print(already_installed)
-
     for lib_obj in already_installed.values():
         # get the include folder path and library files
         recompile_object(lib_obj,
