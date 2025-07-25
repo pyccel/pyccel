@@ -294,7 +294,6 @@ class STCInstaller(ExternalLibInstaller):
                     # If meson is not available make is used as a fallback.
                     # The makefile does not provide an install command so the installation steps are done manually
                     make = shutil.which('make')
-                    sh = shutil.which('sh')
                     libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
                     incdir = install_dir / 'include'
                     os.makedirs(install_dir)
