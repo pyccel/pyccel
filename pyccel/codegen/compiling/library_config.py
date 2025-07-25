@@ -32,16 +32,17 @@ ext_path = Path(ext_folder.__file__).parent
 
 #------------------------------------------------------------------------------------------
 
-class StdlibCompileObj(CompileObj):
-    def __init__(self, file_name, folder, include = (), libdir = (), **kwargs):
+class StdlibCompileObj:
+    def __init__(self, file_name, folder, dependencies = (), **kwargs):
         self._src_dir = stdlib_path / folder
         self._file_name = file_name
-        self._include = include
-        self._libdir = libdir
         self._folder = folder
-        super().__init__(self._file_name, folder = folder, **kwargs)
+        self._dependencies = dependencies
+        self._compile_obj_kwargs = kwargs
+        assert 'include' not in kwargs
+        assert 'libdir' not in kwargs
 
-    def install_to(self, pyccel_dirpath):
+    def install_to(self, pyccel_dirpath, already_installed):
         """
         Install the files to the Pyccel dirpath.
 
@@ -53,27 +54,24 @@ class StdlibCompileObj(CompileObj):
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the copy should be created.
+
+        Returns
+        -------
+        CompileObj
         """
         lib_dest_path = pyccel_dirpath / self._folder
-        self.reset_folder(lib_dest_path)
-        self._lock_source  = FileLock(str(lib_dest_path.with_suffix('.lock')))
-        with self._lock_source:
-            print("Check if folder exists")
+        lock  = FileLock(str(lib_dest_path.with_suffix('.lock')))
+        with lock:
             # Check if folder exists
             if not lib_dest_path.exists():
-                print("Doesn't exist")
                 to_copy = True
                 to_delete = False
             else:
-                print("If folder exists check if it needs updating")
                 # If folder exists check if it needs updating
                 src_files = list(self._src_dir.glob('*'))
                 match, mismatch, errs = filecmp.cmpfiles(self._src_dir, lib_dest_path, src_files)
                 to_copy = len(mismatch) != 0
                 to_delete = to_copy
-
-            print("to_copy : ", to_copy)
-            print("to_delete : ", to_delete)
 
             if to_delete:
                 os.rmtree(lib_dest_path)
@@ -82,47 +80,58 @@ class StdlibCompileObj(CompileObj):
                 # Copy all files from the source to the destination
                 shutil.copytree(self._src_dir, lib_dest_path)
 
+        dependencies = []
+        for d in self._dependencies:
+            if d in already_installed:
+                dependencies.append(already_installed[d])
+            else:
+                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, already_installed))
+
+        return CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
+                          **self._compile_obj_kwargs)
+
 class CWrapperCompileObj(StdlibCompileObj):
-    def install_to(self, pyccel_dirpath):
-        super().install_to(pyccel_dirpath)
+    def install_to(self, pyccel_dirpath, already_installed):
+        super().install_to(pyccel_dirpath, already_installed)
         numpy_file = self.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
 
 #------------------------------------------------------------------------------------------
 
-class ExternalCompileObj(CompileObj):
-    def __init__(self, dest_dir, src_dir = None, **kwargs):
+class ExternalCompileObj:
+    def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
-        super().__init__(self._src_dir.stem, dest_dir, has_target_file = False, **kwargs)
 
     def _check_for_package(self, pkg_name):
         pkg_config = shutil.which('pkg-config')
         if not pkg_config:
-            return False
+            return None
 
         p = subprocess.run([pkg_config, pkg_name], env = os.environ, capture_output = True)
         if p.returncode != 0:
-            return False
+            return None
 
         p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True, text = True)
-        self._include = {i.removeprefix('-I') for i in p.stdout.split()}
+        include = {i.removeprefix('-I') for i in p.stdout.split()}
 
         p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True, text = True)
-        self._flags = list(p.stdout.split())
+        flags = list(p.stdout.split())
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True, text = True)
-        self._libdir = {l.removeprefix('-L') for l in p.stdout.split()}
+        libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True, text = True)
-        self._libs = list(p.stdout.split())
+        libs = list(p.stdout.split())
 
         p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True, text = True)
         assert p.stdout.strip() == ''
 
-        return True
+        return CompileObj(pkg_name, folder = "", has_target_file = False,
+                          include = include, flags = flags, libdir = libdir,
+                          lib = libs)
 
 #------------------------------------------------------------------------------------------
 
@@ -133,14 +142,20 @@ class STCCompileObj(ExternalCompileObj):
                                        include = ("include",), libdir = ("lib/*",))
 
 
-    def install_to(self, pyccel_dirpath, is_debug = False, compiler = None):
-        if compiler is None:
+    def install_to(self, pyccel_dirpath, already_installed, is_debug = False, compiler_family = None):
+        """
+        Returns
+        -------
+        CompileObj
+        """
+        if compiler_family is None:
             compiler_family = 'gnu'
 
         self._lock_source  = FileLock(str(pyccel_dirpath / 'STC.lock'))
 
-        if self._check_for_package('stc'):
-            return
+        existing_installation = self._check_for_package('stc')
+        if existing_installation:
+            return existing_installation
 
         meson = shutil.which('mesons')
         ninja = shutil.which('ninja')
@@ -150,7 +165,7 @@ class STCCompileObj(ExternalCompileObj):
         with FileLock(install_dir.with_suffix('.lock')):
             if not build_dir.exists():
                 if has_meson:
-                    buildtype = 'release'
+                    buildtype = 'debug' if is_debug else 'release'
                     subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
                                     check=True, cwd=self._src_dir)
                     subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
@@ -176,10 +191,12 @@ class STCCompileObj(ExternalCompileObj):
 
         libdir = next((install_dir / 'lib').glob(f'*-{compiler_family}'))
 
-        if not self._check_for_package('stc'):
-            self._include = {install_dir / 'include'}
-            self._libdir = {libdir}
-            self._libs = ['-lstc', '-lm']
+        include = {install_dir / 'include'}
+        libdir = {libdir}
+        libs = ['-lstc', '-lm']
+
+        return CompileObj("stc", folder = "", has_target_file = False,
+                          include = include, libdir = libdir, lib = libs)
 
 #------------------------------------------------------------------------------------------
 
@@ -187,7 +204,7 @@ class GFTLCompileObj(ExternalCompileObj):
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
-    def install_to(self, pyccel_dirpath):
+    def install_to(self, pyccel_dirpath, already_installed):
         """
         Install the files to the Pyccel dirpath.
 
@@ -199,6 +216,10 @@ class GFTLCompileObj(ExternalCompileObj):
         ----------
         pyccel_dirpath : str | Path
             The path to the Pyccel working directory where the link should be created.
+
+        Returns
+        -------
+        CompileObj
         """
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():
@@ -206,26 +227,26 @@ class GFTLCompileObj(ExternalCompileObj):
 
         self._lock_source  = FileLock(str(pyccel_dirpath / 'gFTL.lock'))
 
-        self._include = {dest_dir / 'include/v2'}
+        return CompileObj("gFTL", folder = "gFTL", has_target_file = False,
+                          include = (dest_dir / 'include/v2',))
 
 #------------------------------------------------------------------------------------------
 
-external_libs = {
-        "stc" : STCCompileObj(),
-        "gFTL" : GFTLCompileObj()
-        }
-
-internal_libs = {
+recognised_libs = {
+    # External libs
+    "stc"  : STCCompileObj(),
+    "gFTL" : GFTLCompileObj(),
+    # Internal libs
     "pyc_math_f90"   : StdlibCompileObj("pyc_math_f90.f90", "math", libs = ('m',)),
     "pyc_math_c"     : StdlibCompileObj("pyc_math_c.c", "math"),
     "pyc_tools_f90"  : StdlibCompileObj("pyc_tools_f90.f90", "tools"),
     "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
     "STC_Extensions" : StdlibCompileObj("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
-                                        dependencies = (external_libs['stc'],)),
+                                        dependencies = ('stc',)),
     "gFTL_functions" : StdlibCompileObj("*.inc", "gFTL_functions",
                                         has_target_file = False,
-                                        dependencies = (external_libs['gFTL'],))
+                                        dependencies = ('gFTL',))
 }
 
-internal_libs['CSpan_extensions'] = internal_libs['STC_Extensions']
+recognised_libs['CSpan_extensions'] = recognised_libs['STC_Extensions']
