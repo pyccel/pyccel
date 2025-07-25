@@ -15,12 +15,12 @@ import subprocess
 
 from filelock import FileLock
 
-from .basic import CompileObj
-
 from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
 
 import pyccel.extensions as ext_folder
 import pyccel.stdlib as stdlib_folder
+
+from .basic import CompileObj
 
 #------------------------------------------------------------------------------------------
 
