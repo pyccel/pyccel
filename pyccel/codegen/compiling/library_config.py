@@ -155,7 +155,7 @@ class CWrapperInstaller(StdlibInstaller):
 
 #------------------------------------------------------------------------------------------
 
-class ExternalCompileObj:
+class ExternalLibInstaller:
     """
     A class describing how external libraries used by Pyccel are installed.
 
@@ -216,7 +216,7 @@ class ExternalCompileObj:
 
 #------------------------------------------------------------------------------------------
 
-class STCInstaller(ExternalCompileObj):
+class STCInstaller(ExternalLibInstaller):
     """
     A class describing how the external library STC is installed.
 
@@ -312,7 +312,7 @@ class STCInstaller(ExternalCompileObj):
 
 #------------------------------------------------------------------------------------------
 
-class GFTLInstaller(ExternalCompileObj):
+class GFTLInstaller(ExternalLibInstaller):
     """
     A class describing how the external library gFTL is installed.
 
