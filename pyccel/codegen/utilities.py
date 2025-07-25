@@ -7,10 +7,8 @@
 """
 This file contains some useful functions to compile the generated fortran code
 """
-from itertools import chain
 import os
 from pathlib import Path
-import shutil
 from filelock import FileLock
 
 from pyccel.errors.errors import Errors
