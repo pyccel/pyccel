@@ -66,6 +66,8 @@ include = [
   "pyccel/stdlib/**/*.inc",
   "pyccel/extensions/STC/include",
   "pyccel/extensions/STC/src/*",
+  "pyccel/extensions/STC/tests/*",
+  "pyccel/extensions/STC/examples/*",
   "pyccel/extensions/STC/Makefile",
   "pyccel/extensions/STC/meson.build",
   "pyccel/extensions/STC/meson_options.txt"
