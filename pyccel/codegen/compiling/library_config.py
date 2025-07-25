@@ -42,7 +42,7 @@ class StdlibCompileObj:
         assert 'include' not in kwargs
         assert 'libdir' not in kwargs
 
-    def install_to(self, pyccel_dirpath, already_installed):
+    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -85,17 +85,18 @@ class StdlibCompileObj:
             if d in already_installed:
                 dependencies.append(already_installed[d])
             else:
-                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, already_installed))
+                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, already_installed, compiler, is_debug))
 
         return CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
 
 class CWrapperCompileObj(StdlibCompileObj):
-    def install_to(self, pyccel_dirpath, already_installed):
-        super().install_to(pyccel_dirpath, already_installed)
-        numpy_file = self.source_folder / 'numpy_version.h'
+    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
+        compile_obj = super().install_to(pyccel_dirpath, already_installed, compiler, is_debug)
+        numpy_file = compile_obj.source_folder / 'numpy_version.h'
         with open(numpy_file, 'w') as f:
             f.writelines(get_numpy_max_acceptable_version_file())
+        return compile_obj
 
 #------------------------------------------------------------------------------------------
 
@@ -131,7 +132,7 @@ class ExternalCompileObj:
 
         return CompileObj(pkg_name, folder = "", has_target_file = False,
                           include = include, flags = flags, libdir = libdir,
-                          lib = libs)
+                          libs = libs)
 
 #------------------------------------------------------------------------------------------
 
@@ -142,14 +143,13 @@ class STCCompileObj(ExternalCompileObj):
                                        include = ("include",), libdir = ("lib/*",))
 
 
-    def install_to(self, pyccel_dirpath, already_installed, is_debug = False, compiler_family = None):
+    def install_to(self, pyccel_dirpath, already_installed, compiler, is_debug = False):
         """
         Returns
         -------
         CompileObj
         """
-        if compiler_family is None:
-            compiler_family = 'gnu'
+        compiler_family = compiler.compiler_family
 
         self._lock_source  = FileLock(str(pyccel_dirpath / 'STC.lock'))
 
@@ -167,7 +167,7 @@ class STCCompileObj(ExternalCompileObj):
                 if has_meson:
                     buildtype = 'debug' if is_debug else 'release'
                     subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                                    check=True, cwd=self._src_dir)
+                                   check=True, cwd=self._src_dir, env={'CC': compiler.get_exec({}, "c")})
                     subprocess.run([meson, 'compile', '-C', build_dir], check=True, cwd=pyccel_dirpath)
                     subprocess.run([meson, 'install', '-C', build_dir], check=True, cwd=pyccel_dirpath)
                 else:
@@ -178,7 +178,7 @@ class STCCompileObj(ExternalCompileObj):
                     os.makedirs(install_dir)
                     os.makedirs(libdir)
                     os.makedirs(libdir / 'pkgconfig')
-                    subprocess.run([make, 'lib', f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                    subprocess.run([make, 'lib', f'CC={compiler.get_exec({}, "c")}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=True, cwd=pyccel_dirpath)
                     shutil.copytree(ext_path / 'STC' / 'include', incdir)
                     shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
@@ -196,7 +196,7 @@ class STCCompileObj(ExternalCompileObj):
         libs = ['-lstc', '-lm']
 
         return CompileObj("stc", folder = "", has_target_file = False,
-                          include = include, libdir = libdir, lib = libs)
+                          include = include, libdir = libdir, libs = libs)
 
 #------------------------------------------------------------------------------------------
 
@@ -204,7 +204,7 @@ class GFTLCompileObj(ExternalCompileObj):
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
-    def install_to(self, pyccel_dirpath, already_installed):
+    def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
         """
         Install the files to the Pyccel dirpath.
 
@@ -240,7 +240,7 @@ recognised_libs = {
     "pyc_math_f90"   : StdlibCompileObj("pyc_math_f90.f90", "math", libs = ('m',)),
     "pyc_math_c"     : StdlibCompileObj("pyc_math_c.c", "math"),
     "pyc_tools_f90"  : StdlibCompileObj("pyc_tools_f90.f90", "tools"),
-    "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", accelerators=('python',)),
+    "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", extra_compilation_tools=('python',)),
     "STC_Extensions" : StdlibCompileObj("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = ('stc',)),

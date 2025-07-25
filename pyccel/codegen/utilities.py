@@ -17,7 +17,7 @@ from pyccel.errors.errors import Errors
 
 from .codegen              import printer_registry
 from .compiling.basic      import CompileObj
-from .compiling.library_config import internal_libs, external_libs
+from .compiling.library_config import recognised_libs
 from .compiling.file_locks import FileLockSet
 
 # get path to pyccel/
@@ -141,7 +141,8 @@ def recompile_object(compile_obj,
                 verbose=verbose)
 
 #==============================================================================
-def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False):
+def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False,
+                        already_installed = None):
     """
     Manage dependencies of the code to be compiled.
 
@@ -164,16 +165,19 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     convert_only : bool, default=False
         Indicates if the compilation step is required or not.
     """
+    if already_installed is None:
+        already_installed = {}
+
     pyccel_dirpath = Path(pyccel_dirpath)
     # Iterate over the internal_libs list and determine if the printer
     # requires an internal lib to be included.
-    for lib_name, stdlib in chain(internal_libs.items(), external_libs.items()):
+    for lib_name, stdlib in recognised_libs.items():
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
-            stdlib.install_to(pyccel_dirpath)
+            stdlib_obj = stdlib.install_to(pyccel_dirpath, already_installed, compiler)
 
-            if stdlib.dependencies:
-                manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib.dependencies},
-                        compiler, pyccel_dirpath, stdlib, language, verbose, convert_only)
+            if stdlib_obj.dependencies:
+                manage_dependencies({os.path.splitext(os.path.basename(d.source))[0]: None for d in stdlib_obj.dependencies},
+                        compiler, pyccel_dirpath, stdlib_obj, language, verbose, convert_only)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
@@ -181,12 +185,12 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                 continue
 
             # get the include folder path and library files
-            recompile_object(stdlib,
+            recompile_object(stdlib_obj,
                              compiler = compiler,
                              language = language,
                              verbose  = verbose)
 
-            mod_obj.add_dependencies(stdlib)
+            mod_obj.add_dependencies(stdlib_obj)
 
     # Iterate over the external_libs list and determine if the printer
     # requires an external lib to be included.
