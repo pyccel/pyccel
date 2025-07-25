@@ -32,7 +32,7 @@ ext_path = Path(ext_folder.__file__).parent
 
 #------------------------------------------------------------------------------------------
 
-class StdlibCompileObj:
+class StdlibInstaller:
     def __init__(self, file_name, folder, dependencies = (), **kwargs):
         self._src_dir = stdlib_path / folder
         self._file_name = file_name
@@ -90,7 +90,7 @@ class StdlibCompileObj:
         return CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
 
-class CWrapperCompileObj(StdlibCompileObj):
+class CWrapperInstaller(StdlibInstaller):
     def install_to(self, pyccel_dirpath, already_installed, compiler = None, is_debug = False):
         compile_obj = super().install_to(pyccel_dirpath, already_installed, compiler, is_debug)
         numpy_file = compile_obj.source_folder / 'numpy_version.h'
@@ -136,7 +136,7 @@ class ExternalCompileObj:
 
 #------------------------------------------------------------------------------------------
 
-class STCCompileObj(ExternalCompileObj):
+class STCInstaller(ExternalCompileObj):
     def __init__(self):
         super().__init__("STC")
         self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
@@ -200,7 +200,7 @@ class STCCompileObj(ExternalCompileObj):
 
 #------------------------------------------------------------------------------------------
 
-class GFTLCompileObj(ExternalCompileObj):
+class GFTLInstaller(ExternalCompileObj):
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
@@ -234,17 +234,17 @@ class GFTLCompileObj(ExternalCompileObj):
 
 recognised_libs = {
     # External libs
-    "stc"  : STCCompileObj(),
-    "gFTL" : GFTLCompileObj(),
+    "stc"  : STCInstaller(),
+    "gFTL" : GFTLInstaller(),
     # Internal libs
-    "pyc_math_f90"   : StdlibCompileObj("pyc_math_f90.f90", "math", libs = ('m',)),
-    "pyc_math_c"     : StdlibCompileObj("pyc_math_c.c", "math"),
-    "pyc_tools_f90"  : StdlibCompileObj("pyc_tools_f90.f90", "tools"),
-    "cwrapper"       : CWrapperCompileObj("cwrapper.c", "cwrapper", extra_compilation_tools=('python',)),
-    "STC_Extensions" : StdlibCompileObj("STC_Extensions", "STC_Extensions",
+    "pyc_math_f90"   : StdlibInstaller("pyc_math_f90.f90", "math", libs = ('m',)),
+    "pyc_math_c"     : StdlibInstaller("pyc_math_c.c", "math"),
+    "pyc_tools_f90"  : StdlibInstaller("pyc_tools_f90.f90", "tools"),
+    "cwrapper"       : CWrapperInstaller("cwrapper.c", "cwrapper", extra_compilation_tools=('python',)),
+    "STC_Extensions" : StdlibInstaller("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = ('stc',)),
-    "gFTL_functions" : StdlibCompileObj("*.inc", "gFTL_functions",
+    "gFTL_functions" : StdlibInstaller("*.inc", "gFTL_functions",
                                         has_target_file = False,
                                         dependencies = ('gFTL',))
 }
