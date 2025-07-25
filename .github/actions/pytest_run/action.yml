@@ -34,7 +34,9 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Test translation with make
-      run: python -m pytest -n auto -rX ${FLAGS} -m c test_arrays.py 2>&1 | tee c_make_outfile.out
+      run: |
+        python -m pytest -n auto -rX ${FLAGS} -m c test_arrays.py 2>&1 | tee c_make_outfile.out
+        pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests/epyccel
       id: pytest_c_arr_make
