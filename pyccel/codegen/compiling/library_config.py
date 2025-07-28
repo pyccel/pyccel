@@ -17,6 +17,7 @@ import warnings
 from filelock import FileLock
 
 from pyccel.ast.numpy_wrapper                    import get_numpy_max_acceptable_version_file
+from pyccel.errors.errors import Errors
 
 import pyccel.extensions as ext_folder
 import pyccel.stdlib as stdlib_folder
@@ -24,6 +25,8 @@ import pyccel.stdlib as stdlib_folder
 from .basic import CompileObj
 
 #------------------------------------------------------------------------------------------
+
+errors = Errors()
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = Path(stdlib_folder.__file__).parent
@@ -341,11 +344,11 @@ class STCInstaller(ExternalLibInstaller):
                     make = shutil.which('make')
                     libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
                     incdir = install_dir / 'include'
-                    os.makedirs(install_dir)
-                    os.makedirs(libdir)
-                    os.makedirs(libdir / 'pkgconfig')
+
+                    # Find compiler
                     CC = compiler.get_exec({}, "c")
                     if platform.system() == 'Darwin':
+                        # STC changes flags if compiler name is exactly 'clang'
                         cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True, text = True)
                         if 'clang' in cc_version.stdout:
                             p = subprocess.run(['clang', '--version'], capture_output = True, check = False, text = True)
@@ -359,13 +362,27 @@ class STCInstaller(ExternalLibInstaller):
                                        "To fix this problem either ensure that 'clang' is working or ensure that ninja and meson "
                                        "are installed to use a cleaner install system.")
                                 warnings.warn(msg, RuntimeWarning)
+
+                    # Compile library
                     p = subprocess.run([make, 'lib', f'CC={CC}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
-                    print(p.stdout)
-                    print(p.stderr)
-                    assert p.returncode == 0
+                    if p.returncode != 0:
+                        msg = "Failed to install STC using Make. Please try meson or install manually."
+                        if errors.mode == 'developer' or verbose:
+                            msg += '\n\n------------ STDOUT ------------'
+                            msg += p.stdout
+                            msg += '\n\n------------ STDERR ------------'
+                            msg += p.stderr
+                        errors.report(msg,
+                                      severity='fatal')
+
+                    # Install library
+                    os.makedirs(install_dir)
+                    os.makedirs(libdir)
+                    os.makedirs(libdir / 'pkgconfig')
                     shutil.copytree(ext_path / 'STC' / 'include', incdir)
                     shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
+
                     # Create a .pc file for pyccel-make (this can also be found by CMake)
                     with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
                         f.write("Name: stc\n")
