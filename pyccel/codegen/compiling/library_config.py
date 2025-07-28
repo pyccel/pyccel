@@ -356,10 +356,10 @@ class STCInstaller(ExternalLibInstaller):
                     print(p.stderr)
                     print(CC)
                     print(CC.is_symlink())
-                    p = subprocess.run(['ll', Path(compiler.get_exec({}, "c"))], capture_output = True, check = False)
+                    print(CC.readlink())
+                    p = subprocess.run(['ls', '-l', Path(compiler.get_exec({}, "c"))], capture_output = True, check = False)
                     print(p.stdout)
                     print(p.stderr)
-                    print(CC.readlink())
                     p = subprocess.run([make, 'lib', f'CC={Path(compiler.get_exec({}, "c")).name}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
                     print(p.stdout)
