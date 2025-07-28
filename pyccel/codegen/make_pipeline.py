@@ -21,7 +21,7 @@ from pyccel.codegen.build_generation.cmake_gen import CMakeHandler
 from pyccel.codegen.build_generation.meson_gen import MesonHandler
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.compiling.project import CompileTarget, BuildProject
-from pyccel.codegen.utilities      import manage_dependencies, internal_libs
+from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -266,10 +266,11 @@ def execute_pyccel_make(files, *,
     for f, p in parsers.items():
         targets[f.absolute()].add_dependencies(targets[s.filename] for s in p.sons)
 
+    installed_libs = {}
     manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
-                        verbose = verbose, convert_only = True)
+                        verbose = verbose, convert_only = True, installed_libs = installed_libs)
+    stdlib_deps = {n: c_o.source_folder.name for n,c_o in installed_libs.items()}
 
-    stdlib_deps = {l: internal_libs[l][1] for l in printer_imports if l in internal_libs}
     try:
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
                                      stdlib_deps)
