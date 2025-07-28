@@ -12,6 +12,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
+import warnings
 
 from filelock import FileLock
 
@@ -351,6 +352,9 @@ class STCInstaller(ExternalLibInstaller):
                             if p.returncode != 0 and p.stdout == cc_version.stdout:
                                 CC = 'clang'
                             else:
+                                print(p.returncode, p.stdout)
+                                print(cc_version.stdout)
+                                print(p.stdout == cc_version.stdout)
                                 # Use warnings.warn instead of errors.warn to ensure message is displayed before crash
                                 msg = ("Using compiler {CC} which appears to be a clang compiler. "
                                        "The shortcut 'clang' either does not exist or does not match the requested compiler. "
