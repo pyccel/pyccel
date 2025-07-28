@@ -1,5 +1,7 @@
 
-pyc_math_f90 = library('pyc_math_f90', 'pyc_math_f90.f90')
+if add_languages('fortran', required : false)
+  pyc_math_f90 = library('pyc_math_f90', 'pyc_math_f90.f90')
+endif
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required : true)
