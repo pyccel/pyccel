@@ -118,7 +118,7 @@ class StdlibInstaller:
             if d in installed_libs:
                 dependencies.append(installed_libs[d])
             else:
-                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, compiler))
+                dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, verbose, compiler))
 
         new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
                           **self._compile_obj_kwargs)
@@ -379,7 +379,7 @@ class GFTLInstaller(ExternalLibInstaller):
     def __init__(self):
         super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
 
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, is_debug = False):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
 
@@ -401,8 +401,6 @@ class GFTLInstaller(ExternalLibInstaller):
         compiler : Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
-        is_debug : bool
-            Indicates if we are compiling in debug mode. This is unused in this method.
 
         Returns
         -------
