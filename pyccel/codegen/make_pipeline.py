@@ -27,6 +27,8 @@ from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.parser.scope           import Scope
 
+from .compiling.compilers import Compiler, get_condaless_search_path
+
 pyccel_stage = PyccelStage()
 
 __all__ = ['execute_pyccel']
@@ -135,6 +137,9 @@ def execute_pyccel_make(files, *,
     # Choose Fortran compiler
     if compiler_family is None:
         compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+
+    Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
+    compiler = Compiler(compiler_family, debug)
 
     # Get compiler object
     Scope.name_clash_checker = name_clash_checkers[language]
@@ -266,10 +271,10 @@ def execute_pyccel_make(files, *,
     for f, p in parsers.items():
         targets[f.absolute()].add_dependencies(targets[s.filename] for s in p.sons)
 
-    installed_libs = {}
-    manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, language = language,
-                        verbose = verbose, convert_only = True, installed_libs = installed_libs)
-    stdlib_deps = {n: c_o.source_folder.name for n,c_o in installed_libs.items()}
+    stdlib_deps = {}
+    manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, compiler = compiler,
+                        language = language, verbose = verbose, convert_only = True,
+                        installed_libs = stdlib_deps)
 
     try:
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
