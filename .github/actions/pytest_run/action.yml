@@ -35,7 +35,6 @@ runs:
       working-directory: ./tests
     - name: Test translation with meson
       run: |
-        python -m pip install meson
         python -m pytest -n auto -rX ${FLAGS} -m c test_arrays.py 2>&1 | tee c_meson_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests/epyccel
