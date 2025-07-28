@@ -62,7 +62,7 @@ runs:
          if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
-            echo "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            printf "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py 2>&1 | tee stdlib_update_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
