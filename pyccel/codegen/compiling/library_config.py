@@ -346,18 +346,17 @@ class STCInstaller(ExternalLibInstaller):
         os.environ['PKG_CONFIG_PATH'] = pkg_config_path
 
         new_installation = self._check_for_package('stc', version_info)
-        if new_installation:
-            return new_installation
-        else:
+        if new_installation is None:
             # Fallback if pkg-config is not installed
             libdir = next(install_dir.glob('**/*.a')).parent
             libs = ['-lstc', '-lm']
 
-            new_obj = CompileObj("stc", folder = "", has_target_file = False,
+            new_installation = CompileObj("stc", folder = "", has_target_file = False,
                               include = (install_dir / 'include',),
                               libdir = (libdir, ), libs = libs)
-            installed_libs['stc'] = new_obj
-            return new_obj
+
+        installed_libs['stc'] = new_installation
+        return new_obj
 
 #------------------------------------------------------------------------------------------
 
