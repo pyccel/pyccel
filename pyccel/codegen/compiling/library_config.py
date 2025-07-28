@@ -346,7 +346,7 @@ class STCInstaller(ExternalLibInstaller):
                     CC = compiler.get_exec({}, "c")
                     if platform.system() == 'Darwin':
                         cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True)
-                        if 'clang' in p.stdout:
+                        if 'clang' in cc_version.stdout:
                             p = subprocess.run(['clang', '--version'], capture_output = True, check = False)
                             if p.returncode != 0 and p.stdout == cc_version.stdout:
                                 CC = 'clang'
