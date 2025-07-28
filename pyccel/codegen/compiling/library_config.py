@@ -345,9 +345,9 @@ class STCInstaller(ExternalLibInstaller):
                     os.makedirs(libdir / 'pkgconfig')
                     CC = compiler.get_exec({}, "c")
                     if platform.system() == 'Darwin':
-                        cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True)
+                        cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True, text = True)
                         if 'clang' in cc_version.stdout:
-                            p = subprocess.run(['clang', '--version'], capture_output = True, check = False)
+                            p = subprocess.run(['clang', '--version'], capture_output = True, check = False, text = True)
                             if p.returncode != 0 and p.stdout == cc_version.stdout:
                                 CC = 'clang'
                             else:
