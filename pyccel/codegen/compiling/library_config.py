@@ -343,24 +343,22 @@ class STCInstaller(ExternalLibInstaller):
                     os.makedirs(install_dir)
                     os.makedirs(libdir)
                     os.makedirs(libdir / 'pkgconfig')
-                    CC = Path(compiler.get_exec({}, "c"))
-                    print("Using compiler : ", CC.name)
-                    p = subprocess.run([CC.name, '--version'], capture_output = True, check = False)
-                    print(p.stdout)
-                    print(p.stderr)
-                    p = subprocess.run(['which', 'clang'], capture_output = True, check = False)
-                    print(p.stdout)
-                    print(p.stderr)
-                    p = subprocess.run(['clang', '--version'], capture_output = True, check = False)
-                    print(p.stdout)
-                    print(p.stderr)
-                    print(CC)
-                    print(CC.is_symlink())
-                    print(CC.readlink())
-                    p = subprocess.run(['ls', '-l', Path(compiler.get_exec({}, "c"))], capture_output = True, check = False)
-                    print(p.stdout)
-                    print(p.stderr)
-                    p = subprocess.run([make, 'lib', f'CC={Path(compiler.get_exec({}, "c")).name}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
+                    CC = compiler.get_exec({}, "c")
+                    if platform.system() == 'Darwin':
+                        cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True)
+                        if 'clang' in p.stdout:
+                            p = subprocess.run(['clang', '--version'], capture_output = True, check = False)
+                            if p.returncode != 0 and p.stdout == cc_version.stdout:
+                                CC = 'clang'
+                            else:
+                                # Use warnings.warn instead of errors.warn to ensure message is displayed before crash
+                                msg = ("Using compiler {CC} which appears to be a clang compiler. "
+                                       "The shortcut 'clang' either does not exist or does not match the requested compiler. "
+                                       "It is likely that STC installation will fail. "
+                                       "To fix this problem either ensure that 'clang' is working or ensure that ninja and meson "
+                                       "are installed to use a cleaner install system.")
+                                warnings.warn(RuntimeWarning, msg)
+                    p = subprocess.run([make, 'lib', f'CC={CC}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
                     print(p.stdout)
                     print(p.stderr)
