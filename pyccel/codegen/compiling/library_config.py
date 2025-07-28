@@ -391,8 +391,12 @@ class STCInstaller(ExternalLibInstaller):
                         f.write(f"Libs: -L{libdir} -lstc -lm\n")
                         f.write(f"Cflags: -I{incdir}")
 
+        for root, dirs, files in install_dir.walk():
+              print(root, "contains", dirs, files)
+
         libdir = next((install_dir / 'lib').iterdir())
         libs = ['-lstc', '-lm']
+        print(libdir, libs)
 
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
