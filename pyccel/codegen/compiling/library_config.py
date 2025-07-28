@@ -237,23 +237,23 @@ class ExternalLibInstaller:
             return None
 
         # If the package exists then query pkg-config to get the compilation information
-        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-I'], capture_output = True,
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-I'], capture_output = True,
                            text = True, check = True)
         include = {i.removeprefix('-I') for i in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--cflags-only-other'], capture_output = True,
+        p = subprocess.run([pkg_config, pkg_name, '--cflags-only-other'], capture_output = True,
                            text = True, check = True)
         flags = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-L'], capture_output = True,
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-L'], capture_output = True,
                            text = True, check = True)
         libdir = {l.removeprefix('-L') for l in p.stdout.split()}
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-l'], capture_output = True,
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-l'], capture_output = True,
                            text = True, check = True)
         libs = list(p.stdout.split())
 
-        p = subprocess.run([pkg_config, pkg_name, *options, '--libs-only-other'], capture_output = True,
+        p = subprocess.run([pkg_config, pkg_name, '--libs-only-other'], capture_output = True,
                            text = True, check = True)
         assert p.stdout.strip() == ''
 
