@@ -22,7 +22,7 @@ def test_pop_last_element(language) :
     def pop_last_element():
         a = [1,3,45]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language=language, verbose=2)
+    epyc_last_element = epyccel(pop_last_element, language = language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -32,7 +32,7 @@ def test_pop_list_bool(language) :
     def pop_last_element():
         a = [True, False, True]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language=language, verbose=2)
+    epyc_last_element = epyccel(pop_last_element, language = language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -42,7 +42,7 @@ def test_pop_list_float(language) :
     def pop_last_element():
         a = [1.5 , 3.1, 4.5]
         return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language=language, verbose=2)
+    epyc_last_element = epyccel(pop_last_element, language = language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -127,7 +127,7 @@ def test_pop_specific_index(language) :
     def pop_specific_index():
         a = [1j,3j,45j]
         return a.pop(1)
-    epyc_specific_index = epyccel(pop_specific_index, language=language, verbose=2)
+    epyc_specific_index = epyccel(pop_specific_index, language = language)
     python_result = pop_specific_index()
     pyccel_result = epyc_specific_index()
     assert isinstance(python_result, type(pyccel_result))
@@ -137,7 +137,7 @@ def test_pop_negative_index(language) :
     def pop_negative_index():
         a = [1j,3j,45j]
         return a.pop(-1)
-    epyc_negative_index = epyccel(pop_negative_index, language=language, verbose=2)
+    epyc_negative_index = epyccel(pop_negative_index, language = language)
     python_result = pop_negative_index()
     pyccel_result = epyc_negative_index()
     assert isinstance(python_result, type(pyccel_result))
@@ -148,7 +148,7 @@ def test_pop_2(language) :
         a = [1.7,2.7,45.0]
         a.pop()
         return a.pop(-1)
-    pop_2_epyc = epyccel(pop_2, language=language, verbose=2)
+    pop_2_epyc = epyccel(pop_2, language = language)
     python_result = pop_2()
     pyccel_result = pop_2_epyc()
     assert isinstance(python_result, type(pyccel_result))
@@ -158,7 +158,7 @@ def test_pop_expression(language) :
     def pop_last_element():
         a = [1, 3, 45]
         return a.pop() + 3
-    epyc_last_element = epyccel(pop_last_element, language=language, verbose=2)
+    epyc_last_element = epyccel(pop_last_element, language = language)
     pyccel_result = epyc_last_element()
     python_result = pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -168,7 +168,7 @@ def test_pop_as_arg(language) :
     def pop_as_arg():
         a = [1, 3, 45]
         return a.pop(a.pop(0))
-    epyc_as_arg = epyccel(pop_as_arg, language=language, verbose=2)
+    epyc_as_arg = epyccel(pop_as_arg, language = language)
     pyccel_result = epyc_as_arg()
     python_result = pop_as_arg()
     assert isinstance(python_result, type(pyccel_result))
@@ -180,7 +180,7 @@ def test_append_basic(language):
         a.append(4)
         return len(a), a[0], a[1], a[2], a[3]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_multiple(language):
@@ -191,7 +191,7 @@ def test_append_multiple(language):
         a.append(6)
         return len(a), a[0], a[1], a[2], a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_list(stc_language):
@@ -211,7 +211,7 @@ def test_append_range(language):
         a.append(1000)
         return len(a), a[-1], a[-2]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_range_list(limited_language):
@@ -232,7 +232,7 @@ def test_append_bool(language):
         a.append(True)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_float(language):
@@ -243,7 +243,7 @@ def test_append_float(language):
         a.append(1.1)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_complex(language):
@@ -254,7 +254,7 @@ def test_append_complex(language):
         a.append(1j)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_append_ndarrays(limited_language):
@@ -307,7 +307,7 @@ def test_insert_booleans(language):
         a.insert(-25, False)
         return a
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_complex(language):
@@ -322,7 +322,7 @@ def test_insert_complex(language):
         a.insert(-25, 0 - 0j)
         return a
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_float(language):
@@ -337,7 +337,7 @@ def test_insert_float(language):
         a.insert(-25, 2.5)
         return a
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_ndarrays(limited_language):
@@ -368,7 +368,7 @@ def test_insert_multiple(language):
         a.insert(1, 6)
         return a
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_list(limited_language):
@@ -387,7 +387,7 @@ def test_insert_range(language):
             a.insert(i - 1 ,i)
         return a
 
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_insert_range_list(limited_language):
@@ -415,7 +415,7 @@ def test_clear_1(language):
         a.clear()
         return a
 
-    epyc_clear_1 = epyccel(clear_1, language=language, verbose=2)
+    epyc_clear_1 = epyccel(clear_1, language = language)
     pyccel_result = epyc_clear_1()
     python_result = clear_1()
     assert python_result == pyccel_result
@@ -427,7 +427,7 @@ def test_clear_2(language):
         a.clear()
         return a
 
-    epyc_clear_2 = epyccel(clear_2, language=language, verbose=2)
+    epyc_clear_2 = epyccel(clear_2, language = language)
     pyccel_result = epyc_clear_2()
     python_result = clear_2()
     assert python_result == pyccel_result
@@ -706,7 +706,7 @@ def test_extend_returned_list(language):
             return [4, 5, 6]
         lst = [1, 2, 3]
         lst.extend(g())
-    epyc_f = epyccel(f, language=language, verbose=2)
+    epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
 def test_mutable_indexing(stc_language):
@@ -804,7 +804,7 @@ def test_list_contains(language):
         a = [1, 3, 4, 7, 10, 3]
         return (1 in a), (5 in a), (3 in a)
 
-    epyc_list_contains = epyccel(list_contains, language=language, verbose=2)
+    epyc_list_contains = epyccel(list_contains, language = language)
     pyccel_result = epyc_list_contains()
     python_result = list_contains()
     assert isinstance(python_result, type(pyccel_result))
@@ -817,7 +817,7 @@ def test_list_ptr(language):
         b.append(22)
         return len(a), len(b)
 
-    epyc_list_ptr = epyccel(list_ptr, language=language, verbose=2)
+    epyc_list_ptr = epyccel(list_ptr, language = language)
     pyccel_result = epyc_list_ptr()
     python_result = list_ptr()
     assert isinstance(python_result, type(pyccel_result))
@@ -828,7 +828,7 @@ def test_list_return(language):
         a = [1,2,3,4,5]
         return a
 
-    epyccel_func = epyccel(list_return, language=language, verbose=2)
+    epyccel_func = epyccel(list_return, language = language)
     pyccel_result = epyccel_func()
     python_result = list_return()
     assert python_result == pyccel_result
@@ -841,7 +841,7 @@ def test_list_min_max(language):
         a_int = [1, 2, 3, 4]
         a_float = [1.1, 2.2, 3.3, 4.4]
         return min(a_int), max(a_int), min(a_float), max(a_float)
-    epyccel_func = epyccel(list_min_max, language=language, verbose=2)
+    epyccel_func = epyccel(list_min_max, language = language)
     pyccel_result = epyccel_func()
     python_result = list_min_max()
     assert python_result == pyccel_result
@@ -860,7 +860,7 @@ def test_list_reverse(language):
         a_single.reverse()
         return (a_int[0], a_int[-1], a_float[0], a_float[-1],
                 a_single[0], a_single[-1], a_complex[0], a_complex[-1])
-    epyccel_func = epyccel(list_reverse, language=language, verbose=2)
+    epyccel_func = epyccel(list_reverse, language = language)
     pyccel_result = epyccel_func()
     python_result = list_reverse()
     assert python_result == pyccel_result
@@ -884,7 +884,7 @@ def test_list_const_arg(language):
             my_sum += ai
         return my_sum
 
-    epyccel_func = epyccel(list_arg, language=language, verbose=2)
+    epyccel_func = epyccel(list_arg, language = language)
     int_arg = [1,2,3,4,5,6,7]
     float_arg = [1.5, 2.5, 3.5, 4.5, 6.7]
     complex_arg = [1+0j,4j,2.5+2j]
@@ -911,7 +911,7 @@ def test_list_equality(language):
     def list_equality(arg1 : Final[list[int]], arg2 : Final[list[int]]):
         return arg1 == arg2
 
-    epyccel_func = epyccel(list_equality, language=language, verbose=2)
+    epyccel_func = epyccel(list_equality, language = language)
     arg1 = [1,2,3,4,5]
     arg2 = [4,5,6,7,8]
     arg3 = [1,2,3]
