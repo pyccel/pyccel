@@ -102,8 +102,7 @@ class StdlibInstaller:
             else:
                 # If folder exists check if it needs updating
                 src_files = list(self._src_dir.glob('*'))
-                _, mismatch, _ = filecmp.cmpfiles(self._src_dir, lib_dest_path, src_files)
-                to_copy = len(mismatch) != 0
+                to_copy = lib_dest_path.lstat().st_mtime < self._src_dir.lstat().st_mtime
                 to_delete = to_copy
 
             if to_delete:
