@@ -30,7 +30,7 @@ STC_INLINE Self _c_MEMB(_init)(void) { return c_literal(Self){false, NULL}; }
 STC_INLINE Self _c_MEMB(_make)(_m_value val) {
     Self owned;
     owned.is_owning = true;
-    owned.get = i_malloc(1);
+    owned.get = i_malloc(c_sizeof(_m_value));
     *owned.get = val;
     return owned;
 }
