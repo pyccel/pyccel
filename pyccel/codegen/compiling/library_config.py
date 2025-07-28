@@ -394,7 +394,7 @@ class STCInstaller(ExternalLibInstaller):
         for root, dirs, files in install_dir.walk():
               print(root, "contains", dirs, files)
 
-        libdir = next((install_dir / 'lib').iterdir())
+        libdir = next(install_dir.glob('*.a')).parent
         libs = ['-lstc', '-lm']
         print(libdir, libs)
 
