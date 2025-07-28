@@ -356,12 +356,12 @@ class STCInstaller(ExternalLibInstaller):
                                 print(cc_version.stdout)
                                 print(p.stdout == cc_version.stdout)
                                 # Use warnings.warn instead of errors.warn to ensure message is displayed before crash
-                                msg = ("Using compiler {CC} which appears to be a clang compiler. "
+                                msg = (f"Using compiler {CC} which appears to be a clang compiler. "
                                        "The shortcut 'clang' either does not exist or does not match the requested compiler. "
                                        "It is likely that STC installation will fail. "
                                        "To fix this problem either ensure that 'clang' is working or ensure that ninja and meson "
                                        "are installed to use a cleaner install system.")
-                                warnings.warn(RuntimeWarning, msg)
+                                warnings.warn(msg, RuntimeWarning)
                     p = subprocess.run([make, 'lib', f'CC={CC}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
                                    check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
                     print(p.stdout)
