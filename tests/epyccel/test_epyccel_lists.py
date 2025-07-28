@@ -180,7 +180,7 @@ def test_append_basic(language):
         a.append(4)
         return len(a), a[0], a[1], a[2], a[3]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_multiple(language):
@@ -191,7 +191,7 @@ def test_append_multiple(language):
         a.append(6)
         return len(a), a[0], a[1], a[2], a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_list(stc_language):
@@ -211,7 +211,7 @@ def test_append_range(language):
         a.append(1000)
         return len(a), a[-1], a[-2]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_range_list(limited_language):
@@ -232,7 +232,7 @@ def test_append_bool(language):
         a.append(True)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_float(language):
@@ -243,7 +243,7 @@ def test_append_float(language):
         a.append(1.1)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_complex(language):
@@ -254,7 +254,7 @@ def test_append_complex(language):
         a.append(1j)
         return len(a), a[3], a[4], a[5]
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_append_ndarrays(limited_language):
@@ -307,7 +307,7 @@ def test_insert_booleans(language):
         a.insert(-25, False)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_insert_complex(language):
@@ -322,7 +322,7 @@ def test_insert_complex(language):
         a.insert(-25, 0 - 0j)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_insert_float(language):
@@ -337,7 +337,7 @@ def test_insert_float(language):
         a.insert(-25, 2.5)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_insert_ndarrays(limited_language):
@@ -368,7 +368,7 @@ def test_insert_multiple(language):
         a.insert(1, 6)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_insert_list(limited_language):
@@ -387,7 +387,7 @@ def test_insert_range(language):
             a.insert(i - 1 ,i)
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_insert_range_list(limited_language):
@@ -706,7 +706,7 @@ def test_extend_returned_list(language):
             return [4, 5, 6]
         lst = [1, 2, 3]
         lst.extend(g())
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=language, verbose=2)
     assert f() == epyc_f()
 
 def test_mutable_indexing(stc_language):
