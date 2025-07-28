@@ -349,12 +349,9 @@ class STCInstaller(ExternalLibInstaller):
                         cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True, text = True)
                         if 'clang' in cc_version.stdout:
                             p = subprocess.run(['clang', '--version'], capture_output = True, check = False, text = True)
-                            if p.returncode != 0 and p.stdout == cc_version.stdout:
+                            if p.returncode == 0 and p.stdout == cc_version.stdout:
                                 CC = 'clang'
                             else:
-                                print(p.returncode, p.stdout)
-                                print(cc_version.stdout)
-                                print(p.stdout == cc_version.stdout)
                                 # Use warnings.warn instead of errors.warn to ensure message is displayed before crash
                                 msg = (f"Using compiler {CC} which appears to be a clang compiler. "
                                        "The shortcut 'clang' either does not exist or does not match the requested compiler. "
