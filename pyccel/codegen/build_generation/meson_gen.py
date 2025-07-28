@@ -1,8 +1,10 @@
+import os
 import shutil
 import subprocess
 import sys
 from .build_gen import BuildSystemHandler
 from pyccel.codegen.compiling.project import DirTarget
+from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLibInstaller
 
 class MesonHandler(BuildSystemHandler):
 
@@ -82,8 +84,11 @@ class MesonHandler(BuildSystemHandler):
 
         sections = [project_decl, py_deps]
 
-        for d, folder in expr.stdlib_deps.items():
-            sections.append(f"subdir('{folder}')\n")
+        for d in expr.stdlib_deps:
+            if isinstance(recognised_libs.get(d, None), ExternalLibInstaller):
+                sections.append(f"{d}_dep = dependency('{d}')\n")
+            else:
+                sections.append(f"subdir('{d}')\n")
 
         target_code, _ = self._generate_DirTarget(expr._dir_info)
 
@@ -103,8 +108,8 @@ class MesonHandler(BuildSystemHandler):
         buildtype = 'debug' if self._debug_mode else 'release'
 
         subprocess.run([meson, 'setup', 'build', '--buildtype', buildtype], check=True,
-                       cwd=self._pyccel_dir, capture_output=capture_output)
+                       cwd=self._pyccel_dir, capture_output=capture_output, env = os.environ)
         subprocess.run([meson, 'compile', '-C', 'build'], check=True, cwd=self._pyccel_dir,
-                       capture_output=capture_output)
+                       capture_output=capture_output, env = os.environ)
         subprocess.run([meson, 'install', '-C', 'build'], check=True, cwd=self._pyccel_dir,
-                       capture_output=capture_output)
+                       capture_output=capture_output, env = os.environ)

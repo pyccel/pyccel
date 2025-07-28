@@ -304,9 +304,11 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family.lower()
 
+        version_info = ['--max-version=6', '--atleast-version=5']
+
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
-        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        existing_installation = self._check_for_package('stc', version_info)
         if existing_installation:
             return existing_installation
 
@@ -336,14 +338,26 @@ class STCInstaller(ExternalLibInstaller):
                 subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
                                capture_output = (verbose <= 1))
 
-        libdir = next(install_dir.glob('**/*.a')).parent
-        libs = ['-lstc', '-lm']
+        pkg_config_path = os.environ.get('PKG_CONFIG_PATH', '')
+        if pkg_config_path:
+            pkg_config_path += ':'
+        pkg_config_path += str(next(install_dir.glob('**/*.pc')).parent)
 
-        new_obj = CompileObj("stc", folder = "", has_target_file = False,
-                          include = (install_dir / 'include',),
-                          libdir = (libdir, ), libs = libs)
-        installed_libs['stc'] = new_obj
-        return new_obj
+        os.environ['PKG_CONFIG_PATH'] = pkg_config_path
+
+        new_installation = self._check_for_package('stc', version_info)
+        if new_installation:
+            return new_installation
+        else:
+            # Fallback if pkg-config is not installed
+            libdir = next(install_dir.glob('**/*.a')).parent
+            libs = ['-lstc', '-lm']
+
+            new_obj = CompileObj("stc", folder = "", has_target_file = False,
+                              include = (install_dir / 'include',),
+                              libdir = (libdir, ), libs = libs)
+            installed_libs['stc'] = new_obj
+            return new_obj
 
 #------------------------------------------------------------------------------------------
 
