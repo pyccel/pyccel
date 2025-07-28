@@ -9,18 +9,22 @@ from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLib
 class MesonHandler(BuildSystemHandler):
 
     def _generate_CompileTarget(self, expr):
-        kernel_dep = f'{expr.name}_dep'
+        kernel_dep = f'{expr.name}_lib'
         mod_name = f"'{expr.pyfile.stem}'"
 
         out_folder = f"'{expr.pyfile.parent}'"
 
         args = [mod_name, f"'{expr.file.name}'"]
 
-        to_link = {f"{t.name}_dep" for t in expr.dependencies}
-        to_link.update(expr.stdlib_dependencies)
+        to_link = {f"{t.name}_lib" for t in expr.dependencies}
+        to_dep = {f"{r}_dep" for r in recognised_libs \
+                    if any(d == r or d.startswith(f"{r}/") for d in expr.stdlib_dependencies)}
         if to_link:
             link_args = ', '.join(to_link)
             args.append(f"link_with: [{link_args}]")
+        if to_dep:
+            dep_args = ', '.join(to_dep)
+            args.append(f"dependencies: [{dep_args}]")
 
         files = ',\n    '.join(args)
         lib_cmd = f'{kernel_dep} = library({files})\n'
