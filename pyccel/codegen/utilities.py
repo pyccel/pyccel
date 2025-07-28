@@ -146,7 +146,7 @@ def recompile_object(compile_obj,
 
 #==============================================================================
 def manage_dependencies(pyccel_imports, *, pyccel_dirpath, language, verbose,
-                        compiler = None, mod_obj = None, convert_only = False,
+                        compiler, mod_obj = None, convert_only = False,
                         installed_libs = None):
     """
     Manage dependencies of the code to be compiled.
