@@ -46,6 +46,7 @@ runs:
         meson compile -C build
         meson install -C build 2>&1 | tee install_info.txt
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(grep "\.pc" install_info.txt | cut -d ' ' -f 4-)
+        echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH=}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
     - name: Test C translation
