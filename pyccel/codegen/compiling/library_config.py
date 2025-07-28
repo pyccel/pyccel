@@ -316,80 +316,24 @@ class STCInstaller(ExternalLibInstaller):
         # Check if meson can be used to build
         meson = shutil.which('meson')
         ninja = shutil.which('ninja')
-        has_meson = meson is not None and ninja is not None
+        assert meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
             # If the build dir already exists then we have already compiled these files
             if not build_dir.exists():
-                # Meson is the preferred build system
-                if has_meson:
-                    buildtype = 'debug' if compiler.is_debug else 'release'
-                    env = os.environ.copy()
-                    env['CC'] = compiler.get_exec({}, "c")
-                    if verbose:
-                        print(">> Installing STC with meson")
-                    subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                                   check = True, cwd = self._src_dir, env = env,
-                                   capture_output = (verbose <= 1))
-                    subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                                   capture_output = (verbose == 0))
-                    subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                                   capture_output = (verbose <= 1))
-                else:
-                    if verbose:
-                        print(">> Installing STC with make")
-                    # If meson is not available make is used as a fallback.
-                    # The makefile does not provide an install command so the installation steps are done manually
-                    make = shutil.which('make')
-                    libdir = install_dir / 'lib' / f'{platform.machine()}-{platform.system().lower()}-{compiler_family}'
-                    incdir = install_dir / 'include'
-
-                    # Find compiler
-                    CC = compiler.get_exec({}, "c")
-                    if platform.system() == 'Darwin':
-                        # STC changes flags if compiler name is exactly 'clang'
-                        cc_version = subprocess.run([CC, '--version'], capture_output = True, check = True, text = True)
-                        if 'clang' in cc_version.stdout:
-                            p = subprocess.run(['clang', '--version'], capture_output = True, check = False, text = True)
-                            if p.returncode == 0 and p.stdout == cc_version.stdout:
-                                CC = 'clang'
-                            else:
-                                # Use warnings.warn instead of errors.warn to ensure message is displayed before crash
-                                msg = (f"Using compiler {CC} which appears to be a clang compiler. "
-                                       "The shortcut 'clang' either does not exist or does not match the requested compiler. "
-                                       "It is likely that STC installation will fail. "
-                                       "To fix this problem either ensure that 'clang' is working or ensure that ninja and meson "
-                                       "are installed to use a cleaner install system.")
-                                warnings.warn(msg, RuntimeWarning)
-
-                    # Compile library
-                    p = subprocess.run([make, 'lib', f'CC={CC}', f'BUILDDIR={build_dir}', '-C', self._src_dir],
-                                   check=False, cwd=pyccel_dirpath, capture_output = (verbose <= 1))
-                    if p.returncode != 0:
-                        msg = "Failed to install STC using Make. Please try meson or install manually."
-                        if errors.mode == 'developer' or verbose:
-                            msg += '\n\n------------ STDOUT ------------'
-                            msg += p.stdout
-                            msg += '\n\n------------ STDERR ------------'
-                            msg += p.stderr
-                        errors.report(msg,
-                                      severity='fatal')
-
-                    # Install library
-                    os.makedirs(install_dir)
-                    os.makedirs(libdir)
-                    os.makedirs(libdir / 'pkgconfig')
-                    shutil.copytree(ext_path / 'STC' / 'include', incdir)
-                    shutil.copyfile(build_dir / 'libstc.a', libdir / 'libstc.a')
-
-                    # Create a .pc file for pyccel-make (this can also be found by CMake)
-                    with open(libdir / 'pkgconfig' / 'stc.pc', 'w', encoding='utf-8') as f:
-                        f.write("Name: stc\n")
-                        f.write("Description: stc\n")
-                        f.write("Version: 5.0-dev\n")
-                        f.write(f"Libs: -L{libdir} -lstc -lm\n")
-                        f.write(f"Cflags: -I{incdir}")
+                buildtype = 'debug' if compiler.is_debug else 'release'
+                env = os.environ.copy()
+                env['CC'] = compiler.get_exec({}, "c")
+                if verbose:
+                    print(">> Installing STC with meson")
+                subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                               check = True, cwd = self._src_dir, env = env,
+                               capture_output = (verbose <= 1))
+                subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
+                               capture_output = (verbose == 0))
+                subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
+                               capture_output = (verbose <= 1))
 
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
