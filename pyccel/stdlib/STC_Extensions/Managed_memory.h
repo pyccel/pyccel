@@ -25,9 +25,9 @@
 _c_DEFTYPES(_c_mgd_types, Self, i_key);
 #endif
 
-STC_INLINE Self _c_MEMB(_init)(void) { return c_literal(Self){false, NULL}; }
+STC_API Self _c_MEMB(_init)(void) { return c_literal(Self){false, NULL}; }
 
-STC_INLINE Self _c_MEMB(_make)(_m_value val) {
+STC_API Self _c_MEMB(_make)(_m_value val) {
     Self owned;
     owned.is_owning = true;
     owned.get = i_malloc(c_sizeof(_m_value));
@@ -35,35 +35,36 @@ STC_INLINE Self _c_MEMB(_make)(_m_value val) {
     return owned;
 }
 
-STC_INLINE Self _c_MEMB(_from_ptr)(_m_value* ptr) {
+STC_API Self _c_MEMB(_from_ptr)(_m_value* ptr) {
     Self unowned;
     unowned.is_owning = false;
     unowned.get = ptr;
     return unowned;
 }
 
-STC_INLINE Self _c_MEMB(_clone)(const Self self) {
+STC_API Self _c_MEMB(_clone)(const Self self) {
     return _c_MEMB(_from_ptr)(self.get);
 }
 
-STC_INLINE void _c_MEMB(_drop)(const Self* self) {
+STC_API void _c_MEMB(_drop)(const Self* self) {
     if (self->is_owning) {
         i_keydrop(self->get);
         i_free(self->get, c_sizeof(*self->get));
     }
 }
 
-STC_INLINE _m_value* _c_MEMB(_take_ptr)(Self self) {
+STC_API _m_value* _c_MEMB(_take_ptr)(Self self) {
     _m_value* out = self.get;
     return out;
 }
 
-STC_INLINE _m_value _c_MEMB(_release)(Self self) {
+STC_API _m_value _c_MEMB(_release)(Self self) {
     c_assert(self.is_owning);
     _m_value out = *self.get;
     i_free(self.get, c_sizeof(*self.get));
     return out;
 }
 
+#undef _i_is_arc
 #include <stc/priv/linkage2.h>
 #include <stc/priv/template2.h>
