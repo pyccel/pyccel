@@ -1,3 +1,4 @@
+from itertools import chain
 import os
 import shutil
 import subprocess
@@ -9,50 +10,45 @@ from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLib
 class MesonHandler(BuildSystemHandler):
 
     def _generate_CompileTarget(self, expr):
-        kernel_dep = f'{expr.name}_lib'
+        obj_lib = f'{expr.name}_objs'
+        dep_name = f'{expr.name}_dep'
         mod_name = f"'{expr.pyfile.stem}'"
 
         out_folder = f"'{expr.pyfile.parent}'"
 
-        args = [mod_name, f"'{expr.file.name}'"]
+        lib_args = [mod_name, f"'{expr.file.name}'", 'build_by_default: false']
 
-        to_link = {f"{t.name}_lib" for t in expr.dependencies}
-        to_dep = {f"{r}_dep" for r in recognised_libs \
-                    if any(d == r or d.startswith(f"{r}/") for d in expr.stdlib_dependencies)}
-        if to_link:
-            link_args = ', '.join(to_link)
-            args.append(f"link_with: [{link_args}]")
-        if to_dep:
-            dep_args = ', '.join(to_dep)
-            args.append(f"dependencies: [{dep_args}]")
+        dep_args = ["include_directories: ['.']"]
 
-        files = ',\n    '.join(args)
-        lib_cmd = f'{kernel_dep} = library({files})\n'
+        deps = {*(f"{t.name}_dep" for t in expr.dependencies),
+                  *(f"{r}_dep" for r in recognised_libs \
+                    if any(d == r or d.startswith(f"{r}/") \
+                    for d in expr.stdlib_dependencies))}
+        if deps:
+            dep_args.append(f"dependencies: [{', '.join(deps)}]")
 
-        wrap_args = [mod_name,
-                     *(f"'{w.name}'" for w in expr.wrapper_files),
-                     f'dependencies : [cwrapper_dep]',
-                     f'link_with: {kernel_dep}',
-                     "install: true",
-                     f"install_dir: {out_folder}"]
-        extra_inc_dirs = [f"{t.name}_inc_dir" for t in expr.dependencies if t.file.suffix == '.f90']
-        if extra_inc_dirs:
-            extra_inc_dirs_code = ', '.join(extra_inc_dirs)
-            wrap_args.insert(-2, f'include_directories: [{extra_inc_dirs_code}]')
-        wrap_args_code = ',\n    '.join(wrap_args)
-        wrap_cmd = f'py.extension_module({wrap_args_code})\n'
+        lib_args += dep_args
+        args = ',\n  '.join(lib_args)
+        lib_cmd = f'{obj_lib} = static_library({args})\n'
 
-        cmds = [lib_cmd, wrap_cmd]
+        args = ',\n  '.join(chain([f'objects: {obj_lib}.extract_all_objects(recursive: true)'], dep_args))
+        dep_cmd = f'{dep_name} = declare_dependency(\n  {args})'
 
-        if expr.file.suffix == '.f90':
-            wrap_incdir = f"{expr.name}_inc_dir = include_directories('.')\n"
-            cmds.append(wrap_incdir)
+
+        args = ',\n  '.join([mod_name,
+                             *(f"'{w.name}'" for w in expr.wrapper_files),
+                             f"dependencies: [{dep_name}, cwrapper_dep]",
+                              "install: true",
+                             f"install_dir: {out_folder}"])
+        wrap_cmd = f'py.extension_module({args})\n'
+
+        cmds = [lib_cmd, dep_cmd, wrap_cmd]
 
         if expr.is_exe:
-            link_args = ', '.join([kernel_dep, *to_link])
-            args = ',\n    '.join((mod_name, f"'{expr.program_file.name}'",
-                                   f"link_with: [{link_args}]", "install: true",
-                                   f"install_dir: {out_folder}"))
+            args = ',\n  '.join((mod_name, f"'{expr.program_file.name}'",
+                                 f"dependencies: [{dep_name}]",
+                                  "install: true",
+                                 f"install_dir: {out_folder}"))
             cmds.append(f'prog_{expr.name} = executable({args})\n')
 
         return '\n\n'.join(cmds)
@@ -79,7 +75,7 @@ class MesonHandler(BuildSystemHandler):
 
     def generate(self, expr):
         languages = ', '.join(f"'{l}'" for l in expr.languages)
-        project_decl = f"project('{expr.project_name}', {languages})\n"
+        project_decl = f"project('{expr.project_name}', {languages}, meson_version: '>=1.1.0')\n"
 
         # Python dependencies
         py_import = f"py = import('python').find_installation('{sys.executable}')\n"
