@@ -105,8 +105,8 @@ class CMakeHandler(BuildSystemHandler):
         for folder in expr.stdlib_deps:
             if isinstance(recognised_libs.get(folder, None), ExternalLibInstaller):
                 pkg_config_needed = True
-                sections.append(f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n")
-                sections.append(f"add_library({folder} ALIAS PkgConfig::{folder})\n")
+                sections.append((f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n"
+                                 f"add_library({folder} ALIAS PkgConfig::{folder})\n"))
             else:
                 sections.append(f"add_subdirectory({folder})\n")
 
