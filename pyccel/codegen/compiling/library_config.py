@@ -356,7 +356,7 @@ class STCInstaller(ExternalLibInstaller):
                               libdir = (libdir, ), libs = libs)
 
         installed_libs['stc'] = new_installation
-        return new_obj
+        return new_installation
 
 #------------------------------------------------------------------------------------------
 
