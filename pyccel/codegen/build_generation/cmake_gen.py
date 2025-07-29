@@ -2,8 +2,11 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from .build_gen import BuildSystemHandler
+
 from pyccel.codegen.compiling.project import DirTarget
+from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLibInstaller
+
+from .build_gen import BuildSystemHandler
 
 class CMakeHandler(BuildSystemHandler):
 
@@ -13,11 +16,13 @@ class CMakeHandler(BuildSystemHandler):
 
         out_folder = expr.pyfile.parent
 
-        args = '\n    '.join([kernel_target, 'STATIC', expr.file.name])
+        args = '\n    '.join([kernel_target, 'OBJECT', expr.file.name])
         cmds = [f'add_library({args})\n']
 
         to_link = {t.name for t in expr.dependencies}
-        to_link.update(expr.stdlib_dependencies)
+        to_link.update(r for r in recognised_libs \
+                    if any(d == r or d.startswith(f"{r}/") \
+                    for d in expr.stdlib_dependencies))
         if to_link:
             link_args = '\n    '.join([kernel_target, 'PUBLIC', *to_link])
             cmds.append(f"target_link_libraries({link_args})\n")
@@ -96,8 +101,17 @@ class CMakeHandler(BuildSystemHandler):
 
         sections = [cmake_min, project_decl, pic_on, py_import]
 
-        for d, folder in expr.stdlib_deps.items():
-            sections.append(f"add_subdirectory({folder})\n")
+        pkg_config_needed = False
+        for folder in expr.stdlib_deps:
+            if isinstance(recognised_libs.get(folder, None), ExternalLibInstaller):
+                pkg_config_needed = True
+                sections.append(f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n")
+                sections.append(f"add_library({folder} ALIAS PkgConfig::{folder})\n")
+            else:
+                sections.append(f"add_subdirectory({folder})\n")
+
+        if pkg_config_needed:
+            sections.insert(4, "find_package(PkgConfig REQUIRED)\n")
 
         target_code, _ = self._generate_DirTarget(expr._dir_info)
 
