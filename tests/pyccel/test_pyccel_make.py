@@ -63,3 +63,9 @@ def test_project_multi_imports(language, build_system):
 def test_project_rel_imports(language, build_system):
     pyccel_make_test('runtest.py', current_folder / 'project_rel_imports',
                      language, build_system, ['-g', '**/*.py'])
+
+#------------------------------------------------------------------------------
+def test_project_containers(language, build_system):
+    pyccel_make_test('runtest.py', current_folder / 'project_containers',
+                     language, build_system, ['-d', str(current_folder / 'project_containers' / 'files.txt')],
+                     output_dtype = int)
