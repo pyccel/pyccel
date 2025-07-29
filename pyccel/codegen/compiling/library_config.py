@@ -6,7 +6,6 @@
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
-import filecmp
 import os
 from pathlib import Path
 import shutil
@@ -101,7 +100,6 @@ class StdlibInstaller:
                 to_delete = False
             else:
                 # If folder exists check if it needs updating
-                src_files = list(self._src_dir.glob('*'))
                 to_copy = lib_dest_path.lstat().st_mtime < self._src_dir.lstat().st_mtime
                 to_delete = to_copy
 
