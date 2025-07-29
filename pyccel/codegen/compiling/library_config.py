@@ -271,7 +271,7 @@ class STCInstaller(ExternalLibInstaller):
     """
     def __init__(self):
         super().__init__("STC")
-        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
+        self._compile_obj = CompileObj("stc", folder = "stc", has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
 
@@ -316,8 +316,8 @@ class STCInstaller(ExternalLibInstaller):
         meson = shutil.which('meson')
         ninja = shutil.which('ninja')
         assert meson is not None and ninja is not None
-        build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
-        install_dir = pyccel_dirpath / 'STC' / 'install'
+        build_dir = pyccel_dirpath / 'stc' / f'build-{compiler_family}'
+        install_dir = pyccel_dirpath / 'stc' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
                 shutil.rmtree(build_dir)
