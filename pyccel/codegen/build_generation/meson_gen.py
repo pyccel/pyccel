@@ -3,9 +3,11 @@ import os
 import shutil
 import subprocess
 import sys
-from .build_gen import BuildSystemHandler
+
 from pyccel.codegen.compiling.project import DirTarget
 from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLibInstaller
+
+from .build_gen import BuildSystemHandler
 
 class MesonHandler(BuildSystemHandler):
 
