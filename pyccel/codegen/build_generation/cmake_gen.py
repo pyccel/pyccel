@@ -16,7 +16,7 @@ class CMakeHandler(BuildSystemHandler):
 
         out_folder = expr.pyfile.parent
 
-        args = '\n    '.join([kernel_target, 'OBJECT', expr.file.name])
+        args = '\n    '.join([kernel_target, 'STATIC', expr.file.name])
         cmds = [f'add_library({args})\n']
 
         to_link = {t.name for t in expr.dependencies}
@@ -27,10 +27,11 @@ class CMakeHandler(BuildSystemHandler):
             link_args = '\n    '.join([kernel_target, 'PUBLIC', *to_link])
             cmds.append(f"target_link_libraries({link_args})\n")
 
-        args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
-        cmds.append(f'target_include_directories({args})\n')
         if expr.file.suffix == '.f90':
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
+            cmds.append(f'target_include_directories({args})\n')
+        else:
+            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
 
         wrap_args = '\n    '.join([f'{kernel_target}_so', 'MODULE', 'WITH_SOABI',
@@ -63,7 +64,7 @@ class CMakeHandler(BuildSystemHandler):
             args = '\n    '.join(['TARGETS', prog_target, 'DESTINATION', str(out_folder)])
             cmds.append(f"install({args})\n")
 
-        return '\n\n'.join(cmds)
+        return '\n'.join(cmds)
 
     def _generate_DirTarget(self, expr):
         targets = []
