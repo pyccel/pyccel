@@ -18,7 +18,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2306 : Fix Python containers as arguments to interface functions.
--   Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
+-   #2407 : Fix bad memory handling for multi-level containers.
+-   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
 
 ### Changed
 
