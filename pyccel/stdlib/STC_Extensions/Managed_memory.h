@@ -65,5 +65,6 @@ STC_INLINE _m_value _c_MEMB(_release)(Self self) {
     return out;
 }
 
+#undef _i_is_arc
 #include <stc/priv/linkage2.h>
 #include <stc/priv/template2.h>
