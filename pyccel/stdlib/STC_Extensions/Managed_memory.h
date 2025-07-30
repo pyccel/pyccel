@@ -1,4 +1,3 @@
-
 #include <stc/priv/linkage.h>
 
 #ifndef PYCCEL_MANAGED_MEM_H_INCLUDED
@@ -44,6 +43,10 @@ STC_INLINE Self _c_MEMB(_from_ptr)(_m_value* ptr) {
 
 STC_INLINE Self _c_MEMB(_clone)(const Self self) {
     return _c_MEMB(_from_ptr)(self.get);
+}
+
+STC_INLINE Self _c_MEMB(_steal)(const Self self) {
+    return self;
 }
 
 STC_INLINE void _c_MEMB(_drop)(const Self* self) {
