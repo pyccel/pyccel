@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2306 : Fix Python containers as arguments to interface functions.
+-   #2407 : Fix bad memory handling for multi-level containers.
 
 ### Changed
 
