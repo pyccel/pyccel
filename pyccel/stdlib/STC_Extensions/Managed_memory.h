@@ -1,4 +1,3 @@
-
 #include <stc/priv/linkage.h>
 
 #ifndef PYCCEL_MANAGED_MEM_H_INCLUDED
@@ -46,6 +45,10 @@ STC_INLINE Self _c_MEMB(_clone)(const Self self) {
     return _c_MEMB(_from_ptr)(self.get);
 }
 
+STC_INLINE Self _c_MEMB(_steal)(const Self self) {
+    return self;
+}
+
 STC_INLINE void _c_MEMB(_drop)(const Self* self) {
     if (self->is_owning) {
         i_keydrop(self->get);
@@ -65,5 +68,6 @@ STC_INLINE _m_value _c_MEMB(_release)(Self self) {
     return out;
 }
 
+#undef _i_is_arc
 #include <stc/priv/linkage2.h>
 #include <stc/priv/template2.h>
