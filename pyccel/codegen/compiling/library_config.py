@@ -108,6 +108,7 @@ class StdlibInstaller:
             if to_delete:
                 print("DELETING")
                 shutil.rmtree(lib_dest_path)
+                assert False
 
             if to_copy:
                 if verbose:
