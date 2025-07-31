@@ -48,12 +48,8 @@ runs:
       run: |
          if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
-            python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/cwrapper"); print(p.lstat().st_mtime)'
-            python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "stdlib" / "cwrapper"; print(p.lstat().st_mtime)'
             # Test ndarray folder update (requires parallel tests to avoid clean)
-            printf "\n\n;\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/cwrapper"); print(p.lstat().st_mtime)'
-            python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "stdlib" / "cwrapper"; print(p.lstat().st_mtime)'
+            printf "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar test_arrays.py 2>&1 | tee stdlib_update_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
