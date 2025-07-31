@@ -47,6 +47,7 @@ runs:
           touch ${SITE_DIR}/pyccel/extensions/STC
           python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "extensions" / "STC"; print(p.lstat().st_mtime)'
           python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/STC"); print(p.lstat().st_mtime)'
+          sed -i 's/RERUN = .*/RERUN = False/g' test_epyccel_lists.py
           python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
