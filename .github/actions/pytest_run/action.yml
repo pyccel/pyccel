@@ -38,7 +38,13 @@ runs:
         python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
         # Test STC update
         if [ -n "${SITE_DIR}" ]; then
+          ls __epyccel__gw0
+          ls __epyccel__gw0/__pyccel__
+          python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__/STC"); print(p.lstat().st_mtime)'
+          python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "extensions" / "STC"; print(p.lstat().st_mtime)'
           touch ${SITE_DIR}/pyccel/extensions/STC/Makefile
+          python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "extensions" / "STC"; print(p.lstat().st_mtime)'
+          python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__/STC"); print(p.lstat().st_mtime)'
           python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
