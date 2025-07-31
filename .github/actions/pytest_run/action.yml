@@ -95,8 +95,8 @@ runs:
       run:
         python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests \
                        "C tests with meson install of STC:${{ steps.pytest_c_arr_meson.outcome }}:tests/c_meson_outfile.out" \
-                       "C tests:${{ steps.pytest_c.outcome }}:tests/c_outfile.out" \
                        "Verification of stdlib update:${{ steps.pytest_stdlib_update.outcome }}:tests/stdlib_update_outfile.out" \
+                       "C tests:${{ steps.pytest_c.outcome }}:tests/c_outfile.out" \
                        "Non-parallelisable C tests:${{ steps.pytest_c_xdist_incompatible.outcome }}:tests/c_xdist_incompatible_outfile.out" \
                        "Fortran tests:${{ steps.pytest_fortran.outcome }}:tests/fortran_outfile.out" \
                        "Non-parallelisable Fortran tests:${{ steps.pytest_fortran_xdist_incompatible.outcome }}:tests/fortran_xdist_incompatible_outfile.out"
