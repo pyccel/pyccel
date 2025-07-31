@@ -56,10 +56,10 @@ runs:
             printf "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/cwrapper"); print(p.lstat().st_mtime)'
             python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "stdlib" / "cwrapper"; print(p.lstat().st_mtime)'
-            python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py 2>&1 | tee stdlib_update_outfile.out
+            python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar test_arrays.py 2>&1 | tee stdlib_update_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests
+      working-directory: ./tests/epyccel
       id: pytest_stdlib_update
     - name: Install STC
       run: |
