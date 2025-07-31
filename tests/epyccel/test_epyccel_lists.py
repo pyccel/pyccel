@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from pyccel import epyccel
 
-RERUN = False
+RERUN = True
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
