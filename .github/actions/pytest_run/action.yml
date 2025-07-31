@@ -38,7 +38,7 @@ runs:
         python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
         # Test STC update
         if [ -n "${SITE_DIR}" ]; then
-          touch ${SITE_DIR}/pyccel/extensions/STC
+          touch ${SITE_DIR}/pyccel/extensions/STC/Makefile
           python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
