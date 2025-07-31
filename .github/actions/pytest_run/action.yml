@@ -48,12 +48,14 @@ runs:
       run: |
          if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
-            ls __epyccel__gw0
-            ls __epyccel__gw0/__pyccel__gw0
             python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/cwrapper"); print(p.lstat().st_mtime)'
             python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "stdlib" / "cwrapper"; print(p.lstat().st_mtime)'
+            ll ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            ll ${SITE_DIR}/pyccel/stdlib/cwrapper
             # Test ndarray folder update (requires parallel tests to avoid clean)
-            printf "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            printf "\n\n;\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            ll ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            ll ${SITE_DIR}/pyccel/stdlib/cwrapper
             python -c 'from pathlib import Path; p = Path("__epyccel__gw0/__pyccel__gw0/cwrapper"); print(p.lstat().st_mtime)'
             python -c 'from pathlib import Path; import os; p = Path(os.environ["SITE_DIR"]) / "pyccel" / "stdlib" / "cwrapper"; print(p.lstat().st_mtime)'
             python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar test_arrays.py 2>&1 | tee stdlib_update_outfile.out
