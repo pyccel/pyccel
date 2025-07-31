@@ -101,9 +101,12 @@ class StdlibInstaller:
             else:
                 # If folder exists check if it needs updating
                 to_copy = lib_dest_path.lstat().st_mtime < self._src_dir.lstat().st_mtime
+                print(lib_dest_path, self._src_dir)
+                print(lib_dest_path.lstat().st_mtime, self._src_dir.lstat().st_mtime, lib_dest_path.lstat().st_mtime < self._src_dir.lstat().st_mtime)
                 to_delete = to_copy
 
             if to_delete:
+                print("DELETING")
                 shutil.rmtree(lib_dest_path)
 
             if to_copy:
