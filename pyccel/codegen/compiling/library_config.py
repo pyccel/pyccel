@@ -101,14 +101,13 @@ class StdlibInstaller:
                 to_delete = False
             else:
                 # If folder exists check if it needs updating
-                src_files = list(self._src_dir.glob('*'))
+                src_files = [f.relative_to(self._src_dir) for f in self._src_dir.glob('*')]
                 _, mismatch, _ = filecmp.cmpfiles(lib_dest_path, self._src_dir, src_files)
                 to_copy = len(mismatch) != 0
                 to_delete = to_copy
 
             if to_delete:
                 shutil.rmtree(lib_dest_path)
-                assert False
 
             if to_copy:
                 if verbose:
