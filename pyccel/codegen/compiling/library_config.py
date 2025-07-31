@@ -412,7 +412,7 @@ recognised_libs = {
     "STC_Extensions" : StdlibInstaller("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = ('stc',)),
-    "gFTL_functions" : StdlibInstaller("*.inc", "gFTL_functions",
+    "gFTL_functions" : StdlibInstaller("gFTL_functions", "gFTL_functions",
                                         has_target_file = False,
                                         dependencies = ('gFTL',))
 }
