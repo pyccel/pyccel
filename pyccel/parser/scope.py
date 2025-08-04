@@ -81,7 +81,7 @@ class Scope(object):
         self._locals  = {k:{} for k in self.categories}
 
         prefix_set = ()
-        if parent_scope:
+        if parent_scope and parent_scope.symbol_prefix:
             prefix_set += (parent_scope.symbol_prefix.removesuffix('__'),)
         if name:
             prefix_set += (name,)
