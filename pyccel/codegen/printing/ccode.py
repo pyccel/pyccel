@@ -2451,7 +2451,7 @@ class CCodePrinter(CodePrinter):
                             isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
                     if unneeded_var:
                         code = code + ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
-                        return code + 'return {};\n'.format(self._print(last_assign.rhs))
+                        return code + f'return {self._print(last_assign.rhs)};\n'
                     else:
                         if isinstance(last_assign.lhs, Variable):
                             last_assign.lhs.is_temp = False
