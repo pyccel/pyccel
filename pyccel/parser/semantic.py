@@ -382,7 +382,7 @@ class SemanticParser(BasicParser):
         Scope
             The new scope for the function.
         """
-        child = self.scope.new_child_scope(syntactic_name, **kwargs)
+        child = self.scope.new_child_scope(syntactic_name, 'function', **kwargs)
         child.local_used_symbols[syntactic_name] = semantic_name
         child.python_names[semantic_name] = syntactic_name
 
@@ -2707,7 +2707,8 @@ class SemanticParser(BasicParser):
             prog_syntactic_scope = expr.program.scope
             self.scope = mod_scope.new_child_scope(prog_name,
                     used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
-                    original_symbols = prog_syntactic_scope.python_names.copy())
+                    original_symbols = prog_syntactic_scope.python_names.copy(),
+                    scope_type = 'program')
             prog_scope = self.scope
 
             imports = [self._visit(i) for i in expr.program.imports]

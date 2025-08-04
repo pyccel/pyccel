@@ -402,7 +402,7 @@ class BasicParser(object):
         Scope
             The scope for the class.
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, 'class', **kwargs)
         self._scope = child
 
         return child

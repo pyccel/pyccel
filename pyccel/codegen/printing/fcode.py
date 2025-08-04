@@ -547,7 +547,7 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_types[expr_type] = module
@@ -613,7 +613,7 @@ class FCodePrinter(CodePrinter):
             else:
                 raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module

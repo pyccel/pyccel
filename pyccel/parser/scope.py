@@ -63,7 +63,8 @@ class Scope(object):
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols', '_symbol_prefix')
+            '_dummy_counter','_original_symbol', '_dotted_symbols', '_symbol_prefix',
+            '_scope_type')
 
     categories = ('functions','variables','classes',
             'imports', 'symbolic_aliases',
@@ -71,11 +72,14 @@ class Scope(object):
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
-                    original_symbols = None, symbolic_aliases = None):
+                    original_symbols = None, symbolic_aliases = None,
+                    scope_type):
 
         assert (name is None) != (not is_loop)
+        assert scope_type in ('module', 'function', 'class', 'loop', 'program')
 
-        self._name    = name
+        self._name = name
+        self._scope_type = scope_type
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}
@@ -113,7 +117,7 @@ class Scope(object):
 
         self._dotted_symbols = []
 
-    def new_child_scope(self, name, **kwargs):
+    def new_child_scope(self, name, scope_type, **kwargs):
         """
         Create a new child Scope object which has the current object as parent.
 
@@ -137,7 +141,7 @@ class Scope(object):
         if ps is not self:
             raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
-        child = Scope(name=name, **kwargs, parent_scope = self)
+        child = Scope(name=name, **kwargs, parent_scope = self, scope_type = scope_type)
 
         self.add_son(name, child)
 
@@ -329,7 +333,7 @@ class Scope(object):
         a loop (For/While/etc)
         """
         new_scope = Scope(decorators=self.decorators, is_loop = True,
-                        parent_scope = self)
+                        parent_scope = self, scope_type = 'loop')
         self.add_loop(new_scope)
         return new_scope
 

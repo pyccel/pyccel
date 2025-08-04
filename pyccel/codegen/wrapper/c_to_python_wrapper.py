@@ -463,7 +463,7 @@ class CToPythonWrapper(Wrapper):
             which indicate that the function should be chosen.
         """
         args = [a.clone(a.name, is_argument = True) for a in args]
-        func_scope = self.scope.new_child_scope(name)
+        func_scope = self.scope.new_child_scope(name, 'function')
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
         type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
@@ -715,7 +715,7 @@ class CToPythonWrapper(Wrapper):
         mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
         func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         for v in expr.variables:
@@ -828,7 +828,7 @@ class CToPythonWrapper(Wrapper):
                                     memory_handling = 'alias')
         self.scope.insert_variable(API_var)
 
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         ok_code = LiteralInteger(0, dtype=CNativeInt())
@@ -920,7 +920,7 @@ class CToPythonWrapper(Wrapper):
             func_name = self.scope.get_new_name(f'{func.name}___wrapper')
         else:
             func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
@@ -981,7 +981,7 @@ class CToPythonWrapper(Wrapper):
         original_func = getattr(init_function, 'original_function', init_function)
         original_name = original_func.cls_name or original_func.name
         func_name = self.scope.get_new_name(original_name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
@@ -1067,7 +1067,7 @@ class CToPythonWrapper(Wrapper):
         original_func = getattr(del_function, 'original_function', del_function)
         original_name = original_func.cls_name or original_func.name
         func_name = self.scope.get_new_name(original_name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         # Add the variables to the expected symbols in the scope
@@ -1257,7 +1257,7 @@ class CToPythonWrapper(Wrapper):
         scope = expr.scope
         original_mod = getattr(expr, 'original_module', expr)
         mod_scope = Scope(name = original_mod.name, used_symbols = scope.local_used_symbols.copy(),
-                          original_symbols = scope.python_names.copy())
+                          original_symbols = scope.python_names.copy(), scope_type = 'module')
         self.scope = mod_scope
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
@@ -1374,7 +1374,7 @@ class CToPythonWrapper(Wrapper):
         """
         # Initialise the scope
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_funcs = expr.functions
         example_func = original_funcs[0]
@@ -1459,7 +1459,7 @@ class CToPythonWrapper(Wrapper):
         """
         original_func = getattr(expr, 'original_function', expr)
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
 
@@ -1787,7 +1787,7 @@ class CToPythonWrapper(Wrapper):
         #                        Create getter
         # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_getter')
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -1833,7 +1833,7 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
         setter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_setter')
-        setter_scope = self.scope.new_child_scope(setter_name)
+        setter_scope = self.scope.new_child_scope(setter_name, 'function')
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
@@ -1910,7 +1910,7 @@ class CToPythonWrapper(Wrapper):
         #                        Create getter
         # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(f'{class_type.name}_{name}_getter')
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
@@ -1962,7 +1962,7 @@ class CToPythonWrapper(Wrapper):
         if expr.setter:
             self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
             setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
-            setter_scope = self.scope.new_child_scope(setter_name)
+            setter_scope = self.scope.new_child_scope(setter_name, 'function')
             self.scope = setter_scope
 
             original_args = expr.setter.arguments
@@ -2033,7 +2033,7 @@ class CToPythonWrapper(Wrapper):
 
         type_name = self.scope.get_new_name(f'Py{name}Type')
         docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
+        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name, 'class'),
                                    docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 
@@ -2119,7 +2119,7 @@ class CToPythonWrapper(Wrapper):
                 struct_name = f'Py{name}Object'
                 dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
-                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
+                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = type_name, scope_type = 'class'), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
                 self.scope.imports['classes'][t.name] = wrapped_class
@@ -2127,7 +2127,7 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope())
+            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope(name=expr.source_module.name, scope_type = 'module'))
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None

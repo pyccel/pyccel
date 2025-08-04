@@ -140,9 +140,9 @@ class SyntaxParser(BasicParser):
             with open(inputs, 'r', encoding="utf-8") as file:
                 code = file.read()
 
-            self._scope = Scope(name = inputs.stem)
+            self._scope = Scope(name = inputs.stem, scope_type = 'module')
         else:
-            self._scope = Scope('')
+            self._scope = Scope('', scope_type = 'module')
 
         self._code    = code
         self._context = []
@@ -206,7 +206,7 @@ class SyntaxParser(BasicParser):
         Scope
             The new scope for the function.
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, 'function', **kwargs)
 
         self._scope = child
         self._current_function_name.append(name)
