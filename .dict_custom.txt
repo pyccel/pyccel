@@ -130,3 +130,4 @@ pythonic
 pre
 LLVM
 linter
+inlining
