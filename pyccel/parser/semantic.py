@@ -3356,7 +3356,11 @@ class SemanticParser(BasicParser):
                             func  = func.clone(new_name)
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
-                    syntactic_call.set_current_user_node(expr.current_user_node)
+                    current_user_nodes = expr.get_all_user_nodes()
+                    if len(current_user_nodes) == 1:
+                        syntactic_call.set_current_user_node(current_user_nodes[0])
+                    else:
+                        syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
                     pyccel_stage.set_stage('semantic')
                     if first.__module__.startswith('pyccel.'):
                         self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
