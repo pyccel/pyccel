@@ -511,7 +511,7 @@ class Scope(object):
         """
         self._locals['functions'].pop(name)
 
-    def insert_symbol(self, symbol):
+    def insert_symbol(self, symbol, object_type = 'variable'):
         """
         Add a new symbol to the scope.
 
@@ -544,7 +544,7 @@ class Scope(object):
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
                         self.all_used_symbols, prefix = self._symbol_prefix,
-                        context = 'variable', parent_context = 'loop')
+                        context = object_type, parent_context = 'loop')
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
@@ -680,7 +680,7 @@ class Scope(object):
 
         return new_symbol, counter
 
-    def get_new_name(self, current_name = None, is_temp = None):
+    def get_new_name(self, current_name = None, is_temp = None, object_type = 'variable'):
         """
         Get a new name which does not clash with any names in the current context.
 
@@ -708,7 +708,7 @@ class Scope(object):
         """
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
-            return self.insert_symbol(new_name)
+            return self.insert_symbol(new_name, object_type)
 
         if current_name is None:
             assert is_temp is None
@@ -725,7 +725,7 @@ class Scope(object):
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
         new_name = PyccelSymbol(new_name, is_temp = is_temp)
-        return self.insert_symbol(new_name)
+        return self.insert_symbol(new_name, object_type)
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """

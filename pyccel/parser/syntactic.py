@@ -884,7 +884,7 @@ class SyntaxParser(BasicParser):
         name = PyccelSymbol(stmt.name)
 
         if not isinstance(self._context[-1], ast.Module):
-            self.scope.insert_symbol(name)
+            self.scope.insert_symbol(name, 'function')
 
         new_name = self.scope.get_expected_name(name)
 
@@ -1034,7 +1034,7 @@ class SyntaxParser(BasicParser):
         init_method = next((m for m in methods if m.name == '__init__'), None)
         if init_method is None:
             init_name = PyccelSymbol('__init__')
-            self.scope.insert_symbol(init_name)
+            self.scope.insert_symbol(init_name, 'function')
             annot = self._treat_type_annotation(stmt, LiteralString(name))
             init_scope = self.create_new_function_scope(init_name,
                     used_symbols = {init_name: init_name},
@@ -1401,7 +1401,7 @@ class SyntaxParser(BasicParser):
         assert len(name_lst) == 1
         name = name_lst[0]
 
-        self.scope.insert_symbol(name)
+        self.scope.insert_symbol(name, 'function')
         new_name = self.scope.get_expected_name(name)
         scope = self.create_new_function_scope(name,
                 used_symbols = {name: new_name},
