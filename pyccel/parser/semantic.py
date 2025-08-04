@@ -3356,6 +3356,14 @@ class SemanticParser(BasicParser):
                             func  = func.clone(new_name)
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
+                    current_user_nodes = expr.get_all_user_nodes()
+                    if len(current_user_nodes) == 1:
+                        syntactic_call.set_current_user_node(current_user_nodes[0])
+                    else:
+                        # If the DottedName has multiple users look for the relevant Assign
+                        # This happens if an Assign node was created to handle the expression
+                        # E.g. when the statement is found in a Return node.
+                        syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
                     pyccel_stage.set_stage('semantic')
                     if first.__module__.startswith('pyccel.'):
                         self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
@@ -5148,6 +5156,7 @@ class SemanticParser(BasicParser):
         if assign:
             return body
         else:
+            assert expr.results
             self._additional_exprs[-1].append(body)
             return self._visit(lhs)
 

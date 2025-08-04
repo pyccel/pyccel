@@ -920,13 +920,9 @@ class SyntaxParser(BasicParser):
             is_inline = True
 
 
-        argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
         argument_names = {a.var.name for a in arguments}
-        # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
-        arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
-                           for a, annot in zip(arguments, argument_annotations)]
 
         body = stmt.body
 
@@ -1405,9 +1401,11 @@ class SyntaxParser(BasicParser):
         return_expr = Return(self._visit(stmt.body))
         return_expr.set_current_ast(stmt)
 
+        results = FunctionDefResult(self.scope.get_new_name())
+
         self.exit_function_scope()
 
-        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), results, scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars
