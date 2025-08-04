@@ -141,7 +141,9 @@ class FortranToCWrapper(Wrapper):
         """
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        mod_scope = Scope(name = f'bind_c_{expr.name}', used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy())
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self.scope = mod_scope
 
         # Wrap contents
@@ -167,7 +169,6 @@ class FortranToCWrapper(Wrapper):
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr),
                    *expr.imports]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()

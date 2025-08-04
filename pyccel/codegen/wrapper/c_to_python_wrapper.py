@@ -1255,7 +1255,9 @@ class CToPythonWrapper(Wrapper):
         """
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        original_mod = getattr(expr, 'original_module', expr)
+        mod_scope = Scope(name = original_mod.name, used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy())
         self.scope = mod_scope
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
@@ -1286,7 +1288,6 @@ class CToPythonWrapper(Wrapper):
 
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
-        original_mod = getattr(expr, 'original_module', expr)
         original_mod_name = mod_scope.get_python_name(original_mod.name)
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
