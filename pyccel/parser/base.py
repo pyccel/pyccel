@@ -194,7 +194,6 @@ class BasicParser(object):
         self._metavars = {}
 
         # represent the scope of a function
-        self._scope = Scope()
         self._current_function_name = []
         self._current_function = []
 

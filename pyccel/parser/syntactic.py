@@ -68,6 +68,7 @@ from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnota
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
+from pyccel.parser.scope       import Scope
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
@@ -138,6 +139,10 @@ class SyntaxParser(BasicParser):
 
             with open(inputs, 'r', encoding="utf-8") as file:
                 code = file.read()
+
+            self._scope = Scope(name = inputs.stem)
+        else:
+            self._scope = Scope('')
 
         self._code    = code
         self._context = []
