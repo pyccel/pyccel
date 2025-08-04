@@ -63,7 +63,7 @@ class Scope(object):
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols')
+            '_dummy_counter','_original_symbol', '_dotted_symbols', '_symbol_prefix')
 
     categories = ('functions','variables','classes',
             'imports', 'symbolic_aliases',
@@ -73,10 +73,20 @@ class Scope(object):
                     parent_scope = None, used_symbols = None,
                     original_symbols = None, symbolic_aliases = None):
 
+        assert (name is None) != (not is_loop)
+
         self._name    = name
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}
+
+        prefix_set = ()
+        if parent_scope:
+            prefix_set += (parent_scope.symbol_prefix.removesuffix('__'),)
+        if name:
+            prefix_set += (name,)
+
+        self._symbol_prefix = '__'.join((*prefix_set, ''))
 
         self._temporary_variables = []
 
@@ -141,6 +151,15 @@ class Scope(object):
         The name of the scope.
         """
         return self._name
+
+    @property
+    def symbol_prefix(self):
+        """
+        The prefix used for symbols.
+
+        The prefix that may be prepended to symbols for context information.
+        """
+        return self._symbol_prefix
 
     @property
     def imports(self):
@@ -524,7 +543,7 @@ class Scope(object):
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self.all_used_symbols, prefix = '',
+                        self.all_used_symbols, prefix = self._symbol_prefix,
                         context = 'variable', parent_context = 'loop')
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
