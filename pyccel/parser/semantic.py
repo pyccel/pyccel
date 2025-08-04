@@ -1477,7 +1477,7 @@ class SemanticParser(BasicParser):
                 scope_names.append(new_scope.name)
 
         # Use scope_names to find semantic scopes
-        for n in scope_names[::-1]:
+        for n in scope_names[:-1:-1]:
             new_scope = new_scope.sons_scopes[n]
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
