@@ -60,6 +60,7 @@ include = [
   "pyccel/**/*.py",
   "pyccel/**/*.pyi",
   "pyccel/parser/grammar/*.tx",
+  "pyccel/plugins/**/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",

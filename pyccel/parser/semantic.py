@@ -105,9 +105,6 @@ from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
-from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
-                            OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelAdd, PyccelMinus, PyccelMul, PyccelPow, PyccelOr
@@ -1666,7 +1663,7 @@ class SemanticParser(BasicParser):
             arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
-        
+
         Create a lhs based on the information in d_var, if the lhs already exists
         then check that it has the expected properties.
 
@@ -2603,12 +2600,12 @@ class SemanticParser(BasicParser):
         does not exist then the method resolution order is used to search for
         other compatible _visit_X functions. If none are found then an error is
         raised.
-        
+
         Parameters
         ----------
         expr : pyccel.ast.basic.PyccelAstNode | PyccelSymbol
             Object to visit of type X.
-        
+
         Returns
         -------
         pyccel.ast.basic.PyccelAstNode
@@ -3019,53 +3016,6 @@ class SemanticParser(BasicParser):
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         return expr
-
-    def _visit_OmpAnnotatedComment(self, expr):
-        code = expr._user_nodes
-        code = code[-1]
-        index = code.body.index(expr)
-        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
-
-        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
-           and expr.has_nowait:
-            for node in code.body[index+1:]:
-                if isinstance(node, Omp_End_Clause):
-                    if node.txt.startswith(expr.name, 4):
-                        node.has_nowait = True
-
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
-                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
-            index += 1
-            while index < len(code.body) and isinstance(code.body[index], (Comment, CommentBlock, Pass)):
-                index += 1
-
-            if index < len(code.body) and isinstance(code.body[index], For):
-                end_expr = ['!$omp', 'end', expr.name]
-                if expr.combined:
-                    end_expr.append(expr.combined)
-                if expr.has_nowait:
-                    end_expr.append('nowait')
-                code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
-            else:
-                type_name = type(expr).__name__
-                msg = f"Statement after {type_name} must be a for loop."
-                errors.report(msg, symbol=expr,
-                    severity='fatal')
-
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        return expr
-
-    def _visit_Omp_End_Clause(self, expr):
-        end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
-        if end_loop:
-            errors.report("For loops do not require an end clause. This clause is ignored",
-                    severity='warning', symbol=expr)
-            return EmptyNode()
-        else:
-            expr.clear_syntactic_user_nodes()
-            expr.update_pyccel_staging()
-            return expr
 
     def _visit_Literal(self, expr):
         expr.clear_syntactic_user_nodes()

@@ -42,7 +42,7 @@ def test_mpi(f):
 )
 @pytest.mark.external
 def test_openmp(f, language):
-    execute_pyccel(f, accelerators=['openmp'], language=language)
+    execute_pyccel(f, openmp=True, language=language)
 
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #@pytest.mark.external

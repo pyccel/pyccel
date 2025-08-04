@@ -72,7 +72,6 @@ from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
-from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
@@ -233,17 +232,11 @@ class SyntaxParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             The treated object as a Pyccel ast node.
         """
+        txt = line[1:].lstrip()
+        expr = Comment(txt)
         if line.startswith('#$'):
             env = line[2:].lstrip()
-            if env.startswith('omp'):
-                expr = omp_parse(stmts=line)
-                try:
-                    expr = omp_parse(stmts=line)
-                except TextXSyntaxError as e:
-                    errors.report(f"Invalid OpenMP header. {e.message}",
-                            symbol = stmt, column = e.col,
-                              severity='fatal')
-            elif env.startswith('acc'):
+            if env.startswith('acc'):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -266,14 +259,10 @@ class SyntaxParser(BasicParser):
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
             else:
-                errors.report(PYCCEL_INVALID_HEADER,
-                              symbol = stmt,
-                              severity='fatal')
-
-        else:
-            txt = line[1:].lstrip()
-            expr = Comment(txt)
-
+                errors.report(
+                    "Unexpected pragma detected. To enable support, please re-run the program with the appropriate accelerator flag.",
+                    symbol=stmt,
+                    severity='warning')
         expr.set_current_ast(stmt)
         return expr
 
@@ -462,7 +451,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body = [self._visit(v) for v in stmt.body]
+        body = self._visit(stmt.body)
 
         functions = [f for f in body if isinstance(f, FunctionDef)]
         classes   = [c for c in body if isinstance(c, ClassDef)]
@@ -1164,7 +1153,7 @@ class SyntaxParser(BasicParser):
         Converts a list comprehension statement into a `FunctionalFor` AST object.
 
         This method translates the list comprehension into an equivalent `FunctionalFor`
-        
+
         Parameters
         ----------
         stmt : ast.stmt
@@ -1317,7 +1306,7 @@ class SyntaxParser(BasicParser):
                         severity = 'error')
 
             scope = self.create_new_function_scope('__main__')
-            body = [self._visit(v) for v in stmt.body]
+            body = self._visit(stmt.body)
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]

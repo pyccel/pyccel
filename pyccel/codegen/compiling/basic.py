@@ -11,6 +11,10 @@ from pathlib import Path
 import sys
 from filelock import FileLock
 
+from pyccel.utilities.pluginmanager import PluginManager
+
+plugins = PluginManager()
+
 class CompileObj:
     """
     Class containing all information necessary for compiling.
@@ -97,6 +101,7 @@ class CompileObj:
         self._extra_compilation_tools = set(extra_compilation_tools)
         self._dependencies = {a.module_target:a for a in dependencies}
         self._has_target_file = has_target_file
+        plugins.register((self,))
 
     def reset_folder(self, folder):
         """
@@ -305,7 +310,7 @@ class CompileObj:
                                                        for da in d.extra_compilation_tools])
 
     def __eq__(self, other):
-        return self.module_target == other.module_target
+        return isinstance(other, CompileObj) and self.module_target == other.module_target
 
     def __hash__(self):
         return hash(self.module_target)

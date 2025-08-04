@@ -12,12 +12,14 @@ from pyccel.ast.internals import PyccelSymbol
 
 from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
+from pyccel.utilities.pluginmanager import PluginManager
 
 # TODO: add examples
 
 __all__ = ["CodePrinter"]
 
 errors = Errors()
+plugins = PluginManager()
 
 class CodePrinter:
     """
@@ -37,6 +39,7 @@ class CodePrinter:
         self._current_ast_node = None
         self._additional_imports = {}
         self._verbose = verbose
+        plugins.register((self,))
 
     def doprint(self, expr):
         """

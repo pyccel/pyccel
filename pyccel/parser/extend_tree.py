@@ -9,6 +9,7 @@
 """
 from ast import AST, If as IfNode, parse
 
+import re
 from numpy import array, logical_and, where
 
 from pyccel.errors.errors   import Errors
@@ -30,6 +31,28 @@ class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 
 def get_comments(code):
+    """
+    Extract comments from Python code.
+
+    This function parses the input code string and extracts all comments,
+    including single-line and multi-line comments.
+
+    Parameters
+    ----------
+    code : str
+        The Python code string to parse for comments.
+
+    Returns
+    -------
+    list
+        List of CommentLine or CommentMultiLine objects representing the comments.
+
+    See Also
+    --------
+    CommentLine : Node representing a single-line comment.
+    CommentMultiLine : Node representing a multi-line comment.
+    extend_tree : Function that uses get_comments to extend the AST.
+    """
     lines = code.split("\n")
     comments        = []
     lineno_comments = []
@@ -46,7 +69,7 @@ def get_comments(code):
     if comments:
         new_comments    = [[comments[0]]]
         for index in range(1,len(comments)):
-            if comments[index][1] == comments[index-1][1]+1 and comments[index][2] == comments[index-1][2]:
+            if comments[index][1] == comments[index-1][1]+1 and comments[index][2] == comments[index-1][2] and not re.match(r'^#\$ *omp', comments[index - 1][0]):
                 new_comments[-1].append(comments[index])
             else:
                 new_comments.append([comments[index]])
@@ -250,4 +273,3 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
     # insert in the rest of the comments in the end of a block
     setattr(ast, attr, body + comments.tolist())
-

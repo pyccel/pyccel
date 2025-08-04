@@ -6,6 +6,7 @@ import pytest
 
 from pyccel.parser.parser import Parser
 from pyccel.errors.errors import Errors
+from pyccel.utilities.pluginmanager import PluginManager
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -13,11 +14,15 @@ path_dir = os.path.join(base_dir, 'scripts')
 files = sorted(os.listdir(path_dir))
 files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 
+
+
 @pytest.mark.parametrize( "f", files)
 def test_syntax(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    extensions = PluginManager()
+    extensions.set_options({'openmp':True, 'omp_version':4.5})
 
     pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse(verbose = 0)

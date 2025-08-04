@@ -51,6 +51,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2338 : Support multiple OpenMP versions.
+-   #2338 : Separate OpenMP from Pyccel's core functionalities and connect it as a Plugin.
+-   #2338 : Add preliminary plugin functionalities.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1787 : Ensure STC v5.0 (`ef322ae`) is installed with Pyccel.
 -   #1656 : Ensure gFTL is installed with Pyccel.

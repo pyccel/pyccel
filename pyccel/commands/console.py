@@ -10,6 +10,8 @@ import os
 import argparse
 import pathlib
 
+from pyccel.utilities.pluginmanager import add_plugin_arguments, collect_plugin_options
+
 __all__ = ['MyParser', 'pyccel']
 
 #==============================================================================
@@ -135,8 +137,6 @@ def pyccel() -> None:
     group = parser.add_argument_group('Accelerators options')
     group.add_argument('--mpi', action='store_true', \
                        help='Use MPI.')
-    group.add_argument('--openmp', action='store_true', \
-                       help='Use OpenMP.')
 #    group.add_argument('--openacc', action='store_true', \
 #                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
     # ...
@@ -155,6 +155,10 @@ def pyccel() -> None:
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
 
+    # ... Plugins options
+    add_plugin_arguments(parser)
+    # ...
+
     # ...
     args = parser.parse_args()
     # ...
@@ -169,7 +173,6 @@ def pyccel() -> None:
     filename = args.filename
     compiler = args.compiler_config or args.compiler_family
     mpi      = args.mpi
-    openmp   = args.openmp
     openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
     output   = args.output or filename.parent
 
@@ -224,8 +227,6 @@ def pyccel() -> None:
     accelerators = []
     if mpi:
         accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
     if openacc:
         accelerators.append("openacc")
 
@@ -266,7 +267,8 @@ def pyccel() -> None:
                        debug           = args.debug,
                        accelerators    = accelerators,
                        folder          = str(output) if output is not None else None,
-                       conda_warnings  = args.conda_warnings)
+                       conda_warnings  = args.conda_warnings,
+                       **collect_plugin_options(args))
     except PyccelError:
         sys.exit(1)
     finally:
