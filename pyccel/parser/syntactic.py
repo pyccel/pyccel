@@ -1401,9 +1401,11 @@ class SyntaxParser(BasicParser):
         return_expr = Return(self._visit(stmt.body))
         return_expr.set_current_ast(stmt)
 
+        results = FunctionDefResult(self.scope.get_new_name())
+
         self.exit_function_scope()
 
-        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), results, scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars
