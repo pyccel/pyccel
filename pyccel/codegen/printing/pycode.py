@@ -605,9 +605,13 @@ class PythonCodePrinter(CodePrinter):
             to_print = [l for l in expr.stmt.body \
                             if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
                                      or isinstance(l, UnpackManagedMemory))]
-            # Collect all assignments to easily inline the expressions
-            assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
-            assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
+            if any(expr.stmt.body.index(p) < expr.stmt.body.index(a) for p in to_print for a in expr.stmt.body if isinstance(a, Assign)):
+                to_print = [l for l in expr.stmt.body if not isinstance(l, UnpackManagedMemory)]
+                assigns = {}
+            else:
+                # Collect all assignments to easily inline the expressions
+                assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
+                assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
             # Print all expressions that are required before the print
             prelude = ''.join(self._print(l) for l in to_print)
         else:
