@@ -344,7 +344,7 @@ class BasicParser(object):
             The scope where the function should be inserted.
         """
 
-        assert isinstance(func, (FunctionDef, Interface, FunctionAddress)):
+        assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
         scope = scope or self.scope
         container = scope.functions
         if func.pyccel_staging == 'syntactic':
