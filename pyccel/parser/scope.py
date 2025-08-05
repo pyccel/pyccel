@@ -370,6 +370,26 @@ class Scope(object):
         else:
             raise RuntimeError("Variable not found in scope")
 
+    def inline_variable_definition(self, var_value, name):
+        """
+        Add the definition of a variable inline.
+
+        Add an object to the variables dictionary. This object will
+        be returned when the variable is collected but may not be
+        itself a variable. This is important when translating inlined
+        functions. To ensure that when searching for the variables
+        representing the arguments, the value is used directly.
+
+        Parameters
+        ----------
+        var_value : TypedAstNode
+            The value of the variable.
+        name : str
+            The name of the variable.
+        """
+        self._locals['variables'][name] = var_value
+        self._used_symbols[name] = name
+
     def insert_class(self, cls, name = None):
         """
         Add a class to the current scope.

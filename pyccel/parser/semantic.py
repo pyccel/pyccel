@@ -5080,8 +5080,7 @@ class SemanticParser(BasicParser):
                 # Otherwise the symbol used for the function arguments should be mapped
                 # to the call argument
                 func_a_name = replace_map.get(func_a, func_a)
-                self.scope.variables[func_a_name] = call_a
-                self.scope.local_used_symbols[func_a_name] = func_a_name
+                self.scope.inline_variable_definition(call_a, func_a_name)
 
         # Map local keyword call arguments to function arguments
         nargs = len(positional_call_args)
@@ -5097,8 +5096,7 @@ class SemanticParser(BasicParser):
                 # Otherwise the symbol used for the function arguments should be mapped
                 # to the call argument
                 used_func_a_name = replace_map.get(func_a_name, func_a_name)
-                self.scope.variables[used_func_a_name] = call_a
-                self.scope.local_used_symbols[func_a_name] = func_a_name
+                self.scope.inline_variable_definition(call_a, used_func_a_name)
 
         to_replace = list(replace_map.keys())
         local_var = list(replace_map.values())
