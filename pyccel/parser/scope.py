@@ -65,7 +65,7 @@ class Scope(object):
             '_dummy_counter','_original_symbol', '_dotted_symbols')
 
     categories = ('functions','variables','classes',
-            'imports','symbolic_functions', 'symbolic_aliases',
+            'imports', 'symbolic_aliases',
             'decorators', 'cls_constructs')
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
@@ -194,12 +194,6 @@ class Scope(object):
         to a constant object. E.g. a symbol which represents a type.
         """
         return self._locals['symbolic_aliases']
-
-    @property
-    def symbolic_functions(self):
-        """ A dictionary of symbolic functions defined in this scope
-        """
-        return self._locals['symbolic_functions']
 
     def find(self, name, category = None, local_only = False, raise_if_missing = False):
         """

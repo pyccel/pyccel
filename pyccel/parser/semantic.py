@@ -3567,9 +3567,6 @@ class SemanticParser(BasicParser):
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
 
-        if name == 'lambdify':
-            args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
-
         if self.scope.find(name, 'cls_constructs'):
 
             # TODO improve the test
