@@ -100,7 +100,7 @@ def inline(f):
     """
     return f
 
-def stack_array(f, *args):
+def stack_array(*args):
     """
     Indicate that arrays should be stored on the stack.
 
@@ -109,19 +109,19 @@ def stack_array(f, *args):
 
     Parameters
     ----------
-    f : Function
-        The function to which the decorator is applied.
     *args : str
         The names of all arrays which should be stored on the stack.
 
     Returns
     -------
     Function
-        The unchanged function.
+        The identity decorator which will be applied to the function.
     """
-    return f
+    def identity(f):
+        return f
+    return identity
 
-def allow_negative_index(f,*args):
+def allow_negative_index(*args):
     """
     Indicate that arrays can be accessed with negative indexes.
 
@@ -131,8 +131,6 @@ def allow_negative_index(f,*args):
 
     Parameters
     ----------
-    f : Function
-        The function to which the decorator is applied.
     *args : str
         The names of all arrays which can be accessed with non-constant
         negative indexes.
@@ -140,6 +138,8 @@ def allow_negative_index(f,*args):
     Returns
     -------
     Function
-        The unchanged function.
+        The identity decorator which will be applied to the function.
     """
-    return f
+    def identity(f):
+        return f
+    return identity
