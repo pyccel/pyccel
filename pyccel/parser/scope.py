@@ -19,6 +19,7 @@ from pyccel.errors.errors import Errors
 from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
 
 from pyccel.utilities.strings import create_incremented_string
+from pyccel.utilities.tools import ReadOnlyDict
 
 errors = Errors()
 
@@ -151,7 +152,7 @@ class Scope(object):
     def variables(self):
         """ A dictionary of variables defined in this scope
         """
-        return self._locals['variables']
+        return ReadOnlyDict(self._locals['variables'])
 
     @property
     def classes(self):
