@@ -158,7 +158,7 @@ class Scope(object):
     def classes(self):
         """ A dictionary of classes defined in this scope
         """
-        return self._locals['classes']
+        return ReadOnlyDict(self._locals['classes'])
 
     @property
     def functions(self):
