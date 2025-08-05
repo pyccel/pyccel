@@ -10,13 +10,11 @@ import warnings
 
 __all__ = (
     'allow_negative_index',
-    'bypass',
     'elemental',
     'inline',
     'private',
     'pure',
     'stack_array',
-    'sympy',
     'types',
 )
 
