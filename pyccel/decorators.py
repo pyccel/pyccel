@@ -32,14 +32,19 @@ def pure(f):
     ----------
     f : Function
         The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
     return f
 
 def private(f):
     """
-    Indicates that a function shouldn't be exposed in the Python interface.
+    Indicate that a function shouldn't be exposed in the Python interface.
 
-    Indicates that a function shouldn't be exposed in the Python interface. It
+    Indicate that a function shouldn't be exposed in the Python interface. It
     is translated and can be called by other functions in the module but will
     not be wrapped.
 
@@ -47,6 +52,11 @@ def private(f):
     ----------
     f : Function
         The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
     return f
 
@@ -63,6 +73,11 @@ def elemental(f):
     ----------
     f : Function
         The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
     return f
 
@@ -77,6 +92,11 @@ def inline(f):
     ----------
     f : Function
         The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
     return f
 
@@ -93,10 +113,13 @@ def stack_array(f, *args):
         The function to which the decorator is applied.
     *args : str
         The names of all arrays which should be stored on the stack.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
-    def identity(f):
-        return f
-    return identity
+    return f
 
 def allow_negative_index(f,*args):
     """
@@ -113,7 +136,10 @@ def allow_negative_index(f,*args):
     *args : str
         The names of all arrays which can be accessed with non-constant
         negative indexes.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
     """
-    def identity(f):
-        return f
-    return identity
+    return f
