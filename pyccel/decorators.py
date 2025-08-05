@@ -66,7 +66,7 @@ def elemental(f):
 
     This decorator indicates that the function can be applied element-wise to
     array arguments. The function operates on scalar inputs and the wrapper
-    will be provided for the annotatied arguments, but in the low-level code
+    will be provided for the annotated arguments, but in the low-level code
     the function can be called on arrays whose data type matches the arguments.
 
     Parameters
@@ -86,7 +86,8 @@ def inline(f):
     Indicate that the function should be inlined in the low-level code.
 
     This decorator indicates that the function should be inlined where it is
-    called. Calls are replace with the function body.
+    called. Calls are replaced with the function body, where the
+    arguments are substituted for the function parameters.
 
     Parameters
     ----------
@@ -125,7 +126,7 @@ def allow_negative_index(*args):
     """
     Indicate that arrays can be accessed with negative indexes.
 
-    Decorator indicates that all arrays mentioned as args can be accessed with
+    This decorator indicates that all arrays mentioned as args can be accessed with
     negative indexes. As a result all non-constant indexing uses a modulo
     function. This can have negative results on the performance.
 
