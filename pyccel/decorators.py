@@ -21,12 +21,6 @@ __all__ = (
 )
 
 
-def sympy(f):
-    return f
-
-def bypass(f):
-    return f
-
 def pure(f):
     return f
 
