@@ -29,6 +29,10 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+### Removed
+
+-   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
+-   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27

@@ -18,7 +18,6 @@ import warnings
 from pyccel.version import __version__
 
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
 
 from pyccel.ast.variable import DottedName
@@ -338,36 +337,23 @@ class BasicParser(object):
 
         Parameters
         ----------
-        func : FunctionDef | SympyFunction | Interface | FunctionAddress
+        func : FunctionDef | Interface | FunctionAddress
             The function to be inserted into the scope.
 
         scope : Scope, optional
             The scope where the function should be inserted.
         """
 
-        if isinstance(func, SympyFunction):
-            self.insert_symbolic_function(func)
-        elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            scope = scope or self.scope
-            container = scope.functions
-            if func.pyccel_staging == 'syntactic':
-                container[self.scope.get_expected_name(func.name)] = func
-            else:
-                name = func.name
-                container[name] = func
-                if self._current_function_name and name == self._current_function_name[-1]:
-                    self._current_function.append(func)
+        assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
+        scope = scope or self.scope
+        container = scope.functions
+        if func.pyccel_staging == 'syntactic':
+            container[self.scope.get_expected_name(func.name)] = func
         else:
-            raise TypeError('Expected a Function definition')
-
-    def insert_symbolic_function(self, func):
-        """."""
-
-        container = self.scope.symbolic_functions
-        if isinstance(func, SympyFunction):
-            container[func.name] = func
-        else:
-            raise TypeError('Expected a symbolic_function')
+            name = func.name
+            container[name] = func
+            if self._current_function_name and name == self._current_function_name[-1]:
+                self._current_function.append(func)
 
     def exit_function_scope(self):
         """
