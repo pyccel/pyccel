@@ -23,7 +23,6 @@ from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
@@ -925,17 +924,7 @@ class SyntaxParser(BasicParser):
         argument_names = {a.var.name for a in arguments}
 
         body = stmt.body
-
-        if 'sympy' in decorators:
-            # TODO maybe we should run pylint here
-            stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_current_ast(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        else:
-            body = self._visit(body)
+        body = self._visit(body)
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
