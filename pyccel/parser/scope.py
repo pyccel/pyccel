@@ -164,7 +164,7 @@ class Scope(object):
     def functions(self):
         """ A dictionary of functions defined in this scope
         """
-        return self._locals['functions']
+        return ReadOnlyDict(self._locals['functions'])
 
     @property
     def decorators(self):
@@ -458,6 +458,21 @@ class Scope(object):
         name = class_type.name
         assert name in self._used_symbols
         self._locals['cls_constructs'][name] = class_type
+
+    def insert_function(self, func, name):
+        """
+        Add a function to the scope.
+
+        Add a function to the scope. The key will be the low-level name of the
+        function. This should be changed before merging this PR.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function to be inserted.
+        """
+        assert name in self._original_symbol
+        self._locals['functions'][name] = func
 
     def insert_symbol(self, symbol):
         """

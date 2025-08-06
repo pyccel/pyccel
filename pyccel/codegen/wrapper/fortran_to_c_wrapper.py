@@ -252,7 +252,7 @@ class FortranToCWrapper(Wrapper):
         func = BindCFunctionDef(name, func_arguments, body, FunctionDefResult(func_results), scope=func_scope, original_function = expr,
                 docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
-        self.scope.functions[name] = func
+        self.scope.insert_function(func, name)
 
         return func
 
