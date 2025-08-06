@@ -465,7 +465,8 @@ class Scope(object):
         Add a function to the scope.
 
         Add a function to the scope. The key will be the low-level name of the
-        function. This should be changed before merging this PR.
+        function. This is important as it allows different implementations of
+        the same interface function to be stored in the scope.
 
         Parameters
         ----------
