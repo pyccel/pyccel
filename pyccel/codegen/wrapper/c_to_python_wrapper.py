@@ -561,7 +561,7 @@ class CToPythonWrapper(Wrapper):
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
-        self.scope.functions[name] = function
+        self.scope.insert_function(function, name)
 
         return function
 
