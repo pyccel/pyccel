@@ -177,7 +177,7 @@ class Scope(object):
         """ A dictionary of datatypes for the classes defined in
         this scope
         """
-        return self._locals['cls_constructs']
+        return ReadOnlyDict(self._locals['cls_constructs'])
 
     @property
     def sons_scopes(self):
@@ -448,6 +448,22 @@ class Scope(object):
             if not name_found:
                 raise RuntimeError('Class not found in scope')
             self._locals['classes'][name] = cls
+
+    def insert_cls_construct(self, class_type):
+        """
+        Add a class construct to the scope.
+
+        Add a class construct to the scope. A class construct is a type inheriting from
+        PyccelType which describes the type of a class.
+
+        Parameters
+        ----------
+        class_type : PyccelType
+            The construct to be inserted.
+        """
+        name = class_type.name
+        assert name in self._used_symbols
+        self._locals['cls_constructs'][name] = class_type
 
     def insert_symbol(self, symbol):
         """

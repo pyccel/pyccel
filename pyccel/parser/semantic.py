@@ -5210,7 +5210,7 @@ class SemanticParser(BasicParser):
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name)()
         typenames_to_dtypes[name] = dtype
-        self.scope.cls_constructs[name] = dtype
+        self.scope.insert_cls_construct(dtype)
 
         parent = self._find_superclasses(expr)
 
