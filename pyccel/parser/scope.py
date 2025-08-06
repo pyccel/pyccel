@@ -196,7 +196,8 @@ class Scope(object):
         """
         return ReadOnlyDict(self._locals['symbolic_aliases'])
 
-    def find(self, name, category = None, local_only = False, raise_if_missing = False):
+    def find(self, name, category = None, local_only = False, raise_if_missing = False,
+             python_name = True):
         """
         Find and return the specified object in the scope.
 
@@ -220,12 +221,18 @@ class Scope(object):
         raise_if_missing : bool, default=False
             Indicates whether an error should be raised if the object
             cannot be found.
+        python_name : bool, default=True
+            Indicates whether the provided name is the name of the object in
+            the original Python code or in the low-level code.
 
         Returns
         -------
         pyccel.ast.basic.PyccelAstNode
             The object stored in the scope.
         """
+        if not python_name:
+            name = self.get_python_name(name)
+
         for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:
                 return self._locals[l][name]
@@ -464,20 +471,31 @@ class Scope(object):
         """
         Add a function to the scope.
 
-        Add a function to the scope. The key will be the low-level name of the
-        function. This is important as it allows different implementations of
-        the same interface function to be stored in the scope.
+        Add a function to the scope. The key will be the original name of the
+        function in the Python code.
 
         Parameters
         ----------
         func : FunctionDef
             The function to be inserted.
         """
-        assert name in self._original_symbol
+        assert name in self._used_symbols
+        assert name not in self._locals['functions']
         self._locals['functions'][name] = func
 
-    def remove_function(self, low_level_name):
-        self._locals['functions'].pop(low_level_name)
+    def remove_function(self, name):
+        """
+        Remove a function from the scope.
+
+        Remove a function from the scope. This method is often used when handling
+        Interfaces.
+
+        Parameters
+        ----------
+        name : str
+            The original name of the function in the Python code.
+        """
+        self._locals['functions'].pop(name)
 
     def insert_symbol(self, symbol):
         """

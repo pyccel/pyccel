@@ -1485,13 +1485,15 @@ class SemanticParser(BasicParser):
         self._scope = new_scope
         self._visit(old_func)
 
+        old_name = old_func.name
+
         # Retrieve the annotated function
         if cls_base_syntactic:
-            new_name = cls_scope.get_expected_name(old_func.name)
-            func = cls_scope.find(new_name, 'functions')
+            new_name = cls_scope.get_expected_name(old_name)
+            func = cls_scope.find(old_name, 'functions')
         else:
-            new_name = self.scope.get_expected_name(old_func.name)
-            func = self.scope.find(new_name, 'functions')
+            new_name = self.scope.get_expected_name(old_name)
+            func = self.scope.find(old_name, 'functions')
         assert func is not None
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
@@ -3520,15 +3522,9 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCall(self, expr):
         name     = expr.funcdef
-        try:
-            name = self.scope.get_expected_name(name)
-        except RuntimeError:
-            pass
-
         func = self.scope.find(name, 'functions')
 
         if func is None:
-            name = str(expr.funcdef)
             if name in builtin_functions_dict:
                 func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
@@ -4722,6 +4718,8 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules, classes or inside other functions.",
                     symbol=expr, severity='error')
 
+        python_name = expr.name
+
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
         insertion_scope = self.scope
@@ -4742,7 +4740,7 @@ class SemanticParser(BasicParser):
                     else:
                         return EmptyNode()
                 else:
-                    insertion_scope.remove_function(name)
+                    insertion_scope.remove_function(python_name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr.invalidate_node()
@@ -4806,9 +4804,9 @@ class SemanticParser(BasicParser):
             if is_interface:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
-            insertion_scope.python_names[name] = expr.name
+            insertion_scope.python_names[name] = python_name
 
-            scope = self.create_new_function_scope(expr.name, name, decorators = decorators,
+            scope = self.create_new_function_scope(python_name, name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
@@ -4891,8 +4889,8 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_ = insertion_scope.find(name, 'functions')
-            insertion_scope.remove_function(name)
+            func_ = insertion_scope.find(python_name, 'functions')
+            insertion_scope.remove_function(python_name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
@@ -4948,7 +4946,8 @@ class SemanticParser(BasicParser):
             }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
-                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
+                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
+                        if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
                 cls = InlineFunctionDef
             else:
