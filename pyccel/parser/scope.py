@@ -194,7 +194,7 @@ class Scope(object):
         A symbolic alias is a symbol declared in the scope which is mapped
         to a constant object. E.g. a symbol which represents a type.
         """
-        return self._locals['symbolic_aliases']
+        return ReadOnlyDict(self._locals['symbolic_aliases'])
 
     @property
     def symbolic_functions(self):
