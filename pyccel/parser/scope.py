@@ -475,6 +475,9 @@ class Scope(object):
         assert name in self._original_symbol
         self._locals['functions'][name] = func
 
+    def remove_function(self, low_level_name):
+        self._locals['functions'].pop(low_level_name)
+
     def insert_symbol(self, symbol):
         """
         Add a new symbol to the scope.

@@ -4741,7 +4741,7 @@ class SemanticParser(BasicParser):
                     else:
                         return EmptyNode()
                 else:
-                    insertion_scope.functions.pop(name)
+                    insertion_scope.remove_function(name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr.invalidate_node()
@@ -4811,8 +4811,6 @@ class SemanticParser(BasicParser):
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
-
-            self.scope.decorators.update(decorators)
 
             for n, dtype in zip(used_type_vars, possible_combinations[type_var_idx]):
                 self.scope.insert_symbolic_alias(n, dtype)
@@ -4892,7 +4890,8 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_ = insertion_scope.functions.pop(name)
+            func_ = insertion_scope.find(name, 'functions')
+            insertion_scope.remove_function(name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
