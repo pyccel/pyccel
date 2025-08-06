@@ -4977,9 +4977,6 @@ class SemanticParser(BasicParser):
             new_semantic_funcs = new_semantic_funcs[0]
             self.insert_function(new_semantic_funcs, insertion_scope)
         else:
-            for f in new_semantic_funcs:
-                self.insert_function(f, insertion_scope)
-
             new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
             if expr.python_ast:
                 new_semantic_funcs.set_current_ast(expr.python_ast)
