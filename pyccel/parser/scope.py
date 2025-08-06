@@ -437,6 +437,8 @@ class Scope(object):
             raise TypeError('class must be of type ClassDef')
 
         name = cls.name
+        if cls.pyccel_staging != 'syntactic':
+            name = self.get_python_name(name)
 
         name_found = name in self._locals['classes']
 
