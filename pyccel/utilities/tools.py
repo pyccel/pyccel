@@ -19,4 +19,3 @@ class ReadOnlyDict(dict):
     """
     def __setitem__(self, key, value):
         raise TypeError("Can't modify read-only dictionary")
-        return super().__setitem__(key, value)
