@@ -404,17 +404,18 @@ class Scope(object):
 
         name : str, optional
             The name under which the classes should be indexed in the scope.
-            This defaults to the name of the class.
+            This defaults to the name of the class in Python.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
 
-        if name is None:
-            name = cls.name
-
         if self.is_loop:
-            self.parent_scope.insert_class(cls)
+            self.parent_scope.insert_class(cls, name)
         else:
+            if name is None:
+                name = cls.name
+                if cls.pyccel_staging != 'syntactic':
+                    name = self.get_python_name(name)
             if name in self._locals['classes']:
                 raise RuntimeError(f"A class with name '{name}' already exists in the scope")
             self._locals['classes'][name] = cls
