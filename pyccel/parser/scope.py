@@ -170,7 +170,7 @@ class Scope(object):
     def decorators(self):
         """Dictionary of Pyccel decorators which may be
         applied to a function definition in this scope."""
-        return self._locals['decorators']
+        return ReadOnlyDict(self._locals['decorators'])
 
     @property
     def cls_constructs(self):
