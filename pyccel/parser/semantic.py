@@ -651,7 +651,7 @@ class SemanticParser(BasicParser):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.class_type, CustomDataType) and \
-                            self.current_function_name != i.lhs.cls_base.scope.get_expected_name('__del__'):
+                            self.current_function_name != '__del__':
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
@@ -1141,7 +1141,7 @@ class SemanticParser(BasicParser):
         methods = expr.methods
         cls_scope = expr.scope
 
-        init_func = cls_scope.functions[cls_scope.get_expected_name('__init__')]
+        init_func = cls_scope.functions['__init__']
 
         if isinstance(init_func, Interface):
             errors.report("Pyccel does not support interface constructor", symbol=init_func,
@@ -1155,11 +1155,11 @@ class SemanticParser(BasicParser):
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
-        del_method = next((method for method in methods if method.name == cls_scope.get_expected_name('__del__')), None)
+        del_method = next((method for method in methods if method.name == '__del__'), None)
         if del_method is None:
             argument = FunctionDefArgument(Variable(class_type, 'self', cls_base = expr), bound_argument = True)
             del_name = cls_scope.get_new_name('__del__')
-            scope = self.create_new_function_scope(cls_scope.get_expected_name('__del__'), del_name)
+            scope = self.create_new_function_scope('__del__', del_name)
             scope.insert_variable(argument.var)
             self.exit_function_scope()
             del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
@@ -2956,7 +2956,7 @@ class SemanticParser(BasicParser):
                 if isinstance(dtype, CustomDataType) and not bound_argument:
                     cls = self.scope.find(str(dtype), 'classes')
                     if cls:
-                        init_method = cls.get_method(cls_scope.get_expected_name('__init__'), expr)
+                        init_method = cls.get_method('__init__', expr)
                         if not init_method.is_semantic:
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
