@@ -2442,7 +2442,10 @@ class CCodePrinter(CodePrinter):
                 unused_stmts = [s for s in expr.stmt.body if s not in chain(last_assign, deallocate_nodes)]
                 if unused_stmts:
                     code = self._print(expr.stmt)
-                    last_assign[-1].lhs.is_temp = False
+                    if isinstance(last_assign[-1].lhs, IndexedElement):
+                        last_assign[-1].lhs.base.is_temp = False
+                    else:
+                        last_assign[-1].lhs.is_temp = False
                 else:
                     # make sure that stmt contains one assign node.
                     last_assign = last_assign[-1]
