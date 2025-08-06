@@ -2439,26 +2439,18 @@ class CCodePrinter(CodePrinter):
                 code = code + self._print(expr.stmt)
                 last_assign[-1].lhs.is_temp = False
             else:
-                unused_stmts = [s for s in expr.stmt.body if s not in chain(last_assign, deallocate_nodes)]
-                if unused_stmts:
-                    code = self._print(expr.stmt)
-                    if isinstance(last_assign[-1].lhs, IndexedElement):
-                        last_assign[-1].lhs.base.is_temp = False
-                    else:
-                        last_assign[-1].lhs.is_temp = False
+                # make sure that stmt contains one assign node.
+                last_assign = last_assign[-1]
+                variables = last_assign.rhs.get_attribute_nodes(Variable)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.rank for b in variables) and \
+                        isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
+                if unneeded_var:
+                    code = code + ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                    return code + f'return {self._print(last_assign.rhs)};\n'
                 else:
-                    # make sure that stmt contains one assign node.
-                    last_assign = last_assign[-1]
-                    variables = last_assign.rhs.get_attribute_nodes(Variable)
-                    unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables) and \
-                            isinstance(last_assign.lhs, Variable) and not last_assign.lhs.is_ndarray
-                    if unneeded_var:
-                        code = code + ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
-                        return code + f'return {self._print(last_assign.rhs)};\n'
-                    else:
-                        if isinstance(last_assign.lhs, Variable):
-                            last_assign.lhs.is_temp = False
-                        code = code + self._print(expr.stmt)
+                    if isinstance(last_assign.lhs, Variable):
+                        last_assign.lhs.is_temp = False
+                    code = code + self._print(expr.stmt)
 
         returned_value = self.scope.collect_tuple_element(args[0])
 
