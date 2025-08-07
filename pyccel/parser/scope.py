@@ -495,6 +495,9 @@ class Scope(object):
         ----------
         func : FunctionDef
             The function to be inserted.
+        name : str | PyccelSymbol
+            The original name of the function in the Python code. This will be
+            used as the key for the function in the scope.
         """
         assert name in self._used_symbols
         assert name not in self._locals['functions']

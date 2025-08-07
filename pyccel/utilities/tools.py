@@ -57,5 +57,12 @@ class ReadOnlyDict(dict):
         Update the dictionary using keywords or another dictionary.
 
         Update the dictionary using keywords or another dictionary. Raises an error.
+
+        Parameters
+        ----------
+        E : dict-like
+            See dict.update.
+        **F : vals
+            See dict.update.
         """
         raise TypeError("Can't modify read-only dictionary")
