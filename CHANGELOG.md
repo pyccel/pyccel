@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2306 : Fix Python containers as arguments to interface functions.
 -   #2407 : Fix bad memory handling for multi-level containers.
+-   #2408 : Fix bug when inlining a call to a function with no return, via a dotted function call.
 -   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
 
 ### Changed
@@ -32,6 +33,10 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+### Removed
+
+-   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
+-   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27
