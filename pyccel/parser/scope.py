@@ -432,8 +432,7 @@ class Scope(object):
         else:
             if name is None:
                 name = cls.name
-                if cls.pyccel_staging != 'syntactic':
-                    name = self.get_python_name(name)
+                assert cls.pyccel_staging == 'syntactic'
             if name in self._locals['classes']:
                 raise RuntimeError(f"A class with name '{name}' already exists in the scope")
             assert name in self._used_symbols
