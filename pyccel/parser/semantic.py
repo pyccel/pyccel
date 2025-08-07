@@ -2658,8 +2658,11 @@ class SemanticParser(BasicParser):
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
-        for f in expr.funcs:
-            self.insert_function(f)
+        if not self.is_header_file:
+            # In a header file there may be multiple functions with the same name
+            # due to @overload methods.
+            for f in expr.funcs:
+                self.insert_function(f)
 
         # Avoid conflicts with symbols from Program
         if expr.program:
@@ -2708,7 +2711,7 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
-        funcs_to_visit = list(self.scope.functions.values())
+        funcs_to_visit = list(expr.funcs)
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
