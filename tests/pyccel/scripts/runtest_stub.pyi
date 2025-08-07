@@ -28,6 +28,15 @@ def g() -> 'float':
 def h(arg : 'Final[list[int]]') -> None:
     ...
 
+def m(b : 'int') -> 'int':
+    ...
+
+def n(arg : 'Final[list[int]]') -> None:
+    ...
+
+def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
+    ...
+
 @overload
 def k(a : 'int') -> 'tuple[int, int, int]':
     ...
@@ -52,12 +61,6 @@ def l(a : 'float') -> 'tuple[float, ...]':
 def l(a : 'complex') -> 'tuple[complex, ...]':
     ...
 
-def m(b : 'int') -> 'int':
-    ...
-
-def n(arg : 'Final[list[int]]') -> None:
-    ...
-
 @overload
 def p(a : 'int') -> 'float':
     ...
@@ -68,8 +71,5 @@ def p(a : 'float') -> 'float':
 
 @overload
 def p(a : 'complex') -> 'complex':
-    ...
-
-def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
     ...
 
