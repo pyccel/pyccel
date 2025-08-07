@@ -2659,9 +2659,18 @@ class SemanticParser(BasicParser):
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
         if not self.is_header_file:
-            # In a header file there may be multiple functions with the same name
-            # due to @overload methods.
             for f in expr.funcs:
+                self.insert_function(f)
+        else:
+            funcs = {}
+            for f in expr.funcs:
+                funcs.setdefault(f.name, []).append(f)
+
+            pyccel_stage.set_stage('syntactic')
+            funcs_to_insert = [f[0] if len(f) == 1 else Interface(n, f) for n, f in funcs.items()]
+            pyccel_stage.set_stage('semantic')
+
+            for f in funcs_to_insert:
                 self.insert_function(f)
 
         # Avoid conflicts with symbols from Program
