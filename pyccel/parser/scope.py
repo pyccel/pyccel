@@ -427,16 +427,15 @@ class Scope(object):
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
 
-        if self.is_loop:
-            self.parent_scope.insert_class(cls, name)
-        else:
-            if name is None:
-                name = cls.name
-                assert cls.pyccel_staging == 'syntactic'
-            if name in self._locals['classes']:
-                raise RuntimeError(f"A class with name '{name}' already exists in the scope")
-            assert name in self._used_symbols
-            self._locals['classes'][name] = cls
+        assert not self.is_loop
+
+        if name is None:
+            name = cls.name
+            assert cls.pyccel_staging == 'syntactic'
+        if name in self._locals['classes']:
+            raise RuntimeError(f"A class with name '{name}' already exists in the scope")
+        assert name in self._used_symbols
+        self._locals['classes'][name] = cls
 
     def update_class(self, cls):
         """
