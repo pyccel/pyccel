@@ -715,11 +715,13 @@ class FCodePrinter(CodePrinter):
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
 
+        funcs_to_print = list(expr.funcs) + [f for i in expr.interfaces for f in i.functions]
+
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
                                       (i.name for i in expr.interfaces if not i.is_inline),
-                                      (f.name for f in expr.funcs if not f.is_private and not f.is_inline),
+                                      (f.name for f in funcs_to_print if not f.is_private and not f.is_inline),
                                       (v.name for v in expr.variables if not v.is_private)))
 
         # ...
@@ -738,18 +740,16 @@ class FCodePrinter(CodePrinter):
         func_strings = []
         # Get class functions
         func_strings += [c[1] for c in class_decs_and_methods]
-        if expr.funcs:
-            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+        if funcs_to_print:
+            func_strings += [''.join([sep, self._print(i), sep]) for i in funcs_to_print]
         if isinstance(expr, BindCModule):
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
-        if expr.interfaces:
-            func_strings += [''.join([sep, self._print(f), sep]) for i in expr.interfaces for f in i.functions]
         body = '\n'.join(func_strings)
         # ...
 
         # Don't print contains or private for gFTL extensions
-        private = 'private\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
+        private = 'private\n' if (funcs_to_print or expr.classes or expr.interfaces) else ''
+        contains = 'contains\n' if (funcs_to_print or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
