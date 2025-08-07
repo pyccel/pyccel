@@ -1377,6 +1377,8 @@ class CToPythonWrapper(Wrapper):
         else:
             class_dtype = None
 
+        for f in original_funcs:
+            self._wrap(f)
 
         # Add the variables to the expected symbols in the scope
         for a in example_func.arguments:
