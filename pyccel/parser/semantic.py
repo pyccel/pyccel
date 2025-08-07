@@ -2720,7 +2720,10 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
-        funcs_to_visit = list(expr.funcs)
+        # Funcs to visit are collected from scope so functions that have already been visited
+        # can be excluded.
+        funcs_to_visit = [f for func in self.scope.functions.values()
+                          for f in (func.functions if isinstance(func, Interface) else [func])]
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
