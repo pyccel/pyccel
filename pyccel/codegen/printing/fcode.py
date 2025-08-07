@@ -720,7 +720,6 @@ class FCodePrinter(CodePrinter):
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
-                                      (i.name for i in expr.interfaces if not i.is_inline),
                                       (f.name for f in funcs_to_print if not f.is_private and not f.is_inline),
                                       (v.name for v in expr.variables if not v.is_private)))
 
@@ -736,6 +735,7 @@ class FCodePrinter(CodePrinter):
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if not i.is_inline)
 
         func_strings = []
         # Get class functions
