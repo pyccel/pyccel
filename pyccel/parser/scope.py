@@ -431,40 +431,12 @@ class Scope(object):
 
         if name is None:
             name = cls.name
-            assert cls.pyccel_staging == 'syntactic'
+            if cls.pyccel_staging != 'syntactic':
+                name = self.get_python_name(name)
         if name in self._locals['classes']:
             raise RuntimeError(f"A class with name '{name}' already exists in the scope")
         assert name in self._used_symbols
         self._locals['classes'][name] = cls
-
-    def update_class(self, cls):
-        """
-        Update a class which is in scope.
-
-        Search for a class in the current scope and its parents. Once it
-        has been found, replace it with the updated ClassDef passed as
-        argument.
-
-        Parameters
-        ----------
-        cls : ClassDef
-            The class to be inserted into the current scope.
-        """
-        if not isinstance(cls, ClassDef):
-            raise TypeError('class must be of type ClassDef')
-
-        name = cls.name
-        if cls.pyccel_staging != 'syntactic':
-            name = self.get_python_name(name)
-
-        name_found = name in self._locals['classes']
-
-        if not name_found and self.parent_scope:
-            self.parent_scope.update_class(cls)
-        else:
-            if not name_found:
-                raise RuntimeError('Class not found in scope')
-            self._locals['classes'][name] = cls
 
     def insert_cls_construct(self, class_type):
         """
