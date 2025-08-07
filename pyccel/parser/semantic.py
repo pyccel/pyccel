@@ -4738,8 +4738,7 @@ class SemanticParser(BasicParser):
                         existing_semantic_funcs = [*func.functions]
                     else:
                         return EmptyNode()
-                else:
-                    insertion_scope.remove_function(python_name)
+                insertion_scope.remove_function(python_name)
             name = expr.scope.get_expected_name(python_name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
