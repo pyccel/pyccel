@@ -150,32 +150,56 @@ class Scope(object):
 
     @property
     def variables(self):
-        """ A dictionary of variables defined in this scope
+        """
+        A dictionary of variables defined in this scope.
+
+        A dictionary whose keys are the original Python names of the variables
+        in the scope and whose values are Variable objects. When handling an
+        inlined function it is possible that some of the values will not be
+        Variable objects but rather the value that the variable takes in this
+        context.
         """
         return ReadOnlyDict(self._locals['variables'])
 
     @property
     def classes(self):
-        """ A dictionary of classes defined in this scope
+        """
+        A dictionary of classes defined in this scope.
+
+        A dictionary whose keys are the original Python names of the classes
+        in the scope and whose variables are ClassDef objects.
         """
         return ReadOnlyDict(self._locals['classes'])
 
     @property
     def functions(self):
-        """ A dictionary of functions defined in this scope
+        """
+        A dictionary of functions defined in this scope.
+
+        A dictionary whose keys are the original Python names of the functions
+        in the scope and whose variables are ClassDef objects.
         """
         return ReadOnlyDict(self._locals['functions'])
 
     @property
     def decorators(self):
-        """Dictionary of Pyccel decorators which may be
-        applied to a function definition in this scope."""
+        """
+        A dictionary of the decorators applied to the current function.
+
+        A dictionary of the decorators which are applied to the function definition
+        in this scope. The keys are the name of the decorator function. The values
+        depend on the decorator.
+        """
         return ReadOnlyDict(self._locals['decorators'])
 
     @property
     def cls_constructs(self):
-        """ A dictionary of datatypes for the classes defined in
-        this scope
+        """
+        A dictionary of datatypes for the classes defined in this scope.
+
+        A dictionary whose keys are the original Python names of the classes
+        found in this scope and whose values are the types inheriting from
+        PyccelType which identify these classes.
         """
         return ReadOnlyDict(self._locals['cls_constructs'])
 
