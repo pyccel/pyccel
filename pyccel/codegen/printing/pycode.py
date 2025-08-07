@@ -1396,10 +1396,11 @@ class PythonCodePrinter(CodePrinter):
         type_var_declarations = self._get_type_var_declarations()
 
         init_func = mod.init_func
-        var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+        var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
-        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs \
+        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs \
                 if f not in (mod.init_func, mod.free_func))
+        funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
