@@ -1430,7 +1430,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             init_body = ''
 
-        return '\n'.join((imports, type_var_declarations, var_decl, classes, funcs, init_body))
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+                         if section)
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
