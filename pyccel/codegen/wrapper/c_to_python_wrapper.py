@@ -1320,8 +1320,10 @@ class CToPythonWrapper(Wrapper):
             external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
-        for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for f in expr.funcs)
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for i in expr.interfaces for f in i.functions)
 
         for c in expr.classes:
             m = c.new_func
