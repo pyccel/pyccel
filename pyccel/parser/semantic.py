@@ -4729,8 +4729,7 @@ class SemanticParser(BasicParser):
 
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            name = expr.scope.get_expected_name(expr.name)
-            func = insertion_scope.functions.get(name, None)
+            func = insertion_scope.functions.get(python_name, None)
             if func:
                 if func.is_semantic:
                     if self.is_header_file:
@@ -4741,6 +4740,7 @@ class SemanticParser(BasicParser):
                         return EmptyNode()
                 else:
                     insertion_scope.remove_function(python_name)
+            name = expr.scope.get_expected_name(python_name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr.invalidate_node()
