@@ -35,7 +35,7 @@ This can cause difficulties when developing in Pyccel as each object has 2 names
 - The original name used in the Python.
 - The name used in the low-level code.
 
-For most variables these two names are the same which makes it easy to forget about this subtelty.
+For most variables these two names are the same which makes it easy to forget about this subtlety.
 
 The `Scope` object keeps track of all names used in the described scope. This means that it can be used to prevent these name collisions. In order to do so a few steps must be respected:
 
