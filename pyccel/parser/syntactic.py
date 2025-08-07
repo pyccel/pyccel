@@ -461,10 +461,21 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body = [self._visit(v) for v in stmt.body]
 
-        functions = [f for f in body if isinstance(f, FunctionDef)]
-        classes   = [c for c in body if isinstance(c, ClassDef)]
+        # Collect functions and classes. These must be visited last to ensure
+        # all names have been collected from the parent scope
+        ast_functions = [f for f in stmt.body if isinstance(f, ast.FunctionDef)]
+        ast_classes = [c for c in stmt.body if isinstance(c, ast.ClassDef)]
+
+        # Add the names of the functions and classes to the scope
+        for obj in chain(ast_functions, ast_classes):
+            self.scope.insert_symbol(PyccelSymbol(obj.name))
+
+        body = [self._visit(v) for v in stmt.body
+                if not isinstance(v, (ast.FunctionDef, ast.ClassDef))]
+
+        functions = [self._visit(f) for f in ast_functions]
+        classes   = [self._visit(c) for c in ast_classes]
         imports   = [i for i in body if isinstance(i, Import)]
         programs  = [p for p in body if isinstance(p, Program)]
         body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import, Program))]
@@ -861,8 +872,7 @@ class SyntaxParser(BasicParser):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
-        name = PyccelSymbol(self._visit(stmt.name))
-        self.scope.insert_symbol(name)
+        name = PyccelSymbol(stmt.name)
 
         new_name = self.scope.get_expected_name(name)
 
@@ -987,7 +997,6 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        self.scope.insert_symbol(name)
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
