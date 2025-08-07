@@ -131,4 +131,4 @@ pre
 LLVM
 linter
 inlining
-discoverablel
+discoverable
