@@ -1286,3 +1286,9 @@ def test_pyccel_generated_compilation_dependency(language):
             dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
             output_dtype = int,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_generated_name_collision(language):
+    pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
+            language = language)
+
