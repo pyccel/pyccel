@@ -551,6 +551,8 @@ class CToPythonWrapper(Wrapper):
         PyFunctionDef
             The new function which raises the error.
         """
+        current_scope = self.scope
+        self.scope = scope
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
             func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
@@ -560,6 +562,8 @@ class CToPythonWrapper(Wrapper):
                 body = [PyErr_SetString(PyNotImplementedError, CStrStr(LiteralString(error_msg))),
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
+
+        self.scope = current_scope
 
         self.scope.insert_function(function, name)
 
