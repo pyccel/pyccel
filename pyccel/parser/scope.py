@@ -338,7 +338,7 @@ class Scope(object):
             raise TypeError('variable must be of type Variable')
 
         if name is None:
-            name = var.name
+            name = self.get_python_name(var.name)
 
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_variable(var, name)
@@ -360,8 +360,7 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-            if name not in self.local_used_symbols.values():
-                self.insert_symbol(name)
+                assert name in self.local_used_symbols
 
     def remove_variable(self, var, name = None):
         """
@@ -502,15 +501,21 @@ class Scope(object):
         ----------
         symbol : PyccelSymbol | AnnotatedPyccelSymbol | DottedName
             The symbol to be added to the scope.
+
+        Returns
+        -------
+        PyccelSymbol | DottedName
+            The new collisionless symbol that will be used in the low-level code.
         """
         if isinstance(symbol, AnnotatedPyccelSymbol):
             symbol = symbol.name
 
         if isinstance(symbol, DottedName):
             self._dotted_symbols.append(symbol)
+            return symbol
         else:
             if not self.allow_loop_scoping and self.is_loop:
-                self.parent_scope.insert_symbol(symbol)
+                return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
                         self.all_used_symbols)
@@ -518,6 +523,7 @@ class Scope(object):
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
+                return collisionless_symbol
 
     def remove_symbol(self, symbol):
         """
@@ -644,10 +650,7 @@ class Scope(object):
 
         chosen_new_symbol = PyccelSymbol(new_name, is_temp=True)
 
-        self.insert_symbol(chosen_new_symbol)
-
-        # The symbol may be different to the one chosen in the case of collisions with language-specific terms)
-        new_symbol = self._used_symbols[chosen_new_symbol]
+        new_symbol = self.insert_symbol(chosen_new_symbol)
 
         return new_symbol, counter
 
@@ -679,9 +682,7 @@ class Scope(object):
         """
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
-            self.insert_symbol(new_name)
-            new_collisionless_name = self._used_symbols[new_name]
-            return new_collisionless_name
+            return self.insert_symbol(new_name)
 
         if current_name is None:
             assert is_temp is None
@@ -698,10 +699,7 @@ class Scope(object):
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
         new_name = PyccelSymbol(new_name, is_temp = is_temp)
-        self.insert_symbol(new_name)
-        new_collisionless_name = self._used_symbols[new_name]
-
-        return new_collisionless_name
+        return self.insert_symbol(new_name)
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
