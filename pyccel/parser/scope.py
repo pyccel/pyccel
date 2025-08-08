@@ -360,7 +360,7 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-                assert name in self.local_used_symbols
+                assert name in self.all_used_symbols
 
     def remove_variable(self, var, name = None, remove_symbol = True):
         """
