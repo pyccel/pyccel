@@ -3001,7 +3001,13 @@ class SemanticParser(BasicParser):
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
             elif isinstance(line, list) and isinstance(line[0], Variable):
-                self.scope.insert_variable(line[0])
+                var = line[0]
+                if isinstance(var, DottedVariable):
+                    cls_def = var.lhs.cls_base
+                    cls_def.add_new_attribute(var)
+                    cls_def.scope.insert_variable(var.clone(var.name, new_class = Variable))
+                else:
+                    self.scope.insert_variable(var)
             else:
                 ls.append(line)
         self._additional_exprs.pop()
