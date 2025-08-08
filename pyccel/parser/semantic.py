@@ -4692,8 +4692,10 @@ class SemanticParser(BasicParser):
 
         return_objs = func.results
         return_var = return_objs.var
-        if isinstance(return_var, (AnnotatedPyccelSymbol, Variable)):
+        if isinstance(return_var, AnnotatedPyccelSymbol):
             return_var = return_var.name
+        elif isinstance(return_var, Variable):
+            return_var = self.scope.get_python_name(return_var.name)
 
         assigns     = []
         if return_var != results:
