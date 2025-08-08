@@ -1592,7 +1592,7 @@ class SemanticParser(BasicParser):
                     elem_name = self.scope.symbolic_aliases[idx_name]
                     var = self.check_for_variable(elem_name)
                 else:
-                    elem_name = self.scope.get_new_name( f'{name}_{i}' )
+                    elem_name = insertion_scope.get_new_name( f'{name}_{i}' )
                 pyccel_stage.set_stage('semantic')
 
                 if var is None:
@@ -2769,6 +2769,7 @@ class SemanticParser(BasicParser):
             for v in scope_variables:
                 if v.is_temp:
                     self.scope.remove_variable(v)
+                    init_scope.insert_symbol(v.name)
                     init_scope.insert_variable(v)
                     to_remove.append(v)
                     variables.remove(v)
@@ -3290,10 +3291,7 @@ class SemanticParser(BasicParser):
                 errors.report(f"Variable was declared as the result of the function {self.current_function_name} but is now declared with a different type",
                         symbol=expr, severity='error')
             # Remove variable from scope as AnnotatedPyccelSymbol is always inserted into scope
-            self.scope.remove_variable(var)
-            # Put back name
-            new_name = self.scope.insert_symbol(python_name)
-            assert new_name == var.name
+            self.scope.remove_variable(var, remove_symbol = False)
             return [var]
 
         return possible_args

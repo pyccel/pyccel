@@ -362,7 +362,7 @@ class Scope(object):
                 self._locals['variables'][name] = var
                 assert name in self.local_used_symbols
 
-    def remove_variable(self, var, name = None):
+    def remove_variable(self, var, name = None, remove_symbol = True):
         """
         Remove a variable from anywhere in scope.
 
@@ -375,13 +375,18 @@ class Scope(object):
         name : str, optional
                 The name of the variable in the python code
                 Default : var.name.
+        remove_symbol : bool, default=True
+                Indicate if the associated symbol should also be removed. This is assumed
+                to be true but it may need to be set to false if the variable is removed
+                in order to update the definition.
         """
         if name is None:
             name = self.get_python_name(var.name)
 
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
-            self._used_symbols.pop(name)
+            if remove_symbol:
+                self._used_symbols.pop(name)
         elif self.parent_scope:
             self.parent_scope.remove_variable(var, name)
         else:
