@@ -524,7 +524,8 @@ class Scope(object):
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self.all_used_symbols)
+                        self.all_used_symbols, prefix = '',
+                        context = 'variable', parent_context = 'loop')
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
