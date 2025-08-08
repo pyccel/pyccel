@@ -1157,9 +1157,9 @@ class SemanticParser(BasicParser):
 
         del_method = next((method for method in methods if method.name == '__del__'), None)
         if del_method is None:
-            argument = FunctionDefArgument(Variable(class_type, 'self', cls_base = expr), bound_argument = True)
             del_name = cls_scope.get_new_name('__del__')
             scope = self.create_new_function_scope('__del__', del_name)
+            argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
             self.exit_function_scope()
             del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)

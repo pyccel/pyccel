@@ -2872,7 +2872,7 @@ class CToPythonWrapper(Wrapper):
         """
         if is_bind_c:
             return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
-        name = orig_var.name
+        name = self.scope.get_new_name(orig_var.name)
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
