@@ -1138,7 +1138,6 @@ class SemanticParser(BasicParser):
             The class that implicit __init__ and __del__ methods should be created for.
         """
         class_type = expr.class_type
-        methods = expr.methods
         cls_scope = expr.scope
 
         init_func = cls_scope.functions['__init__']
@@ -1155,7 +1154,7 @@ class SemanticParser(BasicParser):
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
-        del_method = next((method for method in methods if method.name == '__del__'), None)
+        del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
             del_name = cls_scope.get_new_name('__del__')
             scope = self.create_new_function_scope('__del__', del_name)
