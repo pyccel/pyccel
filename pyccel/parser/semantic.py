@@ -2791,6 +2791,15 @@ class SemanticParser(BasicParser):
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
 
+            # Find any remaining unused symbols in the main scope and move them to the init body scope
+            # This may include temporary variables whose necessity has not yet been determined, such as
+            # loop variables. They must be moved so the symbol is found when the variable is eventually
+            # inserted into the scope.
+            unused_symbols = [n for n in self.scope.local_used_symbols if self.scope.find(n) is None]
+            for s in unused_symbols:
+                self.scope.remove_symbol(s)
+                init_scope.insert_symbol(s)
+
         if init_func:
             syntactic_free_func_name = name_suffix+'__free'
             free_func_name = self.scope.get_new_name(syntactic_free_func_name)
