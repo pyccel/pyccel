@@ -680,7 +680,8 @@ class Scope(object):
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
             self.insert_symbol(new_name)
-            return new_name
+            new_collisionless_name = self._used_symbols[new_name]
+            return new_collisionless_name
 
         if current_name is None:
             assert is_temp is None
@@ -698,8 +699,9 @@ class Scope(object):
 
         new_name = PyccelSymbol(new_name, is_temp = is_temp)
         self.insert_symbol(new_name)
+        new_collisionless_name = self._used_symbols[new_name]
 
-        return new_name
+        return new_collisionless_name
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
