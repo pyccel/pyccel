@@ -3291,6 +3291,9 @@ class SemanticParser(BasicParser):
                         symbol=expr, severity='error')
             # Remove variable from scope as AnnotatedPyccelSymbol is always inserted into scope
             self.scope.remove_variable(var)
+            # Put back name
+            new_name = self.scope.insert_symbol(python_name)
+            assert new_name == var.name
             return [var]
 
         return possible_args
