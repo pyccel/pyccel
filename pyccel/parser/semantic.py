@@ -2795,7 +2795,8 @@ class SemanticParser(BasicParser):
             # This may include temporary variables whose necessity has not yet been determined, such as
             # loop variables. They must be moved so the symbol is found when the variable is eventually
             # inserted into the scope.
-            unused_symbols = [n for n in self.scope.local_used_symbols if self.scope.find(n) is None]
+            unused_symbols = [n for n in self.scope.local_used_symbols \
+                              if self.scope.find(n) is None and n != mod_name]
             for s in unused_symbols:
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
