@@ -1149,7 +1149,7 @@ class SemanticParser(BasicParser):
 
         # create a new attribute to check allocation
         deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
-        deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+        deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
                                      class_type = PythonNativeBool(), is_private=True)
         expr.add_new_attribute(deallocater)
         deallocater_assign = Assign(deallocater, LiteralFalse())
@@ -2790,6 +2790,7 @@ class SemanticParser(BasicParser):
             init_func = FunctionDef(init_func_name, [], [init_func_body],
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
+            self.scope.insert_variable(init_var)
 
             # Find any remaining unused symbols in the main scope and move them to the init body scope
             # This may include temporary variables whose necessity has not yet been determined, such as
