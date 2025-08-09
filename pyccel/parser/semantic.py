@@ -2768,8 +2768,8 @@ class SemanticParser(BasicParser):
             scope_variables = list(self.scope.variables.values())
             for v in scope_variables:
                 if v.is_temp:
-                    self.scope.remove_variable(v)
-                    init_scope.insert_symbol(v.name)
+                    # Leave symbol to handle tuples
+                    self.scope.remove_variable(v, remove_symbol = False)
                     init_scope.insert_variable(v)
                     to_remove.append(v)
                     variables.remove(v)

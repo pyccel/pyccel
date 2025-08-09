@@ -360,7 +360,8 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-                assert name in self.local_used_symbols
+                # Name should be in local scope but may be in parent scope if in module init function
+                assert name in self.local_used_symbols or name in self.parent_scope.local_used_symbols
 
     def remove_variable(self, var, name = None, remove_symbol = True):
         """
