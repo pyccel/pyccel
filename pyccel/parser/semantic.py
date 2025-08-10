@@ -2690,7 +2690,7 @@ class SemanticParser(BasicParser):
         if mod_name is None:
             mod_name = expr.name
         else:
-            self.scope.insert_symbol(mod_name)
+            self.scope.insert_symbol(mod_name, 'module')
         self._mod_name = mod_name
         if isinstance(expr.name, AsName):
             name_suffix = expr.name.name
@@ -4848,7 +4848,7 @@ class SemanticParser(BasicParser):
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if is_interface:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
+                name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
 
             insertion_scope.python_names[name] = python_name
 

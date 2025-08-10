@@ -93,7 +93,7 @@ class CNameClashChecker(LanguageNameClashChecker):
             name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
-        if context == 'function' or parent_context == 'module':
+        if context == 'function' or (parent_context == 'module' and context != 'module'):
             name = prefix + name
         return self._get_collisionless_name(name, symbols)
 
