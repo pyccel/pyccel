@@ -536,9 +536,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Allocate(self, expr):
         variable = expr.variable
         if isinstance(variable.dtype, WrapperCustomDataType):
-            class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
-
-            type_name = class_def.type_name
+            type_name = variable.cls_base.type_name
             var_code = self._print(ObjectAddress(variable))
             decl_type = self.get_declare_type(variable)
             return f'{var_code} = ({decl_type}){type_name}.tp_alloc(&{type_name}, 0);\n'
@@ -548,9 +546,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Deallocate(self, expr):
         variable = expr.variable
         if isinstance(variable.dtype, WrapperCustomDataType):
-            class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
-
-            type_name = class_def.type_name
+            type_name = variable.cls_base.type_name
             var_code = self._print(ObjectAddress(variable))
             return f'{type_name}.tp_free({var_code});\n'
         else:

@@ -773,6 +773,7 @@ class PyClassDef(ClassDef):
     _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
+        assert isinstance(original_class, ClassDef)
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name

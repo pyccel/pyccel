@@ -1034,11 +1034,11 @@ class SyntaxParser(BasicParser):
         init_method = next((m for m in methods if m.name == '__init__'), None)
         if init_method is None:
             init_name = PyccelSymbol('__init__')
-            self.scope.insert_symbol(init_name, 'function')
+            semantic_init_name = self.scope.insert_symbol(init_name, 'function')
             annot = self._treat_type_annotation(stmt, LiteralString(name))
             init_scope = self.create_new_function_scope(init_name,
-                    used_symbols = {init_name: init_name},
-                    original_symbols = {init_name: init_name})
+                    used_symbols = {init_name: semantic_init_name},
+                    original_symbols = {semantic_init_name: init_name})
             self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
                                            annotation=annot,
                                            kwonly=False,

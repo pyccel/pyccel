@@ -1033,7 +1033,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, self.scope.get_python_name(func_name))
         self._python_object_map[init_function] = function
         self._error_exit_code = Nil()
 
@@ -1099,7 +1099,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, self.scope.get_python_name(func_name))
         self._python_object_map[del_function] = function
 
         return function
@@ -2038,21 +2038,22 @@ class CToPythonWrapper(Wrapper):
             The wrapped class definition.
         """
         name = expr.name
-        struct_name = self.scope.get_new_name(f'Py{name}Object')
+        python_name = self.scope.get_python_name(name)
+        struct_name = self.scope.get_new_name(f'Py{python_name}Object')
         dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
 
-        type_name = self.scope.get_new_name(f'Py{name}Type')
+        type_name = self.scope.get_new_name(f'Py{python_name}Type')
         docstring = expr.docstring
         wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name, 'class'),
                                    docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 
-        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
+        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[python_name]
 
         self._python_object_map[expr] = wrapped_class
         self._python_object_map[orig_cls_dtype] = dtype
 
-        self.scope.insert_class(wrapped_class, name)
+        self.scope.insert_class(wrapped_class, python_name)
         orig_scope = expr.scope
 
         for f in expr.methods:
