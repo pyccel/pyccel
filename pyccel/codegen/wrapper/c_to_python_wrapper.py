@@ -711,10 +711,10 @@ class CToPythonWrapper(Wrapper):
         PyModInitFunc
             The initialisation function.
         """
-
         mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
+        # The name of the init function is compulsory for the wrapper to work
+        func_name = f'PyInit_{mod_name}'
         # Initialise the scope
-        func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
@@ -1255,8 +1255,17 @@ class CToPythonWrapper(Wrapper):
         # Define scope
         scope = expr.scope
         original_mod = getattr(expr, 'original_module', expr)
-        mod_scope = Scope(name = original_mod.name, used_symbols = scope.local_used_symbols.copy(),
-                          original_symbols = scope.python_names.copy(), scope_type = 'module')
+        original_mod_name = original_mod.scope.get_python_name(original_mod.name)
+        init_mod_func_name = f'PyInit_{original_mod_name}'
+
+        used_symbols = scope.local_used_symbols.copy()
+        original_symbols = scope.python_names.copy()
+
+        original_symbols[init_mod_func_name] = init_mod_func_name
+        used_symbols[init_mod_func_name] = init_mod_func_name
+
+        mod_scope = Scope(name = original_mod.name, used_symbols = used_symbols,
+                          original_symbols = original_symbols, scope_type = 'module')
         self.scope = mod_scope
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
@@ -1459,7 +1468,7 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(expr.name+'_wrapper', 'function')
+        func_name = self.scope.get_new_name(expr.scope.get_python_name(expr.name)+'_wrapper', 'function')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
@@ -1580,7 +1589,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, self.scope.get_python_name(func_name))
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
