@@ -360,14 +360,13 @@ class CWrapperCodePrinter(CCodePrinter):
                                                         if f.docstring else '""')
                                      for f in funcs if not getattr(f, 'is_header', False))
 
-        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_func}'
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
-        module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
+        module_def = (f'static struct PyModuleDef {expr.module_def_name} = {{\n'
                 'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'
                 f'"{self._module_name}",\n'

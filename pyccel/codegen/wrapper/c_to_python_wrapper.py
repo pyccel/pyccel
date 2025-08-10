@@ -690,7 +690,7 @@ class CToPythonWrapper(Wrapper):
         initialised.append(obj)
         return [if_expr, Py_INCREF(obj)]
 
-    def _build_module_init_function(self, expr, imports):
+    def _build_module_init_function(self, expr, imports, module_def_name):
         """
         Build the function that will be called when the module is first imported.
 
@@ -731,7 +731,6 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
-        module_def_name = self.scope.get_new_name(f'{mod_name}_module')
         body = [AliasAssign(module_var, PyModule_Create(module_def_name)),
                 If(IfSection(PyccelIs(module_var, Nil()), [Return(self._error_exit_code)]))]
 
@@ -1280,7 +1279,8 @@ class CToPythonWrapper(Wrapper):
         # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
 
-        init_func = self._build_module_init_function(expr, imports)
+        module_def_name = self.scope.get_new_name(f'module')
+        init_func = self._build_module_init_function(expr, imports, module_def_name)
 
         API_var, import_func = self._build_module_import_function(expr)
 
@@ -1291,7 +1291,8 @@ class CToPythonWrapper(Wrapper):
         original_mod_name = mod_scope.get_python_name(original_mod.name)
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = init_func, import_func = import_func)
+                        init_func = init_func, import_func = import_func,
+                        module_def_name = module_def_name)
 
     def _wrap_BindCModule(self, expr):
         """
@@ -1458,7 +1459,7 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(expr.name+'_wrapper')
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', 'function')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
