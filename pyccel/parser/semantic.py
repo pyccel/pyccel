@@ -3336,8 +3336,7 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
-            # TODO: Improve when #1676 is merged
-            dtype = self.get_class_construct(visited_dtype.name)
+            dtype = self.get_class_construct(self.scope.get_python_name(visited_dtype.name))
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
@@ -4870,7 +4869,7 @@ class SemanticParser(BasicParser):
                     self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
             if arguments and arguments[0].bound_argument:
-                if arguments[0].var.cls_base.name != cls_name:
+                if arguments[0].var.cls_base != bound_class:
                     errors.report('Class method self argument does not have the expected type',
                             severity='error', symbol=arguments[0])
                 for s in expr.scope.dotted_symbols:
