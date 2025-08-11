@@ -817,11 +817,11 @@ class CToPythonWrapper(Wrapper):
         import_func : FunctionDef
             The import function.
         """
-        mod_name = getattr(expr, 'original_module', expr).name
+        mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
-        func_name = self.scope.get_new_name(f'{mod_name}_import')
+        func_name = self.scope.get_new_name(f'import')
 
-        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var_name = self.scope.insert_symbol(f'Py{mod_name}_API', 'python_wrapper_keyword')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
                                     cls_base = StackArrayClass,
                                     memory_handling = 'alias')
@@ -845,7 +845,7 @@ class CToPythonWrapper(Wrapper):
                                                 PyUnicode_FromString(CStrStr(LiteralString(self._sharedlib_dirpath)))),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
-                AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
+                AliasAssign(API_var, PyCapsule_Import(mod_name)),
                 If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
@@ -916,9 +916,10 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         if func:
-            func_name = self.scope.get_new_name(f'{func.name}___wrapper')
+            original_name = self.scope.get_python_name(func.name)
+            func_name = self.scope.get_new_name(f'{original_name.name}__wrapper')
         else:
-            func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
+            func_name = self.scope.get_new_name(f'{class_dtype.name}__new__wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
@@ -978,8 +979,7 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        original_name = original_func.cls_name or original_func.name
-        func_name = self.scope.get_new_name(original_name+'_wrapper')
+        func_name = self.scope.get_new_name(f'{cls_dtype.name}__init__wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
@@ -1064,8 +1064,7 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        original_name = original_func.cls_name or original_func.name
-        func_name = self.scope.get_new_name(original_name+'_wrapper')
+        func_name = self.scope.get_new_name(f'{cls_dtype.name}__del__wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
@@ -1256,17 +1255,11 @@ class CToPythonWrapper(Wrapper):
         scope = expr.scope
         original_mod = getattr(expr, 'original_module', expr)
         original_mod_name = original_mod.scope.get_python_name(original_mod.name)
-        init_mod_func_name = f'PyInit_{original_mod_name}'
 
-        used_symbols = scope.local_used_symbols.copy()
-        original_symbols = scope.python_names.copy()
-
-        original_symbols[init_mod_func_name] = init_mod_func_name
-        used_symbols[init_mod_func_name] = init_mod_func_name
-
-        mod_scope = Scope(name = original_mod.name, used_symbols = used_symbols,
-                          original_symbols = original_symbols, scope_type = 'module')
+        mod_scope = Scope(name = original_mod_name, used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy(), scope_type = 'module')
         self.scope = mod_scope
+        init_mod_func_name = self.scope.insert_symbol(f'PyInit_{original_mod_name}', 'python_wrapper_keyword')
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
@@ -2044,7 +2037,7 @@ class CToPythonWrapper(Wrapper):
 
         type_name = self.scope.get_new_name(f'Py{python_name}Type')
         docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name, 'class'),
+        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(python_name, 'class'),
                                    docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 

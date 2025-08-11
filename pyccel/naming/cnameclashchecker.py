@@ -83,14 +83,18 @@ class CNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable')
+        assert context in ('module', 'function', 'class', 'variable', 'python_wrapper_keyword')
         assert parent_context in ('module', 'function', 'class', 'loop', 'program')
+        if context == 'python_wrapper_keyword':
+            return self._get_collisionless_name(name, symbols)
         if name == '__init__':
             name = 'create'
         if name == '__del__':
             name = 'drop'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             name = 'operator' + name[1:-2]
+        if name.startswith('__'):
+            name = name[2:]
         if name[0] == '_':
             name = 'private'+name
         if context == 'function' or (parent_context == 'module' and context != 'module'):
