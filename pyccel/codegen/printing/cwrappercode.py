@@ -268,6 +268,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_ModuleHeader(self, expr):
         mod = expr.module
+        self.set_scope(mod.scope)
         self._current_module = expr.module
         name = mod.name
 
@@ -303,6 +304,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_import_decs = self._print(Declare(API_var, static=True))
         import_func = self._print(mod.import_func)
 
+        self.exit_scope()
         self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
