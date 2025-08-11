@@ -98,8 +98,10 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable')
+        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
         assert parent_context in ('module', 'function', 'class', 'loop', 'program')
+        if context == 'wrapper':
+            return self._get_collisionless_name(name, symbols)
         if name == '__init__':
             name = 'create'
         if name == '__del__':
