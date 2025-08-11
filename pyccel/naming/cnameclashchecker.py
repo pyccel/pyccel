@@ -83,9 +83,11 @@ class CNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable', 'python_wrapper_keyword')
+        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
         assert parent_context in ('module', 'function', 'class', 'loop', 'program')
-        if context == 'python_wrapper_keyword':
+        if context == 'wrapper':
+            # wrapper names are based off names which already have prefixes so there is no
+            # need to add more
             return self._get_collisionless_name(name, symbols)
         if name == '__init__':
             name = 'create'

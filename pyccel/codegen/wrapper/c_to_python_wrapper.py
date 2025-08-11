@@ -725,7 +725,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
-        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API', 'wrapper')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (n_classes,),
                                     cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
@@ -821,7 +821,7 @@ class CToPythonWrapper(Wrapper):
         # Initialise the scope
         func_name = self.scope.get_new_name(f'import')
 
-        API_var_name = self.scope.insert_symbol(f'Py{mod_name}_API', 'python_wrapper_keyword')
+        API_var_name = self.scope.insert_symbol(f'Py{mod_name}_API', 'wrapper')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
                                     cls_base = StackArrayClass,
                                     memory_handling = 'alias')
@@ -916,8 +916,7 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         if func:
-            original_name = self.scope.get_python_name(func.name)
-            func_name = self.scope.get_new_name(f'{original_name.name}__wrapper')
+            func_name = self.scope.get_new_name(f'{func.name}__wrapper', 'wrapper')
         else:
             func_name = self.scope.get_new_name(f'{class_dtype.name}__new__wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
@@ -1259,7 +1258,7 @@ class CToPythonWrapper(Wrapper):
         mod_scope = Scope(name = original_mod_name, used_symbols = scope.local_used_symbols.copy(),
                           original_symbols = scope.python_names.copy(), scope_type = 'module')
         self.scope = mod_scope
-        init_mod_func_name = self.scope.insert_symbol(f'PyInit_{original_mod_name}', 'python_wrapper_keyword')
+        init_mod_func_name = self.scope.insert_symbol(f'PyInit_{original_mod_name}', 'wrapper')
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
@@ -1461,7 +1460,7 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(expr.name+'_wrapper', 'function')
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', 'wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
@@ -2033,10 +2032,10 @@ class CToPythonWrapper(Wrapper):
         """
         name = expr.name
         python_name = self.scope.get_python_name(name)
-        struct_name = self.scope.get_new_name(f'Py{python_name}Object')
+        struct_name = self.scope.get_new_name(f'Py{python_name}Object', 'wrapper')
         dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
 
-        type_name = self.scope.get_new_name(f'Py{python_name}Type')
+        type_name = self.scope.get_new_name(f'Py{python_name}Type', 'wrapper')
         docstring = expr.docstring
         wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(python_name, 'class'),
                                    docstring = docstring, class_type = dtype)
