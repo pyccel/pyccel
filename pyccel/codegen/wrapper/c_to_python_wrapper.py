@@ -1427,12 +1427,13 @@ class CToPythonWrapper(Wrapper):
                     [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
                      Return(self._error_exit_code)]))
         body.append(If(*if_sections))
+        result_var = self.get_new_PyObject("result", is_temp=True)
         self.exit_scope()
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
                                      body,
-                                     FunctionDefResult(self.get_new_PyObject("result", is_temp=True)),
+                                     FunctionDefResult(result_var),
                                      scope=func_scope)
         for a in python_args:
             self._python_object_map.pop(a)
