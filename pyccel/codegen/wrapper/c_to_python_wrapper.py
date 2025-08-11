@@ -765,7 +765,7 @@ class CToPythonWrapper(Wrapper):
         for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
-            class_name = wrapped_class.name
+            class_name = self.scope.get_python_name(wrapped_class.name)
 
             ready_type = PyType_Ready(type_object)
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
@@ -1461,7 +1461,7 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(expr.scope.get_python_name(expr.name)+'_wrapper', 'function')
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', 'function')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
@@ -1781,7 +1781,8 @@ class CToPythonWrapper(Wrapper):
         """
         lhs = expr.lhs
         class_type = lhs.cls_base
-        python_class_type = self.scope.find(class_type.name, 'classes', raise_if_missing = True)
+        python_class_type = self.scope.find(self.scope.get_python_name(class_type.name),
+                                            'classes', raise_if_missing = True)
         class_scope = python_class_type.scope
 
         class_ptr_attrib = class_scope.find('instance', 'variables', raise_if_missing = True)
