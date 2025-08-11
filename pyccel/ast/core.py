@@ -1047,10 +1047,14 @@ class Module(ScopedAstNode):
         self._is_external = is_external
 
         if pyccel_stage != "syntactic":
-            self._internal_dictionary = {v.name:v for v in variables}
-            self._internal_dictionary.update({f.name:f for f in funcs})
-            self._internal_dictionary.update({i.name:i for i in interfaces})
-            self._internal_dictionary.update({c.name:c for c in classes})
+            def get_name(n):
+                return scope.get_python_name(n) if scope else n
+
+            self._internal_dictionary = {get_name(v.name) : v for v in variables}
+            self._internal_dictionary.update({get_name(f.name) : f for f in funcs})
+            self._internal_dictionary.update({get_name(i.name) : i for i in interfaces})
+            self._internal_dictionary.update({get_name(c.name) : c for c in classes})
+
             import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
                                 for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
