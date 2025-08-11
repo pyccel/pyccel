@@ -554,6 +554,8 @@ class Scope(object):
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
                 return collisionless_symbol
+            else:
+                return self._used_symbols[symbol]
 
     def remove_symbol(self, symbol):
         """
