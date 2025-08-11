@@ -447,7 +447,6 @@ class CWrapperCodePrinter(CCodePrinter):
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
 
         number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods', object_type = 'wrapper')
-        print(expr.name, number_magic_method_name)
 
         number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
         if '__add__' in magic_methods:
