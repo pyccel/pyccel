@@ -362,7 +362,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                                         if f.docstring else '""')
                                      for f in funcs if not getattr(f, 'is_header', False))
 
-        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods', object_type = 'wrapper')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_func}'
                         '{ NULL, NULL, 0, NULL}\n'
@@ -446,7 +446,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
 
-        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods')
+        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods', object_type = 'wrapper')
+        print(expr.name, number_magic_method_name)
 
         number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
         if '__add__' in magic_methods:
@@ -483,27 +484,27 @@ class CWrapperCodePrinter(CCodePrinter):
             number_magic_methods_def += f"     .nb_inplace_or = (binaryfunc){magic_methods['__ior__'].name},\n"
         number_magic_methods_def += '};\n'
 
-        seq_magic_method_name = self.scope.get_new_name(f'{expr.name}_sequence_methods')
+        seq_magic_method_name = self.scope.get_new_name(f'{expr.name}_sequence_methods', object_type = 'wrapper')
 
         seq_magic_methods_def = f"static PySequenceMethods {seq_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             seq_magic_methods_def += f"    .sq_length = (lenfunc){magic_methods['__len__'].name},\n"
         seq_magic_methods_def += '};\n'
 
-        map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods')
+        map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods', object_type = 'wrapper')
         map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
         if '__getitem__' in magic_methods:
             map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
         map_magic_methods_def += '};\n'
-        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods', object_type = 'wrapper')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        property_def_name = self.scope.get_new_name(f'{expr.name}_properties')
+        property_def_name = self.scope.get_new_name(f'{expr.name}_properties', object_type = 'wrapper')
         property_def = (f'static PyGetSetDef {property_def_name}[] = {{\n'
                         f'{property_definitions}'
                         '};\n')

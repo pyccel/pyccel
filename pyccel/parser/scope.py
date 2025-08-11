@@ -686,7 +686,7 @@ class Scope(object):
 
         return new_symbol, counter
 
-    def get_new_name(self, current_name = None, is_temp = None, object_type = 'variable'):
+    def get_new_name(self, current_name = None, *, is_temp = None, object_type = 'variable'):
         """
         Get a new name which does not clash with any names in the current context.
 

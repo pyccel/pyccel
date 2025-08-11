@@ -1156,7 +1156,7 @@ class SemanticParser(BasicParser):
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
-            del_name = cls_scope.get_new_name('__del__', 'function')
+            del_name = cls_scope.get_new_name('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
@@ -2756,7 +2756,7 @@ class SemanticParser(BasicParser):
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
             syntactic_init_func_name = name_suffix+'__init'
-            init_func_name = self.scope.get_new_name(syntactic_init_func_name, 'function')
+            init_func_name = self.scope.get_new_name(syntactic_init_func_name, object_type = 'function')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
             for b in init_func_body:
@@ -2810,7 +2810,7 @@ class SemanticParser(BasicParser):
 
         if init_func:
             syntactic_free_func_name = name_suffix+'__free'
-            free_func_name = self.scope.get_new_name(syntactic_free_func_name, 'function')
+            free_func_name = self.scope.get_new_name(syntactic_free_func_name, object_type = 'function')
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
