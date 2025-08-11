@@ -1403,7 +1403,7 @@ class PythonCodePrinter(CodePrinter):
         funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
         classes = ''
         for classDef in mod.classes:
-            classes += f"class {classDef.name}:\n"
+            classes += f"class {self.scope.get_python_name(classDef.name)}:\n"
             class_body  = '\n'.join(f"{classDef.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
                                     for v in classDef.attributes) + '\n\n'
             for method in classDef.methods:
@@ -1552,7 +1552,9 @@ class PythonCodePrinter(CodePrinter):
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        name = self.scope.get_python_name(expr.name)
+        superclasses = ', '.join(self._print(arg) for arg in  expr.superclasses)
+        classDefName = f'class {name}({superclasses}):'
         docstring = self._indent_codestring(self._print(expr.docstring)) if expr.docstring else ''
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
