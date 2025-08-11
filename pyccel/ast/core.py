@@ -2502,19 +2502,6 @@ class FunctionDef(ScopedAstNode):
         pyccel_stage.set_stage(current_pyccel_stage)
         return new_func
 
-    def rename(self, newname):
-        """
-        Rename the FunctionDef name
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the FunctionDef
-        """
-
-        self._name = newname
-
     def __getnewargs_ex__(self):
         """
         This method returns the positional and keyword arguments used to create
