@@ -8,11 +8,11 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
-from functools import lru_cache
+from functools import cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
+from pyccel.utilities.metaclasses import Singleton
 from .basic import iterable
 
 __all__ = (
@@ -65,7 +65,7 @@ class PrimitiveType(metaclass=Singleton):
     _name = '__UNDEFINED__'
 
     def __init__(self): #pylint: disable=useless-parent-delegation
-        # This __init__ function is required so the ArgumentSingleton can
+        # This __init__ function is required so the Singleton can
         # always detect a signature
         super().__init__()
 
@@ -149,7 +149,7 @@ class PyccelType:
         return self._name
 
     def __init__(self): #pylint: disable=useless-parent-delegation
-        # This __init__ function is required so the ArgumentSingleton can
+        # This __init__ function is required so the Singleton can
         # always detect a signature
         super().__init__()
 
@@ -313,7 +313,7 @@ class PythonNativeBool(PythonNativeNumericType):
     _primitive_type = PrimitiveBooleanType()
     _precision = -1
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeInt()
@@ -322,7 +322,7 @@ class PythonNativeBool(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @lru_cache
+    @cache
     def __and__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeBool()
@@ -342,7 +342,7 @@ class PythonNativeInt(PythonNativeNumericType):
     _primitive_type = PrimitiveIntegerType()
     _precision = numpy.dtype(int).alignment
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -351,7 +351,7 @@ class PythonNativeInt(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @lru_cache
+    @cache
     def __and__(self, other):
         if isinstance(other, PythonNativeNumericType):
             return self
@@ -370,7 +370,7 @@ class PythonNativeFloat(PythonNativeNumericType):
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         if isinstance(other, PythonNativeComplex):
             return other
@@ -391,7 +391,7 @@ class PythonNativeComplex(PythonNativeNumericType):
     _primitive_type = PrimitiveComplexType()
     _precision = 8
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         if isinstance(other, PythonNativeNumericType):
             return self
@@ -432,7 +432,7 @@ class GenericType(FixedSizeType):
     _name = 'Generic'
     _primitive_type = None
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         return other
 
@@ -750,7 +750,7 @@ class StringType(ContainerType, metaclass = Singleton):
     def __hash__(self):
         return hash(self.__class__)
 
-class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Singleton):
     """
     Class representing the homogeneous tuple type.
 
@@ -766,11 +766,16 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     __slots__ = ('_element_type', '_order')
     _container_rank = 1
 
-    def __init__(self, element_type):
-        assert isinstance(element_type, PyccelType)
-        self._element_type = element_type
-        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, element_type):
+        def __init__(self):
+            self._element_type = element_type
+            self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
+            HomogeneousContainerType.__init__(self)
+
+        return type(f'HomogeneousTuple{type(element_type)}', (HomogeneousTupleType,),
+                    {'__init__' : __init__})()
 
     def __str__(self):
         return f'tuple[{self._element_type}, ...]'
@@ -795,7 +800,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
         # TODO: Remove this specialisation if tuples are saved in lists instead of ndarrays
         return isinstance(shape, tuple) and len(shape) == self.rank
 
-class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
+class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing the homogeneous list type.
 
@@ -811,11 +816,16 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     _name = 'list'
     _container_rank = 1
 
-    def __init__(self, element_type):
-        assert isinstance(element_type, PyccelType)
-        self._element_type = element_type
-        self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, element_type):
+        def __init__(self):
+            self._element_type = element_type
+            self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
+            HomogeneousContainerType.__init__(self)
+
+        return type('HomogeneousList{type(element_type)}', (HomogeneousListType,),
+                    {'__init__' : __init__})()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type \
@@ -824,7 +834,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __hash__(self):
         return hash((self.__class__, self._element_type, self._order))
 
-class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
+class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing the homogeneous set type.
 
@@ -841,10 +851,15 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     _container_rank = 1
     _order = None
 
-    def __init__(self, element_type):
-        assert isinstance(element_type, PyccelType)
-        self._element_type = element_type
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, element_type):
+        def __init__(self):
+            self._element_type = element_type
+            HomogeneousContainerType.__init__(self)
+
+        return type('HomogeneousSet{type(element_type)}', (HomogeneousSetType,),
+                    {'__init__' : __init__})()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._element_type == other._element_type
@@ -893,7 +908,7 @@ class CustomDataType(PyccelType, metaclass=Singleton):
         """
         return None
 
-class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
+class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -908,32 +923,44 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
     """
     __slots__ = ('_element_types', '_datatype', '_container_rank', '_order')
 
-    def __init__(self, *args):
-        self._element_types = args
-
+    @classmethod
+    @cache
+    def get_new(cls, *args):
         # Determine datatype
-        possible_types = set(t.datatype for t in self._element_types)
+        possible_types = set(t.datatype for t in args)
         dtype = possible_types.pop()
-        self._datatype = dtype if all(d == dtype for d in possible_types) else self
 
         # Determine rank
-        elem_ranks = set(elem.rank for elem in self._element_types)
+        elem_ranks = set(elem.rank for elem in args)
         if len(elem_ranks) == 1:
-            self._container_rank = elem_ranks.pop() + 1
+            container_rank = elem_ranks.pop() + 1
         else:
-            self._container_rank = 1
+            container_rank = 1
 
         # Determine order
-        if self._container_rank == 2:
-            self._order = 'C'
-        elif self._container_rank > 2:
-            elem_orders = set(elem.order for elem in self._element_types)
+        if container_rank == 2:
+            order = 'C'
+        elif container_rank > 2:
+            elem_orders = set(elem.order for elem in args)
             if len(elem_orders) == 1 and elem_orders.pop() == 'C':
-                self._order = 'C'
+                order = 'C'
             else:
-                self._order = None
+                order = None
         else:
-            self._order = None
+            order = None
+
+        def __init__(self):
+            self._element_types = args
+
+            self._datatype = dtype if all(d == dtype for d in possible_types) else self
+            self._container_rank = container_rank
+            self._order = order
+            ContainerType.__init__(self)
+
+        name = '__'.join(('InhomogeneousTuple', *(str(type(e) for e in args))))
+
+        return type(name, (InhomogeneousTupleType,),
+                    {'__init__' : __init__})()
 
         super().__init__()
 
@@ -1011,7 +1038,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         return super().shape_is_compatible(shape) and shape[0] == len(self._element_types)
 
-class DictType(ContainerType, metaclass = ArgumentSingleton):
+class DictType(ContainerType, metaclass = Singleton):
     """
     Class representing the homogeneous dictionary type.
 
@@ -1030,10 +1057,16 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
     _container_rank = 1
     _order = None
 
-    def __init__(self, key_type, value_type):
-        self._key_type = key_type
-        self._value_type = value_type
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, key_type, value_type):
+        def __init__(self):
+            self._key_type = key_type
+            self._value_type = value_type
+            ContainerType.__init__(self)
+
+        return type('Dict{type(key_type)}_{type(value_type)}', (DictType,),
+                    {'__init__' : __init__})()
 
     def __str__(self):
         return f'dict[{self._key_type}, {self._value_type}]'

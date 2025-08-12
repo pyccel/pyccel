@@ -7,6 +7,7 @@
 Module describing all elements of the AST needed to represent elements which appear in a Fortran-C binding
 file.
 """
+from functools import cache
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode
 from pyccel.ast.core import Module, Deallocate
@@ -54,7 +55,7 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     __slots__ = ()
     _name = 'bindcpointer'
 
-class BindCArrayType(InhomogeneousTupleType):
+class BindCArrayType:
     """
     Datatype for a tuple containing all the information necessary to describe an array.
 
@@ -71,10 +72,16 @@ class BindCArrayType(InhomogeneousTupleType):
     __slots__ = ()
     _name = 'BindCArrayType'
 
-    def __init__(self, rank, has_strides):
+    @classmethod
+    @cache
+    def get_new(self, rank, has_strides):
         shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
-        super().__init__(BindCPointer(), *shape_types, *stride_types)
+        name = 'BindCArray{rank}DType'
+        if has_strides:
+            name += '_strided'
+        return type(name, (type(InhomogeneousTupleType.get_new(BindCPointer(), *shape_types, *stride_types)), BindCArrayType),
+                    {})()
 
 # =======================================================================================
 #                                   Wrapper classes
