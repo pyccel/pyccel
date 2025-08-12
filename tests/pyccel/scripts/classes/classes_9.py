@@ -5,7 +5,7 @@ class MyClass:
     def __init__(self, param1 : 'int', param2 : 'int'):
         self.param1 = param1
         self.param2 = np.ones(param2, dtype=int)
-        print("MyClass Object created!")
+        print(12345)
 
     @inline
     def get_param(self):
@@ -13,7 +13,7 @@ class MyClass:
 
 class MyClass1:
     def __init__(self):
-        print("MyClass1 Object created!")
+        print(54321)
 
     def Method1(self, param1 : MyClass):
         self.param = param1
