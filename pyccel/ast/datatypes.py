@@ -27,6 +27,8 @@ __all__ = (
         'PrimitiveComplexType',
         'PrimitiveFloatingPointType',
         'PrimitiveIntegerType',
+        # ------------ Modifying types ------------
+        'FinalType',
         # ------------ Fixed size types ------------
         'CharType',
         'FixedSizeNumericType',
@@ -196,6 +198,30 @@ class PyccelType:
             True if the shape is acceptable, False otherwise.
         """
         return shape is None
+
+#==============================================================================
+class FinalType:
+    @classmethod
+    @cache
+    def get_new(cls, underlying_type):
+        if isinstance(underlying_type, FinalType):
+            return underlying_type
+
+        type_class = type(underlying_type)
+        def __init__(self):
+            self._underlying_type = underlying_type
+            type(underlying_type).__init__(self)
+        def __hash__(self):
+            return type_class.__hash__(underlying_type)
+        def __eq__(self, other):
+            return type_class.__eq__(underlying_type, other)
+        return type(f'Final{type_class.__name__}', (FinalType, type_class,),
+                    {'__init__' : __init__,
+                     '__hash__' : __hash__,
+                     '__eq__' : __eq__})()
+
+    def __str__(self):
+        return f'Final[{self._underlying_type}]'
 
 #==============================================================================
 
@@ -603,7 +629,7 @@ class HomogeneousContainerType(ContainerType):
         """
         assert isinstance(new_type, FixedSizeType)
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type))
+        return cls.get_new(self.element_type.switch_basic_type(new_type))
 
     def switch_rank(self, new_rank, new_order = None):
         """
