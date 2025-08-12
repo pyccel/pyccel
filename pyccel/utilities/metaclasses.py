@@ -37,7 +37,7 @@ class ArgumentSingleton(type):
 
     def __call__(cls, *args, **kwargs):
         index = (*args, *sorted(kwargs.items()))
-        existing_instance = cls._instances.get(index, None)
+        existing_instance = next((i for i in cls._instances if i is index), None)
         if existing_instance is None:
             new_instance = super().__call__(*args, **kwargs)
             cls._instances[index] = new_instance
