@@ -2358,7 +2358,7 @@ class CToPythonWrapper(Wrapper):
 
         if is_bind_c_argument:
             rank = orig_var.rank
-            arg_var = Variable(BindCArrayType(rank, True), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(rank, True), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(rank*2+1),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
             for i,s in enumerate(shape):
@@ -2451,7 +2451,7 @@ class CToPythonWrapper(Wrapper):
             data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
                                 memory_handling='alias')
             self.scope.insert_variable(data_var)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(data_var))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
@@ -2506,7 +2506,7 @@ class CToPythonWrapper(Wrapper):
             arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             data = DottedVariable(VoidType(), 'data', lhs=arr_var)
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
@@ -2583,7 +2583,7 @@ class CToPythonWrapper(Wrapper):
             arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             data = DottedVariable(VoidType(), 'data', lhs=arr_var)
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
@@ -2685,7 +2685,7 @@ class CToPythonWrapper(Wrapper):
                 data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
                                     shape = (None,), memory_handling='alias', is_const = True)
                 size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
-                arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                                     shape = (LiteralInteger(2),))
                 self.scope.insert_variable(data_var, orig_var.name)
                 self.scope.insert_variable(size_var)

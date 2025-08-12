@@ -2330,7 +2330,7 @@ class SemanticParser(BasicParser):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
                 class_type = HomogeneousTupleType if dtype_cls is TupleType else dtype_cls
-                type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
+                type_annotations = [VariableTypeAnnotation(class_type.get_new(u.class_type), u.is_const)
                                     for u in internal_datatypes.type_list]
                 return UnionTypeAnnotation(*type_annotations)
             elif len(args) == 2 and dtype_cls is DictType:
@@ -2338,14 +2338,14 @@ class SemanticParser(BasicParser):
                 syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
                 key_types = self._visit(syntactic_key_annotation)
                 val_types = self._visit(syntactic_val_annotation)
-                type_annotations = [VariableTypeAnnotation(dtype_cls(k.class_type, v.class_type)) \
+                type_annotations = [VariableTypeAnnotation(dtype_cls.get_new(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
             elif dtype_cls is TupleType:
                 syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
                 types = [self._visit(a).type_list for a in syntactic_annotations]
                 internal_datatypes = list(product(*types))
-                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType(*[ui.class_type for ui in u]), True)
+                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType.get_new(*[ui.class_type for ui in u]), True)
                                     for u in internal_datatypes]
                 return UnionTypeAnnotation(*type_annotations)
             else:
@@ -2550,7 +2550,7 @@ class SemanticParser(BasicParser):
             return PyccelFunctionDef('Final', TypingFinal)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
-            return VariableTypeAnnotation(class_type(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
+            return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
         elif isinstance(env_var, typing.TypeVar):
             constraints = [self.env_var_to_pyccel(c) for c in env_var.__constraints__]
             return TypingTypeVar(env_var.__name__, *constraints,
@@ -4421,14 +4421,14 @@ class SemanticParser(BasicParser):
                           List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
                            symbol=expr, severity='error')
         try:
-            class_type = type_container[conversion_func.cls_name](class_type)
+            class_type = type_container[conversion_func.cls_name].get_new(class_type)
         except TypeError:
             if class_type.rank > 0:
                 errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
                               symbol=expr,
                               severity='fatal')
 
-            class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
+            class_type = type_container[conversion_func.cls_name].get_new(numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         d_var['shape'] = (dim,)
         d_var['cls_base'] = get_cls_base(class_type)
@@ -6174,7 +6174,7 @@ class SemanticParser(BasicParser):
                 assert len(assigns) == 1
                 lhs = assigns[0].lhs
             d_var = {
-                    'class_type' : HomogeneousSetType(class_type.element_type),
+                    'class_type' : HomogeneousSetType.get_new(class_type.element_type),
                     'shape' : arg.shape,
                     'cls_base' : SetClass,
                     'memory_handling' : 'heap'

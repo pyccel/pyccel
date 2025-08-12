@@ -2491,7 +2491,7 @@ class NumpyNonZero(PyccelFunction):
     __slots__ = ('_elements','_arr','_shape')
     _attribute_nodes = ('_elements',)
     name = 'nonzero'
-    _class_type = HomogeneousTupleType(NumpyNDArrayType(NumpyInt64Type(), 1, None))
+    _class_type = HomogeneousTupleType.get_new(NumpyNDArrayType(NumpyInt64Type(), 1, None))
 
     def __init__(self, a):
         if (a.rank > 1):

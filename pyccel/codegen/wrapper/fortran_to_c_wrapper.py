@@ -26,7 +26,7 @@ from pyccel.ast.core import For
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import TupleType
 from pyccel.ast.datatypes import PythonNativeInt, CharType
-from pyccel.ast.datatypes import InhomogeneousTupleType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
@@ -376,7 +376,7 @@ class FortranToCWrapper(Wrapper):
         orig_size = [PyccelMul(sh,st) for sh,st in zip(shape, stride)]
         body = [C_F_Pointer(bind_var, arg_var, orig_size[::-1] if order == 'C' else orig_size)]
 
-        c_arg_var = Variable(BindCArrayType(rank, has_strides = True),
+        c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = True),
                         scope.get_new_name(), is_argument = True,
                         shape = (LiteralInteger(rank*2+1),))
 
@@ -412,7 +412,7 @@ class FortranToCWrapper(Wrapper):
 
         body = [C_F_Pointer(bind_var, arg_var, (shape_var,))]
 
-        c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
+        c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = False),
                         scope.get_new_name(), is_argument = True,
                         shape = (LiteralInteger(rank+1),))
 
@@ -455,7 +455,7 @@ class FortranToCWrapper(Wrapper):
                 Assign(arg_var, LiteralString('')),
                 For((idx,), iterator, for_body, scope = for_scope)]
 
-        c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
+        c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = False),
                         scope.get_new_name(), is_argument = True,
                         shape = (LiteralInteger(2),))
 
@@ -489,24 +489,25 @@ class FortranToCWrapper(Wrapper):
         iterator.set_loop_counter(idx)
         self.scope.insert_variable(idx)
 
-        insert_call = {'set': SetAdd,
-                       'list': ListAppend}
-
-        if var.class_type.name not in insert_call:
+        if isinstance(var.class_type, HomogeneousSetType):
+            insert_method = SetAdd
+        elif isinstance(var.class_type, HomogeneousListType):
+            insert_method = ListAppend
+        else:
             return errors.report(f"Wrapping function arguments is not implemented for type {var.class_type}. "
                     + PYCCEL_RESTRICTION_TODO, symbol=var, severity='fatal')
 
         # Default Fortran arrays retrieved from C_F_Pointer are 1-indexed
         # Lists are 1-indexed but Pyccel adds the shift during printing so they are
         # treated as 0-indexed here
-        for_body = [insert_call[var.class_type.name](arg_var, IndexedElement(local_var, idx))]
+        for_body = [insert_method(arg_var, IndexedElement(local_var, idx))]
 
         body = [C_F_Pointer(bind_var, local_var, (shape_var,)),
                 Allocate(arg_var, shape = (shape_var,), status = 'unallocated',
                     alloc_type = 'reserve'),
                 For((idx,), iterator, for_body, scope = for_scope)]
 
-        c_arg_var = Variable(BindCArrayType(rank, has_strides = False),
+        c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = False),
                         scope.get_new_name(), is_argument = True,
                         shape = (LiteralInteger(2),))
 
@@ -764,7 +765,7 @@ class FortranToCWrapper(Wrapper):
         # Pack C results into inhomogeneous tuple object
         element_vars = [r['c_result'] for r in func_def_results]
         class_types = [e.class_type for e in element_vars]
-        local_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_expected_name(name),
+        local_var = Variable(InhomogeneousTupleType.get_new(*class_types), self.scope.get_expected_name(name),
                         shape = (len(class_types),))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(local_var, i), v)
@@ -772,7 +773,7 @@ class FortranToCWrapper(Wrapper):
         # Pack F results into inhomogeneous tuple object
         element_vars = [r['f_result'] for r in func_def_results]
         class_types = [e.class_type for e in element_vars]
-        result_var = Variable(InhomogeneousTupleType(*class_types), self.scope.get_new_name('Out_'+name),
+        result_var = Variable(InhomogeneousTupleType.get_new(*class_types), self.scope.get_new_name('Out_'+name),
                             shape = (len(class_types),))
         for i, v in enumerate(element_vars):
             self.scope.insert_symbolic_alias(IndexedElement(result_var, i), v)
@@ -977,7 +978,7 @@ class FortranToCWrapper(Wrapper):
         fill_for = For((key_var, val_var), iterator, for_body, scope = for_scope)
         body.extend([Assign(idx, LiteralInteger(0)), fill_for])
 
-        result_var = Variable(InhomogeneousTupleType(BindCPointer(), BindCPointer(), NumpyInt32Type()),
+        result_var = Variable(InhomogeneousTupleType.get_new(BindCPointer(), BindCPointer(), NumpyInt32Type()),
                             scope.get_new_name(), shape = (3,))
         scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), key_bind_var)
         scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(1)), val_bind_var)
@@ -1107,7 +1108,7 @@ class FortranToCWrapper(Wrapper):
 
             f_array = ptr_var
 
-        result_var = Variable(BindCArrayType(rank, has_strides = False),
+        result_var = Variable(BindCArrayType.get_new(rank, has_strides = False),
                         scope.get_new_name(), shape = (rank+1,))
         scope.insert_symbolic_alias(IndexedElement(result_var, LiteralInteger(0)), bind_var)
         for i,s in enumerate(shape_vars):
