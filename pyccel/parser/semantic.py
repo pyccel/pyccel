@@ -5068,7 +5068,7 @@ class SemanticParser(BasicParser):
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
         for func_a, call_a in zip(func_args, positional_call_args):
-            if isinstance(call_a, Variable) and func_a == self.scope.get_expected_name(call_a.name):
+            if isinstance(call_a, Variable) and not isinstance(call_a, DottedVariable) and func_a == self.scope.get_expected_name(call_a.name):
                 # If call argument is a variable with the same name as the target function
                 # argument then there is no need to rename
                 new_func_a = replace_map.pop(func_a)
