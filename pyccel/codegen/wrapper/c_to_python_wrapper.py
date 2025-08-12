@@ -45,7 +45,7 @@ from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes     import HomogeneousContainerType
+from pyccel.ast.datatypes     import HomogeneousContainerType, FinalType
 from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
@@ -2217,8 +2217,11 @@ class CToPythonWrapper(Wrapper):
         """
         assert not bound_argument
         if arg_var is None:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    is_argument = False, is_const = False)
+                                    is_argument = False, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
@@ -2368,19 +2371,22 @@ class CToPythonWrapper(Wrapper):
 
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
+        class_type = orig_var.class_type
+        if isinstance(class_type, FinalType):
+            class_type = class_type.underlying_type
         arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
                                 memory_handling='alias', new_class = Variable, allows_negative_indexes = False,
-                                is_const = False)
+                                class_type = class_type)
         self.scope.insert_variable(arg_var)
         if orig_var.is_optional:
             sliced_arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
                                     is_optional=False, memory_handling='alias', new_class = Variable,
-                                    allows_negative_indexes = False, is_const = False)
+                                    allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var)
         else:
             sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     is_optional=False, memory_handling='alias', new_class = Variable,
-                                    allows_negative_indexes = False, is_const = False)
+                                    allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
         original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
@@ -2503,7 +2509,7 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
             #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+            arr_var = Variable(NumpyNDArrayType.get_new(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
             arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
@@ -2514,8 +2520,11 @@ class CToPythonWrapper(Wrapper):
             arg_vars = [arg_var]
             body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='heap', new_class = Variable, is_const = False)
+                                    memory_handling='heap', new_class = Variable, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonSet()))
@@ -2542,7 +2551,7 @@ class CToPythonWrapper(Wrapper):
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
         clean_up = []
-        if not orig_var.is_const:
+        if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
                 errors.report("Python built-in containers should be passed as constant arguments when "
                               "translating to languages other than C. Any changes to the set will not "
@@ -2580,7 +2589,7 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
             #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+            arr_var = Variable(NumpyNDArrayType.get_new(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
             arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
@@ -2591,8 +2600,11 @@ class CToPythonWrapper(Wrapper):
             arg_vars = [arg_var]
             body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='heap', new_class = Variable, is_const = False)
+                                    memory_handling='heap', new_class = Variable, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonList()))
@@ -2619,7 +2631,7 @@ class CToPythonWrapper(Wrapper):
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
         clean_up = []
-        if not orig_var.is_const:
+        if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
                 errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
                               "Any changes to the list will not be reflected in the calling code.",
@@ -2683,7 +2695,8 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             if arg_var is None:
                 data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
-                                    shape = (None,), memory_handling='alias', is_const = True)
+                                    class_type = FinalType.get_new(orig_var.class_type),
+                                    shape = (None,), memory_handling='alias')
                 size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
                 arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                                     shape = (LiteralInteger(2),))

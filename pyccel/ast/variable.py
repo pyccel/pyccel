@@ -55,9 +55,6 @@ class Variable(TypedAstNode):
         'stack' if memory should be allocated on the stack, represents stack arrays and scalars.
         'alias' if object allows access to memory stored in another variable.
 
-    is_const : bool, default: False
-        Indicates if object is a const argument of a function.
-
     is_target : bool, default: False
         Indicates if object is pointed to by another variable.
 
@@ -97,7 +94,7 @@ class Variable(TypedAstNode):
     >>> Variable(PythonNativeInt(), DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const', '_is_target',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_target',
             '_is_optional', '_allows_negative_indexes', '_cls_base', '_is_argument', '_is_temp',
             '_shape','_is_private','_class_type')
     _attribute_nodes = ()
@@ -108,7 +105,6 @@ class Variable(TypedAstNode):
         name,
         *,
         memory_handling='stack',
-        is_const=False,
         is_target=False,
         is_optional=False,
         is_private=False,
@@ -138,10 +134,6 @@ class Variable(TypedAstNode):
         if memory_handling not in ('heap', 'stack', 'alias'):
             raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         self._memory_handling = memory_handling
-
-        if not isinstance(is_const, bool):
-            raise TypeError('is_const must be a boolean.')
-        self._is_const = is_const
 
         if not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
@@ -325,16 +317,6 @@ class Variable(TypedAstNode):
         """ Class from which the Variable inherits
         """
         return self._cls_base
-
-    @property
-    def is_const(self):
-        """
-        Indicates whether the Variable is constant within its context.
-
-        Indicates whether the Variable is constant within its context.
-        True if the Variable is constant, false if it can be modified.
-        """
-        return self._is_const
 
     @property
     def is_temp(self):
@@ -799,16 +781,6 @@ class IndexedElement(TypedAstNode):
             return IndexedElement(base, *new_indexes)
         else:
             return IndexedElement(self, *args)
-
-    @property
-    def is_const(self):
-        """
-        Indicates whether the Variable is constant within its context.
-
-        Indicates whether the Variable is constant within its context.
-        True if the Variable is constant, false if it can be modified.
-        """
-        return self.base.is_const
 
     @property
     def allows_negative_indexes(self):

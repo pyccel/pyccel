@@ -45,7 +45,7 @@ from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, Pri
 from pyccel.ast.datatypes import PrimitiveCharacterType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, FixedSizeType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, FixedSizeType, FinalType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
@@ -1907,7 +1907,7 @@ class FCodePrinter(CodePrinter):
         dtype           = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
-        is_const        = var.is_const
+        is_const        = isinstance(expr_type, FinalType)
         is_optional     = var.is_optional
         is_private      = var.is_private
         is_alias        = var.is_alias and not isinstance(dtype, BindCPointer)

@@ -35,7 +35,7 @@ from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, Poin
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -408,7 +408,7 @@ class CCodePrinter(CodePrinter):
             return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
 
         if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
-                and a.is_argument and not a.is_const:
+                and a.is_argument and not isinstance(a.class_type, FinalType):
             return True
 
         return a.is_alias or a.is_optional or \
@@ -1594,25 +1594,25 @@ class CCodePrinter(CodePrinter):
         'int64_t'
 
         For an object accessed via a pointer:
-        >>> v = Variable(NumpyNDArrayType(PythonNativeInt(), 1, None), 'x', is_optional=True)
+        >>> v = Variable(NumpyNDArrayType.get_new(PythonNativeInt(), 1, None), 'x', is_optional=True)
         >>> self.get_declare_type(v)
         'array_int64_1d*'
         """
         class_type = expr.class_type
 
-        if isinstance(expr.class_type, CStackArray):
-            dtype = self.get_c_type(expr.class_type.element_type)
-        elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
-            dtype = self.get_c_type(expr.class_type)
+        if isinstance(class_type, CStackArray):
+            dtype = self.get_c_type(class_type.element_type)
+        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+            dtype = self.get_c_type(class_type)
         elif isinstance(class_type, MemoryHandlerType):
             dtype = self.get_c_type(class_type.element_type) + '_mem'
         else:
             dtype = self.get_c_type(expr.class_type)
 
-        if getattr(expr, 'is_const', False):
+        if isinstance(class_type, FinalType):
             dtype = f'const {dtype}'
 
-        if self.is_c_pointer(expr) and not isinstance(expr.class_type, CStackArray):
+        if self.is_c_pointer(expr) and not isinstance(class_type, CStackArray):
             return f'{dtype}*'
         else:
             return dtype
