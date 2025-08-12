@@ -668,12 +668,6 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.element_type == other.element_type
-
-    def __hash__(self):
-        return hash((self.__class__, self.element_type))
-
 class StringType(ContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -800,6 +794,12 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
         # TODO: Remove this specialisation if tuples are saved in lists instead of ndarrays
         return isinstance(shape, tuple) and len(shape) == self.rank
 
+    def __eq__(self, other):
+        return isinstance(other, HomogeneousTupleType) and self.element_type == other.element_type
+
+    def __hash__(self):
+        return hash((HomogeneousTupleType, self.element_type))
+
 class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing the homogeneous list type.
@@ -828,11 +828,11 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
                     {'__init__' : __init__})()
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self._element_type == other._element_type \
+        return isinstance(other, HomogeneousListType) and self._element_type == other._element_type \
                 and self._order == other._order
 
     def __hash__(self):
-        return hash((self.__class__, self._element_type, self._order))
+        return hash((HomogeneousListType, self._element_type, self._order))
 
 class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
     """
@@ -862,10 +862,10 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
                     {'__init__' : __init__})()
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self._element_type == other._element_type
+        return isinstance(other, HomogeneousSetType) and self._element_type == other._element_type
 
     def __hash__(self):
-        return hash((self.__class__, self._element_type))
+        return hash((HomogeneousSetType, self._element_type))
 
 #==============================================================================
 
@@ -1130,11 +1130,11 @@ class DictType(ContainerType, metaclass = Singleton):
         return None
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.key_type == other.key_type \
+        return isinstance(other, DictType) and self.key_type == other.key_type \
                 and self.value_type == other.value_type
 
     def __hash__(self):
-        return hash((self.__class__, self._key_type, self._value_type))
+        return hash((DictType, self._key_type, self._value_type))
 
 #==============================================================================
 
