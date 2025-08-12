@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import numpy as np
 from pyccel.decorators import inline
 
@@ -16,7 +17,7 @@ class MyClass1:
         print(54321)
 
     def Method1(self, param1 : MyClass):
-        self.param = param1
+        self.param = param1 #pylint: disable=attribute-defined-outside-init
 
     def Method2(self):
         return MyClass(2, 4)
