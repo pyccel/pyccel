@@ -116,7 +116,7 @@ pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
                 body      = [],
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
-                results   = FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array')))
+                results   = FunctionDefResult(Variable(NumpyNDArrayType.get_new(GenericType(), 1, None), 'array')))
 
 numpy_to_stc_strides = FunctionDef(
                 name      = 'numpy_to_stc_strides',

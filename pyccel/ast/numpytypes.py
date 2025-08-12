@@ -6,12 +6,12 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing types from the numpy module understood by pyccel
 """
-from functools import lru_cache
+from functools import cache
 from packaging.version import Version
 
 import numpy as np
 
-from pyccel.utilities.metaclasses import ArgumentSingleton
+from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
@@ -49,7 +49,7 @@ class NumpyNumericType(FixedSizeNumericType):
     """
     __slots__ = ()
 
-    @lru_cache
+    @cache
     def __add__(self, other):
         try:
             return original_type_to_pyccel_type[
@@ -58,7 +58,7 @@ class NumpyNumericType(FixedSizeNumericType):
         except KeyError:
             return NotImplemented
 
-    @lru_cache
+    @cache
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -87,7 +87,7 @@ class NumpyIntType(NumpyNumericType):
     __slots__ = ()
     _primitive_type = PrimitiveIntegerType()
 
-    @lru_cache
+    @cache
     def __and__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -97,7 +97,7 @@ class NumpyIntType(NumpyNumericType):
         else:
             return NotImplemented
 
-    @lru_cache
+    @cache
     def __rand__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -257,7 +257,7 @@ class NumpyComplex256Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
+class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing the NumPy ND array type.
 
@@ -276,26 +276,28 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __new__(cls, dtype, rank, order):
-        if rank == 0:
-            return dtype
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, dtype, rank, order):
+    @classmethod
+    @cache
+    def get_new(cls, dtype, rank, order):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
+        assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
 
-        if pyccel_stage == 'semantic':
-            assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
+        if rank == 0:
+            return dtype
 
-        self._element_type = dtype
-        self._container_rank = rank
-        self._order = order
-        super().__init__()
+        def __init__(self):
+            self._element_type = dtype
+            self._container_rank = rank
+            self._order = order
+            super().__init__()
 
-    @lru_cache
+        name = 'Numpy{rank}DArrayType_{order}_{type(dtype)}'
+        return type(name, (NumpyNDArrayType,),
+                    {'__init__': __init__})()
+
+    @cache
     def __add__(self, other):
         test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         if isinstance(other, FixedSizeNumericType):
@@ -312,13 +314,13 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             other_f_contiguous = other.order in (None, 'F')
             self_f_contiguous = self.order in (None, 'F')
             order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
-        return NumpyNDArrayType(result_type, rank, order)
+        return NumpyNDArrayType.get_new(result_type, rank, order)
 
-    @lru_cache
+    @cache
     def __radd__(self, other):
         return self.__add__(other)
 
-    @lru_cache
+    @cache
     def __and__(self, other):
         elem_type = self.element_type
         if isinstance(other, FixedSizeNumericType):
@@ -328,7 +330,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         else:
             return NotImplemented
 
-    @lru_cache
+    @cache
     def __rand__(self, other):
         return self.__and__(other)
 
@@ -354,7 +356,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
+        return cls.get_new(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
 
     def switch_rank(self, new_rank, new_order = None):
         """
@@ -381,7 +383,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             return self.element_type
         else:
             new_order = (new_order or self._order) if new_rank > 1 else None
-            return NumpyNDArrayType(self.element_type, new_rank, new_order)
+            return NumpyNDArrayType.get_new(self.element_type, new_rank, new_order)
 
     def swap_order(self):
         """
@@ -398,7 +400,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             The new type.
         """
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
-        return NumpyNDArrayType(self.element_type, self._container_rank, order)
+        return NumpyNDArrayType.get_new(self.element_type, self._container_rank, order)
 
     @property
     def rank(self):

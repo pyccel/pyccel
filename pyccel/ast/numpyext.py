@@ -243,7 +243,7 @@ class NumpyFloat(PythonFloat):
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order
-        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
+        self._class_type = NumpyNDArrayType.get_new(self.static_type(), rank, order)
         super().__init__(arg)
 
     @property
@@ -304,7 +304,7 @@ class NumpyBool(PythonBool):
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order
-        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
+        self._class_type = NumpyNDArrayType.get_new(self.static_type(), rank, order)
         super().__init__(arg)
 
     @property
@@ -343,7 +343,7 @@ class NumpyInt(PythonInt):
         self._shape = arg.shape
         rank  = arg.rank
         order = arg.order
-        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
+        self._class_type = NumpyNDArrayType.get_new(self.static_type(), rank, order)
         super().__init__(arg)
 
     @property
@@ -446,8 +446,8 @@ class NumpyReal(PythonReal):
         super().__init__(arg)
         rank  = arg.rank
         order = arg.order
-        dtype = arg.dtype.element_type
-        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+        dtype = process_dtype(arg.dtype.element_type)
+        self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         self._shape = process_shape(self.rank == 0, self.internal_var.shape)
 
     @property
@@ -489,8 +489,8 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         rank  = arg.rank
         order = arg.order
-        dtype = arg.dtype.element_type
-        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+        dtype = process_dtype(arg.dtype.element_type)
+        self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         self._shape = process_shape(self.rank == 0, self.internal_var.shape)
 
     @property
@@ -527,7 +527,7 @@ class NumpyComplex(PythonComplex):
         self._shape = arg0.shape
         rank  = arg0.rank
         order = arg0.order
-        self._class_type = NumpyNDArrayType(self.static_type(), rank, order) if rank else self.static_type()
+        self._class_type = NumpyNDArrayType.get_new(self.static_type(), rank, order)
         super().__init__(arg0)
 
     @property
@@ -795,7 +795,7 @@ class NumpyArray(NumpyNewArray):
 
         self._arg   = arg
         self._shape = shape
-        super().__init__(class_type = NumpyNDArrayType(dtype, rank, order), init_dtype = init_dtype)
+        super().__init__(class_type = NumpyNDArrayType.get_new(dtype, rank, order), init_dtype = init_dtype)
 
     def __str__(self):
         return str(self.arg)
@@ -853,7 +853,7 @@ class NumpyArange(NumpyNewArray):
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
         dtype = process_dtype(dtype)
-        super().__init__(class_type = NumpyNDArrayType(dtype, 1, None), init_dtype = init_dtype)
+        super().__init__(class_type = NumpyNDArrayType.get_new(dtype, 1, None), init_dtype = init_dtype)
 
     @property
     def arg(self):
@@ -994,7 +994,7 @@ class NumpyMatmul(PyccelFunction):
         else:
             order = None if rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+        self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
     @property
     def a(self):
@@ -1117,7 +1117,7 @@ class NumpyLinspace(NumpyNewArray):
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 
-        class_type = NumpyNDArrayType(final_dtype, rank, order)
+        class_type = NumpyNDArrayType.get_new(final_dtype, rank, order)
 
         super().__init__(class_type = class_type, init_dtype = init_dtype)
 
@@ -1212,7 +1212,7 @@ class NumpyWhere(PyccelFunction):
         self._shape = process_shape(False, shape)
         rank  = len(shape)
         order = None if rank < 2 else 'C'
-        self._class_type = NumpyNDArrayType(process_dtype(type_info.dtype), rank, order)
+        self._class_type = NumpyNDArrayType.get_new(process_dtype(type_info.dtype), rank, order)
         super().__init__(condition, x, y)
 
     @property
@@ -1260,7 +1260,7 @@ class NumpyRand(PyccelFunction):
             self._class_type = PythonNativeFloat()
         else:
             order = None if rank < 2 else 'C'
-            self._class_type = NumpyNDArrayType(NumpyFloat64Type(), rank, order)
+            self._class_type = NumpyNDArrayType.get_new(NumpyFloat64Type(), rank, order)
 
 #==============================================================================
 class NumpyRandint(PyccelFunction):
@@ -1298,7 +1298,7 @@ class NumpyRandint(PyccelFunction):
         else:
             rank = len(self.shape)
             order = None if rank < 2 else 'C'
-            self._class_type = NumpyNDArrayType(NumpyInt64Type(), rank, order)
+            self._class_type = NumpyNDArrayType.get_new(NumpyInt64Type(), rank, order)
         self._rand    = NumpyRand() if size is None else NumpyRand(*size)
         self._low     = low
         self._high    = high
@@ -1369,7 +1369,7 @@ class NumpyFull(NumpyNewArray):
         rank  = len(self._shape)
         order = NumpyNewArray._process_order(rank, order)
 
-        class_type = NumpyNDArrayType(dtype, rank, order)
+        class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
         super().__init__(fill_value, class_type = class_type, init_dtype = init_dtype)
 
@@ -1694,7 +1694,7 @@ class NumpyNorm(PyccelFunction):
             self._shape = tuple(sh)
             rank = len(self._shape)
             order = None if rank < 2 else arg.order
-            self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         else:
             self._shape = None
             self._class_type = dtype
@@ -1765,7 +1765,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         dtype = self._get_dtype(x)
         self._shape, rank = self._get_shape_rank(x)
         order = self._get_order(x, rank)
-        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+        self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         super().__init__(x)
 
     def _get_shape_rank(self, x):
@@ -1866,7 +1866,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         dtype = self._get_dtype(x1, x2)
         self._shape, rank = self._get_shape_rank(x1, x2)
         order = self._get_order(x1, x2, rank)
-        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
+        self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
     def _get_shape_rank(self, x1, x2):
         """
@@ -2424,7 +2424,7 @@ class NumpyConjugate(PythonConjugate):
         order = arg.order
         rank  = arg.rank
         self._shape = process_shape(rank == 0, arg.shape)
-        self._class_type = NumpyNDArrayType(arg.dtype, rank, order) if rank else arg.dtype
+        self._class_type = NumpyNDArrayType.get_new(arg.dtype, rank, order)
 
     @property
     def is_elemental(self):
@@ -2456,7 +2456,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         self._dim = dim
 
         self._shape = (NumpyCountNonZero(a),)
-        super().__init__(a, class_type = NumpyNDArrayType(NumpyInt64Type(), 1, None))
+        super().__init__(a, class_type = NumpyNDArrayType.get_new(NumpyInt64Type(), 1, None))
 
     @property
     def array(self):
@@ -2491,7 +2491,7 @@ class NumpyNonZero(PyccelFunction):
     __slots__ = ('_elements','_arr','_shape')
     _attribute_nodes = ('_elements',)
     name = 'nonzero'
-    _class_type = HomogeneousTupleType.get_new(NumpyNDArrayType(NumpyInt64Type(), 1, None))
+    _class_type = HomogeneousTupleType.get_new(NumpyNDArrayType.get_new(NumpyInt64Type(), 1, None))
 
     def __init__(self, a):
         if (a.rank > 1):
@@ -2554,7 +2554,7 @@ class NumpyCountNonZero(PyccelFunction):
                 self._shape = tuple(shape)
             else:
                 self._shape = (LiteralInteger(1),)*rank
-            self._class_type = NumpyNDArrayType(dtype, rank, order)
+            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         else:
             if axis is not None:
                 dtype = NumpyInt64Type()
@@ -2563,7 +2563,7 @@ class NumpyCountNonZero(PyccelFunction):
                 self._shape = tuple(shape)
                 rank  = a.rank-1
                 order = a.order
-                self._class_type = NumpyNDArrayType(dtype, rank, order)
+                self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
             else:
                 self._shape = None
                 self._class_type = PythonNativeInt()
