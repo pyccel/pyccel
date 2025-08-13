@@ -215,10 +215,13 @@ class FinalType:
             return type_class.__hash__(underlying_type)
         def __eq__(self, other):
             return type_class.__eq__(underlying_type, other)
+        def get_underlying_type(self):
+            return self._underlying_type
         return type(f'Final{type_class.__name__}', (FinalType, type_class,),
                     {'__init__' : __init__,
                      '__hash__' : __hash__,
-                     '__eq__' : __eq__})()
+                     '__eq__' : __eq__,
+                     'underlying_type': property(get_underlying_type)})()
 
     def __str__(self):
         return f'Final[{self._underlying_type}]'
