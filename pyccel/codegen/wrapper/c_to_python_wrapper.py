@@ -51,6 +51,7 @@ from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
+from pyccel.ast.numpytypes    import numpy_precision_map
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
@@ -2509,7 +2510,8 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
             #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType.get_new(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+            numpy_dtype = numpy_precision_map[(element_type.primitive_type, element_type.precision)]
+            arr_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
             arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
@@ -2588,9 +2590,10 @@ class CToPythonWrapper(Wrapper):
 
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
-            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType.get_new(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
-                                shape = (size_var,), memory_handling = 'heap')
+            numpy_dtype = numpy_precision_map[(element_type.primitive_type, element_type.precision)]
+            arr_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, 1, None),
+                               self.scope.get_expected_name(orig_var.name),
+                               shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
             arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))

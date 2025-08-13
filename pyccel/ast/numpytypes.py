@@ -16,7 +16,7 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from .datatypes import GenericType
+from .datatypes import GenericType, CharType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
@@ -282,7 +282,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
-        assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
+        assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType, CharType))
 
         if rank == 0:
             return dtype

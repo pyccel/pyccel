@@ -29,7 +29,7 @@ from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
-from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type, numpy_precision_map
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
 from pyccel.errors.errors import Errors
@@ -478,8 +478,9 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(bind_var)
 
         shape_var = scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_size', is_argument = True)
-        local_var = Variable(NumpyNDArrayType.get_new(element_type, 1, None), scope.get_new_name(name),
-                            shape = (shape_var,), memory_handling='alias')
+        numpy_dtype = numpy_precision_map[(element_type.primitive_type, element_type.precision)]
+        local_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, 1, None), scope.get_new_name(name),
+                             shape = (shape_var,), memory_handling='alias')
         scope.insert_variable(local_var)
 
         for_scope = scope.create_new_loop_scope()
@@ -932,7 +933,8 @@ class FortranToCWrapper(Wrapper):
 
         # Get storage arrays
         key_c_class_type = key_wrap['c_result'].new_var.class_type
-        key_ptr_var = Variable(NumpyNDArrayType.get_new(key_c_class_type, 1, None), scope.get_new_name(name+'_key_ptr'),
+        key_numpy_dtype = numpy_precision_map[(key_c_class_type.primitive_type, key_c_class_type.precision)]
+        key_ptr_var = Variable(NumpyNDArrayType.get_new(key_numpy_dtype, 1, None), scope.get_new_name(name+'_key_ptr'),
                             memory_handling='alias')
         key_bind_var = Variable(BindCPointer(),
                             scope.get_new_name(f'bound_{name}_key'),
@@ -941,7 +943,8 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(key_bind_var)
 
         val_c_class_type = val_wrap['c_result'].new_var.class_type
-        val_ptr_var = Variable(NumpyNDArrayType.get_new(val_c_class_type, 1, None), scope.get_new_name(name+'_val_ptr'),
+        val_numpy_dtype = numpy_precision_map[(val_c_class_type.primitive_type, val_c_class_type.precision)]
+        val_ptr_var = Variable(NumpyNDArrayType.get_new(val_numpy_dtype, 1, None), scope.get_new_name(name+'_val_ptr'),
                             memory_handling='alias')
         val_bind_var = Variable(BindCPointer(),
                             scope.get_new_name(f'bound_{name}_val'),
@@ -1094,7 +1097,8 @@ class FortranToCWrapper(Wrapper):
             f_array = orig_var
         else:
             # Create an array variable which can be passed to CLocFunc
-            ptr_var = Variable(NumpyNDArrayType.get_new(dtype, rank, order), scope.get_new_name(name+'_ptr'),
+            numpy_dtype = numpy_precision_map[(dtype.primitive_type, dtype.precision)]
+            ptr_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, rank, order), scope.get_new_name(name+'_ptr'),
                                 memory_handling='alias')
             elem_var = Variable(dtype, scope.get_new_name(name+'_elem'))
             scope.insert_variable(ptr_var)
