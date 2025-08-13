@@ -1,9 +1,9 @@
 from typing import Final, TypeVar
-from typing import Final, TypeVar, overload
+from typing import TypeVar, overload
 from numpy import float64
 
 T = TypeVar('T', 'int', 'float', 'complex')
-S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
+S = TypeVar('S', 'int', 'float', 'complex')
 
 
 class A:
@@ -25,7 +25,7 @@ def f(a : 'int', b : 'float64[:]') -> 'tuple[int, float64]':
 def g() -> 'float':
     ...
 
-def h(arg : 'Final[list[int]]') -> None:
+def h(arg : 'list[int]') -> None:
     ...
 
 @overload
@@ -55,7 +55,7 @@ def l(a : 'complex') -> 'tuple[complex, ...]':
 def m(b : 'int') -> 'int':
     ...
 
-def n(arg : 'Final[list[int]]') -> None:
+def n(arg : 'list[int]') -> None:
     ...
 
 @overload
