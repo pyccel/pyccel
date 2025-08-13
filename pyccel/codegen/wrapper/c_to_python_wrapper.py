@@ -723,7 +723,7 @@ class CToPythonWrapper(Wrapper):
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (n_classes,),
+        API_var = Variable(CStackArray.get_new(BindCPointer()), API_var_name, shape = (n_classes,),
                                     cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
@@ -820,7 +820,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{mod_name}_import')
 
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
+        API_var = Variable(CStackArray.get_new(BindCPointer()), API_var_name, shape = (None,),
                                     cls_base = StackArrayClass,
                                     memory_handling = 'alias')
         self.scope.insert_variable(API_var)
@@ -1132,9 +1132,9 @@ class CToPythonWrapper(Wrapper):
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
         data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
                             memory_handling='alias')
-        shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+        shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
                             shape = (orig_var.rank,))
-        stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
+        stride_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
                             shape = (orig_var.rank,))
         self.scope.insert_variable(data_var)
         self.scope.insert_variable(shape_var)
@@ -1686,7 +1686,7 @@ class CToPythonWrapper(Wrapper):
             typenum = numpy_dtype_registry[expr.dtype]
             data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                         lhs=expr)
-            shape_var = DottedVariable(CStackArray(NumpyInt32Type()), 'shape',
+            shape_var = DottedVariable(CStackArray.get_new(NumpyInt32Type()), 'shape',
                         lhs=expr)
             release_memory = False
             return [AliasAssign(py_equiv, to_pyarray(
@@ -1730,7 +1730,7 @@ class CToPythonWrapper(Wrapper):
         data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape_var = self.scope.get_temporary_variable(CStackArray(NumpyInt32Type()), name = v.name+'_size',
+        shape_var = self.scope.get_temporary_variable(CStackArray.get_new(NumpyInt32Type()), name = v.name+'_size',
                 shape = (v.rank,))
         shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
@@ -2455,7 +2455,7 @@ class CToPythonWrapper(Wrapper):
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
 
         if is_bind_c_argument:
-            data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
+            data_var = Variable(CStackArray.get_new(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
                                 memory_handling='alias')
             self.scope.insert_variable(data_var)
             arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
@@ -2697,8 +2697,7 @@ class CToPythonWrapper(Wrapper):
 
         if is_bind_c_argument:
             if arg_var is None:
-                data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
-                                    class_type = FinalType.get_new(orig_var.class_type),
+                data_var = Variable(FinalType.get_new(CStackArray.get_new(CharType())), self.scope.get_expected_name(orig_var.name),
                                     shape = (None,), memory_handling='alias')
                 size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
                 arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
@@ -2890,7 +2889,7 @@ class CToPythonWrapper(Wrapper):
         typenum = numpy_dtype_registry[orig_var.dtype]
         data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                     lhs=c_res)
-        shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+        shape_var = DottedVariable(CStackArray.get_new(PythonNativeInt()), 'shape',
                     lhs=c_res)
         release_memory = False
         if funcdef:
@@ -2933,7 +2932,7 @@ class CToPythonWrapper(Wrapper):
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # Result of calling the bind-c function
         data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-        shape_var = Variable(CStackArray(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
+        shape_var = Variable(CStackArray.get_new(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
                         shape = (orig_var.rank,), memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
         # Save so we can find by iterating over func.results
@@ -3027,7 +3026,7 @@ class CToPythonWrapper(Wrapper):
             result = wrapped_var.new_var
             ptr_var = funcdef.scope.collect_tuple_element(result[0])
             shape_var = funcdef.scope.collect_tuple_element(result[1])
-            c_res = Variable(CStackArray(orig_var.class_type.element_type),
+            c_res = Variable(CStackArray.get_new(orig_var.class_type.element_type),
                              self.scope.get_new_name(ptr_var.name))
             loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(c_res), loop_size]
@@ -3105,9 +3104,9 @@ class CToPythonWrapper(Wrapper):
             key_ptr_var = funcdef.scope.collect_tuple_element(result[0])
             val_ptr_var = funcdef.scope.collect_tuple_element(result[1])
             shape_var = funcdef.scope.collect_tuple_element(result[2])
-            key_c_res = Variable(CStackArray(orig_var.class_type.key_type),
+            key_c_res = Variable(CStackArray.get_new(orig_var.class_type.key_type),
                              self.scope.get_new_name(key_ptr_var.name))
-            val_c_res = Variable(CStackArray(orig_var.class_type.value_type),
+            val_c_res = Variable(CStackArray.get_new(orig_var.class_type.value_type),
                              self.scope.get_new_name(val_ptr_var.name))
             loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(key_c_res), ObjectAddress(val_c_res), loop_size]

@@ -6,8 +6,9 @@
 """
 Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
+from functools import cache
 
-from pyccel.utilities.metaclasses import ArgumentSingleton
+from pyccel.utilities.metaclasses import Singleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
 from .datatypes import CharType
@@ -37,7 +38,7 @@ class CNativeInt(FixedSizeNumericType):
 
 #------------------------------------------------------------------------------
 
-class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
+class CStackArray(HomogeneousContainerType, metaclass=Singleton):
     """
     A data type representing an array allocated on the stack.
 
@@ -54,10 +55,14 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     _container_rank = 1
     _order = None
 
-    def __init__(self, element_type):
-        assert isinstance(element_type, FixedSizeType)
-        self._element_type = element_type
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, element_type):
+        def __init__(self):
+            self._element_type = element_type
+            HomogeneousContainerType.__init__(self)
+        return type(f'CStackArray{type(element_type).__name__}', (CStackArray,),
+                    {'__init__' : __init__})()
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
