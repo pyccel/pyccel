@@ -1156,7 +1156,7 @@ class SemanticParser(BasicParser):
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
-            del_name = cls_scope.get_new_name('__del__', object_type = 'function')
+            del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
@@ -5252,7 +5252,7 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
-        cls_scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+        cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
