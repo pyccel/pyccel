@@ -187,10 +187,7 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
     if class_type.rank == len(shape):
         return new_shape
     elif isinstance(expr, (PythonTuple, PythonList)):
-        possible_shapes = [get_shape_of_multi_level_container(a, new_shape) for a in expr.args]
-        assert all(len(set(s[i] for s in possible_shapes if isinstance(s, LiteralInteger))) <= 1
-                   for i in range(class_type.rank-1))
-        return possible_shapes[0]
+        return get_shape_of_multi_level_container(expr.args[0], new_shape)
     elif isinstance(expr, (Variable, IndexedElement)):
         return get_shape_of_multi_level_container(expr[LiteralInteger(0)], new_shape)
     else:

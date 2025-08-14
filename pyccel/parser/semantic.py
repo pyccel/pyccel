@@ -1998,7 +1998,8 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, PythonTuple):
                     try:
                         shape = get_shape_of_multi_level_container(rhs)
-                        raise_error = len(shape) != class_type.rank or any(a != var.class_type.element_type for a in class_type)
+                        raise_error = len(shape) != class_type.rank or not class_type.shape_is_compatible(shape) \
+                                or any(a != var.class_type.element_type for a in class_type)
                     except AssertionError:
                         raise_error = True
                 else:
