@@ -20,9 +20,9 @@ runs:
         then
           # If running in debug mode
           echo "DEBUG=1" >> $GITHUB_ENV
-          export FLAGS="--developer-mode -xsv --log-cli-level DEBUG"
+          export FLAGS="-xsv --log-cli-level DEBUG"
         else
-          export FLAGS="--developer-mode"
+          export FLAGS=""
         fi
         echo "FLAGS=${FLAGS}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
