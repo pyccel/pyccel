@@ -1,4 +1,4 @@
-# shape
+# Object has already been defined with type
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 a : tuple[tuple[int,...], ...]
