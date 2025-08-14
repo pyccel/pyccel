@@ -74,13 +74,14 @@ class BindCArrayType:
 
     @classmethod
     @cache
-    def get_new(self, rank, has_strides):
+    def get_new(cls, rank, has_strides):
         shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
         name = 'BindCArray{rank}DType'
         if has_strides:
             name += '_strided'
-        return type(name, (type(InhomogeneousTupleType.get_new(BindCPointer(), *shape_types, *stride_types)), BindCArrayType),
+        super_class_instance = InhomogeneousTupleType.get_new(BindCPointer(), *shape_types, *stride_types)
+        return type(name, (type(super_class_instance), BindCArrayType),
                     {})()
 
 # =======================================================================================
