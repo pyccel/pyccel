@@ -617,13 +617,30 @@ class Scope(object):
 
     @property
     def all_used_symbols(self):
-        """ Get all symbols which already exist in this scope
+        """
+        Get all low-level symbols which already exist in this scope
+
+        Get all low-level symbols which already exist in this scope
         """
         if self.parent_scope:
             symbols = self.parent_scope.all_used_symbols
         else:
             symbols = set()
         symbols.update(self._used_symbols.values())
+        return symbols
+
+    @property
+    def all_python_symbols(self):
+        """
+        Get all Python symbols which already exist in this scope.
+
+        Get all Python symbols which already exist in this scope.
+        """
+        if self.parent_scope:
+            symbols = self.parent_scope.all_python_symbols
+        else:
+            symbols = set()
+        symbols.update(self._used_symbols.keys())
         return symbols
 
     @property
@@ -712,7 +729,8 @@ class Scope(object):
         PyccelSymbol
             The new name which will be printed in the code.
         """
-        if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
+        if current_name is not None and \
+                not self.name_clash_checker.has_clash(current_name, self.all_python_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
 
         elif current_name is None:
