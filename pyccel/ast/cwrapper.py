@@ -546,15 +546,11 @@ class PyModule(Module):
     _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
 
     def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
-                        import_func = None, module_def_name, **kwargs):
+                        import_func, module_def_name, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
         self._module_def_name = module_def_name
-        if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (), (),
-                            FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
-        else:
-            self._import_func = import_func
+        self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property

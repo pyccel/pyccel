@@ -2133,8 +2133,11 @@ class CToPythonWrapper(Wrapper):
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
             mod_spoof_scope = Scope(name=expr.source_module.name, scope_type = 'module')
+            mod_import_func = FunctionDef(mod_spoof_scope.get_new_name('import'), (), (),
+                       FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
             mod_spoof = PyModule(expr.source_module.name, (), (), scope = mod_spoof_scope,
-                                 module_def_name = mod_spoof_scope.get_new_name(f'module'))
+                                 module_def_name = mod_spoof_scope.get_new_name(f'module'),
+                                 import_func = mod_import_func)
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
