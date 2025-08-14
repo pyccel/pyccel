@@ -3336,7 +3336,7 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
-            dtype = self.get_class_construct(self.scope.get_python_name(visited_dtype.name))
+            dtype = self.get_class_construct(visited_dtype.scope.get_python_name(visited_dtype.name))
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
