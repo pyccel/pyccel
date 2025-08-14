@@ -1996,12 +1996,9 @@ class SemanticParser(BasicParser):
                     isinstance(class_type, InhomogeneousTupleType):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
                 if isinstance(rhs, PythonTuple):
-                    try:
-                        shape = get_shape_of_multi_level_container(rhs)
-                        raise_error = len(shape) != class_type.rank or not class_type.shape_is_compatible(shape) \
-                                or any(a != var.class_type.element_type for a in class_type)
-                    except AssertionError:
-                        raise_error = True
+                    shape = get_shape_of_multi_level_container(rhs)
+                    raise_error = len(shape) != class_type.rank or not class_type.shape_is_compatible(shape) \
+                            or any(a != var.class_type.element_type for a in class_type)
                 else:
                     raise_error = any(a != var.class_type.element_type for a in class_type) or \
                             not isinstance(rhs, Variable)
