@@ -16,6 +16,7 @@ __all__ = (
     'pure',
     'stack_array',
     'types',
+    'wrapping',
 )
 
 
