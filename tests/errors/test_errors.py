@@ -58,7 +58,7 @@ def test_syntax_errors(f):
 def test_semantic_blocking_errors(f):
     print(f'> testing {f}')
 
-    with open(f) as fl:
+    with open(f, encoding='utf-8') as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
     # reset Errors singleton
@@ -107,7 +107,7 @@ semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/
 def test_semantic_non_blocking_errors(f):
     print(f'> testing {f}')
 
-    with open(f) as fl:
+    with open(f, encoding='utf-8') as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
     # reset Errors singleton
