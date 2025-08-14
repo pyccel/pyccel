@@ -2120,14 +2120,14 @@ class CToPythonWrapper(Wrapper):
         for as_name in expr.target:
             t = as_name.object
             if isinstance(t, ClassDef):
-                name = t.name
+                name = t.scope.get_python_name(t.name)
                 struct_name = f'Py{name}Object'
                 dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = type_name, scope_type = 'class'), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
-                self.scope.imports['classes'][t.name] = wrapped_class
+                self.scope.imports['classes'][name] = wrapped_class
                 import_wrapper = True
 
         if import_wrapper:
