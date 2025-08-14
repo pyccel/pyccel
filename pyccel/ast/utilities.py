@@ -622,7 +622,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
 
-            if not isinstance(rhs.length, LiteralInteger) or rhs.length > 10:
+            if not isinstance(rhs.length, LiteralInteger) or int(rhs.length) > 10:
                 if len(indices) == 0:
                     indices.append(new_index(PythonNativeInt(), 'i'))
                 idx = indices[0]
