@@ -73,7 +73,7 @@ def test_semantic_blocking_errors(f):
         pyccel.annotate(verbose = 0)
 
     assert errors.has_blockers()
-    messages = [e.message for f_errs in errors.error_info_map.values() for e in f_errs]
+    messages = [str(e.message) for f_errs in errors.error_info_map.values() for e in f_errs]
     assert any(expected_error_msg in m for m in messages)
 
 @pytest.mark.xdist_incompatible
@@ -120,7 +120,7 @@ def test_semantic_non_blocking_errors(f):
     pyccel.annotate(verbose = 0)
 
     assert errors.has_errors()
-    messages = [e.message for f_errs in errors.error_info_map.values() for e in f_errs]
+    messages = [str(e.message) for f_errs in errors.error_info_map.values() for e in f_errs]
     assert any(expected_error_msg in m for m in messages)
 
 @pytest.mark.xdist_incompatible

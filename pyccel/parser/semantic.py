@@ -6279,7 +6279,10 @@ class SemanticParser(BasicParser):
             The semantic ListAppend object.
         """
         list_obj, append_arg = [a.value for a in args]
-        semantic_node = ListAppend(list_obj, append_arg)
+        try:
+            semantic_node = ListAppend(list_obj, append_arg)
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
         if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)) \
                 and not isinstance(append_arg, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, append_arg, expr)
@@ -6306,7 +6309,10 @@ class SemanticParser(BasicParser):
             The semantic ListInsert object.
         """
         list_obj, index, new_elem = [a.value for a in args]
-        semantic_node = ListInsert(list_obj, index, new_elem)
+        try:
+            semantic_node = ListInsert(list_obj, index, new_elem)
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
         if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)) \
                 and not isinstance(new_elem, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, new_elem, expr)
