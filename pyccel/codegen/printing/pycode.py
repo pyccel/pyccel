@@ -254,6 +254,14 @@ class PythonCodePrinter(CodePrinter):
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
         if func.is_inline:
             return self._print(func)
+
+        low_level_name = func.name
+        name = self.scope.get_python_name(interface[0].name if interface else func.name)
+        wrapping = f"@wrapping('{low_level_name}')\n" if name != low_level_name else ''
+        if wrapping:
+            self.add_import(Import('pyccel.decorators',
+                                   [AsName(FunctionDef('wrapping', (), ()), 'wrapping')]))
+
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
@@ -268,9 +276,9 @@ class PythonCodePrinter(CodePrinter):
             res = f' -> {self._get_type_annotation(result.var)}'
         else:
             res = ' -> None'
-        name = self.scope.get_python_name(interface[0].name if interface else func.name)
         self.exit_scope()
-        return ''.join((overload, f"def {name}({args}){res}:\n", self._indent_codestring(body)))
+        return ''.join((wrapping, overload, f"def {name}({args}){res}:\n",
+                        self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
         """
