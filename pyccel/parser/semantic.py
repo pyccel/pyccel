@@ -4766,6 +4766,9 @@ class SemanticParser(BasicParser):
         available_type_vars.update(self.scope.collect_all_type_vars())
         used_type_vars = {}
         for a in expr.arguments:
+            if a.annotation is None:
+                errors.report(MISSING_TYPE_ANNOTATIONS,
+                        symbol=expr, severity='fatal')
             used_objs = a.annotation.get_attribute_nodes(PyccelSymbol)
             for o in used_objs:
                 if o in available_type_vars:
