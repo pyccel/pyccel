@@ -2755,7 +2755,7 @@ class SemanticParser(BasicParser):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
-            syntactic_init_func_name = name_suffix+'__init'
+            syntactic_init_func_name = '__init__'
             init_func_name = self.scope.get_new_name(syntactic_init_func_name, object_type = 'function')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
@@ -5420,7 +5420,7 @@ class SemanticParser(BasicParser):
                                 m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
                                 container[entry][t].set_current_user_node(m)
                             elif entry == 'variables':
-                                container[entry][t] = e.clone(t)
+                                container[entry][t] = e.clone(e.name)
                             else:
                                 container[entry][t] = e
                             targets[t] = e
@@ -5457,7 +5457,7 @@ class SemanticParser(BasicParser):
                 targets.append(AsName(import_init, new_name))
 
                 if new_name != old_name:
-                    import_init = import_init.clone(new_name)
+                    import_init = import_init.clone(old_name, is_imported = True)
                     container['functions'][old_name] = import_init
 
                 result  = import_init()
