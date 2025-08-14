@@ -2366,11 +2366,7 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
-        low_level_name = func.name
-        if func.is_imported:
-            low_level_name = func.scope.get_expected_name(low_level_name)
-
-        call_code = f'{low_level_name}({args})'
+        call_code = f'{func.name}({args})'
         if func.results.var is not Nil() and \
                 not isinstance(func.results.var.class_type, InhomogeneousTupleType):
             return call_code

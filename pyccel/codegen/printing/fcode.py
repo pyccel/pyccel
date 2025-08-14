@@ -3578,6 +3578,10 @@ class FCodePrinter(CodePrinter):
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         for k, m in _default_methods.items():
             f_name = f_name.replace(k, m)
+
+        if func.is_imported:
+            f_name = self.scope.get_import_alias(func, 'functions')
+
         args   = expr.args
         func_result_variables = func.scope.collect_all_tuple_elements(func.results.var) \
                                     if func.scope else [func.results.var]

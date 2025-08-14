@@ -798,6 +798,36 @@ class Scope(object):
         else:
             raise RuntimeError(f"{start_name} does not exist in scope")
 
+    def get_import_alias(self, obj, category = None):
+        """
+        Get the name used to access an imported object in the current scope.
+
+        Get the name used to access an imported object in the current scope.
+        This is different to the current name when the function was imported
+        with import X as Y, but only some languages are capable of renaming
+        methods in this way so the original object's name shouldn't be
+        modified.
+
+        Parameters
+        ----------
+        obj : PyccelAstNode
+            The object we are searching for.
+        category : str, optional
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories.
+            If no value is provided then we look in all categories.
+        """
+        for l in ([category] if category else self._locals.keys()):
+            import_obj = self.imports[l]
+            name = next((n for n,o in import_obj.items() if o is obj), None)
+            if name:
+                return name
+
+        if self.parent_scope:
+            return self.parent_scope.get_import_alias(obj, category)
+        else:
+            raise RuntimeError(f"Can't find expected imported object {obj} in scope")
+
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
         has the scope inner_scope
