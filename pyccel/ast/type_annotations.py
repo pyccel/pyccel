@@ -16,7 +16,7 @@ from .bitwise_operators import PyccelBitOr
 from .core import FunctionDefArgument, FunctionDefResult
 
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import VoidType, GenericType, StringType, PyccelType, FinalType
+from .datatypes import VoidType, GenericType, StringType, PyccelType
 
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
