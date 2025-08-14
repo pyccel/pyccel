@@ -1,3 +1,4 @@
+# Unexpected type annotation in creation of A
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class A:
@@ -10,4 +11,3 @@ class A:
 
 if __name__ == '__main__':
     myA : int = A()
-
