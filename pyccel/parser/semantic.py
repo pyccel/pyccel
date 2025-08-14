@@ -1970,7 +1970,8 @@ class SemanticParser(BasicParser):
             new_expressions.append(Deallocate(var))
             return
 
-        elif class_type != var.class_type:
+        elif class_type != var.class_type or \
+                (isinstance(class_type, InhomogeneousTupleType) and class_type is not var.class_type):
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
@@ -1995,8 +1996,11 @@ class SemanticParser(BasicParser):
                     isinstance(class_type, InhomogeneousTupleType):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
                 if isinstance(rhs, PythonTuple):
-                    shape = get_shape_of_multi_level_container(rhs)
-                    raise_error = len(shape) != class_type.rank or any(a != var.class_type.element_type for a in class_type)
+                    try:
+                        shape = get_shape_of_multi_level_container(rhs)
+                        raise_error = len(shape) != class_type.rank or any(a != var.class_type.element_type for a in class_type)
+                    except AssertionError:
+                        raise_error = True
                 else:
                     raise_error = any(a != var.class_type.element_type for a in class_type) or \
                             not isinstance(rhs, Variable)
