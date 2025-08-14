@@ -475,8 +475,6 @@ class PythonCodePrinter(CodePrinter):
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
-            if not isinstance(func, FunctionAddress):
-                func.rename(expr.name)
             func_def_code.append(self._print(func))
 
         # Find all the arguments which lead to the same code snippet.
@@ -539,10 +537,8 @@ class PythonCodePrinter(CodePrinter):
             return code
 
         interface = expr.get_direct_user_nodes(lambda x: isinstance(x, Interface))
-        if self._in_header and interface:
+        if interface:
             name = self._print(expr.scope.get_python_name(expr.name))
-        else:
-            name = self._print(expr.name)
 
         self.set_scope(expr.scope)
         imports    = ''.join(self._print(i) for i in expr.imports)
