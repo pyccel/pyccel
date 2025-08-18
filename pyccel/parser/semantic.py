@@ -3337,7 +3337,7 @@ class SemanticParser(BasicParser):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
-            dtype = self.get_class_construct(visited_dtype.name)
+            dtype = self.get_class_construct(self.scope.get_python_name(visited_dtype.name))
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
@@ -4881,7 +4881,7 @@ class SemanticParser(BasicParser):
                     self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
             if arguments and arguments[0].bound_argument:
-                if arguments[0].var.cls_base.name != cls_name:
+                if arguments[0].var.cls_base is not bound_class:
                     errors.report('Class method self argument does not have the expected type',
                             severity='error', symbol=arguments[0])
                 for s in expr.scope.dotted_symbols:
@@ -5255,7 +5255,21 @@ class SemanticParser(BasicParser):
             errors.report("Classes can only be declared in modules.",
                     symbol=expr, severity='error')
 
-        name = self.scope.get_expected_name(expr.name)
+        decorators = expr.decorators
+        not_used = [d for d in decorators if d != 'low_level']
+        if len(not_used) >= 1:
+            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
+        if 'low_level' in decorators:
+            self.scope.remove_symbol(expr.name)
+            low_level_decs = decorators['low_level']
+            assert len(low_level_decs) == 1
+            arg = low_level_decs[0].args[0].value
+            assert isinstance(arg, LiteralString)
+            name = PyccelSymbol(arg.python_value)
+            self.scope.insert_low_level_symbol(expr.name, name)
+        else:
+            name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, self.scope.get_python_name(name))()

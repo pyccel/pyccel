@@ -1004,6 +1004,7 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        decorators = {}
         for d in self._visit(stmt.decorator_list):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
