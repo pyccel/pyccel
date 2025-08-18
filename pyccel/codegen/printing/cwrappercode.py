@@ -282,6 +282,7 @@ class CWrapperCodePrinter(CCodePrinter):
         API_var = mod.variables[0]
 
         macro_defs = ''
+        type_declarations = ''
         classes = []
         for i,c in enumerate(mod.classes):
             struct_name = c.struct_name
@@ -291,6 +292,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     "    PyObject_HEAD\n"
                     + attributes +
                     "};\n")
+            type_declarations += f'static PyTypeObject {c.type_name};\n'
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces) + \
                           tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset) + \
@@ -311,6 +313,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 {imports}\n \
                 {class_code}\n \
                 #ifdef {header_id}\n\n \
+                {type_declarations}\n\n \
                 {function_signatures}\n \
                 #else\n\n \
                 {static_import_decs}\n \
