@@ -308,19 +308,12 @@ class CWrapperCodePrinter(CCodePrinter):
         self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
-        return (f"#ifndef {header_guard}\n \
-                #define {header_guard}\n\n \
-                {imports}\n \
-                {class_code}\n \
-                #ifdef {header_id}\n\n \
-                {type_declarations}\n\n \
-                {function_signatures}\n \
-                #else\n\n \
-                {static_import_decs}\n \
-                {macro_defs}\n \
-                {import_func}\n \
-                #endif\n \
-                #endif // {header_guard}\n")
+        start = f"#ifndef {header_guard}\n#define {header_guard}\n"
+        end = f"#endif\n#endif // {header_guard}\n"
+        parts = (start, imports, class_code, f"#ifdef {header_id}\n",
+                 type_declarations, function_signatures, "#else\n",
+                 static_import_decs, macro_defs, import_func, end)
+        return '\n'.join((p for p in parts if p))
 
     def _print_PyModule(self, expr):
         scope = expr.scope
