@@ -318,7 +318,6 @@ def execute_pyccel_wrap(fname, *,
 
     start_compile_wrapper = time.time()
     for obj, wrapper_language in zip(wrapper_compile_objs, printed_languages):
-        print("compiling ", obj)
         compiler.compile_module(compile_obj=obj,
                 output_folder=pyccel_dirpath,
                 language=wrapper_language,
