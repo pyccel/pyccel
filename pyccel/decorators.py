@@ -146,7 +146,7 @@ def allow_negative_index(*args):
         return f
     return identity
 
-def wrapping(low_level_name : str):
+def low_level(low_level_name : str):
     """
     Indicate the low-level name of the function being wrapped.
 
