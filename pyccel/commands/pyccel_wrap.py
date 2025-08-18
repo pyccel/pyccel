@@ -147,7 +147,7 @@ def pyccel_wrap_command() -> None:
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.errors.errors     import ErrorsMode
     from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
-    from pyccel.codegen.pipeline  import execute_pyccel
+    from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
 
     # ...
     filename = args.filename
