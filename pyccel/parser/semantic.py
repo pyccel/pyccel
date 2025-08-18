@@ -3265,7 +3265,10 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                cls_name = str(class_type)
+                if isinstance(class_type, CustomDataType):
+                    cls_name = self.scope.get_python_name(cls_name)
+                cls_base = self.scope.find(cls_name, 'classes') or get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
                 elif isinstance(class_type, HomogeneousTupleType):
@@ -5260,7 +5263,7 @@ class SemanticParser(BasicParser):
             name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
-        dtype = DataTypeFactory(expr.name)()
+        dtype = DataTypeFactory(name)()
         typenames_to_dtypes[expr.name] = dtype
         self.scope.insert_cls_construct(dtype)
 
