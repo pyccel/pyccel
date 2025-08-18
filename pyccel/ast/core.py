@@ -3155,9 +3155,9 @@ class ClassDef(ScopedAstNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods', '_class_type',
-                 '_imports','_superclasses','_interfaces', '_docstring')
-    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring',
-                        '_decorators')
+                 '_imports','_superclasses','_interfaces', '_docstring',
+                 '_decorators')
+    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
     def __init__(
         self,
