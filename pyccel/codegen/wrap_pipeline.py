@@ -275,7 +275,17 @@ def execute_pyccel_wrap(fname, *,
     timers['Wrapper creation'] = time.time() - start_wrapper_creation
 
     start_wrapper_printing = time.time()
-    wrapper_files = wrappergen.print(pyccel_dirpath)
+    try:
+        wrapper_files = wrappergen.print(pyccel_dirpath)
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
     timers['Wrapper printing'] = time.time() - start_wrapper_printing
 
     printed_languages = wrappergen.printed_languages
@@ -308,6 +318,7 @@ def execute_pyccel_wrap(fname, *,
 
     start_compile_wrapper = time.time()
     for obj, wrapper_language in zip(wrapper_compile_objs, printed_languages):
+        print("compiling ", obj)
         compiler.compile_module(compile_obj=obj,
                 output_folder=pyccel_dirpath,
                 language=wrapper_language,
