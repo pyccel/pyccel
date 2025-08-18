@@ -257,10 +257,9 @@ class PythonCodePrinter(CodePrinter):
 
         low_level_name = func.name
         name = func.scope.get_python_name(interface[0].name if interface else func.name)
-        wrapping = f"@low_level('{low_level_name}')\n" if name != low_level_name else ''
-        if wrapping:
-            self.add_import(Import('pyccel.decorators',
-                                   [AsName(FunctionDef('wrapping', (), ()), 'wrapping')]))
+        wrapping = f"@low_level('{low_level_name}')\n"
+        self.add_import(Import('pyccel.decorators',
+                               [AsName(FunctionDef('low_level', (), ()), 'low_level')]))
 
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
