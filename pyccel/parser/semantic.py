@@ -4788,6 +4788,8 @@ class SemanticParser(BasicParser):
                 arg = low_level_decs[0].args[0].value
                 assert isinstance(arg, LiteralString)
                 name = PyccelSymbol(arg.python_value)
+                insertion_scope.remove_symbol(python_name)
+                insertion_scope.insert_low_level_symbol(python_name, name)
             else:
                 name = expr.scope.get_expected_name(python_name)
         elif isinstance(expr, Interface):
