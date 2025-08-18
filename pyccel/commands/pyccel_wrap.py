@@ -135,6 +135,8 @@ def pyccel_wrap_command() -> None:
     group = parser.add_argument_group('Other options')
     group.add_argument('-v', '--verbose', action='count', default = 0,\
                         help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
+    group.add_argument('--developer-mode', action='store_true', \
+                        help='Show internal messages.')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
@@ -161,28 +163,6 @@ def pyccel_wrap_command() -> None:
         args.conda_warnings = 'basic'
 
     # ...
-    if args.export_compiler_config:
-        cext = filename.suffix
-        if cext == '':
-            filename = filename.with_suffix('.json')
-        elif cext != '.json':
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Wrong file extension. Expecting `json`, but found',
-                          symbol=cext,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
-
-        execute_pyccel('',
-                       compiler_family = str(compiler) if compiler is not None else None,
-                       compiler_export_file = filename)
-        sys.exit(0)
-
-    # ...
-    if args.convert_only or args.syntax_only or args.semantic_only:
-        compiler = None
-
     # ... report error
     if filename.is_file():
         fext = filename.suffix

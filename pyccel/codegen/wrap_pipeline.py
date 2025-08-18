@@ -268,11 +268,6 @@ def execute_pyccel_wrap(fname, *,
 
 
 
-    if verbose:
-        print( '> Shared library has been created: {}'.format(generated_filepath))
-
-        if codegen.is_program:
-            print( '> Executable has been created: {}'.format(generated_program_filepath))
 
     # Print all warnings now
     if errors.has_warnings():
