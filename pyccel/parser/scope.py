@@ -550,7 +550,7 @@ class Scope(object):
             python_symbol = python_symbol.name
 
         if not self.allow_loop_scoping and self.is_loop:
-            return self.parent_scope.insert_low_level_symbol(python_symbol, low_level_symbol)
+            self.parent_scope.insert_low_level_symbol(python_symbol, low_level_symbol)
 
         assert python_symbol not in self._used_symbols
 
