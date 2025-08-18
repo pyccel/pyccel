@@ -3285,13 +3285,14 @@ class ClassDef(ScopedAstNode):
 
     @property
     def methods_as_dict(self):
-        """Returns a dictionary that contains all methods, where the key is the
-        method's name."""
+        """
+        A dictionary containing all methods with Python names as keys.
 
-        d_methods = {}
-        for i in self.methods:
-            d_methods[i.name] = i
-        return d_methods
+        A dictionary containing all the methods in the class. The keys are the original
+        Python names of the methods. The values are the methods themselves.
+        """
+        return {self._scope.get_python_name(m.name) if m.is_semantic else m.name: m
+                for m in self.methods}
 
     @property
     def attributes_as_dict(self):
