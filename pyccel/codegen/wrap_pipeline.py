@@ -278,14 +278,51 @@ def execute_pyccel_wrap(fname, *,
     wrapper_files = wrappergen.print(pyccel_dirpath)
     timers['Wrapper printing'] = time.time() - start_wrapper_printing
 
+    printed_languages = wrappergen.printed_languages
+
+    includes = [i.strip() for i in parser.metavars.get('includes', '').split(',') if i]
+    libs = [l.strip() for l in parser.metavars.get('libraries', '').split(',') if l]
+    libdirs = [l.strip() for l in parser.metavars.get('libdirs', '').split(',') if l]
+
+    meta_flags = [f.strip() for f in parser.metavars.get('flags', '').split(',') if f]
+
     wrapper_compile_objs = [CompileObj(filepath,
                                        pyccel_dirpath,
-                                       flags = flags)
+                                       flags = meta_flags + flags,
+                                       include = includes,
+                                       libs = libs,
+                                       libdir = libdirs)
                             for filepath in wrapper_files[:-1]] + \
                            [CompileObj(wrapper_files[-1],
                                        pyccel_dirpath,
-                                       flags = wrapper_flags,
+                                       flags = meta_flags + wrapper_flags,
+                                       include = includes,
+                                       libs = libs,
+                                       libdir = libdirs,
                                        extra_compilation_tools = ('python',))]
+
+    for i, (obj, lang, imports) in enumerate(zip(wrapper_compile_objs, printed_languages, wrappergen.get_additional_imports())):
+        obj.add_dependencies(*wrapper_compile_objs[:i])
+        manage_dependencies(imports, compiler,
+                pyccel_dirpath, obj, lang, verbose)
+
+    start_compile_wrapper = time.time()
+    for obj, wrapper_language in zip(wrapper_compile_objs, printed_languages):
+        compiler.compile_module(compile_obj=obj,
+                output_folder=pyccel_dirpath,
+                language=wrapper_language,
+                verbose=verbose)
+
+    if output_name is None:
+        output_name = str(Path(fname).with_suffix(''))
+
+    sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_objs[-1],
+                                                    output_folder = folder,
+                                                    sharedlib_modname = output_name,
+                                                    language = language,
+                                                    verbose = verbose)
+
+    timers['Wrapper compilation'] = time.time() - start_compile_wrapper
 
 
     # Print all warnings now
