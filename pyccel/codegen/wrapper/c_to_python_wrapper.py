@@ -149,7 +149,7 @@ class CToPythonWrapper(Wrapper):
             var = Variable(self._python_object_map[dtype],
                            self.scope.get_new_name(name),
                            memory_handling='alias',
-                           cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
+                           cls_base = self.scope.find(self.scope.get_python_name(dtype.name), 'classes', raise_if_missing = True),
                            is_temp=is_temp)
         else:
             var = Variable(PyccelPyObject(),
@@ -766,7 +766,7 @@ class CToPythonWrapper(Wrapper):
         for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
-            class_name = wrapped_class.name
+            class_name = self.scope.get_python_name(wrapped_class.name)
 
             ready_type = PyType_Ready(type_object)
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
@@ -2122,7 +2122,7 @@ class CToPythonWrapper(Wrapper):
         for as_name in expr.target:
             t = as_name.object
             if isinstance(t, ClassDef):
-                name = t.name
+                name = t.scope.get_python_name(t.name)
                 struct_name = f'Py{name}Object'
                 dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
@@ -2305,7 +2305,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
-        python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
+        python_cls_base = self.scope.find(self.scope.get_python_name(dtype.name), 'classes', raise_if_missing = True)
         scope = python_cls_base.scope
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         if bound_argument:
@@ -2315,7 +2315,7 @@ class CToPythonWrapper(Wrapper):
             cast_type = Variable(self._python_object_map[dtype],
                                 self.scope.get_new_name(collect_arg.name),
                                 memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
+                                cls_base = python_cls_base)
             self.scope.insert_variable(cast_type)
             cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
         c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
