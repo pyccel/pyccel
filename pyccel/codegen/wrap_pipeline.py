@@ -17,8 +17,9 @@ from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
+from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
-from pyccel.codegen.python_wrapper import create_shared_library
+from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
@@ -266,7 +267,25 @@ def execute_pyccel_wrap(fname, *,
 
     semantic_parser = parser.semantic_parser
 
+    codegen = Codegen(semantic_parser, module_name, language, verbose)
 
+    start_wrapper_creation = time.time()
+    wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+    wrappergen.wrap(base_dirpath)
+    timers['Wrapper creation'] = time.time() - start_wrapper_creation
+
+    start_wrapper_printing = time.time()
+    wrapper_files = wrappergen.print(pyccel_dirpath)
+    timers['Wrapper printing'] = time.time() - start_wrapper_printing
+
+    wrapper_compile_objs = [CompileObj(filepath,
+                                       pyccel_dirpath,
+                                       flags = flags)
+                            for filepath in wrapper_files[:-1]] + \
+                           [CompileObj(wrapper_files[-1],
+                                       pyccel_dirpath,
+                                       flags = wrapper_flags,
+                                       extra_compilation_tools = ('python',))]
 
 
     # Print all warnings now
