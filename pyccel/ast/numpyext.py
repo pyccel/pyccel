@@ -206,8 +206,13 @@ def process_shape(is_scalar, shape):
     ----------
     is_scalar : bool
         True if the result is a scalar, False if it is an array.
-    shape : TypedAstNode
+    shape : TypedAstNode | iterable | int
         Input shape.
+
+    Returns
+    -------
+    tuple[int | TypedAstNode]
+        The shape of the array in a compatible format.
     """
     if is_scalar:
         return None
