@@ -257,10 +257,10 @@ def test_classes_10(language):
     import classes.classes_10 as mod
     modnew = epyccel(mod, language = language)
 
-    a_py = mod.A(3)
+    a = modnew.A(3)
 
-    assert isinstance(a_py, mod.A)
-    assert isinstance(a_py[0], mod.B)
+    assert isinstance(a, modnew.A)
+    assert isinstance(a[0], modnew.B)
 
 def test_generic_methods(language):
     import classes.generic_methods as mod
