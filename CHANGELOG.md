@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   #2429 : Fix interface parsing from imported function.
 -   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
 -   #2431 : Fix missing type checks for functions called by functions with variable argument types.
+-   #2433 : Fix shape calculation for resized class member variables.
 
 ### Changed
 
