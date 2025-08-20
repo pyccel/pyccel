@@ -1629,7 +1629,7 @@ class CToPythonWrapper(Wrapper):
         """
 
         collect_arg = self._python_object_map[expr]
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
         is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
         orig_var = getattr(expr.var, 'original_var', expr.var)
