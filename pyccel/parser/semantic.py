@@ -4446,7 +4446,7 @@ class SemanticParser(BasicParser):
         lhs_symbol = expr.lhs
         ne = []
         lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne)
-        lhs_alloc = ne[0]
+        lhs_alloc = ne[0] if ne else EmptyNode()
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
@@ -4456,7 +4456,7 @@ class SemanticParser(BasicParser):
         assign = None
         target_conversion_func = self._visit(target_type_name)
         if (isinstance(target_conversion_func, PyccelFunctionDef)
-                and target_conversion_func.cls_name is NumpyArray):
+                and target_conversion_func.cls_name is NumpyArray) or isinstance(lhs_alloc, EmptyNode):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
