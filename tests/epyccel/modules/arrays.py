@@ -1822,7 +1822,7 @@ def unpack_array_2D_of_known_size():
 
 def assign_slice(a : 'int[:]', n : int):
     m = len(a)
-    a[n::2] = [2*i for i in range((m-n)//2)]
+    a[n::2] = [2*i for i in range((m-n+1)//2)]
 
 #==============================================================================
 # Indexing
