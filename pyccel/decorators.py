@@ -12,6 +12,7 @@ __all__ = (
     'allow_negative_index',
     'elemental',
     'inline',
+    'low_level',
     'private',
     'pure',
     'stack_array',
@@ -140,6 +141,26 @@ def allow_negative_index(*args):
     -------
     Function
         The identity decorator which will be applied to the function.
+    """
+    def identity(f):
+        return f
+    return identity
+
+def low_level(low_level_name : str):
+    """
+    Indicate the low-level name of the function being wrapped.
+
+    Indicate the low-level name of the function being wrapped. This decorator
+    is only designed to be used in .pyi files. It maps the name of Python
+    function prototypes to the name of the low-level function it describes.
+    These two names may be different due to naming conflicts, scoping names,
+    or because more explicit names are wanted in Python (e.g. to avoid
+    6 character Fortran names).
+
+    Parameters
+    ----------
+    low_level_name : str
+        The low-level name of the function being described.
     """
     def identity(f):
         return f

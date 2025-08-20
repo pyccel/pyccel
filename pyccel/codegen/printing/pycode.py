@@ -254,6 +254,13 @@ class PythonCodePrinter(CodePrinter):
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
         if func.is_inline:
             return self._print(func)
+
+        low_level_name = func.name
+        name = func.scope.get_python_name(interface[0].name if interface else func.name)
+        wrapping = f"@low_level('{low_level_name}')\n"
+        self.add_import(Import('pyccel.decorators',
+                               [AsName(FunctionDef('low_level', (), ()), 'low_level')]))
+
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
@@ -268,9 +275,9 @@ class PythonCodePrinter(CodePrinter):
             res = f' -> {self._get_type_annotation(result.var)}'
         else:
             res = ' -> None'
-        name = self.scope.get_python_name(interface[0].name if interface else func.name)
         self.exit_scope()
-        return ''.join((overload, f"def {name}({args}){res}:\n", self._indent_codestring(body)))
+        return ''.join((wrapping, overload, f"def {name}({args}){res}:\n",
+                        self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
         """
@@ -1396,10 +1403,11 @@ class PythonCodePrinter(CodePrinter):
         type_var_declarations = self._get_type_var_declarations()
 
         init_func = mod.init_func
-        var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+        var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
-        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs \
+        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs \
                 if f not in (mod.init_func, mod.free_func))
+        funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
         classes = ''
         for classDef in mod.classes:
             classes += f"class {classDef.name}:\n"
@@ -1429,7 +1437,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             init_body = ''
 
-        return '\n'.join((imports, type_var_declarations, var_decl, classes, funcs, init_body))
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+                         if section)
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)

@@ -650,7 +650,8 @@ class SemanticParser(BasicParser):
         if all(r.expr is None for r in expr.get_attribute_nodes(Return)):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
-                    if isinstance(i.lhs.class_type, CustomDataType) and self.current_function_name != '__del__':
+                    if isinstance(i.lhs.class_type, CustomDataType) and \
+                            self.current_function_name != '__del__':
                         continue
                 if isinstance(i.class_type, CustomDataType) and i.is_alias:
                     continue
@@ -1148,17 +1149,17 @@ class SemanticParser(BasicParser):
 
         # create a new attribute to check allocation
         deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
-        deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+        deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
                                      class_type = PythonNativeBool(), is_private=True)
         expr.add_new_attribute(deallocater)
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
-        del_method = next((method for method in methods if method.name == '__del__'), None)
+        del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
-            argument = FunctionDefArgument(Variable(class_type, 'self', cls_base = expr), bound_argument = True)
             del_name = cls_scope.get_new_name('__del__')
             scope = self.create_new_function_scope('__del__', del_name)
+            argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
             self.exit_function_scope()
             del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
@@ -1484,13 +1485,15 @@ class SemanticParser(BasicParser):
         self._scope = new_scope
         self._visit(old_func)
 
+        old_name = old_func.name
+
         # Retrieve the annotated function
         if cls_base_syntactic:
-            new_name = cls_scope.get_expected_name(old_func.name)
-            func = cls_scope.find(new_name, 'functions')
+            new_name = cls_scope.get_expected_name(old_name)
+            func = cls_scope.find(old_name, 'functions')
         else:
-            new_name = self.scope.get_expected_name(old_func.name)
-            func = self.scope.find(new_name, 'functions')
+            new_name = self.scope.get_expected_name(old_name)
+            func = self.scope.find(old_name, 'functions')
         assert func is not None
         # Add the Module of the imported function to the new function
         if old_func.is_imported:
@@ -1589,7 +1592,7 @@ class SemanticParser(BasicParser):
                     elem_name = self.scope.symbolic_aliases[idx_name]
                     var = self.check_for_variable(elem_name)
                 else:
-                    elem_name = self.scope.get_new_name( f'{name}_{i}' )
+                    elem_name = insertion_scope.get_new_name( f'{name}_{i}' )
                 pyccel_stage.set_stage('semantic')
 
                 if var is None:
@@ -2663,8 +2666,20 @@ class SemanticParser(BasicParser):
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
-        for f in expr.funcs:
-            self.insert_function(f)
+        if not self.is_header_file:
+            for f in expr.funcs:
+                self.insert_function(f)
+        else:
+            funcs = {}
+            for f in expr.funcs:
+                funcs.setdefault(f.name, []).append(f)
+
+            pyccel_stage.set_stage('syntactic')
+            funcs_to_insert = [f[0] if len(f) == 1 else Interface(n, f) for n, f in funcs.items()]
+            pyccel_stage.set_stage('semantic')
+
+            for f in funcs_to_insert:
+                self.insert_function(f)
 
         # Avoid conflicts with symbols from Program
         if expr.program:
@@ -2713,6 +2728,8 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
+        # Funcs to visit are collected from scope so functions that have already been visited
+        # can be excluded.
         syntactic_funcs = [f for f in self.scope.functions.values() if not f.is_semantic]
         funcs_to_visit = [f for func in syntactic_funcs \
                             for f in (func.functions if isinstance(func, Interface) else (func,))]
@@ -2760,7 +2777,8 @@ class SemanticParser(BasicParser):
             scope_variables = list(self.scope.variables.values())
             for v in scope_variables:
                 if v.is_temp:
-                    self.scope.remove_variable(v)
+                    # Leave symbol to handle tuples
+                    self.scope.remove_variable(v, remove_symbol = False)
                     init_scope.insert_variable(v)
                     to_remove.append(v)
                     variables.remove(v)
@@ -2781,6 +2799,17 @@ class SemanticParser(BasicParser):
             init_func = FunctionDef(init_func_name, [], [init_func_body],
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
+            self.scope.insert_variable(init_var)
+
+            # Find any remaining unused symbols in the main scope and move them to the init body scope
+            # This may include temporary variables whose necessity has not yet been determined, such as
+            # loop variables. They must be moved so the symbol is found when the variable is eventually
+            # inserted into the scope.
+            unused_symbols = [n for n in self.scope.local_used_symbols \
+                              if self.scope.find(n) is None and n != mod_name]
+            for s in unused_symbols:
+                self.scope.remove_symbol(s)
+                init_scope.insert_symbol(s)
 
         if init_func:
             syntactic_free_func_name = name_suffix+'__free'
@@ -2993,7 +3022,13 @@ class SemanticParser(BasicParser):
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
             elif isinstance(line, list) and isinstance(line[0], Variable):
-                self.scope.insert_variable(line[0])
+                var = line[0]
+                if isinstance(var, DottedVariable):
+                    cls_def = var.lhs.cls_base
+                    cls_def.add_new_attribute(var)
+                    cls_def.scope.insert_variable(var.clone(var.name, new_class = Variable))
+                else:
+                    self.scope.insert_variable(var)
             else:
                 ls.append(line)
         self._additional_exprs.pop()
@@ -3239,7 +3274,10 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                cls_name = str(class_type)
+                if isinstance(class_type, CustomDataType):
+                    cls_name = self.scope.get_python_name(cls_name)
+                cls_base = self.scope.find(cls_name, 'classes') or get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
                 elif isinstance(class_type, HomogeneousTupleType):
@@ -3276,7 +3314,7 @@ class SemanticParser(BasicParser):
                 errors.report(f"Variable was declared as the result of the function {self.current_function_name} but is now declared with a different type",
                         symbol=expr, severity='error')
             # Remove variable from scope as AnnotatedPyccelSymbol is always inserted into scope
-            self.scope.remove_variable(var)
+            self.scope.remove_variable(var, remove_symbol = False)
             return [var]
 
         return possible_args
@@ -3305,7 +3343,7 @@ class SemanticParser(BasicParser):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
-            dtype = self.get_class_construct(visited_dtype.name)
+            dtype = self.get_class_construct(self.scope.get_python_name(visited_dtype.name))
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
@@ -3529,15 +3567,9 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCall(self, expr):
         name     = expr.funcdef
-        try:
-            name = self.scope.get_expected_name(name)
-        except RuntimeError:
-            pass
-
         func = self.scope.find(name, 'functions')
 
         if func is None:
-            name = str(expr.funcdef)
             if name in builtin_functions_dict:
                 func = PyccelFunctionDef(name, builtin_functions_dict[name])
 
@@ -4681,8 +4713,10 @@ class SemanticParser(BasicParser):
 
         return_objs = func.results
         return_var = return_objs.var
-        if isinstance(return_var, (AnnotatedPyccelSymbol, Variable)):
+        if isinstance(return_var, AnnotatedPyccelSymbol):
             return_var = return_var.name
+        elif isinstance(return_var, Variable):
+            return_var = self.scope.get_python_name(return_var.name)
 
         assigns     = []
         if return_var != results:
@@ -4731,6 +4765,8 @@ class SemanticParser(BasicParser):
             errors.report("Functions can only be declared in modules, classes or inside other functions.",
                     symbol=expr, severity='error')
 
+        python_name = expr.name
+
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
         insertion_scope = self.scope
@@ -4738,10 +4774,11 @@ class SemanticParser(BasicParser):
             bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
             insertion_scope = bound_class.scope
 
+        decorators         = expr.decorators.copy()
+
         existing_semantic_funcs = []
         if not expr.is_semantic:
-            name = expr.scope.get_expected_name(expr.name)
-            func = insertion_scope.functions.get(name, None)
+            func = insertion_scope.functions.get(python_name, None)
             if func:
                 if func.is_semantic:
                     if self.is_header_file:
@@ -4750,15 +4787,24 @@ class SemanticParser(BasicParser):
                         existing_semantic_funcs = [*func.functions]
                     else:
                         return EmptyNode()
-                else:
-                    insertion_scope.functions.pop(name)
+                insertion_scope.remove_function(python_name)
+            if 'low_level' in decorators:
+                low_level_decs = decorators['low_level']
+                assert len(low_level_decs) == 1
+                arg = low_level_decs[0].args[0].value
+                assert isinstance(arg, LiteralString)
+                name = PyccelSymbol(arg.python_value)
+                if 'overload' not in decorators:
+                    insertion_scope.remove_symbol(python_name)
+                    insertion_scope.insert_low_level_symbol(python_name, name)
+            else:
+                name = expr.scope.get_expected_name(python_name)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
             expr.invalidate_node()
             expr = expr.syntactic_node
-            name = expr.scope.get_expected_name(expr.name)
+            name = expr.scope.get_expected_name(python_name)
 
-        decorators         = expr.decorators.copy()
         new_semantic_funcs = []
         sub_funcs          = []
         func_interfaces    = []
@@ -4814,21 +4860,19 @@ class SemanticParser(BasicParser):
             self.exit_function_scope()
 
         # this for the case of a function without arguments => no headers
-        interface_name = name
+        interface_name = expr.scope.get_expected_name(python_name)
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
-            if is_interface:
+            if is_interface and 'low_level' not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
-            insertion_scope.python_names[name] = expr.name
+            insertion_scope.python_names[name] = python_name
 
-            scope = self.create_new_function_scope(expr.name, name, decorators = decorators,
+            scope = self.create_new_function_scope(python_name, name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy(),
                     symbolic_aliases = expr.scope.symbolic_aliases)
-
-            self.scope.decorators.update(decorators)
 
             for n, dtype in zip(used_type_vars, possible_combinations[type_var_idx]):
                 self.scope.insert_symbolic_alias(n, dtype)
@@ -4843,7 +4887,7 @@ class SemanticParser(BasicParser):
                     self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
             if arguments and arguments[0].bound_argument:
-                if arguments[0].var.cls_base.name != cls_name:
+                if arguments[0].var.cls_base is not bound_class:
                     errors.report('Class method self argument does not have the expected type',
                             severity='error', symbol=arguments[0])
                 for s in expr.scope.dotted_symbols:
@@ -4908,7 +4952,8 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            func_ = insertion_scope.functions.pop(name)
+            func_ = insertion_scope.find(python_name, 'functions')
+            insertion_scope.remove_function(python_name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
             if func_.is_recursive and not is_inline:
@@ -4964,7 +5009,8 @@ class SemanticParser(BasicParser):
             }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
-                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
+                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
+                        if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
                 cls = InlineFunctionDef
             else:
@@ -4993,9 +5039,6 @@ class SemanticParser(BasicParser):
             new_semantic_funcs = new_semantic_funcs[0]
             self.insert_function(new_semantic_funcs, insertion_scope)
         else:
-            for f in new_semantic_funcs:
-                self.insert_function(f, insertion_scope)
-
             new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
             if expr.python_ast:
                 new_semantic_funcs.set_current_ast(expr.python_ast)
@@ -5093,8 +5136,7 @@ class SemanticParser(BasicParser):
                 # Otherwise the symbol used for the function arguments should be mapped
                 # to the call argument
                 func_a_name = replace_map.get(func_a, func_a)
-                self.scope.variables[func_a_name] = call_a
-                self.scope.local_used_symbols[func_a_name] = func_a_name
+                self.scope.inline_variable_definition(call_a, func_a_name)
 
         # Map local keyword call arguments to function arguments
         nargs = len(positional_call_args)
@@ -5110,8 +5152,7 @@ class SemanticParser(BasicParser):
                 # Otherwise the symbol used for the function arguments should be mapped
                 # to the call argument
                 used_func_a_name = replace_map.get(func_a_name, func_a_name)
-                self.scope.variables[used_func_a_name] = call_a
-                self.scope.local_used_symbols[func_a_name] = func_a_name
+                self.scope.inline_variable_definition(call_a, used_func_a_name)
 
         to_replace = list(replace_map.keys())
         local_var = list(replace_map.values())
@@ -5220,12 +5261,26 @@ class SemanticParser(BasicParser):
             errors.report("Classes can only be declared in modules.",
                     symbol=expr, severity='error')
 
-        name = self.scope.get_expected_name(expr.name)
+        decorators = expr.decorators
+        not_used = [d for d in decorators if d != 'low_level']
+        if len(not_used) >= 1:
+            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
+        if 'low_level' in decorators:
+            self.scope.remove_symbol(expr.name)
+            low_level_decs = decorators['low_level']
+            assert len(low_level_decs) == 1
+            arg = low_level_decs[0].args[0].value
+            assert isinstance(arg, LiteralString)
+            name = PyccelSymbol(arg.python_value)
+            self.scope.insert_low_level_symbol(expr.name, name)
+        else:
+            name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name)()
-        typenames_to_dtypes[name] = dtype
-        self.scope.cls_constructs[name] = dtype
+        typenames_to_dtypes[expr.name] = dtype
+        self.scope.insert_cls_construct(dtype)
 
         parent = self._find_superclasses(expr)
 
@@ -5410,7 +5465,7 @@ class SemanticParser(BasicParser):
                 container['variables'][source_target] = mod
                 targets = [AsName(mod, source_target)]
 
-            self.scope.cls_constructs.update(p.scope.cls_constructs)
+            self.scope.imports['cls_constructs'].update(p.scope.cls_constructs)
 
             # ... meta variables
 

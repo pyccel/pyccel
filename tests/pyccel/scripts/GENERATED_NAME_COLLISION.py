@@ -11,4 +11,5 @@ def g():
 def do():
     return 4
 
-a = f()
+if __name__ == '__main__':
+    a = f()
