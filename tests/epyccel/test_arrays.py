@@ -6413,6 +6413,13 @@ def test_unpacking_2D_of_known_size(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+def test_assign_slice(language):
+    f1 = arrays.assign_slice
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    assert np.array_equal(f1(a, 10), f2(a, 10))
+
 ##==============================================================================
 ## TEST INDEXING
 ##==============================================================================
