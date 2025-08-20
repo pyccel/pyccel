@@ -1821,7 +1821,8 @@ def unpack_array_2D_of_known_size():
     return x.sum(), y.sum(), z.sum()
 
 def assign_slice(a : 'int[:]', n : int):
-    a[:n] = [2*i for i in range(n)]
+    m = len(a)
+    a[n::2] = [2*i for i in range((m-n)//2)]
 
 #==============================================================================
 # Indexing
