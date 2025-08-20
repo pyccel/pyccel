@@ -4298,8 +4298,29 @@ class SemanticParser(BasicParser):
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                variables.append(handle_iterable_variable(var, a.variable, body.scope))
-                stop = a.variable.shape[0]
+                iter_var = a.variable
+                if isinstance(iter_var, IndexedElement):
+                    base = iter_var.base
+                    variables.append(handle_iterable_variable(var, base, body.scope))
+                    iter_slice = iter_var.indices[0]
+                    if iter_slice.start:
+                        start = iter_slice.start
+                    if iter_slice.stop:
+                        stop = iter_slice.stop
+                    else:
+                        stop = base.shape[0]
+                    if iter_slice.step:
+                        step = iter_slice.step
+                    if getattr(base, 'allows_negative_indexes', False) and \
+                            any(not is_literal_integer(s) for s in (start, stop, step)):
+                        # An if ternary expression cannot be easily expressed via sympy for shape calculations
+                        errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE +
+                                      f'This problem is related to the fact that {base.name} allows negative indexes.',
+                                      bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                      severity='error')
+                else:
+                    variables.append(handle_iterable_variable(var, a.variable, body.scope))
+                    stop = a.variable.shape[0]
 
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
