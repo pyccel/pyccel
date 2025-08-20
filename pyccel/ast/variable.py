@@ -690,22 +690,40 @@ class IndexedElement(TypedAstNode):
             # Calculate new shape
             new_shape = []
             from .mathext import MathCeil
+
+            negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
+
             for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
                     start = a.start
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
-                    if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
-                    if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                    try:
+                        if int(start) < 0:
+                            start = PyccelAdd(s, start, simplify=True)
+                    except TypeError:
+                        if negative_idxs_possible:
+                            new_shape.append(None)
+                            continue
+                    try:
+                        if int(stop) < 0:
+                            stop = PyccelAdd(s, stop, simplify=True)
+                    except TypeError:
+                        if negative_idxs_possible:
+                            new_shape.append(None)
+                            continue
 
                     _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
                     if step is not None:
-                        if isinstance(step, PyccelUnarySub):
-                            start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                            step = PyccelUnarySub(step)
+                        try:
+                            if int(step) < 0:
+                                start = s if a.start is None else start
+                                _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                                step = PyccelUnarySub(step)
+                        except TypeError:
+                            if negative_idxs_possible:
+                                new_shape.append(None)
+                                continue
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
