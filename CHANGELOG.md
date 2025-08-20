@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #2096 : Fix saving a list comprehension into a slice.
 -   #2424 : Fix `isinstance` call testing class instance.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
+-   #2429 : Fix interface parsing from imported function.
 
 ### Changed
 

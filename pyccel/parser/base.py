@@ -28,10 +28,14 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
+from pyccel.utilities.stage import PyccelStage
+
 #==============================================================================
 
 errors = Errors()
 error_mode = ErrorsMode()
+
+pyccel_stage = PyccelStage()
 
 #==============================================================================
 
@@ -348,7 +352,18 @@ class BasicParser(object):
         scope = scope or self.scope
         container = scope.functions
         if func.pyccel_staging == 'syntactic':
-            container[self.scope.get_expected_name(func.name)] = func
+            name = self.scope.get_expected_name(func.name)
+            if name in container:
+                old_func = container[name]
+                pyccel_stage.set_stage('syntactic')
+                if isinstance(old_func, Interface):
+                    container[name] = Interface(old_func.name, old_func.functions + (func,))
+                else:
+                    assert 'overload' in func.decorators
+                    container[name] = Interface(name, (old_func, func))
+                pyccel_stage.set_stage('semantic')
+            else:
+                container[name] = func
         else:
             name = func.name
             container[name] = func

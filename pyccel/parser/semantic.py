@@ -2711,7 +2711,9 @@ class SemanticParser(BasicParser):
 
             self.scope = mod_scope
 
-        funcs_to_visit = list(self.scope.functions.values())
+        syntactic_funcs = [f for f in self.scope.functions.values() if not f.is_semantic]
+        funcs_to_visit = [f for func in syntactic_funcs \
+                            for f in (func.functions if isinstance(func, Interface) else (func,))]
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
