@@ -1034,7 +1034,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, self.scope.get_python_name(func_name))
         self._python_object_map[init_function] = function
         self._error_exit_code = Nil()
 
