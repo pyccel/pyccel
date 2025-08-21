@@ -218,7 +218,7 @@ class Parser(object):
                                 verbose = verbose)
         self._semantic_parser = parser
         parser.metavars.setdefault('printer_imports', '')
-        parser.metavars['printer_imports'] += ', '.join(p.metavars['printer_imports'] for p in self.sons)
+        parser.metavars['printer_imports'] += ', ' + ', '.join(p.metavars['printer_imports'] for p in self.sons)
         parser.metavars['printer_imports'] = parser.metavars['printer_imports'].strip(', ')
 
         # Return the new semantic parser (maybe used by codegen)
