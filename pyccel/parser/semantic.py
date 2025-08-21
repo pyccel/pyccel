@@ -5278,7 +5278,7 @@ class SemanticParser(BasicParser):
             name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
-        dtype = DataTypeFactory(name)()
+        dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
         typenames_to_dtypes[expr.name] = dtype
         self.scope.insert_cls_construct(dtype)
 

@@ -1105,7 +1105,7 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
 
 #==============================================================================
 
-def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
+def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomDataType):
     """
     Create a new data class.
 
@@ -1114,8 +1114,11 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
 
     Parameters
     ----------
-    name : str
-        The name of the new class.
+    ll_name : str
+        The low-level name of the new class.
+
+    python_name : str
+        The original name of the new class matching the name used in Python.
 
     argnames : iterable[str]
         A list of all the arguments for the new class.
@@ -1155,10 +1158,14 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
         else:
             return self._name #pylint: disable=protected-access
 
-    newclass = type(f'Pyccel{name}', (BaseClass,),
+    def low_level_name(self):
+        return ll_name
+
+    newclass = type(f'Pyccel{python_name}', (BaseClass,),
                     {"__init__": class_init_func,
                      "name": property(class_name_func),
-                     "_name": name})
+                     "_name": python_name,
+                     "low_level_name": property(low_level_name)})
 
     return newclass
 

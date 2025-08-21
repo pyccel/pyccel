@@ -2979,7 +2979,7 @@ class CCodePrinter(CodePrinter):
     #================== CLASSES ==================
 
     def _print_CustomDataType(self, expr):
-        return "struct " + expr.name
+        return "struct " + expr.low_level_name
 
     def _print_Del(self, expr):
         return ''.join(self._print(var) for var in expr.variables)

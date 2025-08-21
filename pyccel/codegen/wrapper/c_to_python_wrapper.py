@@ -2123,7 +2123,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(t, ClassDef):
                 name = t.scope.get_python_name(t.name)
                 struct_name = f'Py{name}Object'
-                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
