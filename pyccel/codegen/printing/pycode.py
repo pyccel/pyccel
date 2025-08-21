@@ -27,7 +27,7 @@ from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray, NumpyBool
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
-from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
+from pyccel.ast.typingext  import TypingTypeVar, TypingFinal, TypingAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -226,6 +226,9 @@ class PythonCodePrinter(CodePrinter):
             if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
                 self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
                 type_annotation = f'Final[{type_annotation}]'
+            if obj.is_alias:
+                self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
+                type_annotation = f'Annotated[{type_annotation}, "pointer"]'
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
             args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)

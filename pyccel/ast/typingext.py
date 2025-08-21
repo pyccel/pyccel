@@ -12,6 +12,7 @@ from .core      import Module, PyccelFunctionDef
 from .datatypes import TypeAlias, GenericType
 
 __all__ = (
+    'TypingAnnotation',
     'TypingAny',
     'TypingFinal',
     'TypingOverload',
@@ -50,6 +51,42 @@ class TypingFinal(TypedAstNode):
         Get the argument describing the type annotation for an object.
         """
         return self._arg
+
+#==============================================================================
+
+class TypingAnnotation(TypedAstNode):
+    """
+    Class representing a call to the typing.Final construct.
+
+    Class representing a call to the typing.Final construct. A "call" to this
+    object looks like an IndexedElement. This is because types are involved.
+
+    Parameters
+    ----------
+    arg : SyntacticTypeAnnotation
+        The annotation which is coerced to be constant.
+    """
+    __slots__ = ('_arg','_metadata')
+    _attribute_nodes = ('_arg',)
+    name = 'Annotated'
+
+    def __init__(self, arg, **metadata):
+        self._arg = arg
+        self._metadata = metadata
+        super().__init__()
+
+    @property
+    def arg(self):
+        """
+        Get the argument describing the type annotation for an object.
+
+        Get the argument describing the type annotation for an object.
+        """
+        return self._arg
+
+    @property
+    def metadata(self):
+        return self._metadata
 
 #==============================================================================
 class TypingTypeAlias(TypedAstNode):
@@ -155,6 +192,7 @@ class TypingAny(TypedAstNode):
 
 typing_funcs = {
         'Any': PyccelFunctionDef('Any', TypingAny),
+        'Annotated': PyccelFunctionDef('Annotated', TypingAnnotation),
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),
