@@ -1265,7 +1265,7 @@ class CToPythonWrapper(Wrapper):
         for c in expr.classes:
             name = c.name
             struct_name = self.scope.get_new_name(f'Py{name}Object')
-            dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
 
             type_name = self.scope.get_new_name(f'Py{name}Type')
             wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name),
