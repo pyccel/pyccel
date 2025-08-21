@@ -3275,8 +3275,6 @@ class SemanticParser(BasicParser):
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
                 cls_name = str(class_type)
-                if isinstance(class_type, CustomDataType):
-                    cls_name = self.scope.get_python_name(cls_name)
                 cls_base = self.scope.find(cls_name, 'classes') or get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
@@ -3343,7 +3341,7 @@ class SemanticParser(BasicParser):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
-            dtype = self.get_class_construct(self.scope.get_python_name(visited_dtype.name))
+            dtype = self.get_class_construct(visited_dtype.name)
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))

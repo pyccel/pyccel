@@ -2304,7 +2304,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
-        python_cls_base = self.scope.find(self.scope.get_python_name(dtype.name), 'classes', raise_if_missing = True)
+        python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
         scope = python_cls_base.scope
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         if bound_argument:
