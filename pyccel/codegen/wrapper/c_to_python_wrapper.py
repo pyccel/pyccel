@@ -149,7 +149,7 @@ class CToPythonWrapper(Wrapper):
             var = Variable(self._python_object_map[dtype],
                            self.scope.get_new_name(name),
                            memory_handling='alias',
-                           cls_base = self.scope.find(self.scope.get_python_name(dtype.name), 'classes', raise_if_missing = True),
+                           cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
                            is_temp=is_temp)
         else:
             var = Variable(PyccelPyObject(),
@@ -1263,7 +1263,7 @@ class CToPythonWrapper(Wrapper):
 
         # Ensure all class types are declared
         for c in expr.classes:
-            name = c.name
+            name = c.scope.get_python_name(c.name)
             struct_name = self.scope.get_new_name(f'Py{name}Object')
             dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
 
@@ -2038,7 +2038,7 @@ class CToPythonWrapper(Wrapper):
         PyClassDef
             The wrapped class definition.
         """
-        name = expr.name
+        name = expr.scope.get_python_name(expr.name)
 
         bound_class = isinstance(expr, BindCClassDef)
 
