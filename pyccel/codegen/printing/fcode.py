@@ -856,6 +856,10 @@ class FCodePrinter(CodePrinter):
         for i in targets:
             old_name = i.name
             new_name = i.local_alias
+            if hasattr(i.object, 'scope'):
+                old_python_name = i.object.scope.get_python_name(old_name)
+                if old_python_name == new_name:
+                    new_name = old_name
             if old_name != new_name:
                 target = '{target} => {name}'.format(target=new_name,
                                                      name=old_name)
