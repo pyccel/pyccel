@@ -3013,11 +3013,15 @@ class FCodePrinter(CodePrinter):
         for i, (c, e) in enumerate(expr.blocks):
 
             if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
-                lines.append("else\n")
+                line = "else\n"
             elif i == 0:
-                lines.append(f"if ({self._print(c)}) then\n" )
+                line = f"if ({self._print(c)}) then\n"
             else:
-                lines.append("else if (%s) then\n" % self._print(c))
+                line = f"else if ({self._print(c)}) then\n"
+
+            line = self._additional_code + line
+            self._additional_code = ''
+            lines.append(line)
 
             if isinstance(e, (list, tuple, PythonTuple)):
                 lines.extend(self._print(ee) for ee in e)
@@ -3592,7 +3596,10 @@ class FCodePrinter(CodePrinter):
                 base = class_variable.funcdef.results.var
                 var = self.scope.get_temporary_variable(base)
 
-                self._additional_code += self._print(Assign(var, class_variable)) + '\n'
+                if var.is_alias:
+                    self._additional_code += self._print(AliasAssign(var, class_variable)) + '\n'
+                else:
+                    self._additional_code += self._print(Assign(var, class_variable)) + '\n'
                 f_name = f'{self._print(var)} % {f_name}'
             else:
                 f_name = f'{self._print(class_variable)} % {f_name}'
