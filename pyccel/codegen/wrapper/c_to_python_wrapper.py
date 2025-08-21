@@ -1823,8 +1823,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=None, status='unallocated'),
-                    AliasAssign(new_res_val, attrib),
+            body = [AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
@@ -1950,9 +1949,6 @@ class CToPythonWrapper(Wrapper):
         setup = result_wrapping.get('setup', ())
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
-
-        if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
 
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
@@ -2822,7 +2818,8 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
+            if not c_res.is_alias:
+                setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
