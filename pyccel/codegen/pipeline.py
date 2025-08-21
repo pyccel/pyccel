@@ -290,6 +290,12 @@ def execute_pyccel(fname, *,
     compile_libs, deps = get_module_and_compile_dependencies(parser)
     compile_libs.extend(libs)
 
+    include = list(include) + [i.strip() for i in parser.metavars.get('includes', '').split(',') if i]
+    compile_libs = list(compile_libs) + [l.strip() for l in parser.metavars.get('libraries', '').split(',') if l]
+    libdir = list(libdir) + [l.strip() for l in parser.metavars.get('libdirs', '').split(',') if l]
+
+    flags = list(flags) + [f.strip() for f in parser.metavars.get('flags', '').split(',') if f]
+
     mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = flags,
