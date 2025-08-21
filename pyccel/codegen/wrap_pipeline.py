@@ -269,10 +269,21 @@ def execute_pyccel_wrap(fname, *,
 
     codegen = Codegen(semantic_parser, module_name, language, verbose)
 
-    start_wrapper_creation = time.time()
-    wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
-    wrappergen.wrap(base_dirpath)
-    timers['Wrapper creation'] = time.time() - start_wrapper_creation
+    try:
+        start_wrapper_creation = time.time()
+        wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+        wrappergen.wrap(base_dirpath)
+        timers['Wrapper creation'] = time.time() - start_wrapper_creation
+    except NotImplementedError as error:
+        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error',
+            traceback=error.__traceback__)
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('annotation (semantic)')
+        # Raise a new error to avoid a large traceback
+        raise PyccelError('Semantic step failed') from None
 
     start_wrapper_printing = time.time()
     try:
