@@ -43,6 +43,11 @@ class Header(object):
         self.statements = statements
         super().__init__(**kwargs)
 
+class Str(BasicStmt):
+    def __init__(self, contents, **kwargs):
+        self.contents = contents
+        super().__init__(**kwargs)
+
 class TrailerSubscriptList(BasicStmt):
     """
     Class representing subscripts that appear trailing a type in the grammar.
@@ -92,7 +97,10 @@ class Type(BasicStmt):
 
         Get the Pyccel object equivalent to this grammar object.
         """
-        dtype = PyccelSymbol(self.dtype)
+        if isinstance(self.dtype, Str):
+            dtype = LiteralString(self.dtype.contents)
+        else:
+            dtype = PyccelSymbol(self.dtype)
         order = None
         if self.trailer:
             args = [self.handle_trailer_arg(a) for a in self.trailer.args]
@@ -223,7 +231,7 @@ class MetavarHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
+type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType, Str]
 hdr_classes = [Header,
                MetavarHeaderStmt]
 

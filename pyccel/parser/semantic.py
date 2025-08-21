@@ -119,7 +119,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal, TypingTypeVar
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar, TypingAnnotation
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -2297,7 +2297,21 @@ class SemanticParser(BasicParser):
         UnionTypeAnnotation
             The type annotation described by this object.
         """
-        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
+            syntactic_annotation = args[0]
+            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                pyccel_stage.set_stage('syntactic')
+                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                pyccel_stage.set_stage('semantic')
+            annotation = self._visit(syntactic_annotation)
+            metadata = args[1:]
+            assert len(metadata) == 1
+            assert isinstance(metadata[0].dtype, LiteralString)
+            assert metadata[0].dtype.python_value == "pointer"
+            for t in annotation.type_list:
+                t.is_alias = True
+            return annotation
+        elif isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
             syntactic_annotation = args[0]
             if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
                 pyccel_stage.set_stage('syntactic')
@@ -3285,10 +3299,12 @@ class SemanticParser(BasicParser):
                     shape = (None,)*class_type.container_rank
                 else:
                     shape = None
+                memory_handling = array_memory_handling if class_type.rank > 0 else 'stack'
+                if t.is_alias:
+                    memory_handling = 'alias'
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = shape,
+                        shape = shape, memory_handling = memory_handling,
                         is_const = t.is_const, is_optional = False,
-                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
                 if isinstance(class_type, InhomogeneousTupleType):

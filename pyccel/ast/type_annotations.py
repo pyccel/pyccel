@@ -18,6 +18,8 @@ from .core import FunctionDefArgument, FunctionDefResult
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType, PyccelType
 
+from .literals import LiteralString
+
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
@@ -47,11 +49,12 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_is_const')
+    __slots__ = ('_class_type', '_is_const', '_is_alias')
     _attribute_nodes = ()
     def __init__(self, class_type : PyccelType, is_const : bool = False):
         self._class_type = class_type
         self._is_const = is_const
+        self._is_alias = False
 
         super().__init__()
 
@@ -91,6 +94,19 @@ class VariableTypeAnnotation(PyccelAstNode):
         if not isinstance(val, bool):
             raise TypeError("Is const value should be a boolean")
         self._is_const = val
+
+    @property
+    def is_alias(self):
+        """
+        Indicates whether the object is an alias.
+        """
+        return self._is_alias
+
+    @is_alias.setter
+    def is_alias(self, val):
+        if not isinstance(val, bool):
+            raise TypeError("Is alias value should be a boolean")
+        self._is_alias = val
 
     def __hash__(self):
         return hash(self.class_type)
@@ -275,7 +291,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
             return super().__new__(cls)
 
     def __init__(self, dtype, order = None):
-        if not isinstance(dtype, (str, DottedName, IndexedElement)):
+        if not isinstance(dtype, (str, DottedName, IndexedElement, LiteralString)):
             raise ValueError(f"Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")

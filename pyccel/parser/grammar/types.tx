@@ -2,6 +2,7 @@ UnionTypeStmt: dtypes += TypeHeader['|'];
 
 TypeHeader: FuncType|Type;
 
+Str: '"' contents=/[^\"]*/ '"';
 Slice: ':';
 Ellipsis: '...';
 IndexType: Slice | Ellipsis | Type;
@@ -10,6 +11,6 @@ TrailerSubscriptList: '[' args*=IndexType [','] ']'  ( '(' 'order' '=' order = I
 
 FuncType: '('(results=UnionTypeStmt)?')' '('args*=UnionTypeStmt[',']')';
 
-DataType: ID|STAR|Ellipsis;
+DataType: ID|STAR|Ellipsis|Str;
 STAR: '*';
 
