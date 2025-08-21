@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 -   #2431 : Fix missing type checks for functions called by functions with variable argument types.
 -   #2433 : Fix shape calculation for resized class member variables.
 -   #2413 : Fix late name conflict detection bug.
+-   #2439 : Fix missing call to `Py_INCREF` for booleans.
 
 ### Changed
 
