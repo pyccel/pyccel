@@ -1884,9 +1884,10 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
-                # Get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
+                # Try to get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
                 if isinstance(var, DottedVariable):
-                    var = next(a for a in var.lhs.cls_base.attributes if var == a)
+                    var = next((a for a in var.lhs.cls_base.attributes if var == a), var)
+
                 self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs)
 
                 lhs = var
