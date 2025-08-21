@@ -204,11 +204,11 @@ class Parser(object):
         if self._semantic_parser:
             return self._semantic_parser
 
-        if verbose:
-            print ('>> Calculating semantic annotations :: ', self._filename)
-
         # we first treat all sons to get imports
         self._annotate_sons(verbose=verbose)
+
+        if verbose:
+            print ('>> Calculating semantic annotations :: ', self._filename)
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
@@ -217,9 +217,10 @@ class Parser(object):
                                 context_dict = self._context_dict,
                                 verbose = verbose)
         self._semantic_parser = parser
-        parser.metavars.setdefault('printer_imports', '')
-        parser.metavars['printer_imports'] += ', ' + ', '.join(p.metavars['printer_imports'] for p in self.sons)
-        parser.metavars['printer_imports'] = parser.metavars['printer_imports'].strip(', ')
+        for key in ('printer_imports', 'includes', 'libraries', 'libdirs', 'flags'):
+            parser.metavars.setdefault(key, '')
+            parser.metavars[key] += ', ' + ', '.join(p.metavars[key] for p in self.sons)
+            parser.metavars[key] = parser.metavars[key].strip(', ')
 
         # Return the new semantic parser (maybe used by codegen)
         return parser
