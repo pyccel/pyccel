@@ -798,7 +798,7 @@ class FortranToCWrapper(Wrapper):
                             scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
 
-        if isinstance(orig_var, DottedVariable):
+        if isinstance(orig_var, DottedVariable) or orig_var.is_alias:
             ptr_var = orig_var
             body = [CLocFunc(ptr_var, bind_var)]
         else:
