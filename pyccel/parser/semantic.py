@@ -1268,8 +1268,8 @@ class SemanticParser(BasicParser):
 
             # Check for compatibility
             if incompatible(i_arg, f_arg):
-                expected  = str(f_arg.class_type)
-                type_name = str(i_arg.class_type)
+                expected  = repr(f_arg.class_type)
+                type_name = repr(i_arg.class_type)
                 received  = f'{i_arg} ({type_name})'
                 err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func, expected)]
 
