@@ -4992,14 +4992,13 @@ class SemanticParser(BasicParser):
             result_pointer_map = {}
             for r in results_vars:
                 t = pointer_targets.get(r, ())
-                if r.is_alias:
-                    arg_vars = [a.var for a in arguments]
-                    temp_targets = [target for target, _ in t if target not in arg_vars]
-                    if temp_targets:
-                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                            symbol=r, severity='error')
-                    else:
-                        result_pointer_map[r] = [next(i for i,a in enumerate(arguments) if a.var == target) for target, _ in t]
+                arg_vars = [a.var for a in arguments]
+                temp_targets = [target for target, _ in t if target not in arg_vars]
+                if temp_targets:
+                    errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                        symbol=r, severity='error')
+                else:
+                    result_pointer_map[r] = [next(i for i,a in enumerate(arguments) if a.var == target) for target, _ in t]
 
             optional_inits = []
             for a in arguments:
