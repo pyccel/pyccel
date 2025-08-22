@@ -175,6 +175,15 @@ class Codegen:
             printer_imports = ', '.join(self.get_printer_imports().keys())
             if printer_imports:
                 code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
+            libdirs = self._parser.metavars.get('libdirs', '')
+            if libdirs:
+                code = f'#$ header metavar libdirs="{libdirs}"\n' + code
+            libs = self._parser.metavars.get('libraries', '')
+            if libs:
+                code = f'#$ header metavar libraries="{libs}"\n' + code
+            incs = self._parser.metavars.get('includes', '')
+            if incs:
+                code = f'#$ header metavar includes="{incs}"\n' + code
         with open(pyi_filename, 'w', encoding="utf-8") as f:
             f.write(code)
 
