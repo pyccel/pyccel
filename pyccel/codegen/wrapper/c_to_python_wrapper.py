@@ -1086,6 +1086,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [del_function(c_obj),
                     Deallocate(c_obj)]
+        body.append(AliasAssign(c_obj, Nil()))
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
