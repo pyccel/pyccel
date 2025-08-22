@@ -212,7 +212,8 @@ class Compiler:
         """
         # Use a dictionary instead of a set to ensure properties are ordered by insertion
         # The keys of the dictionary contain the values for the property of interest.
-        properties = dict.fromkeys(properties)
+        properties = dict.fromkeys(str(p).strip()  for p in properties)
+        properties.pop('', None)
 
         properties.update(dict.fromkeys(self._language_info.get(key,())))
 
