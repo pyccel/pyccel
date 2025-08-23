@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #2433 : Fix shape calculation for resized class member variables.
 -   #2413 : Fix late name conflict detection bug.
 -   #2439 : Fix missing call to `Py_INCREF` for booleans.
+-   #2441 : Fix function call pointer result assignment in Fortran.
 
 ### Changed
 
