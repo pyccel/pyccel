@@ -312,7 +312,26 @@ static char* _check_pyarray_order(PyArrayObject *a, int flag)
 	if (flag == NO_ORDER_CHECK)
 		return NULL;
 
-	if (!PyArray_CHKFLAGS(a, flag))
+    bool valid(true);
+    if (flag == NPY_ARRAY_C_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i(1); i<nd; ++i) {
+            valid = valid & np_strides[i-1] >= np_strides[i]
+        }
+    }
+    else if (flag == NPY_ARRAY_F_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i(1); i<nd; ++i) {
+            valid = valid & np_strides[i-1] <= np_strides[i]
+        }
+    }
+    else {
+        valid = PyArray_CHKFLAGS(a, flag);
+    }
+
+	if (!valid)
 	{
 		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
         char* error = (char *)malloc(200);
