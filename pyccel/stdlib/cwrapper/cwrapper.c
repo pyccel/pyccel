@@ -161,14 +161,14 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
             for (int i = nd-1; i >= 0; --i) {
                 shape[i] = np_shape[i];
                 strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+                current_stride *= (shape[i] * strides[i]);
             }
         }
         else {
             for (int i = 0; i < nd; ++i) {
                 shape[i] = np_shape[i];
                 strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+                current_stride *= (shape[i] * strides[i]);
             }
         }
     }
