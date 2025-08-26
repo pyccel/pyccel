@@ -6263,7 +6263,7 @@ class SemanticParser(BasicParser):
             return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
                                 for var_annot in class_or_tuple.type_list], simplify=True)
         else:
-            if isinstance(class_or_tuple, VariableTypeAnnotation):
+            if isinstance(class_or_tuple, (VariableTypeAnnotation, ClassDef)):
                 expected_type = class_or_tuple.class_type
             else:
                 class_type = class_or_tuple.cls_name

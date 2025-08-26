@@ -732,6 +732,7 @@ class Scope(object):
         if current_name is not None and \
                 not self.name_clash_checker.has_clash(current_name, self.all_python_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
+            return self.insert_symbol(new_name)
 
         elif current_name is None:
             assert is_temp is None
