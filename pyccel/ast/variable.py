@@ -810,21 +810,36 @@ class IndexedElement(TypedAstNode):
             new_indexes = []
             j = 0
             base = self.base
-            for i in self.indices:
-                if isinstance(i, Slice) and j<len(args):
+
+            negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
+
+            for i, idx in enumerate(self.indices):
+                if isinstance(idx, Slice) and j<len(args):
                     current_arg = args[j]
                     if isinstance(current_arg, Slice):
                         raise NotImplementedError("Can't extract a slice from a slice")
                     else:
-                        if i.step == 1 or i.step is None:
+                        if idx.step == 1 or idx.step is None:
                             incr = current_arg
                         else:
-                            incr = PyccelMul(i.step, current_arg, simplify = True)
-                        if i.start != 0 and i.start is not None:
-                            incr = PyccelAdd(i.start, incr, simplify = True)
-                    i = incr
+                            incr = PyccelMul(idx.step, current_arg, simplify = True)
+                        if idx.start != 0 and idx.start is not None:
+                            incr = PyccelAdd(idx.start, incr, simplify = True)
+                        elif idx.start is None:
+                            try:
+                                negative_step_possible = negative_idxs_possible or int(idx.step) < 0
+                            except TypeError:
+                                negative_step_possible = False
+                            if negative_step_possible:
+                                if idx.stop is None:
+                                    incr = PyccelAdd(PyccelMinus(base.shape[i],
+                                                                 LiteralInteger(1), simplify=True),
+                                                     incr, simplify = True)
+                                else:
+                                    incr = PyccelAdd(idx.stop, incr, simplify = True)
+                    idx = incr
                     j += 1
-                new_indexes.append(i)
+                new_indexes.append(idx)
             return IndexedElement(base, *new_indexes)
         else:
             return IndexedElement(self, *args)
