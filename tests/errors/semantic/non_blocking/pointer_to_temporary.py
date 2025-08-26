@@ -1,3 +1,4 @@
+# Pointer cannot point at a temporary object
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from numpy import ones
 
@@ -26,5 +27,3 @@ P3 = P2.x
 P4 = P2
 P5 = P2.x.x
 print(x,P5)
-
-

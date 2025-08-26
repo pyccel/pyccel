@@ -145,8 +145,12 @@ class CodePrinter:
                     print(f">>>> Calling {type(self).__name__}.{print_method}")
                 try:
                     obj = getattr(self, print_method)(expr)
-                except (PyccelError, NotImplementedError) as err:
+                except PyccelError as err:
                     raise err
+                except NotImplementedError as error:
+                    errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                        symbol = self._current_ast_node, severity='fatal',
+                        traceback=error.__traceback__)
                 except Exception as err: #pylint: disable=broad-exception-caught
                     if ErrorsMode().value == 'user':
                         errors.report(PYCCEL_INTERNAL_ERROR,

@@ -1,3 +1,4 @@
+# Trying to import an identifier that already exists in the namespace. Hint: use import as
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # pylint: disable=reimported
 import numpy as np
