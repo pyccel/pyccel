@@ -22,6 +22,7 @@ dependencies = [
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "packaging",
+    "immutabledict",
 ]
 
 [project.optional-dependencies]
