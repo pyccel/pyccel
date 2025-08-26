@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 -   #2408 : Fix bug when inlining a call to a function with no return, via a dotted function call.
 -   #2419 : Fix lost error messages.
 -   #2424 : Fix `isinstance` call testing class instance.
+-   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
 
 ### Changed
 

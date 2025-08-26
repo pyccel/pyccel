@@ -734,6 +734,7 @@ Pyccel supports a subset of magic methods that are listed here:
 -   `__iand__`
 -   `__ior__`
 -   `__len__`
+-   `__getitem__`
 
 Additionally the following methods are supported in the translation but are lacking the wrapper support that would allow them to be called from Python code:
 
