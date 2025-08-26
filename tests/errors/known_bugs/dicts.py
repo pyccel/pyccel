@@ -1,3 +1,4 @@
+# Undefined variable
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # pylint: disable=pointless-statement
 
