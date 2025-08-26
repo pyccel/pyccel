@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
+-   #2420 : Add `@low_level` decorator.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 
 ### Fixed
