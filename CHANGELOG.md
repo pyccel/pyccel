@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 -   #2419 : Fix lost error messages.
 -   #2424 : Fix `isinstance` call testing class instance.
 -   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
+-   #2413 : Fix late name conflict detection bug.
 -   #2441 : Fix function call pointer result assignment in Fortran.
 
 ### Changed
@@ -30,6 +31,8 @@ All notable changes to this project will be documented in this file.
 -   Update STC to v6.0-beta2.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
+-   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
+-   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
 
 ### Deprecated
 

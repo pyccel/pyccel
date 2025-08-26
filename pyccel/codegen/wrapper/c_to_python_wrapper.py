@@ -551,6 +551,8 @@ class CToPythonWrapper(Wrapper):
         PyFunctionDef
             The new function which raises the error.
         """
+        current_scope = self.scope
+        self.scope = scope
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
             func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
@@ -561,7 +563,9 @@ class CToPythonWrapper(Wrapper):
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
-        self.scope.functions[name] = function
+        self.scope = current_scope
+
+        self.scope.insert_function(function, name)
 
         return function
 
@@ -1030,7 +1034,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_name)
         self._python_object_map[init_function] = function
         self._error_exit_code = Nil()
 
@@ -1096,7 +1100,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_name)
         self._python_object_map[del_function] = function
 
         return function
@@ -1261,7 +1265,8 @@ class CToPythonWrapper(Wrapper):
         for c in expr.classes:
             name = c.name
             struct_name = self.scope.get_new_name(f'Py{name}Object')
-            dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
+                                    BaseClass=WrapperCustomDataType)()
 
             type_name = self.scope.get_new_name(f'Py{name}Type')
             wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name),
@@ -1336,8 +1341,10 @@ class CToPythonWrapper(Wrapper):
             external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
-        for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for f in expr.funcs)
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for i in expr.interfaces for f in i.functions)
 
         for c in expr.classes:
             m = c.new_func
@@ -1393,6 +1400,8 @@ class CToPythonWrapper(Wrapper):
         else:
             class_dtype = None
 
+        for f in original_funcs:
+            self._wrap(f)
 
         # Add the variables to the expected symbols in the scope
         for a in example_func.arguments:
@@ -1586,7 +1595,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_name)
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
@@ -2115,7 +2124,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(t, ClassDef):
                 name = t.name
                 struct_name = f'Py{name}Object'
-                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
@@ -2875,7 +2884,7 @@ class CToPythonWrapper(Wrapper):
         """
         if is_bind_c:
             return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
-        name = orig_var.name
+        name = self.scope.get_new_name(orig_var.name)
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
