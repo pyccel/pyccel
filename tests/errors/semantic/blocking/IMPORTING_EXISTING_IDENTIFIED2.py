@@ -1,3 +1,4 @@
+# Too many arguments passed in function call
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def ones():

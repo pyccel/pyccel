@@ -1,3 +1,4 @@
+# Object has already been defined with type
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f():
@@ -10,4 +11,5 @@ def g():
 def do():
     return 4
 
-a = f()
+if __name__ == '__main__':
+    a = f()
