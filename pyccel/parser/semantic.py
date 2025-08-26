@@ -4342,6 +4342,11 @@ class SemanticParser(BasicParser):
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
+            try:
+                if step < 0:
+                    start, stop = stop, start
+            except TypeError:
+                pass
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
@@ -4497,7 +4502,6 @@ class SemanticParser(BasicParser):
         else:
             for operation in operations:
                 expr.loops[-1].insert2body(self._visit(operation))
-
 
         loops = [self._visit(i) for i in loops]
         if assign:
