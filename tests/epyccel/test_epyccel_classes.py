@@ -253,6 +253,15 @@ def test_classes_9(language):
     assert a_py.get_A_contents() == a_l.get_A_contents()
     assert a_py.x == a_l.x
 
+def test_classes_10(language):
+    import classes.classes_10 as mod
+    modnew = epyccel(mod, language = language)
+
+    a = modnew.A(3)
+
+    assert isinstance(a, modnew.A)
+    assert isinstance(a[0], modnew.B)
+
 def test_generic_methods(language):
     import classes.generic_methods as mod
     modnew = epyccel(mod, language = language)

@@ -346,12 +346,11 @@ class BasicParser(object):
 
         assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
         scope = scope or self.scope
-        container = scope.functions
         if func.pyccel_staging == 'syntactic':
-            container[self.scope.get_expected_name(func.name)] = func
+            scope.insert_function(func, func.name)
         else:
             name = func.name
-            container[name] = func
+            scope.insert_function(func, scope.get_python_name(name))
             if self._current_function_name and name == self._current_function_name[-1]:
                 self._current_function.append(func)
 

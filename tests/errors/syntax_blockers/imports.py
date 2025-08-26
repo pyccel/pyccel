@@ -1,3 +1,4 @@
+# <class 'pyccel.ast.core.Import'> not currently supported in classes
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 # should not pass

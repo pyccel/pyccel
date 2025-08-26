@@ -769,9 +769,9 @@ class PyClassDef(ClassDef):
         self._new_func = None
         self._properties = ()
         self._magic_methods = ()
-        variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
-                     Variable(PythonNativeBool(), 'is_alias')]
+        variables = [Variable(VoidType(), scope.get_new_name('instance'), memory_handling='alias'),
+                     Variable(PyccelPyObject(), scope.get_new_name('referenced_objects'), memory_handling='alias'),
+                     Variable(PythonNativeBool(), scope.get_new_name('is_alias'))]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
         scope.insert_variable(variables[2])
