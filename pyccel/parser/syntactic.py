@@ -1007,10 +1007,7 @@ class SyntaxParser(BasicParser):
         decorators = {}
         for d in self._visit(stmt.decorator_list):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
-            if tmp_var in decorators:
-                decorators[tmp_var] += [d]
-            else:
-                decorators[tmp_var] = [d]
+            decorators.setdefault(tmp_var, []).append(d)
 
         scope = self.create_new_class_scope(name)
         methods = []
