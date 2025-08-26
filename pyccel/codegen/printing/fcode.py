@@ -273,7 +273,7 @@ class FCodePrinter(CodePrinter):
         errors.set_target(filename)
 
         super().__init__(verbose)
-        self._constantImports = {}
+        self._constantImports = []
         self._current_class    = None
 
         self._additional_code = ''
@@ -296,12 +296,13 @@ class FCodePrinter(CodePrinter):
             The code describing the import of the intrinsics.
         """
         macros = []
-        for (name, imports) in self._constantImports.items():
+        for (name, imports) in self._constantImports[-1].items():
 
             macro = f"use, intrinsic :: {name}, only : "
             rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in imports]
             if len(rename) == 0:
                 continue
+            rename.sort()
             macro += " , ".join(rename)
             macro += "\n"
             macros.append(macro)
@@ -367,11 +368,11 @@ class FCodePrinter(CodePrinter):
 
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
-            self._constantImports.setdefault('ISO_C_Binding', set())\
+            self._constantImports[-1].setdefault('ISO_C_Binding', set())\
                 .add((constant_shortcut, constant_name))
             constant_name = constant_shortcut
         else:
-            self._constantImports.setdefault('ISO_C_Binding', set())\
+            self._constantImports[-1].setdefault('ISO_C_Binding', set())\
                 .add(constant_name)
         return constant_name
 
@@ -692,6 +693,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
+        self._constantImports.append({})
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -715,11 +717,12 @@ class FCodePrinter(CodePrinter):
         self._get_external_declarations(declarations)
         decs += ''.join(self._print(d) for d in declarations)
 
+        funcs_to_print = list(expr.funcs) + [f for i in expr.interfaces for f in i.functions]
+
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
-                                      (i.name for i in expr.interfaces if not i.is_inline),
-                                      (f.name for f in expr.funcs if not f.is_private and not f.is_inline),
+                                      (f.name for f in funcs_to_print if not f.is_private and not f.is_inline),
                                       (v.name for v in expr.variables if not v.is_private)))
 
         # ...
@@ -734,20 +737,21 @@ class FCodePrinter(CodePrinter):
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if not i.is_inline)
 
         func_strings = []
         # Get class functions
         func_strings += [c[1] for c in class_decs_and_methods]
-        if expr.funcs:
-            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+        if funcs_to_print:
+            func_strings += [''.join([sep, self._print(i), sep]) for i in funcs_to_print]
         if isinstance(expr, BindCModule):
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
         body = '\n'.join(func_strings)
         # ...
 
         # Don't print contains or private for gFTL extensions
-        private = 'private\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
+        private = 'private\n' if (funcs_to_print or expr.classes or expr.interfaces) else ''
+        contains = 'contains\n' if (funcs_to_print or expr.classes or expr.interfaces) else ''
         imports += ''.join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
         implicit_none = '' if expr.is_external else 'implicit none\n'
@@ -764,11 +768,13 @@ class FCodePrinter(CodePrinter):
                  f'end module {name}\n']
 
         self.exit_scope()
+        self._constantImports.pop()
 
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
         self.set_scope(expr.scope)
+        self._constantImports.append({})
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
@@ -805,6 +811,7 @@ class FCodePrinter(CodePrinter):
                 'end program {}\n'.format(name)]
 
         self.exit_scope()
+        self._constantImports.pop()
 
         return '\n'.join(a for a in parts if a)
 
@@ -1008,10 +1015,10 @@ class FCodePrinter(CodePrinter):
         args_code       = ' , '.join(args_list)
         args_formatting = ', '.join(fargs_format)
         if expr.file == "stderr":
-            self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+            self._constantImports[-1].setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stderr", "error_unit"))
             return f"write(stderr, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
-        self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+        self._constantImports[-1].setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stdout", "output_unit"))
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
@@ -1947,7 +1954,7 @@ class FCodePrinter(CodePrinter):
             dtype_str = f'{sig}({name})'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
-            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
+            self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('c_ptr')
         elif isinstance(dtype, FixedSizeType) and \
                 isinstance(expr_type, (NumpyNDArrayType, HomogeneousTupleType, FixedSizeType)):
             dtype_str = self._print(dtype.primitive_type)
@@ -2315,7 +2322,7 @@ class FCodePrinter(CodePrinter):
         return f"{iterable_type}_Iterator"
 
     def _print_CustomDataType(self, expr):
-        return expr.name
+        return expr.low_level_name
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
@@ -2367,12 +2374,14 @@ class FCodePrinter(CodePrinter):
         if expr.is_argument:
             funcs_sigs = []
             for f in funcs:
+                self._constantImports.append({})
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                         self.print_constant_imports()+'\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
+                self._constantImports.pop()
             interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
             return interface
 
@@ -2969,7 +2978,7 @@ class FCodePrinter(CodePrinter):
             The code which checks if `x is not None`.
         """
         if isinstance(lhs_var.dtype, BindCPointer):
-            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
+            self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('c_associated')
             return f'c_associated({lhs})'
         else:
             return f'present({lhs})'
@@ -3256,7 +3265,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             self._print_not_supported(expr)
         if func_name.startswith('ieee_'):
-            self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
+            self._constantImports[-1].setdefault('ieee_arithmetic', set()).add(func_name)
         args = [self._get_node_without_gFTL(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
@@ -3672,15 +3681,15 @@ class FCodePrinter(CodePrinter):
     def _print_CLocFunc(self, expr):
         lhs = self._print(expr.result)
         rhs = self._print(expr.arg)
-        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
+        self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
 
     def _print_C_NULL_CHAR(self, expr):
-        self._constantImports.setdefault('ISO_C_Binding', set()).add('C_NULL_CHAR')
+        self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('C_NULL_CHAR')
         return 'C_NULL_CHAR'
 
     def _print_C_F_Pointer(self, expr):
-        self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
+        self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
         shape_tuple = expr.shape or ()
         shape = ', '.join(self._print(s) for s in shape_tuple)
         if shape:
@@ -3860,7 +3869,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCSizeOf(self, expr):
         elem = self._print(expr.args[0])
-        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_size_t')
+        self._constantImports[-1].setdefault('ISO_C_Binding', set()).add('c_size_t')
         return f'storage_size({elem}, kind = c_size_t)'
 
     def _print_MacroDefinition(self, expr):

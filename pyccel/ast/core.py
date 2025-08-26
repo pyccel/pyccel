@@ -86,7 +86,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SympyFunction',
     'While',
     'With',
 )
@@ -3149,12 +3148,6 @@ class FunctionAddress(FunctionDef):
         kwargs['is_optional'] = self.is_optional
         kwargs['memory_handling'] = self.memory_handling
         return args, kwargs
-
-class SympyFunction(FunctionDef):
-
-    """Represents a function definition."""
-    __slots__ = ()
-
 
 
 class ClassDef(ScopedAstNode):

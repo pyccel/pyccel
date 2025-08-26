@@ -46,7 +46,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["**/*.py"]'
+          paths: '["**/*.py", ".github/workflows/pylint.yml", ".github/actions/**"]'
           do_not_skip: '["push"]'
 
       - uses: actions/checkout@v4

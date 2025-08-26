@@ -1,3 +1,4 @@
+# Attempt to reallocate an array which is being used by another variable
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import numpy as np
 

@@ -23,7 +23,6 @@ from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
@@ -445,8 +444,12 @@ class SyntaxParser(BasicParser):
                 result = getattr(self, syntax_method)(stmt)
                 if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                     result.set_current_ast(stmt)
-            except (PyccelError, NotImplementedError) as err:
+            except PyccelError as err:
                 raise err
+            except NotImplementedError as error:
+                errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                    symbol = self._current_ast_node, severity='fatal',
+                    traceback=error.__traceback__)
             except Exception as err: #pylint: disable=broad-exception-caught
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,
@@ -462,10 +465,21 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body = [self._visit(v) for v in stmt.body]
 
-        functions = [f for f in body if isinstance(f, FunctionDef)]
-        classes   = [c for c in body if isinstance(c, ClassDef)]
+        # Collect functions and classes. These must be visited last to ensure
+        # all names have been collected from the parent scope
+        ast_functions = [f for f in stmt.body if isinstance(f, ast.FunctionDef)]
+        ast_classes = [c for c in stmt.body if isinstance(c, ast.ClassDef)]
+
+        # Add the names of the functions and classes to the scope
+        for obj in chain(ast_functions, ast_classes):
+            self.scope.insert_symbol(PyccelSymbol(obj.name))
+
+        body = [self._visit(v) for v in stmt.body
+                if not isinstance(v, (ast.FunctionDef, ast.ClassDef))]
+
+        functions = [self._visit(f) for f in ast_functions]
+        classes   = [self._visit(c) for c in ast_classes]
         imports   = [i for i in body if isinstance(i, Import)]
         programs  = [p for p in body if isinstance(p, Program)]
         body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import, Program))]
@@ -880,8 +894,10 @@ class SyntaxParser(BasicParser):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
-        name = PyccelSymbol(self._visit(stmt.name))
-        self.scope.insert_symbol(name)
+        name = PyccelSymbol(stmt.name)
+
+        if not isinstance(self._context[-1], ast.Module):
+            self.scope.insert_symbol(name)
 
         new_name = self.scope.get_expected_name(name)
 
@@ -938,23 +954,12 @@ class SyntaxParser(BasicParser):
             is_inline = True
 
 
-        argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
         argument_names = {a.var.name for a in arguments}
 
         body = stmt.body
-
-        if 'sympy' in decorators:
-            # TODO maybe we should run pylint here
-            stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_current_ast(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        else:
-            body = self._visit(body)
+        body = self._visit(body)
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
@@ -1017,7 +1022,6 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        self.scope.insert_symbol(name)
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
@@ -1420,9 +1424,11 @@ class SyntaxParser(BasicParser):
         return_expr = Return(self._visit(stmt.body))
         return_expr.set_current_ast(stmt)
 
+        results = FunctionDefResult(self.scope.get_new_name())
+
         self.exit_function_scope()
 
-        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), results, scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars
