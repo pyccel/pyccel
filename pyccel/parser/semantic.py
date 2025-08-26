@@ -1831,7 +1831,7 @@ class SemanticParser(BasicParser):
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
@@ -2047,7 +2047,7 @@ class SemanticParser(BasicParser):
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
