@@ -1970,7 +1970,8 @@ class SemanticParser(BasicParser):
             new_expressions.append(Deallocate(var))
             return
 
-        elif class_type != var.class_type:
+        elif class_type != var.class_type or \
+                (isinstance(class_type, InhomogeneousTupleType) and class_type is not var.class_type):
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
@@ -1996,7 +1997,8 @@ class SemanticParser(BasicParser):
                 # TODO: Remove isinstance(rhs, Variable) condition when tuples are saved like lists
                 if isinstance(rhs, PythonTuple):
                     shape = get_shape_of_multi_level_container(rhs)
-                    raise_error = len(shape) != class_type.rank or any(a != var.class_type.element_type for a in class_type)
+                    raise_error = len(shape) != class_type.rank or not class_type.shape_is_compatible(shape) \
+                            or any(a != var.class_type.element_type for a in class_type)
                 else:
                     raise_error = any(a != var.class_type.element_type for a in class_type) or \
                             not isinstance(rhs, Variable)
@@ -2637,8 +2639,12 @@ class SemanticParser(BasicParser):
                         obj.set_current_ast(self.current_ast_node)
                     self._current_ast_node = current_ast
                     return obj
-            except (PyccelError, NotImplementedError) as err:
+            except PyccelError as err:
                 raise err
+            except NotImplementedError as error:
+                errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                    symbol = self._current_ast_node, severity='fatal',
+                    traceback=error.__traceback__)
             except Exception as err: #pylint: disable=broad-exception-caught
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,
@@ -4767,6 +4773,12 @@ class SemanticParser(BasicParser):
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
         used_type_vars = {}
+
+        if any(a.annotation is None for a in expr.arguments):
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    symbol=expr, severity='error')
+            return EmptyNode()
+
         for a in expr.arguments:
             used_objs = a.annotation.get_attribute_nodes(PyccelSymbol)
             for o in used_objs:
@@ -6278,7 +6290,10 @@ class SemanticParser(BasicParser):
             The semantic ListAppend object.
         """
         list_obj, append_arg = [a.value for a in args]
-        semantic_node = ListAppend(list_obj, append_arg)
+        try:
+            semantic_node = ListAppend(list_obj, append_arg)
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
         if not isinstance(append_arg.class_type, (StringType, FixedSizeNumericType)) \
                 and not isinstance(append_arg, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, append_arg, expr)
@@ -6305,7 +6320,10 @@ class SemanticParser(BasicParser):
             The semantic ListInsert object.
         """
         list_obj, index, new_elem = [a.value for a in args]
-        semantic_node = ListInsert(list_obj, index, new_elem)
+        try:
+            semantic_node = ListInsert(list_obj, index, new_elem)
+        except TypeError as e:
+            errors.report(e, symbol=expr, severity='error')
         if not isinstance(new_elem.class_type, (StringType, FixedSizeNumericType)) \
                 and not isinstance(new_elem, (PythonList, PythonSet, PythonTuple, NumpyNewArray)):
             self._indicate_pointer_target(list_obj, new_elem, expr)

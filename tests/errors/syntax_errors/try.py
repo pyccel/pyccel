@@ -1,3 +1,4 @@
+# Uncovered try/except/finally statements by Pyccel
 # pylint: disable=missing-function-docstring, missing-module-docstring
 try:
     print(5)
