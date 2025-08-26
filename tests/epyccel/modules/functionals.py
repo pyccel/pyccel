@@ -96,3 +96,11 @@ def functional_filter_and_transform():
 def functional_with_multiple_conditions():
     a = [x + 1 - y for x in range(10) if x % 2 == 0 for y in range(12) if y % 3 == 0]
     return len(a), a[0], a[1], a[2]
+
+def functional_negative_indices(arg : 'int[:]'):
+    a = [ai*i for i, ai in enumerate(arg[-5:-1])]
+    return len(a), a[0], a[1], a[2], a[3]
+
+def functional_reverse(arg : 'int[:]'):
+    a = [ai for ai in arg[::-1]]
+    return len(a), a[0], a[1], a[2], a[3]
