@@ -1506,7 +1506,7 @@ class CToPythonWrapper(Wrapper):
             a_var = a.var
             func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
-        in_interface = len(expr.get_user_nodes(Interface, (FunctionCall,))) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.arguments
