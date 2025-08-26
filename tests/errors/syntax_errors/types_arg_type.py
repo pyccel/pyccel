@@ -1,3 +1,4 @@
+# Invalid type annotation
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f(x : 3):
