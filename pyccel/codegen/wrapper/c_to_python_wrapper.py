@@ -1599,7 +1599,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
