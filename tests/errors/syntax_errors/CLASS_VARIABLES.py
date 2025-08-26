@@ -1,3 +1,4 @@
+# <class 'pyccel.ast.core.Assign'> not currently supported in classes
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class A:

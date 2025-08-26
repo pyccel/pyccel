@@ -1,3 +1,4 @@
+# Assign statement is too complex. It seems that some of the variables used non-trivially on the right-hand side appear on the left-hand side.
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
