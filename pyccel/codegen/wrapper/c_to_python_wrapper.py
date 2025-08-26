@@ -1261,6 +1261,23 @@ class CToPythonWrapper(Wrapper):
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
 
+        # Ensure all class types are declared
+        for c in expr.classes:
+            name = c.name
+            struct_name = self.scope.get_new_name(f'Py{name}Object')
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
+                                    BaseClass=WrapperCustomDataType)()
+
+            type_name = self.scope.get_new_name(f'Py{name}Type')
+            wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name),
+                                       docstring = c.docstring, class_type = dtype)
+
+            orig_cls_dtype = c.scope.parent_scope.cls_constructs[name]
+            self._python_object_map[c] = wrapped_class
+            self._python_object_map[orig_cls_dtype] = dtype
+
+            self.scope.insert_class(wrapped_class, name)
+
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
 
@@ -2027,21 +2044,12 @@ class CToPythonWrapper(Wrapper):
             The wrapped class definition.
         """
         name = expr.name
-        struct_name = self.scope.get_new_name(f'Py{name}Object')
-        dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
 
-        type_name = self.scope.get_new_name(f'Py{name}Type')
-        docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
-                                   docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 
         orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
+        wrapped_class = self._python_object_map[expr]
 
-        self._python_object_map[expr] = wrapped_class
-        self._python_object_map[orig_cls_dtype] = dtype
-
-        self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
 
         for f in expr.methods:
@@ -2980,9 +2988,10 @@ class CToPythonWrapper(Wrapper):
         setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
         py_result_vars = [e['py_result'] for e in extract_elems]
-        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        py_res = self.get_new_PyObject(f'{name}_obj')
         body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
         body.extend(Py_DECREF(r) for r in py_result_vars)
+
         return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
 
     def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
