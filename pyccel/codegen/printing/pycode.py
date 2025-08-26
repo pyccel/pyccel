@@ -1411,7 +1411,7 @@ class PythonCodePrinter(CodePrinter):
         classes = ''
         for classDef in mod.classes:
             ll_name = classDef.name
-            py_name = classDef.scope.get_python_name(py_name)
+            py_name = classDef.scope.get_python_name(ll_name)
             classes += f"@low_level('{ll_name}')\n"
             classes += f"class {py_name}:\n"
             class_body  = '\n'.join(f"{classDef.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
