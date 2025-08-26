@@ -1,3 +1,4 @@
+# Arguments types provided to multi_tmplt_1 are incompatible
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
 

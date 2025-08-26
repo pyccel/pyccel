@@ -1,3 +1,4 @@
+# Undefined function
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f():

@@ -444,8 +444,12 @@ class SyntaxParser(BasicParser):
                 result = getattr(self, syntax_method)(stmt)
                 if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                     result.set_current_ast(stmt)
-            except (PyccelError, NotImplementedError) as err:
+            except PyccelError as err:
                 raise err
+            except NotImplementedError as error:
+                errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                    symbol = self._current_ast_node, severity='fatal',
+                    traceback=error.__traceback__)
             except Exception as err: #pylint: disable=broad-exception-caught
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,
