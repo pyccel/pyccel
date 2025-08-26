@@ -1,3 +1,4 @@
+# Containers containing objects of a different type cannot be used as arguments to set[int].union
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f():

@@ -22,8 +22,9 @@ dependencies = [
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "packaging",
+    "immutabledict >= 4.0.0",
     "ninja",
-    "meson"
+    "meson",
 ]
 
 [project.optional-dependencies]
