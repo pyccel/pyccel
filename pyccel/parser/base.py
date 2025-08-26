@@ -352,8 +352,9 @@ class BasicParser(object):
         scope = scope or self.scope
         if func.pyccel_staging == 'syntactic':
             name = func.name
-            if name in scope.functions:
-                old_func = container[name]
+            scope_funcs = scope.functions
+            if name in scope_funcs:
+                old_func = scope_funcs[name]
                 pyccel_stage.set_stage('syntactic')
                 if isinstance(old_func, Interface):
                     scope.insert_function(Interface(name, old_func.functions + (func,)),
