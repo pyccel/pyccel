@@ -302,6 +302,7 @@ class FCodePrinter(CodePrinter):
             rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in imports]
             if len(rename) == 0:
                 continue
+            rename.sort()
             macro += " , ".join(rename)
             macro += "\n"
             macros.append(macro)
