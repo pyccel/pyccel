@@ -681,6 +681,24 @@ class IndexedElement(TypedAstNode):
         else:
             self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
+        def make_positive(idx, shape):
+            """
+            Use the shape to convert a literal negative index to a positive index.
+            """
+            if isinstance(idx, Slice):
+                return Slice(make_positive(idx.start, shape),
+                             make_positive(idx.stop, shape),
+                             idx.step)
+            else:
+                try:
+                    if int(idx) < 0:
+                        return PyccelAdd(shape, idx, simplify=True)
+                except TypeError:
+                    pass
+                return idx
+
+        self._indices = tuple(make_positive(idx, shape[i]) for i, idx in enumerate(self._indices))
+
         if isinstance(base.class_type, InhomogeneousTupleType):
             assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
             self._class_type = base.class_type[self._indices[0]]
@@ -698,18 +716,11 @@ class IndexedElement(TypedAstNode):
                     start = a.start
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
-                    try:
-                        if int(start) < 0:
-                            start = PyccelAdd(s, start, simplify=True)
-                    except TypeError:
-                        if negative_idxs_possible:
-                            new_shape.append(None)
-                            continue
-                    try:
-                        if int(stop) < 0:
-                            stop = PyccelAdd(s, stop, simplify=True)
-                    except TypeError:
-                        if negative_idxs_possible:
+                    if negative_idxs_possible:
+                        try:
+                            start_int = int(start)
+                            stop_int = int(stop)
+                        except TypeError:
                             new_shape.append(None)
                             continue
 
