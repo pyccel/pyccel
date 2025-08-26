@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #2424 : Fix `isinstance` call testing class instance.
 -   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
 -   #2413 : Fix late name conflict detection bug.
+-   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
 
 ### Changed
 
