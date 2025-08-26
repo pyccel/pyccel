@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #2407 : Fix bad memory handling for multi-level containers.
 -   #2408 : Fix bug when inlining a call to a function with no return, via a dotted function call.
 -   #2419 : Fix lost error messages.
+-   #2424 : Fix `isinstance` call testing class instance.
 
 ### Changed
 
