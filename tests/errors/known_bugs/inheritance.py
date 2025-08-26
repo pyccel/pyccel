@@ -1,3 +1,4 @@
+# Static class methods are not yet supported
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class Point2d:
@@ -24,5 +25,3 @@ p = Point2d(0.0, 0.0)
 p.translate(1.0, 2.0)
 p1= Point3d(0.0, 0.0, 0.0)
 p1.translate(1.,2.,3.)
-
-

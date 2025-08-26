@@ -1,3 +1,4 @@
+# Argument 1 : x
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def f(x : 'int[:]'):
