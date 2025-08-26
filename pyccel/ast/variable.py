@@ -730,8 +730,8 @@ class IndexedElement(TypedAstNode):
                             if int(step) < 0:
                                 start = s if a.start is None else start
                                 _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                                step = PyccelUnarySub(step)
-                        except TypeError:
+                                step = PyccelUnarySub(step, simplify=True)
+                        except TypeError as e:
                             if negative_idxs_possible:
                                 new_shape.append(None)
                                 continue

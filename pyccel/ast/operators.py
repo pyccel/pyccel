@@ -363,6 +363,12 @@ class PyccelUnarySub(PyccelUnary):
     """
     __slots__ = ()
 
+    def __new__(cls, arg, simplify = False):
+        if simplify and isinstance(arg, PyccelUnarySub):
+            return arg.args[0]
+        else:
+            return super().__new__(cls)
+
     def __repr__(self):
         return f'-{repr(self.args[0])}'
 
