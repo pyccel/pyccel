@@ -163,5 +163,9 @@ def low_level(low_level_name : str):
         The low-level name of the function being described.
     """
     def identity(f):
+        """
+        The decorator that will actually be applied in the Python code.
+        This method does nothing.
+        """
         return f
     return identity
