@@ -1159,6 +1159,10 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
             return self._name #pylint: disable=protected-access
 
     def low_level_name(self):
+        """
+        The low_level_name function for the new CustomDataType class.
+        This describes the name that will be used in the low-level language.
+        """
         return ll_name
 
     newclass = type(f'Pyccel{python_name}', (BaseClass,),
