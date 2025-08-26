@@ -14,3 +14,4 @@ class Point:
 if __name__ == '__main__':
     p = Point(2.0, 3.0)
     p.show_coords()
+    print(isinstance(p, Point))
