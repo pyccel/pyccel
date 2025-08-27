@@ -3480,6 +3480,10 @@ class FCodePrinter(CodePrinter):
             assert not isinstance(ind, Slice)
             ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
             return f"{base_code}%of({ind_code})"
+        elif isinstance(base.class_type, InhomogeneousTupleType):
+            assert not isinstance(ind, Slice)
+            assert isinstance(ind, LiteralInteger)
+            return self._print(self.scope.collect_tuple_element(ind))
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"

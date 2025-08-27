@@ -1787,6 +1787,10 @@ class CCodePrinter(CodePrinter):
             return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
         elif isinstance(base.class_type, CStackArray):
             return f'{self._print(ObjectAddress(base))}[{indices}]'
+        elif isinstance(base.class_type, InhomogeneousTupleType):
+            assert not isinstance(ind, Slice)
+            assert isinstance(ind, LiteralInteger)
+            return self._print(self.scope.collect_tuple_element(ind))
         else:
             raise NotImplementedError(f"Indexing not implemented for {base.class_type}")
 
