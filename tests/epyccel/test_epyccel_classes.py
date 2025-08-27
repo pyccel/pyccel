@@ -515,7 +515,7 @@ def test_class_variables(language):
     import classes.class_variables as mod
     modnew = epyccel(mod, language = language)
 
-    for bool_val in (True, False)
+    for bool_val in (True, False):
         a_py = mod.A(bool_val)
         a_l = modnew.A(bool_val)
 
