@@ -1,15 +1,14 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
 def g():
-    return (1,2)
-
-def f():
-    shape = (1, 2)
-    a = np.zeros(g())
-    b = np.zeros((1, 2))
-    c = a[0,0]
-    print(a.shape)
-    print(b.shape)
+    return (2,3)
 
 if __name__ == '__main__':
-    f() 
+    shape = (1, 2)
+    a = np.zeros(g())
+    b = np.zeros((4, 1))
+    c = np.zeros(shape)
+    print(a.shape)
+    print(b.shape)
+    print(c.shape)
