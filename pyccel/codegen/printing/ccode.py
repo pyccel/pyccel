@@ -1731,6 +1731,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
+
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            return self._print(self.scope.collect_tuple_element(expr))
+
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
@@ -1787,10 +1791,6 @@ class CCodePrinter(CodePrinter):
             return f'(*cspan_at({self._print(ObjectAddress(base))}, {indices}))'
         elif isinstance(base.class_type, CStackArray):
             return f'{self._print(ObjectAddress(base))}[{indices}]'
-        elif isinstance(base.class_type, InhomogeneousTupleType):
-            assert not isinstance(ind, Slice)
-            assert isinstance(ind, LiteralInteger)
-            return self._print(self.scope.collect_tuple_element(ind))
         else:
             raise NotImplementedError(f"Indexing not implemented for {base.class_type}")
 

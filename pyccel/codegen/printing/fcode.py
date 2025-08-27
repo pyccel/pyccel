@@ -3439,6 +3439,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            return self._print(self.scope.collect_tuple_element(expr))
 
         inds = list(expr.indices)
         if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
@@ -3480,10 +3482,6 @@ class FCodePrinter(CodePrinter):
             assert not isinstance(ind, Slice)
             ind_code = self._print(PyccelAdd(inds[0], LiteralInteger(1), simplify=True))
             return f"{base_code}%of({ind_code})"
-        elif isinstance(base.class_type, InhomogeneousTupleType):
-            assert not isinstance(ind, Slice)
-            assert isinstance(ind, LiteralInteger)
-            return self._print(self.scope.collect_tuple_element(ind))
         elif isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             inds_code = ", ".join(self._print(i) for i in inds)
             return f"{base_code}({inds_code})"
