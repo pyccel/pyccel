@@ -28,14 +28,10 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
-from pyccel.utilities.stage import PyccelStage
-
 #==============================================================================
 
 errors = Errors()
 error_mode = ErrorsMode()
-
-pyccel_stage = PyccelStage()
 
 #==============================================================================
 
