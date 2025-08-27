@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   #2413 : Fix late name conflict detection bug.
 -   #2414 : Fix bug when passing a class member as argument to an inlined function.
 -   #2417 : Fix list duplication expressions.
+-   #2429 : Fix interface parsing from imported function.
 
 ### Changed
 
