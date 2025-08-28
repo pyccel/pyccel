@@ -1,8 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 from pyccel.decorators import pure
 
+T = TypeVar('T', int, float)
+
 @pure
-def add2(x : 'int', y : 'int'):
+def add2(x : T, y : T):
     return x + y
 
 @pure
