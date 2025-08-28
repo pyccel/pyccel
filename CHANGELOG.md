@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 -   #2417 : Fix list duplication expressions.
 -   #2429 : Fix interface parsing from imported function.
 -   #2431 : Fix missing type checks for functions called by functions with variable argument types.
+-   #2433 : Fix shape calculation for resized class member variables.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
 
 ### Changed
