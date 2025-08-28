@@ -1293,3 +1293,7 @@ def test_generated_name_collision(language):
     pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
             language = language)
 
+#------------------------------------------------------------------------------
+def test_array_tuple_shape(language):
+    pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
+            language = language)
