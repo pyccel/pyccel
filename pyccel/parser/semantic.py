@@ -1831,7 +1831,7 @@ class SemanticParser(BasicParser):
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
@@ -1884,17 +1884,13 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
+                # Try to get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
+                if isinstance(var, DottedVariable):
+                    var = next((a for a in var.lhs.cls_base.attributes if var == a), var)
+
                 self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs)
 
-                # in the case of elemental, lhs is not of the same class_type as
-                # var.
-                # TODO d_lhs must be consistent with var!
-                # the following is a small fix, since lhs must be already
-                # declared
-                if isinstance(lhs, DottedName):
-                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = self._visit(lhs.name[0]))
-                else:
-                    lhs = var
+                lhs = var
         else:
             lhs_type = str(type(lhs))
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
@@ -2047,12 +2043,19 @@ class SemanticParser(BasicParser):
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
+                        if isinstance(var, DottedVariable):
+                            # DottedVariable is constructed from the variable in the class's scope
+                            cls_scope = var.lhs.cls_base.scope
+                            py_name = cls_scope.get_python_name(var.name)
+                            attribute = var.lhs.cls_base.scope.find(py_name, 'variables')
+                            attribute.set_changeable_shape()
+
                         last_allocation = previous_allocations[-1]
 
                         # Find outermost IfSection of last allocation
@@ -5110,7 +5113,7 @@ class SemanticParser(BasicParser):
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
         for func_a, call_a in zip(func_args, positional_call_args):
-            if isinstance(call_a, Variable) and func_a == self.scope.get_expected_name(call_a.name):
+            if isinstance(call_a, Variable) and not isinstance(call_a, DottedVariable) and func_a == self.scope.get_expected_name(call_a.name):
                 # If call argument is a variable with the same name as the target function
                 # argument then there is no need to rename
                 new_func_a = replace_map.pop(func_a)
