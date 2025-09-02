@@ -17,8 +17,8 @@ from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, 
 from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
-from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
-                        PyccelUnarySub, PyccelAdd)
+from .operators import (PyccelMinus, PyccelDiv, PyccelMul, PyccelLt,
+                        PyccelUnarySub, PyccelAdd, IfTernaryOperator)
 from .numpytypes import NumpyNDArrayType
 
 errors = Errors()
@@ -721,7 +721,9 @@ class IndexedElement(TypedAstNode):
                             return PyccelAdd(bound, size)
                     except TypeError:
                         if negative_idxs_possible:
-                            return None
+                            return IfTernaryOperator(PyccelLt(bound, LiteralInteger(0)),
+                                                     PyccelAdd(bound, size),
+                                                     bound)
                     return bound
 
 
@@ -738,9 +740,6 @@ class IndexedElement(TypedAstNode):
 
                     start = unpack_bound(a.start, start, s)
                     stop = unpack_bound(a.stop, stop, s)
-                    if None in (start, stop):
-                        new_shape.append(None)
-                        continue
 
                     if start == 0:
                         _shape = stop # Can't be done with simplify kwarg due to potential recursion
