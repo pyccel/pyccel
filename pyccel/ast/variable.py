@@ -741,7 +741,10 @@ class IndexedElement(TypedAstNode):
                                 new_shape.append(None)
                                 continue
 
-                    _shape = PyccelMinus(stop, start, simplify=True)
+                    if start == 0:
+                        _shape = stop # Can't be done with simplify kwarg due to potential recursion
+                    else:
+                        _shape = PyccelMinus(stop, start, simplify=True)
                     if step is not None:
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
