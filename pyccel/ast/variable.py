@@ -713,29 +713,36 @@ class IndexedElement(TypedAstNode):
 
             for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
-                    start = a.start
-                    stop  = a.stop if a.stop is not None else s
-                    step  = a.step
-                    if negative_idxs_possible:
-                        try:
-                            start_int = int(start)
-                            stop_int = int(stop)
-                        except TypeError:
-                            new_shape.append(None)
-                            continue
+                    start, stop = LiteralInteger(0), s
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
-                    if step is not None:
+                    step  = a.step
+                    try:
+                        if int(step) < 0:
+                            start, stop = stop, start
+                    except TypeError as e:
+                        pass
+
+                    if a.start:
+                        start = a.start
                         try:
-                            if int(step) < 0:
-                                start = s if a.start is None else start
-                                _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                                step = PyccelUnarySub(step, simplify=True)
-                        except TypeError as e:
+                            if int(start) < 0:
+                                start = start + s
+                        except TypeError:
+                            if negative_idxs_possible:
+                                new_shape.append(None)
+                                continue
+                    if a.stop:
+                        stop  = a.stop
+                        try:
+                            if int(stop) < 0:
+                                stop = stop + s
+                        except TypeError:
                             if negative_idxs_possible:
                                 new_shape.append(None)
                                 continue
 
+                    _shape = PyccelMinus(stop, start, simplify=True)
+                    if step is not None:
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             if isinstance(base.class_type, HomogeneousTupleType):
