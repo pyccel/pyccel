@@ -711,6 +711,20 @@ class IndexedElement(TypedAstNode):
 
             negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
 
+            def unpack_bound(bound, default, size):
+                """ Get a valid start/stop value from a slice. """
+                if bound is None:
+                    return default
+                else:
+                    try:
+                        if int(bound) < 0:
+                            return PyccelAdd(bound, size)
+                    except TypeError:
+                        if negative_idxs_possible:
+                            return None
+                    return bound
+
+
             for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
                     start, stop = LiteralInteger(0), s
@@ -722,24 +736,11 @@ class IndexedElement(TypedAstNode):
                     except TypeError as e:
                         pass
 
-                    if a.start:
-                        start = a.start
-                        try:
-                            if int(start) < 0:
-                                start = start + s
-                        except TypeError:
-                            if negative_idxs_possible:
-                                new_shape.append(None)
-                                continue
-                    if a.stop:
-                        stop  = a.stop
-                        try:
-                            if int(stop) < 0:
-                                stop = stop + s
-                        except TypeError:
-                            if negative_idxs_possible:
-                                new_shape.append(None)
-                                continue
+                    start = unpack_bound(a.start, start, s)
+                    stop = unpack_bound(a.stop, stop, s)
+                    if None in (start, stop):
+                        new_shape.append(None)
+                        continue
 
                     if start == 0:
                         _shape = stop # Can't be done with simplify kwarg due to potential recursion
