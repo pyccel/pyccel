@@ -1,3 +1,4 @@
+# Cannot modify variable marked as Final
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import Final
 

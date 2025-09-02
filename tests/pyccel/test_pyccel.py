@@ -812,6 +812,7 @@ def test_array_binary_op(language):
                                         "scripts/classes/classes_6.py",
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
+                                        "scripts/classes/classes_9.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
@@ -827,7 +828,7 @@ def test_class_magic(language):
 
 def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
-    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
@@ -1285,4 +1286,14 @@ def test_pyccel_generated_compilation_dependency(language):
     pyccel_test("scripts/runtest_pyccel_generated_compilation_dependency.py",
             dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
             output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_generated_name_collision(language):
+    pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_array_tuple_shape(language):
+    pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
             language = language)

@@ -1,3 +1,4 @@
+# Argument 2 : 2.3
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class A:

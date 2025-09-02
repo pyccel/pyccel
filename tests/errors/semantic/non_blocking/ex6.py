@@ -1,3 +1,4 @@
+# Object has already been defined with type 'numpy.ndarray[numpy.float64]'. Type 'float' in assignment is incompatible
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 

@@ -18,14 +18,27 @@ All notable changes to this project will be documented in this file.
 -   #2306 : Fix Python containers as arguments to interface functions.
 -   #2407 : Fix bad memory handling for multi-level containers.
 -   #2408 : Fix bug when inlining a call to a function with no return, via a dotted function call.
+-   #2419 : Fix lost error messages.
+-   #2424 : Fix `isinstance` call testing class instance.
+-   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
+-   #2413 : Fix late name conflict detection bug.
+-   #2414 : Fix bug when passing a class member as argument to an inlined function.
+-   #2417 : Fix list duplication expressions.
+-   #2429 : Fix interface parsing from imported function.
+-   #2431 : Fix missing type checks for functions called by functions with variable argument types.
+-   #2433 : Fix shape calculation for resized class member variables.
+-   #2426 : Fix bug when specifying ND array shape with a tuple variable.
 
 ### Changed
 
 -   Update compiler commands to output the Python shared libraries and executables directly into the output directory.
 -   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   Update STC to v6.0-beta2.
+-   #2414 : Ensure printing of imports from Fortran intrinsic libraries is done in a reproducible way (by sorting).
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
+-   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
+-   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
 
 ### Deprecated
 
