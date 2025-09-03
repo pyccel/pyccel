@@ -707,7 +707,7 @@ class IndexedElement(TypedAstNode):
         else:
             # Calculate new shape
             new_shape = []
-            from .mathext import MathCeil
+            from .mathext import MathCeil, MathFabs
 
             negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
 
@@ -732,9 +732,11 @@ class IndexedElement(TypedAstNode):
                     start, stop = LiteralInteger(0), s
 
                     step  = a.step
+                    negative_step = negative_idxs_possible
                     try:
                         if int(step) < 0:
-                            start, stop = stop, start
+                            step = step.args[0]
+                            negative_step = False
                     except TypeError as e:
                         pass
 
@@ -747,6 +749,8 @@ class IndexedElement(TypedAstNode):
                         _shape = PyccelMinus(stop, start, simplify=True)
                     if step is not None:
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                        if negative_step:
+                            _shape = MathFabs(_shape)
                     new_shape.append(_shape)
             if isinstance(base.class_type, HomogeneousTupleType):
                 new_shape.extend(shape[1:])
