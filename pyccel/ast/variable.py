@@ -18,7 +18,7 @@ from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul, PyccelLt,
-                        PyccelUnarySub, PyccelAdd, IfTernaryOperator)
+                        PyccelAdd, IfTernaryOperator)
 from .numpytypes import NumpyNDArrayType
 
 errors = Errors()
@@ -737,7 +737,7 @@ class IndexedElement(TypedAstNode):
                         if int(step) < 0:
                             step = step.args[0]
                             negative_step = False
-                    except TypeError as e:
+                    except TypeError:
                         pass
 
                     start = unpack_bound(a.start, start, s)
