@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #2431 : Fix missing type checks for functions called by functions with variable argument types.
 -   #2433 : Fix shape calculation for resized class member variables.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
+-   #2436 : Fix list comprehension with variable slice containing negative indices as an iterable.
 
 ### Changed
 
