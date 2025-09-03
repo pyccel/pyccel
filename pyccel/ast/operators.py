@@ -360,6 +360,9 @@ class PyccelUnarySub(PyccelUnary):
     ----------
     arg : TypedAstNode
         The argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
 
