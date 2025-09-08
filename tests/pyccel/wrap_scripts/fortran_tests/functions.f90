@@ -1,4 +1,4 @@
-module square_mod
+module functions
 
   use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
 
@@ -11,5 +11,6 @@ contains
     integer(i64) :: y
     y = x * x
   end function square
-end module square_mod
+
+end module functions
 

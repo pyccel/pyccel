@@ -89,5 +89,8 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
 #--------------------------------------------------------------------------------------------------
 #                                  Tests
 #--------------------------------------------------------------------------------------------------
-def test_square(language):
-    check_pyccel_wrap_and_call_translation('square_mod', 'runtest_square', language)
+def test_function(language):
+    check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language)
+
+def test_class_accessors(language):
+    check_pyccel_wrap_and_call_translation('class_property', 'runtest_class_property', language)
