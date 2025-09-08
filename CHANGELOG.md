@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
 -   #2420 : Add `@low_level` decorator.
+-   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 
 ### Fixed
