@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
+-   #2420 : Add `@low_level` decorator.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 
 ### Fixed
@@ -23,6 +24,11 @@ All notable changes to this project will be documented in this file.
 -   #2248 : Fix wrapper bug when returning an instance of a class from the method of a preceding class.
 -   #2413 : Fix late name conflict detection bug.
 -   #2414 : Fix bug when passing a class member as argument to an inlined function.
+-   #2417 : Fix list duplication expressions.
+-   #2429 : Fix interface parsing from imported function.
+-   #2431 : Fix missing type checks for functions called by functions with variable argument types.
+-   #2433 : Fix shape calculation for resized class member variables.
+-   #2426 : Fix bug when specifying ND array shape with a tuple variable.
 -   #2096 : Fix saving a list comprehension into a slice.
 
 ### Changed

@@ -575,7 +575,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, (PythonTuple, NumpyArray)):
+                and isinstance(line.rhs, (PythonTuple, NumpyArray, PythonList)):
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
@@ -593,7 +593,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     block = LoopCollection(block, s, set([lhs]))
                 result.append(block)
 
-            elif not language_has_vectors:
+            elif not language_has_vectors or isinstance(rhs, PythonList):
                 if isinstance(rhs, NumpyArray):
                     rhs = rhs.arg
 
@@ -622,7 +622,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             lhs = line.lhs
             rhs = line.rhs
 
-            if not isinstance(rhs.length, LiteralInteger):
+            if not isinstance(rhs.length, LiteralInteger) or int(rhs.length) > 10:
                 if len(indices) == 0:
                     indices.append(new_index(PythonNativeInt(), 'i'))
                 idx = indices[0]

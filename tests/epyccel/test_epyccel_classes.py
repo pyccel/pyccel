@@ -510,3 +510,17 @@ def test_class_globals_visitation_order(language):
     a_l = modnew.A()
 
     assert a_py.x == a_l.x
+
+def test_class_variables(language):
+    import classes.class_variables as mod
+    modnew = epyccel(mod, language = language)
+
+    for bool_val in (True, False):
+        a_py = mod.A(bool_val)
+        a_l = modnew.A(bool_val)
+
+        assert a_py.x == a_l.x
+        assert a_py.z == a_l.z
+        assert a_py.get_4() == a_l.get_4()
+        assert np.array_equal(a_py.y, a_l.y)
+        assert a_py.get_y_len() == a_l.get_y_len()
