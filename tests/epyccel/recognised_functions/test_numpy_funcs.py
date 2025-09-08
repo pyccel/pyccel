@@ -1847,9 +1847,10 @@ def test_empty_order(language):
         return len(s),s[0], s[1]
     def create_empty_shape_F(n : 'int', m : 'int'):
         from numpy import empty, shape
-        a = empty((n,m), order = 'F')
+        p = (n,m)
+        a = empty(p, order = 'F')
         s = shape(a)
-        return len(s),s[0], s[1]
+        return len(s), s[0], s[1], len(p), p[0], p[1]
 
     size_1 = randint(1,10)
     size_2 = randint(1,10)
