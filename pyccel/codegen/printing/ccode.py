@@ -1000,9 +1000,6 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        for item in expr.imports:
-            if item.source_module and item.source_module is not self._current_module:
-                self.rename_imported_methods(item.source_module.classes)
         self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
