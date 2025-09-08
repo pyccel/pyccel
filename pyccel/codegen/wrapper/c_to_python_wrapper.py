@@ -1100,7 +1100,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
-        self.scope.insert_function(function, func_name)
+        self.scope.insert_function(function, self.scope.get_python_name(func_name))
         self._python_object_map[del_function] = function
 
         return function
