@@ -94,3 +94,10 @@ def test_function(language):
 
 def test_class_accessors(language):
     check_pyccel_wrap_and_call_translation('class_property', 'runtest_class_property', language)
+
+def test_array_methods():
+    # C is not tested as compiling array dependencies by hand is harder than necessary for the test
+    check_pyccel_wrap_and_call_translation('array_methods', 'runtest_array_methods', 'fortran')
+
+def test_overload_methods(language):
+    check_pyccel_wrap_and_call_translation('class_overloaded_methods', 'runtest_class_overloaded_methods', language)
