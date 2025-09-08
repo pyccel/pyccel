@@ -290,9 +290,9 @@ def execute_pyccel_wrap(fname, *,
 
     printed_languages = wrappergen.printed_languages
 
-    includes = [i.strip() for i in parser.metavars.get('includes', '').split(',') if i]
+    includes = [os.path.join(pymod_dirpath, i.strip()) for i in parser.metavars.get('includes', '').split(',') if i]
+    libdirs = [os.path.join(pymod_dirpath, l.strip()) for l in parser.metavars.get('libdirs', '').split(',') if l]
     libs = [l.strip() for l in parser.metavars.get('libraries', '').split(',') if l]
-    libdirs = [l.strip() for l in parser.metavars.get('libdirs', '').split(',') if l]
 
     meta_flags = [f.strip() for f in parser.metavars.get('flags', '').split(',') if f]
 
