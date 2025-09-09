@@ -132,6 +132,7 @@ def execute_pyccel_wrap(fname, *,
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     pyccel_dirpath = folder / pyccel_dirname
+    os.makedirs(pyccel_dirpath, exist_ok=True)
 
     # Create new directories if not existing
     os.makedirs(folder, exist_ok=True)
