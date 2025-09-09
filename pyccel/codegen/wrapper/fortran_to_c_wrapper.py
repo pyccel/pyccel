@@ -661,7 +661,7 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
-        name = expr.scope.get_python_name(expr.name)
+        name = expr.name
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
         func_scope = self.scope.new_child_scope(func_name)
 
