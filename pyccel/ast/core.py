@@ -2175,9 +2175,7 @@ class FunctionDef(ScopedAstNode):
         # Outside of semantic stage, if the scope is provided then the original name
         # of the function should be retrievable from the semantic name using scope.python_names
         assert pyccel_stage != "semantic" or scope is None or \
-                is_imported or name in scope.python_names
-        assert pyccel_stage != "semantic" or scope is None or \
-                is_imported or scope.name == scope.python_names[name]
+                is_imported or (name in scope.python_names and scope.name == scope.python_names[name])
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
