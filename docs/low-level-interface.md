@@ -79,6 +79,7 @@ def func(a : np.int32): ...
 ### Compilation metadata
 
 Pyccel requires some information about the underlying low-level code in order to be able to compile the generated wrapper. This information takes the form of metadata which is placed in comments, usually at the top of the file. The syntax for such metadata is:
+
 ```python
 #$ header metavar key=val
 ```
