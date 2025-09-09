@@ -10,7 +10,7 @@ This gives you two benefits at once:
 
 - Pyccel understands those calls, so when you translate Python to C/Fortran code, the calls are re-emitted as direct calls to the original routines.
 
-In practice, the .pyi file creates a two-way bridge between Python and low-level code: easy to call from Python, and still optimisable by Pyccel.
+In practice, the `.pyi` file creates a two-way bridge between Python and low-level code: easy to call from Python, and still translatable by Pyccel.
 
 ## Contents
 
@@ -84,7 +84,7 @@ Pyccel requires some information about the underlying low-level code in order to
 #$ header metavar key=val
 ```
 
-Possible metavar keys are:
+Possible keys are:
 
 - `includes` : Describes the include directories that must be passed to the compiler with the `-I` flag. This should be a string, folders are separated by commas.
 - `libdirs` : Describes the library directories that must be passed to the compiler with the `-L` flag. This should be a string, folders are separated by commas.
