@@ -45,7 +45,7 @@ def execute_pyccel(fname, *,
                    convert_only    = False,
                    verbose         = 0,
                    time_execution  = False,
-                   folder          = None,
+                   output_dirpath  = None,
                    language        = None,
                    compiler_family = None,
                    flags           = None,
@@ -83,8 +83,8 @@ def execute_pyccel(fname, *,
         Indicates the level of verbosity.
     time_execution : bool, default=False
         Show the time spent in each of Pyccel's internal stages.
-    folder : str, optional
-        Path to the working directory. Default is the folder containing the file to be translated.
+    output_dirpath : str, optional
+        Path to the working directory. Default is the output_dirpath containing the file to be translated.
     language : str, optional
         The target language Pyccel is translating to. Default is 'fortran'.
     compiler_family : str, optional
@@ -162,11 +162,11 @@ def execute_pyccel(fname, *,
     # Extract module name
     module_name = os.path.splitext(pymod_filename)[0]
 
-    # Define working directory 'folder'
-    if folder is None or folder == "":
-        folder = pymod_dirpath
+    # Define working directory 'output_dirpath'
+    if output_dirpath is None or output_dirpath == "":
+        output_dirpath = pymod_dirpath
     else:
-        folder = os.path.abspath(folder)
+        output_dirpath = os.path.abspath(output_dirpath)
 
     # Define default debug mode
     if debug is None:
@@ -174,10 +174,10 @@ def execute_pyccel(fname, *,
 
     # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
-    pyccel_dirpath = os.path.join(folder, pyccel_dirname)
+    pyccel_dirpath = os.path.join(output_dirpath, pyccel_dirname)
 
     # Create new directories if not existing
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(output_dirpath, exist_ok=True)
     if not (syntax_only or semantic_only):
         os.makedirs(pyccel_dirpath, exist_ok=True)
 
@@ -208,14 +208,14 @@ def execute_pyccel(fname, *,
 
     Scope.name_clash_checker = name_clash_checkers[language]
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
+    # Change working directory to 'output_dirpath'
+    os.chdir(output_dirpath)
 
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
+        parser = Parser(pymod_filepath, output_folder = output_dirpath, context_dict = context_dict)
         parser.parse(verbose=verbose)
     except PyccelError:
         handle_error('parsing (syntax)')
@@ -275,7 +275,7 @@ def execute_pyccel(fname, *,
 
     if language == 'python':
         output_file = (output_name + '.py') if output_name else os.path.basename(fname)
-        new_location = os.path.join(folder, output_file)
+        new_location = os.path.join(output_dirpath, output_file)
         if verbose:
             print("cp {} {}".format(fname, new_location))
         shutil.copyfile(fname, new_location)
@@ -291,7 +291,7 @@ def execute_pyccel(fname, *,
     compile_libs.extend(libs)
 
     mod_obj = CompileObj(file_name = fname,
-            folder       = pyccel_dirpath,
+            dirpath      = pyccel_dirpath,
             flags        = flags,
             include      = include,
             libs         = compile_libs,
@@ -326,7 +326,7 @@ def execute_pyccel(fname, *,
     # Compile code to modules
     try:
         compiler.compile_module(compile_obj=mod_obj,
-                output_folder=pyccel_dirpath,
+                output_dirpath=pyccel_dirpath,
                 language=language,
                 verbose=verbose)
     except Exception:
@@ -337,11 +337,11 @@ def execute_pyccel(fname, *,
     try:
         if codegen.is_program:
             prog_obj = CompileObj(file_name = prog_name,
-                    folder       = pyccel_dirpath,
+                    dirpath      = pyccel_dirpath,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
             generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=folder,
+                    output_dirpath=output_dirpath,
                     language=language,
                     verbose=verbose)
 
@@ -353,7 +353,7 @@ def execute_pyccel(fname, *,
                                                language = language,
                                                wrapper_flags = wrapper_flags,
                                                pyccel_dirpath = pyccel_dirpath,
-                                               output_dirpath = folder,
+                                               output_dirpath = output_dirpath,
                                                compiler = compiler,
                                                sharedlib_modname = output_name,
                                                verbose = verbose)

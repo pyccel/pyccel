@@ -43,46 +43,46 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",folder="math", libs = ('m',))),
-    "pyc_math_c"       : (stdlib_path / "math", "math", CompileObj("pyc_math_c.c",folder="math")),
-    "pyc_tools_f90"    : (stdlib_path / "tools", "tools", CompileObj("pyc_tools_f90.f90",folder="tools")),
-    "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",folder="cwrapper", extra_compilation_tools=('python',))),
-    "CSpan_extensions" : (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("CSpan_extensions.h", folder="STC_Extensions", has_target_file = False)),
-    "stc" : (ext_path / "STC/include/stc", "STC/include/stc", CompileObj("stc", folder="STC/include", has_target_file = False)),
-    "gFTL" : (ext_path / "gFTL/install/GFTL-1.13/include/v2", "gFTL", CompileObj("gFTL", folder=".", has_target_file = False)),
+    "pyc_math_f90"     : (stdlib_path / "math", "math", CompileObj("pyc_math_f90.f90",dirpath="math", libs = ('m',))),
+    "pyc_math_c"       : (stdlib_path / "math", "math", CompileObj("pyc_math_c.c",dirpath="math")),
+    "pyc_tools_f90"    : (stdlib_path / "tools", "tools", CompileObj("pyc_tools_f90.f90",dirpath="tools")),
+    "cwrapper"         : (stdlib_path / "cwrapper", "cwrapper", CompileObj("cwrapper.c",dirpath="cwrapper", extra_compilation_tools=('python',))),
+    "CSpan_extensions" : (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("CSpan_extensions.h", dirpath="STC_Extensions", has_target_file = False)),
+    "stc" : (ext_path / "STC/include/stc", "STC/include/stc", CompileObj("stc", dirpath="STC/include", has_target_file = False)),
+    "gFTL" : (ext_path / "gFTL/install/GFTL-1.13/include/v2", "gFTL", CompileObj("gFTL", dirpath=".", has_target_file = False)),
 }
 internal_libs["STC_Extensions/Set_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Set_Extensions.h",
-                                                      folder="STC_Extensions",
+                                                      dirpath="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (internal_libs['stc'][2],)))
 internal_libs["STC_Extensions/Dict_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Dict_Extensions.h",
-                                                     folder="STC_Extensions",
+                                                     dirpath="STC_Extensions",
                                                      has_target_file=False,
                                                      dependencies=(internal_libs["stc"][2],)))
 internal_libs["STC_Extensions/List_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("List_Extensions.h",
-                                                      folder="STC_Extensions",
+                                                      dirpath="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (internal_libs['stc'][2],)))
 internal_libs["STC_Extensions/Common_extensions"] = (stdlib_path / "STC_Extensions", "STC_Extensions", CompileObj("Common_Extensions.h",
-                                                      folder="STC_Extensions",
+                                                      dirpath="STC_Extensions",
                                                       has_target_file = False,
                                                       dependencies = (internal_libs['stc'][2],)))
 internal_libs["gFTL_functions/Set_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Set_Extensions.inc",
-                                                                     folder="gFTL_functions",
+                                                                     dirpath="gFTL_functions",
                                                                      has_target_file = False,
                                                                      dependencies = (internal_libs['gFTL'][2],)))
 internal_libs["gFTL_functions/Vector_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Vector_Extensions.inc",
-                                                                     folder="gFTL_functions",
+                                                                     dirpath="gFTL_functions",
                                                                      has_target_file = False,
                                                                      dependencies = (internal_libs['gFTL'][2],)))
 internal_libs["gFTL_functions/Map_extensions"] = (stdlib_path / "gFTL_functions", "gFTL_functions", CompileObj("Map_Extensions.inc",
-                                                                     folder="gFTL_functions",
+                                                                     dirpath="gFTL_functions",
                                                                      has_target_file = False,
                                                                      dependencies = (internal_libs['gFTL'][2],)))
-internal_libs["stc/cstr"] = (ext_path / "STC/src", "STC/src", CompileObj("cstr_core.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
-internal_libs["stc/cspan"] = (ext_path / "STC/src", "STC/src", CompileObj("cspan.c", folder="STC/include", dependencies = (internal_libs['stc'][2],)))
+internal_libs["stc/cstr"] = (ext_path / "STC/src", "STC/src", CompileObj("cstr_core.c", dirpath="STC/include", dependencies = (internal_libs['stc'][2],)))
+internal_libs["stc/cspan"] = (ext_path / "STC/src", "STC/src", CompileObj("cspan.c", dirpath="STC/include", dependencies = (internal_libs['stc'][2],)))
 internal_libs["stc/algorithm"] = (ext_path / "STC/include/stc/", "STC/include/stc/", CompileObj("algorithm.h",
-                                    folder="STC/include",
+                                    dirpath="STC/include",
                                     has_target_file = False,
                                     dependencies = (internal_libs['stc'][2],)))
 
@@ -273,7 +273,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
             with open(filename, 'w', encoding="utf-8") as f:
                 f.write(code)
 
-        new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
+        new_dependencies.append(CompileObj(os.path.basename(filename), dirpath=folder,
                             include=include,
                             libs=libs, libdir=libdir,
                             dependencies=(*dependencies, internal_libs['gFTL'][2]),
@@ -320,7 +320,7 @@ def recompile_object(compile_obj,
             outdated = True
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
-                output_folder=compile_obj.source_folder,
+                output_dirpath=compile_obj.source_dirpath,
                 language=language,
                 verbose=verbose)
 
@@ -367,7 +367,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             # convert only
             if convert_only:
                 continue
-            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
+            stdlib.reset_dirpath(lib_dest_path) # pylint: disable=E1101
 
             # get the include folder path and library files
             recompile_object(stdlib,
@@ -449,7 +449,7 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
             dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
             if not parser.metavars.get('ignore_at_import', False):
                 deps[dep_fname] = CompileObj(mod_base,
-                                    folder          = mod_folder,
+                                    dirpath         = mod_folder,
                                     libs            = dep_compile_libs,
                                     has_target_file = not parser.metavars.get('no_target', False))
             else:

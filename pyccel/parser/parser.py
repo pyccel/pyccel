@@ -10,7 +10,7 @@ Module containing the Parser object
 
 from pathlib import Path
 
-from pyccel.parser.base      import get_filename_from_import
+from pyccel.parser.base      import get_filepath_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
 
@@ -262,7 +262,7 @@ class Parser(object):
         """
 
         imports     = self.imports
-        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
+        source_to_filename = {i: get_filepath_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:

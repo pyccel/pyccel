@@ -41,7 +41,7 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-def get_filename_from_import(module_name, input_folder_name, output_folder_name):
+def get_filepath_from_import(module_name, input_dirpath, output_dirpath):
     """
     Get the absolute path of a module_name, searching in a given folder.
 
@@ -61,18 +61,18 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     module_name : str | AsName
         Name of the module_name of interest.
 
-    input_folder_name : str | Path
+    input_dirpath : str | Path
         Relative path of the folder which should be searched for the module_name.
 
-    output_folder_name : str | Path
-        The name of the folder where the output of the translation of the module
+    output_dirpath : str | Path
+        The path to the folder where the output of the translation of the module
         from which we are searching was printed.
 
     Returns
     -------
-    filename : pathlib.Path
+    file_abspath : pathlib.Path
         Absolute path to the Python file being imported.
-    stashed_filename : pathlib.Path
+    pyi_file_abspath : pathlib.Path
         Absolute path to the .pyi version of the Python file being imported.
         If none exists then the absolute path to the Python file being imported.
 
@@ -87,22 +87,22 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     if (isinstance(module_name, AsName)):
         module_name = str(module_name.name)
 
-    relative_project_path = module_name[0] == '.'
+    is_relative_project_path = module_name[0] == '.'
     in_project = '.' in module_name
 
-    input_folder = pathlib.Path(input_folder_name)
+    input_dirpath = pathlib.Path(input_dirpath)
 
-    if relative_project_path:
+    if is_relative_project_path:
         project_depth = next(i for i, c in enumerate(module_name) if c != '.')
         if project_depth == 1:
-            project_dir = input_folder
+            project_dirpath = input_dirpath
         else:
-            project_dir = input_folder.parents[project_depth-2]
+            project_dirpath = input_dirpath.parents[project_depth-2]
         module_path = module_name[project_depth:].split('.')
-        filename_stem = project_dir.joinpath(*module_path)
+        filepath_stem = project_dirpath.joinpath(*module_path)
     elif in_project:
-        filename_stem = input_folder.joinpath(*module_name.split('.')).with_suffix('.py')
-        if not filename_stem.exists():
+        filepath = input_dirpath.joinpath(*module_name.split('.')).with_suffix('.py')
+        if not filepath.exists():
             module_name_parts = module_name.split('.')
             package = None
             for i in range(len(module_name_parts)):
@@ -114,48 +114,56 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
             if package is None:
                 errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                                 severity='fatal')
-            filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
+            filepath_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
+        else:
+            filepath_stem = filepath.with_suffix('')
     else:
-        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
+        filepath_stem = input_dirpath.joinpath(*module_name.split('.'))
 
-    pyccel_folder = pathlib.Path(__file__).parent.parent
-    filename_py = filename_stem.with_suffix('.py')
-    filename_pyi = filename_stem.with_suffix('.pyi')
-    filename_pyh = filename_stem.with_suffix('.pyh')
+    pyccel_dirpath = pathlib.Path(__file__).parent.parent
+    py_file_path = filepath_stem.with_suffix('.py')
+    pyi_file_path = filepath_stem.with_suffix('.pyi')
+    pyh_file_path = filepath_stem.with_suffix('.pyh')
 
     # Look for .pyi or .pyh files in pyccel
     # Header files take priority in case .py files exist so files can run in Python
-    if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
-        abs_pyi_fname = filename_pyi.absolute()
-        return abs_pyi_fname, abs_pyi_fname
-    elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
-        abs_pyh_fname = filename_pyh.absolute()
-        return abs_pyh_fname, abs_pyh_fname
-    elif filename_py.exists() and pyccel_folder in filename_pyh.parents:
+    if pyi_file_path.exists() and pyccel_dirpath in pyi_file_path.parents:
+        pyi_file_abspath = pyi_file_path.absolute()
+        return pyi_file_abspath, pyi_file_abspath
+
+    elif pyh_file_path.exists() and pyccel_dirpath in pyh_file_path.parents:
+        pyh_file_abspath = pyh_file_path.absolute()
+        return pyh_file_abspath, pyh_file_abspath
+
+    elif py_file_path.exists() and pyccel_dirpath in pyh_file_path.parents:
         # External files are pure Python
-        abs_py_fname = filename_py.absolute()
-        return abs_py_fname, abs_py_fname
+        py_file_abspath = py_file_path.absolute()
+        return py_file_abspath, py_file_abspath
+
     # Look for Python files which should have been translated once
-    elif filename_py.exists():
-        rel_path = os.path.relpath(filename_py.parent, input_folder_name)
+    elif py_file_path.exists():
+        rel_path = os.path.relpath(py_file_path.parent, input_dirpath)
         pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
-        stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
+        pyi_file_abspath = pathlib.Path(output_dirpath) / rel_path / pyccel_output_folder / pyi_file_path.name
         if not stashed_file.exists():
             errors.report("Imported files must be pyccelised before they can be used.",
                     symbol=module_name, severity='fatal')
-        if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
+        if pyi_file_abspath.stat().st_mtime < py_file_path.stat().st_mtime:
             errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
                     symbol=module_name, severity='fatal')
-        return filename_py.absolute(), stashed_file.resolve()
+        return py_file_path.absolute(), pyi_file_abspath.resolve()
+
     # Look for user-defined .pyi or .pyh files
-    elif filename_pyi.exists():
-        abs_pyi_fname = filename_pyi.absolute()
-        return abs_pyi_fname, abs_pyi_fname
-    elif filename_pyh.exists():
+    elif pyi_file_path.exists():
+        pyi_file_abspath = pyi_file_path.absolute()
+        return pyi_file_abspath, pyi_file_abspath
+
+    elif pyh_file_path.exists():
         warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
                 "Please use a .pyi file instead.", FutureWarning)
-        abs_pyh_fname = filename_pyh.absolute()
-        return abs_pyh_fname, abs_pyh_fname
+        pyh_file_abspath = pyh_file_path.absolute()
+        return pyh_file_abspath, pyh_file_abspath
+
     else:
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')

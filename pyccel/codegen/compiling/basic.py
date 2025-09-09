@@ -24,8 +24,8 @@ class CompileObj:
     file_name : str
         Name of file to be compiled.
 
-    folder : str
-        Name of the folder where the file is found.
+    dirpath : str
+        Path to the directory where the file is found.
 
     flags : str
         Any non-default flags passed to the compiler.
@@ -55,12 +55,12 @@ class CompileObj:
         name is used.
     """
     compilation_in_progress = FileLock('.lock_acquisition.lock')
-    __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
+    __slots__ = ('_file_path','_dirpath','_module_name','_module_target','_prog_target',
                  '_lock_target','_lock_source','_flags','_include','_libs',
                  '_libdir','_extra_compilation_tools','_dependencies','_has_target_file')
     def __init__(self,
                  file_name,
-                 folder,
+                 dirpath,
                  flags        = (),
                  include     = (),
                  libs         = (),
@@ -70,12 +70,12 @@ class CompileObj:
                  has_target_file = True,
                  prog_target  = None):
 
-        folder = Path(folder)
-        self._folder = folder
-        self._file = folder / file_name
+        dirpath = Path(dirpath)
+        self._dirpath = dirpath
+        self._file_path = dirpath / file_name
 
         self._module_name = Path(file_name).stem
-        rel_mod_name = folder / self._module_name
+        rel_mod_name = dirpath / self._module_name
         self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
@@ -91,40 +91,40 @@ class CompileObj:
                                             self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._include     = {folder, *(Path(i) for i in include)}
+        self._include     = {dirpath, *(Path(i) for i in include)}
         self._libs         = list(libs)
         self._libdir      = set(libdir)
         self._extra_compilation_tools = set(extra_compilation_tools)
         self._dependencies = {a.module_target:a for a in dependencies}
         self._has_target_file = has_target_file
 
-    def reset_folder(self, folder):
+    def reset_dirpath(self, dirpath):
         """
-        Change the folder in which the source file is saved.
+        Change the dirpath in which the source file is saved.
 
-        Change the folder in which the source file is saved. Normally the location
+        Change the dirpath in which the source file is saved. Normally the location
         of the source file should not change during the execution, however when
-        working with the stdlib, the `CompileObj` is created with the folder set
+        working with the stdlib, the `CompileObj` is created with the dirpath set
         to the file's location in the Pyccel install directory. When the file is
-        used it is copied to the user's folder, at which point the folder of the
+        used it is copied to the user's dirpath, at which point the dirpath of the
         `CompileObj` must be updated.
 
         Parameters
         ----------
-        folder : str
-            The new folder where the source file can be found.
+        dirpath : str
+            The new dirpath where the source file can be found.
         """
-        folder = Path(folder)
-        self._include.remove(self._folder)
-        self._include.add(folder)
+        dirpath = Path(dirpath)
+        self._include.remove(self._dirpath)
+        self._include.add(dirpath)
 
-        self._file = folder / self._file.name
+        self._file_path = dirpath / self._file_path.name
         self._lock_source  = FileLock(self.source.with_suffix(
                                         self.source.suffix+'.lock'))
-        self._folder = folder
-        self._include.add(self._folder)
+        self._dirpath = dirpath
+        self._include.add(self._dirpath)
 
-        rel_mod_name = folder / self._module_name
+        rel_mod_name = dirpath / self._module_name
         self._module_target = rel_mod_name.with_suffix('.o')
 
         self._prog_target = rel_mod_name
@@ -138,13 +138,13 @@ class CompileObj:
     def source(self):
         """ Returns the file to be compiled
         """
-        return self._file
+        return self._file_path
 
     @property
-    def source_folder(self):
+    def source_dirpath(self):
         """ Returns the location of the file to be compiled
         """
-        return self._folder
+        return self._dirpath
 
     @property
     def python_module(self):
