@@ -77,7 +77,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
     subprocess.run([shutil.which("pyccel-wrap"), cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
     py_run = subprocess.run([sys.executable, python_file], text = True, capture_output = True, cwd = cwd, check = True)
     subprocess.run([shutil.which("pyccel"), python_file, *pyccel_flags], check = True)
-    
+
     exe_file = cwd / python_stem
     if sys.platform == "win32":
         exe_file = exe_file.with_suffix('.py')
