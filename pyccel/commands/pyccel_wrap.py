@@ -10,18 +10,7 @@ import os
 import argparse
 import pathlib
 
-__all__ = ['MyParser', 'pyccel']
-
-#==============================================================================
-class MyParser(argparse.ArgumentParser):
-    """
-    Custom argument parser for printing help message in case of an error.
-    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
-    """
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
+__all__ = ['pyccel_wrap_command']
 
 #==============================================================================
 def pyccel_wrap_command() -> None:
@@ -44,13 +33,14 @@ def pyccel_wrap_command() -> None:
     generated for the corresponding block of code.
     """
 
-    parser = MyParser(description="Pyccel's command line interface.",
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
                       add_help=False)
 
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=pathlib.Path,
-                        help='Path (relative or absolute) to the Python file to be translated.')
+                       required = True,
+                       help='Path (relative or absolute) to the Python file to be translated.')
     #...
 
     #... Help and Version
@@ -58,7 +48,7 @@ def pyccel_wrap_command() -> None:
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
     python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    message = f'pyccel {version} from {libpath} ({python})'
 
     group = parser.add_argument_group('Basic options')
     group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
@@ -88,34 +78,9 @@ def pyccel_wrap_command() -> None:
 
     # ... Additional compiler options
     group = parser.add_argument_group('Additional compiler options')
-    group.add_argument('--flags', type=str, \
-                       help='Additional compiler flags.')
-    group.add_argument('--wrapper-flags', type=str, \
-                       help='Additional compiler flags for the wrapper.')
     group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
                         help='Compile the code with debug flags, or not.\n' \
                         ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
-
-    group.add_argument('--include',
-                        type=str,
-                        nargs='*',
-                        dest='include',
-                        default=(),
-                        help='Additional include directories.')
-
-    group.add_argument('--libdir',
-                        type=str,
-                        nargs='*',
-                        dest='libdir',
-                        default=(),
-                        help='Additional library directories.')
-
-    group.add_argument('--libs',
-                        type=str,
-                        nargs='*',
-                        dest='libs',
-                        default=(),
-                        help='Additional libraries to link with.')
 
     group.add_argument('--output', type=pathlib.Path, default = None,\
                        help="Folder in which the output is stored (default: FILE's folder).")
@@ -133,10 +98,14 @@ def pyccel_wrap_command() -> None:
 
     # ... Other options
     group = parser.add_argument_group('Other options')
+    group.add_argument('-t', '--convert-only', action='store_true',
+                       help='Stop Pyccel after translation to the target language, before build.')
     group.add_argument('-v', '--verbose', action='count', default = 0,\
                         help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
     group.add_argument('--developer-mode', action='store_true', \
                         help='Show internal messages.')
+    group.add_argument('--time-execution', action='store_true', \
+                        help='Print the time spent in each section of the execution.')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
@@ -197,7 +166,7 @@ def pyccel_wrap_command() -> None:
 
     # ...
     # this will initialize the singleton ErrorsMode
-    # making this settings available everywhere
+    # making this setting available everywhere
     err_mode = ErrorsMode()
     if args.developer_mode:
         err_mode.set_mode('developer')
@@ -213,19 +182,15 @@ def pyccel_wrap_command() -> None:
 
     try:
         # TODO: prune options
-        execute_pyccel_wrap(str(filename),
+        execute_pyccel_wrap(filename,
+                       convert_only    = args.convert_only,
                        verbose         = args.verbose,
+                       time_execution  = args.time_execution,
                        language        = args.language,
                        compiler_family = str(compiler) if compiler is not None else None,
-                       flags           = args.flags,
-                       wrapper_flags   = args.wrapper_flags,
-                       include         = args.include,
-                       libdir          = args.libdir,
-                       modules         = (),
-                       libs            = args.libs,
                        debug           = args.debug,
                        accelerators    = accelerators,
-                       folder          = str(output) if output is not None else None,
+                       folder          = output if output is not None else None,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
