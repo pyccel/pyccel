@@ -103,6 +103,17 @@ class Parser(object):
         return self._filename
 
     @property
+    def original_filename(self):
+        """
+        The original Python file that was translated.
+
+        This will be equivalent to the filename, unless the file is a dependency.
+        In that case the filename will be a .pyi file while the original_filename
+        will be a .py file.
+        """
+        return self._original_filename
+
+    @property
     def d_parsers(self):
         """Returns the d_parsers parser."""
 
