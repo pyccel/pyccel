@@ -781,6 +781,7 @@ def test_array_binary_op(language):
                                         "scripts/classes/classes_6.py",
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
+                                        "scripts/classes/classes_9.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
@@ -1214,7 +1215,7 @@ def test_stubs(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
 
-    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path(f"scripts/runtest_stub.{language}.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
     wk_dir = get_abs_path("scripts/stub_test")
@@ -1223,9 +1224,6 @@ def test_stubs(language):
         with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
-
-    if language != 'python':
-        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
 
     assert expected_pyi == generated_pyi
 
@@ -1246,3 +1244,7 @@ def test_generated_name_collision(language):
     pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
             language = language)
 
+#------------------------------------------------------------------------------
+def test_array_tuple_shape(language):
+    pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
+            language = language)

@@ -557,6 +557,36 @@ class Scope(object):
             else:
                 return self._used_symbols[symbol]
 
+    def insert_low_level_symbol(self, python_symbol, low_level_symbol):
+        """
+        Add a new symbol to the scope for which the low-level equivalent is known.
+
+        Add a new symbol to the scope in the syntactic stage. This should be used to
+        declare symbols defined by the user but mapped to a low-level name (e.g. via
+        @low_level).
+
+        Parameters
+        ----------
+        python_symbol : PyccelSymbol | AnnotatedPyccelSymbol
+            The symbol to be added to the scope.
+        low_level_symbol : PyccelSymbol
+            The low-level equivalent of the symbol being added to the scope.
+        """
+        if isinstance(python_symbol, AnnotatedPyccelSymbol):
+            python_symbol = python_symbol.name
+
+        if not self.allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_low_level_symbol(python_symbol, low_level_symbol)
+
+        assert python_symbol not in self._used_symbols
+
+        if self.name_clash_checker.has_clash(low_level_symbol, self.all_used_symbols):
+            errors.report("Low-level name conflicts with name already in use.",
+                          severity='error', symbol=python_symbol)
+
+        self._used_symbols[python_symbol] = low_level_symbol
+        self._original_symbol[low_level_symbol] = python_symbol
+
     def remove_symbol(self, symbol):
         """
         Remove symbol from the scope.

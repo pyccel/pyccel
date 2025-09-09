@@ -3128,6 +3128,10 @@ class ClassDef(ScopedAstNode):
     class_type : PyccelType
         The data type associated with this class.
 
+    decorators : dict
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
@@ -3146,7 +3150,8 @@ class ClassDef(ScopedAstNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods', '_class_type',
-                 '_imports','_superclasses','_interfaces', '_docstring')
+                 '_imports','_superclasses','_interfaces', '_docstring',
+                 '_decorators')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
     def __init__(
@@ -3159,7 +3164,8 @@ class ClassDef(ScopedAstNode):
         interfaces=(),
         docstring = None,
         scope = None,
-        class_type = None
+        class_type = None,
+        decorators = ()
         ):
 
         # name
@@ -3216,6 +3222,7 @@ class ClassDef(ScopedAstNode):
         self._interfaces = interfaces
         self._docstring = docstring
         self._class_type = class_type
+        self._decorators = decorators
 
         super().__init__(scope = scope)
 
@@ -3279,6 +3286,16 @@ class ClassDef(ScopedAstNode):
         return self._docstring
 
     @property
+    def decorators(self):
+        """
+        Dictionary mapping decorator names to descriptions.
+
+        Dictionary mapping the names of decorators applied to the function
+        to descriptions of the decorator annotation.
+        """
+        return self._decorators
+
+    @property
     def methods_as_dict(self):
         """
         A dictionary containing all methods with Python names as keys.
@@ -3286,7 +3303,6 @@ class ClassDef(ScopedAstNode):
         A dictionary containing all the methods in the class. The keys are the original
         Python names of the methods. The values are the methods themselves.
         """
-
         return {self._scope.get_python_name(m.name) if m.is_semantic else m.name: m
                 for m in self.methods}
 

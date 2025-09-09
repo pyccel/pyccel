@@ -1704,6 +1704,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
+
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            return self._print(self.scope.collect_tuple_element(expr))
+
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
