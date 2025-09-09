@@ -18,9 +18,3 @@ void Counter__increment(struct Counter* self)
     self->value += INT64_C(1);
 }
 /*........................................*/
-/*........................................*/
-int64_t Counter__get_value(const struct Counter* self)
-{
-    return self->value;
-}
-/*........................................*/
