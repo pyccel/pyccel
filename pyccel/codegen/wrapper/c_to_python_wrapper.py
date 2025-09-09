@@ -2126,14 +2126,20 @@ class CToPythonWrapper(Wrapper):
         # Imports do not use collision handling as there is not enough context available.
         # This should be fixed when stub files and proper pickling is added
         import_wrapper = False
+        import_scope = None
         for as_name in expr.target:
             t = as_name.object
             if isinstance(t, ClassDef):
+                if import_scope is None:
+                    import_scope = Scope(name = expr.source_module.name,
+                                         used_symbols = expr.source_module.scope.local_used_symbols.copy(),
+                                         original_symbols = expr.source_module.scope.python_names.copy(),
+                                         scope_type = 'module')
                 name = t.scope.get_python_name(t.name)
-                struct_name = f'Py{name}Object'
+                struct_name = import_scope.get_new_name(f'Py{name}Object')
                 dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
-                type_name = f'Py{name}Type'
-                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = type_name, scope_type = 'class'), class_type = dtype)
+                type_name = import_scope.get_new_name(f'Py{name}Type')
+                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = name, scope_type = 'class'), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
                 self.scope.imports['classes'][name] = wrapped_class
