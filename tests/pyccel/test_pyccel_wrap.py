@@ -63,7 +63,8 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
     """
     cwd = Path(__file__).parent / 'wrap_scripts' / f'{language}_tests'
 
-    os.makedirs(cwd / '__pyccel__', exist_ok = True)
+    pyccel_dirname = '__pyccel__mod__'
+    os.makedirs(cwd / pyccel_dirname, exist_ok = True)
 
     python_file = cwd / f'{python_stem}.py'
 
@@ -72,7 +73,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         pyccel_flags.append('--developer-mode')
         pyccel_flags.append('-vv')
 
-    compile_low_level(low_level_stem, cwd, cwd, cwd / '__pyccel__', language)
+    compile_low_level(low_level_stem, cwd, cwd, cwd / pyccel_dirname, language)
     subprocess.run([shutil.which("pyccel-wrap"), cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
     py_run = subprocess.run([sys.executable, python_file], text = True, capture_output = True, cwd = cwd, check = True)
     subprocess.run([shutil.which("pyccel"), python_file, *pyccel_flags], check = True)

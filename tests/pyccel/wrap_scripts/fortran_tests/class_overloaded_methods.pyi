@@ -1,3 +1,4 @@
+#$ header metavar includes="__pyccel__mod__"
 #$ header metavar libraries="class_overloaded_methods"
 #$ header metavar libdirs="."
 from typing import overload
