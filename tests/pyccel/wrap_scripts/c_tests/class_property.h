@@ -10,8 +10,8 @@ struct Counter {
 };
 
 void Counter__create(struct Counter* self, int64_t start);
-void Counter__free(struct Counter* self);
+void Counter__free(const struct Counter* self);
 void Counter__increment(struct Counter* self);
-int64_t Counter__get_value(struct Counter* self);
+int64_t Counter__get_value(const struct Counter* self);
 
 #endif // class_property_H
