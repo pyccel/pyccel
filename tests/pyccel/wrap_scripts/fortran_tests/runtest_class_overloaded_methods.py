@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 from class_overloaded_methods import Adder
 
 def main():

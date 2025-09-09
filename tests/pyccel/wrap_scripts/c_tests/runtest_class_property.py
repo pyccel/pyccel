@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 from class_property import Counter
 
 if __name__ == "__main__":
