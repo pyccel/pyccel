@@ -9,7 +9,6 @@ Contains the execute_pyccel function which carries out the main steps required t
 
 import os
 import sys
-import shutil
 import time
 from pathlib import Path
 
@@ -19,7 +18,7 @@ from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.pipeline       import print_timers
-from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
+from pyccel.codegen.utilities      import manage_dependencies
 from pyccel.codegen.wrappergen     import Wrappergen
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
@@ -31,7 +30,7 @@ from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
-__all__ = ['execute_pyccel']
+__all__ = ['execute_pyccel_wrap']
 
 #==============================================================================
 # NOTE:
@@ -109,7 +108,7 @@ def execute_pyccel_wrap(fname, *,
     # Unified way to handle errors: print formatted error message, then move
     # to original working directory. Caller should then raise exception.
     def handle_error(stage):
-        print('\nERROR at {} stage'.format(stage))
+        print(f'\nERROR at {stage} stage')
         errors.check()
         os.chdir(base_dirpath)
 
@@ -208,7 +207,7 @@ def execute_pyccel_wrap(fname, *,
             severity='error',
             traceback=error.__traceback__)
         handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
+        raise PyccelCodegenError(str(error)) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -222,7 +221,7 @@ def execute_pyccel_wrap(fname, *,
             severity='error',
             traceback=error.__traceback__)
         handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
+        raise PyccelCodegenError(str(error)) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -277,7 +276,7 @@ def execute_pyccel_wrap(fname, *,
     if output_name is None:
         output_name = str(Path(fname).with_suffix(''))
 
-    sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_objs[-1],
+    compiler.compile_shared_library(wrapper_compile_objs[-1],
                                                     output_folder = folder,
                                                     sharedlib_modname = output_name,
                                                     language = language,
