@@ -565,7 +565,7 @@ class CToPythonWrapper(Wrapper):
 
         self.scope = current_scope
 
-        self.scope.insert_function(function, name)
+        self.scope.insert_function(function, self.scope.get_python_name(name))
 
         return function
 
