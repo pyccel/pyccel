@@ -455,15 +455,6 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_multi_imports_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -912,15 +903,6 @@ def test_container_type_print(language):
         assert rx.search(lang_out)
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
@@ -1019,15 +1001,6 @@ def test_exit(language, test_file):
     assert lang_out == pyth_out
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled. And chained imports (see #756)"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_init_collisions( language ):
     test_mod  = get_abs_path("scripts/module_init2.py")
     test_prog = get_abs_path("scripts/runtest_module_init2.py")
