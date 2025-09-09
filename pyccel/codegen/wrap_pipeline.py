@@ -108,6 +108,9 @@ def execute_pyccel_wrap(fname, *,
     # Unified way to handle errors: print formatted error message, then move
     # to original working directory. Caller should then raise exception.
     def handle_error(stage):
+        """
+        Print the error message and revert the folders in order to exit cleanly.
+        """
         print(f'\nERROR at {stage} stage')
         errors.check()
         os.chdir(base_dirpath)
