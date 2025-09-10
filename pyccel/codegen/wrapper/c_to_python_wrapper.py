@@ -1265,7 +1265,7 @@ class CToPythonWrapper(Wrapper):
 
         # Ensure all class types are declared
         for c in expr.classes:
-            name = c.name
+            name = c.scope.get_python_name(c.name)
             struct_name = self.scope.get_new_name(f'Py{name}Object')
             dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
                                     BaseClass=WrapperCustomDataType)()
