@@ -2252,13 +2252,13 @@ class FCodePrinter(CodePrinter):
         if isinstance(class_type, InhomogeneousTupleType):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if isinstance(class_type, CustomDataType):
-            Pyccel__del = expr.variable.cls_base.scope.find('__del__')
-            Pyccel_del_args = [FunctionCallArgument(var)]
-            return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
 
         if var.is_alias or isinstance(class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return ''
+        elif isinstance(class_type, CustomDataType):
+            Pyccel__del = expr.variable.cls_base.scope.find('__del__')
+            Pyccel_del_args = [FunctionCallArgument(var)]
+            return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
             code  = f'if (allocated({var_code})) deallocate({var_code})\n'
