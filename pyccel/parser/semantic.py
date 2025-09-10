@@ -2967,7 +2967,7 @@ class SemanticParser(BasicParser):
         if isinstance(value, (PyccelArithmeticOperator, PyccelFunction)) and value.rank:
             a = generate_and_assign_temp_var()
         elif isinstance(value, FunctionCall) and isinstance(value.class_type, CustomDataType):
-            if value.funcdef.results.var and not value.funcdef.results.var.is_alias:
+            if value.funcdef.results.var and not value.funcdef.results.var.is_alias and not value.funcdef.inline:
                 a = generate_and_assign_temp_var()
         return a
 
@@ -5220,6 +5220,10 @@ class SemanticParser(BasicParser):
 
         if assign:
             return body
+        elif len(body.body) == 1 and isinstance(body.body[0], (AliasAssign, Assign)):
+            body.body[0].lhs.invalidate_node()
+            self.scope.remove_variable(body.body[0].lhs)
+            return body.body[0].rhs
         else:
             assert expr.results
             self._additional_exprs[-1].append(body)
