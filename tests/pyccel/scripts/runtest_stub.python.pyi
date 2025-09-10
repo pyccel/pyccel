@@ -6,6 +6,7 @@ from numpy import float64
 T = TypeVar('T', 'int', 'float', 'complex')
 S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
 
+@low_level('A')
 class A:
     _x : 'int'
     is_freed : 'bool'

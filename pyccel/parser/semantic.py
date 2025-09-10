@@ -1831,7 +1831,7 @@ class SemanticParser(BasicParser):
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
@@ -2043,7 +2043,7 @@ class SemanticParser(BasicParser):
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
@@ -2745,9 +2745,8 @@ class SemanticParser(BasicParser):
 
         # Funcs to visit are collected from scope so functions that have already been visited
         # can be excluded.
-        syntactic_funcs = [f for f in self.scope.functions.values() if not f.is_semantic]
-        funcs_to_visit = [f for func in syntactic_funcs \
-                            for f in (func.functions if isinstance(func, Interface) else (func,))]
+        funcs_to_visit = [f for func in self.scope.functions.values()
+                          for f in (func.functions if isinstance(func, Interface) else [func])]
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
@@ -3357,7 +3356,6 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
-            # TODO: Improve when #1676 is merged
             dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
@@ -4795,32 +4793,28 @@ class SemanticParser(BasicParser):
         decorators         = expr.decorators.copy()
 
         existing_semantic_funcs = []
-        if not expr.is_semantic:
-            func = insertion_scope.functions.get(python_name, None)
-            if func:
-                if func.is_semantic:
-                    if self.is_header_file:
-                        # Only Interfaces should be revisited in a header file
-                        assert isinstance(func, Interface)
-                        existing_semantic_funcs = [*func.functions]
-                    else:
-                        return EmptyNode()
-                insertion_scope.remove_function(python_name)
-            if 'low_level' in decorators:
-                low_level_decs = decorators['low_level']
-                assert len(low_level_decs) == 1
-                arg = low_level_decs[0].args[0].value
-                assert isinstance(arg, LiteralString)
-                name = PyccelSymbol(arg.python_value)
-                if 'overload' not in decorators:
-                    insertion_scope.remove_symbol(python_name)
-                    insertion_scope.insert_low_level_symbol(python_name, name)
-            else:
-                name = expr.scope.get_expected_name(python_name)
-        elif isinstance(expr, Interface):
-            existing_semantic_funcs = [*expr.functions]
-            expr.invalidate_node()
-            expr = expr.syntactic_node
+        assert not expr.is_semantic
+
+        func = insertion_scope.functions.get(python_name, None)
+        if func:
+            if func.is_semantic:
+                if self.is_header_file:
+                    # Only Interfaces should be revisited in a header file
+                    assert isinstance(func, Interface)
+                    existing_semantic_funcs = [*func.functions]
+                else:
+                    return EmptyNode()
+            insertion_scope.remove_function(python_name)
+        if 'low_level' in decorators:
+            low_level_decs = decorators['low_level']
+            assert len(low_level_decs) == 1
+            arg = low_level_decs[0].args[0].value
+            assert isinstance(arg, LiteralString)
+            name = PyccelSymbol(arg.python_value)
+            if 'overload' not in decorators:
+                insertion_scope.remove_symbol(python_name)
+                insertion_scope.insert_low_level_symbol(python_name, name)
+        else:
             name = expr.scope.get_expected_name(python_name)
 
         new_semantic_funcs = []
@@ -5144,7 +5138,7 @@ class SemanticParser(BasicParser):
         # Map local call arguments to function arguments
         positional_call_args = [a.value for a in function_call_args if not a.has_keyword]
         for func_a, call_a in zip(func_args, positional_call_args):
-            if isinstance(call_a, Variable) and func_a == self.scope.get_expected_name(call_a.name):
+            if isinstance(call_a, Variable) and not isinstance(call_a, DottedVariable) and func_a == self.scope.get_expected_name(call_a.name):
                 # If call argument is a variable with the same name as the target function
                 # argument then there is no need to rename
                 new_func_a = replace_map.pop(func_a)
@@ -5296,7 +5290,7 @@ class SemanticParser(BasicParser):
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
-        typenames_to_dtypes[expr.name] = dtype
+        typenames_to_dtypes[name] = dtype
         self.scope.insert_cls_construct(dtype)
 
         parent = self._find_superclasses(expr)

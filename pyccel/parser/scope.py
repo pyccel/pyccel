@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing the Scope class
 """
+from immutabledict import immutabledict
 
 from pyccel.ast.bind_c    import BindCVariable
 from pyccel.ast.core      import ClassDef, FunctionDef
@@ -159,7 +160,7 @@ class Scope(object):
         Variable objects but rather the value that the variable takes in this
         context.
         """
-        return ReadOnlyDict(self._locals['variables'])
+        return immutabledict(self._locals['variables'])
 
     @property
     def classes(self):
@@ -169,7 +170,7 @@ class Scope(object):
         A dictionary whose keys are the original Python names of the classes
         in the scope and whose variables are ClassDef objects.
         """
-        return ReadOnlyDict(self._locals['classes'])
+        return immutabledict(self._locals['classes'])
 
     @property
     def functions(self):
@@ -179,7 +180,7 @@ class Scope(object):
         A dictionary whose keys are the original Python names of the functions
         in the scope and whose variables are ClassDef objects.
         """
-        return ReadOnlyDict(self._locals['functions'])
+        return immutabledict(self._locals['functions'])
 
     @property
     def decorators(self):
@@ -190,7 +191,7 @@ class Scope(object):
         in this scope. The keys are the name of the decorator function. The values
         depend on the decorator.
         """
-        return ReadOnlyDict(self._locals['decorators'])
+        return immutabledict(self._locals['decorators'])
 
     @property
     def cls_constructs(self):
@@ -201,7 +202,7 @@ class Scope(object):
         found in this scope and whose values are the types inheriting from
         PyccelType which identify these classes.
         """
-        return ReadOnlyDict(self._locals['cls_constructs'])
+        return immutabledict(self._locals['cls_constructs'])
 
     @property
     def sons_scopes(self):
@@ -218,7 +219,7 @@ class Scope(object):
         A symbolic alias is a symbol declared in the scope which is mapped
         to a constant object. E.g. a symbol which represents a type.
         """
-        return ReadOnlyDict(self._locals['symbolic_aliases'])
+        return immutabledict(self._locals['symbolic_aliases'])
 
     def find(self, name, category = None, local_only = False, raise_if_missing = False):
         """
@@ -455,7 +456,9 @@ class Scope(object):
         class_type : PyccelType
             The construct to be inserted.
         """
-        self._locals['cls_constructs'][class_type.name] = class_type
+        name = class_type.name
+        assert name in self._used_symbols
+        self._locals['cls_constructs'][name] = class_type
 
     def insert_function(self, func, name):
         """

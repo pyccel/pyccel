@@ -350,20 +350,10 @@ class BasicParser(object):
 
         assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
         scope = scope or self.scope
-        name = func.name
         if func.pyccel_staging == 'syntactic':
-            if name in scope.functions:
-                old_func = scope.functions[name]
-                pyccel_stage.set_stage('syntactic')
-                if isinstance(old_func, Interface):
-                    scope.insert_function(Interface(name, old_func.functions + (func,)), name)
-                else:
-                    assert 'overload' in func.decorators
-                    scope.insert_function(Interface(name, (old_func, func)), name)
-                pyccel_stage.set_stage('semantic')
-            else:
-                scope.insert_function(func, name)
+            scope.insert_function(func, func.name)
         else:
+            name = func.name
             scope.insert_function(func, scope.get_python_name(name))
             if self._current_function_name and name == self._current_function_name[-1]:
                 self._current_function.append(func)

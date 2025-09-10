@@ -1265,9 +1265,10 @@ class CToPythonWrapper(Wrapper):
 
         # Ensure all class types are declared
         for c in expr.classes:
-            name = c.scope.get_python_name(c.name)
+            name = c.name
             struct_name = self.scope.get_new_name(f'Py{name}Object')
-            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name), BaseClass=WrapperCustomDataType)()
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
+                                    BaseClass=WrapperCustomDataType)()
 
             type_name = self.scope.get_new_name(f'Py{name}Type')
             wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name),
@@ -1507,7 +1508,7 @@ class CToPythonWrapper(Wrapper):
             a_var = a.var
             func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
-        in_interface = len(expr.get_user_nodes(Interface, (FunctionCall,))) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.arguments

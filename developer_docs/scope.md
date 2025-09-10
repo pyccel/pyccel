@@ -22,7 +22,7 @@ b = a + A
 
 In Fortran `a` and `A` represent the same object so renaming is necessary.
 
-Pyccel renames variables deterministically, usually be appending a numeric suffix. E.g. the code above is translated to:
+Pyccel renames variables deterministically, usually by appending a numeric suffix. E.g. the code above is translated to:
 
 ```fortran
 a = 1_i64
