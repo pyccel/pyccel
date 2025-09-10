@@ -1433,16 +1433,7 @@ class PythonCodePrinter(CodePrinter):
 
         self._in_header = False
 
-        if init_func:
-            # Collect initialisation body
-            init_if = init_func.get_attribute_nodes(IfSection)[0]
-            # Remove boolean from init_body
-            init_body = init_if.body.body[:-1]
-            init_body = ''.join(self._print(l) for l in init_body)
-        else:
-            init_body = ''
-
-        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs)
                          if section)
 
     def _print_AllDeclaration(self, expr):
