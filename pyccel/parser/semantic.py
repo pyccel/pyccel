@@ -1354,7 +1354,7 @@ class SemanticParser(BasicParser):
         else:
             is_inline = func.is_inline if isinstance(func, FunctionDef) else False
             if is_inline:
-                return self._visit_InlineFunctionDef(func, args, expr)
+                return self._visit_InlineFunctionDefCall(func, args, expr)
             elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
 
@@ -2751,6 +2751,11 @@ class SemanticParser(BasicParser):
 
         for f in funcs_to_visit:
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
+                assert isinstance(f, FunctionDef)
+                self._visit(f)
+
+        for f in funcs_to_visit:
+            if not f.is_semantic and isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
@@ -5059,7 +5064,7 @@ class SemanticParser(BasicParser):
 
         return EmptyNode()
 
-    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+    def _visit_InlineFunctionDefCall(self, expr, function_call_args, function_call):
         """
         Visit an inline function definition to add the code to the calling scope.
 
