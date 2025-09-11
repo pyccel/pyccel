@@ -131,6 +131,7 @@ All notable changes to this project will be documented in this file.
 -   #1544 : Add support for `typing.TypeAlias`.
 -   #1583 : Allow inhomogeneous tuples in classes.
 -   #738 : Add support for homogeneous tuples with scalar elements as arguments.
+-   #1519 : Add support for inhomogeneous tuples as arguments.
 -   Add a warning about containers in lists.
 -   #2016 : Add support for translating arithmetic magic methods.
 -   #2106 : Add support for `__len__` magic method.

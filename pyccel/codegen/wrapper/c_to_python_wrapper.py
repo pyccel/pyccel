@@ -44,7 +44,7 @@ from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CN
 from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
-from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
+from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType, InhomogeneousTupleType
 from pyccel.ast.datatypes     import HomogeneousContainerType
 from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
@@ -397,6 +397,32 @@ class CToPythonWrapper(Wrapper):
             type_checks = IfSection(type_check, [size_assign, iter_assign, Assign(type_check_condition, LiteralTrue()), internal_type_check])
             default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
             body.append(If(type_checks, default_value))
+
+        elif isinstance(arg.class_type, InhomogeneousTupleType):
+            # Create type check result variable
+            type_check_condition = self.scope.get_temporary_variable(PythonNativeBool(), 'is_tuple')
+
+            # Check if the object is a tuple
+            tuple_check = PyTuple_Check(py_obj)
+
+            # Check if the object has the expected size
+            size_check = PyccelEq(PyTuple_Size(py_obj), LiteralInteger(len(arg.class_type)))
+
+            # If the tuple is an object check that the elements have the right type
+            indexed_py_obj = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+            elem_body = []
+            for i, idx_elem in enumerate(arg):
+                elem = self.scope.collect_tuple_element(idx_elem)
+                elem_body.append(AliasAssign(indexed_py_obj, PyTuple_GetItem(py_obj, LiteralInteger(i))))
+                internal_type_check_condition, _ = self._get_type_check_condition(indexed_py_obj, elem, False, body)
+                elem_body.append(Assign(type_check_condition, PyccelAnd(type_check_condition, internal_type_check_condition)))
+
+            default_value = IfSection(LiteralTrue(), [Assign(type_check_condition, LiteralFalse())])
+            tuple_elem_checks = IfSection(size_check, [Assign(type_check_condition, LiteralTrue()), *elem_body])
+            tuple_type_checks = IfSection(tuple_check, [If(tuple_elem_checks, default_value)])
+            body.append(If(tuple_type_checks, default_value))
+
         else:
             errors.report(f"Can't check the type of an array of {arg.class_type}\n"+PYCCEL_RESTRICTION_TODO,
                     symbol=arg, severity='fatal')
@@ -1644,8 +1670,12 @@ class CToPythonWrapper(Wrapper):
         orig_var = getattr(expr.var, 'original_var', expr.var)
         bound_argument = expr.bound_argument
 
+        funcdefs = expr.get_direct_user_nodes(lambda u: isinstance(u, FunctionDef))
+        assert len(funcdefs) == 1
+
         # Collect the function which casts from a Python object to a C object
-        arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg, bound_argument, is_bind_c_argument)
+        arg_extraction = self._extract_FunctionDefArgument(orig_var, collect_arg,
+                                bound_argument, is_bind_c_argument, funcdefs[0])
 
         body = []
         cast = arg_extraction['body']
@@ -2140,7 +2170,7 @@ class CToPythonWrapper(Wrapper):
             return None
 
     def _extract_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible FunctionDefArgument from the PythonObject.
 
@@ -2187,14 +2217,14 @@ class CToPythonWrapper(Wrapper):
             annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
             if hasattr(self, annotation_method):
                 return getattr(self, annotation_method)(orig_var, collect_arg, bound_argument,
-                                                is_bind_c_argument, arg_var = arg_var)
+                                                is_bind_c_argument, funcdef, arg_var = arg_var)
 
         # Unknown object, we raise an error.
         return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO, symbol=orig_var,
             severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible scalar FunctionDefArgument from the PythonObject.
 
@@ -2257,7 +2287,7 @@ class CToPythonWrapper(Wrapper):
                 'args': [arg_var]}
 
     def _extract_CustomDataType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible class FunctionDefArgument from the PythonObject.
 
@@ -2324,7 +2354,7 @@ class CToPythonWrapper(Wrapper):
         return {'body': cast, 'args': [arg_var]}
 
     def _extract_NumpyNDArrayType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible NumPy array FunctionDefArgument from the PythonObject.
 
@@ -2414,7 +2444,7 @@ class CToPythonWrapper(Wrapper):
         return {'body': body, 'args': [collect_arg], 'default_init': default_body}
 
     def _extract_HomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible homogeneous tuple FunctionDefArgument from the PythonObject.
 
@@ -2495,7 +2525,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, PyTuple_GetItem(collect_arg, idx))]
         for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
-                                    bound_argument, is_bind_c_argument, arg_var = indexed_arg_var)['body']
+                                    bound_argument, is_bind_c_argument, funcdef, arg_var = indexed_arg_var)['body']
         self.exit_scope()
 
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
@@ -2503,8 +2533,31 @@ class CToPythonWrapper(Wrapper):
 
         return {'body': body, 'args': arg_vars}
 
+    def _extract_InhomogeneousTupleType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
+            is_bind_c_argument, funcdef, *, arg_var = None):
+        assert bound_argument is False
+        body = []
+        arg_elems = []
+        for i, oi in enumerate(orig_var):
+            o_elem = funcdef.scope.collect_tuple_element(oi)
+            collect_elem = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+            body.append(AliasAssign(collect_elem, PyTuple_GetItem(collect_arg, LiteralInteger(i))))
+            self.scope.insert_symbol(o_elem.name)
+            elem_extract = self._extract_FunctionDefArgument(o_elem, collect_elem,
+                                bound_argument, is_bind_c_argument, funcdef)
+            body.extend(elem_extract['body'])
+            arg_elems.extend(elem_extract['args'])
+
+        if arg_var is None:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name))
+
+        for i, oi in enumerate(arg_elems):
+            self.scope.insert_symbolic_alias(arg_var[i], oi)
+
+        return {'body': body, 'args': [arg_var]}
+
     def _extract_HomogeneousSetType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         assert arg_var is None
 
         if orig_var.is_optional:
@@ -2548,7 +2601,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = for_scope
         for_body = [AliasAssign(indexed_collect_arg, PyIter_Next(iter_obj))]
         for_body += self._extract_FunctionDefArgument(indexed_orig_var, indexed_collect_arg,
-                                    bound_argument, is_bind_c_argument, arg_var = indexed_orig_var)['body']
+                                    bound_argument, is_bind_c_argument, funcdef, arg_var = indexed_orig_var)['body']
         if is_bind_c_argument:
             for_body.append(Assign(IndexedElement(arr_var, idx), indexed_orig_var))
         else:
@@ -2657,7 +2710,7 @@ class CToPythonWrapper(Wrapper):
         return {'body': body, 'args': arg_vars, 'clean_up': clean_up}
 
     def _extract_StringType_FunctionDefArgument(self, orig_var, collect_arg, bound_argument,
-            is_bind_c_argument, *, arg_var = None):
+            is_bind_c_argument, funcdef, *, arg_var = None):
         """
         Extract the C-compatible string FunctionDefArgument from the PythonObject.
 

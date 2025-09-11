@@ -364,6 +364,16 @@ class Variable(TypedAstNode):
         """
         return self._is_optional
 
+    @is_optional.setter
+    def is_optional(self, is_optional):
+        """
+        Indicate if the Variable is optional.
+
+        Indicate if the Variable is optional, i.e. if the Variable
+        may be None.
+        """
+        self._is_optional = is_optional
+
     @property
     def is_private(self):
         """ Indicates if the Variable is private

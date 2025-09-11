@@ -1222,10 +1222,16 @@ class FCodePrinter(CodePrinter):
         return ', '.join(self._print(v) for v in self.scope.collect_all_tuple_elements(var))
 
     def _print_FunctionCallArgument(self, expr):
+        assert expr.keyword is None
+        if isinstance(expr.value.class_type, InhomogeneousTupleType):
+            if isinstance(expr.value, Variable):
+                return ', '.join(self._print(v) for v in self.scope.collect_all_tuple_elements(expr.value))
+            else:
+                return ', '.join(self._print(v) for v in expr.value)
         if expr.keyword:
-            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+            return '{expr.keyword} = {self._print(expr.value)}'
         else:
-            return '{}'.format(self._print(expr.value))
+            return self._print(expr.value)
 
     def _print_Constant(self, expr):
         if expr == math_constants['nan']:
