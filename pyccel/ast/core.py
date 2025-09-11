@@ -2589,11 +2589,11 @@ class InlineFunctionDef(FunctionDef):
         The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
-            '_global_funcs')
+            '_global_funcs', '_syntactic_func')
 
-    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
-        if namespace_imports is not None:
-            assert isinstance(namespace_imports, dict)
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, syntactic_func = None, **kwargs):
+        assert namespace_imports is None or isinstance(namespace_imports, dict)
+        assert pyccel_stage == 'syntactic' or isinstance(syntactic_func, FunctionDef)
         self._namespace_imports = namespace_imports
         self._global_funcs = tuple(global_funcs) if global_funcs is not None else None
         super().__init__(*args, **kwargs)
@@ -2601,6 +2601,7 @@ class InlineFunctionDef(FunctionDef):
         self._new_args  = None
         self._new_local_vars = None
         self._if_block_replacements = None
+        self._syntactic_func = syntactic_func
 
     @property
     def is_inline(self):
@@ -2612,6 +2613,10 @@ class InlineFunctionDef(FunctionDef):
         """ The objects in the scope which are available due to imports
         """
         return self._namespace_imports
+
+    @property
+    def syntactic_func(self):
+        return self._syntactic_func
 
     def swap_in_args(self, args, new_local_vars):
         """ Modify the body of the function by replacing the arguments

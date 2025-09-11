@@ -1354,6 +1354,8 @@ class SemanticParser(BasicParser):
         else:
             is_inline = func.is_inline if isinstance(func, FunctionDef) else False
             if is_inline:
+                if func.is_semantic:
+                    func = func.syntactic_func
                 return self._visit_InlineFunctionDefCall(func, args, expr)
             elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
@@ -2750,12 +2752,7 @@ class SemanticParser(BasicParser):
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
-            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
-                assert isinstance(f, FunctionDef)
-                self._visit(f)
-
-        for f in funcs_to_visit:
-            if not f.is_semantic and isinstance(f, InlineFunctionDef):
+            if not f.is_semantic:
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
@@ -3381,7 +3378,6 @@ class SemanticParser(BasicParser):
         lhs = expr.name[0] if len(expr.name) == 2 \
                 else DottedName(*expr.name[:-1])
         rhs = expr.name[-1]
-
         visited_lhs = self._visit(lhs)
         first = visited_lhs
         if isinstance(visited_lhs, FunctionCall):
@@ -5029,6 +5025,7 @@ class SemanticParser(BasicParser):
                         if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
                 cls = InlineFunctionDef
+                func_kwargs['syntactic_func'] = expr
             else:
                 cls = FunctionDef
             func = cls(name,
@@ -5225,7 +5222,7 @@ class SemanticParser(BasicParser):
 
         if assign:
             return body
-        elif len(body.body) == 1 and isinstance(body.body[0], (AliasAssign, Assign)):
+        elif len(body.body) == 1 and isinstance(body.body[0], (AliasAssign, Assign)) and lhs.is_temp:
             body.body[0].lhs.invalidate_node()
             self.scope.remove_variable(body.body[0].lhs)
             return body.body[0].rhs
