@@ -1938,10 +1938,12 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr_type, (HomogeneousContainerType, DictType)):
                 self.add_import(self._build_gFTL_module(expr_type))
 
+            sig = 'type'
             if var.is_argument:
-                sig = 'class'
-            else:
-                sig = 'type'
+                # When inheritance is supported we must also check if inheritance is possible
+                arg = var.get_direct_user_nodes(lambda u: isinstance(u, FunctionDefArgument))[0]
+                if arg.bound_argument:
+                    sig = 'class'
             dtype_str = f'{sig}({name})'
         elif isinstance(dtype, BindCPointer):
             dtype_str = 'type(c_ptr)'
