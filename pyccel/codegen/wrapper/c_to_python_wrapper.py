@@ -1285,7 +1285,6 @@ class CToPythonWrapper(Wrapper):
 
         # Wrap functions
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        funcs_to_wrap = [f for f in funcs_to_wrap if not f.is_inline]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, 'removed_functions', None)
@@ -1295,7 +1294,7 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
 
         # Wrap interfaces
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         init_func = self._build_module_init_function(expr, imports)
 
@@ -2051,8 +2050,6 @@ class CToPythonWrapper(Wrapper):
         orig_scope = expr.scope
 
         for f in expr.methods:
-            if f.is_inline:
-                continue
             orig_f = getattr(f, 'original_function', f)
             name = orig_f.name
             python_name = orig_scope.get_python_name(name)

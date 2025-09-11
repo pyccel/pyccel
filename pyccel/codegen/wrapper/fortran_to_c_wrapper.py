@@ -146,7 +146,7 @@ class FortranToCWrapper(Wrapper):
 
         # Wrap contents
         # We only wrap the non inlined functions
-        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_inline]
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
@@ -159,7 +159,7 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
+        interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
@@ -201,7 +201,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private or expr.is_inline:
+        if expr.is_private:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
@@ -689,7 +689,7 @@ class FortranToCWrapper(Wrapper):
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
             errors.report("Tuples cannot yet be exposed to Python.",

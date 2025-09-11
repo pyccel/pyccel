@@ -411,20 +411,18 @@ class FCodePrinter(CodePrinter):
         scope = expr.scope
         name = expr.name.lower()
         for method in expr.methods:
-            if not method.is_inline:
-                m_name = method.name
-                if m_name in _default_methods:
-                    suggested_name = _default_methods[m_name]
-                    scope.rename_function(method, suggested_name)
-                method.cls_name = scope.get_new_name(f'{name}_{method.name}')
+            m_name = method.name
+            if m_name in _default_methods:
+                suggested_name = _default_methods[m_name]
+                scope.rename_function(method, suggested_name)
+            method.cls_name = scope.get_new_name(f'{name}_{method.name}')
         for i in expr.interfaces:
             for f in i.functions:
-                if not f.is_inline:
-                    i_name = f.name
-                    if i_name in _default_methods:
-                        suggested_name = _default_methods[i_name]
-                        scope.rename_function(f, suggested_name)
-                    f.cls_name = scope.get_new_name(f'{name}_{f.name}')
+                i_name = f.name
+                if i_name in _default_methods:
+                    suggested_name = _default_methods[i_name]
+                    scope.rename_function(f, suggested_name)
+                f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
     def _define_gFTL_element(self, element_type, imports_and_macros, element_name):
         """
@@ -722,7 +720,7 @@ class FCodePrinter(CodePrinter):
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
-                                      (f.name for f in funcs_to_print if not f.is_private and not f.is_inline),
+                                      (f.name for f in funcs_to_print if not f.is_private),
                                       (v.name for v in expr.variables if not v.is_private)))
 
         # ...
@@ -737,7 +735,7 @@ class FCodePrinter(CodePrinter):
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if not i.is_inline)
+            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces)
 
         func_strings = []
         # Get class functions
@@ -2343,10 +2341,6 @@ class FCodePrinter(CodePrinter):
 
         example_func = interface_funcs[0]
 
-        # ... we don't print 'hidden' functions
-        if example_func.is_inline:
-            return ''
-
         if example_func.results:
             if len(set(f.results.var.rank == 0 for f in interface_funcs)) != 1:
                 message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
@@ -2504,8 +2498,6 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        if expr.is_inline:
-            return ''
         self.set_scope(expr.scope)
 
 
@@ -2578,10 +2570,9 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
-                if not method.is_inline)
+        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods)
         for i in expr.interfaces:
-            names = ','.join(f.cls_name for f in i.functions if not f.is_inline)
+            names = ','.join(f.cls_name for f in i.functions)
             if names:
                 methods += f'generic, public :: {i.name} => {names}\n'
                 methods += f'procedure :: {names}\n'
@@ -2598,9 +2589,9 @@ class FCodePrinter(CodePrinter):
         decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
-        cls_methods = [i for i in expr.methods if not i.is_inline]
+        cls_methods = [i for i in expr.methods]
         for i in expr.interfaces:
-            cls_methods +=  [j for j in i.functions if not j.is_inline]
+            cls_methods +=  [j for j in i.functions]
 
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
