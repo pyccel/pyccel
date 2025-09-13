@@ -16,6 +16,10 @@ In practice, the `.pyi` file creates a two-way bridge between Python and low-lev
 
 - [Typical workflow (at a glance)](#typical-workflow-at-a-glance)
 - [Writing the stub file](#writing-the-stub-file)
+    - [Name mapping with `@low_level`](#name-mapping-with-low_level)
+    - [Compilation metadata](#compilation-metadata)
+    - [Fortran specific rules](#fortran-specific-rules)
+    - [C specific rules](#c-specific-rules)
 - [Fortran Example](#fortran-example)
 - [C Example](#c-example)
 
@@ -45,6 +49,7 @@ The stub file (`.pyi`) describes the low-level library in a way that is understa
 
 You must ensure that all functions, methods, and classes have precise type annotations that match the low-level signatures.
 Particular care should be taken with integers. On most platforms Python's default integer precision is equivalent to `numpy.int64`, while the default integer precision in low-level languages like C and Fortran is usually equivalent to `numpy.int32`.
+In addition to the general rules above there are more specific rules for [Fortran](#fortran-specific-rules) and [C](#c-specific-rules). Please see the 
 
 Function argument names are expected to match the name of the argument in the low-level language (for languages such as Fortran, where such information can be used). If the function argument names are unknown please use positional-only arguments:
 
@@ -54,7 +59,7 @@ def f(a: int, b: float, /): ...
 
 ### Name mapping with `@low_level`
 
-You can use the `@low_level` decorator to explicitly map a Python name to its low-level implementation name. This is not strictly required, but it is strongly recommended to avoid surprises as Pyccel can rename symbols internally (e.g. to avoid collisions). It also allows you to rename functions.
+You can use the `@low_level` decorator to explicitly map a Python name to its low-level implementation name. This is not strictly required, but it is strongly recommended to avoid surprises as Pyccel can rename symbols internally (e.g. to avoid collisions). It also allows you to rename functions and classes.
 
 For example:
 
@@ -91,6 +96,52 @@ Possible keys are:
 - `libraries` : Describes the libraries which should be passed to the compiler with the `-l` flag. This should be a string, libraries are separated by commas.
 - `flags` : Describes any additional compiler flags. This should be a string, options commas.
 - `ignore_at_import` : Indicates that the library doesn't need to be imported (e.g. via a `use` statement in Fortran) in order to be used. This should be a boolean.
+
+### Fortran specific rules
+
+**Functions**
+
+- Argument names must match unless they are positional-only.
+
+  Unless positional-only arguments are used the Fortran printer prints the name of the argument being called. As a result it is important that the argument names in the stub file match the argument names in the original code.
+
+- Multiple returns are interpreted as multiple `intent(out)` arguments. These are always the first arguments of the Fortran function and are not called by name.
+
+- Returning arrays is not recommended.
+
+  Array returns are interpreted as an `intent(out)` argument. If code calling such a method is translated, it is assumed that the array will allocate with base-0 indexing. This output will be the first argument of the Fortran function. It will not be called by name.
+
+- Lists, sets, and dictionaries are mapped to gFTL objects in the Fortran code.
+
+- The name of the Python file must match the name of the module that should be imported to use this method.
+
+  If there is no module to import (e.g. because the code is older than Fortran 90), this must be indicated with the appropriate metavariable:
+
+  ```python
+  #$ header metavar ignore_at_import=True
+  ```
+
+**Classes**
+
+- The stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
+
+- The name stated in the `@low_level` decorator is the name of the type-bound procedure.
+
+### C specific rules
+
+- Multiple returns are interpreted as multiple `intent(out)` arguments. These are always the first arguments of the Fortran function and are not called by name.
+
+- Arrays are mapped to instances of STC's `cspan` class.
+
+- Lists, sets, and dictionaries are mapped to STC objects in the C code.
+
+- The name of the Python file must match the name of the header file that should be imported to use this method.
+
+  If there is no header to include, this must be indicated with the appropriate metavariable:
+
+  ```python
+  #$ header metavar ignore_at_import=True
+  ```
 
 ## Fortran Example
 
@@ -166,6 +217,8 @@ from typing import overload
 from pyccel.decorators import low_level
 
 class Counter:
+    value : np.int64
+
     @low_level('create')
     def __init__(self, start: int) -> None: ...
 
@@ -177,7 +230,7 @@ class Counter:
 
     @low_level('get_value')
     @property
-    def value(self) -> int: ...
+    def my_value(self) -> int: ...
 
     @low_level("display_repeat")
     @overload
