@@ -23,6 +23,8 @@ dependencies = [
     "textx >= 2.2",
     "packaging",
     "immutabledict >= 4.0.0",
+    "ninja",
+    "meson",
 ]
 
 [project.optional-dependencies]
@@ -66,7 +68,12 @@ include = [
   "pyccel/stdlib/**/*.f90",
   "pyccel/stdlib/**/*.inc",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/STC/src/*.c"
+  "pyccel/extensions/STC/src/*",
+  "pyccel/extensions/STC/tests/*",
+  "pyccel/extensions/STC/examples/*",
+  "pyccel/extensions/STC/Makefile",
+  "pyccel/extensions/STC/meson.build",
+  "pyccel/extensions/STC/meson_options.txt"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]

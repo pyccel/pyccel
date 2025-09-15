@@ -246,6 +246,15 @@ pip install --user -e ".[test]"
 
 Most of the unit tests can also be run in parallel.
 
+## Installing libraries
+
+Pyccel relies on external libraries to provide some of the low-level equivalents of Python objects (e.g. lists):
+
+- [STC](https://github.com/stclib/STC/)
+- [gFTL](https://github.com/Goddard-Fortran-Ecosystem/gFTL)
+
+Pyccel provides the necessary files to compile these objects, however if you already use them or simply want to speed up compilation times it may be interesting to use a version already installed on your system. Pyccel is capable of using such pre-installed libraries provided that `pkg-config` is installed on your system and that the libraries are discoverable with `pkg-config`.
+
 ## Pyccel Container Images
 
 Pyccel container images are available through both Docker Hub (<docker.io>) and the GitHub Container Registry (<ghcr.io>).
