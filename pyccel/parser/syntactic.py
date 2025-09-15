@@ -1004,6 +1004,11 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        decorators = {}
+        for d in self._visit(stmt.decorator_list):
+            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
+            decorators.setdefault(tmp_var, []).append(d)
+
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
@@ -1047,7 +1052,7 @@ class SyntaxParser(BasicParser):
 
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
-                        docstring = docstring)
+                        docstring = docstring, decorators=decorators)
 
         return expr
 

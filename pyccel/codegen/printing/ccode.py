@@ -1000,9 +1000,6 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        for item in expr.imports:
-            if item.source_module and item.source_module is not self._current_module:
-                self.rename_imported_methods(item.source_module.classes)
         self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
@@ -1731,6 +1728,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
+
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            return self._print(self.scope.collect_tuple_element(expr))
+
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
