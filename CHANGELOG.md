@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 -   Update STC to v6.0-beta2.
 -   #2414 : Ensure printing of imports from Fortran intrinsic libraries is done in a reproducible way (by sorting).
 -   Install STC to use it as a library instead of selectively compiling.
+-   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
