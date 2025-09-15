@@ -448,6 +448,19 @@ def test_wrong_argument_combination_in_interface(language):
     with pytest.raises(TypeError):
         epyc_f(3.5, 4)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
+)
+def test_argument_checks_with_interfaces(language):
+    from modules import Module_12 as mod
+    modnew = epyccel(mod, language=language)
+    with pytest.raises(TypeError):
+        modnew.times_3(1)
+    with pytest.raises(TypeError):
+        modnew.add_2(1)
+
 def test_container_interface(language):
     T = TypeVar('T', 'int[:]', list[int], set[int])
 

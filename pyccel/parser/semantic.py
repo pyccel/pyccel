@@ -1155,7 +1155,7 @@ class SemanticParser(BasicParser):
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
-        del_method = next((method for method in methods if method.name == '__del__'), None)
+        del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
             del_name = cls_scope.get_new_name('__del__')
             scope = self.create_new_function_scope('__del__', del_name)
@@ -1854,7 +1854,7 @@ class SemanticParser(BasicParser):
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
@@ -1907,17 +1907,13 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
+                # Try to get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
+                if isinstance(var, DottedVariable):
+                    var = next((a for a in var.lhs.cls_base.attributes if var == a), var)
+
                 self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs)
 
-                # in the case of elemental, lhs is not of the same class_type as
-                # var.
-                # TODO d_lhs must be consistent with var!
-                # the following is a small fix, since lhs must be already
-                # declared
-                if isinstance(lhs, DottedName):
-                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = self._visit(lhs.name[0]))
-                else:
-                    lhs = var
+                lhs = var
         else:
             lhs_type = str(type(lhs))
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
@@ -2070,12 +2066,19 @@ class SemanticParser(BasicParser):
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
                             alloc_type = 'init'
-                        elif isinstance(rhs, IndexedElement) or rhs.get_attribute_nodes(IndexedElement):
+                        elif isinstance(rhs, (IndexedElement, Duplicate)):
                             alloc_type = 'resize'
                         else:
                             alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
+                        if isinstance(var, DottedVariable):
+                            # DottedVariable is constructed from the variable in the class's scope
+                            cls_scope = var.lhs.cls_base.scope
+                            py_name = cls_scope.get_python_name(var.name)
+                            attribute = var.lhs.cls_base.scope.find(py_name, 'variables')
+                            attribute.set_changeable_shape()
+
                         last_allocation = previous_allocations[-1]
 
                         # Find outermost IfSection of last allocation
@@ -3365,8 +3368,7 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, (UnionTypeAnnotation, TypingTypeVar)):
             return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
-            # TODO: Improve when #1676 is merged
-            dtype = self.get_class_construct(visited_dtype.name)
+            dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
@@ -4507,7 +4509,7 @@ class SemanticParser(BasicParser):
         lhs_symbol = expr.lhs
         ne = []
         lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne)
-        lhs_alloc = ne[0]
+        lhs_alloc = ne[0] if ne else EmptyNode()
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr, severity='error')
@@ -4517,7 +4519,7 @@ class SemanticParser(BasicParser):
         assign = None
         target_conversion_func = self._visit(target_type_name)
         if (isinstance(target_conversion_func, PyccelFunctionDef)
-                and target_conversion_func.cls_name is NumpyArray):
+                and target_conversion_func.cls_name is NumpyArray) or isinstance(lhs_alloc, EmptyNode):
             old_index   = expr.index
             new_index   = self.scope.get_new_name()
             expr.substitute(old_index, new_index, is_equivalent = lambda x,y: x is y)
@@ -4799,26 +4801,33 @@ class SemanticParser(BasicParser):
             bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
             insertion_scope = bound_class.scope
 
-        existing_semantic_funcs = []
-        if not expr.is_semantic:
-            func = insertion_scope.functions.get(python_name, None)
-            if func:
-                if func.is_semantic:
-                    if self.is_header_file:
-                        # Only Interfaces should be revisited in a header file
-                        assert isinstance(func, Interface)
-                        existing_semantic_funcs = [*func.functions]
-                    else:
-                        return EmptyNode()
-                insertion_scope.remove_function(python_name)
-            name = expr.scope.get_expected_name(python_name)
-        elif isinstance(expr, Interface):
-            existing_semantic_funcs = [*expr.functions]
-            expr.invalidate_node()
-            expr = expr.syntactic_node
-            name = expr.scope.get_expected_name(expr.name)
-
         decorators         = expr.decorators.copy()
+
+        existing_semantic_funcs = []
+        assert not expr.is_semantic
+
+        func = insertion_scope.functions.get(python_name, None)
+        if func:
+            if func.is_semantic:
+                if self.is_header_file:
+                    # Only Interfaces should be revisited in a header file
+                    assert isinstance(func, Interface)
+                    existing_semantic_funcs = [*func.functions]
+                else:
+                    return EmptyNode()
+            insertion_scope.remove_function(python_name)
+        if 'low_level' in decorators:
+            low_level_decs = decorators['low_level']
+            assert len(low_level_decs) == 1
+            arg = low_level_decs[0].args[0].value
+            assert isinstance(arg, LiteralString)
+            name = PyccelSymbol(arg.python_value)
+            if 'overload' not in decorators:
+                insertion_scope.remove_symbol(python_name)
+                insertion_scope.insert_low_level_symbol(python_name, name)
+        else:
+            name = expr.scope.get_expected_name(python_name)
+
         new_semantic_funcs = []
         sub_funcs          = []
         func_interfaces    = []
@@ -4879,11 +4888,11 @@ class SemanticParser(BasicParser):
             self.exit_function_scope()
 
         # this for the case of a function without arguments => no headers
-        interface_name = name
+        interface_name = expr.scope.get_expected_name(python_name)
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
-            if is_interface:
+            if is_interface and 'low_level' not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
 
             insertion_scope.python_names[name] = python_name
@@ -4906,7 +4915,7 @@ class SemanticParser(BasicParser):
                     self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
             if arguments and arguments[0].bound_argument:
-                if arguments[0].var.cls_base.name != cls_name:
+                if arguments[0].var.cls_base is not bound_class:
                     errors.report('Class method self argument does not have the expected type',
                             severity='error', symbol=arguments[0])
                 for s in expr.scope.dotted_symbols:
@@ -5280,7 +5289,21 @@ class SemanticParser(BasicParser):
             errors.report("Classes can only be declared in modules.",
                     symbol=expr, severity='error')
 
-        name = self.scope.get_expected_name(expr.name)
+        decorators = expr.decorators
+        not_used = [d for d in decorators if d != 'low_level']
+        if len(not_used) >= 1:
+            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
+        if 'low_level' in decorators:
+            self.scope.remove_symbol(expr.name)
+            low_level_decs = decorators['low_level']
+            assert len(low_level_decs) == 1
+            arg = low_level_decs[0].args[0].value
+            assert isinstance(arg, LiteralString)
+            name = PyccelSymbol(arg.python_value)
+            self.scope.insert_low_level_symbol(expr.name, name)
+        else:
+            name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
