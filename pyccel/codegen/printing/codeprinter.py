@@ -89,10 +89,11 @@ class CodePrinter:
         import_obj : Import
             The AST node describing the import.
         """
-        if import_obj.source not in self._additional_imports:
-            self._additional_imports[import_obj.source] = import_obj
+        source = str(import_obj.source)
+        if source not in self._additional_imports:
+            self._additional_imports[source] = import_obj
         elif import_obj.target:
-            self._additional_imports[import_obj.source].define_target(import_obj.target)
+            self._additional_imports[source].define_target(import_obj.target)
 
     @property
     def scope(self):
