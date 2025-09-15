@@ -40,7 +40,7 @@ def test_array_assigned_dtype(language):
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
 
-    epyccel_func = epyccel(arrays.array_return_first_element, language=language)
+    epyccel_func = epyccel(arrays.array_return_first_element, language=language, verbose=2)
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = arrays.array_return_first_element(integer, integer)
@@ -4375,7 +4375,7 @@ def test_dtype_conversion_to_bool_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_bool(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_bool(integer)
@@ -4413,7 +4413,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int8(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int8(integer8)
@@ -4451,7 +4451,7 @@ def test_dtype_conversion_to_int16_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int16(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int16(integer8)
@@ -4489,7 +4489,7 @@ def test_dtype_conversion_to_int32_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int32(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int32(integer8)
@@ -4527,7 +4527,7 @@ def test_dtype_conversion_to_int64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int64(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int64(integer8)
@@ -4564,7 +4564,7 @@ def test_dtype_conversion_to_float32_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_float32(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_float32(integer8)
@@ -4600,7 +4600,7 @@ def test_dtype_conversion_to_float64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_float64(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_float64(integer8)
@@ -4635,7 +4635,7 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_cfloat(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_cfloat(integer)
@@ -4670,7 +4670,7 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_cdouble(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_cdouble(integer)
@@ -4708,7 +4708,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_pyint(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_pyint(integer)
@@ -4745,7 +4745,7 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_pyfloat(bl)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_pyfloat(integer8)
@@ -4818,7 +4818,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer_1, integer_2, integer_3)
@@ -4891,7 +4891,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8, language=language, verbose=2)
 
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer_1, integer_2, integer_3)
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(b1, b2, b3)
@@ -4964,7 +4964,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer_1, integer_2, integer_3)
@@ -5036,7 +5036,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer_1, integer_2, integer_3)
@@ -5109,7 +5109,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer_1, integer_2, integer_3)
@@ -5181,7 +5181,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer_1, integer_2, integer_3)
@@ -5252,7 +5252,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer_1, integer_2, integer_3)
@@ -5323,7 +5323,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer_1, integer_2, integer_3)
@@ -5393,7 +5393,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer_1, integer_2, integer_3)
@@ -5466,7 +5466,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer_1, integer_2, integer_3)
@@ -5539,7 +5539,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer_1, integer_2, integer_3)
@@ -5612,7 +5612,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer_1, integer_2, integer_3)
@@ -5685,7 +5685,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF, language=language, verbose=2)
 
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer_1, integer_2, integer_3)
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(b1, b2, b3)
@@ -5758,7 +5758,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer_1, integer_2, integer_3)
@@ -5831,7 +5831,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer_1, integer_2, integer_3)
@@ -5904,7 +5904,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer_1, integer_2, integer_3)
@@ -5976,7 +5976,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer_1, integer_2, integer_3)
@@ -6047,7 +6047,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer_1, integer_2, integer_3)
@@ -6118,7 +6118,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer_1, integer_2, integer_3)
@@ -6188,7 +6188,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer_1, integer_2, integer_3)
@@ -6261,7 +6261,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer_1, integer_2, integer_3)
@@ -6334,7 +6334,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer_1, integer_2, integer_3)
