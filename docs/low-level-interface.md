@@ -8,7 +8,7 @@ This gives you two benefits at once:
 
 - The `pyccel-wrap` command allows you to call the compiled code directly from Python.
 
-- Pyccel understands those calls, so when you translate Python to C/Fortran code, the calls are re-emitted as direct calls to the original routines.
+- Pyccel understands those calls, so when you translate Python to C/Fortran code using Pyccel, the calls are re-emitted as direct calls to the original routines.
 
 In practice, the `.pyi` file creates a two-way bridge between Python and low-level code: easy to call from Python, and still translatable by Pyccel.
 
