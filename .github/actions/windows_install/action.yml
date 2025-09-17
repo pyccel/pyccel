@@ -55,8 +55,6 @@ runs:
         cd lapack-3.12.1
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
-        echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
-        echo "FC=$GFORTRAN_EXE" >> $env:GITHUB_ENV
         cmake  -G "MinGW Makefiles" -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -D BUILD_SHARED_LIBS=ON -B build -S .
         cmake --build build -j 4 --target install
         ls ${Env:MINGW_DIR}/lib
@@ -116,4 +114,11 @@ runs:
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         popd
         echo "MS MPI set up for use"
+      shell: powershell
+    - name: Add CC and FC to environment
+      run: |
+        $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
+        $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
+        echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
+        echo "FC=$GFORTRAN_EXE" >> $env:GITHUB_ENV
       shell: powershell
