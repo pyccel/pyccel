@@ -1250,6 +1250,7 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif(sys.platform == 'win32' and not np.__version__.startswith('2.'), reason="Integer mismatch with numpy 1.*")
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are
