@@ -54,7 +54,7 @@ class CustomBuildHook(BuildHookInterface):
                         f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}']
         gfortran = shutil.which('gfortran')
         if 'mingw64' in gfortran:
-            cmake_cmd.extend(('-G', '"MinGW Makefiles"'))
+            cmake_cmd.extend(('-G', 'MinGW Makefiles'))
         subprocess.run(cmake_cmd, cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
