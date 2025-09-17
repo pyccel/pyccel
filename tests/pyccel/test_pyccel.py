@@ -766,7 +766,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    if platform.system() == 'Darwin' and language=='fortran':
+    if platform.system() in ('Darwin', 'Windows') and language=='fortran':
         # MacOS compiler incorrectly reports
         # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
         # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
