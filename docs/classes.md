@@ -295,7 +295,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
@@ -630,7 +630,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
