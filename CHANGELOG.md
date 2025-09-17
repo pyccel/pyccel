@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
 -   #2096 : Fix saving a list comprehension into a slice.
 -   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
+-   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
 -   #2441 : Fix function call pointer result assignment in Fortran.
 
 ### Changed

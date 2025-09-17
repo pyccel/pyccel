@@ -231,6 +231,6 @@ bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag, bool allow_empty
 /*
  * Functions : Numpy array handling functions
  */
-void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[]);
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[], bool c_order);
 
 #endif
