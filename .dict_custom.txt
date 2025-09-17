@@ -133,3 +133,4 @@ linter
 inlining
 inlined
 discoverable
+MinGW
