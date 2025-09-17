@@ -4843,8 +4843,9 @@ class SemanticParser(BasicParser):
 
         if any(a.annotation is None for a in expr.arguments):
             errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=[a for a in expr.arguments if a.annotation is None], severity='fatal',
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
                           bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            return EmptyNode()
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
