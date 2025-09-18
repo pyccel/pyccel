@@ -49,7 +49,7 @@ The stub file (`.pyi`) describes the low-level library in a way that is understa
 
 You must ensure that all functions, methods, and classes have precise type annotations that match the low-level signatures.
 Particular care should be taken with integers. On most platforms Python's default integer precision is equivalent to `numpy.int64`, while the default integer precision in low-level languages like C and Fortran is usually equivalent to `numpy.int32`.
-In addition to the general rules above there are more specific rules for [Fortran](#fortran-specific-rules) and [C](#c-specific-rules). Please see the 
+In addition to the general rules above there are more specific rules for [Fortran](#fortran-specific-rules) and [C](#c-specific-rules).
 
 Function argument names are expected to match the name of the argument in the low-level language (for languages such as Fortran, where such information can be used). If the function argument names are unknown please use positional-only arguments:
 
@@ -99,7 +99,7 @@ Possible keys are:
 
 ### Fortran specific rules
 
-**Functions**
+#### Functions
 
 - Argument names must match unless they are positional-only.
 
@@ -121,7 +121,7 @@ Possible keys are:
   #$ header metavar ignore_at_import=True
   ```
 
-**Classes**
+#### Classes
 
 - The stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
 
