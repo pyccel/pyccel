@@ -109,3 +109,19 @@ def test_overload_methods(language):
 def test_accelerator_flags(language, extra_flag):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
 
+def test_convert_only():
+    cwd = Path(__file__).parent / 'wrap_scripts' / f'fortran_tests'
+
+    pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+    pyccel_mod_dirname = '__pyccel__mod__'
+    os.makedirs(cwd / pyccel_mod_dirname, exist_ok = True)
+
+    pyccel_flags = ['--convert-only', '--time-execution']
+    if os.environ.get('PYCCEL_ERROR_MODE', 'user') == 'developer':
+        pyccel_flags.append('--developer-mode')
+        pyccel_flags.append('-vv')
+
+    compile_low_level('functions', cwd, cwd, cwd / pyccel_mod_dirname, language)
+    p = subprocess.run([shutil.which("pyccel-wrap"), cwd / f'functions.pyi', *pyccel_flags], check = True, text = True, capture_output = True)
+    assert 'Time' in p.stdout
+    assert (cwd / pyccel_dirname / 'functions_wrapper.c').exists()
