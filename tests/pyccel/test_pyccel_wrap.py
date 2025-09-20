@@ -47,7 +47,7 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
     subprocess.run([compiler_info['exec'], '-shared', '-fPIC', '-o', output_folder / f'lib{stem}.so', input_folder / f'{stem}{low_level_suffix[language]}'],
                    check = True, cwd=cwd)
 
-def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language):
+def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language, extra_flags = ()):
     """
     Check that pyccel-wrap allows a Python file to call a low-level file and that
     the Python code which calls that low-level file can itself be translated.
@@ -60,6 +60,8 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         The stem of the Python file which calls the low-level code.
     language : str
         The language we are compiling from.
+    extra_flags : iter[str]
+        Any extra flags to be passed to the wrap command.
     """
     cwd = Path(__file__).parent / 'wrap_scripts' / f'{language}_tests'
 
@@ -68,7 +70,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
 
     python_file = cwd / f'{python_stem}.py'
 
-    pyccel_flags = [f'--language={language}']
+    pyccel_flags = [f'--language={language}', *extra_flags]
     if os.environ.get('PYCCEL_ERROR_MODE', 'user') == 'developer':
         pyccel_flags.append('--developer-mode')
         pyccel_flags.append('-vv')
@@ -102,3 +104,8 @@ def test_array_methods():
 
 def test_overload_methods(language):
     check_pyccel_wrap_and_call_translation('class_overloaded_methods', 'runtest_class_overloaded_methods', language)
+
+@pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
+def test_accelerator_flags(language, extra_flag):
+    check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, extra_flag)
+
