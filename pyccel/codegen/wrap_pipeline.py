@@ -140,10 +140,7 @@ def execute_pyccel_wrap(fname, *,
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
-    if language is None:
-        language = 'fortran'
-    else:
-        language = language.lower()
+    language = language.lower()
 
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
