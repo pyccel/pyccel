@@ -4124,6 +4124,8 @@ class SemanticParser(BasicParser):
                         target_r_idx = funcdef.result_pointer_map[funcdef.results.var]
                         for ti in target_r_idx:
                             self._indicate_pointer_target(l, r.args[ti].value, expr)
+                        l.remove_user_node(new_expr)
+                        r.remove_user_node(new_expr)
                         new_expr = AliasAssign(l, r)
                     else:
                         self._indicate_pointer_target(l, r, expr)

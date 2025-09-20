@@ -49,8 +49,12 @@ class CustomBuildHook(BuildHookInterface):
                 raise RuntimeError("Trying to build in an isolated environment but submodules are not available. Please call 'git submodule update --init'") from e
         shutil.rmtree(gFTL_folder / 'build', ignore_errors = True)
         shutil.rmtree(gFTL_folder / 'install', ignore_errors = True)
-        subprocess.run([shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
-                        f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}'], cwd = gFTL_folder, check=True)
+        cmake_cmd = [shutil.which('cmake'), '-S', str(gFTL_folder), '-B', str(gFTL_folder / 'build'),
+                        f'-DCMAKE_INSTALL_PREFIX={gFTL_folder / "install"}']
+        gfortran = shutil.which('gfortran')
+        if 'mingw64' in gfortran:
+            cmake_cmd.extend(('-G', 'MinGW Makefiles'))
+        subprocess.run(cmake_cmd, cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--build', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
         subprocess.run([shutil.which('cmake'), '--install', str(gFTL_folder / 'build')], cwd = gFTL_folder, check=True)
 
