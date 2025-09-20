@@ -145,10 +145,6 @@ def execute_pyccel_wrap(fname, *,
     else:
         language = language.lower()
 
-    # Choose Fortran compiler
-    if compiler_family is None:
-        compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
-
     # Get compiler object
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family, debug)
