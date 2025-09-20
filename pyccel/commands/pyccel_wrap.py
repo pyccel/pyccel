@@ -69,7 +69,7 @@ def pyccel_wrap_command() -> None:
     compiler_group = group.add_mutually_exclusive_group(required=False)
     compiler_group.add_argument('--compiler-family',
                                 type=str,
-                                default='GNU',
+                                default=os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU'),
                                 metavar='FAMILY',
                                 help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
     compiler_group.add_argument('--compiler-config',
