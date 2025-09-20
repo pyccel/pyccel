@@ -79,13 +79,15 @@ class Compiler:
     debug : bool
                Indicates whether we are compiling in debug mode.
     """
-    __slots__ = ('_debug','_compiler_info','_language_info')
+    __slots__ = ('_debug','_compiler_info','_language_info', '_compiler_family')
     acceptable_bin_paths = None
     def __init__(self, vendor : str, debug=False):
         if vendor.endswith('.json') and os.path.exists(vendor):
+            self._compiler_family = pathlib.Path(vendor).stem
             with open(vendor, encoding="utf-8") as vendor_file:
                 self._compiler_info = json.load(vendor_file)
         else:
+            self._compiler_family = vendor
             if vendor not in vendors:
                 raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
             try:
@@ -96,11 +98,11 @@ class Compiler:
         self._debug = debug
         self._language_info = None
 
-    def _get_exec(self, extra_compilation_tools):
+    def get_exec(self, extra_compilation_tools, language = None):
         """
         Obtain the path of the executable based on the specified compilation tools.
 
-        The `_get_exec` method is responsible for retrieving the path of the executable based on
+        The `get_exec` method is responsible for retrieving the path of the executable based on
         the specified compilation tools. It is used internally in the Pyccel module. In particular
         the executable depends on whether MPI is used.
 
@@ -108,6 +110,9 @@ class Compiler:
         ----------
         extra_compilation_tools : str
             Specifies the compilation tools to be used.
+        language : str, optional
+            The language being compiled. This argument should be provided unless this method
+            is called from a method of this class after setting self._language_info.
 
         Returns
         -------
@@ -119,8 +124,9 @@ class Compiler:
         PyccelError
             If the compiler executable cannot be found.
         """
+        language_info = self._language_info if language is None else self._compiler_info[language]
         # Get executable
-        exec_cmd = self._language_info['mpi_exec'] if 'mpi' in extra_compilation_tools else self._language_info['exec']
+        exec_cmd = language_info['mpi_exec'] if 'mpi' in extra_compilation_tools else language_info['exec']
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
@@ -372,7 +378,7 @@ class Compiler:
         libdir = self._get_libdir(compile_obj.libdir, extra_compilation_tools)
         libdir_flags = self._insert_prefix_to_list(libdir, '-L')
 
-        exec_cmd = self._get_exec(extra_compilation_tools)
+        exec_cmd = self.get_exec(extra_compilation_tools)
 
         return exec_cmd, inc_flags, libs_flags, libdir_flags, m_code
 
@@ -415,7 +421,7 @@ class Compiler:
         inc_flags = self._insert_prefix_to_list(include, '-I')
 
         # Get executable
-        exec_cmd = self._get_exec(extra_compilation_tools)
+        exec_cmd = self.get_exec(extra_compilation_tools)
 
         if language == 'fortran':
             j_code = (self._language_info['module_output_flag'], output_folder)
@@ -618,3 +624,22 @@ class Compiler:
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
             print(json.dumps(self._compiler_info, indent=4),
                     file=out_file)
+
+    @property
+    def compiler_family(self):
+        """
+        Get the compiler family.
+
+        Get an identifier for the compiler family. This is equal to the compiler-family
+        key in the default compilers or to the stem of the provided JSON compiler file.
+        """
+        return self._compiler_family
+
+    @property
+    def is_debug(self):
+        """
+        Check if debug mode is activated.
+
+        Check if debug mode is activated.
+        """
+        return self._debug

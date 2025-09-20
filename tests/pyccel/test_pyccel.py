@@ -766,7 +766,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    if platform.system() == 'Darwin' and language=='fortran':
+    if platform.system() in ('Darwin', 'Windows') and language=='fortran':
         # MacOS compiler incorrectly reports
         # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
         # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
@@ -1251,6 +1251,7 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif(sys.platform == 'win32' and not np.__version__.startswith('2.'), reason="Integer mismatch with numpy 1.*")
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are

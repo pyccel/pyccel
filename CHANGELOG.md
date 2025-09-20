@@ -12,7 +12,9 @@ All notable changes to this project will be documented in this file.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
 -   #2420 : Add `@low_level` decorator.
+-   Allow installed versions of gFTL and STC to be used if they can be discovered by `pkg-config`.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -30,8 +32,10 @@ All notable changes to this project will be documented in this file.
 -   #2433 : Fix shape calculation for resized class member variables.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
 -   #2096 : Fix saving a list comprehension into a slice.
--   #2439 : Fix missing call to `Py_INCREF` for booleans.
+-   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
+-   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
 -   #2441 : Fix function call pointer result assignment in Fortran.
+-   #2439 : Fix missing call to `Py_INCREF` for booleans.
 
 ### Changed
 
@@ -39,7 +43,13 @@ All notable changes to this project will be documented in this file.
 -   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   Update STC to v6.0-beta2.
 -   #2414 : Ensure printing of imports from Fortran intrinsic libraries is done in a reproducible way (by sorting).
+<<<<<<< HEAD
 -   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
+=======
+-   Install STC to use it as a library instead of selectively compiling.
+-   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
+-   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
+>>>>>>> origin/devel
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
