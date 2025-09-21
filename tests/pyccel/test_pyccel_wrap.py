@@ -122,6 +122,6 @@ def test_convert_only(language):
         pyccel_flags.append('-vv')
 
     compile_low_level('functions', cwd, cwd, cwd / pyccel_mod_dirname, language)
-    p = subprocess.run([shutil.which("pyccel-wrap"), cwd / f'functions.pyi', *pyccel_flags], check = True, text = True, capture_output = True)
+    p = subprocess.run([shutil.which("pyccel-wrap"), cwd / 'functions.pyi', *pyccel_flags], check = True, text = True, capture_output = True)
     assert 'Time' in p.stdout
     assert (cwd / pyccel_dirname / 'functions_wrapper.c').exists()
