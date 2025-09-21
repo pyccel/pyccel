@@ -109,8 +109,8 @@ def test_overload_methods(language):
 def test_accelerator_flags(language, extra_flag):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
 
-def test_convert_only():
-    cwd = Path(__file__).parent / 'wrap_scripts' / f'fortran_tests'
+def test_convert_only(language):
+    cwd = Path(__file__).parent / 'wrap_scripts' / f'{language}_tests'
 
     pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     pyccel_mod_dirname = '__pyccel__mod__'
