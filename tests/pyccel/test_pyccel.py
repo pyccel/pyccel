@@ -498,7 +498,6 @@ def test_imports_in_folder(language):
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.skip_llvm
 @pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py",
