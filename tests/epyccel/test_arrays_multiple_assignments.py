@@ -213,6 +213,96 @@ def test_Reassign_to_Target():
     assert error_info.message == ARRAY_ALREADY_IN_USE
 
 #==============================================================================
+def test_Reassign_List_to_Target():
+
+    def f():
+        a = [1, 2, 3]
+        b = a
+        a = [4, 5, 6]
+        return b
+
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f)
+
+    # Check that we got at least 1 Pyccel error
+    assert errors.has_errors()
+    assert errors.num_messages() >= 1
+
+    # Check that the reallocation error is present
+    error_found = False
+    for error_info_list in errors.error_info_map.values():
+        for error_info in error_info_list:
+            if (error_info.symbol in ('a', "'a'") and
+                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_found = True
+                break
+    assert error_found
+
+#==============================================================================
+def test_Reassign_Set_to_Target():
+
+    def f():
+        a = {1, 2, 3}
+        b = a
+        a = {4, 5, 6}
+        return b
+
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f)
+
+    # Check that we got at least 1 Pyccel error
+    assert errors.has_errors()
+    assert errors.num_messages() >= 1
+
+    # Check that the reallocation error is present
+    error_found = False
+    for error_info_list in errors.error_info_map.values():
+        for error_info in error_info_list:
+            if (error_info.symbol in ('a', "'a'") and
+                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_found = True
+                break
+    assert error_found
+
+#==============================================================================
+def test_Reassign_Dict_to_Target():
+
+    def f():
+        a = {'x': 1, 'y': 2}
+        b = a
+        a = {'z': 3, 'w': 4}
+        return b
+
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f)
+
+    # Check that we got at least 1 Pyccel error
+    assert errors.has_errors()
+    assert errors.num_messages() >= 1
+
+    # Check that the reallocation error is present
+    error_found = False
+    for error_info_list in errors.error_info_map.values():
+        for error_info in error_info_list:
+            if (error_info.symbol in ('a', "'a'") and
+                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_found = True
+                break
+    assert error_found
+
+#==============================================================================
 
 def test_Assign_Between_Allocatables():
 
@@ -339,4 +429,7 @@ if __name__ == '__main__':
         test_creation_in_if_heap(l)
 
     test_Reassign_to_Target()
+    test_Reassign_List_to_Target()
+    test_Reassign_Set_to_Target()
+    test_Reassign_Dict_to_Target()
     test_Assign_Between_Allocatables()
