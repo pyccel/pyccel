@@ -49,7 +49,6 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
                     output_folder / f'lib{stem}{lib_suffix}',
                     input_folder / f'{stem}{low_level_suffix[language]}'],
                    check = True, cwd=cwd)
-    print(list(output_folder.glob('*')))
 
 def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language, extra_flags = ()):
     """
@@ -79,18 +78,10 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         pyccel_flags.append('--developer-mode')
         pyccel_flags.append('-vv')
 
-    print("compile_low_level")
     compile_low_level(low_level_stem, cwd, cwd, cwd / pyccel_dirname, language)
-    print(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'No compiler specified'))
-    print(pyccel_flags)
-    print("wrap")
     subprocess.run([shutil.which("pyccel-wrap"), cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
-    print("run")
     py_run = subprocess.run([sys.executable, python_file], text = True, capture_output = True, cwd = cwd, check = True)
-    print(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'No compiler specified'))
-    print("translate")
     subprocess.run([shutil.which("pyccel"), python_file, *pyccel_flags], check = True)
-    print("run again")
 
     exe_file = cwd / python_stem
     if sys.platform == "win32":
