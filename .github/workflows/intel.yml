@@ -87,6 +87,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .[test]
         shell: bash
+      - name: Test
+        run: |
+            export PYCCEL_ERROR_MODE='developer'
+            pytest test_pyccel_wrap.py -v
+        working-directory: ./tests/pyccel
       - name: Coverage install
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/coverage_install

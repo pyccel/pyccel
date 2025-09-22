@@ -44,6 +44,7 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
     """
     compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
     compiler_info = available_compilers[compiler_family][language]
+    print([compiler_info['exec'], '-shared', '-fPIC', '-o', output_folder / f'lib{stem}.so', input_folder / f'{stem}{low_level_suffix[language]}'])
     subprocess.run([compiler_info['exec'], '-shared', '-fPIC', '-o', output_folder / f'lib{stem}.so', input_folder / f'{stem}{low_level_suffix[language]}'],
                    check = True, cwd=cwd)
 
