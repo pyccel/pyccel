@@ -44,9 +44,12 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
     """
     compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
     compiler_info = available_compilers[compiler_family][language]
-    print([compiler_info['exec'], '-shared', '-fPIC', '-o', output_folder / f'lib{stem}.so', input_folder / f'{stem}{low_level_suffix[language]}'])
-    subprocess.run([compiler_info['exec'], '-shared', '-fPIC', '-o', output_folder / f'lib{stem}.so', input_folder / f'{stem}{low_level_suffix[language]}'],
+    lib_suffix = '.dll' if sys.platform == 'win32' else '.so'
+    subprocess.run([compiler_info['exec'], '-shared', '-fPIC', '-o',
+                    output_folder / f'lib{stem}{lib_suffix}',
+                    input_folder / f'{stem}{low_level_suffix[language]}'],
                    check = True, cwd=cwd)
+    print(list(output_folder.glob('*')))
 
 def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language, extra_flags = ()):
     """
