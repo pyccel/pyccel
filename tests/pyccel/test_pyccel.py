@@ -1296,3 +1296,15 @@ def test_generated_name_collision(language):
 def test_array_tuple_shape(language):
     pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_varargs(language):
+    pyccel_test("scripts/runtest_varargs.py",
+                language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.python
+def test_varkwargs():
+    pyccel_test("scripts/runtest_varkwargs.py",
+                language = 'python',
+                output_dtype = str)

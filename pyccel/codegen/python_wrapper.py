@@ -102,7 +102,7 @@ def create_shared_library(codegen,
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
     if errors.has_errors():
-        return
+        return '', {}
 
     #-------------------------------------------
     #           Print wrapper code

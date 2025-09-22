@@ -9,7 +9,7 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple, PythonDict
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
@@ -215,13 +215,18 @@ class PythonCodePrinter(CodePrinter):
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
+                if obj.is_vararg:
+                    return self._get_type_annotation(obj.var[0])
+                if obj.is_kwarg:
+                    type_annotation = self._print(obj.var.class_type.value_type)
+                    return f"'{type_annotation}'"
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, FunctionDefResult):
             if obj.var is Nil():
                 return ''
             else:
                 return self._get_type_annotation(obj.var)
-        elif isinstance(obj, Variable):
+        elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
             if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
                 self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
@@ -268,7 +273,13 @@ class PythonCodePrinter(CodePrinter):
             overload = ''
 
         self.set_scope(func.scope)
-        args = ', '.join(self._print(a) for a in func.arguments)
+        arguments = func.arguments
+        arg_code = [self._print(i) for i in arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
+        args   = ', '.join(arg_code)
         result = func.results
         body = '...'
         if result:
@@ -441,6 +452,11 @@ class PythonCodePrinter(CodePrinter):
             name = self._print(expr.name)
         default = ''
 
+        if expr.is_vararg:
+            name = f'*{name}'
+        if expr.is_kwarg:
+            name = f'**{name}'
+
         if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
@@ -456,7 +472,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
-            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+            if expr.keyword.startswith('**'):
+                val = expr.value
+                assert isinstance(val, PythonDict)
+                assert all(isinstance(k, LiteralString) for k in val.keys)
+                keys = [k.python_value for k in val.keys]
+                args = [self._print(v) for v in val.values]
+                return ', '.join(f'{k} = {a}' for k,a in zip(keys, args))
+            elif expr.keyword.startswith('*'):
+                val = self._print(expr.value)
+                if val.startswith('(') and val.endswith(')'):
+                    return val[1:-1].strip(',')
+                else:
+                    return f'*{val}'
+            else:
+                val = self._print(expr.value)
+                return f'{expr.keyword} = {val}'
         else:
             return self._print(expr.value)
 
@@ -558,7 +589,14 @@ class PythonCodePrinter(CodePrinter):
         functions  = ''.join(self._print(f) for f in functions)
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
-        args    = ', '.join(self._print(i) for i in expr.arguments)
+
+        arguments = expr.arguments
+        arg_code = [self._print(i) for i in arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
+        args = ', '.join(arg_code)
 
         imports    = self._indent_codestring(imports)
         functions  = self._indent_codestring(functions)
