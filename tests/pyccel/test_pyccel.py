@@ -12,6 +12,7 @@ import numpy as np
 from filelock import FileLock
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
+from pyccel.compilers.default_compilers import available_compilers
 
 #==============================================================================
 # UTILITIES
@@ -93,7 +94,9 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
     --------
     compile_fortran_or_c : The function that is called.
     """
-    gcc = shutil.which('gcc')
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    compiler_info = available_compilers[compiler_family]['c']
+    compiler = compiler_info['exec']
     folder = os.path.join(os.path.dirname(test_file), '__pyccel__')
     deps = []
     subfolders = [ f.path for f in os.scandir(folder) if f.is_dir() ]
@@ -102,9 +105,9 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
             root, ext = os.path.splitext(fi)
             if ext == '.c':
                 deps.append(os.path.join(f, root) +'.py')
-                with subprocess.Popen([gcc, '-c', fi, '-o', root+'.o'], text=True, cwd=f) as p:
+                with subprocess.Popen([compiler, '-c', fi, '-o', root+'.o'], text=True, cwd=f) as p:
                     p.wait()
-    compile_fortran_or_c(gcc, '.c', path_dir, test_file, dependencies, deps, is_mod)
+    compile_fortran_or_c(compiler_info, '.c', path_dir, test_file, dependencies, deps, is_mod)
 
 #------------------------------------------------------------------------------
 def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
@@ -131,10 +134,12 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
     --------
     compile_fortran_or_c : The function that is called.
     """
-    compile_fortran_or_c(shutil.which('gfortran'), '.f90', path_dir, test_file, dependencies, (), is_mod)
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    compiler_info = available_compilers[compiler_family]['fortran']
+    compile_fortran_or_c(compiler_info, '.f90', path_dir, test_file, dependencies, (), is_mod)
 
 #------------------------------------------------------------------------------
-def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies, std_deps, is_mod=False):
+def compile_fortran_or_c(compiler_info, extension, path_dir, test_file, dependencies, std_deps, is_mod=False):
     """
     Compile Fortran or C code manually.
 
@@ -143,8 +148,8 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
 
     Parameters
     ----------
-    compiler : str
-        The compiler (gfortran/gcc).
+    compiler_info : dict
+        A dictionary describing the compiler properties.
 
     extension : str
         The extension of the generated file (.c/.f90).
@@ -164,6 +169,7 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
     is_mod : bool, default=False
         True if translating a module, False if translating a program
     """
+    compiler = compiler_info['exec']
     root = insert_pyccel_folder(test_file)[:-3]
 
     assert os.path.isfile(root+extension)
@@ -174,7 +180,7 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, "prog_"+base_name)
         if os.path.isfile(prog_root+extension):
-            compile_fortran_or_c(compiler, extension,
+            compile_fortran_or_c(compiler_info, extension,
                                 path_dir, test_file,
                                 dependencies, std_deps,
                                 is_mod = True)
@@ -201,9 +207,12 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
 
     command.append("-o")
     if is_mod:
-        command.append("%s.o" % root)
+        command.append(f"{root}.o")
     else:
-        command.append("%s" % test_file[:-3])
+        command.append(test_file[:-3])
+
+    command.append(compiler_info['module_output_flag'])
+    command.append(base_dir)
 
     with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
         p.wait()
