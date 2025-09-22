@@ -1216,10 +1216,7 @@ class SemanticParser(BasicParser):
                 semantic_func = self._annotate_the_called_function_def(val, ())
                 a = FunctionCallArgument(semantic_func, keyword = a.keyword, python_ast = a.python_ast)
 
-            if isinstance(val, StarredArguments):
-                args.extend([FunctionCallArgument(av) for av in val.args_var])
-            else:
-                args.append(a)
+            args.append(a)
         return args
 
     def _check_argument_compatibility(self, input_args, func_args, func, elemental, raise_error=True, error_type='error'):
@@ -1258,6 +1255,7 @@ class SemanticParser(BasicParser):
         err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
+
             i_arg = i_arg.value
             f_arg = f_arg.var
             # Ignore types which cannot be compared
@@ -1392,7 +1390,7 @@ class SemanticParser(BasicParser):
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
 
-            if None in new_expr.args:
+            if None in args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
@@ -1421,17 +1419,42 @@ class SemanticParser(BasicParser):
         list[FunctionCallArgument]
             The sorted and complete call arguments.
         """
-        input_args = [a for a in args if a.keyword is None]
-        nargs = len(input_args)
-        for ka in func_args[nargs:]:
-            key = ka.name
-            relevant_args = [a for a in args[nargs:] if a.keyword == key]
-            n_relevant_args = len(relevant_args)
-            assert n_relevant_args <= 1
-            if n_relevant_args == 0 and ka.has_default:
-                input_args.append(ka.default_call_arg)
-            elif n_relevant_args == 1:
-                input_args.append(relevant_args[0])
+        n_funcargs = len(func_args)
+        n_posonly_args = next((i for i, a in enumerate(func_args) if not a.is_posonly), n_funcargs)
+        n_possible_posargs = next((i for i, a in enumerate(func_args) if a.is_vararg), n_funcargs)
+        input_args = []
+        kwargs = {}
+        for i, a in enumerate(args):
+            if a.keyword is None:
+                if isinstance(a.value, StarredArguments) and not func_args[len(input_args)].is_vararg:
+                    input_args.extend(FunctionCallArgument(self.scope.collect_tuple_element(av)) \
+                            for av in a.value.args_var)
+                else:
+                    input_args.append(a)
+            else:
+                kwargs[a.keyword] = a
+        assert len(input_args) >= n_posonly_args
+        if len(input_args) > n_possible_posargs:
+            if len(input_args) == n_possible_posargs + 1 and isinstance(input_args[-1].value, StarredArguments):
+                vararg = FunctionCallArgument(input_args[-1].value.args_var, keyword='*args')
+            else:
+                remaining_input_args = [ai.value for a in input_args[n_possible_posargs:]
+                                        for ai in (a.args_var if isinstance(a, StarredArguments) else (a,))]
+                vararg = FunctionCallArgument(PythonTuple(*remaining_input_args), keyword='*args')
+            input_args = input_args[:n_possible_posargs] + [vararg]
+
+        for ka in func_args[len(input_args):]:
+            if ka.is_vararg:
+                input_args.append(FunctionCallArgument(PythonTuple(class_type = ka.var.class_type), keyword='*args'))
+                continue
+            if not ka.is_kwarg:
+                input_args.append(kwargs.pop(ka.name, ka.default_call_arg))
+
+        if kwargs:
+            assert func_args[-1].is_kwarg
+            keys = [LiteralString(k) for k in kwargs]
+            values = [ka.value for ka in kwargs.values()]
+            input_args.append(FunctionCallArgument(PythonDict(keys, values), keyword='**kwargs'))
 
         return input_args
 
@@ -2976,7 +2999,10 @@ class SemanticParser(BasicParser):
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
         value = None if expr.value is None else self._visit(expr.value)
+        posonly = expr.is_posonly
         kwonly = expr.is_kwonly
+        is_vararg = expr.is_vararg
+        is_kwarg = expr.is_kwarg
         is_optional = isinstance(value, Nil)
         bound_argument = expr.bound_argument
 
@@ -2999,11 +3025,14 @@ class SemanticParser(BasicParser):
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
-                                        value = value, kwonly = kwonly, annotation = expr.annotation))
+                                        value = value, posonly = posonly, kwonly = kwonly, annotation = expr.annotation,
+                                        is_vararg = is_vararg, is_kwarg = is_kwarg))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
-                                is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
-                                value = value, kwonly = kwonly, annotation = expr.annotation))
+                                is_argument = True), posonly = posonly, kwonly = kwonly,
+                                bound_argument = bound_argument,
+                                value = value, annotation = expr.annotation,
+                                is_vararg = is_vararg, is_kwarg = is_kwarg))
         return args
 
     def _visit_CodeBlock(self, expr):
@@ -3596,15 +3625,16 @@ class SemanticParser(BasicParser):
         if (isinstance(func, FunctionDef) and func.scope) or isinstance(func, Interface):
             scope = func.scope if isinstance(func, FunctionDef) else func.functions[0].scope
             args = [a if a.keyword is None else \
-                    FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
+                    FunctionCallArgument(a.value, scope.local_used_symbols.get(a.keyword, a.keyword)) \
                     for a in args]
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
             if not func.is_semantic:
                 # Correct func_args keyword names
                 func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
-                            annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                            annotation=a.annotation, value=a.value, posonly=a.is_posonly, kwonly=a.is_kwonly,
+                            bound_argument=a.bound_argument, is_vararg = a.is_vararg, is_kwarg = a.is_kwarg)
                             for a in func_args]
-            args      = self._sort_function_call_args(func_args, args)
+            args = self._sort_function_call_args(func_args, args)
 
         if self.scope.find(name, 'cls_constructs'):
 
@@ -3657,6 +3687,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
 
+            args = self._sort_function_call_args(method.arguments, args)
             self._check_argument_compatibility(args, method.arguments,
                             method, method.is_elemental)
 
@@ -4813,6 +4844,12 @@ class SemanticParser(BasicParser):
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
+        if any(a.annotation is None for a in expr.arguments):
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            return EmptyNode()
+
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
         used_type_vars = {}
@@ -5531,9 +5568,7 @@ class SemanticParser(BasicParser):
 
     def _visit_StarredArguments(self, expr):
         var = self._visit(expr.args_var)
-        assert var.rank==1
-        size = var.shape[0]
-        return StarredArguments([var[i] for i in range(size)])
+        return StarredArguments(var)
 
     def _visit_NumpyMatmul(self, expr):
         self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))

@@ -13,9 +13,12 @@ All notable changes to this project will be documented in this file.
 -   #2390 : Add support for `np.expm1`.
 -   #2420 : Add `@low_level` decorator.
 -   Allow installed versions of gFTL and STC to be used if they can be discovered by `pkg-config`.
+-   Add support for positional arguments.
+-   Add support for keyword-only arguments.
+-   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
--   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
--   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
+-   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -36,6 +39,7 @@ All notable changes to this project will be documented in this file.
 -   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
 -   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
 -   #2441 : Fix function call pointer result assignment in Fortran.
+-   Rename `main` function when translating to C.
 
 ### Changed
 
