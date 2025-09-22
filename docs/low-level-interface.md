@@ -29,9 +29,9 @@ In practice, the `.pyi` file creates a two-way bridge between Python and low-lev
 
 - Write a `.pyi` stub with precise types and minimal build metadata.
 
-- Wrap the library with a Python-interface using `pyccel-wrap` to make it callable from Python.
+- Wrap the library with a Python interface using `pyccel-wrap` to make it callable from Python.
 
-- Develop in Python using the interface to the low-level code
+- Develop in Python using the interface to the low-level code.
 
 - Run Pyccel to translate the new Python code back to C/Fortran code.
 
