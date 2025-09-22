@@ -77,8 +77,11 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         pyccel_flags.append('-vv')
 
     compile_low_level(low_level_stem, cwd, cwd, cwd / pyccel_dirname, language)
+    print(os.environ['PYCCEL_DEFAULT_COMPILER'])
+    print(pyccel_flags)
     subprocess.run([shutil.which("pyccel-wrap"), cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
     py_run = subprocess.run([sys.executable, python_file], text = True, capture_output = True, cwd = cwd, check = True)
+    print(os.environ['PYCCEL_DEFAULT_COMPILER'])
     subprocess.run([shutil.which("pyccel"), python_file, *pyccel_flags], check = True)
 
     exe_file = cwd / python_stem
