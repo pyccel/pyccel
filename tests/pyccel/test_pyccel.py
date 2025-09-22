@@ -211,8 +211,9 @@ def compile_fortran_or_c(compiler_info, extension, path_dir, test_file, dependen
     else:
         command.append(test_file[:-3])
 
-    command.append(compiler_info['module_output_flag'])
-    command.append(base_dir)
+    if 'module_output_flag' in compiler_info:
+        command.append(compiler_info['module_output_flag'])
+        command.append(base_dir)
 
     with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
         p.wait()
