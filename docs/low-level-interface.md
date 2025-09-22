@@ -41,8 +41,6 @@ This preserves a clean Python API while enabling Pyccel to treat your calls as f
 
 The stub file (`.pyi`) describes the low-level library in a way that is understandable in a Python environment. It follows the same conventions as standard Python type stub files (see the Python documentation), with a few additional rules specific to Pyccel:
 
-- The stub file must have the same base name as the low-level module it describes.
-
 - At the top of the file, you must include some metadata about the compilation
 
 - If you are exposing a class to Python, the stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
