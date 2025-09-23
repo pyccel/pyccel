@@ -1963,8 +1963,7 @@ class SemanticParser(BasicParser):
                     severity='fatal')
 
         # Check for reallocation of containers that are being used by another variable
-        is_reallocatable_container = (var.is_ndarray or
-                                    isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType, DictType)))
+        is_reallocatable_container = not isinstance(var.class_type, FixedSizeNumericType)
         if not is_augassign and is_reallocatable_container and var.is_target:
             errors.report(ARRAY_ALREADY_IN_USE,
                 bounding_box=(self.current_ast_node.lineno,
