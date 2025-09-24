@@ -217,8 +217,10 @@ class Parser(object):
                                 context_dict = self._context_dict,
                                 verbose = verbose)
         self._semantic_parser = parser
+        current_folder = self._filename.parent
         for key in ('includes', 'libdirs'):
-            parser.metavars[key] = ', '.join(str(Path(v).resolve()) for v in parser.metavars.get(key, '').split(','))
+            dirs = [current_folder / Path(v.strip()) for v in parser.metavars.get(key, '').split(',')]
+            parser.metavars[key] = ', '.join(str(v.resolve()) for v in dirs)
         for key in ('printer_imports', 'includes', 'libraries', 'libdirs', 'flags'):
             parser.metavars.setdefault(key, '')
             parser.metavars[key] += ', ' + ', '.join(p.metavars[key] for p in self.sons)
