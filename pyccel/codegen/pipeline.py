@@ -287,9 +287,9 @@ def execute_pyccel(fname, *,
             print_timers(start, timers)
         return
 
-    include = list(include) + [i.strip() for i in parser.metavars.get('includes', '').split(',') if i.strip()]
+    include = list(include) + list({i.strip() for i in parser.metavars.get('includes', '').split(',') if i.strip()})
     libs = list(libs) + [l.strip() for l in parser.metavars.get('libraries', '').split(',') if l.strip()]
-    libdir = list(libdir) + [l.strip() for l in parser.metavars.get('libdirs', '').split(',') if l.strip()]
+    libdir = list(libdir) + list({l.strip() for l in parser.metavars.get('libdirs', '').split(',') if l.strip()})
 
     flags = list(flags) + [f.strip() for f in parser.metavars.get('flags', '').split(',') if f.strip()]
 
