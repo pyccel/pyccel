@@ -1965,11 +1965,14 @@ class SemanticParser(BasicParser):
         # Check for reallocation of containers that are being used by another variable
         is_reallocatable_container = not isinstance(var.class_type, FixedSizeNumericType)
         if not is_augassign and is_reallocatable_container and var.is_target:
-            errors.report(ARRAY_ALREADY_IN_USE,
-                bounding_box=(self.current_ast_node.lineno,
-                    self.current_ast_node.col_offset),
-                        severity='error', symbol=var.name)
-            return
+            pointers = [p for pt in self._pointer_targets for p, t in pt.items() \
+                    if any(var in ti for ti in t)]
+            if any(not p.is_temp for p in pointers):
+                errors.report(ARRAY_ALREADY_IN_USE,
+                    bounding_box=(self.current_ast_node.lineno,
+                        self.current_ast_node.col_offset),
+                            severity='error', symbol=var.name)
+                return
 
         elif not is_augassign and not var.is_alias and var.rank > 0 and \
                 isinstance(rhs, (Variable, IndexedElement)) and \
