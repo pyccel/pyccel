@@ -614,16 +614,18 @@ class SyntaxParser(BasicParser):
     def _visit_arguments(self, stmt):
         is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
-        if stmt.vararg or stmt.kwarg:
-            errors.report(VARARGS, symbol = stmt,
-                    severity='error')
-            return []
-
         arguments       = []
+        if stmt.posonlyargs:
+            for a in stmt.posonlyargs:
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
+                                            annotation=annotation, posonly = True)
+                new_arg.set_current_ast(a)
+                arguments.append(new_arg)
+
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
 
-            arguments = []
             for a in stmt.args[:n_expl]:
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
@@ -638,6 +640,14 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
+
+        if stmt.vararg:
+            annotation = self._treat_type_annotation(stmt.vararg, self._visit(stmt.vararg.annotation))
+            tuple_annotation = IndexedElement(PyccelSymbol('tuple'), annotation, LiteralEllipsis())
+            new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(stmt.vararg.arg, tuple_annotation),
+                                        annotation=annotation, is_vararg = True)
+            new_arg.set_current_ast(stmt.vararg)
+            arguments.append(new_arg)
 
         if is_class_method:
             expected_self_arg = arguments[0]
@@ -658,6 +668,14 @@ class SyntaxParser(BasicParser):
                 arg.set_current_ast(a)
 
                 arguments.append(arg)
+
+        if stmt.kwarg:
+            annotation = self._treat_type_annotation(stmt.kwarg, self._visit(stmt.kwarg.annotation))
+            dict_annotation = IndexedElement(PyccelSymbol('dict'), PyccelSymbol('str'), annotation)
+            new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(stmt.kwarg.arg, dict_annotation),
+                                        annotation=annotation, is_kwarg = True)
+            new_arg.set_current_ast(stmt.kwarg)
+            arguments.append(new_arg)
 
         self.scope.insert_symbols(a.var for a in arguments)
 

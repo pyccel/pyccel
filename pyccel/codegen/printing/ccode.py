@@ -2346,7 +2346,7 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            arg_val = a.value or Nil()
+            arg_val = a.value
             f = f.var
             if self.is_c_pointer(f):
                 if isinstance(arg_val, Variable):
@@ -2969,6 +2969,13 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== Tuple methods =================
+
+    def _print_PythonTuple(self, expr):
+        class_type = self.get_c_type(expr.class_type)
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'cspan_make({class_type}, {{{args}}})'
 
     #================== List methods ==================
     def _print_ListAppend(self, expr):
