@@ -2921,6 +2921,7 @@ class SemanticParser(BasicParser):
                         target.append(t)
                 if target:
                     imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
+            imports.extend(self.scope.imports['imports'].values())
             program = Program(prog_name,
                             self.get_variables(prog_scope),
                             program_body,
