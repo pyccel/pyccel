@@ -8,7 +8,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
                                     STACK_ARRAY_DEFINITION_IN_LOOP,
-                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE,
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, TARGET_ALREADY_IN_USE,
                                     STACK_ARRAY_UNKNOWN_SHAPE)
 
 #==============================================================================
@@ -210,7 +210,7 @@ def test_Reassign_to_Target():
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol in ('x', "'x'")
-    assert error_info.message == ARRAY_ALREADY_IN_USE
+    assert error_info.message == TARGET_ALREADY_IN_USE
 
 #==============================================================================
 def test_Reassign_List_to_Target():
@@ -237,7 +237,7 @@ def test_Reassign_List_to_Target():
     for error_info_list in errors.error_info_map.values():
         for error_info in error_info_list:
             if (error_info.symbol in ('a', "'a'") and
-                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_info.message == TARGET_ALREADY_IN_USE):
                 error_found = True
                 break
     assert error_found
@@ -267,7 +267,7 @@ def test_Reassign_Set_to_Target():
     for error_info_list in errors.error_info_map.values():
         for error_info in error_info_list:
             if (error_info.symbol in ('a', "'a'") and
-                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_info.message == TARGET_ALREADY_IN_USE):
                 error_found = True
                 break
     assert error_found
@@ -297,7 +297,7 @@ def test_Reassign_Dict_to_Target():
     for error_info_list in errors.error_info_map.values():
         for error_info in error_info_list:
             if (error_info.symbol in ('a', "'a'") and
-                error_info.message == ARRAY_ALREADY_IN_USE):
+                error_info.message == TARGET_ALREADY_IN_USE):
                 error_found = True
                 break
     assert error_found
