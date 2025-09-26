@@ -79,13 +79,15 @@ class Compiler:
     debug : bool
                Indicates whether we are compiling in debug mode.
     """
-    __slots__ = ('_debug','_compiler_info','_language_info')
+    __slots__ = ('_debug','_compiler_info','_language_info', '_compiler_family')
     acceptable_bin_paths = None
     def __init__(self, vendor : str, debug=False):
         if vendor.endswith('.json') and os.path.exists(vendor):
+            self._compiler_family = pathlib.Path(vendor).stem
             with open(vendor, encoding="utf-8") as vendor_file:
                 self._compiler_info = json.load(vendor_file)
         else:
+            self._compiler_family = vendor
             if vendor not in vendors:
                 raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
             try:
@@ -96,30 +98,35 @@ class Compiler:
         self._debug = debug
         self._language_info = None
 
-    def _get_exec(self, accelerators):
+    def get_exec(self, extra_compilation_tools, language = None):
         """
-        Obtain the path of the executable based on the specified accelerators.
+        Obtain the path of the executable based on the specified compilation tools.
 
-        The `_get_exec` method is responsible for retrieving the path of the executable based on the specified accelerators.
-        It is used internally in the Pyccel module.
+        The `get_exec` method is responsible for retrieving the path of the executable based on
+        the specified compilation tools. It is used internally in the Pyccel module. In particular
+        the executable depends on whether MPI is used.
 
         Parameters
         ----------
-        accelerators : str
-            Specifies the accelerators to be used.
+        extra_compilation_tools : str
+            Specifies the compilation tools to be used.
+        language : str, optional
+            The language being compiled. This argument should be provided unless this method
+            is called from a method of this class after setting self._language_info.
 
         Returns
         -------
         str
-            The path of the executable corresponding to the specified accelerators.
+            The path of the executable corresponding to the specified compilation tools.
 
         Raises
         ------
         PyccelError
             If the compiler executable cannot be found.
         """
+        language_info = self._language_info if language is None else self._compiler_info[language]
         # Get executable
-        exec_cmd = self._language_info['mpi_exec'] if 'mpi' in accelerators else self._language_info['exec']
+        exec_cmd = language_info['mpi_exec'] if 'mpi' in extra_compilation_tools else language_info['exec']
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
@@ -137,7 +144,7 @@ class Compiler:
 
         return exec_loc
 
-    def _get_flags(self, flags = (), accelerators = ()):
+    def _get_flags(self, flags = (), extra_compilation_tools = ()):
         """
         Collect necessary compile flags.
 
@@ -149,8 +156,8 @@ class Compiler:
         flags : iterable of str
             Any additional flags requested by the user / required by
             the file.
-        accelerators : iterable or str
-            Accelerators used by the code.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
@@ -166,16 +173,16 @@ class Compiler:
 
         flags.extend(self._language_info.get('general_flags',()))
         # M_PI is not in the standard
-        #if 'python' not in accelerators:
+        #if 'python' not in extra_compilation_tools:
         #    # Python sets its own standard
         #    flags.extend(self._language_info.get('standard_flags',()))
 
-        for a in accelerators:
+        for a in extra_compilation_tools:
             flags.extend(self._language_info.get(a,{}).get('flags',()))
 
         return flags
 
-    def _get_property(self, key, properties = (), accelerators = ()):
+    def _get_property(self, key, properties = (), extra_compilation_tools = ()):
         """
         Collect necessary compile property.
 
@@ -189,8 +196,8 @@ class Compiler:
         properties : iterable of str
             Any additional values of the property requested by the
             user / required by the file.
-        accelerators : iterable or str
-            Accelerators used by the code.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
@@ -215,12 +222,12 @@ class Compiler:
 
         properties.update(dict.fromkeys(self._language_info.get(key,())))
 
-        for a in accelerators:
+        for a in extra_compilation_tools:
             properties.update(dict.fromkeys(self._language_info.get(a,{}).get(key,())))
 
         return properties.keys()
 
-    def _get_include(self, include = (), accelerators = ()):
+    def _get_include(self, include = (), extra_compilation_tools = ()):
         """
         Collect necessary compile include directories.
 
@@ -231,17 +238,17 @@ class Compiler:
         include : iterable of str
                        Any additional include directories requested by the user
                        / required by the file.
-        accelerators : iterable or str
-                       Accelerators used by the code.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
         list[str]
             A list of the include folders.
         """
-        return self._get_property('include', include, accelerators)
+        return self._get_property('include', include, extra_compilation_tools)
 
-    def _get_libs(self, libs = (), accelerators = ()):
+    def _get_libs(self, libs = (), extra_compilation_tools = ()):
         """
         Collect necessary compile libraries.
 
@@ -252,17 +259,17 @@ class Compiler:
         libs : iterable of str
             Any additional libraries requested by the user / required
             by the file.
-        accelerators : iterable or str
-            Accelerators used by the code.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
         list[str]
             A list of the libraries.
         """
-        return self._get_property('libs', libs, accelerators)
+        return self._get_property('libs', libs, extra_compilation_tools)
 
-    def _get_libdir(self, libdir = (), accelerators = ()):
+    def _get_libdir(self, libdir = (), extra_compilation_tools = ()):
         """
         Collect necessary compile library directories.
 
@@ -273,28 +280,36 @@ class Compiler:
         libdir : iterable of str
             Any additional library directories requested by the user
             / required by the file.
-        accelerators : iterable or str
-            Accelerators used by the code.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
         list[str]
             A list of the folders containing libraries.
         """
-        return self._get_property('libdir', libdir, accelerators)
+        return self._get_property('libdir', libdir, extra_compilation_tools)
 
-    def _get_dependencies(self, dependencies = (), accelerators = ()):
+    def _get_dependencies(self, dependencies = (), extra_compilation_tools = ()):
         """
-        Collect necessary dependencies
+        Collect necessary dependencies.
+
+        Collect necessary object or static libraries that should be included to compile
+        this object.
 
         Parameters
         ----------
         dependencies : iterable of str
-                       Any additional dependencies required by the file
-        accelerators : iterable or str
-                       Accelerators used by the code
+            Any additional dependencies required by the file.
+        extra_compilation_tools : iterable or str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
+
+        Returns
+        -------
+        list[str]
+            A list of the necessary dependencies.
         """
-        return self._get_property('dependencies', dependencies, accelerators)
+        return self._get_property('dependencies', dependencies, extra_compilation_tools)
 
     @staticmethod
     def _insert_prefix_to_list(lst, prefix):
@@ -321,7 +336,7 @@ class Compiler:
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]
 
-    def _get_compile_components(self, compile_obj, accelerators = ()):
+    def _get_compile_components(self, compile_obj, extra_compilation_tools = ()):
         """
         Provide all components required for compiling.
 
@@ -332,8 +347,8 @@ class Compiler:
         ----------
         compile_obj : CompileObj
             Object containing all information about the object to be compiled.
-        accelerators : iterable of str
-            Name of all tools used by the code which require additional flags/include/etc.
+        extra_compilation_tools : iterable of str
+            Tools used which require additional compilation flags/include dirs/libs/etc.
 
         Returns
         -------
@@ -350,19 +365,19 @@ class Compiler:
         """
 
         # get include
-        include = self._get_include(compile_obj.include, accelerators)
+        include = self._get_include(compile_obj.include, extra_compilation_tools)
         inc_flags = self._insert_prefix_to_list(include, '-I')
 
         # Get dependencies (.o/.a)
-        m_code = self._get_dependencies(compile_obj.extra_modules, accelerators)
+        m_code = self._get_dependencies(compile_obj.extra_modules, extra_compilation_tools)
 
         # Get libraries and library directories
-        libs = self._get_libs(compile_obj.libs, accelerators)
+        libs = self._get_libs(compile_obj.libs, extra_compilation_tools)
         libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
-        libdir = self._get_libdir(compile_obj.libdir, accelerators)
+        libdir = self._get_libdir(compile_obj.libdir, extra_compilation_tools)
         libdir_flags = self._insert_prefix_to_list(libdir, '-L')
 
-        exec_cmd = self._get_exec(accelerators)
+        exec_cmd = self.get_exec(extra_compilation_tools)
 
         return exec_cmd, inc_flags, libs_flags, libdir_flags, m_code
 
@@ -394,18 +409,18 @@ class Compiler:
 
         self._language_info = self._compiler_info[language]
 
-        accelerators = compile_obj.accelerators
+        extra_compilation_tools = compile_obj.extra_compilation_tools
 
         # Get flags
-        flags = self._get_flags(compile_obj.flags, accelerators)
+        flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
         flags.append('-c')
 
         # Get include
-        include  = self._get_include(compile_obj.include, accelerators)
+        include  = self._get_include(compile_obj.include, extra_compilation_tools)
         inc_flags = self._insert_prefix_to_list(include, '-I')
 
         # Get executable
-        exec_cmd = self._get_exec(accelerators)
+        exec_cmd = self.get_exec(extra_compilation_tools)
 
         if language == 'fortran':
             j_code = (self._language_info['module_output_flag'], output_folder)
@@ -446,37 +461,33 @@ class Compiler:
         str
             The name of the generated executable.
         """
-        if verbose:
-            print(">> Compiling executable :: ", compile_obj.program_target)
-
         self._language_info = self._compiler_info[language]
 
-        accelerators = compile_obj.accelerators
+        extra_compilation_tools = compile_obj.extra_compilation_tools
 
         # get flags
-        flags = self._get_flags(compile_obj.flags, accelerators)
+        flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
 
         # Get compile options
         exec_cmd, include, libs_flags, libdir_flags, m_code = \
-                self._get_compile_components(compile_obj, accelerators)
+                self._get_compile_components(compile_obj, extra_compilation_tools)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
-        if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
-        else:
-            j_code = ()
+        out_target = os.path.join(output_folder, compile_obj.program_target)
+
+        if verbose:
+            print(">> Compiling executable :: ", out_target)
 
         cmd = [exec_cmd, *flags, *include, *libdir_flags,
                  *linker_libdir_flags, *m_code, compile_obj.source,
-                '-o', compile_obj.program_target,
-                *libs_flags, *j_code]
+                '-o', out_target, *libs_flags]
 
         with compile_obj:
             self.run_command(cmd, verbose)
 
         self._language_info = None
 
-        return compile_obj.program_target
+        return out_target
 
     def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
         """
@@ -511,18 +522,18 @@ class Compiler:
         self._language_info = self._compiler_info[language]
 
         # Ensure python options are collected
-        accelerators = set(compile_obj.accelerators)
+        extra_compilation_tools = set(compile_obj.extra_compilation_tools)
 
-        accelerators.remove('python')
+        extra_compilation_tools.remove('python')
 
         # get flags
-        flags = self._get_flags(compile_obj.flags, accelerators)
+        flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
 
-        accelerators.add('python')
+        extra_compilation_tools.add('python')
 
         # Collect compile information
         exec_cmd, _, libs_flags, libdir_flags, m_code = \
-                self._get_compile_components(compile_obj, accelerators)
+                self._get_compile_components(compile_obj, extra_compilation_tools)
         linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
 
         flags.insert(0,"-shared")
@@ -530,7 +541,7 @@ class Compiler:
         # Get name of file
         ext_suffix = self._language_info['python']['shared_suffix']
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
-        file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
+        file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
 
         if verbose:
             print(">> Compiling shared library :: ", file_out)
@@ -612,3 +623,22 @@ class Compiler:
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
             print(json.dumps(self._compiler_info, indent=4),
                     file=out_file)
+
+    @property
+    def compiler_family(self):
+        """
+        Get the compiler family.
+
+        Get an identifier for the compiler family. This is equal to the compiler-family
+        key in the default compilers or to the stem of the provided JSON compiler file.
+        """
+        return self._compiler_family
+
+    @property
+    def is_debug(self):
+        """
+        Check if debug mode is activated.
+
+        Check if debug mode is activated.
+        """
+        return self._debug

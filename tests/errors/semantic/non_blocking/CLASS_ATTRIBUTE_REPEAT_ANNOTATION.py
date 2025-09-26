@@ -1,3 +1,4 @@
+# Object has already been defined with type 'int'. Type 'float' in assignment is incompatible
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class MyClass:

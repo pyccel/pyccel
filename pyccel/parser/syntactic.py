@@ -24,7 +24,6 @@ from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
@@ -453,8 +452,12 @@ class SyntaxParser(BasicParser):
                 result = getattr(self, syntax_method)(stmt)
                 if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                     result.set_current_ast(stmt)
-            except (PyccelError, NotImplementedError) as err:
+            except PyccelError as err:
                 raise err
+            except NotImplementedError as error:
+                errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
+                    symbol = self._current_ast_node, severity='fatal',
+                    traceback=error.__traceback__)
             except Exception as err: #pylint: disable=broad-exception-caught
                 if ErrorsMode().value == 'user':
                     errors.report(PYCCEL_INTERNAL_ERROR,
@@ -470,10 +473,21 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body = [self._visit(v) for v in stmt.body]
 
-        functions = [f for f in body if isinstance(f, FunctionDef)]
-        classes   = [c for c in body if isinstance(c, ClassDef)]
+        # Collect functions and classes. These must be visited last to ensure
+        # all names have been collected from the parent scope
+        ast_functions = [f for f in stmt.body if isinstance(f, ast.FunctionDef)]
+        ast_classes = [c for c in stmt.body if isinstance(c, ast.ClassDef)]
+
+        # Add the names of the functions and classes to the scope
+        for obj in chain(ast_functions, ast_classes):
+            self.scope.insert_symbol(PyccelSymbol(obj.name))
+
+        body = [self._visit(v) for v in stmt.body
+                if not isinstance(v, (ast.FunctionDef, ast.ClassDef))]
+
+        functions = [self._visit(f) for f in ast_functions]
+        classes   = [self._visit(c) for c in ast_classes]
         imports   = [i for i in body if isinstance(i, Import)]
         programs  = [p for p in body if isinstance(p, Program)]
         body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import, Program))]
@@ -603,16 +617,18 @@ class SyntaxParser(BasicParser):
     def _visit_arguments(self, stmt):
         is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
-        if stmt.vararg or stmt.kwarg:
-            errors.report(VARARGS, symbol = stmt,
-                    severity='error')
-            return []
-
         arguments       = []
+        if stmt.posonlyargs:
+            for a in stmt.posonlyargs:
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
+                                            annotation=annotation, posonly = True)
+                new_arg.set_current_ast(a)
+                arguments.append(new_arg)
+
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
 
-            arguments = []
             for a in stmt.args[:n_expl]:
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
@@ -627,6 +643,14 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
+
+        if stmt.vararg:
+            annotation = self._treat_type_annotation(stmt.vararg, self._visit(stmt.vararg.annotation))
+            tuple_annotation = IndexedElement(PyccelSymbol('tuple'), annotation, LiteralEllipsis())
+            new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(stmt.vararg.arg, tuple_annotation),
+                                        annotation=annotation, is_vararg = True)
+            new_arg.set_current_ast(stmt.vararg)
+            arguments.append(new_arg)
 
         if is_class_method:
             expected_self_arg = arguments[0]
@@ -647,6 +671,14 @@ class SyntaxParser(BasicParser):
                 arg.set_current_ast(a)
 
                 arguments.append(arg)
+
+        if stmt.kwarg:
+            annotation = self._treat_type_annotation(stmt.kwarg, self._visit(stmt.kwarg.annotation))
+            dict_annotation = IndexedElement(PyccelSymbol('dict'), PyccelSymbol('str'), annotation)
+            new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(stmt.kwarg.arg, dict_annotation),
+                                        annotation=annotation, is_kwarg = True)
+            new_arg.set_current_ast(stmt.kwarg)
+            arguments.append(new_arg)
 
         self.scope.insert_symbols(a.var for a in arguments)
 
@@ -870,8 +902,10 @@ class SyntaxParser(BasicParser):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
-        name = PyccelSymbol(self._visit(stmt.name))
-        self.scope.insert_symbol(name)
+        name = PyccelSymbol(stmt.name)
+
+        if not isinstance(self._context[-1], ast.Module):
+            self.scope.insert_symbol(name)
 
         new_name = self.scope.get_expected_name(name)
 
@@ -928,26 +962,12 @@ class SyntaxParser(BasicParser):
             is_inline = True
 
 
-        argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
         argument_names = {a.var.name for a in arguments}
-        # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
-        arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
-                           for a, annot in zip(arguments, argument_annotations)]
 
         body = stmt.body
-
-        if 'sympy' in decorators:
-            # TODO maybe we should run pylint here
-            stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_current_ast(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        else:
-            body = self._visit(body)
+        body = self._visit(body)
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
@@ -1010,7 +1030,11 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        self.scope.insert_symbol(name)
+        decorators = {}
+        for d in self._visit(stmt.decorator_list):
+            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
+            decorators.setdefault(tmp_var, []).append(d)
+
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
@@ -1054,7 +1078,7 @@ class SyntaxParser(BasicParser):
 
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
-                        docstring = docstring)
+                        docstring = docstring, decorators=decorators)
 
         return expr
 
@@ -1420,9 +1444,11 @@ class SyntaxParser(BasicParser):
         return_expr = Return(self._visit(stmt.body))
         return_expr.set_current_ast(stmt)
 
+        results = FunctionDefResult(self.scope.get_new_name())
+
         self.exit_function_scope()
 
-        return InlineFunctionDef(name, args, CodeBlock([return_expr]), scope = scope)
+        return InlineFunctionDef(name, args, CodeBlock([return_expr]), results, scope = scope)
 
     def _visit_withitem(self, stmt):
         # stmt.optional_vars

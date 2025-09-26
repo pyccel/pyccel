@@ -1,3 +1,4 @@
+# Function 'cross' from module 'numpy' is not currently supported by pyccel
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import ones, empty, cross
 b = ones((2,3))
@@ -9,4 +10,3 @@ for i in range(2):
     b[i,:] = (5,0,4)
 
 c = cross(a,b)
-

@@ -787,7 +787,7 @@ class CCodePrinter(CodePrinter):
             decl_line = f'#define i_{tag}pro cstr\n'
         elif isinstance(element_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             type_decl = self.get_c_type(element_type, not in_arc)
-            decl_line = f'#define i_{tag}class {type_decl}\n'
+            decl_line = f'#define i_{tag} {type_decl}\n#define i_{tag}drop {type_decl}_drop\n#define i_{tag}clone {type_decl}_steal\n'
         else:
             decl_line = ''
             errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
@@ -956,9 +956,8 @@ class CCodePrinter(CodePrinter):
         name = expr.module.name
         if isinstance(name, AsName):
             name = name.name
-        # TODO: Add interfaces
         classes = ""
-        funcs = ""
+        func_blocks = []
         for classDef in expr.module.classes:
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
@@ -966,14 +965,20 @@ class CCodePrinter(CodePrinter):
             # Is external is required to avoid the default initialisation of containers
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
             classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
+            func_blocks.append('')
             for method in classDef.methods:
                 if not method.is_inline:
-                    funcs += f"{self.function_signature(method)};\n"
+                    func_blocks[-1] += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    funcs += f"{self.function_signature(func)};\n"
+                    func_blocks[-1] += f"{self.function_signature(func)};\n"
             classes += "};\n"
-        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
+        func_blocks.append(''.join(f"{self.function_signature(f)};\n" for f in expr.module.funcs if not f.is_inline))
+
+        func_blocks.extend(''.join(f"{self.function_signature(f)};\n" for f in i.functions if not f.is_inline)
+                           for i in expr.module.interfaces)
+
+        funcs = '\n'.join(f for f in func_blocks if f)
 
         decls = [Declare(v, external=True, module_variable=True) for v in expr.module.variables if not v.is_private]
         global_variables = ''.join(self._print(d) for d in decls)
@@ -986,20 +991,15 @@ class CCodePrinter(CodePrinter):
         self._in_header = False
         self.exit_scope()
         self._current_module = None
+        body = '\n'.join(info_block for info_block in (imports, global_variables, classes, funcs) if info_block)
         return (f"#ifndef {name.upper()}_H\n \
                 #define {name.upper()}_H\n\n \
-                {imports}\n \
-                {global_variables}\n \
-                {classes}\n \
-                {funcs}\n \
+                {body}\n \
                 #endif // {name}_H\n")
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        for item in expr.imports:
-            if item.source_module and item.source_module is not self._current_module:
-                self.rename_imported_methods(item.source_module.classes)
         self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
@@ -1009,12 +1009,7 @@ class CCodePrinter(CodePrinter):
         imports = Import(self.scope.get_python_name(expr.name), Module(expr.name,(),()))
         imports = self._print(imports)
 
-        code = ('{imports}\n'
-                '{variables}\n'
-                '{body}\n').format(
-                        imports   = imports,
-                        variables = global_variables,
-                        body      = body)
+        code = '\n'.join((imports, global_variables, body))
 
         self.exit_scope()
         self._current_module = None
@@ -1247,7 +1242,7 @@ class CCodePrinter(CodePrinter):
                            AsName(VariableTypeAnnotation(class_type), container_type),
                            ignore_at_print=True))
 
-                decl_line = f'#define i_type {container_type}\n'
+                decl_line = f'#define T {container_type}\n'
                 if isinstance(class_type, DictType):
                     key_decl_line = self._get_stc_element_type_decl(class_type.key_type, expr)
                     val_decl_line = self._get_stc_element_type_decl(class_type.value_type, expr, 'val')
@@ -1733,6 +1728,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
+
+        if isinstance(base.class_type, InhomogeneousTupleType):
+            return self._print(self.scope.collect_tuple_element(expr))
+
         inds = list(expr.indices)
         base_shape = base.shape
         allow_negative_indexes = expr.allows_negative_indexes
@@ -1752,7 +1751,7 @@ class CCodePrinter(CodePrinter):
                 indices.append('{'+self._print(idx)+'}')
             indices_code = ', '.join(indices)
             base_code = self._print(ObjectAddress(base))
-            return f'cspan_slice({c_type}, {base_code}, {indices_code})'
+            return f'cspan_slice({base_code}, {c_type}, {indices_code})'
 
         for i, ind in enumerate(inds):
             if is_literal_integer(ind) and int(ind) < 0:
@@ -2141,6 +2140,20 @@ class CCodePrinter(CodePrinter):
         code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
+    def _print_NumpyExpm1(self, expr):
+        arg, = expr.args
+        if expr.dtype.primitive_type is PrimitiveComplexType():
+            self.add_import(c_imports['pyc_math_c'])
+            arg_code = self._print(arg)
+            return f'cpyc_expm1({arg_code})'
+        else:
+            self.add_import(c_imports['math'])
+            if arg.dtype.primitive_type is not PrimitiveFloatingPointType():
+                arg_code = self._print(NumpyFloat(arg))
+            else :
+                arg_code = self._print(arg)
+            return f'expm1({arg_code})'
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
@@ -2300,7 +2313,7 @@ class CCodePrinter(CodePrinter):
         return ';\n'.join((init_value, endpoint_code))
 
     def _print_Interface(self, expr):
-        return ""
+        return ''.join(self._print(f) for f in expr.functions)
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
@@ -2357,7 +2370,7 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            arg_val = a.value or Nil()
+            arg_val = a.value
             f = f.var
             if self.is_c_pointer(f):
                 if isinstance(arg_val, Variable):
@@ -2582,7 +2595,7 @@ class CCodePrinter(CodePrinter):
                 rhs = self._print(rhs_address)
                 rhs_type = self.get_c_type(rhs_var.class_type)
                 slicing = ', '.join(['{c_ALL}']*lhs_var.rank)
-                code = f'{lhs} = cspan_slice({rhs_type}, {rhs}, {slicing});\n'
+                code = f'{lhs} = cspan_slice({rhs}, {rhs_type}, {slicing});\n'
                 if lhs_var.order != rhs_var.order:
                     code += f'cspan_transpose({lhs_ptr});\n'
                 return code
@@ -2970,7 +2983,7 @@ class CCodePrinter(CodePrinter):
     #================== CLASSES ==================
 
     def _print_CustomDataType(self, expr):
-        return "struct " + expr.name
+        return "struct " + expr.low_level_name
 
     def _print_Del(self, expr):
         return ''.join(self._print(var) for var in expr.variables)
@@ -2980,6 +2993,13 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== Tuple methods =================
+
+    def _print_PythonTuple(self, expr):
+        class_type = self.get_c_type(expr.class_type)
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'cspan_make({class_type}, {{{args}}})'
 
     #================== List methods ==================
     def _print_ListAppend(self, expr):

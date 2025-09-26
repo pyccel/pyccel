@@ -79,6 +79,7 @@ __all__ = (
     'NumpyCosh',
     'NumpyDivide',
     'NumpyExp',
+    'NumpyExpm1',
     'NumpyFabs',
     'NumpyFloor',
     'NumpyHypot',
@@ -196,20 +197,31 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
-    """ Modify the input shape to the expected type
+    """
+    Modify the input shape to the expected type.
+
+    Modify the input shape to the expected type.
 
     Parameters
     ----------
     is_scalar : bool
-                True if the result is a scalar, False if it is an array
-    shape     : TypedAstNode/iterable/int
-                input shape
+        True if the result is a scalar, False if it is an array.
+    shape : TypedAstNode | iterable | int
+        Input shape.
+
+    Returns
+    -------
+    tuple[int | TypedAstNode]
+        The shape of the array in a compatible format.
     """
     if is_scalar:
         return None
     elif shape is None:
         return ()
-    elif not hasattr(shape,'__iter__'):
+    elif isinstance(shape, TypedAstNode):
+        if shape.rank == 0:
+            shape = [shape]
+    elif not hasattr(shape, '__iter__'):
         shape = [shape]
 
     new_shape = []
@@ -1953,6 +1965,19 @@ class NumpyExp     (NumpyUfuncUnary):
     """Represent a call to the exp function in the Numpy library"""
     __slots__ = ()
     name = 'exp'
+class NumpyExpm1   (NumpyUfuncUnary):
+    """
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Represent a call to the np.expm1 function in the Numpy library.
+
+    Parameters
+    ----------
+    x : PyccelAstType
+        The argument of the unary function.
+    """
+    __slots__ = ()
+    name = 'expm1'
 class NumpyLog     (NumpyUfuncUnary):
     """Represent a call to the log function in the Numpy library"""
     __slots__ = ()
@@ -2878,6 +2903,7 @@ numpy_funcs = {
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
     'fabs'      : PyccelFunctionDef('fabs'      , NumpyFabs),
     'exp'       : PyccelFunctionDef('exp'       , NumpyExp),
+    'expm1'     : PyccelFunctionDef('expm1'     , NumpyExpm1),
     'log'       : PyccelFunctionDef('log'       , NumpyLog),
     'sqrt'      : PyccelFunctionDef('sqrt'      , NumpySqrt),
     # ---

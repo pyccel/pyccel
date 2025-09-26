@@ -20,8 +20,10 @@ from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals  import LiteralTrue, LiteralFalse
 from .mathext   import MathCeil
+from .numpyext  import NumpyFloor
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .operators import PyccelFloorDiv
 from .operators import PyccelEq, PyccelNe, PyccelLt, PyccelLe, PyccelGt, PyccelGe
 from .operators import PyccelAnd, PyccelOr, PyccelNot
 from .variable  import Variable
@@ -119,6 +121,10 @@ def sympy_to_pyccel(expr, symbol_map):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
         return PythonTuple(*args)
 
+    elif isinstance(expr, sp.floor):
+        arg = sympy_to_pyccel(expr.args[0], symbol_map)
+        return NumpyFloor(arg)
+
     else:
         raise TypeError(str(type(expr)))
 
@@ -163,6 +169,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PyccelDiv):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] / args[1]
+
+    elif isinstance(expr, PyccelFloorDiv):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] // args[1]
 
     elif isinstance(expr, PyccelMul):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]

@@ -130,3 +130,9 @@ pythonic
 pre
 LLVM
 linter
+inlining
+inlined
+discoverable
+MinGW
+Makefile
+Makefiles

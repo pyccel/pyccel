@@ -766,7 +766,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    if platform.system() == 'Darwin' and language=='fortran':
+    if platform.system() in ('Darwin', 'Windows') and language=='fortran':
         # MacOS compiler incorrectly reports
         # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
         # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
@@ -812,11 +812,13 @@ def test_array_binary_op(language):
                                         "scripts/classes/classes_6.py",
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
+                                        "scripts/classes/classes_9.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
                                         "scripts/classes/class_with_non_target_array_arg.py",
                                         "scripts/classes/class_pointer.py",
+                                        "scripts/classes/class_pointer_2.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
@@ -827,7 +829,7 @@ def test_class_magic(language):
 
 def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
-    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
@@ -1249,6 +1251,7 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif(sys.platform == 'win32' and not np.__version__.startswith('2.'), reason="Integer mismatch with numpy 1.*")
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are
@@ -1260,7 +1263,7 @@ def test_stubs(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
 
-    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path(f"scripts/runtest_stub.{language}.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
     wk_dir = get_abs_path("scripts/stub_test")
@@ -1269,9 +1272,6 @@ def test_stubs(language):
         with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
-
-    if language != 'python':
-        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
 
     assert expected_pyi == generated_pyi
 
@@ -1286,3 +1286,25 @@ def test_pyccel_generated_compilation_dependency(language):
             dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
             output_dtype = int,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_generated_name_collision(language):
+    pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_array_tuple_shape(language):
+    pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_varargs(language):
+    pyccel_test("scripts/runtest_varargs.py",
+                language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.python
+def test_varkwargs():
+    pyccel_test("scripts/runtest_varkwargs.py",
+                language = 'python',
+                output_dtype = str)

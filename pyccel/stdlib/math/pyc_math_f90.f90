@@ -23,7 +23,8 @@ public :: pyc_gcd, &
           csgn, &
           csign, &
           pyc_bankers_round, &
-          pyc_floor_div
+          pyc_floor_div, &
+          expm1
 
 private
 
@@ -75,6 +76,18 @@ interface pyc_floor_div
     module procedure pyc_floor_div_i32
     module procedure pyc_floor_div_i64
 end interface pyc_floor_div
+
+interface
+   real(f64) pure function c_expm1(x) bind(c, name='expm1')
+     use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE
+     real(f64), intent(in), value :: x
+   end function c_expm1
+end interface
+
+interface expm1
+    module procedure pyc_expm1_f64
+    module procedure pyc_expm1_c64
+end interface expm1
 
 contains
 
@@ -454,5 +467,27 @@ elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
   res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i64
 
+elemental pure function pyc_expm1_f64(x) result(Out_0001)
+    implicit none
+    real(f64) :: Out_0001
+    real(f64), value :: x
+
+    Out_0001 = c_expm1(x)
+
+end function pyc_expm1_f64
+
+elemental pure function pyc_expm1_c64(x) result(Out_0001)
+    implicit none
+
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
+
+    real(f64) :: a
+
+    a = sin(aimag(x) * 0.5_f64)
+    Out_0001 = (c_expm1(real(x)) * cos(aimag(x)) - 2._f64 * a * a) + &
+               (exp(real(x)) * sin(aimag(x))) * cmplx(0,1, kind = c64)
+
+end function pyc_expm1_c64
 
 end module pyc_math_f90

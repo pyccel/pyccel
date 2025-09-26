@@ -487,6 +487,7 @@ def test_omp_sections(language):
     f2 = openmp.omp_sections
     assert f1() == f2()
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Type mismatch warning is an error on Windows")
 @pytest.mark.external
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, flags = '-Wall', openmp=True, language=language)

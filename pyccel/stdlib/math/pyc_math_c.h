@@ -52,6 +52,8 @@ double complex csign(double complex x);
 double fpyc_bankers_round(double arg, int64_t ndigits);
 int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
 
+double complex cpyc_expm1(double complex x);
+
 #define PY_FLOOR_DIV_TYPE(TYPE)                         \
     static inline TYPE py_floor_div_##TYPE(TYPE x, TYPE y) { \
         return (TYPE)(x / y - ((x % y != 0) && ((x < 0) ^ (y < 0)))); \

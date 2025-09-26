@@ -112,6 +112,11 @@ int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits)
     }
 }
 
+double complex cpyc_expm1(double complex x) {
+    double a = sin(cimag(x) * 0.5);
+    return (expm1(creal(x)) * cos(cimag(x)) - 2. * a * a) + exp(creal(x)) * sin(cimag(x)) * _Complex_I;
+}
+
 extern inline double       pyc_radians(double degrees);
 extern inline double       pyc_degrees(double radians);
 extern inline int64_t      pyc_modulo(int64_t a, int64_t b);

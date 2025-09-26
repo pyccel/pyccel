@@ -217,11 +217,6 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
         parser.parse(verbose=verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -241,11 +236,6 @@ def execute_pyccel(fname, *,
     # Annotate abstract syntax Tree
     try:
         parser.annotate(verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('annotation (semantic)')
         # Raise a new error to avoid a large traceback
@@ -272,11 +262,6 @@ def execute_pyccel(fname, *,
         codegen = Codegen(semantic_parser, module_name, language, verbose)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname, prog_name = codegen.export(fname)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('code generation')
         # Raise a new error to avoid a large traceback
@@ -312,7 +297,7 @@ def execute_pyccel(fname, *,
             libs         = compile_libs,
             libdir       = libdir,
             dependencies = modules + list(deps.values()),
-            accelerators = accelerators)
+            extra_compilation_tools = accelerators)
     parser.compile_obj = mod_obj
 
     #------------------------------------------------------
@@ -325,12 +310,6 @@ def execute_pyccel(fname, *,
     try:
         manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
                 language, verbose, convert_only)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -362,7 +341,7 @@ def execute_pyccel(fname, *,
                     dependencies = (mod_obj,),
                     prog_target  = module_name)
             generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=pyccel_dirpath,
+                    output_folder=folder,
                     language=language,
                     verbose=verbose)
 
@@ -374,16 +353,10 @@ def execute_pyccel(fname, *,
                                                language = language,
                                                wrapper_flags = wrapper_flags,
                                                pyccel_dirpath = pyccel_dirpath,
+                                               output_dirpath = folder,
                                                compiler = compiler,
                                                sharedlib_modname = output_name,
                                                verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -397,22 +370,10 @@ def execute_pyccel(fname, *,
         handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation failed')
 
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    generated_filename = os.path.basename(generated_filepath)
-    target = os.path.join(folder, generated_filename)
-    shutil.move(generated_filepath, target)
-    generated_filepath = target
     if verbose:
         print( '> Shared library has been created: {}'.format(generated_filepath))
 
-    if codegen.is_program:
-        generated_program_filename = os.path.basename(generated_program_filepath)
-        target = os.path.join(folder, generated_program_filename)
-        shutil.move(generated_program_filepath, target)
-        generated_program_filepath = target
-
-        if verbose:
+        if codegen.is_program:
             print( '> Executable has been created: {}'.format(generated_program_filepath))
 
     # Print all warnings now
