@@ -1,6 +1,6 @@
 """ A test where the function integrated over a grid is varied. The integration is translated without rewriting the original function.
 """
-#pylint disable=wrong-import-position, unnecessary-lambda-assignment
+#pylint: disable=wrong-import-position, unnecessary-lambda-assignment
 from numpy import linspace, exp
 
 # INTEGRATE_GRID
