@@ -532,12 +532,12 @@ def test_keyword_only_arguments(language):
 def test_lambda_usage(language):
     f = lambda x: x+1 # pylint: disable=unnecessary-lambda-assignment
 
-    def g(a : 'int[:]'):
+    def g(a : 'int64[:]'):
         for i, ai in enumerate(a):
             a[i] = f(ai)
 
     epyc_g = epyccel(g, language=language)
-    val = randint(20, size=(10,))
+    val = randint(20, size=(10,), dtype=np.int64)
     val_epyc = val.copy()
     g(val)
     epyc_g(val_epyc)
@@ -556,12 +556,12 @@ def test_func_usage(language):
     def f(x : int):
         return x+1
 
-    def g(a : 'int[:]'):
+    def g(a : 'int64[:]'):
         for i, ai in enumerate(a):
             a[i] = f(ai)
 
     epyc_g = epyccel(g, language=language)
-    val = randint(20, size=(10,))
+    val = randint(20, size=(10,), dtype=np.int64)
     val_epyc = val.copy()
     g(val)
     epyc_g(val_epyc)
