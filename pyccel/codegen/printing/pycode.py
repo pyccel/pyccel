@@ -668,7 +668,7 @@ class PythonCodePrinter(CodePrinter):
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
-                if len(elem_code) < 2:
+                if len(elem_code) == 1:
                     return_expr += ','
                 return f'({return_expr})'
             else:
