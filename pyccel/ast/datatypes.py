@@ -913,7 +913,11 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
 
         # Determine datatype
         possible_types = set(t.datatype for t in self._element_types)
-        dtype = possible_types.pop()
+        try:
+            dtype = possible_types.pop()
+        except KeyError:
+            dtype = GenericType()
+
         self._datatype = dtype if all(d == dtype for d in possible_types) else self
 
         # Determine rank
