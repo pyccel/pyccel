@@ -2857,9 +2857,7 @@ class SemanticParser(BasicParser):
 
             import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
                                 if imp.source in self.d_parsers]
-            import_frees = [f if f.name in imp.target else \
-                             f.clone(next(i.target for i in imp.target \
-                                        if isinstance(i, AsName) and i.name == f.name)) \
+            import_frees = [f if f.name in imp.target else f.clone(f.name) \
                             for f,imp in zip(import_frees, pyccelised_imports) if f]
 
             if deallocs or import_frees:
@@ -5549,7 +5547,7 @@ class SemanticParser(BasicParser):
                 targets.append(AsName(import_free, new_name))
 
                 if new_name != old_name:
-                    import_free = import_free.clone(new_name)
+                    import_free = import_free.clone(new_name, is_imported = True)
 
             mod = p.semantic_parser.ast
 
