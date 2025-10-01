@@ -1482,10 +1482,10 @@ class SemanticParser(BasicParser):
             cls_name = cls_base_syntactic[0].name
             cls_base = self.scope.find(cls_name, 'classes')
             cls_scope = cls_base.scope
-            new_scope = cls_scope
+            syntactic_scope = cls_scope
         else:
             func_scope = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
-            new_scope = func_scope
+            syntactic_scope = func_scope
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope = self._scope
@@ -1494,13 +1494,19 @@ class SemanticParser(BasicParser):
 
         # Walk up scope to root to find names of relevant scopes
         scope_names = []
-        while new_scope.parent_scope is not None:
-            new_scope = new_scope.parent_scope
-            if not new_scope.name is None:
-                scope_names.append(new_scope.name)
+        while syntactic_scope.parent_scope is not None:
+            syntactic_scope = syntactic_scope.parent_scope
+            if not syntactic_scope.name is None:
+                scope_names.append(syntactic_scope.name)
+
+        # Remove module scope
+        scope_names.pop()
+
+        # Module scope is shared between syntactic and semantic stage
+        new_scope = syntactic_scope
 
         # Use scope_names to find semantic scopes
-        for n in scope_names[:-1:-1]:
+        for n in scope_names[::-1]:
             new_scope = new_scope.sons_scopes[n]
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
