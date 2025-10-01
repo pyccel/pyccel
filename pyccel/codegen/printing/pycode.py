@@ -502,6 +502,8 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = ','.join(self._print(i) for i in indices)
+            if len(indices) == 0:
+                indices = '()'
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
