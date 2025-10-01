@@ -1681,7 +1681,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_InhomogeneousTupleType(self, expr):
         args = ', '.join(self._print(t) for t in expr)
-        return f'tuple[{args}]'
+        if args:
+            return f'tuple[{args}]'
+        else:
+            return 'tuple[()]'
 
     def _print_HomogeneousTupleType(self, expr):
         return f'tuple[{self._print(expr.element_type)}, ...]'
