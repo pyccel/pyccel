@@ -8,6 +8,7 @@ from ast import _Unparser
 
 import os
 import pytest
+from pathlib import Path
 
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.errors.errors    import Errors
@@ -51,7 +52,7 @@ def test_parse(f):
     with open(f) as infile:
         orig = infile.read().strip()
 
-    pyccel = SyntaxParser(f, verbose=0)
+    pyccel = SyntaxParser(Path(f), verbose=0)
     unparser = Unparser()
     copy = unparser.visit(pyccel.fst)
 
