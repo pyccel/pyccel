@@ -326,5 +326,5 @@ def test_return_bool(language):
     a = True
     ref_count_1 = sys.getrefcount(a)
     b = f()
-    ref_count_2 = sys.getrefcount(a)
+    ref_count_2 = sys.getrefcount(b)
     assert ref_count_1 != ref_count_2
