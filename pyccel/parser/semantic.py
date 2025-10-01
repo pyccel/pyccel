@@ -3442,7 +3442,8 @@ class SemanticParser(BasicParser):
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
-                            func  = func.clone(func.name)
+                            func  = func.clone(new_name, is_imported = True)
+                            self.scope.imports['functions'][new_name] = func
                     pyccel_stage.set_stage('syntactic')
                     syntactic_call = FunctionCall(func, args)
                     current_user_nodes = expr.get_all_user_nodes()
