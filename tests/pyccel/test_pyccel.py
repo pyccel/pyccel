@@ -1011,6 +1011,15 @@ def test_exit(language, test_file):
     assert lang_out == pyth_out
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Functions in functions not implemented in C."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_module_init_collisions( language ):
     test_mod  = get_abs_path("scripts/module_init2.py")
     test_prog = get_abs_path("scripts/runtest_module_init2.py")
