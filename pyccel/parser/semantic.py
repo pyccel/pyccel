@@ -2782,9 +2782,9 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
-        header_init = self.is_header_file and len(variables) > 0
-
-        if not all(isinstance(l, comment_types) for l in init_func_body) or header_init:
+        if self.is_header_file:
+            init_func = self.scope.functions.get('__init__', None)
+        elif not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
@@ -2841,7 +2841,9 @@ class SemanticParser(BasicParser):
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
 
-        if init_func:
+        if self.is_header_file:
+            free_func = self.scope.functions.get('__del__', None)
+        elif init_func:
             syntactic_free_func_name = '__del__'
             free_func_name = self.scope.get_new_name(syntactic_free_func_name, object_type = 'function')
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
