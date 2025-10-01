@@ -3454,8 +3454,6 @@ class SemanticParser(BasicParser):
                         # E.g. when the statement is found in a Return node.
                         syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
                     pyccel_stage.set_stage('semantic')
-                    if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
