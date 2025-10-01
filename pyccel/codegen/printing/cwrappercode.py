@@ -602,3 +602,9 @@ class CWrapperCodePrinter(CCodePrinter):
         args = ', '.join([f'"{self._print(expr.error_msg)}"'] + \
                          [f'PyObject_Str((PyObject*)Py_TYPE({self._print(a)}))' for a in expr.args])
         return f'PyErr_SetObject({self._print(expr.error_type)}, PyUnicode_FromFormat({args}));\n'
+
+    def _print_BindCModuleVariable(self, expr):
+        if self.is_c_pointer(expr):
+            return f'(*{expr.name.lower()})'
+        else:
+            return expr.name.lower()

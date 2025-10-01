@@ -781,8 +781,7 @@ class CToPythonWrapper(Wrapper):
                 continue
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
-            name = getattr(v, 'indexed_name', v.name)
-            var_name = self.scope.get_python_name(name)
+            var_name = self.scope.get_python_name(v.name)
             body.extend(self._add_object_to_mod(module_var, wrapped_var, var_name, initialised))
 
         body.append(Return(module_var))
