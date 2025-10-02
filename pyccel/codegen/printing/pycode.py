@@ -502,6 +502,8 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = ','.join(self._print(i) for i in indices)
+            if len(indices) == 0:
+                indices = '()'
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -668,7 +670,7 @@ class PythonCodePrinter(CodePrinter):
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
-                if len(elem_code) < 2:
+                if len(elem_code) == 1:
                     return_expr += ','
                 return f'({return_expr})'
             else:
@@ -1094,14 +1096,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         class_type = expr.variable.class_type
+        if isinstance(class_type, HomogeneousTupleType) and expr.shape[0] == 0:
+            var = self._print(expr.variable)
+            return f'{var} = ()\n'
         if expr.alloc_type == 'reserve':
             var = self._print(expr.variable)
             if isinstance(class_type, HomogeneousSetType):
                 return f'{var} = set()\n'
             elif isinstance(class_type, HomogeneousListType):
-                return f'{var} = list()\n'
+                return f'{var} = []\n'
             elif isinstance(class_type, DictType):
-                return f'{var} = dict()\n'
+                return f'{var} = {{}}\n'
 
         return ''
 
@@ -1678,7 +1683,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_InhomogeneousTupleType(self, expr):
         args = ', '.join(self._print(t) for t in expr)
-        return f'tuple[{args}]'
+        if args:
+            return f'tuple[{args}]'
+        else:
+            return 'tuple[()]'
 
     def _print_HomogeneousTupleType(self, expr):
         return f'tuple[{self._print(expr.element_type)}, ...]'
