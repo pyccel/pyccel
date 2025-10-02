@@ -84,7 +84,9 @@ PyObject	*Complex64_to_NumpyComplex(float complex *c)
 //-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
 {
-	return (*b) ? Py_True : Py_False;
+    PyObject* result = (*b) ? Py_True : Py_False;
+    Py_INCREF(result);
+    return result;
 }
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
