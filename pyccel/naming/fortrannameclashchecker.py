@@ -103,9 +103,15 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         if context == 'wrapper':
             return self._get_collisionless_name(name, symbols)
         if name == '__init__':
-            name = 'create'
+            if parent_context == 'module':
+                name = f'{prefix}create'
+            else:
+                name = 'create'
         if name == '__del__':
-            name = 'free'
+            if parent_context == 'module':
+                name = f'{prefix}free'
+            else:
+                name = 'free'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             name = 'operator' + name[1:-2]
         if name[0] == '_':

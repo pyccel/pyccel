@@ -5537,7 +5537,7 @@ class SemanticParser(BasicParser):
                 targets.extend(container['imports'][source_target].target)
 
             if import_init:
-                old_name = f'{p.semantic_parser.ast.name}__{import_init.name}'
+                old_name = import_init.name
                 new_name = self.scope.get_new_name(old_name)
 
                 import_init = import_init.clone(import_init.name, is_imported = True)
@@ -5547,7 +5547,7 @@ class SemanticParser(BasicParser):
                 result  = import_init()
 
             if import_free:
-                old_name = import_free.scope.get_python_name(import_free.name)
+                old_name = import_free.name
                 new_name = self.scope.get_new_name(old_name)
 
                 import_free = import_free.clone(import_free.name, is_imported = True)
