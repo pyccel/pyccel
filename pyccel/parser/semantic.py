@@ -2697,6 +2697,10 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
+        if not self.is_header_file:
+            self.scope.insert_symbol('__init__', object_type = 'function')
+            self.scope.insert_symbol('__del__', object_type = 'function')
+
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
@@ -2795,7 +2799,7 @@ class SemanticParser(BasicParser):
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
             syntactic_init_func_name = '__init__'
-            init_func_name = self.scope.get_new_name(syntactic_init_func_name, object_type = 'function')
+            init_func_name = self.scope.get_expected_name(syntactic_init_func_name)
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
             for b in init_func_body:
@@ -2842,7 +2846,7 @@ class SemanticParser(BasicParser):
             # loop variables. They must be moved so the symbol is found when the variable is eventually
             # inserted into the scope.
             unused_symbols = [n for n in self.scope.local_used_symbols \
-                              if self.scope.find(n) is None and n != mod_name]
+                              if self.scope.find(n) is None and n not in (mod_name, '__del__')]
             for s in unused_symbols:
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
@@ -2851,19 +2855,21 @@ class SemanticParser(BasicParser):
             free_func = self.scope.functions.get('__del__', None)
         elif init_func:
             syntactic_free_func_name = '__del__'
-            free_func_name = self.scope.get_new_name(syntactic_free_func_name, object_type = 'function')
+            free_func_name = self.scope.get_expected_name(syntactic_free_func_name)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
             import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
                                 if imp.source in self.d_parsers]
-            import_frees = [f if f.name in imp.target else f.clone(f.name) \
+            import_frees = [next(t.object for t in imp.target if t.name == f.name) \
                             for f,imp in zip(import_frees, pyccelised_imports) if f]
+            assert all(f.is_imported for f in import_frees)
 
             if deallocs or import_frees:
                 # If there is anything that needs deallocating when the module goes out of scope
                 # create a deallocation function
                 import_free_calls = [f() for f in import_frees if f is not None]
+
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
@@ -5531,23 +5537,22 @@ class SemanticParser(BasicParser):
                 targets.extend(container['imports'][source_target].target)
 
             if import_init:
-                old_name = import_init.name
+                old_name = f'{p.semantic_parser.ast.name}__{import_init.name}'
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_init, new_name))
 
-                if new_name != old_name:
-                    import_init = import_init.clone(old_name, is_imported = True)
-                    container['functions'][old_name] = import_init
+                import_init = import_init.clone(import_init.name, is_imported = True)
+                targets.append(AsName(import_init, new_name))
+                container['functions'][new_name] = import_init
 
                 result  = import_init()
 
             if import_free:
                 old_name = import_free.scope.get_python_name(import_free.name)
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_free, new_name))
 
-                if new_name != old_name:
-                    import_free = import_free.clone(new_name, is_imported = True)
+                import_free = import_free.clone(import_free.name, is_imported = True)
+                targets.append(AsName(import_free, new_name))
+                container['functions'][new_name] = import_free
 
             mod = p.semantic_parser.ast
 
