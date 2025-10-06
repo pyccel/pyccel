@@ -3435,12 +3435,20 @@ class SemanticParser(BasicParser):
 
                         # Save the import target that has been used
                         imp.define_target(AsName(rhs_obj, new_name))
+                        scope = self.scope
+                        source_mod = next(t.local_alias for t in imp.target if isinstance(t.object, Module))
+                        while source_mod not in scope.imports['imports']:
+                            scope = scope.parent_scope
+
                         if isinstance(rhs, FunctionCall):
-                            self.scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                            if isinstance(rhs_obj, PyccelFunctionDef):
+                                scope.imports['functions'][new_name] = rhs_obj
+                            else:
+                                scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
                         elif isinstance(rhs, ConstructorCall):
-                            self.scope.imports['classes'][new_name] = rhs_obj
+                            scope.imports['classes'][new_name] = rhs_obj
                         elif isinstance(rhs, Variable):
-                            self.scope.imports['variables'][new_name] = rhs
+                            scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
