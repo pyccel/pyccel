@@ -3431,35 +3431,22 @@ class SemanticParser(BasicParser):
                     if new_name is None:
                         new_name = self.scope.get_new_name(rhs_name)
 
+                        rhs_obj = first[rhs_name]
+
                         # Save the import target that has been used
-                        imp.define_target(AsName(first[rhs_name], PyccelSymbol(new_name)))
-                elif isinstance(rhs, FunctionCall):
-                    self.scope.imports['functions'][new_name] = first[rhs_name]
-                elif isinstance(rhs, ConstructorCall):
-                    self.scope.imports['classes'][new_name] = first[rhs_name]
-                elif isinstance(rhs, Variable):
-                    self.scope.imports['variables'][new_name] = rhs
+                        imp.define_target(AsName(rhs_obj, new_name))
+                        if isinstance(rhs, FunctionCall):
+                            self.scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                        elif isinstance(rhs, ConstructorCall):
+                            self.scope.imports['classes'][new_name] = rhs_obj
+                        elif isinstance(rhs, Variable):
+                            self.scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
-                    func  = first[rhs_name]
-                    if new_name != rhs_name:
-                        if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
-                            func  = func.clone(func.name, is_imported = True)
-                            self.scope.imports['functions'][new_name] = func
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_call = FunctionCall(func, args)
-                    current_user_nodes = expr.get_all_user_nodes()
-                    if len(current_user_nodes) == 1:
-                        syntactic_call.set_current_user_node(current_user_nodes[0])
-                    else:
-                        # If the DottedName has multiple users look for the relevant Assign
-                        # This happens if an Assign node was created to handle the expression
-                        # E.g. when the statement is found in a Return node.
-                        syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
-                    pyccel_stage.set_stage('semantic')
-                    return self._handle_function(syntactic_call, func, args)
+                    func  = self.scope.find(new_name)
+                    return self._handle_function(expr, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
