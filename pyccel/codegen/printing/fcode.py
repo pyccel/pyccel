@@ -3576,6 +3576,8 @@ class FCodePrinter(CodePrinter):
 
         if func.is_imported:
             f_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            f_name = self.scope.get_import_alias(expr.interface, 'functions')
 
         args   = expr.args
         func_result_variables = func.scope.collect_all_tuple_elements(func.results.var) \

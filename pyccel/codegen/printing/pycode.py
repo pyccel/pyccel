@@ -879,7 +879,12 @@ class PythonCodePrinter(CodePrinter):
         func = expr.funcdef
         if func in self._ignore_funcs:
             return ''
-        if expr.interface:
+
+        if func.is_imported:
+            func_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            func_name = self.scope.get_import_alias(expr.interface, 'functions')
+        elif expr.interface:
             func_name = expr.interface_name
         else:
             func_name = expr.func_name
