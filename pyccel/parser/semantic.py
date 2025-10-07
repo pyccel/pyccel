@@ -3440,11 +3440,10 @@ class SemanticParser(BasicParser):
                         while source_mod not in scope.imports['imports']:
                             scope = scope.parent_scope
 
-                        if isinstance(rhs, FunctionCall):
-                            if isinstance(rhs_obj, PyccelFunctionDef):
-                                scope.imports['functions'][new_name] = rhs_obj
-                            else:
-                                scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                        if isinstance(rhs_obj, PyccelFunctionDef):
+                            scope.imports['functions'][new_name] = rhs_obj
+                        elif isinstance(rhs, FunctionCall):
+                            scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
                         elif isinstance(rhs, ConstructorCall):
                             scope.imports['classes'][new_name] = rhs_obj
                         elif isinstance(rhs, Variable):
@@ -3454,6 +3453,7 @@ class SemanticParser(BasicParser):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
                     func  = self.scope.find(new_name)
+                    assert func is not None
                     return self._handle_function(expr, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
