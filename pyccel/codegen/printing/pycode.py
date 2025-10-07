@@ -889,9 +889,6 @@ class PythonCodePrinter(CodePrinter):
         else:
             func_name = expr.func_name
 
-        if func.is_imported:
-            func_name = self.scope.get_import_alias(func, 'functions')
-
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
