@@ -1539,6 +1539,8 @@ class SemanticParser(BasicParser):
                 scope = scope.parent_scope
             assert old_func is scope.imports['functions'].get(new_name)
             func = func.clone(new_name, is_imported=True)
+            m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            container[entry][t].set_current_user_node(m)
             func.set_current_user_node(mod)
             scope.imports['functions'][new_name] = func
 
@@ -3436,7 +3438,7 @@ class SemanticParser(BasicParser):
                         # Save the import target that has been used
                         imp.define_target(AsName(rhs_obj, new_name))
                         scope = self.scope
-                        source_mod = next(t.local_alias for t in imp.target if isinstance(t.object, Module))
+                        source_mod = _get_name(lhs)
                         while source_mod not in scope.imports['imports']:
                             scope = scope.parent_scope
 
@@ -3444,6 +3446,8 @@ class SemanticParser(BasicParser):
                             scope.imports['functions'][new_name] = rhs_obj
                         elif isinstance(rhs, FunctionCall):
                             scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                            m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                            scope.imports['functions'][new_name].set_current_user_node(m)
                         elif isinstance(rhs, ConstructorCall):
                             scope.imports['classes'][new_name] = rhs_obj
                         elif isinstance(rhs, Variable):
