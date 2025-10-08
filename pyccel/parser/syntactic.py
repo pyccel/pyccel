@@ -729,8 +729,10 @@ class SyntaxParser(BasicParser):
             imp = self._visit(name)
             if isinstance(imp, AsName):
                 source = AsName(self._treat_import_source(imp.object, 0), imp.local_alias)
+                self.scope.insert_symbol(imp.local_alias)
             else:
                 source = self._treat_import_source(imp, 0)
+                self.scope.insert_symbol(imp)
             import_line = Import(source)
             import_line.set_current_ast(stmt)
             self.insert_import(import_line)
