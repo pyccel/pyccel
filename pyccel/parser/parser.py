@@ -174,7 +174,6 @@ class Parser(object):
         parser             = SyntaxParser(self._filename, verbose = verbose,
                                             context_dict = self._context_dict)
         self.syntax_parser = parser
-        parser.ast        = parser.ast
 
         if d_parsers_by_filename is None:
             d_parsers_by_filename = {}
