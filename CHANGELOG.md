@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 -   Add support for positional arguments.
 -   Add support for keyword-only arguments.
 -   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
--   #2381 : Allow functions to be called from a function being translated via `epyccel`.
+-   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
