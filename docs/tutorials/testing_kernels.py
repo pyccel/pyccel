@@ -30,13 +30,13 @@ def midpoint_rule(nx : int, ny : int, x_start : float, x_end : float, y_start : 
 from pyccel import epyccel
 
 test_func = lambda x, y : exp(-(x**2 + y**2))
-compiled_integrator = epyccel(integrate_grid)
+compiled_integrator = epyccel(midpoint_rule)
 
 # END_COMPILE
 
 # TEST
 
-# area = integrate_grid(1000, 1000, -5., 5., -5., 5.)
+# area = midpoint_rule(1000, 1000, -5., 5., -5., 5.)
 area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
 print(area)
 
@@ -45,8 +45,8 @@ print(area)
 # MULTIPLE_TESTS
 
 test_func = lambda x, y : exp(-(x**2 + y**2))
-integrate_test_1 = epyccel(integrate_grid)
+integrate_test_1 = epyccel(midpoint_rule)
 test_func = lambda x, y : exp(-(x**2 + y**2))
-integrate_test_2 = epyccel(integrate_grid)
+integrate_test_2 = epyccel(midpoint_rule)
 
 # END_MULTIPLE_TESTS
