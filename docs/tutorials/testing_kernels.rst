@@ -27,8 +27,8 @@ General integration routine
 .. literalinclude:: ./testing_kernels.py
    :language: python
    :linenos:
-   :start-after: # INTEGRATE_GRID
-   :end-before: # END_INTEGRATE_GRID
+   :start-after: # MIDPOINT_RULE
+   :end-before: # END_MIDPOINT_RULE
 
 Here we have tested the integration of multiple expressions (seen in comments) but we can see that (especially in an interactive environment) it is simpler to use a Python function to specify what should be integrated during a testing phase.
 

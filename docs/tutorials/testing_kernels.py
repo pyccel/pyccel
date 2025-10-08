@@ -3,7 +3,7 @@
 #pylint: disable=wrong-import-order, wrong-import-position, unnecessary-lambda-assignment
 from numpy import linspace, exp
 
-# INTEGRATE_GRID
+# MIDPOINT_RULE
 
 def midpoint_rule(nx : int, ny : int, x_start : float, x_end : float, y_start : float, y_end : float):
     """
@@ -23,7 +23,7 @@ def midpoint_rule(nx : int, ny : int, x_start : float, x_end : float, y_start : 
             result += test_func(xs[i], ys[j]) * dx * dy
     return result
 
-# END_INTEGRATE_GRID
+# END_MIDPOINT_RULE
 
 # COMPILE
 
@@ -42,7 +42,8 @@ assert midpoint_rule(*args) == compiled_integrator(*args)
 import timeit
 midpoint_time = timeit.timeit('midpoint_rule(*args)', number=10, globals=globals())
 accelerated_time = timeit.timeit('compiled_integrator(*args)', number=10, globals=globals())
-print("Speed up : ", midpoint_time/accelerated_time)
+speedup = midpoint_time / accelerated_time
+print(f"Speed up : {speedup:.6g}")
 
 # END_TEST
 
