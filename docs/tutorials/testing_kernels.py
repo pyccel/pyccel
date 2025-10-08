@@ -5,9 +5,9 @@ from numpy import linspace, exp
 
 # INTEGRATE_GRID
 
-def integrate_grid(nx : int, ny : int, x_start : float, x_end : float, y_start : float, y_end : float):
+def midpoint_rule(nx : int, ny : int, x_start : float, x_end : float, y_start : float, y_end : float):
     """
-    Integrate the function test_func.
+    Integrate the function test_func using the midpoint rule.
     """
     dx = (x_end - x_start) / nx
     dy = (y_end - y_start) / ny
