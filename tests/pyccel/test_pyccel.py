@@ -1108,12 +1108,6 @@ def test_function(language):
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
@@ -1317,3 +1311,30 @@ def test_varkwargs():
     pyccel_test("scripts/runtest_varkwargs.py",
                 language = 'python',
                 output_dtype = str)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+def test_inline_using_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import.py",
+                dependencies = ["scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+def test_inline_using_import_2(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import_2.py",
+                dependencies = ["scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+def test_inline_using_named_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_named_import.py",
+                dependencies = ["scripts/inlining/inline_using_named_import.py"],
+                language = language,
+                output_dtype = float)
