@@ -128,7 +128,7 @@ class SyntaxParser(BasicParser):
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, context_dict, **kwargs):
+    def __init__(self, inputs, *, context_dict = None, **kwargs):
         BasicParser.__init__(self, **kwargs)
 
         # check if inputs is a file

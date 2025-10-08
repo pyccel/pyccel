@@ -51,7 +51,7 @@ def test_parse(f):
     with open(f) as infile:
         orig = infile.read().strip()
 
-    pyccel = SyntaxParser(f, verbose=0, context_dict={})
+    pyccel = SyntaxParser(f, verbose=0)
     unparser = Unparser()
     copy = unparser.visit(pyccel.fst)
 
