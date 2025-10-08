@@ -49,9 +49,9 @@ print(f"Speed up : {speedup:.6g}")
 
 # MULTIPLE_TESTS
 
-test_func = lambda x, y : exp(-(x**2 + y**2))
+test_func = lambda x, y : exp(-(x**3 + y**2))
 integrate_test_1 = epyccel(midpoint_rule)
-test_func = lambda x, y : exp(-(x**2 + y**2))
+test_func = lambda x, y : exp(-(x**2 + y**3))
 integrate_test_2 = epyccel(midpoint_rule)
 
 # END_MULTIPLE_TESTS
