@@ -36,9 +36,10 @@ compiled_integrator = epyccel(midpoint_rule)
 
 # TEST
 
-# area = midpoint_rule(1000, 1000, -5., 5., -5., 5.)
 area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
 print(area)
+assert midpoint_rule(1000, 1000, -5., 5., -5., 5.) == \
+        compiled_integrator(1000, 1000, -5., 5., -5., 5.)
 
 # END_TEST
 
