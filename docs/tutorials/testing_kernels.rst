@@ -30,13 +30,13 @@ General integration routine
    :start-after: # INTEGRATE_GRID
    :end-before: # END_INTEGRATE_GRID
 
-Here we have tested the integration of multiple functions but we can see that (especially in an interactive environment) it is simpler to use a Python function to specify what should be integrated.
+Here we have tested the integration of multiple expressions (seen in comments) but we can see that (especially in an interactive environment) it is simpler to use a Python function to specify what should be integrated during a testing phase.
 
 ---------------------
 Compiling with Pyccel
 ---------------------
 
-If we define a local lambda with the expected name (`test_func`) we can now use `epyccel` to get a compiled version of the general integration routine, specific to this test kernel:
+If we define a free function or a lambda function with the expected name (`test_func`) we can now use `epyccel` to get a compiled version of the general integration routine, specific to this test kernel:
 
 .. literalinclude:: ./testing_kernels.py
    :language: python
@@ -60,7 +60,7 @@ The compiled method can be used exactly as the original method was used:
 Generated code
 --------------
 
-Using a lambda function for the kernel ensures that the method is inlined. For example the Pyccel-generated translation created by the call above is:
+Using a lambda function (or a function with the [`@inline` decorator](./decorators#inline)) for the kernel ensures that the method is inlined. For example the Pyccel-generated translation created by the call above is:
 
 .. code-block:: fortran
    :linenos:
@@ -68,9 +68,6 @@ Using a lambda function for the kernel ensures that the method is inlined. For e
     result_0001 = 0.0_f64
     do i = 0_i64, nx - 1_i64
       do j = 0_i64, ny - 1_i64
-        !result += exp(-(xs[i]**2 + ys[j]**2)) * dx * dy
-        !result += exp(-(xs[i]**3 + ys[j]**2)) * dx * dy
-        !result += exp(-(xs[i]**2 + ys[j]**3)) * dx * dy
         Dummy_0000 = exp(-(xs(i) ** 2_i64 + ys(j) ** 2_i64))
         result_0001 = result_0001 + Dummy_0000 * dx * dy
       end do
