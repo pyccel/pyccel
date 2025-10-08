@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import sin
 from inline_using_import import sin_2
 
