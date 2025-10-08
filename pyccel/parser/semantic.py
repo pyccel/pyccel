@@ -5138,7 +5138,7 @@ class SemanticParser(BasicParser):
                         if self.scope.symbol_in_use(v):
                             new_v = self.scope.get_new_name(v)
                             replace_map[v] = new_v
-                        source = self.scope.find(v, 'imports').source
+                        source = mod.scope.find(v, 'imports').source
                         mod_import = source if source == new_v else AsName(source, new_v)
                         imports.append(Import(mod_import))
                     else:
