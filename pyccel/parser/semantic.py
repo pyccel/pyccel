@@ -2338,6 +2338,11 @@ class SemanticParser(BasicParser):
         elif isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
+        if len(args) == 0:
+            if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
+                errors.report("Unrecognised type", severity='fatal', symbol=expr)
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
+
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
             order = None if rank < 2 else 'C'
