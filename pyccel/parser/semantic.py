@@ -5115,6 +5115,7 @@ class SemanticParser(BasicParser):
         replace_map = {}
 
         pyccel_stage.set_stage('syntactic')
+        imports = list(expr.imports)
         global_scope_import_targets = {}
         if expr.is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
@@ -5131,14 +5132,23 @@ class SemanticParser(BasicParser):
                         if v in import_type:
                             imported_obj = import_type[v]
                             break
-                    if imported_obj:
-                        import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
-                    if self.scope.symbol_in_use(v):
-                        new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
-                        replace_map[v] = new_v
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                    if isinstance(imported_obj, Module):
+                        # Insert an imported module as a new Import object
+                        import_mod_name = imported_obj.name
+                        new_v = v
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                            replace_map[v] = new_v
+                        imports.append(Import(AsName(import_mod_name, new_v)))
                     else:
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(v)
+                        if imported_obj:
+                            import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                            replace_map[v] = new_v
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                        else:
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(v)
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
@@ -5208,7 +5218,6 @@ class SemanticParser(BasicParser):
                           else EmptyNode() for r in returns]
         expr.body.substitute(returns, replace_return, invalidate = False)
 
-        imports = list(expr.imports)
         imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
         pyccel_stage.set_stage('semantic')
 
