@@ -757,7 +757,10 @@ class SyntaxParser(BasicParser):
                               severity='error')
 
             targets.append(s)
-            self.scope.insert_symbol(s)
+            if isinstance(s, AsName):
+                self.scope.insert_symbol(s.local_alias)
+            else:
+                self.scope.insert_symbol(s)
 
         expr = Import(source, targets)
         self.insert_import(expr)
