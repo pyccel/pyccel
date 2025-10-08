@@ -36,14 +36,12 @@ compiled_integrator = epyccel(midpoint_rule)
 
 # TEST
 
-import timeit
+args = (1000, 1000, -5., 5., -5., 5.)
+assert midpoint_rule(*args) == compiled_integrator(*args)
 
-area = compiled_integrator(1000, 1000, -5., 5., -5., 5.)
-print(area)
-assert midpoint_rule(1000, 1000, -5., 5., -5., 5.) == \
-        compiled_integrator(1000, 1000, -5., 5., -5., 5.)
-midpoint_time = timeit.timeit('midpoint_rule(1000, 1000, -5., 5., -5., 5.)', number=10, globals=globals())
-accelerated_time = timeit.timeit('compiled_integrator(1000, 1000, -5., 5., -5., 5.)', number=10, globals=globals())
+import timeit
+midpoint_time = timeit.timeit('midpoint_rule(*args)', number=10, globals=globals())
+accelerated_time = timeit.timeit('compiled_integrator(*args)', number=10, globals=globals())
 print("Speed up : ", midpoint_time/accelerated_time)
 
 # END_TEST
