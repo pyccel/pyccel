@@ -920,8 +920,7 @@ class PythonCodePrinter(CodePrinter):
 
         prefix = ''
         if mod_target:
-            assert len(mod_target) == 1
-            prefix = f'import {source} as {mod_target[0].local_alias}\n'
+            prefix = ''.join(f'import {t.name} as {t.local_alias}\n' for t in mod_target)
 
         if target:
             if source in import_object_swap:
