@@ -30,7 +30,7 @@ General integration routine
    :start-after: # INTEGRATE_GRID
    :end-before: # END_INTEGRATE_GRID
 
-Here we have tested the integration of multiple functions but we can see that (especially in an interactive environment) it is simpler to use a function to specify the function.
+Here we have tested the integration of multiple functions but we can see that (especially in an interactive environment) it is simpler to use a Python function to specify what should be integrated.
 
 ---------------------
 Compiling with Pyccel
@@ -77,7 +77,7 @@ Using a lambda function for the kernel ensures that the method is inlined. For e
     end do
 
 This makes the resulting code faster but it means that `epyccel` will need to be called again to get an updated version if the lambda function `test_func` is modified.
-On the other hand this means that both versions co-exist and are usable simultaneously:
+On the other hand this means that multiple versions of the accelerated function co-exist and are usable simultaneously:
 
 .. literalinclude:: ./testing_kernels.py
    :language: python
