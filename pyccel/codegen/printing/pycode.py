@@ -920,7 +920,11 @@ class PythonCodePrinter(CodePrinter):
 
         prefix = ''
         if mod_target:
-            prefix = ''.join(f'import {t.name} as {t.local_alias}\n' for t in mod_target)
+            if source in pyccel_builtin_import_registry:
+                prefix = ''.join(f'import {t.name} as {t.local_alias}\n' for t in mod_target)
+            else:
+                assert len(mod_target) == 1
+                prefix = f'import {source} as {mod_target[0].local_alias}\n'
 
         if target:
             if source in import_object_swap:
