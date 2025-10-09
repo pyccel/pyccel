@@ -60,7 +60,6 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
@@ -404,14 +403,12 @@ class SyntaxParser(BasicParser):
                 name   = str(expr.source)
                 source = name
 
-            if not recognised_source(source):
-                container[name] = []
+            container[name] = []
         else:
             source = str(expr.source)
-            if not recognised_source(source):
-                if not source in container.keys():
-                    container[source] = []
-                container[source] += expr.target
+            if not source in container.keys():
+                container[source] = []
+            container[source] += expr.target
 
     #====================================================
     #                 _visit functions
@@ -992,6 +989,8 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
+        targets = [t for target_list in self.scope.imports['imports'].values() for t in target_list]
+
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
@@ -1004,7 +1003,7 @@ class SyntaxParser(BasicParser):
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
-                                        forbidden_names = argument_names,
+                                        forbidden_names = argument_names.union(targets),
                                         suggestion = 'result')
 
             if result_annotation:
