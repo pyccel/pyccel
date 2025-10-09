@@ -398,10 +398,8 @@ class SyntaxParser(BasicParser):
         if len(expr.target) == 0:
             if isinstance(expr.source, AsName):
                 name   = expr.source
-                source = expr.source.name
             else:
                 name   = str(expr.source)
-                source = name
 
             container[name] = []
         else:

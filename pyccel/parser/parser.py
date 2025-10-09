@@ -263,7 +263,7 @@ class Parser(object):
             The updated dictionary of parsed sons.
         """
 
-        imports = [i for i in self.imports if not recognised_source(i)]
+        imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
