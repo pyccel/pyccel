@@ -2211,6 +2211,7 @@ class FCodePrinter(CodePrinter):
                     var_code = self._print(expr.variable)
                     return f'deallocate({var_code})\n'
             elif isinstance(class_type, HomogeneousListType):
+                var_code = self._print(expr.variable)
                 return f'call {var_code} % clear()\n'
         if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
             # Transpose indices because of Fortran column-major ordering
