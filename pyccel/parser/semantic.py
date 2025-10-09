@@ -1907,7 +1907,7 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
                 if isinstance(var, Constant):
-                    errors.report(f"Attempting to overwrite constant variable {lhs}",
+                    errors.report(f"Attempting to overwrite the constant {lhs}",
                                   bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                                   severity='error')
 
