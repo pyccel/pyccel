@@ -51,6 +51,10 @@ def slice_assign():
     a = [1,2,3,4]
     b = a[1:-1]
 
+def list_return():
+    a = [1,2,3]
+    return a
+
 if __name__ == '__main__':
     create_list()
     create_set()
@@ -65,3 +69,6 @@ if __name__ == '__main__':
     conditional_set(False)
     conditional_dict(False)
     slice_assign()
+
+    tmp = list_return()
+    tmp = list_return()
