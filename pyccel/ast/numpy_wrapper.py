@@ -155,7 +155,8 @@ get_strides_and_shape_from_numpy_array = FunctionDef(
         arguments = [
             FunctionDefArgument(Variable(PyccelPyObject(), 'arr', memory_handling='alias')),
             FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'shape', memory_handling='alias')),
-            FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'strides', memory_handling='alias'))
+            FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'strides', memory_handling='alias')),
+            FunctionDefArgument(Variable(PythonNativeBool(), 'c_order'))
             ],
         body = [])
 

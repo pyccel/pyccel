@@ -9,7 +9,7 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple, PythonDict
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
@@ -215,13 +215,18 @@ class PythonCodePrinter(CodePrinter):
                 type_annotation = self._print(obj.annotation)
                 return f"'{type_annotation}'"
             else:
+                if obj.is_vararg:
+                    return self._get_type_annotation(obj.var[0])
+                if obj.is_kwarg:
+                    type_annotation = self._print(obj.var.class_type.value_type)
+                    return f"'{type_annotation}'"
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, FunctionDefResult):
             if obj.var is Nil():
                 return ''
             else:
                 return self._get_type_annotation(obj.var)
-        elif isinstance(obj, Variable):
+        elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
@@ -251,6 +256,13 @@ class PythonCodePrinter(CodePrinter):
         interface = func.get_direct_user_nodes(lambda x: isinstance(x, Interface))
         if func.is_inline:
             return self._print(func)
+
+        low_level_name = func.name
+        name = func.scope.get_python_name(interface[0].name if interface else func.name)
+        wrapping = f"@low_level('{low_level_name}')\n"
+        self.add_import(Import('pyccel.decorators',
+                               [AsName(FunctionDef('low_level', (), ()), 'low_level')]))
+
         if interface:
             self.add_import(Import('typing', [AsName(FunctionDef('overload', (), ()), 'overload')]))
             overload = '@overload\n'
@@ -258,16 +270,22 @@ class PythonCodePrinter(CodePrinter):
             overload = ''
 
         self.set_scope(func.scope)
-        args = ', '.join(self._print(a) for a in func.arguments)
+        arguments = func.arguments
+        arg_code = [self._print(i) for i in arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
+        args   = ', '.join(arg_code)
         result = func.results
         body = '...'
         if result:
             res = f' -> {self._get_type_annotation(result.var)}'
         else:
             res = ' -> None'
-        name = self.scope.get_python_name(interface[0].name if interface else func.name)
         self.exit_scope()
-        return ''.join((overload, f"def {name}({args}){res}:\n", self._indent_codestring(body)))
+        return ''.join((wrapping, overload, f"def {name}({args}){res}:\n",
+                        self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
         """
@@ -431,6 +449,11 @@ class PythonCodePrinter(CodePrinter):
             name = self._print(expr.name)
         default = ''
 
+        if expr.is_vararg:
+            name = f'*{name}'
+        if expr.is_kwarg:
+            name = f'**{name}'
+
         if expr.annotation and not self._in_header:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:
@@ -446,7 +469,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
-            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+            if expr.keyword.startswith('**'):
+                val = expr.value
+                assert isinstance(val, PythonDict)
+                assert all(isinstance(k, LiteralString) for k in val.keys)
+                keys = [k.python_value for k in val.keys]
+                args = [self._print(v) for v in val.values]
+                return ', '.join(f'{k} = {a}' for k,a in zip(keys, args))
+            elif expr.keyword.startswith('*'):
+                val = self._print(expr.value)
+                if val.startswith('(') and val.endswith(')'):
+                    return val[1:-1].strip(',')
+                else:
+                    return f'*{val}'
+            else:
+                val = self._print(expr.value)
+                return f'{expr.keyword} = {val}'
         else:
             return self._print(expr.value)
 
@@ -461,6 +499,8 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = ','.join(self._print(i) for i in indices)
+            if len(indices) == 0:
+                indices = '()'
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -548,7 +588,14 @@ class PythonCodePrinter(CodePrinter):
         functions  = ''.join(self._print(f) for f in functions)
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
-        args    = ', '.join(self._print(i) for i in expr.arguments)
+
+        arguments = expr.arguments
+        arg_code = [self._print(i) for i in arguments]
+        if arguments and arguments[0].is_posonly:
+            arg_code.insert(next((i for i, a in enumerate(arguments) if not a.is_posonly), len(arg_code)), '/')
+        if arguments and any(a.is_kwonly for a in arguments) and all(not a.is_vararg for a in arguments):
+            arg_code.insert(next((i for i, a in enumerate(arguments) if a.is_kwonly), len(arg_code)), '*')
+        args = ', '.join(arg_code)
 
         imports    = self._indent_codestring(imports)
         functions  = self._indent_codestring(functions)
@@ -620,7 +667,7 @@ class PythonCodePrinter(CodePrinter):
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
-                if len(elem_code) < 2:
+                if len(elem_code) == 1:
                     return_expr += ','
                 return f'({return_expr})'
             else:
@@ -1046,14 +1093,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         class_type = expr.variable.class_type
+        if isinstance(class_type, HomogeneousTupleType) and expr.shape[0] == 0:
+            var = self._print(expr.variable)
+            return f'{var} = ()\n'
         if expr.alloc_type == 'reserve':
             var = self._print(expr.variable)
             if isinstance(class_type, HomogeneousSetType):
                 return f'{var} = set()\n'
             elif isinstance(class_type, HomogeneousListType):
-                return f'{var} = list()\n'
+                return f'{var} = []\n'
             elif isinstance(class_type, DictType):
-                return f'{var} = dict()\n'
+                return f'{var} = {{}}\n'
 
         return ''
 
@@ -1393,13 +1443,17 @@ class PythonCodePrinter(CodePrinter):
         type_var_declarations = self._get_type_var_declarations()
 
         init_func = mod.init_func
-        var_decl = '\n'.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
+        var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
-        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs \
+        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs \
                 if f not in (mod.init_func, mod.free_func))
+        funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
         classes = ''
         for classDef in mod.classes:
-            classes += f"class {classDef.name}:\n"
+            ll_name = classDef.name
+            py_name = classDef.scope.get_python_name(ll_name)
+            classes += f"@low_level('{ll_name}')\n"
+            classes += f"class {py_name}:\n"
             class_body  = '\n'.join(f"{classDef.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}"
                                     for v in classDef.attributes) + '\n\n'
             for method in classDef.methods:
@@ -1426,7 +1480,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             init_body = ''
 
-        return '\n'.join((imports, type_var_declarations, var_decl, classes, funcs, init_body))
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+                         if section)
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
@@ -1621,7 +1676,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_InhomogeneousTupleType(self, expr):
         args = ', '.join(self._print(t) for t in expr)
-        return f'tuple[{args}]'
+        if args:
+            return f'tuple[{args}]'
+        else:
+            return 'tuple[()]'
 
     def _print_HomogeneousTupleType(self, expr):
         return f'tuple[{self._print(expr.element_type)}, ...]'

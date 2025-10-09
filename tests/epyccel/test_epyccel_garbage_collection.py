@@ -2,6 +2,7 @@
 import gc
 import sys
 import numpy as np
+import pytest
 from pyccel import epyccel
 
 def test_return_pointer(language):
@@ -314,3 +315,16 @@ def test_setter(language):
 
     assert ref_count_target1 == start_ref_count_target
     assert ref_count_target2 == start_ref_count_target
+
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason="PEP-0683 introduced immortal objects")
+def test_return_bool(language):
+    def get_true():
+        return True
+
+    f = epyccel(get_true, language=language)
+
+    a = True
+    ref_count_1 = sys.getrefcount(a)
+    b = f()
+    ref_count_2 = sys.getrefcount(b)
+    assert ref_count_1 != ref_count_2

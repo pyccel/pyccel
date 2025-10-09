@@ -1,3 +1,4 @@
+# Pyccel does not support interface constructor
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class MyClass:

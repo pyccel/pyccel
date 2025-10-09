@@ -635,9 +635,6 @@ class IndexedElement(TypedAstNode):
 
     def __init__(self, base, *indices):
 
-        if not indices:
-            raise IndexError('Indexed needs at least one index.')
-
         self._label = base
         self._shape = None
         if pyccel_stage == 'syntactic':

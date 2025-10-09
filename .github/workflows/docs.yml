@@ -139,10 +139,21 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'compare/docs/build/html'
+      - name: Check tutorial code
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        id: tutorial_check
+        run: |
+          FILES_TO_TEST=$(find tutorials/ -name '*.py')
+          for f in ${FILES_TO_TEST};
+          do
+            python3 $f
+          done
+        shell: bash
+        working-directory: ./compare/docs
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
-          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }}
+          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }} ${{ steps.tutorial_check.outcome }}
         shell: bash -l {0}
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'

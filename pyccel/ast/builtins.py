@@ -583,20 +583,27 @@ class PythonTuple(TypedAstNode):
     prefer_inhomogeneous : bool, default=False
         A boolean that can be used to ensure that the tuple is stocked as an
         inhomogeneous object even if it could be homogeneous.
+    class_type : PyccelType, optional
+        The final type of the tuple. This is necessary to create a printable
+        empty tuple. Otherwise it is not used.
     """
     __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
     _iterable = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args, prefer_inhomogeneous = False):
+    def __init__(self, *args, prefer_inhomogeneous = False, class_type = None):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
-            self._class_type = HomogeneousTupleType.get_new(GenericType())
+            if class_type is None:
+                self._class_type = InhomogeneousTupleType()
+                self._is_homogeneous = False
+            else:
+                self._class_type = class_type
+                self._is_homogeneous = isinstance(class_type, HomogeneousTupleType)
             self._shape = (LiteralInteger(0),)
-            self._is_homogeneous = False
             return
 
         # Get possible types of elements

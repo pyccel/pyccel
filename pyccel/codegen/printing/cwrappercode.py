@@ -283,6 +283,7 @@ class CWrapperCodePrinter(CCodePrinter):
         API_var = mod.variables[0]
 
         macro_defs = ''
+        type_declarations = ''
         classes = []
         for i,c in enumerate(mod.classes):
             struct_name = c.struct_name
@@ -292,6 +293,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     "    PyObject_HEAD\n"
                     + attributes +
                     "};\n")
+            type_declarations += f'static PyTypeObject {c.type_name};\n'
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces) + \
                           tuple(getset for p in c.properties for getset in (p.getter, p.setter) if getset) + \
@@ -307,18 +309,12 @@ class CWrapperCodePrinter(CCodePrinter):
         self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
-        return (f"#ifndef {header_guard}\n \
-                #define {header_guard}\n\n \
-                {imports}\n \
-                {class_code}\n \
-                #ifdef {header_id}\n\n \
-                {function_signatures}\n \
-                #else\n\n \
-                {static_import_decs}\n \
-                {macro_defs}\n \
-                {import_func}\n \
-                #endif\n \
-                #endif // {header_guard}\n")
+        start = f"#ifndef {header_guard}\n#define {header_guard}\n"
+        end = f"#endif\n#endif // {header_guard}\n"
+        parts = (start, imports, class_code, f"#ifdef {header_id}\n",
+                 type_declarations, function_signatures, "#else\n",
+                 static_import_decs, macro_defs, import_func, end)
+        return '\n'.join((p for p in parts if p))
 
     def _print_PyModule(self, expr):
         scope = expr.scope
@@ -596,8 +592,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyTuple_Pack(self, expr):
         args = expr.args
         n = len(args)
-        args_code = ', '.join(self._print(a) for a in args)
-        return f'(*PyTuple_Pack( {n}, {args_code} ))'
+        if n:
+            args_code = ', '.join(self._print(a) for a in args)
+            return f'(*PyTuple_Pack( {n}, {args_code} ))'
+        else:
+            return f'(*PyTuple_Pack( {n} ))'
 
     def _print_PyList_Clear(self, expr):
         list_code = self._print(ObjectAddress(expr.list_obj))

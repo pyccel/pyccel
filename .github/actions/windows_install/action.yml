@@ -115,3 +115,12 @@ runs:
         popd
         echo "MS MPI set up for use"
       shell: powershell
+    - name: Add CC and FC to environment
+      run: |
+        $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
+        $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
+        echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
+        echo "FC=$GFORTRAN_EXE" >> $env:GITHUB_ENV
+        echo "CC=$GCC_EXE"
+        echo "FC=$GFORTRAN_EXE"
+      shell: powershell

@@ -1,3 +1,4 @@
+# Can't find method translated in class Point
 # pylint: disable=missing-class-docstring,  missing-function-docstring, missing-module-docstring
 
 class Point(object):

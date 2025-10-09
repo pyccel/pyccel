@@ -295,7 +295,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
@@ -630,7 +630,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
@@ -734,6 +734,7 @@ Pyccel supports a subset of magic methods that are listed here:
 -   `__iand__`
 -   `__ior__`
 -   `__len__`
+-   `__getitem__`
 
 Additionally the following methods are supported in the translation but are lacking the wrapper support that would allow them to be called from Python code:
 
