@@ -3,11 +3,12 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+import ast
+import inspect
 from itertools import chain
 import os
 import re
-
-import ast
+import types
 import warnings
 
 from textx.exceptions import TextXSyntaxError
@@ -119,11 +120,15 @@ class SyntaxParser(BasicParser):
         A string containing code or containing the name of a file whose code
         should be read.
 
+    context_dict : dict, optional
+        A dictionary describing any variables in the context where the translated
+        objected was defined.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, **kwargs):
+    def __init__(self, inputs, *, context_dict = None, **kwargs):
         BasicParser.__init__(self, **kwargs)
 
         # check if inputs is a file
@@ -141,6 +146,9 @@ class SyntaxParser(BasicParser):
 
         self._code    = code
         self._context = []
+
+        # provides information about the calling context to collect constants and functions
+        self._context_dict = context_dict or {}
 
         tree                = extend_tree(code)
         self._fst           = tree
@@ -1134,19 +1142,26 @@ class SyntaxParser(BasicParser):
 
         if isinstance(func, PyccelSymbol):
             if func == "print":
-                func = PythonPrint(PythonTuple(*args))
+                func_call = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(func, args)
+                if func in self._context_dict and isinstance(self._context_dict[func], types.FunctionType) \
+                        and not self.scope.symbol_in_use(func):
+                    code_lines, _ = inspect.getsourcelines(self._context_dict[func])
+                    indent_length = len(code_lines[0])-len(code_lines[0].lstrip())
+                    fst = extend_tree(''.join(l[indent_length:] for l in code_lines))
+                    assert len(fst.body) == 1
+                    self._context_dict[func] = self._visit(fst.body[0])
+                func_call = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
             for n in func.name:
                 if isinstance(n, PyccelAstNode):
                     n.clear_syntactic_user_nodes()
-            func = DottedName(*func.name[:-1], func_attr)
+            func_call = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(f' Unknown function type {type(func)}')
 
-        return func
+        return func_call
 
     def _visit_keyword(self, stmt):
 
