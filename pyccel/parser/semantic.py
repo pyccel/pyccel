@@ -1852,7 +1852,7 @@ class SemanticParser(BasicParser):
                                     new_args.extend(self.scope.collect_tuple_element(v) for v in a if v.rank>0)
                                 elif a.rank > 0:
                                     new_expressions.append(Allocate(a,
-                                        shape=a.alloc_shape, status=status))
+                                        shape=a.alloc_shape, status=status, alloc_type=alloc_type))
                             args = new_args
                             new_args = []
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
