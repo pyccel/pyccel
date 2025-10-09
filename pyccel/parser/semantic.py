@@ -2065,7 +2065,7 @@ class SemanticParser(BasicParser):
             if len(previous_allocations) == 0:
                 var.set_init_shape(d_var['shape'])
 
-            if d_var['shape'] != shape or (shape and isinstance(rhs, FunctionCall)):
+            if d_var['shape'] != shape or (shape and isinstance(rhs, (FunctionCall, PyccelFunction))):
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
@@ -2081,7 +2081,7 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
-                    alloc_type = 'function' if isinstance(rhs, FunctionCall) or arr_in_multirets else None
+                    alloc_type = 'function' if isinstance(rhs, (FunctionCall, PyccelFunction)) or arr_in_multirets else None
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if alloc_type is None:
                             if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
