@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 -   #2452 : Fix default Pyccel compiler on command line to use `PYCCEL_DEFAULT_COMPILER` environment variable.
 -   #2447 : Fix returning an empty tuple.
 -   #2456 : Fix Python reference counting when returning a boolean from a function.
+-   #2292 : Fix memory leak when memory is allocated in a function.
 -   Rename `main` function when translating to C.
 
 ### Changed
