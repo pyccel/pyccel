@@ -1948,6 +1948,8 @@ class CCodePrinter(CodePrinter):
                 free_code += ''.join(("{\n", self._print(Deallocate(variable)), "}\n"))
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
+            if expr.alloc_type == 'function':
+                return free_code
 
             tot_shape = self._print(functools.reduce(
                 lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))

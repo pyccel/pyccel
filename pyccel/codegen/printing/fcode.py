@@ -2197,6 +2197,21 @@ class FCodePrinter(CodePrinter):
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
         class_type = expr.variable.class_type
+        if expr.alloc_type == 'function':
+            if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+                if expr.status == 'unallocated':
+                    return ''
+                elif expr.status == 'unknown':
+                    var_code = self._print(expr.variable)
+                    return (f'if (allocated({var_code})) then\n'
+                            f'  deallocate({var_code})\n'
+                             'end if\n')
+
+                elif expr.status == 'allocated':
+                    var_code = self._print(expr.variable)
+                    return f'deallocate({var_code})\n'
+            elif isinstance(class_type, HomogeneousListType):
+                return f'call {var_code} % clear()\n'
         if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
             # Transpose indices because of Fortran column-major ordering
             if expr.variable.rank == 0:
