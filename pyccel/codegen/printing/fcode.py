@@ -83,7 +83,7 @@ from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOp
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import Variable, IndexedElement, DottedName, Constant
+from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
 from pyccel.parser.scope import Scope
 
@@ -2566,10 +2566,6 @@ class FCodePrinter(CodePrinter):
         code = ''
         if expr.stmt:
             code += self._print(expr.stmt)
-
-        val = expr.expr
-        if isinstance(val, Constant):
-            code += f'{self._print_Variable(val)} = {self._print(val)}\n'
         code +='return\n'
         return code
 
