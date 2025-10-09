@@ -1826,7 +1826,7 @@ class SemanticParser(BasicParser):
                                             and not getattr(rhs.funcdef, 'is_elemental', False) and \
                                             not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
                                             isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
-                if lhs.on_heap and not array_declared_in_function:
+                if lhs.on_heap:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1837,6 +1837,10 @@ class SemanticParser(BasicParser):
                     else:
                         # Array defined outside of a loop will be allocated only once
                         status='unallocated'
+
+                    alloc_type = None
+                    if array_declared_in_function:
+                        alloc_type = 'function'
 
                     # Create Allocate node
                     if isinstance(lhs.class_type, InhomogeneousTupleType):
@@ -1852,15 +1856,16 @@ class SemanticParser(BasicParser):
                             args = new_args
                             new_args = []
                     elif isinstance(lhs.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
-                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
-                            alloc_type = 'init'
-                        elif isinstance(rhs, (IndexedElement, Duplicate)):
-                            alloc_type = 'resize'
-                        else:
-                            alloc_type = 'reserve'
+                        if alloc_type is None:
+                            if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                                alloc_type = 'init'
+                            elif isinstance(rhs, (IndexedElement, Duplicate)):
+                                alloc_type = 'resize'
+                            else:
+                                alloc_type = 'reserve'
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                     else:
-                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status))
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, status=status, alloc_type=alloc_type))
                 # ...
 
                 # ...
@@ -1911,7 +1916,7 @@ class SemanticParser(BasicParser):
                 if isinstance(var, DottedVariable):
                     var = next((a for a in var.lhs.cls_base.attributes if var == a), var)
 
-                self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs)
+                self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs, arr_in_multirets)
 
                 lhs = var
         else:
@@ -1920,7 +1925,7 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _ensure_inferred_type_matches_existing(self, class_type, d_var, var, is_augassign, new_expressions, rhs):
+    def _ensure_inferred_type_matches_existing(self, class_type, d_var, var, is_augassign, new_expressions, rhs, arr_in_multirets):
         """
         Ensure that the inferred type matches the existing variable.
 
@@ -1945,6 +1950,9 @@ class SemanticParser(BasicParser):
         rhs : TypedAstNode
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
+        arr_in_multirets : bool, default: False
+            If True, the variable that will be created is an array
+            in multi-values return, false otherwise.
         """
 
         # TODO improve check type compatibility
@@ -1976,7 +1984,8 @@ class SemanticParser(BasicParser):
 
         elif not is_augassign and not var.is_alias and var.rank > 0 and \
                 isinstance(rhs, (Variable, IndexedElement)) and \
-                not isinstance(var.class_type, (StringType, TupleType)):
+                not isinstance(var.class_type, (StringType, TupleType)) and \
+                not arr_in_multirets:
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
@@ -2008,7 +2017,7 @@ class SemanticParser(BasicParser):
                 if d_var['shape'][0] == var.shape[0]:
                     rhs_elem = self.scope.collect_tuple_element(var[0])
                     self._ensure_inferred_type_matches_existing(class_type.element_type,
-                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs)
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs, arr_in_multirets)
                     raise_error = False
                 else:
                     raise_error = True
@@ -2017,7 +2026,8 @@ class SemanticParser(BasicParser):
                 for i, element_type in enumerate(class_type):
                     rhs_elem = self.scope.collect_tuple_element(var[i])
                     self._ensure_inferred_type_matches_existing(element_type,
-                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs)
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs,
+                            arr_in_multirets)
                 raise_error = False
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
@@ -2051,7 +2061,7 @@ class SemanticParser(BasicParser):
             if len(previous_allocations) == 0:
                 var.set_init_shape(d_var['shape'])
 
-            if d_var['shape'] != shape:
+            if d_var['shape'] != shape or isinstance(rhs, FunctionCall):
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
@@ -2067,14 +2077,15 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
-                    alloc_type = None
+                    alloc_type = 'function' if isinstance(rhs, FunctionCall) or arr_in_multirets else None
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
-                        if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
-                            alloc_type = 'init'
-                        elif isinstance(rhs, (IndexedElement, Duplicate)):
-                            alloc_type = 'resize'
-                        else:
-                            alloc_type = 'reserve'
+                        if alloc_type is None:
+                            if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
+                                alloc_type = 'init'
+                            elif isinstance(rhs, (IndexedElement, Duplicate)):
+                                alloc_type = 'resize'
+                            else:
+                                alloc_type = 'reserve'
                     if previous_allocations:
                         var.set_changeable_shape()
                         if isinstance(var, DottedVariable):
@@ -2208,7 +2219,7 @@ class SemanticParser(BasicParser):
 
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
-            self._ensure_inferred_type_matches_existing(class_type, d_var, lhs, False, new_expr, None)
+            self._ensure_inferred_type_matches_existing(class_type, d_var, lhs, False, new_expr, None, arr_in_multirets=False)
         else:
             lhs_name = self.scope.get_expected_name(lhs_name)
             lhs = Variable(class_type, lhs_name, **d_var)
