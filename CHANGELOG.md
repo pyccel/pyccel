@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 -   #2447 : Fix returning an empty tuple.
 -   #2456 : Fix Python reference counting when returning a boolean from a function.
 -   #2458 : Fix incoherent import printing in Python and `.pyi` files.
+-   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   Rename `main` function when translating to C.
 
 ### Changed
