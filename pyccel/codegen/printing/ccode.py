@@ -1928,6 +1928,8 @@ class CCodePrinter(CodePrinter):
                 free_code = f'{self._print(Deallocate(variable))}'
             if expr.shape[0] is None:
                 return free_code
+            if expr.alloc_type == 'function':
+                return free_code
             size = self._print(expr.shape[0])
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
