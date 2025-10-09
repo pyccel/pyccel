@@ -75,3 +75,5 @@ if __name__ == '__main__':
     z = array([[1,2],[3,4]])
 
     x = array([5.,6.,7.,8.])
+
+    y,x,s = arrays_in_multi_returns()
