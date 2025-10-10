@@ -5489,7 +5489,7 @@ class SemanticParser(BasicParser):
             # using repr.
             # TODO shall we improve it?
 
-            p       = self.d_parsers[source_target]
+            p       = self.d_parsers[source]
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
