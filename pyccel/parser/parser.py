@@ -288,7 +288,7 @@ class Parser(object):
             son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
-            d_parsers[source] = son
+            d_parsers[getattr(source, 'name', source)] = son
             d_parsers.update(son.d_parsers)
 
         return d_parsers
