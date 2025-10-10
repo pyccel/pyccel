@@ -10,6 +10,8 @@ Module containing the Parser object
 
 from pathlib import Path
 
+from pyccel.ast.utilities import recognised_source
+
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
@@ -171,9 +173,9 @@ class Parser(object):
         if verbose:
             print ('>> Parsing :: ', self._filename)
 
-        parser             = SyntaxParser(self._filename, verbose = verbose)
+        parser             = SyntaxParser(self._filename, verbose = verbose,
+                                            context_dict = self._context_dict)
         self.syntax_parser = parser
-        parser.ast        = parser.ast
 
         if d_parsers_by_filename is None:
             d_parsers_by_filename = {}
@@ -261,7 +263,7 @@ class Parser(object):
             The updated dictionary of parsed sons.
         """
 
-        imports     = self.imports
+        imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]

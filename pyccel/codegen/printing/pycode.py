@@ -502,6 +502,8 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = ','.join(self._print(i) for i in indices)
+            if len(indices) == 0:
+                indices = '()'
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -663,7 +665,7 @@ class PythonCodePrinter(CodePrinter):
             if isinstance(return_var.class_type, InhomogeneousTupleType):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
-                if len(elem_code) < 2:
+                if len(elem_code) == 1:
                     return_expr += ','
                 return f'({return_expr})'
             else:
@@ -910,18 +912,22 @@ class PythonCodePrinter(CodePrinter):
             init_func = mod.init_func
             free_func = mod.free_func
 
-        if isinstance(expr.source, AsName):
-            source = self._print(expr.source.name)
-        else:
-            source = self._print(expr.source)
+        source = self._print(expr.source)
 
         source = import_source_swap.get(source, source)
 
         target = [t for t in expr.target if not isinstance(t.object, Module)]
+        mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
-        if not target:
-            return 'import {source}\n'.format(source=source)
-        else:
+        prefix = ''
+        if mod_target:
+            if source in pyccel_builtin_import_registry:
+                prefix = ''.join(f'import {t.name} as {t.local_alias}\n' for t in mod_target)
+            else:
+                assert len(mod_target) == 1
+                prefix = f'import {source} as {mod_target[0].local_alias}\n'
+
+        if target:
             if source in import_object_swap:
                 target = [AsName(import_object_swap[source].get(i.object,i.object), i.local_alias) for i in target]
             if source in import_target_swap:
@@ -946,7 +952,9 @@ class PythonCodePrinter(CodePrinter):
 
             target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
-            return 'from {source} import {target}\n'.format(source=source, target=target)
+            return prefix + f'from {source} import {target}\n'
+        else:
+            return prefix
 
     def _print_CodeBlock(self, expr):
         if len(expr.body)==0:
@@ -1095,14 +1103,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         class_type = expr.variable.class_type
+        if isinstance(class_type, HomogeneousTupleType) and expr.shape[0] == 0:
+            var = self._print(expr.variable)
+            return f'{var} = ()\n'
         if expr.alloc_type == 'reserve':
             var = self._print(expr.variable)
             if isinstance(class_type, HomogeneousSetType):
                 return f'{var} = set()\n'
             elif isinstance(class_type, HomogeneousListType):
-                return f'{var} = list()\n'
+                return f'{var} = []\n'
             elif isinstance(class_type, DictType):
-                return f'{var} = dict()\n'
+                return f'{var} = {{}}\n'
 
         return ''
 
@@ -1671,7 +1682,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_InhomogeneousTupleType(self, expr):
         args = ', '.join(self._print(t) for t in expr)
-        return f'tuple[{args}]'
+        if args:
+            return f'tuple[{args}]'
+        else:
+            return 'tuple[()]'
 
     def _print_HomogeneousTupleType(self, expr):
         return f'tuple[{self._print(expr.element_type)}, ...]'

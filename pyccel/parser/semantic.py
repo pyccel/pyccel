@@ -1913,6 +1913,10 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+                if isinstance(var, Constant):
+                    errors.report(f"Attempting to overwrite the constant {lhs}",
+                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  severity='error')
 
                 # Try to get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
                 if isinstance(var, DottedVariable):
@@ -2344,6 +2348,11 @@ class SemanticParser(BasicParser):
             return annotation
         elif isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
+
+        if len(args) == 0:
+            if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
+                errors.report("Unrecognised type", severity='fatal', symbol=expr)
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -3726,28 +3735,31 @@ class SemanticParser(BasicParser):
 
             if func is None and name in self._context_dict:
                 env_var = self._context_dict[name]
-                func = builtin_functions_dict.get(env_var.__name__, None)
-                if func is not None:
-                    func = PyccelFunctionDef(env_var.__name__, func)
-                mod_name = env_var.__module__
-                if mod_name:
-                    recognised_mod = recognised_source(mod_name)
-                elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
-                    # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                    mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
-                    while mod_name and not recognised_source(mod_name):
-                        mod_name = mod_name.rsplit('.', 1)[0]
-
-                    recognised_mod = len(mod_name) != 0
+                if isinstance(env_var, FunctionDef):
+                    func = env_var
                 else:
-                    recognised_mod = False
+                    func = builtin_functions_dict.get(env_var.__name__, None)
+                    if func is not None:
+                        func = PyccelFunctionDef(env_var.__name__, func)
+                    mod_name = env_var.__module__
+                    if mod_name:
+                        recognised_mod = recognised_source(mod_name)
+                    elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
+                        # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
+                        mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
+                        while mod_name and not recognised_source(mod_name):
+                            mod_name = mod_name.rsplit('.', 1)[0]
 
-                if func is None and recognised_mod:
-                    pyccel_stage.set_stage('syntactic')
-                    import_node = Import(mod_name, name)
-                    pyccel_stage.set_stage('semantic')
-                    self._additional_exprs[-1].append(self._visit(import_node))
-                    func = self.scope.find(name)
+                        recognised_mod = len(mod_name) != 0
+                    else:
+                        recognised_mod = False
+
+                    if func is None and recognised_mod:
+                        pyccel_stage.set_stage('syntactic')
+                        import_node = Import(mod_name, name)
+                        pyccel_stage.set_stage('semantic')
+                        self._additional_exprs[-1].append(self._visit(import_node))
+                        func = self.scope.find(name)
 
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
@@ -5126,6 +5138,7 @@ class SemanticParser(BasicParser):
         replace_map = {}
 
         pyccel_stage.set_stage('syntactic')
+        imports = list(expr.imports)
         global_scope_import_targets = {}
         if expr.is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
@@ -5142,14 +5155,24 @@ class SemanticParser(BasicParser):
                         if v in import_type:
                             imported_obj = import_type[v]
                             break
-                    if imported_obj:
-                        import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
-                    if self.scope.symbol_in_use(v):
-                        new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
-                        replace_map[v] = new_v
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                    if isinstance(imported_obj, Module):
+                        # Insert an imported module as a new Import object
+                        new_v = v
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(v)
+                            replace_map[v] = new_v
+                        source = mod.scope.find(v, 'imports').source
+                        mod_import = source if source == new_v else AsName(source, new_v)
+                        imports.append(Import(mod_import))
                     else:
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(v)
+                        if imported_obj:
+                            import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                            replace_map[v] = new_v
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                        else:
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(v)
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
@@ -5219,7 +5242,6 @@ class SemanticParser(BasicParser):
                           else EmptyNode() for r in returns]
         expr.body.substitute(returns, replace_return, invalidate = False)
 
-        imports = list(expr.imports)
         new_imports = [Import(m_name, targets) for m_name, targets in global_scope_import_targets.items()]
         for i in new_imports:
             i.set_current_ast(function_call.python_ast)
