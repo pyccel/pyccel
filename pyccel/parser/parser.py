@@ -289,6 +289,7 @@ class Parser(object):
             son.append_parent(self)
             self.append_son(son)
             d_parsers[source] = son
+            d_parsers.update(son.d_parsers)
 
         return d_parsers
 
