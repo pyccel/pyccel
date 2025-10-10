@@ -30,6 +30,34 @@ def language(request):
 def stc_language(request):
     return request.param
 
+@pytest.fixture(autouse=True)
+def skipif_by_language(request, language):
+    """
+    Looks for the decorator `skipif_by_language(condition, *, language, reason)`
+    and skips the test when the condition is met for a given language.
+
+    """
+    mark = request.node.get_closest_marker('skipif_by_language')
+    if mark:
+
+        preamble = "Error evaluating 'skipif_by_language': "
+        assert len(mark.args) == 1, preamble + "you need to specify a boolean condition"
+        assert 'language' in mark.kwargs.keys(), preamble + "you need to specify language=STRING"
+        assert 'reason'   in mark.kwargs.keys(), preamble + "you need to specify reason=STRING"
+
+        condition = mark.args[0]
+        lang      = mark.kwargs['language']
+        reason    = mark.kwargs['reason']
+
+        print(condition, lang, reason)
+
+        assert isinstance(condition, bool), preamble + "condition must be bool"
+        assert isinstance(  lang, str), preamble + "language must be str"
+        assert isinstance(reason, str), preamble + "reason must be str"
+
+        if condition and lang == language:
+            pytest.skip(reason)
+
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):
         for name in files:
