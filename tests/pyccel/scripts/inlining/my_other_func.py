@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
+import my_func as f
 
-def my_sin(a : float):
-    return np.sin(a)
+def foobar(a : float):
+    return f.func(a)

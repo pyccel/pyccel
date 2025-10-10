@@ -1333,7 +1333,9 @@ def test_varkwargs():
 @pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import(language):
     pyccel_test("scripts/inlining/runtest_inline_using_import.py",
-                dependencies = ["scripts/inlining/inline_using_import.py", "scripts/inlining/numpy_like.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
 
@@ -1342,7 +1344,9 @@ def test_inline_using_import(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline_using_import_2(language):
     pyccel_test("scripts/inlining/runtest_inline_using_import_2.py",
-                dependencies = ["scripts/inlining/inline_using_import.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
 
@@ -1351,6 +1355,8 @@ def test_inline_using_import_2(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline_using_named_import(language):
     pyccel_test("scripts/inlining/runtest_inline_using_named_import.py",
-                dependencies = ["scripts/inlining/numpy_twist.py", "scripts/inlining/inline_using_named_import.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_func2.py",
+                                "scripts/inlining/inline_using_named_import.py"],
                 language = language,
                 output_dtype = float)

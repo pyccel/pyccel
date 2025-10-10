@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import sin
-from inline_using_import import sin_2
+from my_func import func
+from inline_using_import import func_2
 
 if __name__ == '__main__':
-    print(sin(3.0))
-    print(sin_2(1.5))
+    print(func(3.0))
+    print(func_2(1.5))
