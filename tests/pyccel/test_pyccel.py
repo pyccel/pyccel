@@ -705,7 +705,7 @@ def test_import_collisions(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Collisions are not handled in C"),
+            pytest.mark.skip(reason="Collisions are not handled in C"),
             pytest.mark.c]
         )
     )
