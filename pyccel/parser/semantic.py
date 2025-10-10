@@ -5506,8 +5506,7 @@ class SemanticParser(BasicParser):
                         if n in d_son:
                             e = d_son[n]
                             if entry == 'functions':
-                                t_name = e.decorators['low_level'][0].args[0].value.python_value if 'low_level' in e.decorators else t
-                                container[entry][t] = e.clone(t_name, is_imported=True)
+                                container[entry][t] = e.clone(t, is_imported=True)
                                 m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
                                 container[entry][t].set_current_user_node(m)
                             elif entry == 'variables':
