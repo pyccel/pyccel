@@ -5220,7 +5220,10 @@ class SemanticParser(BasicParser):
         expr.body.substitute(returns, replace_return, invalidate = False)
 
         imports = list(expr.imports)
-        imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
+        new_imports = [Import(m_name, targets) for m_name, targets in global_scope_import_targets.items()]
+        for i in new_imports:
+            i.set_current_ast(function_call.python_ast)
+        imports.extend(new_imports)
         pyccel_stage.set_stage('semantic')
 
         import_init_calls = [self._visit(i) for i in imports]
