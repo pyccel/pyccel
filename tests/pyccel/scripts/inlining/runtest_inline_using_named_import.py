@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import sin
+from numpy_twist import sin
 from inline_using_named_import import sin_2
 
 if __name__ == '__main__':
