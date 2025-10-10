@@ -1330,8 +1330,7 @@ def test_varkwargs():
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-#@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
-@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'GNU', reason="1671", language='fortran')
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import(language):
     pyccel_test("scripts/inlining/runtest_inline_using_import.py",
                 dependencies = ["scripts/inlining/inline_using_import.py", "scripts/inlining/numpy_like.py"],
