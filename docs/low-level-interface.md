@@ -114,9 +114,9 @@ Possible keys are:
 
 - Multiple returns are interpreted as multiple `intent(out)` arguments. These are always the first arguments of the Fortran function and are not called by name.
 
-- Returning arrays is not recommended.
+- Returning arrays is not currently recommended as the support is still quite restrictive.
 
-  Array returns are interpreted as an `intent(out)` argument. If code calling such a method is translated, it is assumed that the array will allocate with base-0 indexing. This output will be the first argument of the Fortran function. It will not be called by name.
+  Array returns are interpreted as an `intent(out)` argument. If code calling such a method is translated, it is assumed that the array will be an allocatable and will be allocated with base-0 indexing. This output will be the first argument of the Fortran function. It will not be called by name.
 
 - Lists, sets, and dictionaries are mapped to gFTL objects in the Fortran code.
 
