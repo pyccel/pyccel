@@ -14,14 +14,14 @@ module array_methods
 
 contains
 
-  subroutine create_arrayops(obj)
-    class(ArrayOps), intent(inout) :: obj
+  subroutine create_arrayops(this)
+    class(ArrayOps), intent(inout) :: this
   end subroutine create_arrayops
 
-  subroutine free_arrayops(obj)
-    class(ArrayOps), intent(inout) :: obj
-    if (allocated(obj%data)) then
-      deallocate(obj%data)
+  subroutine free_arrayops(this)
+    class(ArrayOps), intent(inout) :: this
+    if (allocated(this%data)) then
+      deallocate(this%data)
     end if
   end subroutine free_arrayops
 
