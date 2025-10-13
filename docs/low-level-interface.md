@@ -39,7 +39,7 @@ This preserves a clean Python API while enabling Pyccel to treat your calls as f
 
 ## Writing the stub file
 
-The stub file (`.pyi`) describes the low-level library in a way that is understandable in a Python environment. It follows the same conventions as standard Python type stub files (see the Python documentation), with a few additional rules specific to Pyccel:
+The stub file (`.pyi`) describes the low-level library in a way that is understandable in a Python environment. It follows the same conventions as standard Python stub files (see the [Python documentation](https://typing.python.org/en/latest/guides/writing_stubs.html)), with a few additional rules specific to Pyccel:
 
 - At the top of the file, you must include some metadata about the compilation
 
