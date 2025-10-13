@@ -138,7 +138,7 @@ Possible keys are:
 
 - Multiple returns are interpreted as multiple `intent(out)` arguments. These are always the first arguments of the Fortran function and are not called by name.
 
-- Arrays are mapped to instances of STC's `cspan` class.
+- Arrays are mapped to instances of [STC](https://github.com/Stclib/STC)'s `cspan` class as described in the [documentation](ndarrays.md#the-n-dimensional-array-ndarray).
 
 - Lists, sets, and dictionaries are mapped to STC objects in the C code.
 
