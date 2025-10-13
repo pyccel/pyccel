@@ -153,10 +153,6 @@ def execute_pyccel_wrap(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
         parser.parse(verbose=verbose)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -170,10 +166,6 @@ def execute_pyccel_wrap(fname, *,
     # Annotate abstract syntax Tree
     try:
         parser.annotate(verbose = verbose)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('annotation (semantic)')
         # Raise a new error to avoid a large traceback
@@ -195,12 +187,6 @@ def execute_pyccel_wrap(fname, *,
     wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
     try:
         wrappergen.wrap(base_dirpath)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(str(error)) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -209,12 +195,6 @@ def execute_pyccel_wrap(fname, *,
     start_wrapper_printing = time.time()
     try:
         wrapper_files = wrappergen.print(pyccel_dirpath)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(str(error)) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
