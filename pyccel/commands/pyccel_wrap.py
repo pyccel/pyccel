@@ -42,7 +42,7 @@ def pyccel_wrap_command() -> None:
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=pathlib.Path,
-                       help='Path (relative or absolute) to the Python file to be translated.')
+                       help='Path (relative or absolute) to the Python stub file describing the low-level code.')
     #...
 
     #... Help and Version
