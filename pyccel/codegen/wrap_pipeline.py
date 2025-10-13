@@ -247,7 +247,7 @@ def execute_pyccel_wrap(fname, *,
                 verbose=verbose)
 
     if output_name is None:
-        output_name = str(Path(fname).with_suffix(''))
+        output_name = str(fname.with_suffix(''))
 
     compiler.compile_shared_library(wrapper_compile_objs[-1],
                                                     output_folder = folder,
