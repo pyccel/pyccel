@@ -59,6 +59,8 @@ def f(a: int, b: float, /): ...
 
 You can use the `@low_level` decorator to explicitly map a Python name to its low-level implementation name. This is not strictly required, but it is strongly recommended to avoid surprises as Pyccel can rename symbols internally (e.g. to avoid collisions). It also allows you to rename functions and classes.
 
+Another common use case is for functions that accept different types of arguments. In Python stub files such functions are annotated with the [`@overload` decorator](https://typing.python.org/en/latest/spec/overload.html). Such functions may map to different low-level functions.
+
 For example:
 
 ```python
