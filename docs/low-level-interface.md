@@ -39,7 +39,10 @@ This preserves a clean Python API while enabling Pyccel to treat your calls as f
 
 ## Writing the stub file
 
-The stub file (`.pyi`) describes the low-level library in a way that is understandable in a Python environment. It follows the same conventions as standard Python stub files (see the [Python documentation](https://typing.python.org/en/latest/guides/writing_stubs.html)), with a few additional rules specific to Pyccel:
+The stub file (`.pyi`) describes the low-level library in a way that is understandable in a Python environment. It follows the same conventions as standard Python stub files (see the [Python documentation](https://typing.python.org/en/latest/guides/writing_stubs.html)), with a few additional rules specific to Pyccel. These additional rules mean that Pyccel cannot create an interface for every C/Fortran function.
+
+In addition to the general rules above there are more specific rules for [Fortran](#fortran-specific-rules) and [C](#c-specific-rules) which are detailed later.
+The following are the general language-agnostic rules:
 
 - At the top of the file, you must include some metadata about the compilation
 
@@ -47,7 +50,6 @@ The stub file (`.pyi`) describes the low-level library in a way that is understa
 
 You must ensure that all functions, methods, and classes have precise type annotations that match the low-level signatures.
 Particular care should be taken with integers. On most platforms Python's default integer precision is equivalent to `numpy.int64`, while the default integer precision in low-level languages like C and Fortran is usually equivalent to `numpy.int32`.
-In addition to the general rules above there are more specific rules for [Fortran](#fortran-specific-rules) and [C](#c-specific-rules).
 
 Function argument names are expected to match the name of the argument in the low-level language (for languages such as Fortran, where such information can be used). If the function argument names are unknown please use positional-only arguments:
 
