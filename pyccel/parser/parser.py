@@ -103,9 +103,9 @@ class Parser(object):
         return self._filename
 
     @property
-    def original_filename(self):
+    def original_filename(self) -> Path:
         """
-        The original Python file that was translated.
+        The absolute path to the original Python file that was translated.
 
         This will be equivalent to the filename, unless the file is a dependency.
         In that case the filename will be a .pyi file while the original_filename
