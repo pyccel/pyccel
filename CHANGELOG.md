@@ -16,9 +16,10 @@ All notable changes to this project will be documented in this file.
 -   Add support for positional arguments.
 -   Add support for keyword-only arguments.
 -   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
+-   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
--   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
--   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
+-   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -41,6 +42,10 @@ All notable changes to this project will be documented in this file.
 -   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
 -   #2441 : Fix function call pointer result assignment in Fortran.
 -   #2452 : Fix default Pyccel compiler on command line to use `PYCCEL_DEFAULT_COMPILER` environment variable.
+-   #2447 : Fix returning an empty tuple.
+-   #2456 : Fix Python reference counting when returning a boolean from a function.
+-   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
+-   #2462 : Fix erroneous additional import in stub file.
 -   Rename `main` function when translating to C.
 
 ### Changed

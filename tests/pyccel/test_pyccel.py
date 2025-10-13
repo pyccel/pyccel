@@ -701,6 +701,22 @@ def test_import_collisions(language):
             language=language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
+    )
+)
+@pytest.mark.xdist_incompatible
+def test_import_collisions_builtins(language):
+    pyccel_test("scripts/import_syntax/collisions6.py",
+            dependencies = ["scripts/import_syntax/user_mod_builtin_conflict.py"],
+            language=language)
+
+#------------------------------------------------------------------------------
 # Numpy sum required
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),

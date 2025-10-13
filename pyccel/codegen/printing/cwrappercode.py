@@ -593,8 +593,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyTuple_Pack(self, expr):
         args = expr.args
         n = len(args)
-        args_code = ', '.join(self._print(a) for a in args)
-        return f'(*PyTuple_Pack( {n}, {args_code} ))'
+        if n:
+            args_code = ', '.join(self._print(a) for a in args)
+            return f'(*PyTuple_Pack( {n}, {args_code} ))'
+        else:
+            return f'(*PyTuple_Pack( {n} ))'
 
     def _print_PyList_Clear(self, expr):
         list_code = self._print(ObjectAddress(expr.list_obj))

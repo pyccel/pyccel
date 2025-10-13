@@ -1906,6 +1906,10 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+                if isinstance(var, Constant):
+                    errors.report(f"Attempting to overwrite the constant {lhs}",
+                                  bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                  severity='error')
 
                 # Try to get pre-existing DottedVariable to avoid doubles and to ensure validity of AST tree
                 if isinstance(var, DottedVariable):
@@ -2337,6 +2341,11 @@ class SemanticParser(BasicParser):
             return annotation
         elif isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
+
+        if len(args) == 0:
+            if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
+                errors.report("Unrecognised type", severity='fatal', symbol=expr)
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -3445,7 +3454,7 @@ class SemanticParser(BasicParser):
                         syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
                     pyccel_stage.set_stage('semantic')
                     if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(func, func.name), _get_name(lhs))
+                        self.insert_import(first.name, AsName(func, new_name), _get_name(lhs))
                     return self._handle_function(syntactic_call, func, args)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -3714,28 +3723,31 @@ class SemanticParser(BasicParser):
 
             if func is None and name in self._context_dict:
                 env_var = self._context_dict[name]
-                func = builtin_functions_dict.get(env_var.__name__, None)
-                if func is not None:
-                    func = PyccelFunctionDef(env_var.__name__, func)
-                mod_name = env_var.__module__
-                if mod_name:
-                    recognised_mod = recognised_source(mod_name)
-                elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
-                    # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                    mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
-                    while mod_name and not recognised_source(mod_name):
-                        mod_name = mod_name.rsplit('.', 1)[0]
-
-                    recognised_mod = len(mod_name) != 0
+                if isinstance(env_var, FunctionDef):
+                    func = env_var
                 else:
-                    recognised_mod = False
+                    func = builtin_functions_dict.get(env_var.__name__, None)
+                    if func is not None:
+                        func = PyccelFunctionDef(env_var.__name__, func)
+                    mod_name = env_var.__module__
+                    if mod_name:
+                        recognised_mod = recognised_source(mod_name)
+                    elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
+                        # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
+                        mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
+                        while mod_name and not recognised_source(mod_name):
+                            mod_name = mod_name.rsplit('.', 1)[0]
 
-                if func is None and recognised_mod:
-                    pyccel_stage.set_stage('syntactic')
-                    import_node = Import(mod_name, name)
-                    pyccel_stage.set_stage('semantic')
-                    self._additional_exprs[-1].append(self._visit(import_node))
-                    func = self.scope.find(name)
+                        recognised_mod = len(mod_name) != 0
+                    else:
+                        recognised_mod = False
+
+                    if func is None and recognised_mod:
+                        pyccel_stage.set_stage('syntactic')
+                        import_node = Import(mod_name, name)
+                        pyccel_stage.set_stage('semantic')
+                        self._additional_exprs[-1].append(self._visit(import_node))
+                        func = self.scope.find(name)
 
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
