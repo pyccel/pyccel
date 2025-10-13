@@ -206,6 +206,7 @@ def execute_pyccel_wrap(fname, *,
     timers['Wrapper printing'] = time.time() - start_wrapper_printing
 
     if convert_only:
+        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
