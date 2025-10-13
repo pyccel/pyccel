@@ -63,7 +63,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         The stem of the Python file which calls the low-level code.
     language : str
         The language we are compiling from.
-    extra_flags : iter[str]
+    extra_flags : Iterable[str]
         Any extra flags to be passed to the wrap command.
 
     Results
