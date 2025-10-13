@@ -178,10 +178,6 @@ def pyccel_wrap_command() -> None:
 
     base_dirpath = os.getcwd()
 
-    if args.language == 'Python' and args.output == '':
-        print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
-        sys.exit(1)
-
     try:
         # TODO: prune options
         execute_pyccel_wrap(filename,
