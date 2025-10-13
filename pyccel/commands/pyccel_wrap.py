@@ -60,9 +60,9 @@ def pyccel_wrap_command() -> None:
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
 
-    group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
-                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
-                       type=str.lower)
+    group.add_argument('--language', choices=('Fortran', 'C'), default='Fortran',
+                       help='The language of the code being exposed to Python.',
+                       type=str.title)
 
     # ... Compiler options
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
@@ -101,7 +101,7 @@ def pyccel_wrap_command() -> None:
     # ... Other options
     group = parser.add_argument_group('Other options')
     group.add_argument('-t', '--convert-only', action='store_true',
-                       help='Stop Pyccel after translation to the target language, before build.')
+                       help='Stop Pyccel after generating the wrapper files but before building the Python extension file.')
     group.add_argument('-v', '--verbose', action='count', default = 0,\
                         help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
     group.add_argument('--developer-mode', action='store_true', \
@@ -178,7 +178,7 @@ def pyccel_wrap_command() -> None:
 
     base_dirpath = os.getcwd()
 
-    if args.language == 'python' and args.output == '':
+    if args.language == 'Python' and args.output == '':
         print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
 
@@ -188,7 +188,7 @@ def pyccel_wrap_command() -> None:
                        convert_only    = args.convert_only,
                        verbose         = args.verbose,
                        time_execution  = args.time_execution,
-                       language        = args.language,
+                       language        = args.language.lower(),
                        compiler_family = str(compiler) if compiler is not None else None,
                        debug           = args.debug,
                        accelerators    = accelerators,
