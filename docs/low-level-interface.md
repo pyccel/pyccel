@@ -161,56 +161,63 @@ module class_property
   implicit none
 
   type :: Counter
-    integer(i64) :: value
+    integer(i64) :: ncounters
+    integer(i64), allocatable :: private_counters
   contains
     procedure :: create => counter_create
     procedure :: free => counter_free
     procedure :: increment_n => counter_increment_n
-    procedure :: get_value => counter_get_value
-    generic, public :: display => counter_display_repeat, counter_display_scaled
-    procedure :: counter_display_repeat, counter_display_scaled
+    procedure :: n_nonzero => counter_n_nonzero
+    generic, public :: display => counter_display_element, counter_display_scaled
+    procedure :: counter_display_element, counter_display_scaled
   end type Counter
 
 contains
 
-  subroutine counter_create(this, start)
+  subroutine counter_create(this, ncounters)
     class(Counter), intent(inout) :: this
-    integer(i64), intent(in) :: start
-    this%value = start
+    integer(i64), intent(in) :: ncounters
+    this%ncounters = ncounters
+    allocate(this%private_counters(ncounters))
+    this%private_counters(:) = 0
   end subroutine counter_create
 
   subroutine counter_free(this)
     class(Counter), intent(inout) :: this
-    this%value = -1
+    deallocate(this%private_counters)
   end subroutine counter_free
 
   subroutine counter_increment_n(this, n)
     class(Counter), intent(inout) :: this
     integer(i64) :: n
-    this%value = this%value + n
+    this%private_counters(n) = this%private_counters(n) + 1
   end subroutine counter_increment_n
 
-  subroutine counter_display_repeat(this, n)
+  subroutine counter_display_element(this, n)
     class(Counter), intent(in) :: this
     integer(i64), value  :: n
-    integer :: i
-    do i = 1, n
-       print *, "Counter value:", this%value
-    end do
-  end subroutine counter_display_repeat
+    print *, "Counter value:", this%private_counters(n)
+  end subroutine counter_display_element
 
   subroutine counter_display_scaled(this, scale)
     class(Counter), intent(in) :: this
     real(f64), value      :: scale
-    print *, "Counter value (scaled):", real(this%value, f64) * scale
+    integer :: i
+    do i = 1, n
+       print *, "Counter value (scaled):", real(this%private_counters(i), f64) * scale
+    end do
   end subroutine counter_display_scaled
 
 
-  function counter_get_value(this) result(v)
+  function counter_n_nonzero(this) result(v)
     class(Counter), intent(in) :: this
     integer(i64) :: v
-    v = this%value
-  end function counter_get_value
+    integer :: i
+    v = 0
+    do i = 1, n
+      v = v + this%private_counters(i)
+    end do
+  end function counter_n_nonzero
 
 end module class_property
 ```
@@ -224,10 +231,10 @@ from typing import overload
 from pyccel.decorators import low_level
 
 class Counter:
-    value : np.int64
+    ncounters : np.int64
 
     @low_level('create')
-    def __init__(self, start: int) -> None: ...
+    def __init__(self, ncounters: int) -> None: ...
 
     @low_level('free')
     def __del__(self) -> None: ...
@@ -235,15 +242,14 @@ class Counter:
     @low_level('increment_n')
     def __iadd__(self, n : int) -> None: ...
 
-    @low_level('get_value')
     @property
-    def my_value(self) -> int: ...
+    def n_nonzero(self) -> int: ...
 
-    @low_level("display_repeat")
+    @low_level("counter_display_element")
     @overload
     def display(self, n: int) -> None: ...
 
-    @low_level("display_scaled")
+    @low_level("counter_display_scaled")
     @overload
     def display(self, scale: float) -> None: ...
 ```
@@ -264,14 +270,15 @@ Suppose we have the following C code that we want to be able to call from Python
 
 ```c
 struct Counter {
+    int64_t* private_counter_arr;
     int64_t value;
 };
 
 void Counter__create(struct Counter*, int64_t);
 void Counter__free(struct Counter*);
 void Counter__increment(struct Counter*, int64_t);
-int64_t Counter__get_value(struct Counter*);
-void Counter__display_repeat(struct Counter*, int64_t);
+int64_t Counter__n_nonzero(struct Counter*);
+void Counter__display_element(struct Counter*, int64_t);
 void Counter__display_scaled(struct Counter*, double);
 ```
 
@@ -293,9 +300,9 @@ class Counter:
     @low_level('increment_n')
     def __iadd__(self, n : int) -> None: ...
 
-    @low_level('get_value')
+    @low_level('counter_n_nonzero')
     @property
-    def value(self) -> int: ...
+    def n_nonzero(self) -> int: ...
 
     @low_level("display_repeat")
     @overload
