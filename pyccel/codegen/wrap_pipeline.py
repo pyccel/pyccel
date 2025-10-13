@@ -40,17 +40,16 @@ __all__ = ['execute_pyccel_wrap']
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel_wrap(fname, *,
-                   convert_only    = False,
-                   verbose         = 0,
-                   time_execution  = False,
-                   folder          = None,
-                   language        = None,
-                   compiler_family = None,
-                   debug           = None,
-                   accelerators    = (),
-                   output_name     = None,
-                   conda_warnings  = 'basic',
-                   context_dict    = None):
+                   convert_only,
+                   verbose,
+                   time_execution,
+                   folder,
+                   language,
+                   compiler_family,
+                   debug,
+                   accelerators,
+                   output_name,
+                   conda_warnings):
     """
     Run Pyccel on the provided code.
 
@@ -87,9 +86,6 @@ def execute_pyccel_wrap(fname, *,
         Name of the generated module. Default is the same name as the translated file.
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
-    context_dict : dict[str, object], optional
-        A dictionary containing any variables that are available in the calling context.
-        This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
     timers = {}
@@ -155,7 +151,7 @@ def execute_pyccel_wrap(fname, *,
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
+        parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,

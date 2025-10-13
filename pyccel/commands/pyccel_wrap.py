@@ -193,6 +193,7 @@ def pyccel_wrap_command() -> None:
                        debug           = args.debug,
                        accelerators    = accelerators,
                        folder          = output if output is not None else None,
+                       output_name     = filename.stem,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
