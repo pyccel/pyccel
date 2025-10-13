@@ -10,11 +10,9 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import time
-from pathlib import Path
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
-from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.pipeline       import print_timers
