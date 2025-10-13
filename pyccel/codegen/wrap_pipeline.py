@@ -4,7 +4,8 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-Contains the execute_pyccel function which carries out the main steps required to execute pyccel
+Contains the `execute_pyccel_wrap` function which carries out the main steps required
+to execute the `pyccel-wrap` command.
 """
 
 import os
