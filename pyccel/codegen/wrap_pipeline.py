@@ -61,7 +61,7 @@ def execute_pyccel_wrap(fname, *,
     Parameters
     ----------
     fname : Path
-        Name of the stub file describing the low-level functions.
+        Name of the stub file describing the mapping between Python and low-level code.
     convert_only : bool
         Indicates whether the pipeline should stop after generating the wrapper files.
     verbose : int
