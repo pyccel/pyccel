@@ -65,6 +65,15 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         The language we are compiling from.
     extra_flags : iter[str]
         Any extra flags to be passed to the wrap command.
+
+    Results
+    -------
+    py_run_output : str
+        The output of running the Python file which calls the code from the
+        wrapped low-level file.
+    l_run_output : str
+        The output of running the low-level file obtained by translating
+        the Python file which calls the low-level code.
     """
     cwd = Path(__file__).parent / 'wrap_scripts' / f'{language}_tests'
 
