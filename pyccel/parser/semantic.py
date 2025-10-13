@@ -3317,8 +3317,7 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_name = str(class_type)
-                cls_base = self.scope.find(cls_name, 'classes') or get_cls_base(class_type)
+                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
                 elif isinstance(class_type, HomogeneousTupleType):
