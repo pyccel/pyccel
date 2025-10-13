@@ -1,9 +1,9 @@
 module array_methods
-  use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding, only : C_DOUBLE, C_INT
   implicit none
 
   type :: ArrayOps
-    real(c_double), allocatable :: data(:)
+    real(C_DOUBLE), allocatable :: data(:)
   contains
     procedure :: create => create_arrayops
     procedure :: free => free_arrayops
@@ -27,8 +27,8 @@ contains
 
   subroutine array_set_data(this, arr, n)
     class(ArrayOps), intent(inout) :: this
-    real(c_double), intent(in) :: arr(n)
-    integer(c_int), intent(in) :: n
+    real(C_DOUBLE), intent(in) :: arr(n)
+    integer(C_INT), intent(in) :: n
     if (allocated(this%data)) deallocate(this%data)
     allocate(this%data(n))
     this%data = arr
@@ -36,7 +36,7 @@ contains
 
   function array_sum(this) result(total)
     class(ArrayOps), intent(in) :: this
-    real(c_double) :: total
+    real(C_DOUBLE) :: total
     integer :: i
     total = 0.0d0
     do i = 1, size(this%data)
@@ -46,7 +46,7 @@ contains
 
   subroutine array_scale(this, factor)
     class(ArrayOps), intent(inout) :: this
-    real(c_double), intent(in) :: factor
+    real(C_DOUBLE), intent(in) :: factor
     integer :: i
     do i = 1, size(this%data)
       this%data(i) = this%data(i) * factor

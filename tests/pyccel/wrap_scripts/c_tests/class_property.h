@@ -1,9 +1,7 @@
 #ifndef CLASS_PROPERTY_H
 #define CLASS_PROPERTY_H
 
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 struct Counter {
     int64_t value;

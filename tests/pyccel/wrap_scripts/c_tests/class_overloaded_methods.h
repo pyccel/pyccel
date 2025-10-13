@@ -1,9 +1,7 @@
 #ifndef CLASS_OVERLOADED_METHODS_H
 #define CLASS_OVERLOADED_METHODS_H
 
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 struct Adder {
 };

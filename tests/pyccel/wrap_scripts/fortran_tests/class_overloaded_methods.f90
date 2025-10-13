@@ -1,5 +1,5 @@
 module class_overloaded_methods
-  use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding, only : C_INT64_T, C_DOUBLE
   implicit none
 
   type :: Adder
@@ -22,15 +22,15 @@ contains
 
   function adder_add_int(this, x, y) result(z)
     class(Adder), intent(in) :: this
-    integer(c_int64_t), intent(in) :: x, y
-    integer(c_int64_t) :: z
+    integer(C_INT64_T), intent(in) :: x, y
+    integer(C_INT64_T) :: z
     z = x + y
   end function adder_add_int
 
   function adder_add_real(this, x, y) result(z)
     class(Adder), intent(in) :: this
-    real(c_double), intent(in) :: x, y
-    real(c_double) :: z
+    real(C_DOUBLE), intent(in) :: x, y
+    real(C_DOUBLE) :: z
     z = x + y
   end function adder_add_real
 
