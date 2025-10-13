@@ -104,6 +104,10 @@ Possible keys are:
 
 #### Functions
 
+- Python functions with a single non-array result, match Fortran functions.
+
+- Python functions with no results or multiple results, match Fortran subroutines.
+
 - Argument names must match unless they are positional-only.
 
   Unless positional-only arguments are used, the Fortran printer prints the name of the argument being called. As a result, it is important that the argument names in the stub file match the argument names in the original code.
