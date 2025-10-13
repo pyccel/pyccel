@@ -101,7 +101,7 @@ Possible keys are:
 
 - Argument names must match unless they are positional-only.
 
-  Unless positional-only arguments are used the Fortran printer prints the name of the argument being called. As a result it is important that the argument names in the stub file match the argument names in the original code.
+  Unless positional-only arguments are used, the Fortran printer prints the name of the argument being called. As a result, it is important that the argument names in the stub file match the argument names in the original code.
 
 - Multiple returns are interpreted as multiple `intent(out)` arguments. These are always the first arguments of the Fortran function and are not called by name.
 
