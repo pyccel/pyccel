@@ -62,29 +62,29 @@ def execute_pyccel_wrap(fname, *,
     Parameters
     ----------
     fname : Path
-        Name of the Python file to be translated.
-    convert_only : bool, optional
-        Indicates whether the pipeline should stop after the codegen stage. Default is False.
-    verbose : int, default=0
+        Name of the stub file describing the low-level functions.
+    convert_only : bool
+        Indicates whether the pipeline should stop after generating the wrapper files.
+    verbose : int
         Indicates the level of verbosity.
-    time_execution : bool, default=False
+    time_execution : bool
         Show the time spent in each of Pyccel's internal stages.
-    folder : Path, optional
+    folder : Path
         Path to the working directory. Default is the folder containing the file to be translated.
-    language : str, optional
-        The target language Pyccel is translating to. Default is 'fortran'.
-    compiler_family : str, optional
-        The compiler used to compile the generated files. Default is 'GNU'.
+    language : str
+        The target language Pyccel is translating to.
+    compiler_family : str
+        The compiler used to compile the generated files.
         This can also contain the name of a json file describing a compiler.
-    debug : bool, optional
-        Indicates whether the file should be compiled in debug mode.
+    debug : bool
+        Indicates whether the wrapper files should be compiled in debug mode.
         The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
         If no such environment variable exists then the default is False.
-    accelerators : iterable, optional
+    accelerators : iterable
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
-    output_name : str, optional
+    output_name : str
         Name of the generated module. Default is the same name as the translated file.
-    conda_warnings : str, optional
+    conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
     start = time.time()
