@@ -137,7 +137,7 @@ def pyccel_wrap_command() -> None:
     # ... report error
     if filename.is_file():
         fext = filename.suffix
-        if fext not in ['.py', '.pyi']:
+        if fext != '.pyi':
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
