@@ -4,7 +4,7 @@ module class_overloaded_methods
 
   type :: Adder
   contains
-    procedure :: create => create_adder
+    procedure :: init => init_adder
     procedure :: free => free_adder
     generic, public :: add => adder_add_int, adder_add_real
     procedure :: adder_add_int, adder_add_real
@@ -12,9 +12,9 @@ module class_overloaded_methods
 
 contains
 
-  subroutine create_adder(a)
+  subroutine init_adder(a)
     class(Adder), intent(inout) :: a
-  end subroutine create_adder
+  end subroutine init_adder
 
   subroutine free_adder(a)
     class(Adder), intent(inout) :: a
