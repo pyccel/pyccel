@@ -121,7 +121,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     filename_py = filename_stem.with_suffix('.py')
     filename_pyi = filename_stem.with_suffix('.pyi')
 
-    # Look for .pyi files in pyccel
+    # Look for .pyi files in the Pyccel folder
     # Stub files take priority in case .py files exist so files can run in Python
     if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
         abs_pyi_fname = filename_pyi.absolute()
