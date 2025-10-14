@@ -280,7 +280,7 @@ class BasicParser(object):
         return self._semantic_done
 
     @property
-    def is_header_file(self):
+    def is_stub_file(self):
         """
         Indicate if the file being translated is a stub file.
 
