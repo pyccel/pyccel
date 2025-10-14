@@ -1340,6 +1340,15 @@ def test_inline_using_import(language):
                 output_dtype = float)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 @pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import_2(language):
@@ -1351,6 +1360,15 @@ def test_inline_using_import_2(language):
                 output_dtype = float)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
 @pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_named_import(language):
