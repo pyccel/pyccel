@@ -2882,7 +2882,7 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        # in the case of a header file, we need to convert all headers to
+        # in the case of a stub file, we need to convert all headers to
         # FunctionDef etc ...
 
         if self.is_header_file:
@@ -4829,7 +4829,7 @@ class SemanticParser(BasicParser):
         if func:
             if func.is_semantic:
                 if self.is_header_file:
-                    # Only Interfaces should be revisited in a header file
+                    # Only Interfaces should be revisited in a stub file
                     assert isinstance(func, Interface)
                     existing_semantic_funcs = [*func.functions]
                 else:

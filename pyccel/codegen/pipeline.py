@@ -123,7 +123,7 @@ def execute_pyccel(fname, *,
     if fname.endswith('.pyi'):
         semantic_only = True
         if verbose:
-            print("Header file recognised, stopping after semantic stage")
+            print("Stub file recognised, stopping after semantic stage")
 
     if Path(fname).stem in python_builtin_libs:
         raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")

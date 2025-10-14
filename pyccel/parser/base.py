@@ -49,7 +49,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     When searching for files in a folder, the order of priority is:
 
     - python files (extension == .py)
-    - header files (extension == .pyi)
+    - stub files (extension == .pyi)
 
     In the Pyccel folder the priority is inverted as .py files are sometimes
     provided alongside .pyi files to spoof the functionalities so user code
@@ -282,11 +282,11 @@ class BasicParser(object):
     @property
     def is_header_file(self):
         """
-        Indicate if the file being translated is a header file.
+        Indicate if the file being translated is a stub file.
 
-        Indicate if the file being translated is a header file.
-        A file is a header file if it does not include the implementation of the
-        methods. This is the case for .pyi files.
+        Indicate if the file being translated is a stub file.
+        A stub file does not include the implementation of the
+        methods. It has the suffix .pyi.
         """
 
         if self.filename:

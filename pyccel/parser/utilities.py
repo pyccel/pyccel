@@ -29,7 +29,7 @@ def get_default_path(name):
     This function takes the name of an import source. If the imported library is in
     stdlib, it returns the full Python path to the stdlib equivalent library.
     Otherwise the original name is returned. This equivalent library should be a
-    header file which describes all the functions which are supported by Pyccel.
+    stub file which describes all the functions which are supported by Pyccel.
 
     Parameters
     ----------
