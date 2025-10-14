@@ -3035,7 +3035,7 @@ class SemanticParser(BasicParser):
                     cls = self.scope.find(str(dtype), 'classes')
                     if cls:
                         init_method = cls.get_method('__init__', expr)
-                        if not init_method.is_semantic and not self.is_header_file:
+                        if not init_method.is_semantic and not self.is_stub_file:
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
