@@ -268,7 +268,7 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
             dep_compile_libdirs = [mod_folder / l for l in parser.metavars.get('libdirs', '').split(',') if l]
             dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
             if not parser.metavars.get('ignore_at_import', False):
-                is_header_only = dep_fname.suffix in ('.pyi', '.pyh') and parser.original_filename.suffix != '.py'
+                is_header_only = dep_fname.suffix == '.pyi' and parser.original_filename.suffix != '.py'
                 deps[dep_fname] = CompileObj(mod_base,
                                     folder          = mod_folder,
                                     include         = dep_compile_includes,
