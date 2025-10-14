@@ -5134,6 +5134,7 @@ class SemanticParser(BasicParser):
                 remaining_to_examine = []
                 for ex in to_examine:
                     if isinstance(ex, DottedName) and isinstance(ex.name[-1], FunctionCall):
+                        global_symbols.add(ex.name[0])
                         remaining = ex.name[-1].get_attribute_nodes((PyccelSymbol, DottedName))
                         remaining.remove(ex.name[-1].funcdef)
                         global_symbols.update(s for s in remaining if not isinstance(s, DottedName))
