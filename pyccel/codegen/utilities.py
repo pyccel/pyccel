@@ -248,7 +248,7 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
         is the CompileObj describing the .o file.
     """
     dep_fname = Path(parser.filename)
-    assert compile_libs is None or dep_fname.suffix in ('.pyi', '.pyh') or pyccel_root in dep_fname.parents
+    assert compile_libs is None or dep_fname.suffix == '.pyi' or pyccel_root in dep_fname.parents
     mod_folder = dep_fname.parent
     mod_base = dep_fname.name
 

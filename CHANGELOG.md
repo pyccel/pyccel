@@ -62,6 +62,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
+-   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
 
 ### Deprecated
 
@@ -69,6 +70,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
+-   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27
