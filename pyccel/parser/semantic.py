@@ -2704,7 +2704,7 @@ class SemanticParser(BasicParser):
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
-        if not self.is_header_file:
+        if not self.is_stub_file:
             for f in expr.funcs:
                 self.insert_function(f)
         else:
@@ -2882,10 +2882,10 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        # in the case of a header file, we need to convert all headers to
+        # in the case of a stub file, we need to convert all headers to
         # FunctionDef etc ...
 
-        if self.is_header_file:
+        if self.is_stub_file:
             if self.metavars.get('external', False):
                 for f in funcs:
                     f.is_external = True
@@ -4828,8 +4828,8 @@ class SemanticParser(BasicParser):
         func = insertion_scope.functions.get(python_name, None)
         if func:
             if func.is_semantic:
-                if self.is_header_file:
-                    # Only Interfaces should be revisited in a header file
+                if self.is_stub_file:
+                    # Only Interfaces should be revisited in a stub file
                     assert isinstance(func, Interface)
                     existing_semantic_funcs = [*func.functions]
                 else:
