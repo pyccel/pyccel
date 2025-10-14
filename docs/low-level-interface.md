@@ -262,7 +262,7 @@ pyccel-wrap class_property.pyi
 
 This generates a file `class_property.cpython-313-x86_64-linux-gnu.so` which is directly usable from Python.
 
-More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/devel/tests/pyccel/wrap_scripts/fortran_tests).
+More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/devel/tests/pyccel/wrap_scripts/fortran_tests). The stub files in this folder assume that the `.mod` files were saved into the sub-folder `__pyccel__mod__`.
 
 ## C Example
 
@@ -321,4 +321,4 @@ pyccel-wrap class_property.pyi
 
 This generates a file `class_property.cpython-313-x86_64-linux-gnu.so` which is directly usable from Python.
 
-More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/devel/tests/pyccel/wrap_scripts/fortran_tests).
+More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/devel/tests/pyccel/wrap_scripts/c_tests).
