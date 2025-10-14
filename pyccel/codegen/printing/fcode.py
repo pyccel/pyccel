@@ -187,8 +187,7 @@ math_function_to_fortran = {
 INF = math_constants['inf']
 
 _default_methods = {
-    '__new__' : 'alloc',
-    '__init__': 'create',
+    '__init__': 'init',
     '__del__' : 'free',
 }
 
