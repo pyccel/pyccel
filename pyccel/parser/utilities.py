@@ -10,9 +10,7 @@ import os
 from pyccel.ast.variable       import DottedName
 from pyccel.ast.internals      import PyccelSymbol
 
-__all__ = ('is_valid_filename_py',
-           'is_valid_filename_pyh',
-           'get_default_path',
+__all__ = ('get_default_path',
            'pyccel_external_lib')
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
@@ -23,28 +21,6 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
 
 #==============================================================================
-
-#  ... checking the validity of the filenames, using absolute paths
-def _is_valid_filename(filename, ext):
-    """Returns True if filename has the extension ext and exists."""
-
-    if not isinstance(filename, str):
-        return False
-
-    if not(ext == filename.split('.')[-1]):
-        return False
-    fname = os.path.abspath(filename)
-
-    return os.path.isfile(fname)
-
-def is_valid_filename_py(filename):
-    """Returns True if filename is an existing python file."""
-    return _is_valid_filename(filename, 'py')
-
-def is_valid_filename_pyh(filename):
-    """Returns True if filename is an existing pyccel header file."""
-    return _is_valid_filename(filename, 'pyh')
-#  ...
 
 def get_default_path(name):
     """
