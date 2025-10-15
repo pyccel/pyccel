@@ -3920,7 +3920,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _build_ListExtend or _build_PythonSetFunction
-        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
