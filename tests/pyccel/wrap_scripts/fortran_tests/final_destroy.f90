@@ -1,4 +1,4 @@
-module final_test
+module final_destroy
   type :: t
      real a,b
      real, pointer :: c(:), d(:)

@@ -121,13 +121,13 @@ def test_overload_methods(language):
 def test_class_no_init(language):
     check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
 
-def test_class_finalizer():
-    check_pyccel_wrap_and_call_translation('final_test', 'runtest_final_test', 'fortran')
+def test_class_final_fortran_keyword():
+    check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
     valgrind = shutil.which('valgrind')
     if valgrind:
         cwd = Path(__file__).parent / 'wrap_scripts' / 'fortran_tests'
-        subprocess.run([valgrind, sys.executable, cwd / 'runtest_final_test.py'], cwd = cwd, check = True)
-        exe_file = cwd / 'runtest_final_test'
+        subprocess.run([valgrind, sys.executable, cwd / 'runtest_final_destroy.py'], cwd = cwd, check = True)
+        exe_file = cwd / 'runtest_final_destroy'
         if sys.platform == "win32":
             exe_file = exe_file.with_suffix('.exe')
         subprocess.run([valgrind, exe_file], cwd = cwd, check = True)
