@@ -3465,7 +3465,7 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
-                    func  = self.scope.find(new_name)
+                    func = first[rhs_name]
                     assert func is not None
                     return self._handle_function(expr, func, args)
                 elif isinstance(rhs, Constant):
