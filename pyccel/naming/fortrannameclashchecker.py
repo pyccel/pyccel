@@ -104,9 +104,9 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             return self._get_collisionless_name(name, symbols)
         if name == '__init__':
             if parent_context == 'module':
-                name = f'{prefix}create'
+                name = f'{prefix}init'
             else:
-                name = 'create'
+                name = 'init'
         if name == '__del__':
             if parent_context == 'module':
                 name = f'{prefix}free'
