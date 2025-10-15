@@ -120,6 +120,19 @@ def test_overload_methods(language):
 def test_class_no_init(language):
     check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
 
+def test_class_finalizer():
+    check_pyccel_wrap_and_call_translation('final_test', 'runtest_final_test', 'fortran')
+    valgrind = shutil.which('valgrind')
+    if valgrind:
+        cwd = Path(__file__).parent / 'wrap_scripts' / f'fortran_tests'
+        subprocess.run([valgrind, sys.executable, cwd / 'runtest_final_test.py'], cwd = cwd, check = True)
+        exe_file = cwd / 'runtest_final_test'
+        if sys.platform == "win32":
+            exe_file = exe_file.with_suffix('.exe')
+        subprocess.run([valgrind, exe_file], cwd = cwd, check = True)
+
+# Flag tests
+
 @pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
 def test_accelerator_flags(language, extra_flag):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
