@@ -60,7 +60,6 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
@@ -399,19 +398,15 @@ class SyntaxParser(BasicParser):
         if len(expr.target) == 0:
             if isinstance(expr.source, AsName):
                 name   = expr.source
-                source = expr.source.name
             else:
                 name   = str(expr.source)
-                source = name
 
-            if not recognised_source(source):
-                container[name] = []
+            container[name] = []
         else:
             source = str(expr.source)
-            if not recognised_source(source):
-                if not source in container.keys():
-                    container[source] = []
-                container[source] += expr.target
+            if not source in container.keys():
+                container[source] = []
+            container[source] += expr.target
 
     #====================================================
     #                 _visit functions
@@ -737,8 +732,10 @@ class SyntaxParser(BasicParser):
             imp = self._visit(name)
             if isinstance(imp, AsName):
                 source = AsName(self._treat_import_source(imp.object, 0), imp.local_alias)
+                self.scope.insert_symbol(imp.local_alias)
             else:
                 source = self._treat_import_source(imp, 0)
+                self.scope.insert_symbol(imp)
             import_line = Import(source)
             import_line.set_current_ast(stmt)
             self.insert_import(import_line)
@@ -763,6 +760,10 @@ class SyntaxParser(BasicParser):
                               severity='error')
 
             targets.append(s)
+            if isinstance(s, AsName):
+                self.scope.insert_symbol(s.local_alias)
+            else:
+                self.scope.insert_symbol(s)
 
         expr = Import(source, targets)
         self.insert_import(expr)
@@ -986,6 +987,8 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
+        targets = [t for target_list in self.scope.imports['imports'].values() for t in target_list]
+
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
@@ -998,7 +1001,7 @@ class SyntaxParser(BasicParser):
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
-                                        forbidden_names = argument_names,
+                                        forbidden_names = argument_names.union(targets),
                                         suggestion = 'result')
 
             if result_annotation:
