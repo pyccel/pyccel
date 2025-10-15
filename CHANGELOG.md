@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 -   #2452 : Fix default Pyccel compiler on command line to use `PYCCEL_DEFAULT_COMPILER` environment variable.
 -   #2447 : Fix returning an empty tuple.
 -   #2456 : Fix Python reference counting when returning a boolean from a function.
+-   #2458 : Fix incoherent import printing in Python and `.pyi` files.
 -   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   #2462 : Fix erroneous additional import in stub file.
 -   Rename `main` function when translating to C.
