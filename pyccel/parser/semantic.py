@@ -4848,12 +4848,15 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators:
-            low_level_decs = decorators['low_level']
-            assert len(low_level_decs) == 1
-            arg = low_level_decs[0].args[0].value
-            assert isinstance(arg, LiteralString)
-            name = PyccelSymbol(arg.python_value)
+        if 'low_level' in decorators or self.is_stub_file:
+            if 'low_level' in decorators:
+                low_level_decs = decorators['low_level']
+                assert len(low_level_decs) == 1
+                arg = low_level_decs[0].args[0].value
+                assert isinstance(arg, LiteralString)
+                name = PyccelSymbol(arg.python_value)
+            else:
+                name = python_name
             if 'overload' not in decorators:
                 insertion_scope.remove_symbol(python_name)
                 insertion_scope.insert_low_level_symbol(python_name, name)
@@ -5366,6 +5369,10 @@ class SemanticParser(BasicParser):
             arg = low_level_decs[0].args[0].value
             assert isinstance(arg, LiteralString)
             name = PyccelSymbol(arg.python_value)
+            self.scope.insert_low_level_symbol(expr.name, name)
+        elif self.is_stub_file:
+            self.scope.remove_symbol(expr.name)
+            name = expr.name
             self.scope.insert_low_level_symbol(expr.name, name)
         else:
             name = self.scope.get_expected_name(expr.name)
