@@ -124,7 +124,7 @@ def test_class_finalizer():
     check_pyccel_wrap_and_call_translation('final_test', 'runtest_final_test', 'fortran')
     valgrind = shutil.which('valgrind')
     if valgrind:
-        cwd = Path(__file__).parent / 'wrap_scripts' / f'fortran_tests'
+        cwd = Path(__file__).parent / 'wrap_scripts' / 'fortran_tests'
         subprocess.run([valgrind, sys.executable, cwd / 'runtest_final_test.py'], cwd = cwd, check = True)
         exe_file = cwd / 'runtest_final_test'
         if sys.platform == "win32":
