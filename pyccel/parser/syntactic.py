@@ -1058,7 +1058,7 @@ class SyntaxParser(BasicParser):
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
 
         init_method = next((m for m in methods if m.name == '__init__'), None)
-        if init_method is None:
+        if init_method is None and not self.is_stub_file:
             init_name = PyccelSymbol('__init__')
             self.scope.insert_symbol(init_name)
             annot = self._treat_type_annotation(stmt, LiteralString(name))
