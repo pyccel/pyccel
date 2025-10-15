@@ -117,6 +117,9 @@ def test_array_methods():
 def test_overload_methods(language):
     check_pyccel_wrap_and_call_translation('class_overloaded_methods', 'runtest_class_overloaded_methods', language)
 
+def test_class_no_init(language):
+    check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
+
 @pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
 def test_accelerator_flags(language, extra_flag):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
