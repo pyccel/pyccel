@@ -104,6 +104,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
 #--------------------------------------------------------------------------------------------------
 #                                  Tests
 #--------------------------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_function(language):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language)
 
@@ -133,10 +134,12 @@ def test_class_finalizer():
 
 # Flag tests
 
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
 def test_accelerator_flags(language, extra_flag):
     check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
 
+@pytest.mark.xdist_incompatible
 def test_convert_only(language):
     cwd = Path(__file__).parent / 'wrap_scripts' / f'{language}_tests'
 
