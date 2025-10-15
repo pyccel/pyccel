@@ -2708,7 +2708,7 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
-        if not self.is_header_file:
+        if not self.is_stub_file:
             self.scope.insert_symbol('__init__', object_type = 'function')
             self.scope.insert_symbol('__del__', object_type = 'function')
 
@@ -2803,7 +2803,7 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
-        if self.is_header_file:
+        if self.is_stub_file:
             init_func = self.scope.functions.get('__init__', None)
         elif not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
@@ -2862,7 +2862,7 @@ class SemanticParser(BasicParser):
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
 
-        if self.is_header_file:
+        if self.is_stub_file:
             free_func = self.scope.functions.get('__del__', None)
         elif init_func:
             syntactic_free_func_name = '__del__'
