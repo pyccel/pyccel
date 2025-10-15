@@ -97,6 +97,10 @@ jobs:
       - name: Coverage install
         if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
         uses: ./.github/actions/coverage_install
+      - name: Test blocked
+        run: |
+          pytest test_pyccel_wrap.py::test_class_finalizer -v
+        working-directory: tests/pyccel
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
         id: f_c_pytest
