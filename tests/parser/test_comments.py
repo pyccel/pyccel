@@ -7,8 +7,8 @@
 from ast import _Unparser
 
 import os
-import pytest
 from pathlib import Path
+import pytest
 
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.errors.errors    import Errors
