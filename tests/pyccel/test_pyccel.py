@@ -1074,13 +1074,13 @@ def test_function(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
@@ -1272,28 +1272,33 @@ def test_varkwargs():
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-#@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
-@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'GNU', reason="1671", language='fortran')
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import(language):
     pyccel_test("scripts/inlining/runtest_inline_using_import.py",
-                dependencies = ["scripts/inlining/inline_using_import.py", "scripts/inlining/numpy_like.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import_2(language):
     pyccel_test("scripts/inlining/runtest_inline_using_import_2.py",
-                dependencies = ["scripts/inlining/inline_using_import.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_named_import(language):
     pyccel_test("scripts/inlining/runtest_inline_using_named_import.py",
-                dependencies = ["scripts/inlining/numpy_twist.py", "scripts/inlining/inline_using_named_import.py"],
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_func2.py",
+                                "scripts/inlining/inline_using_named_import.py"],
                 language = language,
                 output_dtype = float)

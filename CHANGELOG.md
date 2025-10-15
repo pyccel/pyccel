@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   Add support for keyword-only arguments.
 -   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
+-   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
@@ -57,10 +58,12 @@ All notable changes to this project will be documented in this file.
 -   Install STC to use it as a library instead of selectively compiling.
 -   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
 -   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
+-   #2465 : Change default name of `__init__` functions in Fortran translations.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
+-   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
 
 ### Deprecated
 
@@ -68,6 +71,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
+-   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27

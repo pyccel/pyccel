@@ -49,8 +49,6 @@ def skipif_by_language(request, language):
         lang      = mark.kwargs['language']
         reason    = mark.kwargs['reason']
 
-        print(condition, lang, reason)
-
         assert isinstance(condition, bool), preamble + "condition must be bool"
         assert isinstance(  lang, str), preamble + "language must be str"
         assert isinstance(reason, str), preamble + "reason must be str"

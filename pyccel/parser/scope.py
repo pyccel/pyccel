@@ -478,8 +478,8 @@ class Scope(object):
         class_type : PyccelType
             The construct to be inserted.
         """
-        name = class_type.name
-        assert name in self._used_symbols
+        low_level_name = class_type.name
+        name = self.get_python_name(low_level_name)
         self._locals['cls_constructs'][name] = class_type
 
     def insert_function(self, func, name):

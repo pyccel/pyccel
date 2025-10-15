@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import sin
+from my_func import func
 from pyccel.decorators import inline
 
 @inline
-def sin_2(d : float):
-    return sin(2*d)
+def func_2(d : float):
+    return func(2*d)

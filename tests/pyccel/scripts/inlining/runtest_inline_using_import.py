@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy_like as np
-from inline_using_import import sin_2
+import my_other_func as f
+from inline_using_import import func_2
 
 if __name__ == '__main__':
-    print(np.my_sin(3.0))
-    print(sin_2(1.5))
+    print(f.foobar(3.0))
+    print(func_2(1.5))

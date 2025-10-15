@@ -2715,7 +2715,7 @@ class SemanticParser(BasicParser):
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
-        if not self.is_header_file:
+        if not self.is_stub_file:
             for f in expr.funcs:
                 self.insert_function(f)
         else:
@@ -2898,10 +2898,10 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        # in the case of a header file, we need to convert all headers to
+        # in the case of a stub file, we need to convert all headers to
         # FunctionDef etc ...
 
-        if self.is_header_file:
+        if self.is_stub_file:
             if self.metavars.get('external', False):
                 for f in funcs:
                     f.is_external = True
@@ -3052,7 +3052,7 @@ class SemanticParser(BasicParser):
                     cls = self.scope.find(str(dtype), 'classes')
                     if cls:
                         init_method = cls.get_method('__init__', expr)
-                        if not init_method.is_semantic:
+                        if not init_method.is_semantic and not self.is_stub_file:
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
@@ -4841,8 +4841,8 @@ class SemanticParser(BasicParser):
         func = insertion_scope.functions.get(python_name, None)
         if func:
             if func.is_semantic:
-                if self.is_header_file:
-                    # Only Interfaces should be revisited in a header file
+                if self.is_stub_file:
+                    # Only Interfaces should be revisited in a stub file
                     assert isinstance(func, Interface)
                     existing_semantic_funcs = [*func.functions]
                 else:
@@ -5144,7 +5144,23 @@ class SemanticParser(BasicParser):
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
             mod = self.d_parsers[mod_name].semantic_parser.ast
 
-            global_symbols = set(expr.body.get_attribute_nodes(PyccelSymbol))
+            global_symbols = set()
+            to_examine = [expr.body]
+            while to_examine:
+                remaining_to_examine = []
+                for ex in to_examine:
+                    if isinstance(ex, DottedName) and isinstance(ex.name[-1], FunctionCall):
+                        global_symbols.add(ex.name[0])
+                        remaining = ex.name[-1].get_attribute_nodes((PyccelSymbol, DottedName))
+                        remaining.remove(ex.name[-1].funcdef)
+                        global_symbols.update(s for s in remaining if not isinstance(s, DottedName))
+                        remaining_to_examine.extend(s for s in remaining if isinstance(s, DottedName))
+                    else:
+                        symbols = ex.get_attribute_nodes((PyccelSymbol, DottedName))
+                        global_symbols.update(s for s in symbols if not isinstance(s, DottedName))
+                        remaining_to_examine.extend(s for s in symbols if isinstance(s, DottedName))
+                to_examine = remaining_to_examine
+
             global_symbols.difference_update(expr.scope.local_used_symbols)
 
             for v in global_symbols:
@@ -5508,7 +5524,7 @@ class SemanticParser(BasicParser):
             # using repr.
             # TODO shall we improve it?
 
-            p       = self.d_parsers[source_target]
+            p       = self.d_parsers[source]
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
