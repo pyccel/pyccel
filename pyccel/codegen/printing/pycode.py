@@ -700,6 +700,10 @@ class PythonCodePrinter(CodePrinter):
             return target
 
         name = self._print(expr.name)
+        if isinstance(expr.object, FunctionDef):
+            if expr.object.scope and not expr.object.is_inline:
+                name = self._print(expr.object.scope.get_python_name(expr.name))
+
         if name == target:
             return name
         else:
