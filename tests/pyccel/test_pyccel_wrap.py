@@ -7,9 +7,8 @@ import sys
 
 import pytest
 
-from pyccel.compilers.default_compilers import available_compilers
-
 from test_pyccel import compare_pyth_fort_output
+from pyccel.compilers.default_compilers import available_compilers
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -129,7 +128,7 @@ def test_class_no_init(language):
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 def test_class_final_fortran_keyword():
-    py_out, l_out = check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
+    py_out, _ = check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
     assert "c allocated, cleaning up" in py_out
 
     # Variables declared in the main program implicitly acquire the save attribute according to the standard. The compiler is not supposed to generate any automatic finalization.
