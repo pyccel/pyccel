@@ -31,7 +31,7 @@ def stc_language(request):
     return request.param
 
 @pytest.fixture(autouse=True)
-def skipif_by_language(request, language):
+def skipif_by_language(request):
     """
     Looks for the decorator `skipif_by_language(condition, *, language, reason)`
     and skips the test when the condition is met for a given language.
@@ -46,14 +46,13 @@ def skipif_by_language(request, language):
         assert 'reason'   in mark.kwargs.keys(), preamble + "you need to specify reason=STRING"
 
         condition = mark.args[0]
-        lang      = mark.kwargs['language']
+        language  = mark.kwargs['language']
         reason    = mark.kwargs['reason']
 
         assert isinstance(condition, bool), preamble + "condition must be bool"
-        assert isinstance(  lang, str), preamble + "language must be str"
         assert isinstance(reason, str), preamble + "reason must be str"
 
-        if condition and lang == language:
+        if condition and request.getfixturevalue('language') == language:
             pytest.skip(reason)
 
 def move_coverage(path_dir):
