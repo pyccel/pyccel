@@ -3451,31 +3451,32 @@ class SemanticParser(BasicParser):
                             scope = scope.parent_scope
 
                 if isinstance(rhs_obj, PyccelFunctionDef):
+                    assert new_name not in scope.imports['functions']
                     scope.imports['functions'][new_name] = rhs_obj
                 elif isinstance(rhs, FunctionCall):
-                    scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                    assert new_name not in scope.imports['functions']
                     m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                    scope.imports['functions'][new_name].set_current_user_node(m)
+                    rhs_obj = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                    scope.imports['functions'][new_name] = rhs_obj
+                    rhs_obj.set_current_user_node(m)
                 elif isinstance(rhs, ConstructorCall):
+                    assert new_name not in scope.imports['classes']
                     scope.imports['classes'][new_name] = rhs_obj
                 elif isinstance(rhs, Variable):
+                    assert new_name not in scope.imports['variables']
                     scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
-                    func = first[rhs_name]
-                    assert func is not None
-                    return self._handle_function(expr, func, args)
+                    return self._handle_function(expr, func = rhs_obj, args = args)
                 elif isinstance(rhs, Constant):
-                    var = first[rhs_name]
                     if new_name != rhs_name:
-                        var.name = new_name
-                    return var
+                        rhs_obj.name = new_name
+                    return rhs_obj
                 else:
                     # If object is something else (eg. dict)
-                    var = first[rhs_name]
-                    return var
+                    return rhs_obj
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr, severity='fatal')
