@@ -3451,7 +3451,7 @@ class SemanticParser(BasicParser):
                             scope = scope.parent_scope
 
                 if isinstance(rhs_obj, PyccelFunctionDef):
-                    assert new_name not in scope.imports['functions']
+                    assert new_name not in scope.imports['functions'] or scope.imports['functions'][new_name] == rhs_obj
                     scope.imports['functions'][new_name] = rhs_obj
                 elif isinstance(rhs, FunctionCall):
                     assert new_name not in scope.imports['functions']
