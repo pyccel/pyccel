@@ -3454,11 +3454,11 @@ class SemanticParser(BasicParser):
                     assert new_name not in scope.imports['functions'] or scope.imports['functions'][new_name] == rhs_obj
                     scope.imports['functions'][new_name] = rhs_obj
                 elif isinstance(rhs, FunctionCall):
-                    assert new_name not in scope.imports['functions']
-                    m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                    rhs_obj = rhs_obj.clone(rhs_obj.name, is_imported = True)
-                    scope.imports['functions'][new_name] = rhs_obj
-                    rhs_obj.set_current_user_node(m)
+                    if new_name not in scope.imports['functions']:
+                        m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                        rhs_obj = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                        scope.imports['functions'][new_name] = rhs_obj
+                        rhs_obj.set_current_user_node(m)
                 elif isinstance(rhs, ConstructorCall):
                     assert new_name not in scope.imports['classes']
                     scope.imports['classes'][new_name] = rhs_obj
