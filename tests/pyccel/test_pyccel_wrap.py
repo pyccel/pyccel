@@ -131,7 +131,10 @@ def test_class_no_init(language):
 def test_class_final_fortran_keyword():
     py_out, l_out = check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
     assert "c allocated, cleaning up" in py_out
+
+    # Variables declared in the main program implicitly acquire the save attribute according to the standard. The compiler is not supposed to generate any automatic finalization.
     #assert "c allocated, cleaning up" in l_out
+
     valgrind = shutil.which('valgrind')
     if valgrind:
         cwd = Path(__file__).parent / 'wrap_scripts' / 'fortran_tests'
