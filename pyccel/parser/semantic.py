@@ -3437,12 +3437,11 @@ class SemanticParser(BasicParser):
                 imp = self.scope.find(_get_name(lhs), 'imports')
 
                 new_name = rhs_name
+                rhs_obj = first[rhs_name]
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
                         new_name = self.scope.get_new_name(rhs_name)
-
-                        rhs_obj = first[rhs_name]
 
                         # Save the import target that has been used
                         imp.define_target(AsName(rhs_obj, new_name))
@@ -3451,16 +3450,16 @@ class SemanticParser(BasicParser):
                         while source_mod not in scope.imports['imports']:
                             scope = scope.parent_scope
 
-                        if isinstance(rhs_obj, PyccelFunctionDef):
-                            scope.imports['functions'][new_name] = rhs_obj
-                        elif isinstance(rhs, FunctionCall):
-                            scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
-                            m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                            scope.imports['functions'][new_name].set_current_user_node(m)
-                        elif isinstance(rhs, ConstructorCall):
-                            scope.imports['classes'][new_name] = rhs_obj
-                        elif isinstance(rhs, Variable):
-                            scope.imports['variables'][new_name] = rhs
+                if isinstance(rhs_obj, PyccelFunctionDef):
+                    scope.imports['functions'][new_name] = rhs_obj
+                elif isinstance(rhs, FunctionCall):
+                    scope.imports['functions'][new_name] = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                    m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                    scope.imports['functions'][new_name].set_current_user_node(m)
+                elif isinstance(rhs, ConstructorCall):
+                    scope.imports['classes'][new_name] = rhs_obj
+                elif isinstance(rhs, Variable):
+                    scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
