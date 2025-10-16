@@ -3434,7 +3434,8 @@ class SemanticParser(BasicParser):
         if isinstance(first, Module):
 
             if rhs_name in first:
-                imp = self.scope.find(_get_name(lhs), 'imports')
+                scope = self.scope
+                imp = scope.find(_get_name(lhs), 'imports')
 
                 new_name = rhs_name
                 rhs_obj = first[rhs_name]
@@ -3445,7 +3446,6 @@ class SemanticParser(BasicParser):
 
                         # Save the import target that has been used
                         imp.define_target(AsName(rhs_obj, new_name))
-                        scope = self.scope
                         source_mod = _get_name(lhs)
                         while source_mod not in scope.imports['imports']:
                             scope = scope.parent_scope
