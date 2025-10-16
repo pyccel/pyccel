@@ -4848,7 +4848,7 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators or self.is_stub_file:
+        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
             if 'low_level' in decorators:
                 low_level_decs = decorators['low_level']
                 assert len(low_level_decs) == 1
