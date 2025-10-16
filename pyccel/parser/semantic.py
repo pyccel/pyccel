@@ -3657,7 +3657,7 @@ class SemanticParser(BasicParser):
 
             cls = self.scope.find(name, 'classes')
             d_methods = cls.methods_as_dict
-            method = d_methods.pop('__init__', None)
+            init_method = d_methods.pop('__init__', None)
 
             dtype = cls.class_type
             cls_def = cls
@@ -3674,33 +3674,33 @@ class SemanticParser(BasicParser):
             else:
                 lhs = self.scope.get_new_name()
 
-            if method is not None:
-                if not method.is_semantic:
-                    if method.is_inline:
+            if init_method is not None:
+                if not init_method.is_semantic:
+                    if init_method.is_inline:
                         errors.report("An __init__ method cannot be inlined",
                                 severity='fatal', symbol=expr)
-                    method = self._annotate_the_called_function_def(method, args)
+                    init_method = self._annotate_the_called_function_def(init_method, args)
 
                 if isinstance(lhs, AnnotatedPyccelSymbol):
                     annotation = self._visit(lhs.annotation)
-                    if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != method.arguments[0].var.class_type:
+                    if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != init_method.arguments[0].var.class_type:
                         errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
                                 symbol=annotation, severity='error')
                     lhs = lhs.name
 
                 cls_variable = self._assign_lhs_variable(lhs, d_var,
-                                        rhs = method.results.var,
+                                        rhs = init_method.results.var,
                                         new_expressions = new_expression,
                                         is_augassign = False)
                 args = (FunctionCallArgument(cls_variable), *args)
 
-                args = self._sort_function_call_args(method.arguments, args)
-                self._check_argument_compatibility(args, method.arguments,
-                                method, method.is_elemental)
+                args = self._sort_function_call_args(init_method.arguments, args)
+                self._check_argument_compatibility(args, init_method.arguments,
+                                init_method, init_method.is_elemental)
 
-                new_expr = ConstructorCall(method, args, cls_variable)
+                new_expr = ConstructorCall(init_method, args, cls_variable)
 
-                for a, f_a in zip(new_expr.args, method.arguments):
+                for a, f_a in zip(new_expr.args, init_method.arguments):
                     if f_a.persistent_target:
                         val = a.value
                         if isinstance(val, Variable):
