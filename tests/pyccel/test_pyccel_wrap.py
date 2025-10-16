@@ -9,6 +9,8 @@ import pytest
 
 from pyccel.compilers.default_compilers import available_compilers
 
+from test_pyccel import compare_pyth_fort_output
+
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -106,23 +108,30 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
 #--------------------------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_function(language):
-    check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language)
+    py_out, l_out = check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language)
+    compare_pyth_fort_output(py_out, l_out, int, language)
 
 def test_class_accessors(language):
-    check_pyccel_wrap_and_call_translation('class_property', 'runtest_class_property', language)
+    py_out, l_out = check_pyccel_wrap_and_call_translation('class_property', 'runtest_class_property', language)
+    compare_pyth_fort_output(py_out, l_out, int, language)
 
 def test_array_methods():
     # C is not tested as compiling array dependencies by hand is harder than necessary for the test
-    check_pyccel_wrap_and_call_translation('array_methods', 'runtest_array_methods', 'fortran')
+    py_out, l_out = check_pyccel_wrap_and_call_translation('array_methods', 'runtest_array_methods', 'fortran')
+    compare_pyth_fort_output(py_out, l_out, float, language)
 
 def test_overload_methods(language):
-    check_pyccel_wrap_and_call_translation('class_overloaded_methods', 'runtest_class_overloaded_methods', language)
+    py_out, l_out = check_pyccel_wrap_and_call_translation('class_overloaded_methods', 'runtest_class_overloaded_methods', language)
+    compare_pyth_fort_output(py_out, l_out, [int, float], language)
 
 def test_class_no_init(language):
-    check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
+    py_out, l_out = check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
+    compare_pyth_fort_output(py_out, l_out, int, language)
 
 def test_class_final_fortran_keyword():
-    check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
+    py_out, l_out = check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
+    assert "c allocated, cleaning up" in py_out
+    #assert "c allocated, cleaning up" in l_out
     valgrind = shutil.which('valgrind')
     if valgrind:
         cwd = Path(__file__).parent / 'wrap_scripts' / 'fortran_tests'
@@ -137,7 +146,8 @@ def test_class_final_fortran_keyword():
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
 def test_accelerator_flags(language, extra_flag):
-    check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
+    py_out, l_out = check_pyccel_wrap_and_call_translation('functions', 'runtest_functions', language, (extra_flag,))
+    compare_pyth_fort_output(py_out, l_out, int, language)
 
 @pytest.mark.xdist_incompatible
 def test_convert_only(language):
