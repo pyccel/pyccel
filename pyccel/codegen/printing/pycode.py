@@ -908,18 +908,22 @@ class PythonCodePrinter(CodePrinter):
             init_func = mod.init_func
             free_func = mod.free_func
 
-        if isinstance(expr.source, AsName):
-            source = self._print(expr.source.name)
-        else:
-            source = self._print(expr.source)
+        source = self._print(expr.source)
 
         source = import_source_swap.get(source, source)
 
         target = [t for t in expr.target if not isinstance(t.object, Module)]
+        mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
-        if not target:
-            return 'import {source}\n'.format(source=source)
-        else:
+        prefix = ''
+        if mod_target:
+            if source in pyccel_builtin_import_registry:
+                prefix = ''.join(f'import {t.name} as {t.local_alias}\n' for t in mod_target)
+            else:
+                assert len(mod_target) == 1
+                prefix = f'import {source} as {mod_target[0].local_alias}\n'
+
+        if target:
             if source in import_object_swap:
                 target = [AsName(import_object_swap[source].get(i.object,i.object), i.local_alias) for i in target]
             if source in import_target_swap:
@@ -944,7 +948,9 @@ class PythonCodePrinter(CodePrinter):
 
             target = [self._print(t) for t in target if t.object not in (init_func, free_func)]
             target = ', '.join(target)
-            return 'from {source} import {target}\n'.format(source=source, target=target)
+            return prefix + f'from {source} import {target}\n'
+        else:
+            return prefix
 
     def _print_CodeBlock(self, expr):
         if len(expr.body)==0:
