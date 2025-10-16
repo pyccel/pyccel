@@ -5548,9 +5548,16 @@ class SemanticParser(BasicParser):
                         if n in d_son:
                             e = d_son[n]
                             if entry == 'functions':
-                                container[entry][t] = e.clone(e.name, is_imported=True)
-                                m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                                container[entry][t].set_current_user_node(m)
+                                if t in container[entry]:
+                                    existing_e = container[entry][t]
+                                    assert existing_e.is_imported
+                                    assert e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0] is \
+                                            existing_e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                else:
+                                    assert t not in container[entry]
+                                    container[entry][t] = e.clone(e.name, is_imported=True)
+                                    m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                    container[entry][t].set_current_user_node(m)
                             elif entry == 'variables':
                                 container[entry][t] = e.clone(e.name)
                             else:
