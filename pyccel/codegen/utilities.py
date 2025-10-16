@@ -29,9 +29,9 @@ __all__ = ['copy_internal_library','recompile_object']
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
-def generate_extension_modules(import_key, import_node, pyccel_dirpath, *,
-                               compiler, include = (), libs = (), libdir = (), dependencies = (),
-                               extra_compilation_tools = (), language, verbose, convert_only,
+def generate_extension_modules(import_key, import_node, pyccel_dirpath,
+                               compiler, include, libs, libdir, dependencies,
+                               extra_compilation_tools, language, verbose, convert_only,
                                installed_libs):
     """
     Generate any new modules that describe extensions.
@@ -91,15 +91,13 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath, *,
             with open(filename, 'w', encoding="utf-8") as f:
                 f.write(code)
 
-        if not convert_only:
-            new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
-                                include=include,
-                                libs=libs, libdir=libdir,
-                                dependencies=dependencies,
-                                extra_compilation_tools=extra_compilation_tools))
-            manage_dependencies({'gFTL':None}, compiler = compiler, pyccel_dirpath = pyccel_dirpath,
-                                mod_obj = new_dependencies[-1], language = language, verbose = verbose,
-                                convert_only = convert_only, installed_libs = installed_libs)
+        new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
+                            include=include,
+                            libs=libs, libdir=libdir,
+                            dependencies=dependencies,
+                            extra_compilation_tools=extra_compilation_tools))
+        manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
+                language, verbose, convert_only, installed_libs = installed_libs)
 
     return new_dependencies
 
@@ -145,8 +143,7 @@ def recompile_object(compile_obj,
                 verbose=verbose)
 
 #==============================================================================
-def manage_dependencies(pyccel_imports, *, pyccel_dirpath, language, verbose,
-                        compiler, mod_obj = None, convert_only = False,
+def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, language, verbose, convert_only = False,
                         installed_libs = None):
     """
     Manage dependencies of the code to be compiled.
@@ -183,53 +180,40 @@ def manage_dependencies(pyccel_imports, *, pyccel_dirpath, language, verbose,
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
             stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, verbose, compiler)
 
+            mod_obj.add_dependencies(stdlib_obj)
+
             # stop after copying lib to __pyccel__ directory for
             # convert only
             if convert_only:
                 continue
 
-            mod_obj.add_dependencies(stdlib_obj)
+    for lib_obj in installed_libs.values():
+        # get the include folder path and library files
+        recompile_object(lib_obj,
+                         compiler = compiler,
+                         language = language,
+                         verbose  = verbose)
 
-    if convert_only:
-        # Iterate over the imports and determine if the printer
-        # requires an extension module to be generated
-        for key, import_node in pyccel_imports.items():
-            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
-                                              compiler = compiler,
-                                              language = language,
-                                              verbose = verbose,
-                                              convert_only = convert_only,
-                                              installed_libs = installed_libs)
-
-    else:
-        # Iterate over the imports and determine if the printer
-        # requires an extension module to be generated
-        for key, import_node in pyccel_imports.items():
-            deps = generate_extension_modules(key, import_node, pyccel_dirpath,
-                                              compiler     = compiler,
-                                              include     = mod_obj.include,
-                                              libs         = mod_obj.libs,
-                                              libdir      = mod_obj.libdir,
-                                              dependencies = mod_obj.dependencies,
-                                              extra_compilation_tools = mod_obj.extra_compilation_tools,
-                                              language = language,
-                                              verbose = verbose,
-                                              convert_only = convert_only,
-                                              installed_libs = installed_libs)
-
-            for d in deps:
-                recompile_object(d,
-                                 compiler = compiler,
-                                 language = language,
-                                 verbose  = verbose)
-                mod_obj.add_dependencies(d)
-
-        for lib_obj in installed_libs.values():
-            # get the include folder path and library files
-            recompile_object(lib_obj,
+    # Iterate over the imports and determine if the printer
+    # requires an extension module to be generated
+    for key, import_node in pyccel_imports.items():
+        deps = generate_extension_modules(key, import_node, pyccel_dirpath,
+                                          compiler     = compiler,
+                                          include     = mod_obj.include,
+                                          libs         = mod_obj.libs,
+                                          libdir      = mod_obj.libdir,
+                                          dependencies = mod_obj.dependencies,
+                                          extra_compilation_tools = mod_obj.extra_compilation_tools,
+                                          language = language,
+                                          verbose = verbose,
+                                          convert_only = convert_only,
+                                          installed_libs = installed_libs)
+        for d in deps:
+            recompile_object(d,
                              compiler = compiler,
                              language = language,
                              verbose  = verbose)
+            mod_obj.add_dependencies(d)
 
 #==============================================================================
 def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None):
@@ -264,7 +248,7 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
         is the CompileObj describing the .o file.
     """
     dep_fname = Path(parser.filename)
-    assert compile_libs is None or dep_fname.suffix in ('.pyi', '.pyh') or pyccel_root in dep_fname.parents
+    assert compile_libs is None or dep_fname.suffix == '.pyi' or pyccel_root in dep_fname.parents
     mod_folder = dep_fname.parent
     mod_base = dep_fname.name
 
@@ -280,12 +264,17 @@ def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None
         if parser.compile_obj:
             deps[dep_fname] = parser.compile_obj
         elif dep_fname not in deps:
+            dep_compile_includes = [mod_folder / i for i in parser.metavars.get('includes', '').split(',') if i]
+            dep_compile_libdirs = [mod_folder / l for l in parser.metavars.get('libdirs', '').split(',') if l]
             dep_compile_libs = [l for l in parser.metavars.get('libraries', '').split(',') if l]
             if not parser.metavars.get('ignore_at_import', False):
+                is_header_only = dep_fname.suffix == '.pyi' and parser.original_filename.suffix != '.py'
                 deps[dep_fname] = CompileObj(mod_base,
                                     folder          = mod_folder,
+                                    include         = dep_compile_includes,
                                     libs            = dep_compile_libs,
-                                    has_target_file = not parser.metavars.get('no_target', False))
+                                    libdir          = dep_compile_libdirs,
+                                    has_target_file = not is_header_only)
             else:
                 compile_libs.extend(dep_compile_libs)
 

@@ -17,7 +17,7 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, CustomDataType,
+from .datatypes import (PyccelType, CustomDataType, TupleType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
@@ -86,7 +86,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SympyFunction',
     'While',
     'With',
 )
@@ -1492,23 +1491,32 @@ class FunctionDefArgument(TypedAstNode):
     name : PyccelSymbol, Variable, FunctionAddress
         The name of the argument.
 
-    value : TypedAstNode, default: None
+    value : TypedAstNode, optional
         The default value of the argument.
 
-    kwonly : bool
+    posonly : bool, default: False
+        Indicates if the argument must be passed by position.
+
+    kwonly : bool, default: False
         Indicates if the argument must be passed by keyword.
 
-    annotation : str
+    annotation : str, optional
         The type annotation describing the argument.
 
-    bound_argument : bool
+    bound_argument : bool, default: False
         Indicates if the argument is bound to the function call. This is
         the case if the argument is the first argument of a method of a
         class.
 
     persistent_target : bool, default: False
-        Indicate if the object passed as this argument becomes a target.
+        Indicates if the object passed as this argument becomes a target.
         This argument will usually only be passed by the wrapper.
+
+    is_vararg : bool, default: False
+        Indicates if the argument represents a variadic argument.
+
+    is_kwarg : bool, default: False
+        Indicates if the argument represents a set of keyword arguments.
 
     See Also
     --------
@@ -1521,11 +1529,12 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target', '_bound_argument')
+    __slots__ = ('_name','_var','_posonly','_kwonly','_annotation','_value','_inout', '_persistent_target',
+                 '_bound_argument', '_is_vararg', '_is_kwarg')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False,
-            persistent_target = False):
+    def __init__(self, name, *, value = None, posonly=False, kwonly=False, annotation=None, bound_argument = False,
+            persistent_target = False, is_vararg = False, is_kwarg = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1540,10 +1549,13 @@ class FunctionDefArgument(TypedAstNode):
         if not isinstance(bound_argument, bool):
             raise TypeError("bound_argument must be a boolean")
         self._value      = value
+        self._posonly    = posonly
         self._kwonly     = kwonly
         self._annotation = annotation
         self._persistent_target = persistent_target
         self._bound_argument = bound_argument
+        self._is_vararg = is_vararg
+        self._is_kwarg = is_kwarg
 
         if isinstance(name, Variable):
             name.declare_as_argument()
@@ -1551,7 +1563,7 @@ class FunctionDefArgument(TypedAstNode):
         if pyccel_stage != "syntactic":
             if isinstance(self.var, Variable):
                 self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
-                        and not self.var.is_const
+                        and not self.var.is_const and not isinstance(self.var.class_type, TupleType)
             else:
                 # If var is not a Variable it is a FunctionAddress
                 self._inout = False
@@ -1572,9 +1584,20 @@ class FunctionDefArgument(TypedAstNode):
         return self._var
 
     @property
+    def is_posonly(self):
+        """
+        Indicates if the argument must be passed by position.
+
+        Indicates if the argument must be passed by position.
+        """
+        return self._posonly
+
+    @property
     def is_kwonly(self):
-        """ Indicates if the argument must be passed
-        by keyword
+        """
+        Indicates if the argument must be passed by keyword.
+
+        Indicates if the argument must be passed by keyword.
         """
         return self._kwonly
 
@@ -1660,16 +1683,46 @@ class FunctionDefArgument(TypedAstNode):
         self._bound_argument = bound
 
     def __str__(self):
+        name = str(self.name)
+        if self.is_vararg:
+            name = f'*{name}'
+        if self.is_kwarg:
+            name = f'**{name}'
+
         if self.has_default:
-            return f'{self.name}={self.value}'
+            return f'{name}={self.value}'
         else:
-            return str(self.name)
+            return name
 
     def __repr__(self):
+        name = repr(self.name)
+        if self.is_vararg:
+            name = f'*{name}'
+        if self.is_kwarg:
+            name = f'**{name}'
+
         if self.has_default:
-            return f'FunctionDefArgument({self.name}={self.value})'
+            return f'FunctionDefArgument({name}={self.value})'
         else:
-            return f'FunctionDefArgument({repr(self.name)})'
+            return f'FunctionDefArgument({name})'
+
+    @property
+    def is_vararg(self):
+        """
+        True if the argument represents a variadic argument.
+
+        True if the argument represents a variadic argument.
+        """
+        return self._is_vararg
+
+    @property
+    def is_kwarg(self):
+        """
+        True if the argument represents a set of keyword arguments.
+
+        True if the argument represents a set of keyword arguments.
+        """
+        return self._is_kwarg
 
 class FunctionDefResult(TypedAstNode):
     """
@@ -3096,12 +3149,6 @@ class FunctionAddress(FunctionDef):
         kwargs['memory_handling'] = self.memory_handling
         return args, kwargs
 
-class SympyFunction(FunctionDef):
-
-    """Represents a function definition."""
-    __slots__ = ()
-
-
 
 class ClassDef(ScopedAstNode):
     """
@@ -3140,6 +3187,10 @@ class ClassDef(ScopedAstNode):
     class_type : PyccelType
         The data type associated with this class.
 
+    decorators : dict
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
@@ -3158,7 +3209,8 @@ class ClassDef(ScopedAstNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods', '_class_type',
-                 '_imports','_superclasses','_interfaces', '_docstring')
+                 '_imports','_superclasses','_interfaces', '_docstring',
+                 '_decorators')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
     def __init__(
@@ -3171,7 +3223,8 @@ class ClassDef(ScopedAstNode):
         interfaces=(),
         docstring = None,
         scope = None,
-        class_type = None
+        class_type = None,
+        decorators = ()
         ):
 
         # name
@@ -3228,6 +3281,7 @@ class ClassDef(ScopedAstNode):
         self._interfaces = interfaces
         self._docstring = docstring
         self._class_type = class_type
+        self._decorators = decorators
 
         super().__init__(scope = scope)
 
@@ -3291,14 +3345,25 @@ class ClassDef(ScopedAstNode):
         return self._docstring
 
     @property
-    def methods_as_dict(self):
-        """Returns a dictionary that contains all methods, where the key is the
-        method's name."""
+    def decorators(self):
+        """
+        Dictionary mapping decorator names to descriptions.
 
-        d_methods = {}
-        for i in self.methods:
-            d_methods[i.name] = i
-        return d_methods
+        Dictionary mapping the names of decorators applied to the function
+        to descriptions of the decorator annotation.
+        """
+        return self._decorators
+
+    @property
+    def methods_as_dict(self):
+        """
+        A dictionary containing all methods with Python names as keys.
+
+        A dictionary containing all the methods in the class. The keys are the original
+        Python names of the methods. The values are the methods themselves.
+        """
+        return {self._scope.get_python_name(m.name) if m.is_semantic else m.name: m
+                for m in self.methods}
 
     @property
     def attributes_as_dict(self):
@@ -4223,14 +4288,31 @@ class If(PyccelAstNode):
         super().set_current_ast(ast_node)
 
 class StarredArguments(PyccelAstNode):
-    __slots__ = ('_starred_obj',)
+    """
+    A class representing unpacked arguments passed to a function call.
+
+    A class representing unpacked arguments passed to a function call.
+    E.g. `f(*my_arg)`.
+
+    Parameters
+    ----------
+    args : TypedAstNode
+        The object whose elements are unpacked.
+    """
+    __slots__ = ('_starred_obj')
     _attribute_nodes = ('_starred_obj',)
+
     def __init__(self, args):
         self._starred_obj = args
         super().__init__()
 
     @property
     def args_var(self):
+        """
+        The object whose elements are unpacked.
+
+        The object whose elements are unpacked.
+        """
         return self._starred_obj
 
 # ...

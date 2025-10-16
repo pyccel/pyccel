@@ -11,6 +11,8 @@ import os
 from pathlib import Path
 
 from pyccel.errors.errors    import Errors
+from pyccel.ast.utilities import recognised_source
+
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
@@ -106,6 +108,17 @@ class Parser(object):
         return self._filename
 
     @property
+    def original_filename(self) -> Path:
+        """
+        The absolute path to the original Python file that was translated.
+
+        This will be equivalent to the filename, unless the file is a dependency.
+        In that case the filename will be a .pyi file while the original_filename
+        will be a .py file.
+        """
+        return self._original_filename
+
+    @property
     def d_parsers(self):
         """Returns the d_parsers parser."""
 
@@ -174,9 +187,9 @@ class Parser(object):
         if verbose:
             print ('>> Parsing :: ', self._filename)
 
-        self.syntax_parser = SyntaxParser(self._filename, verbose = verbose)
-        parser = self.syntax_parser
-        parser.ast        = parser.ast
+        parser             = SyntaxParser(self._filename, verbose = verbose,
+                                            context_dict = self._context_dict)
+        self.syntax_parser = parser
 
         if d_parsers_by_filename is None:
             d_parsers_by_filename = {}
@@ -207,11 +220,11 @@ class Parser(object):
         if self._semantic_parser:
             return self._semantic_parser
 
-        if verbose:
-            print ('>> Calculating semantic annotations :: ', self._filename)
-
         # we first treat all sons to get imports
         self._annotate_sons(verbose=verbose)
+
+        if verbose:
+            print ('>> Calculating semantic annotations :: ', self._filename)
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
@@ -267,7 +280,7 @@ class Parser(object):
         for p in to_parse:
             d_parsers_by_filename[p].parse(verbose=verbose, d_parsers_by_filename = d_parsers_by_filename)
 
-        imports     = self.imports
+        imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         for imp, (filename_py, stashed_file) in source_to_filename.items():
             if filename_py in d_parsers_by_filename:
@@ -302,7 +315,8 @@ class Parser(object):
             son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
-            d_parsers[source] = son
+            d_parsers[getattr(source, 'name', source)] = son
+            d_parsers.update(son.d_parsers)
 
         return d_parsers
 

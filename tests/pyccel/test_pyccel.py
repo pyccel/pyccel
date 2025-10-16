@@ -12,6 +12,7 @@ import numpy as np
 from filelock import FileLock
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
+from pyccel.compilers.default_compilers import available_compilers
 
 #==============================================================================
 # UTILITIES
@@ -93,7 +94,9 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
     --------
     compile_fortran_or_c : The function that is called.
     """
-    gcc = shutil.which('gcc')
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    compiler_info = available_compilers[compiler_family]['c']
+    compiler = compiler_info['exec']
     folder = os.path.join(os.path.dirname(test_file), '__pyccel__')
     deps = []
     subfolders = [ f.path for f in os.scandir(folder) if f.is_dir() ]
@@ -102,9 +105,9 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
             root, ext = os.path.splitext(fi)
             if ext == '.c':
                 deps.append(os.path.join(f, root) +'.py')
-                with subprocess.Popen([gcc, '-c', fi, '-o', root+'.o'], text=True, cwd=f) as p:
+                with subprocess.Popen([compiler, '-c', fi, '-o', root+'.o'], text=True, cwd=f) as p:
                     p.wait()
-    compile_fortran_or_c(gcc, '.c', path_dir, test_file, dependencies, deps, is_mod)
+    compile_fortran_or_c(compiler_info, '.c', path_dir, test_file, dependencies, deps, is_mod)
 
 #------------------------------------------------------------------------------
 def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
@@ -131,10 +134,12 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
     --------
     compile_fortran_or_c : The function that is called.
     """
-    compile_fortran_or_c(shutil.which('gfortran'), '.f90', path_dir, test_file, dependencies, (), is_mod)
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    compiler_info = available_compilers[compiler_family]['fortran']
+    compile_fortran_or_c(compiler_info, '.f90', path_dir, test_file, dependencies, (), is_mod)
 
 #------------------------------------------------------------------------------
-def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies, std_deps, is_mod=False):
+def compile_fortran_or_c(compiler_info, extension, path_dir, test_file, dependencies, std_deps, is_mod=False):
     """
     Compile Fortran or C code manually.
 
@@ -143,8 +148,8 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
 
     Parameters
     ----------
-    compiler : str
-        The compiler (gfortran/gcc).
+    compiler_info : dict
+        A dictionary describing the compiler properties.
 
     extension : str
         The extension of the generated file (.c/.f90).
@@ -164,6 +169,7 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
     is_mod : bool, default=False
         True if translating a module, False if translating a program
     """
+    compiler = compiler_info['exec']
     root = insert_pyccel_folder(test_file)[:-3]
 
     assert os.path.isfile(root+extension)
@@ -174,7 +180,7 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, "prog_"+base_name)
         if os.path.isfile(prog_root+extension):
-            compile_fortran_or_c(compiler, extension,
+            compile_fortran_or_c(compiler_info, extension,
                                 path_dir, test_file,
                                 dependencies, std_deps,
                                 is_mod = True)
@@ -201,9 +207,13 @@ def compile_fortran_or_c(compiler, extension, path_dir, test_file, dependencies,
 
     command.append("-o")
     if is_mod:
-        command.append("%s.o" % root)
+        command.append(f"{root}.o")
     else:
-        command.append("%s" % test_file[:-3])
+        command.append(test_file[:-3])
+
+    if 'module_output_flag' in compiler_info:
+        command.append(compiler_info['module_output_flag'])
+        command.append(base_dir)
 
     with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
         p.wait()
@@ -489,7 +499,6 @@ def test_imports_in_folder(language):
             compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.skip_llvm
 @pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py",
@@ -692,6 +701,22 @@ def test_import_collisions(language):
             language=language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled in C"),
+            pytest.mark.c]
+        )
+    )
+)
+@pytest.mark.xdist_incompatible
+def test_import_collisions_builtins(language):
+    pyccel_test("scripts/import_syntax/collisions6.py",
+            dependencies = ["scripts/import_syntax/user_mod_builtin_conflict.py"],
+            language=language)
+
+#------------------------------------------------------------------------------
 # Numpy sum required
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -766,7 +791,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
-    if platform.system() == 'Darwin' and language=='fortran':
+    if platform.system() in ('Darwin', 'Windows') and language=='fortran':
         # MacOS compiler incorrectly reports
         # Fortran runtime error: Index '4378074096' of dimension 2 of array 'a' outside of expected range (0:2)
         # At line 208 of file /Users/runner/work/pyccel/pyccel/tests/pyccel/scripts/__pyccel__/arrays_view.f90
@@ -812,11 +837,13 @@ def test_array_binary_op(language):
                                         "scripts/classes/classes_6.py",
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
+                                        "scripts/classes/classes_9.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         "scripts/classes/class_temporary_in_constructor.py",
                                         "scripts/classes/class_with_non_target_array_arg.py",
                                         "scripts/classes/class_pointer.py",
+                                        "scripts/classes/class_pointer_2.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
@@ -827,7 +854,7 @@ def test_class_magic(language):
 
 def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
-    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool])
+    pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool, bool])
 
 def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
@@ -1096,13 +1123,7 @@ def test_function(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
@@ -1117,7 +1138,7 @@ def test_inline(language):
         )
     )
 )
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
@@ -1249,6 +1270,7 @@ def test_module_name_containing_conflict(language):
     assert out1 == out2
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif(sys.platform == 'win32' and not np.__version__.startswith('2.'), reason="Integer mismatch with numpy 1.*")
 def test_stubs(language):
     """
     This tests that a stub file is generated and ensures the stub files are
@@ -1260,7 +1282,7 @@ def test_stubs(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
 
-    with open(get_abs_path("scripts/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
+    with open(get_abs_path(f"scripts/runtest_stub.{language}.pyi"), 'r', encoding="utf-8") as f:
         expected_pyi = f.read()
 
     wk_dir = get_abs_path("scripts/stub_test")
@@ -1269,9 +1291,6 @@ def test_stubs(language):
         with open(get_abs_path(f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"), 'r', encoding="utf-8") as f:
             generated_pyi = f.read()
         shutil.rmtree(wk_dir)
-
-    if language != 'python':
-        generated_pyi = "\n".join(line for line in generated_pyi.split("\n") if not line.startswith("#$ header metavar"))
 
     assert expected_pyi == generated_pyi
 
@@ -1286,3 +1305,76 @@ def test_pyccel_generated_compilation_dependency(language):
             dependencies = ["scripts/pyccel_generated_compilation_dependency.py"],
             output_dtype = int,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_generated_name_collision(language):
+    pyccel_test("scripts/GENERATED_NAME_COLLISION.py", output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_array_tuple_shape(language):
+    pyccel_test("scripts/array_tuple_shape.py", output_dtype = int,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_varargs(language):
+    pyccel_test("scripts/runtest_varargs.py",
+                language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.python
+def test_varkwargs():
+    pyccel_test("scripts/runtest_varkwargs.py",
+                language = 'python',
+                output_dtype = str)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_import_2(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import_2.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_named_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_named_import.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_func2.py",
+                                "scripts/inlining/inline_using_named_import.py"],
+                language = language,
+                output_dtype = float)

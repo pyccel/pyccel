@@ -252,7 +252,7 @@ class FortranToCWrapper(Wrapper):
         func = BindCFunctionDef(name, func_arguments, body, FunctionDefResult(func_results), scope=func_scope, original_function = expr,
                 docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
-        self.scope.functions[name] = func
+        self.scope.insert_function(func, name)
 
         return func
 
@@ -273,8 +273,7 @@ class FortranToCWrapper(Wrapper):
         pyccel.ast.core.Interface
             The C-compatible interface.
         """
-        functions = [self.scope.functions[self._wrapper_names_dict[f.name]] for f in expr.functions]
-        functions = [f for f in functions if not isinstance(f, EmptyNode)]
+        functions = [self._wrap(f) for f in expr.functions if not isinstance(f, EmptyNode)]
         return Interface(expr.name, functions, expr.is_argument)
 
     def _extract_FunctionDefArgument(self, expr, func):
@@ -313,8 +312,9 @@ class FortranToCWrapper(Wrapper):
                 func_def_argument_dict = getattr(self, annotation_method)(var, func)
                 new_var = func_def_argument_dict['c_arg']
                 func_def_argument_dict['c_arg'] = FunctionDefArgument(new_var, value = expr.value,
-                    kwonly = expr.is_kwonly, annotation = expr.annotation,
-                    bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
+                    posonly = expr.is_posonly, kwonly = expr.is_kwonly, annotation = expr.annotation,
+                    bound_argument = expr.bound_argument, persistent_target = expr.persistent_target,
+                    is_vararg = expr.is_vararg, is_kwarg = expr.is_kwarg)
                 func_def_argument_dict['f_arg'] = FunctionCallArgument(func_def_argument_dict['f_arg'],
                                                                         keyword = expr.name)
                 return func_def_argument_dict

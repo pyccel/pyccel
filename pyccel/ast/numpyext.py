@@ -197,20 +197,31 @@ def get_shape_of_multi_level_container(expr, shape_prefix = ()):
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
-    """ Modify the input shape to the expected type
+    """
+    Modify the input shape to the expected type.
+
+    Modify the input shape to the expected type.
 
     Parameters
     ----------
     is_scalar : bool
-                True if the result is a scalar, False if it is an array
-    shape     : TypedAstNode/iterable/int
-                input shape
+        True if the result is a scalar, False if it is an array.
+    shape : TypedAstNode | iterable | int
+        Input shape.
+
+    Returns
+    -------
+    tuple[int | TypedAstNode]
+        The shape of the array in a compatible format.
     """
     if is_scalar:
         return None
     elif shape is None:
         return ()
-    elif not hasattr(shape,'__iter__'):
+    elif isinstance(shape, TypedAstNode):
+        if shape.rank == 0:
+            shape = [shape]
+    elif not hasattr(shape, '__iter__'):
         shape = [shape]
 
     new_shape = []

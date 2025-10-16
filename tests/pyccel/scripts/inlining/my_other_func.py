@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import my_func as f
 
-def f(*args):
-    pass
+def foobar(a : float):
+    return f.func(a)

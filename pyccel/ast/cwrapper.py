@@ -238,14 +238,21 @@ class PyArg_ParseTupleNode(PyccelAstNode):
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
 
-        i = 0
-        while i < len(c_func_args) and not c_func_args[i].has_default:
-            i+=1
-        self._flags = 'O'*i
+        self._flags = ''
+        has_default = False
+        has_keyword = False
+        for a in c_func_args:
+            if a.has_default and not has_default:
+                self._flags += '|'
+                has_default = True
+            if a.is_kwonly and not has_keyword:
+                self._flags += '$'
+                has_keyword = True
+            self._flags += 'O'
 
-        if i < len(c_func_args):
-            self._flags += '|'
-            self._flags += 'O'*(len(c_func_args)-i)
+        if any(a.is_vararg or a.is_kwarg for a in c_func_args):
+            errors.report("Variadic arguments (*args, **kwargs) are not yet supported in the wrapper.",
+                          symbol=c_func_args, severity='error')
 
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
@@ -769,9 +776,9 @@ class PyClassDef(ClassDef):
         self._new_func = None
         self._properties = ()
         self._magic_methods = ()
-        variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
-                     Variable(PythonNativeBool(), 'is_alias')]
+        variables = [Variable(VoidType(), scope.get_new_name('instance'), memory_handling='alias'),
+                     Variable(PyccelPyObject(), scope.get_new_name('referenced_objects'), memory_handling='alias'),
+                     Variable(PythonNativeBool(), scope.get_new_name('is_alias'))]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
         scope.insert_variable(variables[2])

@@ -1336,16 +1336,25 @@ def test_shape_indexed(language):
         a = shape(f)
         return a[0], a[1]
 
+    def test_shape_2d_f(f : 'int[:,:](order=F)'):
+        from numpy import shape
+        a = shape(f)
+        return a[0], a[1]
+
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
+    f3 = epyccel(test_shape_2d_f, language = language)
     n1 = randint(1,20)
     n2 = randint(1,20)
     n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
+    x3 = empty((n1,n2,1), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
     assert f2(x2) == test_shape_2d(x2)
+    assert f3(x2.T) == test_shape_2d_f(x2.T)
+    assert f3(x3[0,:,:].T) == test_shape_2d_f(x3[0,:,:].T)
 
 def test_shape_property(language):
     def test_shape_1d(f : 'int[:]'):
@@ -1847,9 +1856,10 @@ def test_empty_order(language):
         return len(s),s[0], s[1]
     def create_empty_shape_F(n : 'int', m : 'int'):
         from numpy import empty, shape
-        a = empty((n,m), order = 'F')
+        p = (n,m)
+        a = empty(p, order = 'F')
         s = shape(a)
-        return len(s),s[0], s[1]
+        return len(s), s[0], s[1], len(p), p[0], p[1]
 
     size_1 = randint(1,10)
     size_2 = randint(1,10)

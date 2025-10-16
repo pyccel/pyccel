@@ -18,13 +18,11 @@ import warnings
 from pyccel.version import __version__
 
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
 
 from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
-from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
@@ -51,7 +49,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     When searching for files in a folder, the order of priority is:
 
     - python files (extension == .py)
-    - header files (extension == .pyi)
+    - stub files (extension == .pyi)
 
     In the Pyccel folder the priority is inverted as .py files are sometimes
     provided alongside .pyi files to spoof the functionalities so user code
@@ -122,35 +120,22 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     pyccel_folder = pathlib.Path(__file__).parent.parent
     filename_py = filename_stem.with_suffix('.py')
     filename_pyi = filename_stem.with_suffix('.pyi')
-    filename_pyh = filename_stem.with_suffix('.pyh')
 
-    # Look for .pyi or .pyh files in pyccel
-    # Header files take priority in case .py files exist so files can run in Python
+    # Look for .pyi files in the Pyccel folder
+    # Stub files take priority in case .py files exist so files can run in Python
     if filename_pyi.exists() and pyccel_folder in filename_pyi.parents:
         abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
-    elif filename_pyh.exists() and pyccel_folder in filename_pyh.parents:
-        abs_pyh_fname = filename_pyh.absolute()
-        return abs_pyh_fname, abs_pyh_fname
-    elif filename_py.exists() and pyccel_folder in filename_pyh.parents:
-        # External files are pure Python
-        abs_py_fname = filename_py.absolute()
-        return abs_py_fname, abs_py_fname
     # Look for Python files which should have been translated once
     elif filename_py.exists():
         rel_path = os.path.relpath(filename_py.parent, input_folder_name)
         pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
         stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
         return filename_py.absolute(), stashed_file.resolve()
-    # Look for user-defined .pyi or .pyh files
+    # Look for user-defined .pyi files
     elif filename_pyi.exists():
         abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
-    elif filename_pyh.exists():
-        warnings.warn("Pyh files will be deprecated in version 2.0 of Pyccel. " +
-                "Please use a .pyi file instead.", FutureWarning)
-        abs_pyh_fname = filename_pyh.absolute()
-        return abs_pyh_fname, abs_pyh_fname
     else:
         raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
                       severity='fatal')
@@ -289,17 +274,17 @@ class BasicParser(object):
         return self._semantic_done
 
     @property
-    def is_header_file(self):
+    def is_stub_file(self):
         """
-        Indicate if the file being translated is a header file.
+        Indicate if the file being translated is a stub file.
 
-        Indicate if the file being translated is a header file.
-        A file is a header file if it does not include the implementation of the
-        methods. This is the case for .pyi files.
+        Indicate if the file being translated is a stub file.
+        A stub file does not include the implementation of the
+        methods. It has the suffix .pyi.
         """
 
         if self.filename:
-            return self.filename.suffix in ('.pyi', '.pyh')
+            return self.filename.suffix == '.pyi'
         else:
             return False
 
@@ -332,36 +317,22 @@ class BasicParser(object):
 
         Parameters
         ----------
-        func : FunctionDef | SympyFunction | Interface | FunctionAddress
+        func : FunctionDef | Interface | FunctionAddress
             The function to be inserted into the scope.
 
         scope : Scope, optional
             The scope where the function should be inserted.
         """
 
-        if isinstance(func, SympyFunction):
-            self.insert_symbolic_function(func)
-        elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            scope = scope or self.scope
-            container = scope.functions
-            if func.pyccel_staging == 'syntactic':
-                container[self.scope.get_expected_name(func.name)] = func
-            else:
-                name = func.name
-                container[name] = func
-                if self._current_function_name and name == self._current_function_name[-1]:
-                    self._current_function.append(func)
+        assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
+        scope = scope or self.scope
+        if func.pyccel_staging == 'syntactic':
+            scope.insert_function(func, func.name)
         else:
-            raise TypeError('Expected a Function definition')
-
-    def insert_symbolic_function(self, func):
-        """."""
-
-        container = self.scope.symbolic_functions
-        if isinstance(func, SympyFunction):
-            container[func.name] = func
-        else:
-            raise TypeError('Expected a symbolic_function')
+            name = func.name
+            scope.insert_function(func, scope.get_python_name(name))
+            if self._current_function_name and name == self._current_function_name[-1]:
+                self._current_function.append(func)
 
     def exit_function_scope(self):
         """

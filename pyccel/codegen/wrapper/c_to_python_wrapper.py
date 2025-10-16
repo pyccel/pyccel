@@ -242,7 +242,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map[bound_arg] = func_args[0]
 
         # Create the list of argument names
-        arg_names = [getattr(a.var, 'original_var', a.var).name for a in args]
+        arg_names = ['' if a.is_posonly else getattr(a.var, 'original_var', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
@@ -551,6 +551,8 @@ class CToPythonWrapper(Wrapper):
         PyFunctionDef
             The new function which raises the error.
         """
+        current_scope = self.scope
+        self.scope = scope
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
             func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
@@ -561,7 +563,9 @@ class CToPythonWrapper(Wrapper):
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
-        self.scope.functions[name] = function
+        self.scope = current_scope
+
+        self.scope.insert_function(function, name)
 
         return function
 
@@ -1030,7 +1034,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[init_function] = function
         self._error_exit_code = Nil()
 
@@ -1096,7 +1100,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[del_function] = function
 
         return function
@@ -1141,7 +1145,8 @@ class CToPythonWrapper(Wrapper):
 
         get_data = AliasAssign(data_var, PyArray_DATA(ObjectAddress(pyarray_collect_arg)))
         get_strides_and_shape = get_strides_and_shape_from_numpy_array(
-                                        ObjectAddress(collect_arg), shape_var, stride_var)
+                                        ObjectAddress(collect_arg), shape_var, stride_var,
+                                        convert_to_literal(orig_var.order != 'F'))
 
         body = [get_data, get_strides_and_shape]
 
@@ -1257,6 +1262,23 @@ class CToPythonWrapper(Wrapper):
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
 
+        # Ensure all class types are declared
+        for c in expr.classes:
+            name = c.name
+            struct_name = self.scope.get_new_name(f'Py{name}Object')
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
+                                    BaseClass=WrapperCustomDataType)()
+
+            type_name = self.scope.get_new_name(f'Py{name}Type')
+            wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name),
+                                       docstring = c.docstring, class_type = dtype)
+
+            orig_cls_dtype = c.scope.parent_scope.cls_constructs[name]
+            self._python_object_map[c] = wrapped_class
+            self._python_object_map[orig_cls_dtype] = dtype
+
+            self.scope.insert_class(wrapped_class, name)
+
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
 
@@ -1320,8 +1342,10 @@ class CToPythonWrapper(Wrapper):
             external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
-        for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for f in expr.funcs)
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for i in expr.interfaces for f in i.functions)
 
         for c in expr.classes:
             m = c.new_func
@@ -1377,6 +1401,8 @@ class CToPythonWrapper(Wrapper):
         else:
             class_dtype = None
 
+        for f in original_funcs:
+            self._wrap(f)
 
         # Add the variables to the expected symbols in the scope
         for a in example_func.arguments:
@@ -1481,7 +1507,7 @@ class CToPythonWrapper(Wrapper):
             a_var = a.var
             func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.arguments
@@ -1570,7 +1596,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_name)
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
@@ -1613,7 +1639,7 @@ class CToPythonWrapper(Wrapper):
         """
 
         collect_arg = self._python_object_map[expr]
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
         is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
         orig_var = getattr(expr.var, 'original_var', expr.var)
@@ -2019,21 +2045,12 @@ class CToPythonWrapper(Wrapper):
             The wrapped class definition.
         """
         name = expr.name
-        struct_name = self.scope.get_new_name(f'Py{name}Object')
-        dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
 
-        type_name = self.scope.get_new_name(f'Py{name}Type')
-        docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
-                                   docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 
         orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
+        wrapped_class = self._python_object_map[expr]
 
-        self._python_object_map[expr] = wrapped_class
-        self._python_object_map[orig_cls_dtype] = dtype
-
-        self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
 
         for f in expr.methods:
@@ -2108,7 +2125,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(t, ClassDef):
                 name = t.name
                 struct_name = f'Py{name}Object'
-                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
                 type_name = f'Py{name}Type'
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
@@ -2868,7 +2885,7 @@ class CToPythonWrapper(Wrapper):
         """
         if is_bind_c:
             return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
-        name = orig_var.name
+        name = self.scope.get_new_name(orig_var.name)
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
@@ -2972,9 +2989,10 @@ class CToPythonWrapper(Wrapper):
         setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
         py_result_vars = [e['py_result'] for e in extract_elems]
-        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        py_res = self.get_new_PyObject(f'{name}_obj')
         body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
         body.extend(Py_DECREF(r) for r in py_result_vars)
+
         return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
 
     def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):

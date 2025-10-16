@@ -120,10 +120,10 @@ def execute_pyccel(fname, *,
     """
     start = time.time()
     timers = {}
-    if fname.endswith('.pyh'):
-        syntax_only = True
+    if fname.endswith('.pyi'):
+        semantic_only = True
         if verbose:
-            print("Header file recognised, stopping after syntactic stage")
+            print("Stub file recognised, stopping after semantic stage")
 
     if Path(fname).stem in python_builtin_libs:
         raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
@@ -217,11 +217,6 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
         parser.parse(verbose=verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -241,11 +236,6 @@ def execute_pyccel(fname, *,
     # Annotate abstract syntax Tree
     try:
         parser.annotate(verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('annotation (semantic)')
         # Raise a new error to avoid a large traceback
@@ -272,11 +262,6 @@ def execute_pyccel(fname, *,
         codegen = Codegen(semantic_parser, module_name, language, verbose)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname, prog_name = codegen.export(fname)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
     except PyccelError:
         handle_error('code generation')
         # Raise a new error to avoid a large traceback
@@ -323,15 +308,8 @@ def execute_pyccel(fname, *,
     #         pass
     #------------------------------------------------------
     try:
-        manage_dependencies(codegen.get_printer_imports(), pyccel_dirpath = pyccel_dirpath,
-                            language = language, verbose = verbose, compiler = compiler,
-                            mod_obj = mod_obj, convert_only = convert_only)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
+        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
+                language, verbose, convert_only)
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
@@ -379,13 +357,6 @@ def execute_pyccel(fname, *,
                                                compiler = compiler,
                                                sharedlib_modname = output_name,
                                                verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise

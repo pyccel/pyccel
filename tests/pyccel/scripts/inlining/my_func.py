@@ -1,3 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def f(x):
-    return x**2
+
+def func(a : float):
+    return a * 3.5 + 4.7

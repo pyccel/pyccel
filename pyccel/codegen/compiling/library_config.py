@@ -6,6 +6,7 @@
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
+import filecmp
 import os
 from pathlib import Path
 import shutil
@@ -100,7 +101,9 @@ class StdlibInstaller:
                 to_delete = False
             else:
                 # If folder exists check if it needs updating
-                to_copy = lib_dest_path.lstat().st_mtime < self._src_dir.lstat().st_mtime
+                src_files = [f.relative_to(self._src_dir) for f in self._src_dir.glob('*')]
+                _, mismatch, _ = filecmp.cmpfiles(lib_dest_path, self._src_dir, src_files)
+                to_copy = len(mismatch) != 0
                 to_delete = to_copy
 
             if to_delete:
@@ -269,7 +272,7 @@ class STCInstaller(ExternalLibInstaller):
     """
     def __init__(self):
         super().__init__("STC")
-        self._compile_obj = CompileObj("stc", folder = "stc", has_target_file = False,
+        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
 
@@ -302,11 +305,9 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family.lower()
 
-        version_info = ['--max-version=6', '--atleast-version=5']
-
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
-        existing_installation = self._check_for_package('stc', version_info)
+        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
         if existing_installation:
             return existing_installation
 
@@ -314,8 +315,8 @@ class STCInstaller(ExternalLibInstaller):
         meson = shutil.which('meson')
         ninja = shutil.which('ninja')
         assert meson is not None and ninja is not None
-        build_dir = pyccel_dirpath / 'stc' / f'build-{compiler_family}'
-        install_dir = pyccel_dirpath / 'stc' / 'install'
+        build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
+        install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
                 shutil.rmtree(build_dir)
@@ -336,25 +337,14 @@ class STCInstaller(ExternalLibInstaller):
                 subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
                                capture_output = (verbose <= 1))
 
-        pkg_config_path = os.environ.get('PKG_CONFIG_PATH', '')
-        if pkg_config_path:
-            pkg_config_path += ':'
-        pkg_config_path += str(next(install_dir.glob('**/*.pc')).parent)
+        libdir = next(install_dir.glob('**/*.a')).parent
+        libs = ['-lstc', '-lm']
 
-        os.environ['PKG_CONFIG_PATH'] = pkg_config_path
-
-        new_installation = self._check_for_package('stc', version_info)
-        if new_installation is None:
-            # Fallback if pkg-config is not installed
-            libdir = next(install_dir.glob('**/*.a')).parent
-            libs = ['-lstc', '-lm']
-
-            new_installation = CompileObj("stc", folder = "", has_target_file = False,
-                              include = (install_dir / 'include',),
-                              libdir = (libdir, ), libs = libs)
-
-        installed_libs['stc'] = new_installation
-        return new_installation
+        new_obj = CompileObj("stc", folder = "", has_target_file = False,
+                          include = (install_dir / 'include',),
+                          libdir = (libdir, ), libs = libs)
+        installed_libs['stc'] = new_obj
+        return new_obj
 
 #------------------------------------------------------------------------------------------
 
@@ -422,7 +412,7 @@ recognised_libs = {
     "STC_Extensions" : StdlibInstaller("STC_Extensions", "STC_Extensions",
                                         has_target_file = False,
                                         dependencies = ('stc',)),
-    "gFTL_functions" : StdlibInstaller("*.inc", "gFTL_functions",
+    "gFTL_functions" : StdlibInstaller("gFTL_functions", "gFTL_functions",
                                         has_target_file = False,
                                         dependencies = ('gFTL',))
 }

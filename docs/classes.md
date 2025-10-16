@@ -212,7 +212,7 @@ module cls_test
     logical(b1), private :: is_freed
 
     contains
-    procedure :: create => myclass_create
+    procedure :: init => myclass_init
     procedure :: free => myclass_free
   end type MyClass
 
@@ -221,7 +221,7 @@ module cls_test
     type(MyClass), pointer :: param
 
     contains
-    procedure :: create => myclass1_create
+    procedure :: init => myclass1_init
     procedure :: Method1 => myclass1_Method1
     procedure :: Method2 => myclass1_Method2
     procedure :: free => myclass1_free
@@ -232,7 +232,7 @@ module cls_test
 
   !........................................
 
-  subroutine myclass_create(self, param1, param2)
+  subroutine myclass_init(self, param1, param2)
 
     implicit none
 
@@ -246,7 +246,7 @@ module cls_test
     self%param2 = 1.0_f64
     write(stdout, '(A)', advance="yes") 'MyClass Object created!'
 
-  end subroutine myclass_create
+  end subroutine myclass_init
 
   !........................................
   !........................................
@@ -274,7 +274,7 @@ module cls_test
 
   !........................................
 
-  subroutine myclass1_create(self)
+  subroutine myclass1_init(self)
 
     implicit none
 
@@ -283,7 +283,7 @@ module cls_test
     self%is_freed = .False._b1
     write(stdout, '(A)', advance="yes") 'MyClass1 Object created!'
 
-  end subroutine myclass1_create
+  end subroutine myclass1_init
 
   !........................................
 
@@ -295,7 +295,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
@@ -312,7 +312,7 @@ module cls_test
     type(MyClass) :: Out_0001
     class(MyClass1), intent(inout) :: self
 
-    call Out_0001 % create(2_i64, 4_i64)
+    call Out_0001 % init(2_i64, 4_i64)
     return
 
   end function myclass1_Method2
@@ -358,7 +358,7 @@ program prog_prog_cls_test
   type(MyClass), target :: Dummy_0000
   integer(i64) :: i
 
-  call obj % create()
+  call obj % init()
   Dummy_0000 = obj % Method2()
   call obj % Method1(Dummy_0000)
   write(stdout, '(I0, A)', advance="no") obj%param%param1 , ' '
@@ -514,7 +514,7 @@ module cls_test
     logical(b1), private :: is_freed
 
     contains
-    procedure :: create => myclass_create
+    procedure :: init => myclass_init
     procedure :: free => myclass_free
   end type MyClass
 
@@ -523,7 +523,7 @@ module cls_test
     type(MyClass), pointer :: param
 
     contains
-    procedure :: create => myclass1_create
+    procedure :: init => myclass1_init
     procedure :: Method1 => myclass1_Method1
     procedure :: Method2 => myclass1_Method2
     procedure :: free => myclass1_free
@@ -534,7 +534,7 @@ module cls_test
 
   !........................................
 
-  subroutine myclass_create(self, param1, param2)
+  subroutine myclass_init(self, param1, param2)
 
     implicit none
 
@@ -548,7 +548,7 @@ module cls_test
     self%param2 = 1.0_f64
     write(stdout, '(A)', advance="yes") 'MyClass Object created!'
 
-  end subroutine myclass_create
+  end subroutine myclass_init
 
   !........................................
 
@@ -609,7 +609,7 @@ module cls_test
 
   !........................................
 
-  subroutine myclass1_create(self)
+  subroutine myclass1_init(self)
 
     implicit none
 
@@ -618,7 +618,7 @@ module cls_test
     self%is_freed = .False._b1
     write(stdout, '(A)', advance="yes") 'MyClass1 Object created!'
 
-  end subroutine myclass1_create
+  end subroutine myclass1_init
 
   !........................................
 
@@ -630,7 +630,7 @@ module cls_test
     implicit none
 
     class(MyClass1), intent(inout) :: self
-    class(MyClass), target, intent(in) :: param1
+    type(MyClass), target, intent(inout) :: param1
 
     self%param => param1
 
@@ -648,7 +648,7 @@ module cls_test
     type(MyClass) :: Out_0001
     class(MyClass1), intent(inout) :: self
 
-    call Out_0001 % create(2_i64, 4_i64)
+    call Out_0001 % init(2_i64, 4_i64)
     return
 
   end function myclass1_Method2
@@ -694,7 +694,7 @@ program prog_prog_cls_test
   type(MyClass), target :: Dummy_0000
   integer(i64) :: i
 
-  call obj % create()
+  call obj % init()
   Dummy_0000 = obj % Method2()
   call obj % Method1(Dummy_0000)
   write(stdout, '(I0, A)', advance="no") obj%param%param1 , ' '
@@ -734,6 +734,7 @@ Pyccel supports a subset of magic methods that are listed here:
 -   `__iand__`
 -   `__ior__`
 -   `__len__`
+-   `__getitem__`
 
 Additionally the following methods are supported in the translation but are lacking the wrapper support that would allow them to be called from Python code:
 
