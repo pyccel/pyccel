@@ -3438,7 +3438,7 @@ class SemanticParser(BasicParser):
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
-                        new_name = self.scope.get_new_name(rhs_name)
+                        new_name = scope.get_new_name(rhs_name)
 
                         # Save the import target that has been used
                         imp.define_target(AsName(rhs_obj, new_name))
