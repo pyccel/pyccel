@@ -291,6 +291,7 @@ class BindCModuleVariable(Variable):
     --------
     Variable : The super class.
     """
+    __slots__ = ()
 
 # =======================================================================================
 
