@@ -1497,9 +1497,6 @@ class CCodePrinter(CodePrinter):
         PyccelCodegenError
             If the dtype is not found in the dtype_registry.
         """
-        if isinstance(dtype, FinalType):
-            return 'const ' + self.get_c_type(dtype.underlying_type)
-
         if isinstance(dtype, FixedSizeNumericType):
             primitive_type = dtype.primitive_type
             if isinstance(primitive_type, PrimitiveComplexType):
