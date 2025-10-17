@@ -293,6 +293,9 @@ class BindCModuleVariable(Variable):
     """
     __slots__ = ()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 # =======================================================================================
 
 class BindCArrayVariable(Variable):
