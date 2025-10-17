@@ -895,6 +895,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             func_name = expr.func_name
 
+        # No need to print module init/del functions in Python
+        if func.scope.get_python_name(func.name) in ('__init__', '__del__') and \
+                func.is_imported and len(func.arguments) == 0:
+            return ''
+
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
