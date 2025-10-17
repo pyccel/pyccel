@@ -1,5 +1,5 @@
 # coding: utf-8
-#pylint: disable=no-member
+#pylint: disable=no-member, protected-access
 
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
@@ -140,7 +140,6 @@ class PyccelType:
     the type.
     """
     __slots__ = ()
-    _name = None
 
     @property
     def name(self):
@@ -994,8 +993,6 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
 
         return type(name, (InhomogeneousTupleType,),
                     {'__init__' : __init__})()
-
-        super().__init__()
 
     def __str__(self):
         element_types = ', '.join(str(d) for d in self._element_types)

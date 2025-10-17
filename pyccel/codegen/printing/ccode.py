@@ -1497,6 +1497,9 @@ class CCodePrinter(CodePrinter):
         PyccelCodegenError
             If the dtype is not found in the dtype_registry.
         """
+        if isinstance(dtype, FinalType):
+            return 'const ' + self.get_c_type(dtype.underlying_type)
+
         if isinstance(dtype, FixedSizeNumericType):
             primitive_type = dtype.primitive_type
             if isinstance(primitive_type, PrimitiveComplexType):
@@ -1603,9 +1606,6 @@ class CCodePrinter(CodePrinter):
             dtype = self.get_c_type(class_type.element_type) + '_mem'
         else:
             dtype = self.get_c_type(expr.class_type)
-
-        if isinstance(class_type, FinalType):
-            dtype = f'const {dtype}'
 
         if self.is_c_pointer(expr) and not isinstance(class_type, CStackArray):
             return f'{dtype}*'
