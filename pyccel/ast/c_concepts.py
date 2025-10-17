@@ -44,11 +44,6 @@ class CStackArray(HomogeneousContainerType, metaclass=Singleton):
 
     A data type representing an array allocated on the stack.
     E.g. `float a[4];`
-
-    Parameters
-    ----------
-    element_type : FixedSizeType
-        The type of the elements inside the array.
     """
     __slots__ = ('_element_type',)
     _name = 'c_stackarray'
@@ -58,6 +53,16 @@ class CStackArray(HomogeneousContainerType, metaclass=Singleton):
     @classmethod
     @cache
     def get_new(cls, element_type):
+        """
+        Get the parametrised stack array type.
+
+        Get the parametrised CStackArray subclass.
+
+        Parameters
+        ----------
+        element_type : FixedSizeType
+            The type of the elements inside the array.
+        """
         def __init__(self):
             self._element_type = element_type
             HomogeneousContainerType.__init__(self)

@@ -61,13 +61,6 @@ class BindCArrayType:
 
     Datatype for a tuple containing a pointer to array data and integers describing their
     shape and strides.
-
-    Parameters
-    ----------
-    rank : int
-        The rank of the array being described.
-    has_strides : bool
-        Indicates whether strides are used to describe the array.
     """
     __slots__ = ()
     _name = 'BindCArrayType'
@@ -75,6 +68,18 @@ class BindCArrayType:
     @classmethod
     @cache
     def get_new(cls, rank, has_strides):
+        """
+        Get the parametrised BindCArrayType subclass.
+
+        Get the parametrised BindCArrayType subclass.
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array being described.
+        has_strides : bool
+            Indicates whether strides are used to describe the array.
+        """
         shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
         name = 'BindCArray{rank}DType'

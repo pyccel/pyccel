@@ -201,9 +201,24 @@ class PyccelType:
 
 #==============================================================================
 class FinalType:
+    """
+    A class to get PyccelType subclasses describing constant values.
+
+    A class to get PyccelType subclasses describing constant values.
+    """
     @classmethod
     @lru_cache
     def get_new(cls, underlying_type):
+        """
+        Get the parameterised Final type.
+
+        Get the parameterised Final type Final[underlying_type].
+
+        Parameters
+        ----------
+        underlying_type : PyccelType
+            The type which is characterised as final.
+        """
         if isinstance(underlying_type, FinalType):
             return underlying_type
 
@@ -779,11 +794,6 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
 
     Class representing the type of a homogeneous tuple. This
     is a container type and should be used as the class_type.
-
-    Parameters
-    ----------
-    element_type : PyccelType
-        The type of the elements of the homogeneous tuple.
     """
     _name = 'tuple'
     __slots__ = ('_element_type', '_order')
@@ -792,6 +802,17 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
     @classmethod
     @lru_cache
     def get_new(cls, element_type):
+        """
+        Get the parametrised homogeneous tuple type.
+
+        Get the subclass of HomogeneousTupleType describing the
+        type of a tuple[element_type, ...].
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of the elements of the homogeneous tuple.
+        """
         def __init__(self):
             self._element_type = element_type
             self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
@@ -944,17 +965,22 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
     Class representing the type of an inhomogeneous tuple. This is a
     basic datatype as it cannot be arbitrarily indexed. It is
     therefore parametrised by the datatypes that it contains.
-
-    Parameters
-    ----------
-    *args : tuple of DataTypes
-        The datatypes stored in the inhomogeneous tuple.
     """
     __slots__ = ('_element_types', '_datatype', '_container_rank', '_order')
 
     @classmethod
     @lru_cache
     def get_new(cls, *args):
+        """
+        Get the parametrised inhomogeneous tuple type.
+
+        Get the parametrised inhomogeneous tuple type.
+
+        Parameters
+        ----------
+        *args : tuple of DataTypes
+            The datatypes stored in the inhomogeneous tuple.
+        """
         # Determine datatype
         possible_types = set(t.datatype for t in args)
         try:
@@ -1074,13 +1100,6 @@ class DictType(ContainerType, metaclass = Singleton):
 
     Class representing the type of a homogeneous dict. This
     is a container type and should be used as the class_type.
-
-    Parameters
-    ----------
-    key_type : PyccelType
-        The type of the keys of the homogeneous dictionary.
-    value_type : PyccelType
-        The type of the values of the homogeneous dictionary.
     """
     __slots__ = ('_key_type', '_value_type')
     _name = 'dict'
@@ -1090,6 +1109,19 @@ class DictType(ContainerType, metaclass = Singleton):
     @classmethod
     @lru_cache
     def get_new(cls, key_type, value_type):
+        """
+        Get the parametrised dictionary type.
+
+        Get the subclass describing a dictionary type
+        Dict[key_type, value_type].
+
+        Parameters
+        ----------
+        key_type : PyccelType
+            The type of the keys of the homogeneous dictionary.
+        value_type : PyccelType
+            The type of the values of the homogeneous dictionary.
+        """
         def __init__(self):
             self._key_type = key_type
             self._value_type = value_type

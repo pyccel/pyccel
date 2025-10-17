@@ -263,16 +263,6 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
     Class representing the NumPy ND array type.
 
     Class representing the NumPy ND array type.
-
-    Parameters
-    ----------
-    dtype : NumpyNumericType | PythonNativeBool | GenericType
-        The internal datatype of the object (GenericType is allowed for external
-        libraries, e.g. MPI).
-    rank : int
-        The rank of the new NumPy array.
-    order : str
-        The order of the memory layout for the new NumPy array.
     """
     __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
@@ -280,6 +270,21 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
     @classmethod
     @lru_cache
     def get_new(cls, dtype, rank, order):
+        """
+        Get the parametrised NumPy ND array type.
+
+        Get the parametrised NumPy ND array type.
+
+        Parameters
+        ----------
+        dtype : NumpyNumericType | PythonNativeBool | GenericType
+            The internal datatype of the object (GenericType is allowed for external
+            libraries, e.g. MPI).
+        rank : int
+            The rank of the new NumPy array.
+        order : str
+            The order of the memory layout for the new NumPy array.
+        """
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
