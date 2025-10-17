@@ -598,7 +598,7 @@ class PythonTuple(TypedAstNode):
             return
         elif len(args) == 0:
             if class_type is None:
-                self._class_type = InhomogeneousTupleType()
+                self._class_type = InhomogeneousTupleType.get_new()
                 self._is_homogeneous = False
             else:
                 self._class_type = class_type

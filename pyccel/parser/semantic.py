@@ -2335,7 +2335,7 @@ class SemanticParser(BasicParser):
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
-            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType.get_new()))
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -3763,7 +3763,7 @@ class SemanticParser(BasicParser):
                 lhs_scope_name = lhs.name
             lhs = lhs.name
 
-            if semantic_lhs_var.class_type is TypeAlias():
+            if isinstance(semantic_lhs_var.class_type, TypeAlias):
                 pyccel_stage.set_stage('syntactic')
                 if isinstance(rhs, LiteralString):
                     try:
