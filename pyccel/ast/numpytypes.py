@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing types from the numpy module understood by pyccel
 """
-from functools import cache
+from functools import lru_cache
 from packaging.version import Version
 
 import numpy as np
@@ -49,7 +49,7 @@ class NumpyNumericType(FixedSizeNumericType):
     """
     __slots__ = ()
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         try:
             return original_type_to_pyccel_type[
@@ -58,7 +58,7 @@ class NumpyNumericType(FixedSizeNumericType):
         except KeyError:
             return NotImplemented
 
-    @cache
+    @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -87,7 +87,7 @@ class NumpyIntType(NumpyNumericType):
     __slots__ = ()
     _primitive_type = PrimitiveIntegerType()
 
-    @cache
+    @lru_cache
     def __and__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -97,7 +97,7 @@ class NumpyIntType(NumpyNumericType):
         else:
             return NotImplemented
 
-    @cache
+    @lru_cache
     def __rand__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -277,7 +277,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
     _name = 'numpy.ndarray'
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, dtype, rank, order):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
@@ -297,7 +297,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
         return type(name, (NumpyNDArrayType,),
                     {'__init__': __init__})()
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         if isinstance(other, FixedSizeNumericType):
@@ -316,11 +316,11 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
             order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
         return NumpyNDArrayType.get_new(result_type, rank, order)
 
-    @cache
+    @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
 
-    @cache
+    @lru_cache
     def __and__(self, other):
         elem_type = self.element_type
         if isinstance(other, FixedSizeNumericType):
@@ -330,7 +330,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
         else:
             return NotImplemented
 
-    @cache
+    @lru_cache
     def __rand__(self, other):
         return self.__and__(other)
 
