@@ -22,7 +22,7 @@ from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For
+from pyccel.ast.core import For, FunctionDef, Pass
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import TupleType
 from pyccel.ast.datatypes import PythonNativeInt, CharType
@@ -246,6 +246,9 @@ class FortranToCWrapper(Wrapper):
         self._additional_exprs.clear()
 
         if expr.scope.get_python_name(expr.name) == '__del__' and call_arguments:
+            if expr.is_external:
+                # If __del__ is not defined in the module then the del call is unnecessary
+                body.pop()
             body.append(DeallocatePointer(call_arguments[0].value))
 
         self.exit_scope()
@@ -692,6 +695,19 @@ class FortranToCWrapper(Wrapper):
             for f in i.functions:
                 self._wrap(f)
         interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+
+        del_method = expr.methods_as_dict.get('__del__', None)
+        if del_method is None:
+            del_name = expr.scope.get_new_name('__del__')
+            scope = expr.scope.new_child_scope('__del__')
+            scope.local_used_symbols['__del__'] = del_name
+            scope.python_names[del_name] = '__del__'
+            argument = FunctionDefArgument(Variable(expr.class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
+            scope.insert_variable(argument.var)
+            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope,
+                                     is_external = True)
+            methods.append(self._wrap(del_method))
+
 
         if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
             errors.report("Tuples cannot yet be exposed to Python.",

@@ -1984,8 +1984,11 @@ class CCodePrinter(CodePrinter):
             return ''.join(self._print(Deallocate(v)) for v in var)
         if isinstance(var.dtype, CustomDataType):
             variable_address = self._print(ObjectAddress(var))
-            Pyccel__del = var.cls_base.scope.find('__del__').name
-            return f"{Pyccel__del}({variable_address});\n" + code
+            Pyccel__del = var.cls_base.scope.find('__del__')
+            if Pyccel__del:
+                return f"{Pyccel__del.name}({variable_address});\n" + code
+            else:
+                return code
         elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if var.is_alias:
                 return code
