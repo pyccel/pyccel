@@ -8,7 +8,7 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
-from functools import cache
+from functools import lru_cache
 
 import numpy
 
@@ -202,7 +202,7 @@ class PyccelType:
 #==============================================================================
 class FinalType:
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, underlying_type):
         if isinstance(underlying_type, FinalType):
             return underlying_type
@@ -342,7 +342,7 @@ class PythonNativeBool(PythonNativeNumericType):
     _primitive_type = PrimitiveBooleanType()
     _precision = -1
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeInt()
@@ -351,7 +351,7 @@ class PythonNativeBool(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @cache
+    @lru_cache
     def __and__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeBool()
@@ -371,7 +371,7 @@ class PythonNativeInt(PythonNativeNumericType):
     _primitive_type = PrimitiveIntegerType()
     _precision = numpy.dtype(int).alignment
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
@@ -380,7 +380,7 @@ class PythonNativeInt(PythonNativeNumericType):
         else:
             return NotImplemented
 
-    @cache
+    @lru_cache
     def __and__(self, other):
         if isinstance(other, PythonNativeNumericType):
             return self
@@ -399,7 +399,7 @@ class PythonNativeFloat(PythonNativeNumericType):
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if isinstance(other, PythonNativeComplex):
             return other
@@ -420,7 +420,7 @@ class PythonNativeComplex(PythonNativeNumericType):
     _primitive_type = PrimitiveComplexType()
     _precision = 8
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if isinstance(other, PythonNativeNumericType):
             return self
@@ -461,7 +461,7 @@ class GenericType(FixedSizeType):
     _name = 'Generic'
     _primitive_type = None
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         return other
 
@@ -790,7 +790,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
     _container_rank = 1
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, element_type):
         def __init__(self):
             self._element_type = element_type
@@ -846,7 +846,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     _container_rank = 1
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, element_type):
         def __init__(self):
             self._element_type = element_type
@@ -881,7 +881,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
     _order = None
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, element_type):
         def __init__(self):
             self._element_type = element_type
@@ -953,7 +953,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
     __slots__ = ('_element_types', '_datatype', '_container_rank', '_order')
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, *args):
         # Determine datatype
         possible_types = set(t.datatype for t in args)
@@ -1090,7 +1090,7 @@ class DictType(ContainerType, metaclass = Singleton):
     _order = None
 
     @classmethod
-    @cache
+    @lru_cache
     def get_new(cls, key_type, value_type):
         def __init__(self):
             self._key_type = key_type
