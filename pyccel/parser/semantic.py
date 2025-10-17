@@ -1532,17 +1532,6 @@ class SemanticParser(BasicParser):
         self._scope = old_scope
         self._current_function_name = old_current_function_name
         self._current_function = old_current_function
-        # Remove the old_func from the imports dict and Assign the new annotated one
-        if old_func.is_imported:
-            scope = self.scope
-            while new_name not in scope.imports['functions']:
-                scope = scope.parent_scope
-            assert old_func is scope.imports['functions'].get(new_name)
-            func = func.clone(new_name, is_imported=True)
-            m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            container[entry][t].set_current_user_node(m)
-            func.set_current_user_node(mod)
-            scope.imports['functions'][new_name] = func
 
         return func
 
