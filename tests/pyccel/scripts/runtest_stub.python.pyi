@@ -1,10 +1,10 @@
 from typing import Final, TypeVar
-from typing import TypeVar, overload
+from typing import Final, TypeVar, overload
 from pyccel.decorators import low_level
 from numpy import float64
 
 T = TypeVar('T', 'int', 'float', 'complex')
-S = TypeVar('S', 'int', 'float', 'complex')
+S = TypeVar('S', 'Final[int]', 'Final[float]', 'Final[complex]')
 
 @low_level('A')
 class A:
@@ -32,7 +32,7 @@ def g() -> 'float':
     ...
 
 @low_level('h')
-def h(arg : 'list[int]') -> None:
+def h(arg : 'Final[list[int]]') -> None:
     ...
 
 @low_level('m')
@@ -40,7 +40,7 @@ def m(b : 'int') -> 'int':
     ...
 
 @low_level('n')
-def n(arg : 'list[int]') -> None:
+def n(arg : 'Final[list[int]]') -> None:
     ...
 
 @low_level('high_int_1')
@@ -64,17 +64,17 @@ def k(a : 'complex') -> 'tuple[complex, complex, complex]':
 
 @low_level('l')
 @overload
-def l(a : 'int') -> 'tuple[int, ...]':
+def l(a : 'Final[int]') -> 'tuple[int, ...]':
     ...
 
 @low_level('l')
 @overload
-def l(a : 'float') -> 'tuple[float, ...]':
+def l(a : 'Final[float]') -> 'tuple[float, ...]':
     ...
 
 @low_level('l')
 @overload
-def l(a : 'complex') -> 'tuple[complex, ...]':
+def l(a : 'Final[complex]') -> 'tuple[complex, ...]':
     ...
 
 @low_level('p')
