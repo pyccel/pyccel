@@ -269,17 +269,17 @@ More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/
 Suppose we have the following C code that we want to be able to call from Python:
 
 ```c
-struct Counter {
+struct mod__Counter {
     int64_t* private_counter_arr;
     int64_t value;
 };
 
-void Counter__create(struct Counter*, int64_t);
-void Counter__free(struct Counter*);
-void Counter__increment(struct Counter*, int64_t);
-int64_t Counter__n_nonzero(struct Counter*);
-void Counter__display_element(struct Counter*, int64_t);
-void Counter__display_scaled(struct Counter*, double);
+void mod__Counter__create(struct mod__Counter*, int64_t);
+void mod__Counter__free(struct mod__Counter*);
+void mod__Counter__increment(struct mod__Counter*, int64_t);
+int64_t mod__Counter__n_nonzero(struct mod__Counter*);
+void mod__Counter__display_element(struct mod__Counter*, int64_t);
+void mod__Counter__display_scaled(struct mod__Counter*, double);
 ```
 
 supposing the file is compiled to a library `libclass_property.so`, we can describe this code with the following stub file:
