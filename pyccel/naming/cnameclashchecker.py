@@ -95,8 +95,6 @@ class CNameClashChecker(LanguageNameClashChecker):
             name = 'drop'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             name = 'operator' + name[1:-2]
-        if name.startswith('__'):
-            name = name[2:]
         if name[0] == '_':
             name = 'private'+name
         if context == 'function' or (parent_context == 'module' and context != 'module'):
