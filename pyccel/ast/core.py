@@ -1048,6 +1048,7 @@ class Module(ScopedAstNode):
 
         if pyccel_stage != "syntactic":
             def get_name(o):
+                """ Get the syntactic/Python name of the object """
                 n = o.name
                 if o.pyccel_staging == 'syntactic':
                     return n
