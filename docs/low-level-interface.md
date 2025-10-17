@@ -46,8 +46,6 @@ The following are the general language-agnostic rules:
 
 - At the top of the file, you must include some metadata about the compilation
 
-- If you are exposing a class to Python, the stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
-
 You must ensure that all functions, methods, and classes have precise type annotations that match the low-level signatures.
 Particular care should be taken with integers. On most platforms Python's default integer precision is equivalent to `numpy.int64`, while the default integer precision in low-level languages like C and Fortran is usually equivalent to `numpy.int32`.
 
@@ -129,8 +127,6 @@ Possible keys are:
   ```
 
 #### Classes
-
-- The stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
 
 - The name stated in the `@low_level` decorator is the name of the type-bound procedure.
 
