@@ -706,6 +706,9 @@ class CToPythonWrapper(Wrapper):
         imports : list of Import
             A list of any imports that will appear in the PyModule.
 
+        module_def_name : str
+            The name of the structure which defined the module.
+
         Returns
         -------
         PyModInitFunc

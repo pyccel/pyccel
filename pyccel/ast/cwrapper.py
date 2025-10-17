@@ -542,6 +542,9 @@ class PyModule(Module):
         modules.
         See: https://docs.python.org/3/extending/extending.html .
 
+    module_def_name : str
+        The name of the structure which defined the module.
+
     **kwargs : dict
         See Module.
 

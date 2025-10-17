@@ -58,6 +58,9 @@ class Scope(object):
     symbolic_aliases : dict, optional
         A dictionary which maps indexed tuple elements to variables representing those
         elements. This argument should only be used after the semantic stage.
+
+    scope_type : str
+        The type of the scope being created [module, function, class, loop, program].
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
@@ -129,6 +132,8 @@ class Scope(object):
         ----------
         name : str
             Name of the new scope, used as a key to retrieve the new scope.
+        scope_type : str
+            The type of the scope being created [module, function, class, loop, program].
         **kwargs : dict
             Keyword arguments passed to __init__() for object initialization.
 
@@ -647,9 +652,9 @@ class Scope(object):
     @property
     def all_used_symbols(self):
         """
-        Get all low-level symbols which already exist in this scope
+        Get all low-level symbols which already exist in this scope.
 
-        Get all low-level symbols which already exist in this scope
+        Get all low-level symbols which already exist in this scope.
         """
         if self.parent_scope:
             symbols = self.parent_scope.all_used_symbols
@@ -868,6 +873,11 @@ class Scope(object):
             The type of object we are searching for.
             This must be one of the strings in Scope.categories.
             If no value is provided then we look in all categories.
+
+        Returns
+        -------
+        str
+            The name used to access an imported object in the current scope.
         """
         for l in ([category] if category else self._locals.keys()):
             import_obj = self.imports[l]
