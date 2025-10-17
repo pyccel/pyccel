@@ -1670,8 +1670,8 @@ class PythonCodePrinter(CodePrinter):
     def _print_VariableTypeAnnotation(self, expr):
         return self._print(expr.class_type)
 
-    def _print_TypingFinal(self, expr):
-        annotation = self._print(expr.arg)
+    def _print_FinalType(self, expr):
+        annotation = self._print(expr.underlying_type)
         self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
         return f'Final[{annotation}]'
 
