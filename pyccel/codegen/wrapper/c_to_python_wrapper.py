@@ -1393,7 +1393,7 @@ class CToPythonWrapper(Wrapper):
             of the type_indicator.
         """
         # Initialise the scope
-        func_name = self.scope.get_new_name(expr.name+'_wrapper')
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', object_type = 'wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_funcs = expr.functions
@@ -1424,7 +1424,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
 
         # Determine flags which indicate argument type
-        type_check_name = self.scope.get_new_name(expr.name+'_type_check')
+        type_check_name = self.scope.get_new_name(expr.name+'_type_check', object_type = 'wrapper')
         type_check_func, argument_type_flags = self._get_type_check_function(type_check_name, python_arg_objs, original_funcs)
 
         self.scope = func_scope
