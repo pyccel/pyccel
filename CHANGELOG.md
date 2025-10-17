@@ -64,6 +64,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
 -   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
+-   \[INTERNALS\] Use inheritance to handle parametrised types. Identity operators should no longer be used for type checking.
 
 ### Deprecated
 
