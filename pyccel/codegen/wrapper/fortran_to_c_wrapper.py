@@ -699,7 +699,7 @@ class FortranToCWrapper(Wrapper):
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
             del_name = expr.scope.get_new_name('__del__')
-            scope = expr.scope.new_child_scope('__del__')
+            scope = expr.scope.new_child_scope('__del__', scope_type='function')
             scope.local_used_symbols['__del__'] = del_name
             scope.python_names[del_name] = '__del__'
             argument = FunctionDefArgument(Variable(expr.class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
