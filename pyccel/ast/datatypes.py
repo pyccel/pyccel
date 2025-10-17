@@ -1,4 +1,5 @@
 # coding: utf-8
+#pylint: disable=no-member
 
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
@@ -156,7 +157,7 @@ class PyccelType:
         super().__init__()
 
     def __str__(self):
-        return self._name #pylint: disable=no-member
+        return self._name
 
     def switch_basic_type(self, new_type):
         """
@@ -253,7 +254,7 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
 
         The datatype category of the object (e.g. integer, floating point).
         """
-        return self._primitive_type # pylint: disable=no-member
+        return self._primitive_type
 
     @property
     def rank(self):
@@ -321,7 +322,7 @@ class FixedSizeNumericType(FixedSizeType):
 
         The precision in Pyccel is equivalent to the `kind` parameter in Fortran.
         """
-        return self._precision # pylint: disable=no-member
+        return self._precision
 
 class PythonNativeNumericType(FixedSizeNumericType):
     """
@@ -538,7 +539,7 @@ class ContainerType(PyccelType):
         bool
             True if the shape is acceptable, False otherwise.
         """
-        return isinstance(shape, tuple) and len(shape) == self.container_rank # pylint: disable=no-member
+        return isinstance(shape, tuple) and len(shape) == self.container_rank
 
 #==============================================================================
 
@@ -605,10 +606,10 @@ class HomogeneousContainerType(ContainerType):
 
         The PyccelType describing an element of the container.
         """
-        return self._element_type # pylint: disable=no-member
+        return self._element_type
 
     def __str__(self):
-        return f'{self._name}[{self._element_type}]' # pylint: disable=no-member
+        return f'{self._name}[{self._element_type}]'
 
     def switch_basic_type(self, new_type):
         """
@@ -674,7 +675,7 @@ class HomogeneousContainerType(ContainerType):
         Number of dimensions of the object described by the container. This is
         equal to the number of values required to index an element of this container.
         """
-        return self._container_rank # pylint: disable=no-member
+        return self._container_rank
 
     @property
     def rank(self):
@@ -695,7 +696,7 @@ class HomogeneousContainerType(ContainerType):
         ('F') format. This is only relevant if rank > 1. When it is not relevant
         this function returns None.
         """
-        return self._order # pylint: disable=no-member
+        return self._order
 
 class StringType(ContainerType, metaclass = Singleton):
     """
