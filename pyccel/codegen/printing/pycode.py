@@ -925,8 +925,6 @@ class PythonCodePrinter(CodePrinter):
                    t.object.scope.get_python_name(t.object.name) in ('__init__', '__del__')))]
         mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
-        print(target)
-
         prefix = ''
         if mod_target:
             if source in pyccel_builtin_import_registry:
