@@ -856,11 +856,6 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
 
     Class representing the type of a homogeneous list. This
     is a container type and should be used as the class_type.
-
-    Parameters
-    ----------
-    element_type : PyccelType
-        The type which is stored in the homogeneous list.
     """
     __slots__ = ('_element_type', '_order')
     _name = 'list'
@@ -869,6 +864,17 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     @classmethod
     @lru_cache
     def get_new(cls, element_type):
+        """
+        Get the parametrised homogeneous list type.
+
+        Get the subclass of HomogeneousListType describing the
+        type of a list[element_type].
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type which is stored in the homogeneous list.
+        """
         def __init__(self):
             self._element_type = element_type
             self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
@@ -904,6 +910,17 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
     @classmethod
     @lru_cache
     def get_new(cls, element_type):
+        """
+        Get the parametrised homogeneous set type.
+
+        Get the subclass of HomogeneousSetType describing the
+        type of a set[element_type].
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type which is stored in the homogeneous set.
+        """
         def __init__(self):
             self._element_type = element_type
             HomogeneousContainerType.__init__(self)
