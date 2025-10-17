@@ -90,7 +90,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             The prefix that may be added to the name to provide context information.
         context : str
             The context where the name will be used.
-         parent_context : str
+        parent_context : str
             The type of the scope where the object with this name will be saved.
 
         Returns
