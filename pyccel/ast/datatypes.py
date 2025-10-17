@@ -231,6 +231,11 @@ class FinalType:
         def __eq__(self, other):
             return type_class.__eq__(underlying_type, other)
         def get_underlying_type(self):
+            """
+            Get the type that is indicated as const.
+
+            Get the type that is indicated as const.
+            """
             return self._underlying_type
         return type(f'Final{type_class.__name__}', (FinalType, type_class,),
                     {'__init__' : __init__,
