@@ -4926,10 +4926,7 @@ class SemanticParser(BasicParser):
             if is_interface and 'low_level' not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
 
-            if python_name in insertion_scope.local_used_symbols:
-                insertion_scope.python_names[name] = python_name
-            else:
-                insertion_scope.insert_low_level_symbol(python_name, name)
+            insertion_scope.python_names[name] = python_name
 
             scope = self.create_new_function_scope(python_name, name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
