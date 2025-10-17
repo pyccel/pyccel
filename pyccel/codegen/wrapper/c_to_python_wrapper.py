@@ -818,7 +818,7 @@ class CToPythonWrapper(Wrapper):
         """
         mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
-        func_name = self.scope.get_new_name(f'import')
+        func_name = self.scope.get_new_name('import')
 
         API_var_name = self.scope.insert_symbol(f'Py{mod_name}_API', 'wrapper')
         API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
@@ -1258,7 +1258,6 @@ class CToPythonWrapper(Wrapper):
         mod_scope = Scope(name = original_mod_name, used_symbols = scope.local_used_symbols.copy(),
                           original_symbols = scope.python_names.copy(), scope_type = 'module')
         self.scope = mod_scope
-        init_mod_func_name = self.scope.insert_symbol(f'PyInit_{original_mod_name}', 'wrapper')
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
@@ -1298,7 +1297,7 @@ class CToPythonWrapper(Wrapper):
         # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
 
-        module_def_name = self.scope.get_new_name(f'module')
+        module_def_name = self.scope.get_new_name('module')
         init_func = self._build_module_init_function(expr, imports, module_def_name)
 
         API_var, import_func = self._build_module_import_function(expr)
@@ -2151,7 +2150,7 @@ class CToPythonWrapper(Wrapper):
             mod_import_func = FunctionDef(mod_spoof_scope.get_new_name('import'), (), (),
                        FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
             mod_spoof = PyModule(expr.source_module.name, (), (), scope = mod_spoof_scope,
-                                 module_def_name = mod_spoof_scope.get_new_name(f'module'),
+                                 module_def_name = mod_spoof_scope.get_new_name('module'),
                                  import_func = mod_import_func)
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
