@@ -1056,7 +1056,7 @@ class Module(ScopedAstNode):
                     return scope.get_python_name(n) if scope else n
 
             self._internal_dictionary = {get_name(v) : v for v in variables}
-            self._internal_dictionary.update({get_name(f) if f.is_semantic else f.name : f for f in funcs})
+            self._internal_dictionary.update({get_name(f) : f for f in funcs})
             self._internal_dictionary.update({get_name(i) : i for i in interfaces})
             self._internal_dictionary.update({get_name(c) : c for c in classes})
 
