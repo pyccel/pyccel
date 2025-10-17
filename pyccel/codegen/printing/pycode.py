@@ -921,7 +921,7 @@ class PythonCodePrinter(CodePrinter):
         source = import_source_swap.get(source, source)
 
         target = [t for t in expr.target if not (isinstance(t.object, Module) or
-                  (isinstance(t.object, FunctionDef) and t.object.scope and
+                  (isinstance(t.object, FunctionDef) and not t.object.is_inline and t.object.scope and
                    t.object.scope.get_python_name(t.object.name) in ('__init__', '__del__')))]
         mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
