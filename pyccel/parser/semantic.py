@@ -2778,8 +2778,9 @@ class SemanticParser(BasicParser):
                 self._visit(f)
 
         classes = self.scope.classes.values()
-        for c in classes:
-            self._create_class_destructor(c)
+        if not self.is_stub_file:
+            for c in classes:
+                self._create_class_destructor(c)
 
         for f in self.scope.functions.values():
             assert f.is_semantic or f.is_inline
@@ -3656,21 +3657,8 @@ class SemanticParser(BasicParser):
 
             cls = self.scope.find(name, 'classes')
             d_methods = cls.methods_as_dict
-            method = d_methods.pop('__init__', None)
+            init_method = d_methods.pop('__init__', None)
 
-            if not method.is_semantic:
-                if method.is_inline:
-                    errors.report("An __init__ method cannot be inlined",
-                            severity='fatal', symbol=expr)
-                method = self._annotate_the_called_function_def(method, args)
-
-            if method is None:
-
-                # TODO improve case of class with the no __init__
-
-                errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='error')
             dtype = cls.class_type
             cls_def = cls
             d_var = {'class_type' : dtype,
@@ -3686,36 +3674,48 @@ class SemanticParser(BasicParser):
             else:
                 lhs = self.scope.get_new_name()
 
-            if isinstance(lhs, AnnotatedPyccelSymbol):
-                annotation = self._visit(lhs.annotation)
-                if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != method.arguments[0].var.class_type:
-                    errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
-                            symbol=annotation, severity='error')
-                lhs = lhs.name
+            if init_method is not None:
+                if not init_method.is_semantic:
+                    if init_method.is_inline:
+                        errors.report("An __init__ method cannot be inlined",
+                                severity='fatal', symbol=expr)
+                    init_method = self._annotate_the_called_function_def(init_method, args)
 
-            cls_variable = self._assign_lhs_variable(lhs, d_var,
-                                    rhs = method.results.var,
-                                    new_expressions = new_expression,
-                                    is_augassign = False)
+                if isinstance(lhs, AnnotatedPyccelSymbol):
+                    annotation = self._visit(lhs.annotation)
+                    if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != init_method.arguments[0].var.class_type:
+                        errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
+                                symbol=annotation, severity='error')
+                    lhs = lhs.name
+
+                cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                        rhs = init_method.results.var,
+                                        new_expressions = new_expression,
+                                        is_augassign = False)
+                args = (FunctionCallArgument(cls_variable), *args)
+
+                args = self._sort_function_call_args(init_method.arguments, args)
+                self._check_argument_compatibility(args, init_method.arguments,
+                                init_method, init_method.is_elemental)
+
+                new_expr = ConstructorCall(init_method, args, cls_variable)
+
+                for a, f_a in zip(new_expr.args, init_method.arguments):
+                    if f_a.persistent_target:
+                        val = a.value
+                        if isinstance(val, Variable):
+                            a.value.is_target = True
+                            self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
+                        else:
+                            errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
+                                    severity='error', symbol=expr)
+            else:
+                cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                        rhs = None,
+                                        new_expressions = new_expression,
+                                        is_augassign = False)
+                new_expr = EmptyNode()
             self._additional_exprs[-1].extend(new_expression)
-            args = (FunctionCallArgument(cls_variable), *args)
-
-            args = self._sort_function_call_args(method.arguments, args)
-            self._check_argument_compatibility(args, method.arguments,
-                            method, method.is_elemental)
-
-            new_expr = ConstructorCall(method, args, cls_variable)
-
-            for a, f_a in zip(new_expr.args, method.arguments):
-                if f_a.persistent_target:
-                    val = a.value
-                    if isinstance(val, Variable):
-                        a.value.is_target = True
-                        self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
-                    else:
-                        errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
-                                severity='error', symbol=expr)
-
             self._allocs[-1].add(cls_variable)
             return new_expr
         else:
@@ -3920,7 +3920,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _build_ListExtend or _build_PythonSetFunction
-        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
