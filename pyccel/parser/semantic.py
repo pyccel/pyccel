@@ -2789,10 +2789,6 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        classes = self.scope.classes.values()
-        for c in classes:
-            self._create_class_destructor(c)
-
         for f in self.scope.functions.values():
             assert f.is_semantic or f.is_inline
 
@@ -2862,6 +2858,9 @@ class SemanticParser(BasicParser):
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
 
+        if init_func is None:
+            self.scope.remove_symbol('__init__')
+
         if self.is_stub_file:
             free_func = self.scope.functions.get('__del__', None)
         elif init_func:
@@ -2889,6 +2888,13 @@ class SemanticParser(BasicParser):
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
+
+        if free_func is None:
+            self.scope.remove_symbol('__del__')
+
+        classes = self.scope.classes.values()
+        for c in classes:
+            self._create_class_destructor(c)
 
         funcs = []
         interfaces = []
