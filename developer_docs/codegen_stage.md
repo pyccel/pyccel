@@ -116,7 +116,7 @@ def f(a : 'int[:,:]', b : 'int[:]'):
 In C with full unravelling this becomes:
 
 ```c
-array_int64_2d f(array_int64_2d a, array_int64_1d b)
+array_int64_2d mod__f(array_int64_2d a, array_int64_1d b)
 {
     int64_t i;
     int64_t i_0001;
@@ -220,7 +220,7 @@ This dictionary maps optional arguments to local variables.
 This allows the above code to be translated to:
 
 ```c
-void f(int64_t *a)
+void mod__f(int64_t *a)
 {
     int64_t Dummy_0000;
     if (a == NULL)
@@ -255,10 +255,10 @@ def f():
 becomes:
 
 ```c
-void f() {
+void mod__f() {
 }
 
-void f__g() {
+void mod__f__g() {
 }
 ```
 
