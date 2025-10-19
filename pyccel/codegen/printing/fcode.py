@@ -187,8 +187,7 @@ math_function_to_fortran = {
 INF = math_constants['inf']
 
 _default_methods = {
-    '__new__' : 'alloc',
-    '__init__': 'create',
+    '__init__': 'init',
     '__del__' : 'free',
 }
 
@@ -2263,8 +2262,11 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(class_type, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
-            Pyccel_del_args = [FunctionCallArgument(var)]
-            return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
+            if Pyccel__del:
+                Pyccel_del_args = [FunctionCallArgument(var)]
+                return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
+            else:
+                return ''
 
         if var.is_alias or isinstance(class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return ''

@@ -12,7 +12,7 @@ class A:
     _x : 'int'
     is_freed : 'bool'
     
-    @low_level('create')
+    @low_level('init')
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
