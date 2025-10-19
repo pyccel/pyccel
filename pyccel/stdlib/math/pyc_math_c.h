@@ -64,6 +64,17 @@ PY_FLOOR_DIV_TYPE(int16_t)
 PY_FLOOR_DIV_TYPE(int32_t)
 PY_FLOOR_DIV_TYPE(int64_t)
 
+#define PY_CSIGN_TYPE(TYPE)                         \
+    static inline TYPE py_sign_type_##TYPE(TYPE x) { \
+    __typeof__(cabs(x)) absolute = cabs(x); \
+    return (TYPE)((absolute == TYPE (0)) ? TYPE(0) : (x / absolute)); \
+}
+
+PY_CSIGN_TYPE(int8_t)
+PY_CSIGN_TYPE(int16_t)
+PY_CSIGN_TYPE(int32_t)
+PY_CSIGN_TYPE(int64_t)
+
 inline double complex complex_min(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
     return lt ? a : b;
