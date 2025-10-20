@@ -206,6 +206,8 @@ class FinalType:
 
     A class to get PyccelType subclasses describing constant values.
     """
+    __slots__ = ()
+
     @classmethod
     @lru_cache
     def get_new(cls, underlying_type):
