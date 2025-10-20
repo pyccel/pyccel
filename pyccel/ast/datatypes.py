@@ -903,11 +903,6 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
 
     Class representing the type of a homogeneous set. This
     is a container type and should be used as the class_type.
-
-    Parameters
-    ----------
-    element_type : PyccelType
-        The type which is stored in the homogeneous set.
     """
     __slots__ = ('_element_type',)
     _name = 'set'
