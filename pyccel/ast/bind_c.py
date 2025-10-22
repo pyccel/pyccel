@@ -291,33 +291,10 @@ class BindCModuleVariable(Variable):
     --------
     Variable : The super class.
     """
-    __slots__ = ('_f_name',)
+    __slots__ = ()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._f_name = self._name.lower()
-
-    @property
-    def name(self):
-        """
-        The name of the external variable that should be printed in C.
-
-        The name of the external variable that should be printed in C.
-        In order to be compatible with Fortran the name must be printed
-        in lower case letters.
-        """
-        return self._f_name
-
-    @property
-    def indexed_name(self):
-        """
-        The name under which the variable is indexed in the scope.
-
-        The name under which the variable is indexed in the scope. This is
-        important in order to be able to collect the original Python name
-        used by the user in case of collisions.
-        """
-        return self._name
 
 # =======================================================================================
 

@@ -22,7 +22,7 @@ from pyccel.ast.core import Assign, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For
+from pyccel.ast.core import For, FunctionDef, Pass
 from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.datatypes import TupleType
 from pyccel.ast.datatypes import PythonNativeInt, CharType
@@ -141,7 +141,9 @@ class FortranToCWrapper(Wrapper):
         """
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        mod_scope = Scope(name = f'bind_c_{expr.name}', used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy(), scope_type = 'module')
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self.scope = mod_scope
 
         # Wrap contents
@@ -167,7 +169,6 @@ class FortranToCWrapper(Wrapper):
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr),
                    *expr.imports]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
@@ -216,7 +217,7 @@ class FortranToCWrapper(Wrapper):
             return EmptyNode()
 
         # Create the scope
-        func_scope = self.scope.new_child_scope(name)
+        func_scope = self.scope.new_child_scope(name, 'function')
         self.scope = func_scope
 
         # Wrap the arguments and collect the expressions passed as the call argument.
@@ -244,7 +245,10 @@ class FortranToCWrapper(Wrapper):
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
-        if expr.scope.get_python_name(expr.name) == '__del__':
+        if expr.scope.get_python_name(expr.name) == '__del__' and call_arguments:
+            if expr.is_external:
+                # If __del__ is not defined in the module then the del call is unnecessary
+                body.pop()
             body.append(DeallocatePointer(call_arguments[0].value))
 
         self.exit_scope()
@@ -543,7 +547,7 @@ class FortranToCWrapper(Wrapper):
         elif isinstance(expr.class_type, NumpyNDArrayType):
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
-            func_scope = scope.new_child_scope(func_name)
+            func_scope = scope.new_child_scope(func_name, 'function')
             mod = expr.get_user_nodes(Module)[0]
             import_mod = Import(mod.name, AsName(expr,expr.name), mod=mod)
             func_scope.imports['variables'][expr.name] = expr
@@ -587,7 +591,7 @@ class FortranToCWrapper(Wrapper):
         #                        Create getter
         # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_getter'.lower())
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
         self.scope.insert_symbol(expr.name)
         getter_result_info = self._extract_FunctionDefResult(expr, lhs.cls_base.scope)
@@ -617,7 +621,7 @@ class FortranToCWrapper(Wrapper):
         #                        Create setter
         # ----------------------------------------------------------------------------------
         setter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_setter'.lower())
-        setter_scope = self.scope.new_child_scope(setter_name)
+        setter_scope = self.scope.new_child_scope(setter_name, 'function')
         self.scope = setter_scope
         self.scope.insert_symbol(expr.name)
 
@@ -664,7 +668,7 @@ class FortranToCWrapper(Wrapper):
         """
         name = expr.name
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
 
         # Allocatable is not returned so it must appear in local scope
         local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
@@ -691,6 +695,19 @@ class FortranToCWrapper(Wrapper):
             for f in i.functions:
                 self._wrap(f)
         interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+
+        del_method = expr.methods_as_dict.get('__del__', None)
+        if del_method is None:
+            del_name = expr.scope.get_new_name('__del__')
+            scope = expr.scope.new_child_scope('__del__', scope_type='function')
+            scope.local_used_symbols['__del__'] = del_name
+            scope.python_names[del_name] = '__del__'
+            argument = FunctionDefArgument(Variable(expr.class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
+            scope.insert_variable(argument.var)
+            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope,
+                                     is_external = True)
+            methods.append(self._wrap(del_method))
+
 
         if any(isinstance(v.class_type, TupleType) for v in expr.attributes):
             errors.report("Tuples cannot yet be exposed to Python.",

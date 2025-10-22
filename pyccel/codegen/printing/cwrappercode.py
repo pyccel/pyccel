@@ -268,6 +268,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_ModuleHeader(self, expr):
         mod = expr.module
+        self.set_scope(mod.scope)
         self._current_module = expr.module
         name = mod.name
 
@@ -305,6 +306,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_import_decs = self._print(Declare(API_var, static=True))
         import_func = self._print(mod.import_func)
 
+        self.exit_scope()
         self._current_module = None
         header_id = f'{name.upper()}_WRAPPER'
         header_guard = f'{header_id}_H'
@@ -356,14 +358,13 @@ class CWrapperCodePrinter(CCodePrinter):
                                                         if f.docstring else '""')
                                      for f in funcs if not getattr(f, 'is_header', False))
 
-        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods', object_type = 'wrapper')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_func}'
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
-        module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
+        module_def = (f'static struct PyModuleDef {expr.module_def_name} = {{\n'
                 'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'
                 f'"{self._module_name}",\n'
@@ -441,7 +442,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         magic_methods = {self.get_python_name(original_scope, f.original_function): f for f in expr.magic_methods}
 
-        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods')
+        number_magic_method_name = self.scope.get_new_name(f'{expr.name}_number_methods', object_type = 'wrapper')
 
         number_magic_methods_def = f"static PyNumberMethods {number_magic_method_name} = {{\n"
         if '__add__' in magic_methods:
@@ -478,27 +479,27 @@ class CWrapperCodePrinter(CCodePrinter):
             number_magic_methods_def += f"     .nb_inplace_or = (binaryfunc){magic_methods['__ior__'].name},\n"
         number_magic_methods_def += '};\n'
 
-        seq_magic_method_name = self.scope.get_new_name(f'{expr.name}_sequence_methods')
+        seq_magic_method_name = self.scope.get_new_name(f'{expr.name}_sequence_methods', object_type = 'wrapper')
 
         seq_magic_methods_def = f"static PySequenceMethods {seq_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             seq_magic_methods_def += f"    .sq_length = (lenfunc){magic_methods['__len__'].name},\n"
         seq_magic_methods_def += '};\n'
 
-        map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods')
+        map_magic_method_name = self.scope.get_new_name(f'{expr.name}_mapping_methods', object_type = 'wrapper')
         map_magic_methods_def = f"static PyMappingMethods {map_magic_method_name} = {{\n"
         if '__len__' in magic_methods:
             map_magic_methods_def += f"    .mp_length = (lenfunc){magic_methods['__len__'].name},\n"
         if '__getitem__' in magic_methods:
             map_magic_methods_def += f"     .mp_subscript = (binaryfunc){magic_methods['__getitem__'].name},\n"
         map_magic_methods_def += '};\n'
-        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods', object_type = 'wrapper')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        property_def_name = self.scope.get_new_name(f'{expr.name}_properties')
+        property_def_name = self.scope.get_new_name(f'{expr.name}_properties', object_type = 'wrapper')
         property_def = (f'static PyGetSetDef {property_def_name}[] = {{\n'
                         f'{property_definitions}'
                         '};\n')
@@ -610,3 +611,9 @@ class CWrapperCodePrinter(CCodePrinter):
         args = ', '.join([f'"{self._print(expr.error_msg)}"'] + \
                          [f'PyObject_Str((PyObject*)Py_TYPE({self._print(a)}))' for a in expr.args])
         return f'PyErr_SetObject({self._print(expr.error_type)}, PyUnicode_FromFormat({args}));\n'
+
+    def _print_BindCModuleVariable(self, expr):
+        if self.is_c_pointer(expr):
+            return f'(*{expr.name.lower()})'
+        else:
+            return expr.name.lower()

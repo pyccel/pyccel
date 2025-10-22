@@ -46,8 +46,6 @@ The following are the general language-agnostic rules:
 
 - At the top of the file, you must include some metadata about the compilation
 
-- If you are exposing a class to Python, the stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
-
 You must ensure that all functions, methods, and classes have precise type annotations that match the low-level signatures.
 Particular care should be taken with integers. On most platforms Python's default integer precision is equivalent to `numpy.int64`, while the default integer precision in low-level languages like C and Fortran is usually equivalent to `numpy.int32`.
 
@@ -129,8 +127,6 @@ Possible keys are:
   ```
 
 #### Classes
-
-- The stub must define `__init__` and `__del__` methods, which map to the corresponding routines in the low-level code.
 
 - The name stated in the `@low_level` decorator is the name of the type-bound procedure.
 
@@ -269,17 +265,17 @@ More examples can be found in the [tests](https://github.com/pyccel/pyccel/tree/
 Suppose we have the following C code that we want to be able to call from Python:
 
 ```c
-struct Counter {
+struct mod__Counter {
     int64_t* private_counter_arr;
     int64_t value;
 };
 
-void Counter__create(struct Counter*, int64_t);
-void Counter__free(struct Counter*);
-void Counter__increment(struct Counter*, int64_t);
-int64_t Counter__n_nonzero(struct Counter*);
-void Counter__display_element(struct Counter*, int64_t);
-void Counter__display_scaled(struct Counter*, double);
+void mod__Counter__create(struct mod__Counter*, int64_t);
+void mod__Counter__free(struct mod__Counter*);
+void mod__Counter__increment(struct mod__Counter*, int64_t);
+int64_t mod__Counter__n_nonzero(struct mod__Counter*);
+void mod__Counter__display_element(struct mod__Counter*, int64_t);
+void mod__Counter__display_scaled(struct mod__Counter*, double);
 ```
 
 supposing the file is compiled to a library `libclass_property.so`, we can describe this code with the following stub file:
@@ -290,25 +286,26 @@ supposing the file is compiled to a library `libclass_property.so`, we can descr
 from typing import overload
 from pyccel.decorators import low_level
 
+@low_level('Counter')
 class Counter:
-    @low_level('create')
+    @low_level('mod__Counter__create')
     def __init__(self, start: int) -> None: ...
 
-    @low_level('free')
+    @low_level('mod__Counter__free')
     def __del__(self) -> None: ...
 
-    @low_level('increment_n')
+    @low_level('mod__Counter__increment')
     def __iadd__(self, n : int) -> None: ...
 
-    @low_level('counter_n_nonzero')
+    @low_level('mod__Counter__n_nonzero')
     @property
     def n_nonzero(self) -> int: ...
 
-    @low_level("display_repeat")
+    @low_level("mod__Counter__display_element")
     @overload
     def display(self, n: int) -> None: ...
 
-    @low_level("display_scaled")
+    @low_level("mod__Counter__display_scaled")
     @overload
     def display(self, scale: float) -> None: ...
 ```
