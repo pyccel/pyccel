@@ -1496,10 +1496,11 @@ class SemanticParser(BasicParser):
         scope_names = []
         while syntactic_scope.parent_scope is not None:
             syntactic_scope = syntactic_scope.parent_scope
-            if not syntactic_scope.name is None:
+            if syntactic_scope.name is not None:
                 scope_names.append(syntactic_scope.name)
 
-        # Remove module scope
+        # Remove name of module scope. This is not needed to walk down the scope
+        # starting from the module scope
         scope_names.pop()
 
         # Module scope is shared between syntactic and semantic stage
