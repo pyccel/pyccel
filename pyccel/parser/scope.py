@@ -562,10 +562,10 @@ class Scope(object):
             if not self.allow_loop_scoping and self.is_loop:
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
-                collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
+                collisionless_name = self.name_clash_checker.get_collisionless_name(symbol,
                         self.all_used_symbols, prefix = self._symbol_prefix,
                         context = object_type, parent_context = self._scope_type)
-                collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                collisionless_symbol = PyccelSymbol(collisionless_name,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
@@ -810,10 +810,10 @@ class Scope(object):
         collisionless_name = self.name_clash_checker.get_collisionless_name(new_name,
                 self.all_used_symbols, prefix = self._symbol_prefix,
                 context = object_type, parent_context = self._scope_type)
-        collisionless_name = PyccelSymbol(collisionless_name, is_temp = True)
-        self._used_symbols[collisionless_name] = collisionless_name
-        self._original_symbol[collisionless_name] = collisionless_name
-        return self.insert_symbol(collisionless_name, object_type)
+        collisionless_symbol = PyccelSymbol(collisionless_name, is_temp = True)
+        self._used_symbols[collisionless_symbol] = collisionless_symbol
+        self._original_symbol[collisionless_symbol] = collisionless_symbol
+        return self.insert_symbol(collisionless_symbol, object_type)
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
