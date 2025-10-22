@@ -12,7 +12,7 @@ class A:
     _x : 'int'
     is_freed : 'bool'
     
-    @low_level('runtest_stub__A__create')
+    @low_level('runtest_stub__A__init')
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
