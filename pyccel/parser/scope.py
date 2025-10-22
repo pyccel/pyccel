@@ -23,7 +23,7 @@ from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
 
-class Scope(object):
+class Scope:
     """
     Class representing all objects defined within a given scope.
 

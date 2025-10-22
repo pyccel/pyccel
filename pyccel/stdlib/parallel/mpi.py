@@ -32,7 +32,7 @@ from pyccel.stdlib.parallel.mpi import MPI_SUM
 #$ header method communicate(Cart, double [:,:])
 #$ header method reduce(Cart, double)
 
-class Cart(object):
+class Cart:
     def __init__(self, npts, pads, periods, reorder):
 
         ntx = npts[0]

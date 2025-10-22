@@ -26,7 +26,7 @@ DEBUG = False
 errors = Errors()
 pyccel_stage = PyccelStage()
 
-class Header(object):
+class Header:
     """
     Class describing a Header in the grammar.
 

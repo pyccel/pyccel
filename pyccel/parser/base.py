@@ -147,7 +147,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
                       severity='fatal')
 
 #==============================================================================
-class BasicParser(object):
+class BasicParser:
     """
     Class for a basic parser.
 

@@ -109,7 +109,7 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
     return txt, has_nowait
 
 
-class Openmp(object):
+class Openmp:
     """Class for Openmp syntax."""
     def __init__(self, **kwargs):
         self.statements = kwargs.pop('statements', [])

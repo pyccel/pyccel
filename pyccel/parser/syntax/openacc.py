@@ -15,7 +15,7 @@ from pyccel.ast.core import AnnotatedComment
 
 DEBUG = False
 
-class Openacc(object):
+class Openacc:
     """Class for Openacc syntax."""
     def __init__(self, **kwargs):
         """

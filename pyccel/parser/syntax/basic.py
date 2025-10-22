@@ -6,7 +6,7 @@
 
 __all__ = ["BasicStmt"]
 
-class BasicStmt(object):
+class BasicStmt:
     """
     Base class for all objects in Pyccel.
     """
