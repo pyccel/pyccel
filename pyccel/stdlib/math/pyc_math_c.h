@@ -59,10 +59,8 @@ double complex cpyc_expm1(double complex x);
         return (TYPE)(x / y - ((x % y != 0) && ((x < 0) ^ (y < 0)))); \
     }
 
-PY_FLOOR_DIV_TYPE(int8_t)
-PY_FLOOR_DIV_TYPE(int16_t)
-PY_FLOOR_DIV_TYPE(int32_t)
-PY_FLOOR_DIV_TYPE(int64_t)
+PY_FLOOR_DIV_TYPE(float)
+PY_FLOOR_DIV_TYPE(double)
 
 #define PY_CSIGN_TYPE(TYPE)                         \
     static inline TYPE py_sign_type_##TYPE(TYPE x) { \
