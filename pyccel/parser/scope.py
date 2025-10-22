@@ -666,7 +666,8 @@ class Scope(object):
         """
         Get all low-level symbols which already exist in this scope.
 
-        Get all low-level symbols which already exist in this scope.
+        Get a set containing all low-level symbols which already exist
+        in this scope.
         """
         if self.parent_scope:
             symbols = self.parent_scope.all_used_symbols
@@ -680,7 +681,8 @@ class Scope(object):
         """
         Get all Python symbols which already exist in this scope.
 
-        Get all Python symbols which already exist in this scope.
+        Get a set containing all Python symbols which already exist
+        in this scope.
         """
         if self.parent_scope:
             symbols = self.parent_scope.all_python_symbols
@@ -691,8 +693,15 @@ class Scope(object):
 
     @property
     def local_used_symbols(self):
-        """ Get all symbols which already exist in this scope
-        excluding enclosing scopes
+        """
+        Get all symbols which already exist in this local scope.
+
+        Get the dictionary describing all symbols which already exist
+        in the local scope. The local scope is this scope excluding
+        enclosing scopes. The dictionary's keys are existing symbols
+        (that were used in the original Python code). Its values are
+        the collisionless symbols that will be used in the low-level
+        code to describe these objects.
         """
         return self._used_symbols
 
