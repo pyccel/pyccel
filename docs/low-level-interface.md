@@ -270,12 +270,12 @@ struct mod__Counter {
     int64_t value;
 };
 
-void create(struct mod__Counter*, int64_t);
-void free(struct mod__Counter*);
-void increment(struct mod__Counter*, int64_t);
-int64_t n_nonzero(struct mod__Counter*);
-void display_element(struct mod__Counter*, int64_t);
-void display_scaled(struct mod__Counter*, double);
+void mod__Counter__create(struct mod__Counter*, int64_t);
+void mod__Counter__free(struct mod__Counter*);
+void mod__Counter__increment(struct mod__Counter*, int64_t);
+int64_t mod__Counter__n_nonzero(struct mod__Counter*);
+void mod__Counter__display_element(struct mod__Counter*, int64_t);
+void mod__Counter__display_scaled(struct mod__Counter*, double);
 ```
 
 supposing the file is compiled to a library `libclass_property.so`, we can describe this code with the following stub file:
@@ -286,25 +286,26 @@ supposing the file is compiled to a library `libclass_property.so`, we can descr
 from typing import overload
 from pyccel.decorators import low_level
 
+@low_level('Counter')
 class Counter:
-    @low_level('create')
+    @low_level('mod__Counter__create')
     def __init__(self, start: int) -> None: ...
 
-    @low_level('free')
+    @low_level('mod__Counter__free')
     def __del__(self) -> None: ...
 
-    @low_level('increment_n')
+    @low_level('mod__Counter__increment')
     def __iadd__(self, n : int) -> None: ...
 
-    @low_level('counter_n_nonzero')
+    @low_level('mod__Counter__n_nonzero')
     @property
     def n_nonzero(self) -> int: ...
 
-    @low_level("display_repeat")
+    @low_level("mod__Counter__display_element")
     @overload
     def display(self, n: int) -> None: ...
 
-    @low_level("display_scaled")
+    @low_level("mod__Counter__display_scaled")
     @overload
     def display(self, scale: float) -> None: ...
 ```
