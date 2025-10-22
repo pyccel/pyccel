@@ -28,7 +28,7 @@ Elements of a homogeneous tuple should have the same type, the same number of di
 
 Inhomogeneous tuples are handled symbolically. This means that an inhomogeneous tuple is treated as a collection of translatable objects. Each of these objects is then handled individually. In particular this means that tuples can only be indexed by compile-time constants.
 
-For example the following code:
+For example the following code (in file `mod.py`):
 
 ```python
 def f():
