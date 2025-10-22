@@ -807,13 +807,13 @@ class Scope(object):
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
-        collisionless_symbol = self.name_clash_checker.get_collisionless_name(new_name,
+        collisionless_name = self.name_clash_checker.get_collisionless_name(new_name,
                 self.all_used_symbols, prefix = self._symbol_prefix,
                 context = object_type, parent_context = self._scope_type)
-        collisionless_symbol = PyccelSymbol(collisionless_symbol, is_temp = True)
-        self._used_symbols[collisionless_symbol] = collisionless_symbol
-        self._original_symbol[collisionless_symbol] = collisionless_symbol
-        return self.insert_symbol(collisionless_symbol, object_type)
+        collisionless_name = PyccelSymbol(collisionless_name, is_temp = True)
+        self._used_symbols[collisionless_name] = collisionless_name
+        self._original_symbol[collisionless_name] = collisionless_name
+        return self.insert_symbol(collisionless_name, object_type)
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
