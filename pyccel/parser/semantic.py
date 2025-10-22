@@ -382,7 +382,7 @@ class SemanticParser(BasicParser):
         Scope
             The new scope for the function.
         """
-        child = self.scope.new_child_scope(syntactic_name, **kwargs)
+        child = self.scope.new_child_scope(syntactic_name, 'function', **kwargs)
         child.local_used_symbols[syntactic_name] = semantic_name
         child.python_names[semantic_name] = syntactic_name
 
@@ -1138,7 +1138,6 @@ class SemanticParser(BasicParser):
             The class that implicit __init__ and __del__ methods should be created for.
         """
         class_type = expr.class_type
-        methods = expr.methods
         cls_scope = expr.scope
 
         init_func = cls_scope.functions['__init__']
@@ -1157,7 +1156,7 @@ class SemanticParser(BasicParser):
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
-            del_name = cls_scope.get_new_name('__del__')
+            del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
@@ -1483,10 +1482,10 @@ class SemanticParser(BasicParser):
             cls_name = cls_base_syntactic[0].name
             cls_base = self.scope.find(cls_name, 'classes')
             cls_scope = cls_base.scope
-            new_scope = cls_scope
+            syntactic_scope = cls_scope
         else:
             func_scope = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
-            new_scope = func_scope
+            syntactic_scope = func_scope
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope = self._scope
@@ -1495,10 +1494,17 @@ class SemanticParser(BasicParser):
 
         # Walk up scope to root to find names of relevant scopes
         scope_names = []
-        while new_scope.parent_scope is not None:
-            new_scope = new_scope.parent_scope
-            if not new_scope.name is None:
-                scope_names.append(new_scope.name)
+        while syntactic_scope.parent_scope is not None:
+            syntactic_scope = syntactic_scope.parent_scope
+            if syntactic_scope.name is not None:
+                scope_names.append(syntactic_scope.name)
+
+        # Remove name of module scope. This is not needed to walk down the scope
+        # starting from the module scope
+        scope_names.pop()
+
+        # Module scope is shared between syntactic and semantic stage
+        new_scope = syntactic_scope
 
         # Use scope_names to find semantic scopes
         for n in scope_names[::-1]:
@@ -1527,15 +1533,6 @@ class SemanticParser(BasicParser):
         self._scope = old_scope
         self._current_function_name = old_current_function_name
         self._current_function = old_current_function
-        # Remove the old_func from the imports dict and Assign the new annotated one
-        if old_func.is_imported:
-            scope = self.scope
-            while new_name not in scope.imports['functions']:
-                scope = scope.parent_scope
-            assert old_func is scope.imports['functions'].get(new_name)
-            func = func.clone(new_name, is_imported=True)
-            func.set_current_user_node(mod)
-            scope.imports['functions'][new_name] = func
 
         return func
 
@@ -2701,6 +2698,10 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
+        if not self.is_stub_file:
+            self.scope.insert_symbol('__init__', object_type = 'function')
+            self.scope.insert_symbol('__del__', object_type = 'function')
+
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
@@ -2731,7 +2732,7 @@ class SemanticParser(BasicParser):
         if mod_name is None:
             mod_name = expr.name
         else:
-            self.scope.insert_symbol(mod_name)
+            self.scope.insert_symbol(mod_name, 'module')
         self._mod_name = mod_name
         if isinstance(expr.name, AsName):
             name_suffix = expr.name.name
@@ -2748,7 +2749,8 @@ class SemanticParser(BasicParser):
             prog_syntactic_scope = expr.program.scope
             self.scope = mod_scope.new_child_scope(prog_name,
                     used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
-                    original_symbols = prog_syntactic_scope.python_names.copy())
+                    original_symbols = prog_syntactic_scope.python_names.copy(),
+                    scope_type = 'program')
             prog_scope = self.scope
 
             imports = [self._visit(i) for i in expr.program.imports]
@@ -2777,11 +2779,6 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        classes = self.scope.classes.values()
-        if not self.is_stub_file:
-            for c in classes:
-                self._create_class_destructor(c)
-
         for f in self.scope.functions.values():
             assert f.is_semantic or f.is_inline
 
@@ -2792,12 +2789,14 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
-        if not all(isinstance(l, comment_types) for l in init_func_body):
+        if self.is_stub_file:
+            init_func = self.scope.functions.get('__init__', None)
+        elif not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
-            syntactic_init_func_name = name_suffix+'__init'
-            init_func_name = self.scope.get_new_name(syntactic_init_func_name)
+            syntactic_init_func_name = '__init__'
+            init_func_name = self.scope.get_expected_name(syntactic_init_func_name)
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
             for b in init_func_body:
@@ -2844,28 +2843,33 @@ class SemanticParser(BasicParser):
             # loop variables. They must be moved so the symbol is found when the variable is eventually
             # inserted into the scope.
             unused_symbols = [n for n in self.scope.local_used_symbols \
-                              if self.scope.find(n) is None and n != mod_name]
+                              if self.scope.find(n) is None and n not in (mod_name, '__del__')]
             for s in unused_symbols:
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
 
-        if init_func:
-            syntactic_free_func_name = name_suffix+'__free'
-            free_func_name = self.scope.get_new_name(syntactic_free_func_name)
+        if init_func is None:
+            self.scope.remove_symbol('__init__')
+
+        if self.is_stub_file:
+            free_func = self.scope.functions.get('__del__', None)
+        elif init_func:
+            syntactic_free_func_name = '__del__'
+            free_func_name = self.scope.get_expected_name(syntactic_free_func_name)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
             import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
                                 if imp.source in self.d_parsers]
-            import_frees = [f if f.name in imp.target else \
-                             f.clone(next(i.target for i in imp.target \
-                                        if isinstance(i, AsName) and i.name == f.name)) \
+            import_frees = [next(t.object for t in imp.target if t.name == f.name) \
                             for f,imp in zip(import_frees, pyccelised_imports) if f]
+            assert all(f.is_imported for f in import_frees)
 
             if deallocs or import_frees:
                 # If there is anything that needs deallocating when the module goes out of scope
                 # create a deallocation function
                 import_free_calls = [f() for f in import_frees if f is not None]
+
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
@@ -2874,6 +2878,14 @@ class SemanticParser(BasicParser):
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
+
+        if free_func is None:
+            self.scope.remove_symbol('__del__')
+
+        classes = self.scope.classes.values()
+        if not self.is_stub_file:
+            for c in classes:
+                self._create_class_destructor(c)
 
         funcs = []
         interfaces = []
@@ -3418,53 +3430,49 @@ class SemanticParser(BasicParser):
         if isinstance(first, Module):
 
             if rhs_name in first:
-                imp = self.scope.find(_get_name(lhs), 'imports')
+                scope = self.scope
+                imp = scope.find(_get_name(lhs), 'imports')
 
                 new_name = rhs_name
+                rhs_obj = first[rhs_name]
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
-                        new_name = self.scope.get_new_name(rhs_name)
+                        new_name = scope.get_new_name(rhs_name)
 
                         # Save the import target that has been used
-                        imp.define_target(AsName(first[rhs_name], PyccelSymbol(new_name)))
+                        imp.define_target(AsName(rhs_obj, new_name))
+                        source_mod = _get_name(lhs)
+                        while source_mod not in scope.imports['imports']:
+                            scope = scope.parent_scope
+
+                if isinstance(rhs_obj, PyccelFunctionDef):
+                    assert new_name not in scope.imports['functions'] or scope.imports['functions'][new_name] == rhs_obj
+                    scope.imports['functions'][new_name] = rhs_obj
                 elif isinstance(rhs, FunctionCall):
-                    self.scope.imports['functions'][new_name] = first[rhs_name]
+                    if new_name not in scope.imports['functions']:
+                        m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                        rhs_obj = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                        scope.imports['functions'][new_name] = rhs_obj
+                        rhs_obj.set_current_user_node(m)
                 elif isinstance(rhs, ConstructorCall):
-                    self.scope.imports['classes'][new_name] = first[rhs_name]
+                    assert new_name not in scope.imports['classes']
+                    scope.imports['classes'][new_name] = rhs_obj
                 elif isinstance(rhs, Variable):
-                    self.scope.imports['variables'][new_name] = rhs
+                    assert new_name not in scope.imports['variables']
+                    scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
-                    func  = first[rhs_name]
-                    if new_name != rhs_name:
-                        if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
-                            mod = func.get_direct_user_nodes(lambda m: isinstance(m, Module))[0]
-                            func  = func.clone(new_name, is_imported = True)
-                            func.set_current_user_node(mod)
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_call = FunctionCall(func, args)
-                    current_user_nodes = expr.get_all_user_nodes()
-                    if len(current_user_nodes) == 1:
-                        syntactic_call.set_current_user_node(current_user_nodes[0])
-                    else:
-                        # If the DottedName has multiple users look for the relevant Assign
-                        # This happens if an Assign node was created to handle the expression
-                        # E.g. when the statement is found in a Return node.
-                        syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
-                    pyccel_stage.set_stage('semantic')
-                    return self._handle_function(syntactic_call, func, args)
+                    return self._handle_function(expr, func = rhs_obj, args = args)
                 elif isinstance(rhs, Constant):
-                    var = first[rhs_name]
                     if new_name != rhs_name:
-                        var.name = new_name
-                    return var
+                        rhs_obj.name = new_name
+                    return rhs_obj
                 else:
                     # If object is something else (eg. dict)
-                    var = first[rhs_name]
-                    return var
+                    return rhs_obj
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr, severity='fatal')
@@ -4835,12 +4843,15 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators:
-            low_level_decs = decorators['low_level']
-            assert len(low_level_decs) == 1
-            arg = low_level_decs[0].args[0].value
-            assert isinstance(arg, LiteralString)
-            name = PyccelSymbol(arg.python_value)
+        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
+            if 'low_level' in decorators:
+                low_level_decs = decorators['low_level']
+                assert len(low_level_decs) == 1
+                arg = low_level_decs[0].args[0].value
+                assert isinstance(arg, LiteralString)
+                name = PyccelSymbol(arg.python_value)
+            else:
+                name = python_name
             if 'overload' not in decorators:
                 insertion_scope.remove_symbol(python_name)
                 insertion_scope.insert_low_level_symbol(python_name, name)
@@ -4913,7 +4924,7 @@ class SemanticParser(BasicParser):
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if is_interface and 'low_level' not in decorators:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
+                name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
 
             insertion_scope.python_names[name] = python_name
 
@@ -5242,7 +5253,10 @@ class SemanticParser(BasicParser):
                           else EmptyNode() for r in returns]
         expr.body.substitute(returns, replace_return, invalidate = False)
 
-        imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
+        new_imports = [Import(m_name, targets) for m_name, targets in global_scope_import_targets.items()]
+        for i in new_imports:
+            i.set_current_ast(function_call.python_ast)
+        imports.extend(new_imports)
         pyccel_stage.set_stage('semantic')
 
         import_init_calls = [self._visit(i) for i in imports]
@@ -5348,6 +5362,10 @@ class SemanticParser(BasicParser):
             assert isinstance(arg, LiteralString)
             name = PyccelSymbol(arg.python_value)
             self.scope.insert_low_level_symbol(expr.name, name)
+        elif self.is_stub_file:
+            self.scope.remove_symbol(expr.name)
+            name = expr.name
+            self.scope.insert_low_level_symbol(expr.name, name)
         else:
             name = self.scope.get_expected_name(expr.name)
 
@@ -5358,7 +5376,7 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
-        cls_scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+        cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
@@ -5522,11 +5540,18 @@ class SemanticParser(BasicParser):
                         if n in d_son:
                             e = d_son[n]
                             if entry == 'functions':
-                                container[entry][t] = e.clone(t, is_imported=True)
-                                m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                                container[entry][t].set_current_user_node(m)
+                                if t in container[entry]:
+                                    existing_e = container[entry][t]
+                                    assert existing_e.is_imported
+                                    assert e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0] is \
+                                            existing_e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                else:
+                                    assert t not in container[entry]
+                                    container[entry][t] = e.clone(e.name, is_imported=True)
+                                    m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                    container[entry][t].set_current_user_node(m)
                             elif entry == 'variables':
-                                container[entry][t] = e.clone(t)
+                                container[entry][t] = e.clone(e.name)
                             else:
                                 container[entry][t] = e
                             targets[t] = e
@@ -5560,21 +5585,20 @@ class SemanticParser(BasicParser):
             if import_init:
                 old_name = import_init.name
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_init, new_name))
 
-                if new_name != old_name:
-                    import_init = import_init.clone(new_name)
-                    container['functions'][old_name] = import_init
+                import_init = import_init.clone(import_init.name, is_imported = True)
+                targets.append(AsName(import_init, new_name))
+                container['functions'][new_name] = import_init
 
                 result  = import_init()
 
             if import_free:
                 old_name = import_free.name
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_free, new_name))
 
-                if new_name != old_name:
-                    import_free = import_free.clone(new_name)
+                import_free = import_free.clone(import_free.name, is_imported = True)
+                targets.append(AsName(import_free, new_name))
+                container['functions'][new_name] = import_free
 
             mod = p.semantic_parser.ast
 

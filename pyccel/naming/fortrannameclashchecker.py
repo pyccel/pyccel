@@ -72,7 +72,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         return name in self.keywords or \
                any(name == s.lower() for s in symbols)
 
-    def get_collisionless_name(self, name, symbols):
+    def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
         Get a valid name which doesn't collide with symbols or Fortran keywords.
 
@@ -86,14 +86,32 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             The suggested name.
         symbols : set
             Symbols which should be considered as collisions.
+        prefix : str
+            The prefix that may be added to the name to provide context information.
+        context : str
+            The context where the name will be used.
+        parent_context : str
+            The type of the scope where the object with this name will be saved.
 
         Returns
         -------
         str
             A new name which is collision free.
         """
-        if name in ('__init__', '__del__'):
-            return name
+        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
+        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
+        if context == 'wrapper':
+            return self._get_collisionless_name(name, symbols)
+        if name == '__init__':
+            if parent_context == 'module':
+                name = f'{prefix}init'
+            else:
+                name = 'init'
+        if name == '__del__':
+            if parent_context == 'module':
+                name = f'{prefix}free'
+            else:
+                name = 'free'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             name = 'operator' + name[1:-2]
         if name[0] == '_':

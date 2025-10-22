@@ -411,7 +411,7 @@ The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](http
 
 #### Example 1
 
-The following Python code:
+The following Python code (in file `tmp.py`):
 
 ```python
 def f(x : 'float[:]', y : float = 3):
@@ -421,13 +421,13 @@ def f(x : 'float[:]', y : float = 3):
 leads to C code with the following prototype:
 
 ```c
-array_double_1d f(array_double_1d x, double y);
+array_double_1d tmp__f(array_double_1d x, double y);
 ```
 
 which is then wrapped as follows:
 
 ```c
-static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* tmp__f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* x_obj;
     PyObject* y_obj;
@@ -470,7 +470,7 @@ static PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
             return NULL;
         }
     }
-    Out_0001 = f(x, y);
+    Out_0001 = tmp__f(x, y);
     Out_0001_obj = to_pyarray(INT64_C(1), NPY_DOUBLE, Out_0001.data, Out_0001.shape, 1, 0);
     return Out_0001_obj;
 }
@@ -482,7 +482,7 @@ The function is linked to the module via a `PyMethodDef` as follows:
 static PyMethodDef tmp_methods[] = {
     {
         "f", // Function name
-        (PyCFunction)f_wrapper, // Function implementation
+        (PyCFunction)tmp__f_wrapper, // Function implementation
         METH_VARARGS | METH_KEYWORDS, // Indicates that the function accepts args and kwargs
         "" // function docstring
     },
@@ -557,13 +557,13 @@ def get_first_element_of_tuple(a : 'tuple[int,...]'):
 leads to C code with the following prototype (as homogeneous tuples are treated like arrays):
 
 ```c
-int64_t get_first_element_of_tuple(array_int64_1d a);
+int64_t tmp__get_first_element_of_tuple(array_int64_1d a);
 ```
 
 which is then wrapped as follows:
 
 ```c
-static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* tmp__get_first_element_of_tuple_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* a_obj;
     int64_t a_size_0001;
@@ -612,7 +612,7 @@ static PyObject* get_first_element_of_tuple_wrapper(PyObject* self, PyObject* ar
         Dummy_0001 = PyTuple_GetItem(a_obj, Dummy_0000);
         (*cspan_at(&a, Dummy_0000)) = PyInt64_to_Int64(Dummy_0001);
     }
-    Out_0001 = get_first_element_of_tuple(a);
+    Out_0001 = tmp__get_first_element_of_tuple(a);
     Out_0001_obj = Int64_to_PyLong(&Out_0001);
     return Out_0001_obj;
 }
@@ -645,34 +645,34 @@ def f(x : int | float):
 leads to C code with the following prototypes:
 
 ```c
-double f_00(double x);
-int64_t f_01(int64_t x);
+double tmp__f_00(double x);
+int64_t tmp__f_01(int64_t x);
 ```
 
 which is then wrapped as follows:
 
 ```c
 /*........................................*/
-PyObject* f_00_wrapper(PyObject* x_obj)
+PyObject* tmp__f_00_wrapper(PyObject* x_obj)
 {
     double x;
     double Out_0001;
     PyObject* Out_0001_obj;
     x = PyDouble_to_Double(x_obj);
-    Out_0001 = f_00(x);
+    Out_0001 = tmp__f_00(x);
     Out_0001_obj = Double_to_PyDouble(&Out_0001);
     return Out_0001_obj;
 }
 /*........................................*/
 
 /*........................................*/
-PyObject* f_01_wrapper(PyObject* x_obj)
+PyObject* tmp__f_01_wrapper(PyObject* x_obj)
 {
     int64_t x;
     int64_t Out_0001;
     PyObject* Out_0001_obj;
     x = PyInt64_to_Int64(x_obj);
-    Out_0001 = f_01(x);
+    Out_0001 = tmp__f_01(x);
     Out_0001_obj = Int64_to_PyLong(&Out_0001);
     return Out_0001_obj;
 }
@@ -681,7 +681,7 @@ PyObject* f_01_wrapper(PyObject* x_obj)
 /*Assess the types. Raise an error for unexpected types and calculate an integer */
 /*which indicates which function should be called.                               */
 /*_______________________________________________________________________________*/
-int64_t f_type_check(PyObject* x_obj)
+int64_t tmp__f_type_check(PyObject* x_obj)
 {
     int64_t type_indicator;
     type_indicator = INT64_C(0);
@@ -702,7 +702,7 @@ int64_t f_type_check(PyObject* x_obj)
 }
 /*........................................*/
 /*........................................*/
-PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+PyObject* tmp__f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* x_obj;
     int64_t type_indicator;
@@ -717,11 +717,11 @@ PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
     type_indicator = f_type_check(x_obj);
     if (type_indicator == INT64_C(0))
     {
-        return f_00_wrapper(x_obj);
+        return tmp__f_00_wrapper(x_obj);
     }
     else if (type_indicator == INT64_C(1))
     {
-        return f_01_wrapper(x_obj);
+        return tmp__f_01_wrapper(x_obj);
     }
     else
     {
@@ -738,7 +738,7 @@ The function is linked to the module via a `PyMethodDef` as follows:
 static PyMethodDef tmp_methods[] = {
     {
         "f", // Function name
-        (PyCFunction)f_wrapper, // Function implementation
+        (PyCFunction)tmp__f_wrapper, // Function implementation
         METH_VARARGS | METH_KEYWORDS, // Indicates that the function accepts args and kwargs
         "" // function docstring
     },
