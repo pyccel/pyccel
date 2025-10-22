@@ -90,7 +90,7 @@ class CNameClashChecker(LanguageNameClashChecker):
             # need to add more
             return self._get_collisionless_name(name, symbols)
         if name == '__init__':
-            name = 'create'
+            name = 'init'
         if name == '__del__':
             name = 'drop'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
