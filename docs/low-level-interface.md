@@ -270,12 +270,12 @@ struct mod__Counter {
     int64_t value;
 };
 
-void mod__Counter__create(struct mod__Counter*, int64_t);
-void mod__Counter__free(struct mod__Counter*);
-void mod__Counter__increment(struct mod__Counter*, int64_t);
-int64_t mod__Counter__n_nonzero(struct mod__Counter*);
-void mod__Counter__display_element(struct mod__Counter*, int64_t);
-void mod__Counter__display_scaled(struct mod__Counter*, double);
+void create(struct mod__Counter*, int64_t);
+void free(struct mod__Counter*);
+void increment(struct mod__Counter*, int64_t);
+int64_t n_nonzero(struct mod__Counter*);
+void display_element(struct mod__Counter*, int64_t);
+void display_scaled(struct mod__Counter*, double);
 ```
 
 supposing the file is compiled to a library `libclass_property.so`, we can describe this code with the following stub file:
