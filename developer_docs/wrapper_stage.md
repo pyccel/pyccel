@@ -411,7 +411,7 @@ The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](http
 
 #### Example 1
 
-The following Python code:
+The following Python code (in file tmp.py):
 
 ```python
 def f(x : 'float[:]', y : float = 3):
