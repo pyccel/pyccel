@@ -105,7 +105,7 @@ In C this means unravelling all vector expressions to operate on scalars.
 The Fortran language handles some vector expressions so in this case the unravelling is not always needed.
 Expressions must just be unrolled so that all expressions have the same number of dimensions.
 
-E.g for a Python file `mod.py`:
+E.g. for a Python file `mod.py`:
 
 ```python
 def f(a : 'int[:,:]', b : 'int[:]'):
