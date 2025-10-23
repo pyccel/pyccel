@@ -9,16 +9,13 @@ runs:
       shell: bash
 
     # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#homebrew-note
-    - name: Add Homebrew to PATH
+    - name: Install compilers with Homebrew
       run: |
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew --version
-      shell: bash
-
-    - name: Install compilers with Homebrew
-      run: |
         brew install llvm
         brew install flang
+        brew install libomp
         clang --version
       shell: bash
   
@@ -40,7 +37,6 @@ runs:
     - name: Install MPI and OpenMP
       run: |
         CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
-        brew install libomp
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         find /usr/lib -name libomp.so
