@@ -64,6 +64,7 @@ Subclasses of `PyccelType` generally fall into one of two categories:
 -   `ContainerType`
 
 `FixedSizeType` objects usually take no arguments. These can therefore be created by calling the constructor directly. A `ContainerType` (or other parametrisable types such as `FinalType`) must first create the parametrised sub-type. This is done via the `get_new` factory function. E.g.:
+
 ```python
 FinalType.get_new(PythonNativeInt()) # to create a Final[int] which inherits from PythonNativeInt and FinalType
 HomogeneousListType.get_new(PythonNativeInt()) # to create a list[int] which inherits from HomogeneousListType
