@@ -59,7 +59,7 @@ runs:
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         sudo apt-get install -y libomp5
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
-        find /usr -name libomp5.so
+        find /usr -name libomp.so
       shell: bash
 
     - name: Install LaPack
