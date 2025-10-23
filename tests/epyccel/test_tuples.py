@@ -26,11 +26,6 @@ failing_tests = {
         'tuple_homogeneous_string':"Can't save a list of strings (#459)",
         }
 
-failing_c_tests = {
-    'tuple_arg_unpacking':'Functions in functions not implemented in c',
-    'tuples_func':'Functions in functions not implemented in c',
-}
-
 
 def compare_python_pyccel( p_output, f_output ):
     if p_output is None:
@@ -63,26 +58,6 @@ marks = [f[1] if f[0] not in failing_tests else
                 for f in tuple_funcs if f[0] not in failing_c_tests]
 @pytest.mark.parametrize('test_func', marks)
 def test_tuples(test_func, language):
-    f1 = test_func
-    f2 = epyccel( f1, language=language )
-
-    python_out = f1()
-    pyccel_out = f2()
-    compare_python_pyccel(python_out, pyccel_out)
-
-c_marks = [f[1] for f in tuple_funcs if f[0] in failing_c_tests]
-@pytest.mark.parametrize('test_func', c_marks)
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="function in function is not implemented yet\
-                in C language", run=False),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_tuples_c_fail(test_func, language):
     f1 = test_func
     f2 = epyccel( f1, language=language )
 
