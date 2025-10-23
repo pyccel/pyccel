@@ -15,35 +15,17 @@ runs:
         brew --version
       shell: bash
 
-    - name: Add Homebrew to PATH
+    - name: Install compilers with Homebrew
       run: |
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo "PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH" >> $GITHUB_ENV
-        brew --version
-      shell: bash
-
-    - name: Test Homebrew
-      run: |
-        brew --version
-        brew install hello
-      shell: bash
-
-    - name: Install flang with Homebrew
-      run: |
+        brew install llvm
         brew install flang
+        clang --version
       shell: bash
   
     - name: Add flang to LD_LIBRARY_PATH
       run: |
         echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
       shell: bash
-    
-    - name: Install clang with apt-get
-      run: |
-        sudo apt-get install -y clang
-        clang --version
-      shell: bash
-
 
     - name: Create flang symlink
       run: |
@@ -58,9 +40,8 @@ runs:
     - name: Install MPI and OpenMP
       run: |
         CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
-        brew install libomp-${CLANG_VERSION}-dev
+        brew install libomp
         sudo apt-get install -y libopenmpi-dev openmpi-bin
-        sudo apt-get install -y libomp-${CLANG_VERSION}-dev
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         find /usr/lib -name libomp.so
         ls /usr/lib/llvm-${CLANG_VERSION}/lib/
