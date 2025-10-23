@@ -41,6 +41,7 @@ runs:
     - name: Install clang with apt-get
       run: |
         sudo apt-get install -y clang
+        clang --version
       shell: bash
 
 
@@ -57,6 +58,7 @@ runs:
     - name: Install MPI and OpenMP
       run: |
         CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
+        brew install libomp-${CLANG_VERSION}-dev
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         sudo apt-get install -y libomp-${CLANG_VERSION}-dev
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
