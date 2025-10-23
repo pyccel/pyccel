@@ -658,29 +658,6 @@ class CCodePrinter(CodePrinter):
             keyraw = '{' + split + f',{split}'.join(args) + split + '}'
         return f'c_make({dtype}, {keyraw})'
 
-    def rename_imported_methods(self, expr):
-        """
-        Rename class methods from user-defined imports.
-
-        This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct
-        by prefixing them with their class names.
-
-        Parameters
-        ----------
-        expr : iterable[ClassDef]
-            The ClassDef objects found in the module being renamed.
-        """
-        for classDef in expr:
-            class_scope = classDef.scope
-            for method in classDef.methods:
-                if not method.is_inline:
-                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-            for interface in classDef.interfaces:
-                for func in interface.functions:
-                    if not func.is_inline:
-                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
-
     def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
         """
         Print code describing a NumPy functional for object.
@@ -1000,7 +977,6 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        self.rename_imported_methods(expr.classes)
         body    = ''.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])

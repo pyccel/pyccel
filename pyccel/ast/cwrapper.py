@@ -542,6 +542,9 @@ class PyModule(Module):
         modules.
         See: https://docs.python.org/3/extending/extending.html .
 
+    module_def_name : str
+        The name of the structure which defined the module.
+
     **kwargs : dict
         See Module.
 
@@ -549,18 +552,15 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations', '_import_func')
+    __slots__ = ('_external_funcs', '_declarations', '_import_func', '_module_def_name')
     _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
 
     def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
-                        import_func = None, **kwargs):
+                        import_func, module_def_name, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
-        if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (), (),
-                            FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
-        else:
-            self._import_func = import_func
+        self._module_def_name = module_def_name
+        self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property
@@ -611,6 +611,16 @@ class PyModule(Module):
         is done.
         """
         return self._import_func
+
+    @property
+    def module_def_name(self):
+        """
+        The name of the PyModuleDef object describing the module.
+
+        The name of the PyModuleDef object describing the module and
+        its contents for Python.
+        """
+        return self._module_def_name
 
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
@@ -769,6 +779,7 @@ class PyClassDef(ClassDef):
     _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
+        assert isinstance(original_class, ClassDef)
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name

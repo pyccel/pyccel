@@ -512,8 +512,6 @@ class PythonCodePrinter(CodePrinter):
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
-            if not isinstance(func, FunctionAddress):
-                func.rename(expr.name)
             func_def_code.append(self._print(func))
 
         # Find all the arguments which lead to the same code snippet.
@@ -576,10 +574,7 @@ class PythonCodePrinter(CodePrinter):
             return code
 
         interface = expr.get_direct_user_nodes(lambda x: isinstance(x, Interface))
-        if self._in_header and interface:
-            name = self._print(expr.scope.get_python_name(expr.name))
-        else:
-            name = self._print(expr.name)
+        name = self._print(expr.scope.get_python_name(expr.name))
 
         self.set_scope(expr.scope)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -702,6 +697,10 @@ class PythonCodePrinter(CodePrinter):
             return target
 
         name = self._print(expr.name)
+        if isinstance(expr.object, FunctionDef):
+            if expr.object.scope and not expr.object.is_inline:
+                name = self._print(expr.object.scope.get_python_name(expr.name))
+
         if name == target:
             return name
         else:
@@ -883,10 +882,21 @@ class PythonCodePrinter(CodePrinter):
         func = expr.funcdef
         if func in self._ignore_funcs:
             return ''
-        if expr.interface:
+
+        if func.is_imported:
+            func_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            func_name = self.scope.get_import_alias(expr.interface, 'functions')
+        elif expr.interface:
             func_name = expr.interface_name
         else:
             func_name = expr.func_name
+
+        # No need to print module init/del functions in Python
+        if func.scope.get_python_name(func.name) in ('__init__', '__del__') and \
+                func.is_imported and len(func.arguments) == 0:
+            return ''
+
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
@@ -912,7 +922,9 @@ class PythonCodePrinter(CodePrinter):
 
         source = import_source_swap.get(source, source)
 
-        target = [t for t in expr.target if not isinstance(t.object, Module)]
+        target = [t for t in expr.target if not (isinstance(t.object, Module) or
+                  (isinstance(t.object, FunctionDef) and not t.object.is_inline and t.object.scope and
+                   t.object.scope.get_python_name(t.object.name) in ('__init__', '__del__')))]
         mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
         prefix = ''
@@ -1451,8 +1463,7 @@ class PythonCodePrinter(CodePrinter):
         init_func = mod.init_func
         var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
-        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs \
-                if f not in (mod.init_func, mod.free_func))
+        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs)
         funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
         classes = ''
         for classDef in mod.classes:
@@ -1477,16 +1488,7 @@ class PythonCodePrinter(CodePrinter):
 
         self._in_header = False
 
-        if init_func:
-            # Collect initialisation body
-            init_if = init_func.get_attribute_nodes(IfSection)[0]
-            # Remove boolean from init_body
-            init_body = init_if.body.body[:-1]
-            init_body = ''.join(self._print(l) for l in init_body)
-        else:
-            init_body = ''
-
-        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs)
                          if section)
 
     def _print_AllDeclaration(self, expr):
@@ -1608,7 +1610,9 @@ class PythonCodePrinter(CodePrinter):
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        name = self.scope.get_python_name(expr.name)
+        superclasses = ', '.join(self._print(arg) for arg in  expr.superclasses)
+        classDefName = f'class {name}({superclasses}):'
         docstring = self._indent_codestring(self._print(expr.docstring)) if expr.docstring else ''
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)

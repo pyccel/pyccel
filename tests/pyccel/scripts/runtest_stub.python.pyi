@@ -47,47 +47,47 @@ def n(arg : 'Final[list[int]]') -> None:
 def high_int_1(function : '(int)(int)', a : 'int') -> 'int':
     ...
 
-@low_level('k')
+@low_level('k_0000')
 @overload
 def k(a : 'int') -> 'tuple[int, int, int]':
     ...
 
-@low_level('k')
+@low_level('k_0001')
 @overload
 def k(a : 'float') -> 'tuple[float, float, float]':
     ...
 
-@low_level('k')
+@low_level('k_0002')
 @overload
 def k(a : 'complex') -> 'tuple[complex, complex, complex]':
     ...
 
-@low_level('l')
+@low_level('l_0000')
 @overload
 def l(a : 'Final[int]') -> 'tuple[int, ...]':
     ...
 
-@low_level('l')
+@low_level('l_0001')
 @overload
 def l(a : 'Final[float]') -> 'tuple[float, ...]':
     ...
 
-@low_level('l')
+@low_level('l_0002')
 @overload
 def l(a : 'Final[complex]') -> 'tuple[complex, ...]':
     ...
 
-@low_level('p')
+@low_level('p_0000')
 @overload
 def p(a : 'int') -> 'float':
     ...
 
-@low_level('p')
+@low_level('p_0001')
 @overload
 def p(a : 'float') -> 'float':
     ...
 
-@low_level('p')
+@low_level('p_0002')
 @overload
 def p(a : 'complex') -> 'complex':
     ...

@@ -141,7 +141,9 @@ class FortranToCWrapper(Wrapper):
         """
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        mod_scope = Scope(name = f'bind_c_{expr.name}', used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy(), scope_type = 'module')
+        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self.scope = mod_scope
 
         # Wrap contents
@@ -167,7 +169,6 @@ class FortranToCWrapper(Wrapper):
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr),
                    *expr.imports]
 
-        name = mod_scope.get_new_name(f'bind_c_{expr.name}')
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
@@ -216,7 +217,7 @@ class FortranToCWrapper(Wrapper):
             return EmptyNode()
 
         # Create the scope
-        func_scope = self.scope.new_child_scope(name)
+        func_scope = self.scope.new_child_scope(name, 'function')
         self.scope = func_scope
 
         # Wrap the arguments and collect the expressions passed as the call argument.
@@ -244,7 +245,7 @@ class FortranToCWrapper(Wrapper):
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
-        if expr.scope.get_python_name(expr.name) == '__del__':
+        if expr.scope.get_python_name(expr.name) == '__del__' and call_arguments:
             if expr.is_external:
                 # If __del__ is not defined in the module then the del call is unnecessary
                 body.pop()
@@ -547,7 +548,7 @@ class FortranToCWrapper(Wrapper):
         elif isinstance(expr.class_type, NumpyNDArrayType):
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
-            func_scope = scope.new_child_scope(func_name)
+            func_scope = scope.new_child_scope(func_name, 'function')
             mod = expr.get_user_nodes(Module)[0]
             import_mod = Import(mod.name, AsName(expr,expr.name), mod=mod)
             func_scope.imports['variables'][expr.name] = expr
@@ -591,7 +592,7 @@ class FortranToCWrapper(Wrapper):
         #                        Create getter
         # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_getter'.lower())
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
         self.scope.insert_symbol(expr.name)
         getter_result_info = self._extract_FunctionDefResult(expr, lhs.cls_base.scope)
@@ -621,7 +622,7 @@ class FortranToCWrapper(Wrapper):
         #                        Create setter
         # ----------------------------------------------------------------------------------
         setter_name = self.scope.get_new_name(f'{class_dtype.name}_{expr.name}_setter'.lower())
-        setter_scope = self.scope.new_child_scope(setter_name)
+        setter_scope = self.scope.new_child_scope(setter_name, 'function')
         self.scope = setter_scope
         self.scope.insert_symbol(expr.name)
 
@@ -668,7 +669,7 @@ class FortranToCWrapper(Wrapper):
         """
         name = expr.name
         func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
 
         # Allocatable is not returned so it must appear in local scope
         local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
@@ -699,7 +700,7 @@ class FortranToCWrapper(Wrapper):
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
             del_name = expr.scope.get_new_name('__del__')
-            scope = expr.scope.new_child_scope('__del__')
+            scope = expr.scope.new_child_scope('__del__', scope_type='function')
             scope.local_used_symbols['__del__'] = del_name
             scope.python_names[del_name] = '__del__'
             argument = FunctionDefArgument(Variable(expr.class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
