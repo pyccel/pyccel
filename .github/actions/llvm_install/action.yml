@@ -56,12 +56,12 @@ runs:
 
     - name: Install MPI and OpenMP
       run: |
-        LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
+        CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
         sudo apt-get install -y libopenmpi-dev openmpi-bin
-        sudo apt-get install -y libomp-${LLVM_VERSION}-dev
+        sudo apt-get install -y libomp-${CLANG_VERSION}-dev
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         find /usr/lib -name libomp.so
-        ls /usr/lib/llvm-${LLVM_VERSION}/lib/
+        ls /usr/lib/llvm-${CLANG_VERSION}/lib/
       shell: bash
 
     - name: Install LaPack
