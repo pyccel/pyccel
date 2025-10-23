@@ -36,13 +36,11 @@ runs:
         flang --version
       shell: bash
 
-    - name: Install MPI and OpenMP
+    - name: Install MPI
       run: |
         CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
-        find /usr/lib -name libomp.so
-        ls /usr/lib/llvm-${CLANG_VERSION}/lib/
       shell: bash
 
     - name: Install LaPack
