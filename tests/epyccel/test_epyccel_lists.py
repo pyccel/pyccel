@@ -694,13 +694,13 @@ def test_mixed_list_methods(limited_language):
     epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
-def test_extend_returned_list(stc_language):
+def test_extend_returned_list(limited_language):
     def f():
         def g():
             return [4, 5, 6]
         lst = [1, 2, 3]
         lst.extend(g())
-    epyc_f = epyccel(f, language=stc_language)
+    epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
 def test_mutable_indexing(stc_language):
