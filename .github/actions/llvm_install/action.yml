@@ -17,11 +17,13 @@ runs:
         brew install flang
         brew install libomp
         clang --version
+        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+        echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       shell: bash
   
-    - name: Add flang to LD_LIBRARY_PATH
+    - name: Add flang and OpenMP to LD_LIBRARY_PATH
       run: |
-        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
       shell: bash
 
     - name: Create flang symlink
