@@ -57,7 +57,7 @@ runs:
     - name: Install MPI and OpenMP
       run: |
         sudo apt-get install -y libopenmpi-dev openmpi-bin
-        sudo apt-get install -y libomp5
+        sudo apt-get install -y libomp5-dev
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         find /usr -name libomp.so
       shell: bash
