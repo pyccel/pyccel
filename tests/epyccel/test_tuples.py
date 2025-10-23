@@ -55,7 +55,7 @@ def compare_python_pyccel( p_output, f_output ):
 
 marks = [f[1] if f[0] not in failing_tests else
         pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) \
-                for f in tuple_funcs if f[0] not in failing_c_tests]
+                for f in tuple_funcs]
 @pytest.mark.parametrize('test_func', marks)
 def test_tuples(test_func, language):
     f1 = test_func
