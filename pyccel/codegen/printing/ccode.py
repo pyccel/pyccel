@@ -2314,7 +2314,10 @@ class CCodePrinter(CodePrinter):
         results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
                 if isinstance(r, Variable)]
         returning_tuple = isinstance(expr.results.var.class_type, InhomogeneousTupleType)
-        self._additional_args.append(results)
+        if len(results) > 1 or returning_tuple:
+            self._additional_args.append(results)
+        else:
+            self._additional_args.append([])
         for v in expr.global_vars:
             if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
                 self._additional_args[-1].append(v)
