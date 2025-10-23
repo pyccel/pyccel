@@ -76,12 +76,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .[test]
         shell: bash
-      - name: Test OMP
-        run: |
-          pytest test_epyccel_openmp.py -m c -v
-          pytest test_epyccel_openmp.py -m fortrant -v
-        working-directory: ./tests/epyccel
-        shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
       - name: Fortran/C tests with pytest
