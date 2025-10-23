@@ -74,6 +74,8 @@ runs:
       run: |
         export LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
         export LIBOMP_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
+        echo ${LIBOMP_PATH}
+        ls ${LIBOMP_PATH}
         echo "LD_LIBRARY_PATH=$LIBOMP_PATH:$LD_LIBRARY_PATH" >> $GITHUB_ENV
       shell: bash
 
