@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import pytest
 import numpy as np
 from numpy import iinfo, finfo
