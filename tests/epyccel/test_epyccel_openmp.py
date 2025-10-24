@@ -399,7 +399,7 @@ def test_omp_master(language):
     f1 = epyccel(openmp.omp_master, flags = '-Wall', openmp=True, language=language)
     assert f1() == openmp.omp_master()
 
-@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'llvm', reason="flang error: not yet implemented: omp.taskloop", language='fortran')
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang error: not yet implemented: omp.taskloop", language='fortran')
 @pytest.mark.parametrize( 'language', [
             pytest.param("python", marks = [
             pytest.mark.xfail(reason="The result of this test depend on threads, so in python we get different result because we don't use threads."),
