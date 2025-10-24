@@ -24,6 +24,7 @@ runs:
     - name: Add flang and OpenMP to LD_LIBRARY_PATH
       run: |
         echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LIBRARY_PATH" >> $GITHUB_ENV
       shell: bash
 
     - name: Create flang symlink
