@@ -39,7 +39,6 @@ runs:
 
     - name: Install MPI
       run: |
-        CLANG_VERSION=$(clang --version |  grep -oP "(?<=version )[0-9.]*" | cut -d. -f1)
         sudo apt-get install -y libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         echo "OMPI_CC=clang" >> $GITHUB_ENV
