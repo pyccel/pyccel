@@ -15,9 +15,13 @@ runs:
         pyccel --language=c --debug leaks_check.py
         valgrind --leak-check=full --error-exitcode=1 ./leaks_check
         pyccel-clean -p
-        pyccel --language=fortran --debug leaks_check.py
-        valgrind --leak-check=full --error-exitcode=1 ./leaks_check
-        pyccel-clean -p
+        if [ "${PYCCEL_DEFAULT_COMPILER}" != "LLVM" ]
+        then
+          # Disable gFTL leak check for LLVM. See #2342
+          pyccel --language=fortran --debug leaks_check.py
+          valgrind --leak-check=full --error-exitcode=1 ./leaks_check
+          pyccel-clean -p
+        fi
         pyccel --language=c --debug nested_leaks_check.py
         valgrind --leak-check=full --error-exitcode=1 ./nested_leaks_check
       shell: bash

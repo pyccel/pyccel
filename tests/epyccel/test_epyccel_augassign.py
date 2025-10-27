@@ -213,15 +213,6 @@ def test_augassign_div_2d(language):
     assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_augassign_func(language):
     func = mod.augassign_func
     func_epyc = epyccel(func, language = language)
@@ -235,15 +226,6 @@ def test_augassign_func(language):
     assert np.isclose(z, z_epyc, rtol=RTOL, atol=ATOL)
     assert isinstance(z, type(z_epyc))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_augassign_array_func(language):
     func = mod.augassign_array_func
     func_epyc = epyccel(func, language = language)

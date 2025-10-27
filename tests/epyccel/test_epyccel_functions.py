@@ -543,15 +543,6 @@ def test_lambda_usage(language):
     epyc_g(val_epyc)
     assert np.array_equal(val, val_epyc)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Function in function is not implemented yet in C language"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_func_usage(language):
     def f(x : int):
         return x+1
