@@ -515,8 +515,6 @@ class SemanticParser(BasicParser):
         list
             A list of variables.
         """
-        # this only works if called on a function scope
-        # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
         for sub_container in container.loops:

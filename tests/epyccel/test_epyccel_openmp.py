@@ -419,13 +419,6 @@ def test_omp_taskloop(language):
             result = result + 1
         assert result == f1(x)
 
-@pytest.mark.parametrize( 'language', [
-            pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Nested functions not handled for C !", run=False),
-            pytest.mark.c]),
-            pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 @pytest.mark.external
 def test_omp_tasks(language):
     f1 = epyccel(openmp.omp_tasks, flags = '-Wall', openmp=True, language=language)
