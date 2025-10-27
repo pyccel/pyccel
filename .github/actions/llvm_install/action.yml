@@ -9,40 +9,23 @@ runs:
       shell: bash
 
     # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#homebrew-note
-    - name: Add Homebrew to PATH
+    - name: Install compilers with Homebrew
       run: |
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew --version
-      shell: bash
-
-    - name: Add Homebrew to PATH
-      run: |
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo "PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH" >> $GITHUB_ENV
-        brew --version
-      shell: bash
-
-    - name: Test Homebrew
-      run: |
-        brew --version
-        brew install hello
-      shell: bash
-
-    - name: Install flang with Homebrew
-      run: |
+        brew install llvm
         brew install flang
+        brew install libomp
+        clang --version
+        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+        echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       shell: bash
   
-    - name: Add flang to LD_LIBRARY_PATH
+    - name: Ensure installed libraries can be discovered during compilation and runtime
       run: |
-        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LIBRARY_PATH" >> $GITHUB_ENV
       shell: bash
-    
-    - name: Install clang with apt-get
-      run: |
-        sudo apt-get install -y clang
-      shell: bash
-
 
     - name: Create flang symlink
       run: |
@@ -54,27 +37,13 @@ runs:
         flang --version
       shell: bash
 
-    - name: Install MPI and OpenMP
+    - name: Install MPI
       run: |
         sudo apt-get install -y libopenmpi-dev openmpi-bin
-        sudo apt-get install -y libomp-dev libomp5
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Export libomp path
-      run: |
-        LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
-        LLVM_LIB_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
-        echo "LLVM version: $LLVM_VERSION"
-        echo "LLVM path: $LLVM_LIB_PATH"
-        echo "LD_LIBRARY_PATH=${LLVM_LIB_PATH}:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Set LD_LIBRARY_PATH for OpenMP
-      run: |
-        export LLVM_VERSION=$(llvm-config --version | cut -d. -f1)
-        export LIBOMP_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib/x86_64-linux-gnu"
-        echo "LD_LIBRARY_PATH=$LIBOMP_PATH:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "OMPI_CC=clang" >> $GITHUB_ENV
+        echo "OMPI_CXX=clang++" >> $GITHUB_ENV
+        echo "OMPI_FC=flang" >> $GITHUB_ENV
       shell: bash
 
     - name: Install LaPack

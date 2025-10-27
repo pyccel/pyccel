@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import pytest
 import numpy as np
 from numpy import iinfo, finfo
@@ -4355,6 +4356,7 @@ def test_array_ndmin_2_order(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_bool_from_other_types(language):
     size = (2, 2)
 
@@ -4393,6 +4395,7 @@ def test_dtype_conversion_to_bool_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int8_from_other_types(language):
     size = (2, 2)
 
@@ -4431,6 +4434,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int16_from_other_types(language):
     size = (2, 2)
 
@@ -4469,6 +4473,7 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int32_from_other_types(language):
     size = (2, 2)
 
@@ -4507,6 +4512,7 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int64_from_other_types(language):
     size = (2, 2)
 
@@ -4544,6 +4550,7 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_float32_from_other_types(language):
     size = (2, 2)
 
@@ -4616,6 +4623,7 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
@@ -4688,6 +4696,7 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_pyint_from_other_types(language):
     size = (2, 2)
 
@@ -4725,6 +4734,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_pyfloat_from_other_types(language):
     size = (2, 2)
 
@@ -4763,6 +4773,7 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
@@ -4836,6 +4847,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1,2)
 
@@ -4909,6 +4921,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1,2)
 
@@ -4981,6 +4994,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1,2)
 
@@ -5054,6 +5068,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1,2)
 
@@ -5126,6 +5141,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
@@ -5268,6 +5284,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
@@ -5411,6 +5428,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1,2)
 
@@ -5484,6 +5502,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
@@ -5557,6 +5576,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
@@ -5630,6 +5650,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1,2)
 
@@ -5703,6 +5724,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1,2)
 
@@ -5776,6 +5798,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1,2)
 
@@ -5849,6 +5872,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1,2)
 
@@ -5921,6 +5945,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
@@ -6063,6 +6088,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
@@ -6206,6 +6232,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1,2)
 
@@ -6279,6 +6306,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 
