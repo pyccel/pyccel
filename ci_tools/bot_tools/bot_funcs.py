@@ -56,9 +56,9 @@ test_dependencies = {'coverage':['linux']}
 tests_with_base = ('coverage', 'docs', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
+                'llvm', 'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
 
-pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
+pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel', 'llvm')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 
