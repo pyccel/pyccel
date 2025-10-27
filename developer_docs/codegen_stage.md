@@ -261,7 +261,6 @@ Care must be taken regarding any variables local to the enclosing function which
 These variables are noted as global variables in the nested function, however as they are not entirely global they must be passed as arguments.
 As the variable is shared between the functions it is not annotated as constant in the nested functions, these arguments are therefore passed as pointers and saved in `CCodePrinter._additional_args` (see [Multiple returns](#multiple-returns)).
 
-
 ### Arrays
 
 Unlike Fortran, C does not have any native support for arrays.
