@@ -28,7 +28,7 @@ class CMakeHandler(BuildSystemHandler):
             cmds.append(f"target_link_libraries({link_args})\n")
 
         if expr.file.suffix == '.f90':
-            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
+            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
         else:
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
@@ -42,9 +42,9 @@ class CMakeHandler(BuildSystemHandler):
         cmds.append(f'set_target_properties({target_args})')
 
         to_link.add('cwrapper')
-        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', *to_link])
+        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', kernel_target, *to_link])
         cmds.append(f"target_link_libraries({link_args})\n")
-        args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}'])
+        args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
         cmds.append(f'target_include_directories({args})\n')
 
         args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', str(out_folder)])
