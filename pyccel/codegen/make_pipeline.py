@@ -242,11 +242,24 @@ def execute_pyccel_make(files, *,
         if language != 'python':
             start_wrapper_creation = time.time()
             wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
-            wrappergen.wrap(base_dirpath)
+            try:
+                wrappergen.wrap(str((base_dirpath / f).parent))
+            except PyccelError:
+                handle_error('code generation (wrapping)')
+                raise
             timers['Wrapper creation'] += time.time() - start_wrapper_creation
 
             start_wrapper_printing = time.time()
-            wrapper_files = wrappergen.print(output_dir)
+            try:
+                wrapper_files = wrappergen.print(output_dir)
+            except PyccelError:
+                handle_error('code generation (wrapping)')
+                raise
+
+            if errors.has_errors():
+                handle_error('code generation (wrapping)')
+                raise PyccelCodegenError('Code generation step failed')
+
             timers['Wrapper printing'] += time.time() - start_wrapper_printing
 
             wrappergens.append(wrappergen)
