@@ -180,7 +180,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
             stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, verbose, compiler)
 
-            mod_obj.add_dependencies(stdlib_obj)
+            if isinstance(mod_obj, CompileObj):
+                mod_obj.add_dependencies((stdlib_obj,))
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
@@ -199,11 +200,11 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     for key, import_node in pyccel_imports.items():
         deps = generate_extension_modules(key, import_node, pyccel_dirpath,
                                           compiler     = compiler,
-                                          include     = mod_obj.include,
-                                          libs         = mod_obj.libs,
-                                          libdir      = mod_obj.libdir,
+                                          include      = getattr(mod_obj, 'include', ()),
+                                          libs         = getattr(mod_obj, 'libs', ()),
+                                          libdir       = getattr(mod_obj, 'libdir', ()),
                                           dependencies = mod_obj.dependencies,
-                                          extra_compilation_tools = mod_obj.extra_compilation_tools,
+                                          extra_compilation_tools = getattr(mod_obj, 'extra_compilation_tools', ()),
                                           language = language,
                                           verbose = verbose,
                                           convert_only = convert_only,

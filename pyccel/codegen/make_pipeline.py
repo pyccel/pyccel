@@ -272,10 +272,10 @@ def execute_pyccel_make(files, *,
         targets[f.absolute()].add_dependencies(targets[s.filename] for s in p.sons)
 
     stdlib_deps = {}
-    #TODO: Fix
-    manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, compiler = compiler,
-                        language = language, verbose = verbose, convert_only = True,
-                        installed_libs = stdlib_deps)
+    for t in targets.values():
+        manage_dependencies(printer_imports, pyccel_dirpath = pyccel_dirpath, compiler = compiler,
+                            language = language, verbose = verbose, convert_only = True, mod_obj = t,
+                            installed_libs = stdlib_deps)
 
     try:
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
