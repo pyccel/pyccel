@@ -102,7 +102,7 @@ class CompileTarget:
         """
         return self._program_file is not None
 
-    def add_dependencies(self, dependencies_iterable):
+    def add_dependencies(self, *new_dependencies):
         """
         Add dependencies to the target.
 
@@ -112,10 +112,10 @@ class CompileTarget:
 
         Parameters
         ----------
-        dependencies_iterable : iterable[CompileTarget]
+        *new_dependencies : CompileTarget
             The dependencies that should be added.
         """
-        self._dependencies.extend(dependencies_iterable)
+        self._dependencies.extend(new_dependencies)
 
     @property
     def dependencies(self):

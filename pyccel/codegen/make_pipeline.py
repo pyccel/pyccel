@@ -282,7 +282,7 @@ def execute_pyccel_make(files, *,
         return
 
     for f, p in parsers.items():
-        targets[f.absolute()].add_dependencies(targets[s.filename] for s in p.sons)
+        targets[f.absolute()].add_dependencies(*(targets[s.filename] for s in p.sons))
 
     stdlib_deps = {}
     for t in targets.values():

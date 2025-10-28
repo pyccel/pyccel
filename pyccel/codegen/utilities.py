@@ -181,7 +181,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, verbose, compiler)
 
             if isinstance(mod_obj, CompileObj):
-                mod_obj.add_dependencies((stdlib_obj,))
+                mod_obj.add_dependencies(stdlib_obj)
 
             # stop after copying lib to __pyccel__ directory for
             # convert only
