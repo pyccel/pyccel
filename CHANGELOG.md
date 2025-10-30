@@ -70,6 +70,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #2474 : Drop support for Python 3.9
+
 ### Removed
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
