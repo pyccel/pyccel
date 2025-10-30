@@ -209,12 +209,13 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                                           verbose = verbose,
                                           convert_only = convert_only,
                                           installed_libs = installed_libs)
-        for d in deps:
-            recompile_object(d,
-                             compiler = compiler,
-                             language = language,
-                             verbose  = verbose)
-            mod_obj.add_dependencies(d)
+        if isinstance(mod_obj, CompileObj):
+            for d in deps:
+                recompile_object(d,
+                                 compiler = compiler,
+                                 language = language,
+                                 verbose  = verbose)
+                mod_obj.add_dependencies(d)
 
 #==============================================================================
 def get_module_and_compile_dependencies(parser, compile_libs = None, deps = None):

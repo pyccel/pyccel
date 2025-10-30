@@ -340,6 +340,9 @@ class STCInstaller(ExternalLibInstaller):
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
 
+        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
+        os.environ['PKG_CONFIG_PATH'] = f'${PKG_CONFIG_PATH}:{libdir / "pkgconfig"}'
+
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
                           libdir = (libdir, ), libs = libs)
@@ -396,6 +399,11 @@ class GFTLInstaller(ExternalLibInstaller):
         new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
                           include = (dest_dir / 'include/v2',))
         installed_libs['gFTL'] = new_obj
+
+        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
+        os.environ['PKG_CONFIG_PATH'] = f'${PKG_CONFIG_PATH}:{self._dest_dir}'
+        print(f'{PKG_CONFIG_PATH}:{dest_dir}')
+
         return new_obj
 
 #------------------------------------------------------------------------------------------
