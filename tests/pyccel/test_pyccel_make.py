@@ -23,15 +23,21 @@ def pyccel_make_test(main_file, folder, language, build_system, args, output_dty
 
     exe_path = (folder / main_file).with_suffix('')
 
-    if language=="python":
+    if language == "python":
         lang_output = get_python_output(exe_path.with_suffix('.py'))
     else:
         if sys.platform == "win32":
             exe_path = exe_path.with_suffix('.exe')
-        p = subprocess.run([exe_path], capture_output = True, text=True)
+        p = subprocess.run([exe_path], capture_output = True, text=True, check=True)
         lang_output = p.stdout
 
     compare_pyth_fort_output(python_output, lang_output, output_dtype, language)
+
+    # Check if main can still run via Python
+    if language != "python":
+        p = subprocess.run([sys.executable, exe_path.with_suffix('.py')], capture_output = True,
+                           text=True, check=True)
+        assert p.stdout == python_output
 
 #------------------------------------------------------------------------------
 def test_project_abs_imports(language, build_system):
