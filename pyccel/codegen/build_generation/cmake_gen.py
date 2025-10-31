@@ -105,8 +105,8 @@ class CMakeHandler(BuildSystemHandler):
 
         pkg_config_needed = False
         for folder in expr.stdlib_deps:
-            if isinstance(recognised_libs.get(folder, None), ExternalLibInstaller):
-                lib_install = recognised_libs.get(folder, None)
+            lib_install = recognised_libs.get(folder, None)
+            if isinstance(lib_install, ExternalLibInstaller):
                 if lib_install.discovery_method == 'pkgconfig':
                     pkg_config_needed = True
                     sections.append((f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n"

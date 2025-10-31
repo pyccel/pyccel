@@ -87,8 +87,9 @@ class MesonHandler(BuildSystemHandler):
         sections = [project_decl, py_deps]
 
         for d in expr.stdlib_deps:
-            if isinstance(recognised_libs.get(d, None), ExternalLibInstaller):
-                sections.append(f"{d}_dep = dependency('{d}')\n")
+            lib_install = recognised_libs.get(d, None)
+            if isinstance(lib_install, ExternalLibInstaller):
+                sections.append(f"{d}_dep = dependency('{lib_install.name}')\n")
             else:
                 sections.append(f"subdir('{d}')\n")
 
@@ -109,6 +110,8 @@ class MesonHandler(BuildSystemHandler):
         meson = shutil.which('meson')
         buildtype = 'debug' if self._debug_mode else 'release'
 
+        if self._verbose:
+            print(">> Running meson")
         subprocess.run([meson, 'setup', 'build', '--buildtype', buildtype], check=True,
                        cwd=self._pyccel_dir, capture_output=capture_output, env = os.environ)
         subprocess.run([meson, 'compile', '-C', 'build'], check=True, cwd=self._pyccel_dir,
