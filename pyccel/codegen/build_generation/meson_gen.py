@@ -93,7 +93,11 @@ class MesonHandler(BuildSystemHandler):
         for d in expr.stdlib_deps:
             lib_install = recognised_libs.get(d, None)
             if isinstance(lib_install, ExternalLibInstaller):
-                sections.append(f"{d}_dep = dependency('{lib_install.name}')\n")
+                dep_str = f"{d}_dep = dependency('{lib_install.name}'"
+                if lib_install.discovery_method == 'CMake':
+                    dep_str += f", method : 'cmake', modules : ['{lib_install.name}::{lib_install.target_name}']"
+                dep_str += ")\n"
+                sections.append(dep_str)
             else:
                 sections.append(f"subdir('{d}')\n")
 
@@ -105,7 +109,8 @@ class MesonHandler(BuildSystemHandler):
                 for file in gFTL_extensions_obj:
                     f.write(f"    '{file.split('/')[-1]}.F90',\n")
                 f.write('    dependencies: gFTL_dep\n')
-                f.write(')')
+                f.write(')\n')
+                f.write("gFTL_extensions_dep = declare_dependency(link_with: gFTL_extensions_mod)\n")
 
         target_code, _ = self._generate_DirTarget(expr._dir_info)
 

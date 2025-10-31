@@ -179,6 +179,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     # Iterate over the recognised_libs list and determine if the printer
     # requires a library to be included.
     for lib_name, stdlib in recognised_libs.items():
+        if stdlib is None:
+            continue
         if any(i == lib_name or i.startswith(f'{lib_name}/') for i in pyccel_imports):
             stdlib_obj = stdlib.install_to(pyccel_dirpath, installed_libs, verbose, compiler)
 

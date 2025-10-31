@@ -426,6 +426,10 @@ class GFTLInstaller(ExternalLibInstaller):
     def __init__(self):
         super().__init__("GFTL", src_dir = "gFTL/install/GFTL-1.13")
 
+    @property
+    def target_name(self):
+        return 'gftl-v2'
+
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
@@ -455,7 +459,7 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = 'gftl-v2')
+        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
         if existing_installation:
             installed_libs['gFTL'] = existing_installation
             return existing_installation
@@ -490,7 +494,8 @@ recognised_libs = {
                                         dependencies = ('stc',)),
     "gFTL_functions" : StdlibInstaller("gFTL_functions", "gFTL_functions",
                                         has_target_file = False,
-                                        dependencies = ('gFTL',))
+                                        dependencies = ('gFTL',)),
+    "gFTL_extensions" : None
 }
 
 recognised_libs['CSpan_extensions'] = recognised_libs['STC_Extensions']
