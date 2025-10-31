@@ -18,7 +18,7 @@ default_python_versions = {
         'llvm': '3.11',
         'linux': '3.10',
         'linux_pyccel-test_cmd': '3.11',
-        'macosx': '3.13',
+        'macosx': '3.14',
         'wheel': '3.10',
         'check_install': '3.10',
         'editable_check_install': '3.10',
