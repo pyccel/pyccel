@@ -91,11 +91,13 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
             with open(filename, 'w', encoding="utf-8") as f:
                 f.write(code)
 
-        new_dependencies.append(CompileObj(os.path.basename(filename), folder=folder,
+        compile_obj = CompileObj(os.path.basename(filename), folder=folder,
                             include=include,
                             libs=libs, libdir=libdir,
                             dependencies=dependencies,
-                            extra_compilation_tools=extra_compilation_tools))
+                            extra_compilation_tools=extra_compilation_tools)
+        new_dependencies.append(compile_obj)
+        installed_libs.setdefault('gFTL_extensions', {})[import_key] = compile_obj
         manage_dependencies({'gFTL':None}, compiler, pyccel_dirpath, new_dependencies[-1],
                 language, verbose, convert_only, installed_libs = installed_libs)
 
@@ -188,12 +190,13 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
             if convert_only:
                 continue
 
-    for lib_obj in installed_libs.values():
-        # get the include folder path and library files
-        recompile_object(lib_obj,
-                         compiler = compiler,
-                         language = language,
-                         verbose  = verbose)
+    if not convert_only:
+        for lib_obj in installed_libs.values():
+            # get the include folder path and library files
+            recompile_object(lib_obj,
+                             compiler = compiler,
+                             language = language,
+                             verbose  = verbose)
 
     # Iterate over the imports and determine if the printer
     # requires an extension module to be generated
@@ -209,6 +212,8 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                                           verbose = verbose,
                                           convert_only = convert_only,
                                           installed_libs = installed_libs)
+        if convert_only:
+            continue
         if isinstance(mod_obj, CompileObj):
             for d in deps:
                 recompile_object(d,

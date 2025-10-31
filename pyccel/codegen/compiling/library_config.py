@@ -336,7 +336,7 @@ class STCInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("STC")
+        super().__init__("stc", src_dir = "STC")
         self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
@@ -373,6 +373,7 @@ class STCInstaller(ExternalLibInstaller):
         # with version >= 5.0 < 6
         existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
         if existing_installation:
+            installed_libs['stc'] = existing_installation
             return existing_installation
 
         # Check if meson can be used to build
@@ -405,7 +406,7 @@ class STCInstaller(ExternalLibInstaller):
         libs = ['-lstc', '-lm']
 
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
-        os.environ['PKG_CONFIG_PATH'] = f'${PKG_CONFIG_PATH}:{libdir / "pkgconfig"}'
+        os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (PKG_CONFIG_PATH, str(libdir / "pkgconfig")) if p)
 
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
@@ -456,6 +457,7 @@ class GFTLInstaller(ExternalLibInstaller):
         """
         existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = 'gftl-v2')
         if existing_installation:
+            installed_libs['gFTL'] = existing_installation
             return existing_installation
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():

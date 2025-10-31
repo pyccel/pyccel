@@ -28,8 +28,10 @@ class CompileTarget:
         The absolute path to the Python file that was translated.
     file : str | Path
         The absolute path to the low-level translation of the Python file.
-    wrapper_files : list[Path]
-        The absolute path to the generated wrapper files.
+    wrapper_files : dict[Path, iterable[str]]
+        A dictionary whose keys are the absolute paths to the generated wrapper files,
+        and whose values are iterables containing the names of the stdlib targets for
+        these additional files.
     program_file : str | Path, optional
         The absolute path to the low-level translation of the program found
         in the Python file (if the file contained a program).
@@ -37,11 +39,13 @@ class CompileTarget:
         An iterable containing the names of the stdlib targets of this object.
     """
     __slots__ = ('_name', '_pyfile', '_file', '_wrapper_files',
-                 '_program_file', '_dependencies', '_stdlib_deps')
+                 '_program_file', '_dependencies', '_stdlib_deps',
+                 '_wrapper_stdlib_deps')
     def __init__(self, name, pyfile, file, wrapper_files, program_file, stdlib_deps):
         self._name = name
         self._pyfile = pyfile
         self._file = Path(file)
+        print(wrapper_files)
         self._wrapper_files = wrapper_files
         self._program_file = Path(program_file) if program_file is not None else program_file
         self._dependencies = []
