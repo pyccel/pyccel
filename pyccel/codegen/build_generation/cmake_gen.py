@@ -116,6 +116,15 @@ class CMakeHandler(BuildSystemHandler):
             else:
                 sections.append(f"add_subdirectory({folder})\n")
 
+        if 'gFTL_extensions' in expr.stdlib_deps:
+            gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
+            folder = next(iter(gFTL_extensions_obj.values())).source_folder
+            with open(folder / 'CMakeLists.txt', 'w') as f:
+                f.write("add_library(gFTL_extensions\n    STATIC\n")
+                for file in gFTL_extensions_obj:
+                    f.write(f"    {file.split('/')[-1]}.F90\n")
+                f.write(')')
+
         if pkg_config_needed:
             sections.insert(4, "find_package(PkgConfig REQUIRED)\n")
 
