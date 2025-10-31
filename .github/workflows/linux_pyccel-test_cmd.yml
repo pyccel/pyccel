@@ -35,7 +35,7 @@ jobs:
     - id: push-matrix
       if: github.event_name == 'push'
       run: |
-        echo "matrix=['3.10', '3.11', '3.12', '3.13']" >> $GITHUB_ENV
+        echo "matrix=['3.10', '3.11', '3.12', '3.13', '3.14']" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
