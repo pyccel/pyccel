@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
 
 from filelock import FileLock
 
@@ -205,6 +206,65 @@ class ExternalLibInstaller:
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
+        self._discovery_method = None
+
+    @property
+    def discovery_method(self):
+        """
+        Get the standard method for discovering this package (CMake vs pkgconfig).
+
+        Get the standard method for discovering this package (CMake vs pkgconfig). If the
+        method is unknown then None is returned. In this case the method should match the
+        chosen build system.
+        """
+        return self._discovery_method
+
+    def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name = None):
+        cmake = shutil.which('cmake')
+        # If cmake is not installed then exit
+        if not cmake:
+            return None
+
+        if target_name is None:
+            target_name = pkg_name
+
+        with tempfile.TemporaryDirectory() as build_dir:
+            # Write a minimal CMakeLists.txt
+            cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
+            with open(cmakelists_path, "w") as f:
+                f.write(f'project(Test LANGUAGES {languages})\n')
+                f.write(f'cmake_minimum_required(VERSION 3.28)\n')
+                f.write(f'find_package({pkg_name} REQUIRED {options})\n')
+                f.write(f'get_target_property(FLAGS {pkg_name}::{target_name} COMPILE_FLAGS)\n')
+                f.write(f'get_target_property(INCLUDE_DIRS {pkg_name}::{target_name} INCLUDE_DIRECTORIES)\n')
+                f.write(f'get_target_property(IINCLUDE_DIRS {pkg_name}::{target_name} INTERFACE_INCLUDE_DIRECTORIES)\n')
+                f.write(f'get_target_property(LIBRARIES {pkg_name}::{target_name} LINK_LIBRARIES)\n')
+                f.write(f'get_target_property(ILIBRARIES {pkg_name}::{target_name} INTERFACE_LINK_LIBRARIES)\n')
+                f.write(f'get_target_property(LIB_DIRS {pkg_name}::{target_name} INTERFACE_LINK_DIRECTORIES)\n')
+                f.write(f'message(STATUS "{pkg_name} Found : ${{{pkg_name}_FOUND}}")\n')
+                f.write('message(STATUS "${FLAGS}")\n')
+                f.write('message(STATUS "${INCLUDE_DIRS}")\n')
+                f.write('message(STATUS "${IINCLUDE_DIRS}")\n')
+                f.write('message(STATUS "${LIBRARIES}")\n')
+                f.write('message(STATUS "${ILIBRARIES}")\n')
+                f.write('message(STATUS "${LIB_DIRS}")\n')
+
+            # Run cmake configure step in that temp dir
+            p = subprocess.run(
+                [cmake, "-S", build_dir, "-B", build_dir],
+                capture_output=True, text=True, check=False)
+
+        if p.returncode:
+            return None
+        else:
+            self._discovery_method = 'CMake'
+            output = p.stdout.split('\n-- ')
+            start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
+            flags, include_dirs, iinclude_dirs, libs, ilibs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
+            return CompileObj(pkg_name, folder = "", has_target_file = False,
+                              include = [*include_dirs.split(','), *iinclude_dirs.split(',')],
+                              flags = flags.split(','), libdir = libdirs.split(','),
+                              libs = [*libs.split(','), *ilibs.split(',')])
 
     def _check_for_package(self, pkg_name, options = ()):
         """
@@ -257,6 +317,7 @@ class ExternalLibInstaller:
                            text = True, check = True)
         assert p.stdout.strip() == ''
 
+        self._discovery_method = 'pkgconfig'
         return CompileObj(pkg_name, folder = "", has_target_file = False,
                           include = include, flags = flags, libdir = libdir,
                           libs = libs)
@@ -390,6 +451,9 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
+        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = 'gftl-v2')
+        if existing_installation:
+            return existing_installation
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():
             if verbose:
@@ -400,9 +464,8 @@ class GFTLInstaller(ExternalLibInstaller):
                           include = (dest_dir / 'include/v2',))
         installed_libs['gFTL'] = new_obj
 
-        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
-        os.environ['PKG_CONFIG_PATH'] = f'${PKG_CONFIG_PATH}:{self._dest_dir}'
-        print(f'{PKG_CONFIG_PATH}:{dest_dir}')
+        CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '')
+        os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (CMAKE_PREFIX_PATH, str(dest_dir)) if s)
 
         return new_obj
 
