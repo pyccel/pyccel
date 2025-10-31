@@ -219,6 +219,10 @@ class ExternalLibInstaller:
         """
         return self._discovery_method
 
+    @property
+    def name(self):
+        return self._dest_dir
+
     def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name = None):
         cmake = shutil.which('cmake')
         # If cmake is not installed then exit
@@ -336,7 +340,6 @@ class STCInstaller(ExternalLibInstaller):
         self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
-
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
         Install the files to the Pyccel dirpath.
@@ -420,7 +423,7 @@ class GFTLInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
+        super().__init__("GFTL", src_dir = "gFTL/install/GFTL-1.13")
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
