@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -105,9 +106,13 @@ class CMakeHandler(BuildSystemHandler):
         pkg_config_needed = False
         for folder in expr.stdlib_deps:
             if isinstance(recognised_libs.get(folder, None), ExternalLibInstaller):
-                pkg_config_needed = True
-                sections.append((f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n"
-                                 f"add_library({folder} ALIAS PkgConfig::{folder})\n"))
+                lib_install = recognised_libs.get(folder, None)
+                if lib_install.discovery_method == 'pkgconfig':
+                    pkg_config_needed = True
+                    sections.append((f"pkg_check_modules({folder} REQUIRED IMPORTED_TARGET {folder})\n"
+                                     f"add_library({folder} ALIAS PkgConfig::{folder})\n"))
+                else:
+                    sections.append(f"find_package({lib_install.name} REQUIRED)\n")
             else:
                 sections.append(f"add_subdirectory({folder})\n")
 
@@ -131,9 +136,11 @@ class CMakeHandler(BuildSystemHandler):
         cmake = shutil.which('cmake')
         buildtype = 'Debug' if self._debug_mode else 'Release'
 
-        subprocess.run([cmake, '-B', 'build', f'-DCMAKE_BUILD_TYPE={buildtype}'], check=True,
-                       cwd=self._pyccel_dir, capture_output=capture_output)
-        subprocess.run([cmake, '--build', 'build'], check=True, cwd=self._pyccel_dir,
+        if self._verbose:
+            print(">> Running CMake")
+        subprocess.run([cmake, '-B', self._pyccel_dir / 'build', f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', self._pyccel_dir], check=True,
+                       env=os.environ, capture_output=capture_output)
+        subprocess.run([cmake, '--build', self._pyccel_dir / 'build'], check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output)
-        subprocess.run([cmake, '--install', 'build'], check=True, cwd=self._pyccel_dir,
+        subprocess.run([cmake, '--install', self._pyccel_dir / 'build'], check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output)
