@@ -22,10 +22,10 @@ class MesonHandler(BuildSystemHandler):
 
         dep_args = ["include_directories: ['.']"]
 
-        deps = {*(f"{t.name}_dep" for t in expr.dependencies),
-                  *(f"{r}_dep" for r in recognised_libs \
+        deps = {f"{t.name}_dep": None for t in expr.dependencies}
+        deps.update({f"{r}_dep": None for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
-                    for d in expr.stdlib_dependencies))}
+                    for d in expr.stdlib_dependencies)})
         if deps:
             dep_args.append(f"dependencies: [{', '.join(deps)}]")
 
@@ -36,10 +36,14 @@ class MesonHandler(BuildSystemHandler):
         args = ',\n  '.join(chain([f'objects: {obj_lib}.extract_all_objects(recursive: true)'], dep_args))
         dep_cmd = f'{dep_name} = declare_dependency(\n  {args})'
 
+        ext_std_deps = {f"{r}_dep": None for r in recognised_libs \
+                    if any(d == r or d.startswith(f"{r}/") \
+                    for deps in expr.wrapper_files.values() for d in deps)}
+        ext_deps = ', '.join((dep_name, 'cwrapper_dep', *ext_std_deps))
 
         args = ',\n  '.join([mod_name,
                              *(f"'{w.name}'" for w in expr.wrapper_files),
-                             f"dependencies: [{dep_name}, cwrapper_dep]",
+                             f"dependencies: [{ext_deps}]",
                               "install: true",
                              f"install_dir: {out_folder}"])
         wrap_cmd = f'py.extension_module({args})\n'
@@ -92,6 +96,16 @@ class MesonHandler(BuildSystemHandler):
                 sections.append(f"{d}_dep = dependency('{lib_install.name}')\n")
             else:
                 sections.append(f"subdir('{d}')\n")
+
+        if 'gFTL_extensions' in expr.stdlib_deps:
+            gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
+            folder = next(iter(gFTL_extensions_obj.values())).source_folder
+            with open(folder / 'meson.build', 'w') as f:
+                f.write("gFTL_extensions_mod = library('gFTL_extensions',\n")
+                for file in gFTL_extensions_obj:
+                    f.write(f"    '{file.split('/')[-1]}.F90',\n")
+                f.write('    dependencies: gFTL_dep\n')
+                f.write(')')
 
         target_code, _ = self._generate_DirTarget(expr._dir_info)
 
