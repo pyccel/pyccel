@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import pytest
@@ -18,7 +19,7 @@ def build_system(request):
 def pyccel_make_test(main_file, folder, language, build_system, args, output_dtype = float):
     python_output = get_python_output(folder / main_file, cwd = folder)
 
-    p = subprocess.run(['pyccel-make', *args, f'--language={language}',
+    p = subprocess.run([shutil.which('pyccel-make'), *args, f'--language={language}',
                         f'--build-system={build_system}'], cwd=folder, check=True)
 
     exe_path = (folder / main_file).with_suffix('')

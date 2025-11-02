@@ -289,7 +289,7 @@ class Parser(object):
                 errors.report("Imported files must be pyccelised before they can be used.",
                         symbol=imp, severity='fatal')
             if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
-                errors.report(f"File {module_name} has been modified since Pyccel was last run on this file.",
+                errors.report(f"File {filename_py} has been modified since Pyccel was last run on this file.",
                         symbol=imp, severity='fatal')
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
