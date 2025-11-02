@@ -42,8 +42,10 @@ class CMakeHandler(BuildSystemHandler):
         target_args = '\n    '.join([f'{kernel_target}_so', 'PROPERTIES', 'OUTPUT_NAME', mod_name])
         cmds.append(f'set_target_properties({target_args})')
 
-        to_link.add('cwrapper')
-        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', kernel_target, *to_link])
+        ext_std_deps = {r: None for r in recognised_libs \
+                    if any(d == r or d.startswith(f"{r}/") \
+                    for deps in expr.wrapper_files.values() for d in deps)}
+        link_args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', kernel_target, 'cwrapper', *ext_std_deps])
         cmds.append(f"target_link_libraries({link_args})\n")
         args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
         cmds.append(f'target_include_directories({args})\n')
