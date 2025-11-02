@@ -35,7 +35,7 @@ runs:
       working-directory: ./tests
     - name: Test translation with uninstalled STC/gFTL
       run: |
-        python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
+        python -m pytest -rX ${FLAGS} -vsx -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
         python -m pytest -rX ${FLAGS} -m fortran test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
         # Test STC update
         if [ -n "${SITE_DIR}" ]; then

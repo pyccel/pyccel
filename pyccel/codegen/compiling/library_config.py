@@ -425,9 +425,12 @@ class STCInstaller(ExternalLibInstaller):
                 env['CC'] = compiler.get_exec({}, "c")
                 if verbose:
                     print(">> Installing STC with meson")
-                subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                               check = True, cwd = self._src_dir, env = env,
+                p = subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                               check = False, cwd = self._src_dir, env = env,
                                capture_output = (verbose <= 1))
+                print(p.stdout)
+                print(p.stderr)
+                assert p.returncode
                 subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
                                capture_output = (verbose == 0))
                 subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
