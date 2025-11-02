@@ -30,7 +30,7 @@ from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
-__all__ = ['execute_pyccel']
+__all__ = ['execute_pyccel_make']
 
 build_system_handler = {'cmake': CMakeHandler,
                         'meson': MesonHandler}
@@ -40,8 +40,6 @@ build_system_handler = {'cmake': CMakeHandler,
 # [..]_dirname is the name of a directory
 # [..]_dirpath is the full (absolute) path of a directory
 
-# TODO: change name of variable 'module_name', as it could be a program
-# TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel_make(files, *,
                    verbose         = 0,
                    time_execution  = False,
