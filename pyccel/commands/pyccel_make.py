@@ -4,6 +4,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+"""
+File containing the pyccel-make command line interface.
+"""
 
 import argparse
 import glob
@@ -11,7 +14,12 @@ import os
 import sys
 from pathlib import Path
 
-def pyccel_make_command():
+def pyccel_make_command() -> None:
+    """
+    Pyccel console command.
+
+    The command line interface allowing pyccel-make to be called.
+    """
     parser = argparse.ArgumentParser(description="Pyccel's project command line interface.",
             add_help = False)
 
