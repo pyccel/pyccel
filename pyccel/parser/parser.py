@@ -7,7 +7,6 @@
 """
 Module containing the Parser object
 """
-import os
 from pathlib import Path
 
 from pyccel.errors.errors    import Errors
