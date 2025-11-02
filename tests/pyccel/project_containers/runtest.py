@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from math_utils import square_elements, sum_elements
 from set_utils import unique_elements, common_elements
 from simple_sort import simple_sorted
