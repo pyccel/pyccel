@@ -27,8 +27,8 @@ def pyccel_make_command() -> None:
     import pyccel
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
-    python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    python  = f'python {sys.version_info.major}.{sys.version_info.minor}'
+    message = f'pyccel {version} from {libpath} ({python})'
 
     group = parser.add_argument_group('Basic options')
     group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
