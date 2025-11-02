@@ -173,7 +173,7 @@ class MesonHandler(BuildSystemHandler):
             gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
             folder = next(iter(gFTL_extensions_obj.values())).source_folder
             with open(folder / 'meson.build', 'w', encoding='utf-8') as f:
-                f.write("gFTL_extensions_mod = library('gFTL_extensions',\n")
+                f.write("gFTL_extensions_mod = static_library('gFTL_extensions',\n")
                 for file in gFTL_extensions_obj:
                     f.write(f"    '{file.split('/')[-1]}.F90',\n")
                 f.write('    dependencies: [gFTL_dep, gFTL_functions_dep]\n')
