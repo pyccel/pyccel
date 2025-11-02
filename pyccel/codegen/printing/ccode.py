@@ -658,29 +658,6 @@ class CCodePrinter(CodePrinter):
             keyraw = '{' + split + f',{split}'.join(args) + split + '}'
         return f'c_make({dtype}, {keyraw})'
 
-    def rename_imported_methods(self, expr):
-        """
-        Rename class methods from user-defined imports.
-
-        This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct
-        by prefixing them with their class names.
-
-        Parameters
-        ----------
-        expr : iterable[ClassDef]
-            The ClassDef objects found in the module being renamed.
-        """
-        for classDef in expr:
-            class_scope = classDef.scope
-            for method in classDef.methods:
-                if not method.is_inline:
-                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-            for interface in classDef.interfaces:
-                for func in interface.functions:
-                    if not func.is_inline:
-                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
-
     def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
         """
         Print code describing a NumPy functional for object.
@@ -1000,8 +977,7 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        self.rename_imported_methods(expr.classes)
-        body    = ''.join(self._print(i) for i in expr.body)
+        body    = '\n'.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
@@ -1681,7 +1657,6 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
         result_vars = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) \
                             if v and not v.is_argument]
 
@@ -1697,8 +1672,16 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         elif n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
+            self._additional_args.append([])
         else:
             ret_type = self.get_c_type(VoidType())
+            self._additional_args.append([])
+
+        for v in expr.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                self._additional_args[-1].append(v)
+                arg_vars.append(v)
+        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
 
         name = expr.name
         if not arg_vars:
@@ -1716,8 +1699,7 @@ class CCodePrinter(CodePrinter):
                                 else get_arg_declaration(var) for var in arg_vars]
             arg_code = ', '.join(arg_code_list)
 
-        if self._additional_args :
-            self._additional_args.pop()
+        self._additional_args.pop()
 
         static = 'static ' if expr.is_static else ''
 
@@ -2322,15 +2304,23 @@ class CCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
 
+        sep = self._print(SeparatorComment(40))
+
+        inner_funcs = ''.join(self._print(f).removeprefix(sep).removesuffix(sep) + '\n' for f in expr.functions)
+
         self.set_scope(expr.scope)
 
-        arguments = [a.var for a in expr.arguments]
         # Collect results filtering out Nil()
         results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
                 if isinstance(r, Variable)]
         returning_tuple = isinstance(expr.results.var.class_type, InhomogeneousTupleType)
         if len(results) > 1 or returning_tuple:
             self._additional_args.append(results)
+        else:
+            self._additional_args.append([])
+        for v in expr.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                self._additional_args[-1].append(v)
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
@@ -2349,14 +2339,13 @@ class CCodePrinter(CodePrinter):
                                             v.is_temp]
             body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
 
-        sep = self._print(SeparatorComment(40))
-        if self._additional_args :
-            self._additional_args.pop()
+        self._additional_args.pop()
         for i in expr.imports:
             self.add_import(i)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
         parts = [sep,
+                 inner_funcs,
                  docstring,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
                  decs,
@@ -2394,6 +2383,11 @@ class CCodePrinter(CodePrinter):
             args = args[:1] + self._temporary_args + args[1:]
         else:
             args = self._temporary_args + args
+
+        for v in func.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                args.append(ObjectAddress(v))
+
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 

@@ -113,15 +113,6 @@ def test_product_loop(language):
     f2( y, 4, 11 )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_map_on_1d_array(language):
 
     f1 = loops.map_on_1d_array

@@ -186,11 +186,6 @@ math_function_to_fortran = {
 
 INF = math_constants['inf']
 
-_default_methods = {
-    '__init__': 'init',
-    '__del__' : 'free',
-}
-
 #==============================================================================
 iso_c_binding = {
     PrimitiveIntegerType() : {
@@ -412,17 +407,11 @@ class FCodePrinter(CodePrinter):
         for method in expr.methods:
             if not method.is_inline:
                 m_name = method.name
-                if m_name in _default_methods:
-                    suggested_name = _default_methods[m_name]
-                    scope.rename_function(method, suggested_name)
                 method.cls_name = scope.get_new_name(f'{name}_{method.name}')
         for i in expr.interfaces:
             for f in i.functions:
                 if not f.is_inline:
                     i_name = f.name
-                    if i_name in _default_methods:
-                        suggested_name = _default_methods[i_name]
-                        scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
     def _define_gFTL_element(self, element_type, imports_and_macros, element_name):
@@ -547,7 +536,7 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_types[expr_type] = module
@@ -613,7 +602,7 @@ class FCodePrinter(CodePrinter):
             else:
                 raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
@@ -2390,16 +2379,9 @@ class FCodePrinter(CodePrinter):
             return interface
 
         if funcs[0].cls_name:
-            for k, m in list(_default_methods.items()):
-                name = name.replace(k, m)
             cls_name = expr.cls_name
             if not (cls_name == '__UNDEFINED__'):
                 name = '{0}_{1}'.format(cls_name, name)
-        else:
-            for i in _default_methods:
-                # because we may have a class Point with init: Point___init__
-                if i in name:
-                    name = name.replace(i, _default_methods[i])
         interface = 'interface ' + name +'\n'
         for f in funcs:
             interface += 'module procedure ' + str(f.name)+'\n'
@@ -3594,8 +3576,12 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        for k, m in _default_methods.items():
-            f_name = f_name.replace(k, m)
+
+        if func.is_imported:
+            f_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            f_name = self.scope.get_import_alias(expr.interface, 'functions')
+
         args   = expr.args
         func_result_variables = func.scope.collect_all_tuple_elements(func.results.var) \
                                     if func.scope else [func.results.var]

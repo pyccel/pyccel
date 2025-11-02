@@ -180,7 +180,6 @@ class BasicParser(object):
         self._metavars = {}
 
         # represent the scope of a function
-        self._scope = Scope()
         self._current_function_name = []
         self._current_function = []
 
@@ -389,7 +388,7 @@ class BasicParser(object):
         Scope
             The scope for the class.
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, 'class', **kwargs)
         self._scope = child
 
         return child
