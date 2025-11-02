@@ -424,7 +424,7 @@ class GFTLInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("GFTL", src_dir = "gFTL/install/GFTL-1.13")
+        super().__init__("GFTL", src_dir = "gFTL/install")
 
     @property
     def target_name(self):
