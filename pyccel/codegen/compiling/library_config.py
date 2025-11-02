@@ -237,7 +237,7 @@ class ExternalLibInstaller:
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
             with open(cmakelists_path, "w", encoding='utf-8') as f:
                 f.write(f'project(Test LANGUAGES {languages})\n')
-                f.write(f'cmake_minimum_required(VERSION 3.28)\n')
+                f.write('cmake_minimum_required(VERSION 3.28)\n')
                 f.write(f'find_package({pkg_name} REQUIRED {options})\n')
                 f.write(f'get_target_property(FLAGS {pkg_name}::{target_name} COMPILE_FLAGS)\n')
                 f.write(f'get_target_property(INCLUDE_DIRS {pkg_name}::{target_name} INCLUDE_DIRECTORIES)\n')
