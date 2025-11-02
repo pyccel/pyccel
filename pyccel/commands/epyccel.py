@@ -341,24 +341,23 @@ def epyccel_seq(function_class_or_module, *,
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
-        try:
-            # Generate shared library
-            execute_pyccel(pymod_filename,
-                           verbose         = verbose,
-                           time_execution  = time_execution,
-                           language        = language,
-                           compiler_family = compiler_family_or_config,
-                           flags           = flags,
-                           wrapper_flags   = wrapper_flags,
-                           include         = include,
-                           libdir          = libdir,
-                           modules         = (),
-                           libs            = libs,
-                           debug           = debug,
-                           accelerators    = accelerators,
-                           output_name     = module_name,
-                           conda_warnings  = conda_warnings,
-                           context_dict    = context_dict)
+        # Generate shared library
+        execute_pyccel(pymod_filename,
+                       verbose         = verbose,
+                       time_execution  = time_execution,
+                       language        = language,
+                       compiler_family = compiler_family_or_config,
+                       flags           = flags,
+                       wrapper_flags   = wrapper_flags,
+                       include         = include,
+                       libdir          = libdir,
+                       modules         = (),
+                       libs            = libs,
+                       debug           = debug,
+                       accelerators    = accelerators,
+                       output_name     = module_name,
+                       conda_warnings  = conda_warnings,
+                       context_dict    = context_dict)
 
 
         # Import shared library
