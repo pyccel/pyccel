@@ -156,8 +156,8 @@ class DirTarget:
     ----------
     folder : Path
         The absolute path to the folder containing the generated code.
-    compile_targets : list[CompileTarget]
-        A list of the CompileTarget objects which are found in this directory.
+    compile_targets : iterable[CompileTarget]
+        An iterable of the CompileTarget objects which are found in this directory.
     """
     __slots__ = ('_folder', '_targets', '_dependencies')
     def __init__(self, folder, compile_targets : list[CompileTarget]):
@@ -217,14 +217,30 @@ class DirTarget:
 
     @property
     def dependencies(self):
+        """
+        Get all directories which must be compiled before this directory.
+
+        Get all directories which must be compiled before this directory.
+        """
         return self._dependencies
 
     @property
     def folder(self):
+        """
+        Get the path to the folder being described by this target.
+
+        Get the path to the folder being described by this target.
+        """
         return self._folder
 
     @property
     def targets(self):
+        """
+        Get all targets found in this directory.
+
+        Get all targets found in this directory. This includes compilation targets
+        and sub-directories.
+        """
         return self._targets
 
     def __contains__(self, other):
@@ -237,6 +253,25 @@ class DirTarget:
         return f'DirTarget({self.folder})'
 
 class BuildProject:
+    """
+    Class representing the overall build project structure.
+
+    This class encapsulates the directory structure, compilation targets,
+    programming languages, and standard library dependencies of a project.
+    It serves as the main data container for build configuration.
+
+    Parameters
+    ----------
+    root_dir : str | Path
+        Root directory of the project where the original Python code is found.
+    compile_targets : iterable[CompileTarget]
+        An iterable of all compile targets in the project.
+    languages : iterable[str]
+        An iterable of languages used in the project (e.g., ['C', 'Fortran']).
+    stdlib_deps : dict[str, CompileObj]
+        A dictionary mapping the names of standard library dependencies
+        required for the build to the CompileObj describing how they are used.
+    """
     def __init__(self, root_dir, compile_targets, languages, stdlib_deps):
         self._root_dir = Path(root_dir)
 
@@ -248,20 +283,46 @@ class BuildProject:
 
     @property
     def project_name(self):
+        """
+        Get the name of the project.
+
+        Get the name of the project.
+        """
         return self._root_dir.stem
 
     @property
     def languages(self):
+        """
+        Get all programming languages used in the project.
+
+        Get all programming languages used in the project.
+        """
         return self._languages
 
     @property
     def stdlib_deps(self):
+        """
+        Get the dependencies injected by Pyccel.
+
+        Get a dictionary mapping the names of standard library dependencies
+        required for the build to the CompileObj describing how they are used.
+        """
         return self._stdlib_deps
 
     @property
     def dir_info(self):
+        """
+        Get the DirTarget describing the target heirarchy within the project.
+
+        Get the DirTarget describing the target heirarchy within the project.
+        """
         return self._dir_info
 
     @property
     def root_dir(self):
+        """
+        Get the root directory of the project where the original Python code is found.
+
+        Get the root directory of the project where the original Python code is found.
+        """
         return self._root_dir
