@@ -403,16 +403,6 @@ def test_array_int32_2d_C_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
@@ -473,16 +463,6 @@ def test_array_int32_2d_C_scalar_idiv(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_idiv_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
@@ -576,16 +556,6 @@ def test_array_int32_2d_F_scalar_add(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_add_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_add
@@ -616,16 +586,6 @@ def test_array_int32_2d_F_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
