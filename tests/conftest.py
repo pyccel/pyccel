@@ -74,12 +74,12 @@ def pytest_runtest_teardown(item, nextitem):
             or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
         marks = [m.name for m in item.own_markers ]
         if 'mpi' not in marks:
-            pyccel_clean(path_dir, remove_shared_libs = True)
+            pass #pyccel_clean(path_dir, remove_shared_libs = True)
         else:
             comm = MPI.COMM_WORLD
             comm.Barrier()
             if comm.rank == 0:
-                pyccel_clean(path_dir, remove_shared_libs = True)
+                pass #pyccel_clean(path_dir, remove_shared_libs = True)
             comm.Barrier()
 
 def pytest_addoption(parser):
@@ -102,7 +102,7 @@ def pytest_sessionstart(session):
     if xdist_plugin is None:
         marks = [m.name for m in session.own_markers ]
         if 'mpi' not in marks:
-            pyccel_clean(path_dir)
+            pass #pyccel_clean(path_dir)
 
 def pytest_runtest_setup(item):
     # Skip on `skip_llvm` marker and environment variable
