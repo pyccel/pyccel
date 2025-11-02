@@ -67,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
 -   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
+-   \[INTERNALS\] Stop using `os.chdir` during Pyccel execution (absolute paths guarantee identical behaviour).
 
 ### Deprecated
 
