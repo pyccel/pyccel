@@ -9,7 +9,6 @@ Contains the execute_pyccel function which carries out the main steps required t
 
 import os
 import sys
-import shutil
 import time
 from pathlib import Path
 
