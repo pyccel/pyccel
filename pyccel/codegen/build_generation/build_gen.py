@@ -1,3 +1,6 @@
+"""
+Module describing things that are in common between different build system handlers.
+"""
 
 class BuildSystemHandler:
     """

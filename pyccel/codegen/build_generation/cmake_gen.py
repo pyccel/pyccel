@@ -1,3 +1,6 @@
+"""
+A module to handle everything related to CMake for the pyccel-make command.
+"""
 import os
 from pathlib import Path
 import shutil
@@ -186,7 +189,7 @@ class CMakeHandler(BuildSystemHandler):
         if 'gFTL_extensions' in expr.stdlib_deps:
             gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
             folder = next(iter(gFTL_extensions_obj.values())).source_folder
-            with open(folder / 'CMakeLists.txt', 'w') as f:
+            with open(folder / 'CMakeLists.txt', 'w', encoding='utf-8') as f:
                 f.write('add_library(gFTL_extensions\n    STATIC\n')
                 for file in gFTL_extensions_obj:
                     f.write(f"    {file.split('/')[-1]}.F90\n")
@@ -203,7 +206,7 @@ class CMakeHandler(BuildSystemHandler):
         if pkg_config_needed:
             sections.insert(4, "find_package(PkgConfig REQUIRED)\n")
 
-        target_code, _ = self._generate_DirTarget(expr._dir_info)
+        target_code, _ = self._generate_DirTarget(expr.dir_info)
 
         sections.append(target_code)
 

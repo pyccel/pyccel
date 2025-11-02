@@ -1,3 +1,6 @@
+"""
+A module to handle everything related to meson for the pyccel-make command.
+"""
 from itertools import chain
 import os
 import shutil
@@ -169,7 +172,7 @@ class MesonHandler(BuildSystemHandler):
         if 'gFTL_extensions' in expr.stdlib_deps:
             gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
             folder = next(iter(gFTL_extensions_obj.values())).source_folder
-            with open(folder / 'meson.build', 'w') as f:
+            with open(folder / 'meson.build', 'w', encoding='utf-8') as f:
                 f.write("gFTL_extensions_mod = library('gFTL_extensions',\n")
                 for file in gFTL_extensions_obj:
                     f.write(f"    '{file.split('/')[-1]}.F90',\n")
@@ -177,7 +180,7 @@ class MesonHandler(BuildSystemHandler):
                 f.write(')\n')
                 f.write("gFTL_extensions_dep = declare_dependency(link_with: gFTL_extensions_mod)\n")
 
-        target_code, _ = self._generate_DirTarget(expr._dir_info)
+        target_code, _ = self._generate_DirTarget(expr.dir_info)
 
         sections.append(target_code)
 
