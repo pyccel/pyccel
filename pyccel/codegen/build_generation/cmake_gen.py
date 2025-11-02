@@ -120,10 +120,18 @@ class CMakeHandler(BuildSystemHandler):
             gFTL_extensions_obj = expr.stdlib_deps['gFTL_extensions']
             folder = next(iter(gFTL_extensions_obj.values())).source_folder
             with open(folder / 'CMakeLists.txt', 'w') as f:
-                f.write("add_library(gFTL_extensions\n    STATIC\n")
+                f.write('add_library(gFTL_extensions\n    STATIC\n')
                 for file in gFTL_extensions_obj:
                     f.write(f"    {file.split('/')[-1]}.F90\n")
-                f.write(')')
+                f.write(')\n')
+                f.write('target_include_directories(gFTL_extensions\n')
+                f.write('    PUBLIC "${CMAKE_CURRENT_BINARY_DIR}"\n')
+                f.write(')\n\n')
+                f.write('target_link_libraries(gFTL_extensions\n')
+                f.write('    PUBLIC\n')
+                f.write('    gFTL_functions\n')
+                f.write(f'    GFTL::{recognised_libs["gFTL"].target_name}\n')
+                f.write(')\n')
 
         if pkg_config_needed:
             sections.insert(4, "find_package(PkgConfig REQUIRED)\n")

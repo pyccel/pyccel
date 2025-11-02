@@ -108,7 +108,7 @@ class MesonHandler(BuildSystemHandler):
                 f.write("gFTL_extensions_mod = library('gFTL_extensions',\n")
                 for file in gFTL_extensions_obj:
                     f.write(f"    '{file.split('/')[-1]}.F90',\n")
-                f.write('    dependencies: gFTL_dep\n')
+                f.write('    dependencies: [gFTL_dep, gFTL_functions_dep]\n')
                 f.write(')\n')
                 f.write("gFTL_extensions_dep = declare_dependency(link_with: gFTL_extensions_mod)\n")
 
