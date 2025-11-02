@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,10 +14,31 @@ current_folder = Path(__file__).parent
     ],
 )
 def build_system(request):
+    """
+    Test with the chosen build system.
+    """
     return request.param
 
 #------------------------------------------------------------------------------
 def pyccel_make_test(main_file, folder, language, build_system, args, output_dtype = float):
+    """
+    Test the pyccel-make command.
+
+    Parameters
+    ----------
+    main_file : str
+        The file containing the `__main__` implementation.
+    folder : Path
+        The folder in which the test is found.
+    build_system : str
+        The build system that should be used for compilation.
+    args : iterable[str]
+        The additional arguments that should be passed to pyccel-make. This must
+        include a command to specify how the files to be translated are selected.
+    output_dtype : type/list of types, default=float
+        The types expected as output of the program.
+        If one argument is provided then all types are assumed to be the same.
+    """
     python_output = get_python_output(folder / main_file, cwd = folder)
 
     p = subprocess.run([shutil.which('pyccel-make'), *args, f'--language={language}',
