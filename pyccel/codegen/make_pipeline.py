@@ -98,9 +98,11 @@ def execute_pyccel_make(files, *,
     base_dirpath = os.getcwd()
     sys.path.insert(0, base_dirpath)
 
-    # Unified way to handle errors: print formatted error message, then move
-    # to original working directory. Caller should then raise exception.
     def handle_error(stage):
+        """
+        Unified way to handle errors: print formatted error message, then move
+        to original working directory. Caller should then raise exception.
+        """
         print(f'\nERROR at {stage} stage')
         errors.check()
         os.chdir(base_dirpath)
