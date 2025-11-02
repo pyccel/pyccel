@@ -267,7 +267,9 @@ def execute_pyccel_make(files, *,
             printed_languages.update(wrappergen.printed_languages)
 
             relative_name = Path(fname).relative_to(pyccel_dirpath).with_suffix('')
-            targets[f.absolute()] = CompileTarget('__'.join(relative_name.parts),
+            target_name = '__'.join(relative_name.parts) if has_conflicting_modules \
+                          else relative_name.stem
+            targets[f.absolute()] = CompileTarget(target_name,
                                                   f.absolute(), fname, dict(zip(wrapper_files, wrappergen.get_additional_imports())),
                                                   prog_name, codegen.get_printer_imports())
 
