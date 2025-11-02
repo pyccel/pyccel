@@ -2657,7 +2657,7 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not orig_var.is_const:
             if is_bind_c_argument:
-                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C. " +
                               "Any changes to the list will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
