@@ -221,9 +221,36 @@ class ExternalLibInstaller:
 
     @property
     def name(self):
+        """
+        Get the name by which the package is known in the build system.
+        """
         return self._dest_dir
 
     def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name = None):
+        """
+        Use CMake to search for a package.
+
+        Use CMake to search for a package. CMake can provide the compilation
+        information.
+
+        Parameters
+        ----------
+        pkg_name : str
+            The name of the package.
+        languages : iterable[str]
+            The languages that the project will use with this package.
+        options : iterable[str], optional
+            Any additional options that should be passed to find_package.
+            E.g. COMPONENTS.
+        target_name : str, optional
+            The name of the package target. By default this is assumed to be
+            the same as the pkg_name (e.g. HDF5::HDF5).
+
+        Returns
+        -------
+        CompileObj | None
+            A CompileObj describing the package if it is installed on the system.
+        """
         cmake = shutil.which('cmake')
         # If cmake is not installed then exit
         if not cmake:
@@ -428,6 +455,11 @@ class GFTLInstaller(ExternalLibInstaller):
 
     @property
     def target_name(self):
+        """
+        The name of the relevant CMake target inside the gFTL package.
+
+        The name of the relevant CMake target inside the gFTL package.
+        """
         return 'gftl-v2'
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
