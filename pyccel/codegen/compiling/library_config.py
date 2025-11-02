@@ -235,7 +235,7 @@ class ExternalLibInstaller:
         with tempfile.TemporaryDirectory() as build_dir:
             # Write a minimal CMakeLists.txt
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
-            with open(cmakelists_path, "w") as f:
+            with open(cmakelists_path, "w", encoding='utf-8') as f:
                 f.write(f'project(Test LANGUAGES {languages})\n')
                 f.write(f'cmake_minimum_required(VERSION 3.28)\n')
                 f.write(f'find_package({pkg_name} REQUIRED {options})\n')
