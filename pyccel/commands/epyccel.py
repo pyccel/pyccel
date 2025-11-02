@@ -337,9 +337,6 @@ def epyccel_seq(function_class_or_module, *,
         os.makedirs(folder, exist_ok=True)
         os.makedirs(epyccel_dirpath, exist_ok=True)
 
-        # Change working directory to '__epyccel__'
-        os.chdir(epyccel_dirpath)
-
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
@@ -362,9 +359,6 @@ def epyccel_seq(function_class_or_module, *,
                            output_name     = module_name,
                            conda_warnings  = conda_warnings,
                            context_dict    = context_dict)
-        finally:
-            # Change working directory back to starting point
-            os.chdir(base_dirpath)
 
 
         # Import shared library

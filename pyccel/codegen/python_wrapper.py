@@ -83,9 +83,8 @@ def create_shared_library(codegen,
     # Get module name
     module_name = codegen.name
 
-    # Change working directory to '__pyccel__'
+    # Get the directory where the command is run
     base_dirpath = os.getcwd()
-    os.chdir(pyccel_dirpath)
 
     # Name of shared library
     if sharedlib_modname is None:
@@ -155,9 +154,6 @@ def create_shared_library(codegen,
                                                     verbose = verbose)
 
     timings['Wrapper compilation'] = time.time() - start_compile_wrapper
-
-    # Change working directory back to starting point
-    os.chdir(base_dirpath)
 
     # Return absolute path of shared library
     return sharedlib_filepath, timings

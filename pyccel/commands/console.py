@@ -269,5 +269,3 @@ def pyccel() -> None:
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
-    finally:
-        os.chdir(base_dirpath)
