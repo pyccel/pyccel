@@ -161,14 +161,14 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
             for (int i = nd-1; i >= 0; --i) {
                 shape[i] = np_shape[i];
                 strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+                current_stride *= (shape[i] * strides[i]);
             }
         }
         else {
             for (int i = 0; i < nd; ++i) {
                 shape[i] = np_shape[i];
                 strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+                current_stride *= (shape[i] * strides[i]);
             }
         }
     }
@@ -309,18 +309,37 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank, bool allow_empty)
  */
 static char* _check_pyarray_order(PyArrayObject *a, int flag)
 {
-	if (flag == NO_ORDER_CHECK)
-		return NULL;
+    if (flag == NO_ORDER_CHECK)
+        return NULL;
 
-	if (!PyArray_CHKFLAGS(a, flag))
-	{
-		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
+    bool valid = true;
+    if (flag == NPY_ARRAY_C_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i = 1; i<nd; ++i) {
+            valid = valid & (np_strides[i-1] >= np_strides[i]);
+        }
+    }
+    else if (flag == NPY_ARRAY_F_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i = 1; i<nd; ++i) {
+            valid = valid & (np_strides[i-1] <= np_strides[i]);
+        }
+    }
+    else {
+        valid = PyArray_CHKFLAGS(a, flag);
+    }
+
+    if (!valid)
+    {
+        char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
         char* error = (char *)malloc(200);
-		sprintf(error, "argument does not have the expected ordering (%c)", order);
-		return error;
-	}
+        sprintf(error, "argument does not have the expected ordering (%c)", order);
+        return error;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 
