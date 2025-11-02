@@ -45,7 +45,6 @@ class CompileTarget:
         self._name = name
         self._pyfile = pyfile
         self._file = Path(file)
-        print(wrapper_files)
         self._wrapper_files = wrapper_files
         self._program_file = Path(program_file) if program_file is not None else program_file
         self._dependencies = []
