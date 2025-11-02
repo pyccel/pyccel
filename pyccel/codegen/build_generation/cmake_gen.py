@@ -10,8 +10,43 @@ from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLib
 from .build_gen import BuildSystemHandler
 
 class CMakeHandler(BuildSystemHandler):
+    """
+    A class providing the functionalities to handle a CMake build system.
+
+    A class providing the functionalities to generate CMake build system
+    files and compile a CMake project.
+
+    Parameters
+    ----------
+    pyccel_dir : Path
+        The directory where generated files should be outputted.
+    root_dir : Path
+        The directory from which the pyccel-make command was called.
+    verbose : int
+        The level of verbosity.
+    debug_mode : bool
+        Indicates if we should compile in debug mode.
+    """
 
     def _generate_CompileTarget(self, expr):
+        """
+        Generate the lines describing this CompileTarget for CMake.
+
+        Generate the lines of a CMakeLists.txt file which describe the
+        compilation of this CompileTarget. If the CompileTarget has an
+        associated Python wrapper or executable the targets for these
+        objects are also described.
+
+        Parameters
+        ----------
+        expr : CompileTarget
+            The CMake target that should be compiled.
+
+        Returns
+        -------
+        str
+            The CMake code describing the target(s).
+        """
         kernel_target = expr.name
         mod_name = expr.pyfile.stem
 
@@ -70,6 +105,23 @@ class CMakeHandler(BuildSystemHandler):
         return '\n'.join(cmds)
 
     def _generate_DirTarget(self, expr):
+        """
+        Generate the CMakeLists.txt file describing the targets in a directory.
+
+        Generate the CMakeLists.txt file for a directory. This file describes all
+        targets in the directory and imports any sub-directories.
+
+        Parameters
+        ----------
+        expr : DirTarget
+            The Pyccel description of the targets in the directory.
+
+        Returns
+        -------
+        str
+            The string that should be printed in the enclosing CMakeLists.txt file
+            to include this new file.
+        """
         targets = []
         for t in expr.targets:
             if isinstance(t, DirTarget):
@@ -90,6 +142,19 @@ class CMakeHandler(BuildSystemHandler):
         return code, f"add_subdirectory({expr.folder.stem})\n"
 
     def generate(self, expr):
+        """
+        Generate all CMakeLists.txt files necessary to describe the project.
+
+        Generate all CMakeLists.txt files necessary to describe the project to
+        CMake. With these files it should be possible to compile the project
+        using CMake.
+
+        Parameters
+        ----------
+        expr : BuildProject
+            A BuildProject object describing all necessary build information
+            for the project.
+        """
         cmake_min = 'cmake_minimum_required(VERSION 3.20)'
 
         languages = ' '.join(['LANGUAGES', *[l.capitalize() for l in expr.languages]])
@@ -151,15 +216,32 @@ class CMakeHandler(BuildSystemHandler):
             f.write(code)
 
     def compile(self):
+        """
+        Use CMake to compile the project.
+
+        Use CMake to compile the project.
+        """
         capture_output = (self._verbose == 0)
         cmake = shutil.which('cmake')
         buildtype = 'Debug' if self._debug_mode else 'Release'
 
         if self._verbose:
             print(">> Running CMake")
-        subprocess.run([cmake, '-B', self._pyccel_dir / 'build', f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', self._pyccel_dir], check=True,
-                       env=os.environ, capture_output=capture_output)
-        subprocess.run([cmake, '--build', self._pyccel_dir / 'build'], check=True, cwd=self._pyccel_dir,
+
+        setup_cmd = [cmake, '-B', self._pyccel_dir / 'build', f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', self._pyccel_dir]
+        if self._verbose > 1:
+            print(" ".join(setup_cmd))
+        subprocess.run(setup_cmd, check=True, env=os.environ,
                        capture_output=capture_output)
-        subprocess.run([cmake, '--install', self._pyccel_dir / 'build'], check=True, cwd=self._pyccel_dir,
+
+        build_cmd = [cmake, '--build', self._pyccel_dir / 'build']
+        if self._verbose > 1:
+            print(" ".join(build_cmd))
+        subprocess.run(build_cmd, check=True, cwd=self._pyccel_dir,
+                       capture_output=capture_output)
+
+        install_cmd = [cmake, '--install', self._pyccel_dir / 'build']
+        if self._verbose > 1:
+            print(" ".join(install_cmd))
+        subprocess.run(install_cmd, check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output)

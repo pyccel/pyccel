@@ -10,8 +10,43 @@ from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLib
 from .build_gen import BuildSystemHandler
 
 class MesonHandler(BuildSystemHandler):
+    """
+    A class providing the functionalities to handle a meson build system.
+
+    A class providing the functionalities to generate meson build system
+    files and compile a meson project.
+
+    Parameters
+    ----------
+    pyccel_dir : Path
+        The directory where generated files should be outputted.
+    root_dir : Path
+        The directory from which the pyccel-make command was called.
+    verbose : int
+        The level of verbosity.
+    debug_mode : bool
+        Indicates if we should compile in debug mode.
+    """
 
     def _generate_CompileTarget(self, expr):
+        """
+        Generate the lines describing this CompileTarget for meson.
+
+        Generate the lines of a meson.build file which describe the
+        compilation of this CompileTarget. If the CompileTarget has an
+        associated Python wrapper or executable the targets for these
+        objects are also described.
+
+        Parameters
+        ----------
+        expr : CompileTarget
+            The CMake target that should be compiled.
+
+        Returns
+        -------
+        str
+            The CMake code describing the target(s).
+        """
         obj_lib = f'{expr.name}_objs'
         dep_name = f'{expr.name}_dep'
         mod_name = f"'{expr.pyfile.stem}'"
@@ -60,6 +95,23 @@ class MesonHandler(BuildSystemHandler):
         return '\n\n'.join(cmds)
 
     def _generate_DirTarget(self, expr):
+        """
+        Generate the meson.build file describing the targets in a directory.
+
+        Generate the meson.build file for a directory. This file describes all
+        targets in the directory and imports any sub-directories.
+
+        Parameters
+        ----------
+        expr : DirTarget
+            The Pyccel description of the targets in the directory.
+
+        Returns
+        -------
+        str
+            The string that should be printed in the enclosing meson.build file
+            to include this new file.
+        """
         targets = []
         for t in expr.targets:
             if isinstance(t, DirTarget):
@@ -80,6 +132,19 @@ class MesonHandler(BuildSystemHandler):
         return code, f"subdir('{expr.folder.stem}')\n"
 
     def generate(self, expr):
+        """
+        Generate all meson.build files necessary to describe the project.
+
+        Generate all meson.build files necessary to describe the project to
+        meson. With these files it should be possible to compile the project
+        using meson.
+
+        Parameters
+        ----------
+        expr : BuildProject
+            A BuildProject object describing all necessary build information
+            for the project.
+        """
         languages = ', '.join(f"'{l}'" for l in expr.languages)
         project_decl = f"project('{expr.project_name}', {languages}, meson_version: '>=1.1.0')\n"
 
@@ -125,15 +190,32 @@ class MesonHandler(BuildSystemHandler):
             f.write(code)
 
     def compile(self):
+        """
+        Use meson to compile the project.
+
+        Use meson to compile the project.
+        """
         capture_output = (self._verbose == 0)
         meson = shutil.which('meson')
         buildtype = 'debug' if self._debug_mode else 'release'
 
         if self._verbose:
             print(">> Running meson")
-        subprocess.run([meson, 'setup', 'build', '--buildtype', buildtype], check=True,
-                       cwd=self._pyccel_dir, capture_output=capture_output, env = os.environ)
-        subprocess.run([meson, 'compile', '-C', 'build'], check=True, cwd=self._pyccel_dir,
+
+        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype]
+        if self._verbose > 1:
+            print(" ".join(setup_cmd))
+        subprocess.run(setup_cmd, check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output, env = os.environ)
-        subprocess.run([meson, 'install', '-C', 'build'], check=True, cwd=self._pyccel_dir,
+
+        build_cmd = [meson, 'compile', '-C', 'build']
+        if self._verbose > 1:
+            print(" ".join(build_cmd))
+        subprocess.run(build_cmd, check=True, cwd=self._pyccel_dir,
+                       capture_output=capture_output, env = os.environ)
+
+        install_cmd = [meson, 'install', '-C', 'build']
+        if self._verbose > 1:
+            print(" ".join(install_cmd))
+        subprocess.run(install_cmd, check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output, env = os.environ)
