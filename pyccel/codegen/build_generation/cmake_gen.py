@@ -62,16 +62,25 @@ class CMakeHandler(BuildSystemHandler):
         to_link.update(r for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies))
+        if expr.file.suffix == '.f90':
+            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}'])
+            cmds.append(f'target_include_directories({args})\n')
+            if 'openmp' in self._accelerators:
+                to_link.add('OpenMP::OpenMP_Fortran')
+            if 'mpi' in self._accelerators:
+                to_link.add('MPI::MPI_Fortran')
+        else:
+            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
+            cmds.append(f'target_include_directories({args})\n')
+            if 'openmp' in self._accelerators:
+                to_link.add('OpenMP::OpenMP_C')
+            if 'mpi' in self._accelerators:
+                to_link.add('MPI::MPI_C')
+
         if to_link:
             link_args = '\n    '.join([kernel_target, 'PUBLIC', *to_link])
             cmds.append(f"target_link_libraries({link_args})\n")
 
-        if expr.file.suffix == '.f90':
-            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}'])
-            cmds.append(f'target_include_directories({args})\n')
-        else:
-            args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
-            cmds.append(f'target_include_directories({args})\n')
 
         wrap_args = '\n    '.join([f'{kernel_target}_so', 'MODULE', 'WITH_SOABI',
                                     *[w.name for w in expr.wrapper_files]])
@@ -173,6 +182,12 @@ class CMakeHandler(BuildSystemHandler):
 
         sections = [cmake_min, project_decl, pic_on, py_import]
 
+        if 'openmp' in self._accelerators:
+            sections.append('find_package(OpenMP REQUIRED)\n')
+
+        if 'mpi' in self._accelerators:
+            sections.append('find_package(MPI REQUIRED)\n')
+
         pkg_config_needed = False
         for folder in expr.stdlib_deps:
             lib_install = recognised_libs.get(folder, None)
@@ -234,7 +249,10 @@ class CMakeHandler(BuildSystemHandler):
         setup_cmd = [cmake, '-B', self._pyccel_dir / 'build', f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', self._pyccel_dir]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
-        subprocess.run(setup_cmd, check=True, env=os.environ,
+        env = os.environ.copy()
+        env['CC'] = self._compiler.get_exec(self._accelerators, 'c')
+        env['FC'] = self._compiler.get_exec(self._accelerators, 'fortran')
+        subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 
         build_cmd = [cmake, '--build', self._pyccel_dir / 'build']

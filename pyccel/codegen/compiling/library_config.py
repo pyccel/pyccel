@@ -223,6 +223,8 @@ class ExternalLibInstaller:
     def name(self):
         """
         Get the name by which the package is known in the build system.
+
+        Get the name by which the package is known in the build system.
         """
         return self._dest_dir
 

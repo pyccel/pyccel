@@ -51,13 +51,15 @@ def execute_pyccel_make(files, *,
                    accelerators    = (),
                    conda_warnings  = 'basic'):
     """
-    Run Pyccel on the provided code.
+    Run Pyccel-make on the provided files.
 
     Carry out the main steps required to execute Pyccel:
     - Parses the python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
     - Generates the translated file(s) (codegen stage)
-    - Compiles the files to generate an executable and/or a shared library.
+    - Generates the wrapper file(s) (wrapper stage)
+    - Generates the build system file(s)
+    - Compiles the files to generate executable(s) and/or shared library(s).
 
     Parameters
     ----------
@@ -74,6 +76,8 @@ def execute_pyccel_make(files, *,
     compiler_family : str, optional
         The compiler used to compile the generated files. Default is 'GNU'.
         This can also contain the name of a json file describing a compiler.
+    build_system : str, optional
+        The build-system used to compile the generated files. Default is 'meson'.
     debug : bool, optional
         Indicates whether the file should be compiled in debug mode.
         The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
@@ -82,9 +86,6 @@ def execute_pyccel_make(files, *,
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
-    context_dict : dict[str, object], optional
-        A dictionary containing any variables that are available in the calling context.
-        This can allow certain constants to be defined outside of the function passed to epyccel.
     """
     start = time.time()
     timers = {}
@@ -296,7 +297,8 @@ def execute_pyccel_make(files, *,
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
                                      stdlib_deps)
 
-        build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, verbose, debug)
+        build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath,
+                                                       verbose, debug, compiler, accelerators)
 
         build_sys.generate(build_project)
     except NotImplementedError as error:

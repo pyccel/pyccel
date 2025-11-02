@@ -64,6 +64,10 @@ class MesonHandler(BuildSystemHandler):
         deps.update({f"{r}_dep": None for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies)})
+        if 'openmp' in self._accelerators:
+            deps.append('openmp')
+        if 'mpi' in self._accelerators:
+            deps.append('mpi')
         if deps:
             dep_args.append(f"dependencies: [{', '.join(deps)}]")
 
@@ -158,6 +162,12 @@ class MesonHandler(BuildSystemHandler):
 
         sections = [project_decl, py_deps]
 
+        if 'openmp' in self._accelerators:
+            sections.append("openmp = dependency('openmp')")
+
+        if 'mpi' in self._accelerators:
+            sections.append("mpi = dependency('mpi')")
+
         for d in expr.stdlib_deps:
             lib_install = recognised_libs.get(d, None)
             if isinstance(lib_install, ExternalLibInstaller):
@@ -208,8 +218,11 @@ class MesonHandler(BuildSystemHandler):
         setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
+        env = os.environ.copy()
+        env['CC'] = self._compiler.get_exec(self._accelerators, 'c')
+        env['FC'] = self._compiler.get_exec(self._accelerators, 'fortran')
         subprocess.run(setup_cmd, check=True, cwd=self._pyccel_dir,
-                       capture_output=capture_output, env = os.environ)
+                       capture_output=capture_output, env = env)
 
         build_cmd = [meson, 'compile', '-C', 'build']
         if self._verbose > 1:
