@@ -97,7 +97,7 @@ def create_shared_library(codegen,
     #-------------------------------------------
 
     start_wrapper_creation = time.time()
-    gen.wrap(base_dirpath)
+    gen.wrap(os.path.dirname(pyccel_dirpath))
     timings['Wrapper creation'] = time.time() - start_wrapper_creation
 
     if errors.has_errors():
