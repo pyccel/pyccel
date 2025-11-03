@@ -36,6 +36,7 @@ runs:
     - name: Investigate NumPy
       run: |
           np_home=$(python -c "import numpy as np; print(np.__file__)")
+          np_home=$(dirname ${np_home})
           echo ${np_home}
           echo ${np_home}/_core
           echo ${np_home}/_core/lib
