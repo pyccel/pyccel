@@ -3,12 +3,9 @@ A module to handle everything related to meson for the pyccel-make command.
 """
 from itertools import chain
 import os
-import pathlib
 import shutil
 import subprocess
 import sys
-
-import numpy as np
 
 from pyccel.codegen.compiling.project import DirTarget
 from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLibInstaller
@@ -225,9 +222,6 @@ class MesonHandler(BuildSystemHandler):
         env = os.environ.copy()
         env['CC'] = self._compiler.get_exec(self._accelerators, 'c')
         env['FC'] = self._compiler.get_exec(self._accelerators, 'fortran')
-        #PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
-        #numpy_path = next(pathlib.Path(np.__file__).parent.glob('**/*.pc')).parent
-        #env['PKG_CONFIG_PATH'] = ':'.join(p for p in (PKG_CONFIG_PATH, str(numpy_path)) if p)
         subprocess.run(setup_cmd, check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output, env = env)
 
