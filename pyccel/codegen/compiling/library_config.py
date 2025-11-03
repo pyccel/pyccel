@@ -508,7 +508,7 @@ class GFTLInstaller(ExternalLibInstaller):
             os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
         new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
-                          include = (dest_dir / 'include/v2',))
+                          include = (dest_dir / 'GFTL-1.13/include/v2',))
         installed_libs['gFTL'] = new_obj
 
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '')
