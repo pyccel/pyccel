@@ -8,7 +8,7 @@ dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 authors = [
     { name = "Pyccel development team" },
 ]
@@ -17,7 +17,7 @@ keywords = [
 ]
 dependencies = [
     "filelock >= 3.4.0",
-    "numpy >= 1.16, != 2.0.*",
+    "numpy >= 2.1",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
