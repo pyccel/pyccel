@@ -67,6 +67,7 @@ class MesonHandler(BuildSystemHandler):
         deps.update({f"{r}_dep": None for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies)})
+        deps.add('m_dep')
         if 'openmp' in self._accelerators:
             deps.append('openmp')
         if 'mpi' in self._accelerators:
@@ -160,8 +161,8 @@ class MesonHandler(BuildSystemHandler):
 
         # Python dependencies
         py_import = f"py = import('python').find_installation('{sys.executable}', modules: ['numpy'])\n"
-        #numpy_dep = "numpy_dep = dependency('numpy')\n"
-        py_deps = ''.join(("# Python dependencies\n", py_import))#, numpy_dep))
+        math_dep = "m_dep = cc.find_library('m', required : false)\n"
+        py_deps = ''.join(("# Python dependencies\n", py_import, m_dep))
 
         sections = [project_decl, py_deps]
 
