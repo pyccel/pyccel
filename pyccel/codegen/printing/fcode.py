@@ -12,7 +12,6 @@ import sys
 import re
 from collections import OrderedDict
 from itertools import chain
-from packaging.version import Version
 
 import numpy as np
 
@@ -90,8 +89,6 @@ from pyccel.parser.scope import Scope
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 # TODO: add examples
 
@@ -3288,7 +3285,7 @@ class FCodePrinter(CodePrinter):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
-            func_name = 'csgn' if numpy_v1 else 'csign'
+            func_name = 'csign'
             func = PyccelFunctionDef(func_name, NumpySign)
             self.add_import(Import('pyc_math_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'

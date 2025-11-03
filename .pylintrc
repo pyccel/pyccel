@@ -48,7 +48,7 @@ unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.9 # Set to last python which has not reached end-of-life
+py-version=3.10 # Set to last Python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 
