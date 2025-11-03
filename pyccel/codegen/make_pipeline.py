@@ -144,9 +144,6 @@ def execute_pyccel_make(files, *,
     # Get compiler object
     Scope.name_clash_checker = name_clash_checkers[language]
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
 
