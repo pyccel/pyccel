@@ -59,7 +59,7 @@ path = "pyccel/version.py"
 [tool.hatch.build.targets.wheel]
 artifacts = [
   "*.pyccel",
-  "pyccel/extensions/gFTL/install/GFTL-1.13/include/v2"
+  "pyccel/extensions/gFTL/install"
 ]
 include = [
   "pyccel/**/*.py",
