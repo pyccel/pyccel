@@ -8,7 +8,6 @@ import functools
 from itertools import chain, product
 import re
 import sys
-from packaging.version import Version
 
 import numpy as np
 
@@ -79,7 +78,6 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
 
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -2094,7 +2092,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csgn' if numpy_v1 else 'csign'
+            func = 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 

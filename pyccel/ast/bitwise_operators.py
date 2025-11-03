@@ -8,7 +8,6 @@ These operators all have a precision as detailed here:
 https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
-from packaging.version import Version
 import numpy
 
 from .builtins     import DtypePrecisionToCastFunction
@@ -17,7 +16,6 @@ from .datatypes    import PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
 from .numpytypes   import NumpyInt8Type
 
-numpy_v1 = Version(numpy.__version__) < Version("2.0.0")
 
 __all__ = (
     'PyccelBitAnd',
@@ -231,22 +229,10 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         DataType
             The  datatype of the result of the operation.
         """
-        class_type = None
-        if numpy_v1:
-            if arg1.rank > 0 and arg2.rank == 0:
-                class_type = arg1.class_type.switch_basic_type(arg2.class_type) \
-                                if isinstance(arg1.class_type.primitive_type, PrimitiveBooleanType) \
-                                else arg1.class_type
-            elif arg1.rank == 0 and arg2.rank > 0:
-                class_type = arg2.class_type.switch_basic_type(arg1.class_type) \
-                                if isinstance(arg2.class_type.primitive_type, PrimitiveBooleanType) \
-                                else arg2.class_type
-
-        if class_type is None:
-            try:
-                class_type = arg1.class_type & arg2.class_type
-            except NotImplementedError as err:
-                raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
+        try:
+            class_type = arg1.class_type & arg2.class_type
+        except NotImplementedError as err:
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
 
         primitive_type = class_type.primitive_type
         assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))

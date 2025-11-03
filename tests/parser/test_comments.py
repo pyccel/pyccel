@@ -4,7 +4,12 @@
 # Note that we need to change the directory for tests involving the import
 # statement
 
-from ast import _Unparser
+try:
+    # Python <= 3.13
+    from ast import _Unparser
+except ImportError:
+    # Python >= 3.14
+    from _ast_unparse import Unparser as _Unparser
 
 import os
 from pathlib import Path
