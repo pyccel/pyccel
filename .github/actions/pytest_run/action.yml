@@ -78,6 +78,10 @@ runs:
         echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH=}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
+    - name: Test pyccel-make meson after install
+      run: python -m pytest -rX -sv test_pyccel_make.py -k meson
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests/pyccel
     - name: Test pyccel-make
       run: python -m pytest -rX -sv test_pyccel_make.py -k cmake
       shell: ${{ inputs.shell_cmd }}
