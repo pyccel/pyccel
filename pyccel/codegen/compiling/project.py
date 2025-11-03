@@ -311,9 +311,9 @@ class BuildProject:
     @property
     def dir_info(self):
         """
-        Get the DirTarget describing the target heirarchy within the project.
+        Get the DirTarget describing the target hierarchy within the project.
 
-        Get the DirTarget describing the target heirarchy within the project.
+        Get the DirTarget describing the target hierarchy within the project.
         """
         return self._dir_info
 
