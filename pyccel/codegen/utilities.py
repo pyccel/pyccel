@@ -193,7 +193,9 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
                 continue
 
     if not convert_only:
-        for lib_obj in installed_libs.values():
+        lib_compile_objs = [lib_obj for key, lib_obj in installed_libs.items() if key != 'gFTL_extensions']
+        lib_compile_objs.extend(installed_libs.get('gFTL_extensions', {}).values())
+        for lib_obj in lib_compile_objs:
             # get the include folder path and library files
             recompile_object(lib_obj,
                              compiler = compiler,
