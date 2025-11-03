@@ -176,8 +176,6 @@ def pyccel_wrap_command() -> None:
         err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
-    base_dirpath = os.getcwd()
-
     try:
         # TODO: prune options
         execute_pyccel_wrap(filename,
@@ -193,5 +191,3 @@ def pyccel_wrap_command() -> None:
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
-    finally:
-        os.chdir(base_dirpath)
