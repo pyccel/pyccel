@@ -62,6 +62,7 @@ class CMakeHandler(BuildSystemHandler):
         to_link.update(r for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies))
+        to_link.add('${MATH_LIBRARY}')
         if expr.file.suffix == '.f90':
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
@@ -180,7 +181,9 @@ class CMakeHandler(BuildSystemHandler):
         py_import = (f'set(Python_ROOT_DIR {Path(sys.executable).parent.parent})\n'
                      f"find_package(Python {version.major}.{version.minor}.{version.micro} EXACT REQUIRED COMPONENTS Development NumPy)\n")
 
-        sections = [cmake_min, project_decl, pic_on, py_import]
+        math_import = 'find_library(MATH_LIBRARY m)'
+
+        sections = [cmake_min, project_decl, pic_on, py_import, math_import]
 
         if 'openmp' in self._accelerators:
             sections.append('find_package(OpenMP REQUIRED)\n')
