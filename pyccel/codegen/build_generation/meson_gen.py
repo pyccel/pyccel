@@ -81,7 +81,7 @@ class MesonHandler(BuildSystemHandler):
         ext_std_deps = {f"{r}_dep": None for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for deps in expr.wrapper_files.values() for d in deps)}
-        ext_deps = ', '.join((dep_name, 'cwrapper_dep', *ext_std_deps))
+        ext_deps = ', '.join((dep_name, *ext_std_deps))
 
         args = ',\n  '.join([mod_name,
                              *(f"'{w.name}'" for w in expr.wrapper_files),
@@ -156,9 +156,8 @@ class MesonHandler(BuildSystemHandler):
         project_decl = f"project('{expr.project_name}', {languages}, meson_version: '>=1.1.0')\n"
 
         # Python dependencies
-        py_import = f"py = import('python').find_installation('{sys.executable}')\n"
-        numpy_dep = "numpy_dep = dependency('numpy')\n"
-        py_deps = ''.join(("# Python dependencies\n", py_import, numpy_dep))
+        py_import = f"py = import('python').find_installation('{sys.executable}', modules : ['numpy'])\n"
+        py_deps = ''.join(("# Python dependencies\n", py_import))
 
         sections = [project_decl, py_deps]
 
