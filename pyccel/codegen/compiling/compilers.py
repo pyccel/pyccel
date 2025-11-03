@@ -550,8 +550,6 @@ class Compiler:
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
-        print(cmd)
-
         with compile_obj:
             self.run_command(cmd, verbose)
 
