@@ -74,15 +74,6 @@ def test_project_class_imports(language, build_system):
                      language, build_system, ['-g', '**/*.py'])
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_project_multi_imports(language, build_system):
     pyccel_make_test('file4.py', current_folder / 'project_multi_imports',
                      language, build_system, ['-f', 'file1.py', 'file2.py', 'file3.py', 'file4.py'],
