@@ -294,12 +294,14 @@ class ExternalLibInstaller:
             self._discovery_method = 'CMake'
             output = p.stdout.split('\n-- ')
             start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
-            flags, include_dirs, iinclude_dirs, libs, ilibs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
+            flags, include_dirs, interface_include_dirs, libs, interface_libs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
             return CompileObj(pkg_name, folder = "", has_target_file = False,
-                              include = [i for i in chain(include_dirs.split(','), iinclude_dirs.split(',')) if i],
+                              include = [i for i in chain(include_dirs.split(','),
+                                                          interface_include_dirs.split(',')) if i],
                               flags = [f for f in flags.split(',') if f],
                               libdir = [l for l in libdirs.split(',') if l],
-                              libs = [l for l in chain(libs.split(','), ilibs.split(',')) if l])
+                              libs = [l for l in chain(libs.split(','),
+                                                       interface_libs.split(',')) if l])
 
     def _check_for_package(self, pkg_name, options = ()):
         """
