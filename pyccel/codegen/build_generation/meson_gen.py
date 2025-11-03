@@ -64,7 +64,7 @@ class MesonHandler(BuildSystemHandler):
         deps.update({f"{r}_dep": None for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies)})
-        deps.add('m_dep')
+        deps['m_dep'] = None
         if 'openmp' in self._accelerators:
             deps.append('openmp')
         if 'mpi' in self._accelerators:
