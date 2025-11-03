@@ -241,8 +241,6 @@ def pyccel() -> None:
         err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
-    base_dirpath = os.getcwd()
-
     if args.language == 'python' and args.output == '':
         print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)

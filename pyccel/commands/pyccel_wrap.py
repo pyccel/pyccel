@@ -176,8 +176,6 @@ def pyccel_wrap_command() -> None:
         err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
-    base_dirpath = os.getcwd()
-
     try:
         # TODO: prune options
         execute_pyccel_wrap(filename,

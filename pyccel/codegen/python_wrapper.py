@@ -83,9 +83,6 @@ def create_shared_library(codegen,
     # Get module name
     module_name = codegen.name
 
-    # Get the directory where the command is run
-    base_dirpath = os.getcwd()
-
     # Name of shared library
     if sharedlib_modname is None:
         sharedlib_modname = module_name

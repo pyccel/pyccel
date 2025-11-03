@@ -268,9 +268,6 @@ def epyccel_seq(function_class_or_module, *,
     object
         Return accelerated Python module and function.
     """
-    # Store current directory
-    base_dirpath = os.getcwd()
-
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
