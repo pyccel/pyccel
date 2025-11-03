@@ -65,6 +65,10 @@ runs:
         echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH=}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
+    - name: Test pyccel-make
+      run: python -m pytest -rX -sv test_pyccel_make.py
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests/pyccel
     - name: Test C translation
       run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" 2>&1 | tee c_outfile.out
       shell: ${{ inputs.shell_cmd }}
