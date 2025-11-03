@@ -29,6 +29,10 @@ class MesonHandler(BuildSystemHandler):
         The level of verbosity.
     debug_mode : bool
         Indicates if we should compile in debug mode.
+    compiler : Compiler
+        The compiler that should be used to compile the code.
+    accelerators : iterable[str]
+        Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     """
 
     def _generate_CompileTarget(self, expr):
