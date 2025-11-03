@@ -7,6 +7,7 @@
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 import filecmp
+from itertools import chain
 import os
 from pathlib import Path
 import shutil
@@ -295,9 +296,10 @@ class ExternalLibInstaller:
             start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
             flags, include_dirs, iinclude_dirs, libs, ilibs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
             return CompileObj(pkg_name, folder = "", has_target_file = False,
-                              include = [*include_dirs.split(','), *iinclude_dirs.split(',')],
-                              flags = flags.split(','), libdir = libdirs.split(','),
-                              libs = [*libs.split(','), *ilibs.split(',')])
+                              include = [i for i in chain(include_dirs.split(','), iinclude_dirs.split(',')) if i],
+                              flags = [f for f in flags.split(',') if f],
+                              libdir = [l for l in libdirs.split(',') if l],
+                              libs = [l for l in chain(libs.split(','), ilibs.split(',')) if l])
 
     def _check_for_package(self, pkg_name, options = ()):
         """
