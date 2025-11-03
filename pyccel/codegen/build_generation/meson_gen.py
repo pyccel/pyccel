@@ -158,7 +158,7 @@ class MesonHandler(BuildSystemHandler):
 
         # Python dependencies
         py_import = f"py = import('python').find_installation('{sys.executable}', modules: ['numpy'])\n"
-        math_dep = "m_dep = cc.find_library('m', required : false)\n"
+        math_dep = "cc = meson.get_compiler('c')\nm_dep = cc.find_library('m', required : false)\n"
         py_deps = ''.join(("# Python dependencies\n", py_import, math_dep))
 
         sections = [project_decl, py_deps]
