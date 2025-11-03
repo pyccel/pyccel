@@ -181,7 +181,7 @@ def execute_pyccel_wrap(fname, *,
     start_wrapper_creation = time.time()
     wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
     try:
-        wrappergen.wrap(folder)
+        wrappergen.wrap(str(folder))
     except PyccelError:
         handle_error('code generation (wrapping)')
         raise
