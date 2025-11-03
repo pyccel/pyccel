@@ -28,12 +28,12 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.13' }}
 
 jobs:
   Spelling:
     runs-on: ubuntu-latest
-    name: Documentation spellcheck (spelling, ${{ inputs.python_version || '3.12' }})
+    name: Documentation spellcheck (spelling, ${{ inputs.python_version || '3.13' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
