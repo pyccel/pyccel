@@ -171,13 +171,6 @@ class CMakeHandler(BuildSystemHandler):
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(code)
                 targets.append(subdir_cmd)
-
-                print("---------------------------------------------")
-                print(filename)
-                print("---------------------------------------------")
-                with open(filename, 'r', encoding='utf-8') as f:
-                    print(f.read())
-                print("---------------------------------------------")
             else:
                 targets.append(self._generate_CompileTarget(t))
 
@@ -253,13 +246,6 @@ class CMakeHandler(BuildSystemHandler):
                 f.write(f'    GFTL::{recognised_libs["gFTL"].target_name}\n')
                 f.write(')\n')
 
-            print("---------------------------------------------")
-            print(folder / 'CMakeLists.txt')
-            print("---------------------------------------------")
-            with open(folder / 'CMakeLists.txt', 'r', encoding='utf-8') as f:
-                print(f.read())
-            print("---------------------------------------------")
-
         if pkg_config_needed:
             sections.insert(4, "find_package(PkgConfig REQUIRED)\n")
 
@@ -274,13 +260,6 @@ class CMakeHandler(BuildSystemHandler):
             print(">>> Printing :: ", filename)
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(code)
-
-        print("---------------------------------------------")
-        print(filename)
-        print("---------------------------------------------")
-        with open(filename, 'r', encoding='utf-8') as f:
-            print(f.read())
-        print("---------------------------------------------")
 
     def compile(self):
         """
