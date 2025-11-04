@@ -124,3 +124,7 @@ runs:
         echo "CC=$GCC_EXE"
         echo "FC=$GFORTRAN_EXE"
       shell: powershell
+    - name: Install Pkg-config
+      run: |
+        choco install pkgconfiglite
+      shell: powershell
