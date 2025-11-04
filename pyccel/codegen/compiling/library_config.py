@@ -441,6 +441,9 @@ class STCInstaller(ExternalLibInstaller):
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
         os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
                                                  if p and Path(p).exists())
+        print("PKG_CONFIG_PATH:")
+        print((PKG_CONFIG_PATH, str(libdir / "pkgconfig")))
+        print(os.environ['PKG_CONFIG_PATH'])
 
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
