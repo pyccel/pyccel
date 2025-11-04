@@ -36,6 +36,7 @@ class CMakeHandler(BuildSystemHandler):
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     """
     def __init__(self, *args, **kwargs):
+        cmake = shutil.which('cmake')
         with tempfile.TemporaryDirectory() as build_dir:
             # Write a minimal CMakeLists.txt
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
