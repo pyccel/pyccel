@@ -35,8 +35,8 @@ runs:
       working-directory: ./tests
     - name: Test pyccel-make
       run: |
-        python -m pytest -rX -vs test_pyccel_make.py -k cmake
         python -m pytest -rX -vs test_pyccel_make.py -k meson
+        python -m pytest -rX -vs test_pyccel_make.py -k cmake
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests/pyccel
     - name: Test translation with meson
