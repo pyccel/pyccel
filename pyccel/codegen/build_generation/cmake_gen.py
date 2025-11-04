@@ -253,7 +253,8 @@ class CMakeHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running CMake")
 
-        setup_cmd = [cmake, '-B', str(self._pyccel_dir / 'build'), f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', str(self._pyccel_dir)]
+        setup_cmd = [cmake, '-G', 'MinGW Makefiles', '-B', str(self._pyccel_dir / 'build'),
+                     f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', str(self._pyccel_dir)]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
