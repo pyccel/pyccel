@@ -439,7 +439,8 @@ class STCInstaller(ExternalLibInstaller):
         libs = ['-lstc', '-lm']
 
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '')
-        os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (PKG_CONFIG_PATH, str(libdir / "pkgconfig")) if p)
+        os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
+                                                 if p and Path(p).exists())
 
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
@@ -512,7 +513,8 @@ class GFTLInstaller(ExternalLibInstaller):
         installed_libs['gFTL'] = new_obj
 
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '')
-        os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (CMAKE_PREFIX_PATH, str(dest_dir)) if s)
+        os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (CMAKE_PREFIX_PATH, str(dest_dir))
+                                                   if s and Path(s).exists())
 
         return new_obj
 
