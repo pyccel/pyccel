@@ -34,6 +34,23 @@ class CMakeHandler(BuildSystemHandler):
     accelerators : iterable[str]
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     """
+    def __init__(self, *args, **kwargs):
+        with tempfile.TemporaryDirectory() as build_dir:
+            # Write a minimal CMakeLists.txt
+            cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
+            with open(cmakelists_path, "w", encoding='utf-8') as f:
+                f.write(f'project(Test LANGUAGES C)\n')
+                f.write('cmake_minimum_required(VERSION 3.28)\n')
+                f.write(f'find_library(MATH_LIBRARY m REQUIRED)\n')
+
+            # Run cmake configure step in that temp dir
+            p = subprocess.run(
+                [cmake, "-S", build_dir, "-B", build_dir],
+                capture_output=True, text=True, check=False)
+
+        self._math_lib_available_on_platform = p.returncode == 0
+
+        super().__init__(*args, **kwargs)
 
     def _generate_CompileTarget(self, expr):
         """
@@ -66,7 +83,8 @@ class CMakeHandler(BuildSystemHandler):
         to_link.update(r for r in recognised_libs \
                     if any(d == r or d.startswith(f"{r}/") \
                     for d in expr.stdlib_dependencies))
-        to_link.add('${MATH_LIBRARY}')
+        if self._math_lib_available_on_platform:
+            to_link.add('${MATH_LIBRARY}')
         if expr.file.suffix == '.f90':
             args = '\n    '.join([kernel_target, 'PUBLIC', '${CMAKE_CURRENT_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}'])
             cmds.append(f'target_include_directories({args})\n')
@@ -191,10 +209,9 @@ class CMakeHandler(BuildSystemHandler):
         py_import = (f'set(Python_ROOT_DIR {Path(sys.executable).parent.parent.as_posix()})\n'
                      f"find_package(Python {version.major}.{version.minor}.{version.micro} EXACT REQUIRED COMPONENTS Development NumPy)\n")
 
-        math_import = ('find_library(MATH_LIBRARY m)\n'
-                       'if (NOT ${MATH_LIBRARY_FOUND})\n'
-                       '    set(MATH_LIBRARY '')\n'
-                       'endif()\n')
+        math_import = ''
+        if self._math_lib_available_on_platform:
+            math_import = 'find_library(MATH_LIBRARY m)\n'
 
         sections = [cmake_min, project_decl, pic_on, py_import, math_import]
 
