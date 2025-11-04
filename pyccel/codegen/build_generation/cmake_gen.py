@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 from pyccel.codegen.compiling.project import DirTarget
 from pyccel.codegen.compiling.library_config import recognised_libs, ExternalLibInstaller
