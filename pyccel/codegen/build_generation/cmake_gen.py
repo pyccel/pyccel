@@ -116,7 +116,7 @@ class CMakeHandler(BuildSystemHandler):
             args = '\n    '.join([prog_target, 'PUBLIC', kernel_target])
             cmds.append(f'target_link_libraries({args})')
 
-            args = '\n    '.join(['TARGETS', prog_target, 'DESTINATION', str(out_folder)])
+            args = '\n    '.join(['TARGETS', prog_target, 'DESTINATION', out_folder.as_posix()])
             cmds.append(f"install({args})\n")
 
         return '\n'.join(cmds)
