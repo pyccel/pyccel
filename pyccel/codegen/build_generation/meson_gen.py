@@ -59,7 +59,7 @@ class MesonHandler(BuildSystemHandler):
         dep_name = f'{expr.name}_dep'
         mod_name = f"'{expr.pyfile.stem}'"
 
-        out_folder = f"'{expr.pyfile.parent}'"
+        out_folder = f"'{expr.pyfile.parent.as_posix()}'"
 
         lib_args = [mod_name, f"'{expr.file.name}'", 'build_by_default: false']
 
