@@ -253,7 +253,7 @@ class CMakeHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running CMake")
 
-        setup_cmd = [cmake, '-B', self._pyccel_dir / 'build', f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', self._pyccel_dir]
+        setup_cmd = [cmake, '-B', str(self._pyccel_dir / 'build'), f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', str(self._pyccel_dir)]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
@@ -263,13 +263,13 @@ class CMakeHandler(BuildSystemHandler):
         subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 
-        build_cmd = [cmake, '--build', self._pyccel_dir / 'build']
+        build_cmd = [cmake, '--build', str(self._pyccel_dir / 'build')]
         if self._verbose > 1:
             print(" ".join(build_cmd))
         subprocess.run(build_cmd, check=True, cwd=self._pyccel_dir,
                        capture_output=capture_output)
 
-        install_cmd = [cmake, '--install', self._pyccel_dir / 'build']
+        install_cmd = [cmake, '--install', str(self._pyccel_dir / 'build')]
         if self._verbose > 1:
             print(" ".join(install_cmd))
         subprocess.run(install_cmd, check=True, cwd=self._pyccel_dir,
