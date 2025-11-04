@@ -50,6 +50,10 @@ class CMakeHandler(BuildSystemHandler):
                 [cmake, "-S", build_dir, "-B", build_dir],
                 capture_output=True, text=True, check=False)
 
+            # Wait for cmake to complete to avoid file locks
+            if sys.platform == 'win32':
+                time.sleep(1)
+
         self._math_lib_available_on_platform = p.returncode == 0
 
         super().__init__(*args, **kwargs)
