@@ -3,6 +3,7 @@ A module to handle everything related to meson for the pyccel-make command.
 """
 from itertools import chain
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
@@ -161,8 +162,7 @@ class MesonHandler(BuildSystemHandler):
         project_decl = f"project('{expr.project_name}', {languages}, meson_version: '>=1.1.0')\n"
 
         # Python dependencies
-        print(sys.executable)
-        py_import = f"py = import('python').find_installation('{sys.executable}', modules: ['numpy'])\n"
+        py_import = f"py = import('python').find_installation('{Path(sys.executable).as_posix()}', modules: ['numpy'])\n"
         math_dep = "cc = meson.get_compiler('c')\nm_dep = cc.find_library('m', required : false)\n"
         py_deps = ''.join(("# Python dependencies\n", py_import, math_dep))
 

@@ -182,7 +182,7 @@ class CMakeHandler(BuildSystemHandler):
         # Python dependencies
         version = sys.version_info
 
-        py_import = (f'set(Python_ROOT_DIR {Path(sys.executable).parent.parent})\n'
+        py_import = (f'set(Python_ROOT_DIR {Path(sys.executable).parent.parent.as_posix()})\n'
                      f"find_package(Python {version.major}.{version.minor}.{version.micro} EXACT REQUIRED COMPONENTS Development NumPy)\n")
 
         math_import = 'find_library(MATH_LIBRARY m)'
@@ -260,7 +260,6 @@ class CMakeHandler(BuildSystemHandler):
         env = os.environ.copy()
         env['CC'] = self._compiler.get_exec(self._accelerators, 'c')
         env['FC'] = self._compiler.get_exec(self._accelerators, 'fortran')
-        print(env['FC'])
         subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 
