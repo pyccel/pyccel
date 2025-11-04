@@ -41,9 +41,9 @@ class CMakeHandler(BuildSystemHandler):
             # Write a minimal CMakeLists.txt
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
             with open(cmakelists_path, "w", encoding='utf-8') as f:
-                f.write(f'project(Test LANGUAGES C)\n')
+                f.write('project(Test LANGUAGES C)\n')
                 f.write('cmake_minimum_required(VERSION 3.28)\n')
-                f.write(f'find_library(MATH_LIBRARY m REQUIRED)\n')
+                f.write('find_library(MATH_LIBRARY m REQUIRED)\n')
 
             # Run cmake configure step in that temp dir
             p = subprocess.run(
