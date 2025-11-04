@@ -191,7 +191,10 @@ class CMakeHandler(BuildSystemHandler):
         py_import = (f'set(Python_ROOT_DIR {Path(sys.executable).parent.parent.as_posix()})\n'
                      f"find_package(Python {version.major}.{version.minor}.{version.micro} EXACT REQUIRED COMPONENTS Development NumPy)\n")
 
-        math_import = 'find_library(MATH_LIBRARY m)'
+        math_import = ('find_library(MATH_LIBRARY m)\n'
+                       'if (NOT ${MATH_LIBRARY_FOUND})\n'
+                       '    set(MATH_LIBRARY '')\n'
+                       'endif()\n')
 
         sections = [cmake_min, project_decl, pic_on, py_import, math_import]
 
@@ -273,8 +276,12 @@ class CMakeHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running CMake")
 
-        setup_cmd = [cmake, '-G', 'MinGW Makefiles', '-B', str(self._pyccel_dir / 'build'),
+        setup_cmd = [cmake, '-B', str(self._pyccel_dir / 'build'),
                      f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', str(self._pyccel_dir)]
+        if sys.platform == 'win32':
+            setup_cmd.append('-G')
+            setup_cmd.append('MinGW Makefiles')
+
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
