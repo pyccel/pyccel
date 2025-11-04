@@ -262,7 +262,7 @@ class ExternalLibInstaller:
         if target_name is None:
             target_name = pkg_name
 
-        with tempfile.TemporaryDirectory() as build_dir:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as build_dir:
             # Write a minimal CMakeLists.txt
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
             with open(cmakelists_path, "w", encoding='utf-8') as f:

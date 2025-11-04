@@ -37,7 +37,7 @@ class CMakeHandler(BuildSystemHandler):
     """
     def __init__(self, *args, **kwargs):
         cmake = shutil.which('cmake')
-        with tempfile.TemporaryDirectory() as build_dir:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as build_dir:
             # Write a minimal CMakeLists.txt
             cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
             with open(cmakelists_path, "w", encoding='utf-8') as f:
@@ -49,10 +49,6 @@ class CMakeHandler(BuildSystemHandler):
             p = subprocess.run(
                 [cmake, "-S", build_dir, "-B", build_dir],
                 capture_output=True, text=True, check=False)
-
-            # Wait for cmake to complete to avoid file locks
-            if sys.platform == 'win32':
-                time.sleep(1)
 
         self._math_lib_available_on_platform = p.returncode == 0
 
