@@ -102,7 +102,7 @@ class CMakeHandler(BuildSystemHandler):
         args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
         cmds.append(f'target_include_directories({args})\n')
 
-        args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', str(out_folder)])
+        args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', out_folder.as_posix()])
         cmds.append(f"install({args})\n")
 
         if expr.is_exe:
