@@ -259,6 +259,7 @@ class CMakeHandler(BuildSystemHandler):
         env = os.environ.copy()
         env['CC'] = self._compiler.get_exec(self._accelerators, 'c')
         env['FC'] = self._compiler.get_exec(self._accelerators, 'fortran')
+        print(env['FC'])
         subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 
