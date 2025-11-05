@@ -63,28 +63,33 @@ def pyccel_make_test(main_file, folder, language, build_system, args, output_dty
         assert p.stdout == python_output
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_project_abs_imports(language, build_system):
     pyccel_make_test('runtest.py', current_folder / 'project_abs_imports',
                      language, build_system, ['-g', '**/*.py'])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_project_class_imports(language, build_system):
     # Failing due to repeated renaming
     pyccel_make_test('runtest.py', current_folder / 'project_class_imports',
                      language, build_system, ['-g', '**/*.py'])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_project_multi_imports(language, build_system):
     pyccel_make_test('file4.py', current_folder / 'project_multi_imports',
                      language, build_system, ['-f', 'file1.py', 'file2.py', 'file3.py', 'file4.py'],
                      output_dtype = str)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_project_rel_imports(language, build_system):
     pyccel_make_test('runtest.py', current_folder / 'project_rel_imports',
                      language, build_system, ['-g', '**/*.py'])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_project_containers(language, build_system):
     pyccel_make_test('runtest.py', current_folder / 'project_containers',
                      language, build_system, ['-d', str(current_folder / 'project_containers' / 'files.txt')],
