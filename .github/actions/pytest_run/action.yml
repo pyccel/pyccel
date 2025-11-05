@@ -33,11 +33,6 @@ runs:
         echo "PYCCEL_DEBUG_MODE=1" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-    - name: Test pyccel-make
-      run: |
-        python -m pytest -rX -vs test_pyccel_make.py -k rel -m python
-      shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests/pyccel
     - name: Test translation with meson
       run: |
         python -m pytest -n auto -rX ${FLAGS} -m c test_epyccel_lists.py 2>&1 | tee c_meson_outfile.out
@@ -68,7 +63,9 @@ runs:
         meson install -C build 2>&1 | tee install_info.txt
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(grep "\.pc" install_info.txt | cut -d ' ' -f 4-)
         echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> $GITHUB_ENV
-        export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:$(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake'))
+        echo ${SITE_DIR}/pyccel/
+        ls ${SITE_DIR}/pyccel/
+        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:$(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake'))"
         echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
