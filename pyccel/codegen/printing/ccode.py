@@ -703,7 +703,7 @@ class CCodePrinter(CodePrinter):
 
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            iter_var = Variable(IteratorType(class_type), iter_var_name)
+            iter_var = Variable(IteratorType.get_new(class_type), iter_var_name)
             iter_ref_var = DottedVariable(arg_var.class_type.element_type, 'ref',
                         memory_handling='alias', lhs=iter_var)
 
@@ -1489,7 +1489,7 @@ class CCodePrinter(CodePrinter):
             return 'cstr'
 
         elif in_container:
-            return self.get_c_type(MemoryHandlerType(dtype))
+            return self.get_c_type(MemoryHandlerType.get_new(dtype))
 
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
             element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_')
@@ -2610,7 +2610,7 @@ class CCodePrinter(CodePrinter):
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
-            counter = Variable(IteratorType(iterable_type), indices[0].name)
+            counter = Variable(IteratorType.get_new(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
             for_code = f'for (c_each ({self._print(counter)}, {c_type}, {iterable_code}))'

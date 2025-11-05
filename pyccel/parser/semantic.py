@@ -749,7 +749,7 @@ class SemanticParser(BasicParser):
             if isinstance(managed_var, Variable):
                 managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(managed_var.class_type),
                                        self.scope.get_new_name(f'{managed_var.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)
@@ -796,7 +796,7 @@ class SemanticParser(BasicParser):
             if isinstance(pointer, Variable):
                 managed_mem = pointer.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(pointer.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(pointer.class_type),
                                        self.scope.get_new_name(f'{pointer.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)

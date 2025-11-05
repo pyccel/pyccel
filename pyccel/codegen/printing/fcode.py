@@ -506,7 +506,7 @@ class FCodePrinter(CodePrinter):
                 defs, undefs = self._define_gFTL_element(element_type, imports_and_macros, 'T')
                 imports_and_macros.extend([*defs,
                                            MacroDefinition(type_name, expr_type),
-                                           MacroDefinition(f'{type_name}Iterator', IteratorType(expr_type)),
+                                           MacroDefinition(f'{type_name}Iterator', IteratorType.get_new(expr_type)),
                                            Import(LiteralString(f'{type_name.lower()}/template.inc'), Module('_', (), ())),
                                            MacroUndef(type_name),
                                            MacroUndef(f'{type_name}Iterator'),
@@ -520,9 +520,9 @@ class FCodePrinter(CodePrinter):
                 key_defs, key_undefs = self._define_gFTL_element(key_type, imports_and_macros, 'Key')
                 val_defs, val_undefs = self._define_gFTL_element(value_type, imports_and_macros, 'T')
                 imports_and_macros.extend([*key_defs, *val_defs,
-                                           MacroDefinition('Pair', PairType(key_type, value_type)),
+                                           MacroDefinition('Pair', PairType.get_new(key_type, value_type)),
                                            MacroDefinition('Map', expr_type),
-                                           MacroDefinition('MapIterator', IteratorType(expr_type)),
+                                           MacroDefinition('MapIterator', IteratorType.get_new(expr_type)),
                                            Import(LiteralString('map/template.inc'), Module('_', (), ())),
                                            MacroUndef('Pair'),
                                            MacroUndef('Map'),
@@ -1199,7 +1199,7 @@ class FCodePrinter(CodePrinter):
 
         else:
             class_type = expr.class_type
-            pair_type = self._print(PairType(class_type.key_type, class_type.value_type))
+            pair_type = self._print(PairType.get_new(class_type.key_type, class_type.value_type))
             args = ', '.join(f'{pair_type}({self._print(k)}, {self._print(v)})' for k,v in expr)
             list_arg = f'[{args}]'
             dict_type = self._print(class_type)
@@ -1284,7 +1284,7 @@ class FCodePrinter(CodePrinter):
             _shape = PyccelArrayShapeElement(list_obj, index_element)
             if isinstance(index_element, PyccelUnarySub) and isinstance(index_element.args[0], LiteralInteger):
                 index_element = PyccelMinus(_shape, index_element.args[0], simplify = True)
-            tmp_iter = self.scope.get_temporary_variable(IteratorType(list_obj.class_type),
+            tmp_iter = self.scope.get_temporary_variable(IteratorType.get_new(list_obj.class_type),
                     name = f'{list_obj}_iter')
             code = (f'{tmp_iter} = {target} % begin() + {self._print(index_element)}\n'
                     f'{lhs} = {tmp_iter} % of()\n'
@@ -2656,9 +2656,9 @@ class FCodePrinter(CodePrinter):
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
             var_code = self._print(var)
-            iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
+            iterator = self.scope.get_temporary_variable(IteratorType.get_new(iterable_type),
                     name = suggested_name + 'iter')
-            last = self.scope.get_temporary_variable(IteratorType(iterable_type),
+            last = self.scope.get_temporary_variable(IteratorType.get_new(iterable_type),
                     name = suggested_name + 'last')
             if isinstance(iterable, DictItems):
                 key = self._print(expr.target[0])

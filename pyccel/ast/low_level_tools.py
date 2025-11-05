@@ -5,6 +5,7 @@
 """
 Module to handle low-level language agnostic objects such as macros.
 """
+from functools import lru_cache
 
 from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
@@ -121,7 +122,7 @@ class PairType(PyccelType):
         def __init__(self):
             self._key_type = key_type
             self._value_type = value_type
-            PyccelType.__init__()
+            PyccelType.__init__(self)
 
         return type(f'Pair[{type(key_type)}, {type(val_type)}]', (PairType,),
                     {'__init__' : __init__})()
@@ -158,6 +159,8 @@ class MemoryHandlerType(PyccelType):
     """
     __slots__ = ('_element_type',)
 
+    @classmethod
+    @lru_cache
     def get_new(self, element_type):
         """
         Get the parametrised MemoryHandlerType.
@@ -172,7 +175,7 @@ class MemoryHandlerType(PyccelType):
         """
         def __init__(self):
             self._element_type = element_type
-            PyccelType.__init__()
+            PyccelType.__init__(self)
 
         return type(f'MemoryHandlerType[{type(element_type)}]', (MemoryHandlerType,),
                     {'__init__' : __init__})()
