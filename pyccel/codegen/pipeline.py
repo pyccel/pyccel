@@ -151,7 +151,6 @@ def execute_pyccel(fname, *,
     def handle_error(stage):
         print('\nERROR at {} stage'.format(stage))
         errors.check()
-        os.chdir(base_dirpath)
 
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
@@ -207,9 +206,6 @@ def execute_pyccel(fname, *,
             return
 
     Scope.name_clash_checker = name_clash_checkers[language]
-
-    # Change working directory to 'folder'
-    os.chdir(folder)
 
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
@@ -281,7 +277,6 @@ def execute_pyccel(fname, *,
         shutil.copyfile(fname, new_location)
 
         # Change working directory back to starting point
-        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
@@ -315,8 +310,6 @@ def execute_pyccel(fname, *,
         raise
 
     if convert_only:
-        # Change working directory back to starting point
-        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
@@ -380,8 +373,6 @@ def execute_pyccel(fname, *,
     if errors.has_warnings():
         errors.check()
 
-    # Change working directory back to starting point
-    os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
 
     if time_execution:

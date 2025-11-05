@@ -5,15 +5,6 @@ import modules.function_call_before_definition_2 as mod2
 
 from pyccel import epyccel
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Functions in functions not implemented in c"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_fun_1(language):
     modnew = epyccel(mod1, language = language)
     assert mod1.x1 == modnew.x1

@@ -126,7 +126,7 @@ clang_info = {'exec': 'clang',
 #------------------------------------------------------------
 flang_info = {
             'exec': 'flang',
-            'mpi_exec': 'mpif90',
+            'mpi_exec': 'mpifort',
             'module_output_flag': '-J',
             'debug_flags': ("-g", "-O0",),
             'release_flags': ("-O3",),

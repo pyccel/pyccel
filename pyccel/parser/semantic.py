@@ -515,8 +515,6 @@ class SemanticParser(BasicParser):
         list
             A list of variables.
         """
-        # this only works if called on a function scope
-        # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
         for sub_container in container.loops:
@@ -3720,17 +3718,7 @@ class SemanticParser(BasicParser):
                     if func is not None:
                         func = PyccelFunctionDef(env_var.__name__, func)
                     mod_name = env_var.__module__
-                    if mod_name:
-                        recognised_mod = recognised_source(mod_name)
-                    elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
-                        # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                        mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
-                        while mod_name and not recognised_source(mod_name):
-                            mod_name = mod_name.rsplit('.', 1)[0]
-
-                        recognised_mod = len(mod_name) != 0
-                    else:
-                        recognised_mod = False
+                    recognised_mod = (mod_name is not None) and recognised_source(mod_name)
 
                     if func is None and recognised_mod:
                         pyccel_stage.set_stage('syntactic')

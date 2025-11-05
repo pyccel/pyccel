@@ -8,7 +8,6 @@
 """ Module containing types from the numpy module understood by pyccel
 """
 from functools import lru_cache
-from packaging.version import Version
 
 import numpy as np
 
@@ -479,7 +478,4 @@ pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
 original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
 
-if Version(np.__version__) >= Version("2.0.0"):
-    NumpyInt = NumpyInt64Type()
-else:
-    NumpyInt = numpy_precision_map[PrimitiveIntegerType(), np.dtype(int).alignment]
+NumpyInt = NumpyInt64Type()
