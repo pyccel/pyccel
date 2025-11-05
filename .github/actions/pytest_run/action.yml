@@ -63,10 +63,10 @@ runs:
         meson install -C build 2>&1 | tee install_info.txt
         export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(grep "\.pc" install_info.txt | cut -d ' ' -f 4-)
         echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> $GITHUB_ENV
-        export cmake_folder=$(find ${SITE_DIR}/pyccel/ -name '*.cmake' | tail -n1)
-        echo "${cmake_folder}"
-        echo "$(dirname ${cmake_folder})"
-        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:$(dirname ${cmake_folder})"
+        export cmake_folders=$(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake') | sort -u)
+        to_append=$(echo "${cmake_folders}" | paste -sd ":" -)
+        echo "${to_append}"
+        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:${to_append}"
         echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
