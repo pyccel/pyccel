@@ -43,6 +43,7 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'process_dtype',
     'process_shape',
     # --- Base classes ---
     'NumpyAutoFill',
@@ -230,6 +231,64 @@ def process_shape(is_scalar, shape):
         else:
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, TypedAstNode, int, FunctionCall')
     return tuple(new_shape)
+
+#==============================================================================
+
+def process_dtype(dtype):
+    """
+    Analyse a dtype passed to a NumPy array creation function.
+
+    This function takes a dtype passed to a NumPy array creation function,
+    processes it in different ways depending on its type, and finally extracts
+    the corresponding type and precision from the `dtype_registry` dictionary.
+
+    This function could be useful when working with numpy creation function
+    having a dtype argument, like numpy.array, numpy.arrange, numpy.linspace...
+
+    Parameters
+    ----------
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
+        The actual dtype passed to the NumPy function.
+
+    Returns
+    -------
+    Datatype
+        The Datatype corresponding to the passed dtype.
+    int
+        The precision corresponding to the passed dtype.
+
+    Raises
+    ------
+    TypeError: In the case of unrecognized argument type.
+    TypeError: In the case of passed string argument not recognized as valid dtype.
+    """
+    if isinstance(dtype, VariableTypeAnnotation):
+        dtype = dtype.class_type
+
+    if isinstance(dtype, PythonType):
+        if dtype.arg.rank > 0:
+            errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
+                    symbol=dtype, severity="fatal")
+        else:
+            dtype = dtype.arg.class_type
+    elif isinstance(dtype, NumpyResultType):
+        dtype =  dtype.dtype
+
+    elif isinstance(dtype, PyccelFunctionDef):
+        dtype = dtype.cls_name.static_type()
+
+    elif isinstance(dtype, (LiteralString, str)):
+        try:
+            dtype = dtype_registry[str(dtype)]
+        except KeyError:
+            raise TypeError(f'Unknown type of {dtype}.')
+
+    if isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType)):
+        return dtype
+    if isinstance(dtype, FixedSizeNumericType):
+        return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
+    else:
+        raise TypeError(f'Unknown type of {dtype}.')
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -611,64 +670,6 @@ class NumpyResultType(PyccelFunction):
             self._class_type = self._class_type.element_type
 
         super().__init__(*arrays_and_dtypes)
-
-#==============================================================================
-
-def process_dtype(dtype):
-    """
-    Analyse a dtype passed to a NumPy array creation function.
-
-    This function takes a dtype passed to a NumPy array creation function,
-    processes it in different ways depending on its type, and finally extracts
-    the corresponding type and precision from the `dtype_registry` dictionary.
-
-    This function could be useful when working with numpy creation function
-    having a dtype argument, like numpy.array, numpy.arrange, numpy.linspace...
-
-    Parameters
-    ----------
-    dtype : PythonType, PyccelFunctionDef, LiteralString, str, VariableTypeAnnotation
-        The actual dtype passed to the NumPy function.
-
-    Returns
-    -------
-    Datatype
-        The Datatype corresponding to the passed dtype.
-    int
-        The precision corresponding to the passed dtype.
-
-    Raises
-    ------
-    TypeError: In the case of unrecognized argument type.
-    TypeError: In the case of passed string argument not recognized as valid dtype.
-    """
-    if isinstance(dtype, VariableTypeAnnotation):
-        dtype = dtype.class_type
-
-    if isinstance(dtype, PythonType):
-        if dtype.arg.rank > 0:
-            errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
-                    symbol=dtype, severity="fatal")
-        else:
-            dtype = dtype.arg.class_type
-    elif isinstance(dtype, NumpyResultType):
-        dtype =  dtype.dtype
-
-    elif isinstance(dtype, PyccelFunctionDef):
-        dtype = dtype.cls_name.static_type()
-
-    elif isinstance(dtype, (LiteralString, str)):
-        try:
-            dtype = dtype_registry[str(dtype)]
-        except KeyError:
-            raise TypeError(f'Unknown type of {dtype}.')
-
-    if isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType)):
-        return dtype
-    if isinstance(dtype, FixedSizeNumericType):
-        return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
-    else:
-        raise TypeError(f'Unknown type of {dtype}.')
 
 #==============================================================================
 class NumpyNewArray(PyccelFunction):
