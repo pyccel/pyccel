@@ -307,7 +307,7 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
 
         Parameters
         ----------
-        new_type : PyccelType
+        new_type : FixedSizeType
             The new basic type.
 
         Returns
@@ -644,7 +644,7 @@ class HomogeneousContainerType(ContainerType):
 
         Parameters
         ----------
-        new_type : PyccelType
+        new_type : FixedSizeType
             The new basic type.
 
         Returns

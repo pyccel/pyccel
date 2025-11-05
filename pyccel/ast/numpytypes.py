@@ -350,7 +350,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = Singleton):
 
         Parameters
         ----------
-        new_type : PyccelType
+        new_type : FixedSizeNumericType
             The new basic type.
 
         Returns
