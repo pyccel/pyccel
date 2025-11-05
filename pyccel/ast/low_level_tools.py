@@ -124,7 +124,7 @@ class PairType(PyccelType):
             self._value_type = value_type
             PyccelType.__init__(self)
 
-        return type(f'Pair[{type(key_type)}, {type(val_type)}]', (PairType,),
+        return type(f'Pair[{type(key_type)}, {type(value_type)}]', (PairType,),
                     {'__init__' : __init__})()
 
     @property
@@ -161,7 +161,7 @@ class MemoryHandlerType(PyccelType):
 
     @classmethod
     @lru_cache
-    def get_new(self, element_type):
+    def get_new(cls, element_type):
         """
         Get the parametrised MemoryHandlerType.
 
