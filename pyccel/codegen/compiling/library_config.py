@@ -289,7 +289,10 @@ class ExternalLibInstaller:
                 [cmake, "-S", build_dir, "-B", build_dir],
                 capture_output=True, text=True, check=False)
 
+        print(p)
+
         if p.returncode:
+            print(p.stderr)
             return None
         else:
             self._discovery_method = 'CMake'
