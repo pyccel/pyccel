@@ -1751,8 +1751,10 @@ class SemanticParser(BasicParser):
             else:
                 symbolic_var = self.scope.find(lhs, 'symbolic_aliases')
                 if symbolic_var:
-                    errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
-                            severity='fatal')
+                    errors.report(f"Variable '{lhs}' represents a symbolic concept. Its value cannot be changed.",
+                            severity='fatal',
+                            bounding_box=(self.current_ast_node.lineno,
+                                self.current_ast_node.col_offset))
                 var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
