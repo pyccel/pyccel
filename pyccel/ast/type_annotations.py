@@ -46,6 +46,7 @@ class VariableTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_class_type',)
     _attribute_nodes = ()
+
     def __init__(self, class_type : PyccelType):
         self._class_type = class_type
 
