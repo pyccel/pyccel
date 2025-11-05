@@ -65,7 +65,10 @@ runs:
         echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> $GITHUB_ENV
         echo ${SITE_DIR}/pyccel/
         ls ${SITE_DIR}/pyccel/
-        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:$(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake'))"
+        dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake')
+        ls $(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake'))
+        export cmake_folder=$(find ${SITE_DIR}/pyccel/ -name '*.cmake')
+        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:$(dirname ${cmake_folder})"
         echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
