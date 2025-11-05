@@ -222,6 +222,7 @@ class FinalType:
             The type which is characterised as final.
         """
         if isinstance(underlying_type, FinalType):
+            assert isinstance(underlying_type, PyccelType)
             return underlying_type
 
         type_class = type(underlying_type)
