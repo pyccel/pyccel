@@ -289,10 +289,7 @@ class ExternalLibInstaller:
                 [cmake, "-S", build_dir, "-B", build_dir],
                 capture_output=True, text=True, check=False)
 
-        print(p)
-
         if p.returncode:
-            print(p.stderr)
             return None
         else:
             self._discovery_method = 'CMake'
@@ -442,6 +439,7 @@ class STCInstaller(ExternalLibInstaller):
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
 
+        self._discovery_method = 'pkgconfig'
         sep = ';' if sys.platform == "win32" else ':'
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
         os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (*PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
@@ -517,6 +515,7 @@ class GFTLInstaller(ExternalLibInstaller):
                           include = (dest_dir / 'GFTL-1.13/include/v2',))
         installed_libs['gFTL'] = new_obj
 
+        self._discovery_method = 'CMake'
         sep = ';' if sys.platform == "win32" else ':'
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
         os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(dest_dir))
