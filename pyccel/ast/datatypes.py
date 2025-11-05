@@ -239,7 +239,7 @@ class FinalType:
             Get the type that is indicated as const.
             """
             return self._underlying_type
-        return type(f'Final{type_class.__name__}', (FinalType, type_class,),
+        return type(f'Final[{type_class.__name__}]', (FinalType, type_class,),
                     {'__init__' : __init__,
                      '__hash__' : __hash__,
                      '__eq__' : __eq__,
@@ -825,7 +825,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
             self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
             HomogeneousContainerType.__init__(self)
 
-        return type(f'HomogeneousTuple{type(element_type)}', (HomogeneousTupleType,),
+        return type(f'HomogeneousTuple[{type(element_type)}, ...]', (HomogeneousTupleType,),
                     {'__init__' : __init__})()
 
     def __str__(self):
@@ -887,7 +887,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
             self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
             HomogeneousContainerType.__init__(self)
 
-        return type('HomogeneousList{type(element_type)}', (HomogeneousListType,),
+        return type(f'HomogeneousList[{type(element_type)}]', (HomogeneousListType,),
                     {'__init__' : __init__})()
 
     def __eq__(self, other):
@@ -927,7 +927,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
             self._element_type = element_type
             HomogeneousContainerType.__init__(self)
 
-        return type('HomogeneousSet{type(element_type)}', (HomogeneousSetType,),
+        return type(f'HomogeneousSet[{type(element_type)}]', (HomogeneousSetType,),
                     {'__init__' : __init__})()
 
     def __eq__(self, other):
@@ -1034,7 +1034,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
             self._order = order
             ContainerType.__init__(self)
 
-        name = '__'.join(('InhomogeneousTuple', *(str(type(e) for e in args))))
+        name = 'InhomogeneousTuple[' + ', '.join(str(type(e)) for e in args) + ']'
 
         return type(name, (InhomogeneousTupleType,),
                     {'__init__' : __init__})()
@@ -1146,7 +1146,7 @@ class DictType(ContainerType, metaclass = Singleton):
             self._value_type = value_type
             ContainerType.__init__(self)
 
-        return type('Dict{type(key_type)}_{type(value_type)}', (DictType,),
+        return type(f'Dict[{type(key_type)}, {type(value_type)}]', (DictType,),
                     {'__init__' : __init__})()
 
     def __str__(self):
