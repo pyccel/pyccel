@@ -280,8 +280,8 @@ def process_dtype(dtype):
     elif isinstance(dtype, (LiteralString, str)):
         try:
             dtype = dtype_registry[str(dtype)]
-        except KeyError:
-            raise TypeError(f'Unknown type of {dtype}.')
+        except KeyError as e:
+            raise TypeError(f'Unknown type of {dtype}.') from e
 
     if isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType)):
         return dtype
