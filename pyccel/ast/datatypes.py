@@ -221,8 +221,8 @@ class FinalType:
         underlying_type : PyccelType
             The type which is characterised as final.
         """
+        assert isinstance(underlying_type, PyccelType)
         if isinstance(underlying_type, FinalType):
-            assert isinstance(underlying_type, PyccelType)
             return underlying_type
 
         type_class = type(underlying_type)
