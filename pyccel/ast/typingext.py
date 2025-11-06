@@ -67,15 +67,15 @@ class TypingAnnotation(TypedAstNode):
     ----------
     arg : SyntacticTypeAnnotation
         The annotation which is annotated.
-    *metadata : TypedAstNode
-        The metadata providing additional information about the object being
+    *metadata : object
+        The metadata providing additional information about the variable being
         declared.
     """
     __slots__ = ('_arg','_metadata')
     _attribute_nodes = ('_arg',)
     name = 'Annotated'
 
-    def __init__(self, arg, *metadata):
+    def __init__(self, arg, **metadata):
         self._arg = arg
         self._metadata = metadata
         super().__init__()
@@ -92,9 +92,9 @@ class TypingAnnotation(TypedAstNode):
     @property
     def metadata(self):
         """
-        The metadata providing additional information about the object being declared.
+        The metadata providing additional information about the variable being declared.
 
-        The metadata providing additional information about the object being declared.
+        The metadata providing additional information about the variable being declared.
         """
         return self._metadata
 

@@ -2331,8 +2331,32 @@ class SemanticParser(BasicParser):
 
         if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
             annotation = self._visit(self._convert_syntactic_object_to_type_annotation(args[0]))
+            if annotation.get_attribute_nodes(TypingAnnotation):
+                errors.report("Nested Annotated[] type modifiers are not handled.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
             metavars = [self._visit(a.dtype) for a in args[1:]]
-            return annotation
+            var_metadata = {}
+            if 'pointer' in metavars:
+                var_metadata['memory_handling'] = 'alias'
+                metavars.remove('pointer')
+            if 'stack' in metavars:
+                if 'memory_handling' in var_metadata:
+                    errors.report("An object cannot be both a pointer to an object stored elsewhere and a stack allocated object.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+                var_metadata['memory_handling'] = 'stack'
+                metavars.remove('stack')
+            if metavars:
+                errors.report(f"Unrecognised annotations have been ignored ({metavars})",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity='warning')
+            if var_metadata:
+                assert isinstance(annotation, UnionTypeAnnotation)
+                assert all(isinstance(t, VariableTypeAnnotation) for t in annotation.type_list)
+                return UnionTypeAnnotation(*[TypingAnnotation(d, **var_metadata) for d in annotation.type_list])
+            else:
+                return annotation
 
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
@@ -3321,6 +3345,11 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
+                var_kwargs = kwargs.copy()
+                if isinstance(class_type, TypingAnnotation):
+                    var_kwargs.update(class_type.metadata)
+                    assert isinstance(class_type.arg, VariableTypeAnnotation)
+                    class_type = class_type.arg.class_type
                 cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
@@ -3330,10 +3359,11 @@ class SemanticParser(BasicParser):
                     shape = (None,)*class_type.container_rank
                 else:
                     shape = None
+                if 'memory_handling' not in var_kwargs:
+                    var_kwargs['memory_handling'] = array_memory_handling if class_type.rank > 0 else 'stack'
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape, is_optional = False,
-                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
-                        **kwargs)
+                        **var_kwargs)
                 possible_args.append(v)
                 if isinstance(class_type, InhomogeneousTupleType):
                     for i, t in enumerate(class_type):
@@ -3387,7 +3417,7 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
-        elif isinstance(visited_dtype, PyccelType):
+        elif isinstance(visited_dtype, (PyccelType, TypingAnnotation)):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
