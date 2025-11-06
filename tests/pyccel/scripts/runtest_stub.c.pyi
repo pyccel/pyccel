@@ -65,17 +65,17 @@ def k(a : 'complex') -> 'tuple[complex, complex, complex]':
 
 @low_level('runtest_stub__l_0000')
 @overload
-def l(a : 'int') -> 'tuple[int, ...]':
+def l(a : 'Final[int]') -> 'tuple[int, ...]':
     ...
 
 @low_level('runtest_stub__l_0001')
 @overload
-def l(a : 'float') -> 'tuple[float, ...]':
+def l(a : 'Final[float]') -> 'tuple[float, ...]':
     ...
 
 @low_level('runtest_stub__l_0002')
 @overload
-def l(a : 'complex') -> 'tuple[complex, ...]':
+def l(a : 'Final[complex]') -> 'tuple[complex, ...]':
     ...
 
 @low_level('runtest_stub__p_0000')

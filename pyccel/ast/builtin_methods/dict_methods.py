@@ -141,7 +141,7 @@ class DictPopitem(DictMethod):
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
-        self._class_type = InhomogeneousTupleType(dict_type.key_type, dict_type.value_type)
+        self._class_type = InhomogeneousTupleType.get_new(dict_type.key_type, dict_type.value_type)
         super().__init__(dict_obj)
 
     def __iter__(self):

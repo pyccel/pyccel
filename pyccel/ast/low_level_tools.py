@@ -5,7 +5,7 @@
 """
 Module to handle low-level language agnostic objects such as macros.
 """
-from pyccel.utilities.metaclasses import ArgumentSingleton
+from functools import lru_cache
 
 from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
@@ -20,22 +20,35 @@ __all__ = ('IteratorType',
            'UnpackManagedMemory')
 
 #------------------------------------------------------------------------------
-class IteratorType(PyccelType, metaclass=ArgumentSingleton):
+class IteratorType(PyccelType):
     """
     The type of an iterator which accesses elements of a container.
 
     The type of an iterator which accesses elements of a container
     (e.g. list, set, etc)
-
-    Parameters
-    ----------
-    iterable_type : ContainerType
-        The container that is iterated over.
     """
     __slots__ = ('_iterable_type',)
-    def __init__(self, iterable_type):
-        self._iterable_type = iterable_type
-        super().__init__()
+
+    @classmethod
+    @lru_cache
+    def get_new(cls, iterable_type):
+        """
+        Get the parametrised iterator type.
+
+        Get the subclass of IteratorType describing the type of an
+        iterator element of iterable_type.
+
+        Parameters
+        ----------
+        iterable_type : PyccelType
+            The type of the iterable object whose elements are accessed via this type.
+        """
+        def __init__(self):
+            self._iterable_type = iterable_type
+            PyccelType.__init__(self)
+
+        return type(f'Iterator[{type(iterable_type)}]', (IteratorType,),
+                    {'__init__' : __init__})()
 
     @property
     def iterable_type(self):
@@ -80,28 +93,39 @@ class IteratorType(PyccelType, metaclass=ArgumentSingleton):
         return None
 
 #------------------------------------------------------------------------------
-class PairType(PyccelType, metaclass=ArgumentSingleton):
+class PairType(PyccelType):
     """
     The type of an element of a dictionary type.
 
     The type of an element of a dictionary type.
-
-    Parameters
-    ----------
-    key_type : PyccelType
-        The type of the keys of the homogeneous dictionary.
-    value_type : PyccelType
-        The type of the values of the homogeneous dictionary.
     """
     __slots__ = ('_key_type', '_value_type')
     _name = 'pair'
     _container_rank = 0
     _order = None
 
-    def __init__(self, key_type, value_type):
-        self._key_type = key_type
-        self._value_type = value_type
-        super().__init__()
+    @classmethod
+    @lru_cache
+    def get_new(cls, key_type, value_type):
+        """
+        Get the type of an element of a dictionary type.
+
+        Get the type of an element of a dictionary type.
+
+        Parameters
+        ----------
+        key_type : PyccelType
+            The type of the keys of the homogeneous dictionary.
+        value_type : PyccelType
+            The type of the values of the homogeneous dictionary.
+        """
+        def __init__(self):
+            self._key_type = key_type
+            self._value_type = value_type
+            PyccelType.__init__(self)
+
+        return type(f'Pair[{type(key_type)}, {type(value_type)}]', (PairType,),
+                    {'__init__' : __init__})()
 
     @property
     def key_type(self):
@@ -125,24 +149,36 @@ class PairType(PyccelType, metaclass=ArgumentSingleton):
         return f'pair[{self._key_type}, {self._value_type}]'
 
 #------------------------------------------------------------------------------
-class MemoryHandlerType(PyccelType, metaclass=ArgumentSingleton):
+class MemoryHandlerType(PyccelType):
     """
     The type of an object which can hold a pointer and manage its memory.
 
     The type of an object which can hold a pointer and manage its memory by
     choosing whether or not to deallocate. This class may be used notably
     for list elements and dictionary values.
-
-    Parameters
-    ----------
-    element_type : PyccelType
-        The type of the element whose memory is being managed.
     """
     __slots__ = ('_element_type',)
 
-    def __init__(self, element_type):
-        self._element_type = element_type
-        super().__init__()
+    @classmethod
+    @lru_cache
+    def get_new(cls, element_type):
+        """
+        Get the parametrised MemoryHandlerType.
+
+        Get the subclass of MemoryHandlerType describing the type of an
+        object which can hold a pointer and manage its memory.
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of the element whose memory is being managed.
+        """
+        def __init__(self):
+            self._element_type = element_type
+            PyccelType.__init__(self)
+
+        return type(f'MemoryHandlerType[{type(element_type)}]', (MemoryHandlerType,),
+                    {'__init__' : __init__})()
 
     @property
     def element_type(self):
