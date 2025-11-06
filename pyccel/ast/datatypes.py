@@ -585,7 +585,8 @@ class HomogeneousContainerType(ContainerType):
     """
     __slots__ = ()
 
-    def get_new(self, element_type):
+    @classmethod
+    def get_new(cls, element_type):
         """
         Get a new homogeneous container whose elements have the specified type.
 
