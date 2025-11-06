@@ -585,6 +585,19 @@ class HomogeneousContainerType(ContainerType):
     """
     __slots__ = ()
 
+    def get_new(self, element_type):
+        """
+        Get a new homogeneous container whose elements have the specified type.
+
+        Get a new homogeneous container whose elements have the specified type.
+
+        Parameters
+        ----------
+        element_type : PyccelType
+            The type of the elements of the homogeneous container.
+        """
+        raise NotImplementedError("Subclasses should implement a get_new method to create the parametrised sub-class.")
+
     @property
     def datatype(self):
         """
