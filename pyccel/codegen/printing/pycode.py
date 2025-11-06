@@ -228,6 +228,9 @@ class PythonCodePrinter(CodePrinter):
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
+            if obj.is_alias:
+                self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
+                type_annotation = f'Annotated[{type_annotation}, "pointer"]'
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
             args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)
