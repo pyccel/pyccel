@@ -19,8 +19,9 @@ All notable changes to this project will be documented in this file.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
 -   #601 : Add C support for nested functions.
+-   Add badge for Documentation workflow to README.md.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
--   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
+-   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library 
 
 ### Fixed
 
