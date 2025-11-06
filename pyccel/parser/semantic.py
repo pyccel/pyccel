@@ -73,7 +73,7 @@ from pyccel.ast.class_defs import get_cls_base, SetClass
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType
+from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType, FinalType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
 from pyccel.ast.datatypes import original_type_to_pyccel_type
@@ -749,7 +749,7 @@ class SemanticParser(BasicParser):
             if isinstance(managed_var, Variable):
                 managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(managed_var.class_type),
                                        self.scope.get_new_name(f'{managed_var.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)
@@ -796,7 +796,7 @@ class SemanticParser(BasicParser):
             if isinstance(pointer, Variable):
                 managed_mem = pointer.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(pointer.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(pointer.class_type),
                                        self.scope.get_new_name(f'{pointer.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)
@@ -1751,8 +1751,10 @@ class SemanticParser(BasicParser):
             else:
                 symbolic_var = self.scope.find(lhs, 'symbolic_aliases')
                 if symbolic_var:
-                    errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
-                            severity='fatal')
+                    errors.report(f"Variable '{lhs}' represents a symbolic concept. Its value cannot be changed.",
+                            severity='fatal',
+                            bounding_box=(self.current_ast_node.lineno,
+                                self.current_ast_node.col_offset))
                 var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
@@ -2324,23 +2326,13 @@ class SemanticParser(BasicParser):
         UnionTypeAnnotation
             The type annotation described by this object.
         """
-        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
-            syntactic_annotation = args[0]
-            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                pyccel_stage.set_stage('syntactic')
-                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-                pyccel_stage.set_stage('semantic')
-            annotation = self._visit(syntactic_annotation)
-            for t in annotation.type_list:
-                t.is_const = True
-            return annotation
-        elif isinstance(base, UnionTypeAnnotation):
+        if isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
-            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType.get_new()))
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -2349,14 +2341,14 @@ class SemanticParser(BasicParser):
                 dtype = base.class_type
                 if dtype.rank != 0:
                     raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
-                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
+                class_type = NumpyNDArrayType.get_new(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
                 try:
                     dtype = numpy_process_dtype(dtype_cls.static_type())
                 except AttributeError:
                     errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
-                class_type = NumpyNDArrayType(dtype, rank, order)
+                class_type = NumpyNDArrayType.get_new(dtype, rank, order)
             return VariableTypeAnnotation(class_type)
 
         if not any(isinstance(a, Slice) for a in args):
@@ -2370,7 +2362,7 @@ class SemanticParser(BasicParser):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
                 class_type = HomogeneousTupleType if dtype_cls is TupleType else dtype_cls
-                type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
+                type_annotations = [VariableTypeAnnotation(class_type.get_new(u.class_type))
                                     for u in internal_datatypes.type_list]
                 return UnionTypeAnnotation(*type_annotations)
             elif len(args) == 2 and dtype_cls is DictType:
@@ -2378,14 +2370,14 @@ class SemanticParser(BasicParser):
                 syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
                 key_types = self._visit(syntactic_key_annotation)
                 val_types = self._visit(syntactic_val_annotation)
-                type_annotations = [VariableTypeAnnotation(dtype_cls(k.class_type, v.class_type)) \
+                type_annotations = [VariableTypeAnnotation(dtype_cls.get_new(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
             elif dtype_cls is TupleType:
                 syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
                 types = [self._visit(a).type_list for a in syntactic_annotations]
                 internal_datatypes = list(product(*types))
-                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType(*[ui.class_type for ui in u]), True)
+                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType.get_new(*[ui.class_type for ui in u]))
                                     for u in internal_datatypes]
                 return UnionTypeAnnotation(*type_annotations)
             else:
@@ -2590,7 +2582,7 @@ class SemanticParser(BasicParser):
             return PyccelFunctionDef('Final', TypingFinal)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
-            return VariableTypeAnnotation(class_type(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
+            return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
         elif isinstance(env_var, typing.TypeVar):
             constraints = [self.env_var_to_pyccel(c) for c in env_var.__constraints__]
             return TypingTypeVar(env_var.__name__, *constraints,
@@ -3015,12 +3007,6 @@ class SemanticParser(BasicParser):
         res_type = self._visit(expr.result)
         return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_type))
 
-    def _visit_TypingFinal(self, expr):
-        annotation = self._visit(expr.arg)
-        for t in annotation:
-            t.is_const = True
-        return annotation
-
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
         value = None if expr.value is None else self._visit(expr.value)
@@ -3338,8 +3324,7 @@ class SemanticParser(BasicParser):
                 else:
                     shape = None
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = shape,
-                        is_const = t.is_const, is_optional = False,
+                        shape = shape, is_optional = False,
                         memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
@@ -3735,17 +3720,7 @@ class SemanticParser(BasicParser):
                     if func is not None:
                         func = PyccelFunctionDef(env_var.__name__, func)
                     mod_name = env_var.__module__
-                    if mod_name:
-                        recognised_mod = recognised_source(mod_name)
-                    elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
-                        # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                        mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
-                        while mod_name and not recognised_source(mod_name):
-                            mod_name = mod_name.rsplit('.', 1)[0]
-
-                        recognised_mod = len(mod_name) != 0
-                    else:
-                        recognised_mod = False
+                    recognised_mod = (mod_name is not None) and recognised_source(mod_name)
 
                     if func is None and recognised_mod:
                         pyccel_stage.set_stage('syntactic')
@@ -3786,7 +3761,7 @@ class SemanticParser(BasicParser):
                 lhs_scope_name = lhs.name
             lhs = lhs.name
 
-            if semantic_lhs_var.class_type is TypeAlias():
+            if isinstance(semantic_lhs_var.class_type, TypeAlias):
                 pyccel_stage.set_stage('syntactic')
                 if isinstance(rhs, LiteralString):
                     try:
@@ -4153,13 +4128,13 @@ class SemanticParser(BasicParser):
         for l, r in zip(lhs,rhs):
             if isinstance(l, PythonTuple):
                 for li in l:
-                    if li.is_const:
+                    if isinstance(li.class_type, FinalType):
                         # If constant (can't use annotations on tuple assignment)
                         errors.report("Cannot modify variable marked as Final",
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
-                if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
+                if isinstance(l.class_type, FinalType) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
                         any(not isinstance(u, (Allocate, PyccelArrayShapeElement)) for u in l.get_all_user_nodes())):
                     # If constant and not the initialising declaration of a constant variable
                     errors.report("Cannot modify variable marked as Final",
@@ -4224,7 +4199,7 @@ class SemanticParser(BasicParser):
 
     def _visit_AugAssign(self, expr):
         lhs = self._visit(expr.lhs)
-        if lhs.is_const:
+        if isinstance(lhs.class_type, FinalType):
             errors.report("Cannot modify variable marked as Final",
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 symbol=lhs, severity='error')
@@ -4515,14 +4490,14 @@ class SemanticParser(BasicParser):
                           List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
                            symbol=expr, severity='error')
         try:
-            class_type = type_container[conversion_func.cls_name](class_type)
+            class_type = type_container[conversion_func.cls_name].get_new(class_type)
         except TypeError:
             if class_type.rank > 0:
                 errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
                               symbol=expr,
                               severity='fatal')
 
-            class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
+            class_type = type_container[conversion_func.cls_name].get_new(numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         d_var['shape'] = (dim,)
         d_var['cls_base'] = get_cls_base(class_type)
@@ -6339,7 +6314,7 @@ class SemanticParser(BasicParser):
                 assert len(assigns) == 1
                 lhs = assigns[0].lhs
             d_var = {
-                    'class_type' : HomogeneousSetType(class_type.element_type),
+                    'class_type' : HomogeneousSetType.get_new(class_type.element_type),
                     'shape' : arg.shape,
                     'cls_base' : SetClass,
                     'memory_handling' : 'heap'

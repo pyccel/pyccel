@@ -63,7 +63,16 @@ Subclasses of `PyccelType` generally fall into one of two categories:
 -   `FixedSizeType`
 -   `ContainerType`
 
-The types can be compared using either the `is` operator or the `==` operator. These operators have slightly different behaviour. All instances of `PyccelType` are singletons so the `is` operator tests if the types are identical. However the `==` operator tests if the types are compatible. For example `PythonNativeFloat() == NumpyFloat64Type()` will return true. This operator should therefore be used when permissive behaviour is required (e.g. when adding elements to a list of `PythonNativeFloat()` we are capable of adding an instance with the type `NumpyFloat64Type()` even if this would not be strictly homogeneous in Python).
+`FixedSizeType` objects are usually not parametrised. These can therefore be created by calling the constructor directly with no arguments. A `ContainerType` (or other parametrisable types such as `FinalType`) must first create the parametrised sub-type. This is done via the `get_new` factory function. E.g.:
+
+```python
+FinalType.get_new(PythonNativeInt()) # to create a Final[int] which inherits from PythonNativeInt and FinalType
+HomogeneousListType.get_new(PythonNativeInt()) # to create a list[int] which inherits from HomogeneousListType
+```
+
+Types can be compared using either the `is` operator, the `isinstance` function, or the `==` operator. Each of these operators has slightly different behaviour and therefore tests slightly different things. All instances of `PyccelType` are singletons so the `is` operator tests if the types are identical. In reality this test is often too restrictive. For example a `Final[int]` will have a type which inherits from `FinalType` and from `PythonNativeInt` but it is not the same type as an `int`. `isinstance` should therefore be preferred when trying to check if a datatype describes a known specific type.
+
+Often however we do not require an object to have an exact type, but only to be compatible with another type. This is what the `==` operator tests. For example `PythonNativeFloat() == NumpyFloat64Type()` will return true, as will `PythonNativeFloat() == FinalType.get_new_type(NumpyFloat64Type())`. This operator should therefore be used when permissive behaviour is required (e.g. when adding elements to a list of `PythonNativeFloat()` we are capable of adding an instance with the type `NumpyFloat64Type()` even if this would not be strictly homogeneous in Python).
 
 These classes also have a method `shape_is_compatible` which allows us to check if the calculated shape of an object is compatible with the data type (see [AST Nodes](./ast_nodes.md) for more details).
 

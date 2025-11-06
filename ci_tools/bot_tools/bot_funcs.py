@@ -10,23 +10,23 @@ import time
 from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
-        'anaconda_linux': '3.10',
-        'anaconda_windows': '3.12',
-        'coverage': '3.9',
-        'docs': '3.10',
-        'intel': '3.10',
-        'llvm': '3.10',
-        'linux': '3.9',
-        'linux_pyccel-test_cmd': '3.10',
-        'macosx': '3.13',
-        'wheel': '3.9',
-        'check_install': '3.9',
-        'editable_check_install': '3.9',
-        'pyccel_lint': '3.11',
-        'markdown_lint': '3.11',
-        'pylint': '3.9',
-        'spelling': '3.12',
-        'windows': '3.11'
+        'anaconda_linux': '3.11',
+        'anaconda_windows': '3.13',
+        'coverage': '3.10',
+        'docs': '3.11',
+        'intel': '3.11',
+        'llvm': '3.11',
+        'linux': '3.10',
+        'linux_pyccel-test_cmd': '3.11',
+        'macosx': '3.14',
+        'wheel': '3.10',
+        'check_install': '3.10',
+        'editable_check_install': '3.10',
+        'pyccel_lint': '3.12',
+        'markdown_lint': '3.12',
+        'pylint': '3.10',
+        'spelling': '3.13',
+        'windows': '3.12'
         }
 
 test_names = {
