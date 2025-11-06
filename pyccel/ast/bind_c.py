@@ -19,7 +19,6 @@ from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
-from pyccel.utilities.metaclasses import Singleton
 
 errors = Errors()
 
@@ -45,7 +44,7 @@ __all__ = (
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(FixedSizeType, metaclass = Singleton):
+class BindCPointer(FixedSizeType):
     """
     Datatype representing a C pointer in Fortran.
 

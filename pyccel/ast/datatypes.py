@@ -122,7 +122,7 @@ class PrimitiveCharacterType(PrimitiveType):
 
 #==============================================================================
 
-class PyccelType:
+class PyccelType(metaclass=Singleton):
     """
     Base class representing the type of an object.
 
@@ -251,7 +251,7 @@ class FinalType:
 
 #==============================================================================
 
-class FixedSizeType(PyccelType, metaclass=Singleton):
+class FixedSizeType(PyccelType):
     """
     Base class representing a built-in scalar datatype.
 
@@ -720,7 +720,7 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order
 
-class StringType(ContainerType, metaclass = Singleton):
+class StringType(ContainerType):
     """
     Class representing Python's native string type.
 
@@ -796,7 +796,7 @@ class StringType(ContainerType, metaclass = Singleton):
     def __hash__(self):
         return hash(self.__class__)
 
-class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Singleton):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     """
     Class representing the homogeneous tuple type.
 
@@ -858,7 +858,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
     def __hash__(self):
         return hash((HomogeneousTupleType, self.element_type))
 
-class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
+class HomogeneousListType(HomogeneousContainerType):
     """
     Class representing the homogeneous list type.
 
@@ -898,7 +898,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     def __hash__(self):
         return hash((HomogeneousListType, self._element_type, self._order))
 
-class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
+class HomogeneousSetType(HomogeneousContainerType):
     """
     Class representing the homogeneous set type.
 
@@ -939,7 +939,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = Singleton):
 
 #==============================================================================
 
-class CustomDataType(PyccelType, metaclass=Singleton):
+class CustomDataType(PyccelType):
     """
     Class from which user-defined types inherit.
 
@@ -978,7 +978,7 @@ class CustomDataType(PyccelType, metaclass=Singleton):
         """
         return None
 
-class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
+class InhomogeneousTupleType(ContainerType, TupleType):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -1114,7 +1114,7 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = Singleton):
         """
         return super().shape_is_compatible(shape) and shape[0] == len(self._element_types)
 
-class DictType(ContainerType, metaclass = Singleton):
+class DictType(ContainerType):
     """
     Class representing the homogeneous dictionary type.
 

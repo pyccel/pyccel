@@ -11,8 +11,6 @@ objects defined in Python.h.
 """
 import re
 
-from pyccel.utilities.metaclasses import Singleton
-
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -111,7 +109,7 @@ __all__ = (
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(FixedSizeType, metaclass=Singleton):
+class PyccelPyObject(FixedSizeType):
     """
     Datatype representing a `PyObject`.
 
@@ -121,7 +119,7 @@ class PyccelPyObject(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
+class PyccelPyClassType(FixedSizeType):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -131,7 +129,7 @@ class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyclasstype'
 
-class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
+class PyccelPyTypeObject(FixedSizeType):
     """
     Datatype representing a `PyTypeObject`.
 

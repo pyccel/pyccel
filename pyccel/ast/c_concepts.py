@@ -8,7 +8,6 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 """
 from functools import cache
 
-from pyccel.utilities.metaclasses import Singleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
 from .datatypes import CharType
@@ -38,7 +37,7 @@ class CNativeInt(FixedSizeNumericType):
 
 #------------------------------------------------------------------------------
 
-class CStackArray(HomogeneousContainerType, metaclass=Singleton):
+class CStackArray(HomogeneousContainerType):
     """
     A data type representing an array allocated on the stack.
 
