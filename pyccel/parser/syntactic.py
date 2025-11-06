@@ -316,6 +316,7 @@ class SyntaxParser(BasicParser):
             return SyntacticTypeAnnotation(dtype=annotation)
         elif isinstance(annotation, LiteralString):
             try:
+                print(repr(annotation.python_value))
                 annotation = types_meta.model_from_str(annotation.python_value)
             except TextXSyntaxError as e:
                 errors.report(f"Invalid header. {e.message}",

@@ -43,7 +43,12 @@ class Header(object):
         self.statements = statements
         super().__init__(**kwargs)
 
-class Str(BasicStmt):
+class DoubleQuotedStr(BasicStmt):
+    def __init__(self, contents, **kwargs):
+        self.contents = contents
+        super().__init__(**kwargs)
+
+class SingleQuotedStr(BasicStmt):
     def __init__(self, contents, **kwargs):
         self.contents = contents
         super().__init__(**kwargs)
@@ -97,7 +102,7 @@ class Type(BasicStmt):
 
         Get the Pyccel object equivalent to this grammar object.
         """
-        if isinstance(self.dtype, Str):
+        if isinstance(self.dtype, (DoubleQuotedStr, SingleQuotedStr)):
             dtype = LiteralString(self.dtype.contents)
         else:
             dtype = PyccelSymbol(self.dtype)
@@ -231,7 +236,7 @@ class MetavarHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType, Str]
+type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType, DoubleQuotedStr, SingleQuotedStr]
 hdr_classes = [Header,
                MetavarHeaderStmt]
 

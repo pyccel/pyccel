@@ -2,10 +2,12 @@ UnionTypeStmt: dtypes += TypeHeader['|'];
 
 TypeHeader: FuncType|Type;
 
-Str: '"' contents=/[^\"]*/ '"';
+DoubleQuotedStr: '"' contents=/[^\"]*/ '"';
+SingleQuotedStr: '\'' contents=/[^']*/ '\'';
+Str: SingleQuotedStr | DoubleQuotedStr;
 Slice: ':';
 Ellipsis: '...';
-IndexType: Slice | Ellipsis | Type;
+IndexType: Slice | Ellipsis | Type | Str;
 Type: dtype=DataType (trailer=TrailerSubscriptList)?;
 TrailerSubscriptList: '[' args*=IndexType [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
