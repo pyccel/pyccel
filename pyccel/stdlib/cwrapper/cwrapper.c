@@ -158,23 +158,22 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[],
         npy_intp itemsize = PyArray_ITEMSIZE(a);
         npy_intp* np_strides = PyArray_STRIDES(a);
         npy_intp* np_shape = PyArray_SHAPE(a);
+        int64_t current_shape = itemsize;
         if (c_order) {
-            for (int i = 1; i < nd; ++i) {
-                base_shape[i] = np_strides[i-1] / itemsize;
-            }
             strides[nd-1] = np_strides[nd-1] / itemsize;
-            for (int i = 0; i < nd-1; ++i) {
-                strides[i] = np_strides[i] / itemsize / base_shape[i+1];
+            for (int i = nd-1; i >= 1; --i) {
+                base_shape[i] = np_strides[i-1] / current_shape;
+                current_shape *= base_shape[i];
+                strides[i-1] = np_strides[i-1] / current_shape;
             }
             base_shape[0] = np_shape[0] * strides[0];
         }
         else {
-            for (int i = 0; i < nd-1; ++i) {
-                base_shape[i] = np_strides[i+1] / itemsize;
-            }
             strides[0] = np_strides[0] / itemsize;
-            for (int i = 1; i < nd; ++i) {
-                strides[i] = np_strides[i] / itemsize / base_shape[i-1];
+            for (int i = 0; i < nd-1; ++i) {
+                base_shape[i] = np_strides[i+1] / current_shape;
+                current_shape *= base_shape[i];
+                strides[i+1] = np_strides[i+1] / current_shape;
             }
             base_shape[nd-1] = np_shape[nd-1] * strides[nd-1];
         }
