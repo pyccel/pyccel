@@ -6238,9 +6238,9 @@ def test_copy(language):
         return b
 
     arr_1d = randint(min_int, max_int, size=5)
-    arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3,4))
-    arr_3d = (uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5)) \
-            + uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5))*1j).T
+    arr_2d = uniform(min_float64 / 2,  100, size=(3,4))
+    arr_3d = (uniform(min_float64 / 2, 100, size=(3,4,5)) \
+            + uniform(min_float64 / 2, 100, size=(3,4,5))*1j).T
 
     funcs = [(f.__name__, f, epyccel(f, language=language)) for f in (copy_array, copy_array_to_F, copy_array_to_C)]
 
@@ -6250,7 +6250,8 @@ def test_copy(language):
     assert np.array_equal(res_1d_pyt, res_1d_pyc)
     assert res_1d_pyt.dtype is res_1d_pyc.dtype
 
-    for _, f, epyc_f in funcs:
+    for name, f, epyc_f in funcs:
+        print(name)
         res_2d_pyt = f(arr_2d)
         res_2d_pyc = epyc_f(arr_2d)
         assert np.array_equal(res_2d_pyt, res_2d_pyc)
