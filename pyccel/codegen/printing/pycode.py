@@ -283,8 +283,9 @@ class PythonCodePrinter(CodePrinter):
             res = f' -> {self._get_type_annotation(result.var)}'
         else:
             res = ' -> None'
+        dec = self._handle_decorators(func.decorators)
         self.exit_scope()
-        return ''.join((wrapping, overload, f"def {name}({args}){res}:\n",
+        return ''.join((dec, wrapping, overload, f"def {name}({args}){res}:\n",
                         self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
