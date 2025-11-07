@@ -2405,12 +2405,14 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             rank = orig_var.rank
             arg_var = Variable(BindCArrayType.get_new(rank, True), self.scope.get_new_name(orig_var.name),
-                        shape = (LiteralInteger(rank*2+1),))
+                        shape = (LiteralInteger(rank*3+1),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
             for i,s in enumerate(shape):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
-            for i,s in enumerate(strides):
+            for i,s in enumerate(ubounds):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+2*rank+1)), s)
 
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 

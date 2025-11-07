@@ -372,27 +372,29 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(arg_var)
         scope.insert_variable(bind_var)
 
-        shape   = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_shape_{i+1}', is_argument = True)
-                   for i in range(rank)]
+        base_shape = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_base_shape_{i+1}', is_argument = True)
+                      for i in range(rank)]
         stride  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_stride_{i+1}', is_argument = True)
                    for i in range(rank)]
+        ubound  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_ubound_{i+1}', is_argument = True)
+                   for i in range(rank)]
 
-        orig_size = [PyccelMul(sh,st) for sh,st in zip(shape, stride)]
-        body = [C_F_Pointer(bind_var, arg_var, orig_size[::-1] if order == 'C' else orig_size)]
+        body = [C_F_Pointer(bind_var, arg_var, base_shape[::-1] if order == 'C' else base_shape)]
 
         c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = True),
                         scope.get_new_name(), is_argument = True,
-                        shape = (LiteralInteger(rank*2+1),))
+                        shape = (LiteralInteger(rank*3+1),))
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
-        for i,s in enumerate(shape):
+        for i,s in enumerate(base_shape):
             scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+1)), s)
-        for i,s in enumerate(stride):
+        for i,s in enumerate(ubound):
             scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+rank+1)), s)
+        for i,s in enumerate(stride):
+            scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+2*rank+1)), s)
 
         start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
-        stop = None
-        indexes = [Slice(start, stop, step) for step in stride]
+        indexes = [Slice(start, PyccelAdd(stop, LiteralInteger(1)), step) for step,stop in zip(stride, ubound)]
 
         f_arg = IndexedElement(arg_var, *indexes)
 
