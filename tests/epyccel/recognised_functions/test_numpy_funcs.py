@@ -6250,8 +6250,7 @@ def test_copy(language):
     assert np.array_equal(res_1d_pyt, res_1d_pyc)
     assert res_1d_pyt.dtype is res_1d_pyc.dtype
 
-    for name, f, epyc_f in funcs:
-        print(name)
+    for _, f, epyc_f in funcs:
         res_2d_pyt = f(arr_2d)
         res_2d_pyc = epyc_f(arr_2d)
         assert np.array_equal(res_2d_pyt, res_2d_pyc)
