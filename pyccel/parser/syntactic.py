@@ -42,7 +42,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
-from pyccel.ast.datatypes import TypeAlias
+from pyccel.ast.datatypes import TypeAlias, FinalType
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -1501,7 +1501,7 @@ class SyntaxParser(BasicParser):
         name = self._visit(stmt.name)
         self._in_lhs_assign = False
         rhs = self._treat_type_annotation(stmt.value, self._visit(stmt.value))
-        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(TypeAlias(), is_const = True))
+        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(FinalType.get_new(TypeAlias())))
         return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
 
 #==============================================================================

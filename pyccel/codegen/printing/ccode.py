@@ -8,7 +8,6 @@ import functools
 from itertools import chain, product
 import re
 import sys
-from packaging.version import Version
 
 import numpy as np
 
@@ -35,7 +34,7 @@ from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, Poin
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -79,7 +78,6 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
 
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -408,7 +406,7 @@ class CCodePrinter(CodePrinter):
             return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
 
         if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
-                and a.is_argument and not a.is_const:
+                and a.is_argument and not isinstance(a.class_type, FinalType):
             return True
 
         return a.is_alias or a.is_optional or \
@@ -705,7 +703,7 @@ class CCodePrinter(CodePrinter):
 
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            iter_var = Variable(IteratorType(class_type), iter_var_name)
+            iter_var = Variable(IteratorType.get_new(class_type), iter_var_name)
             iter_ref_var = DottedVariable(arg_var.class_type.element_type, 'ref',
                         memory_handling='alias', lhs=iter_var)
 
@@ -1491,7 +1489,7 @@ class CCodePrinter(CodePrinter):
             return 'cstr'
 
         elif in_container:
-            return self.get_c_type(MemoryHandlerType(dtype))
+            return self.get_c_type(MemoryHandlerType.get_new(dtype))
 
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
             element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_')
@@ -1565,25 +1563,22 @@ class CCodePrinter(CodePrinter):
         'int64_t'
 
         For an object accessed via a pointer:
-        >>> v = Variable(NumpyNDArrayType(PythonNativeInt(), 1, None), 'x', is_optional=True)
+        >>> v = Variable(NumpyNDArrayType.get_new(PythonNativeInt(), 1, None), 'x', is_optional=True)
         >>> self.get_declare_type(v)
         'array_int64_1d*'
         """
         class_type = expr.class_type
 
-        if isinstance(expr.class_type, CStackArray):
-            dtype = self.get_c_type(expr.class_type.element_type)
-        elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
-            dtype = self.get_c_type(expr.class_type)
+        if isinstance(class_type, CStackArray):
+            dtype = self.get_c_type(class_type.element_type)
+        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+            dtype = self.get_c_type(class_type)
         elif isinstance(class_type, MemoryHandlerType):
             dtype = self.get_c_type(class_type.element_type) + '_mem'
         else:
             dtype = self.get_c_type(expr.class_type)
 
-        if getattr(expr, 'is_const', False):
-            dtype = f'const {dtype}'
-
-        if self.is_c_pointer(expr) and not isinstance(expr.class_type, CStackArray):
+        if self.is_c_pointer(expr) and not isinstance(class_type, CStackArray):
             return f'{dtype}*'
         else:
             return dtype
@@ -2094,7 +2089,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csgn' if numpy_v1 else 'csign'
+            func = 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -2615,7 +2610,7 @@ class CCodePrinter(CodePrinter):
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
-            counter = Variable(IteratorType(iterable_type), indices[0].name)
+            counter = Variable(IteratorType.get_new(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
             for_code = f'for (c_each ({self._print(counter)}, {c_type}, {iterable_code}))'

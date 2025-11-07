@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#pylint: disable=no-member
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
@@ -7,16 +8,14 @@
 """ Module containing types from the numpy module understood by pyccel
 """
 from functools import lru_cache
-from packaging.version import Version
 
 import numpy as np
 
-from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
-from .datatypes import GenericType
+from .datatypes import GenericType, CharType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
@@ -257,43 +256,50 @@ class NumpyComplex256Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
+class NumpyNDArrayType(HomogeneousContainerType):
     """
     Class representing the NumPy ND array type.
 
     Class representing the NumPy ND array type.
-
-    Parameters
-    ----------
-    dtype : NumpyNumericType | PythonNativeBool | GenericType
-        The internal datatype of the object (GenericType is allowed for external
-        libraries, e.g. MPI).
-    rank : int
-        The rank of the new NumPy array.
-    order : str
-        The order of the memory layout for the new NumPy array.
     """
     __slots__ = ('_element_type', '_container_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __new__(cls, dtype, rank, order):
-        if rank == 0:
-            return dtype
-        else:
-            return super().__new__(cls)
+    @classmethod
+    @lru_cache
+    def get_new(cls, dtype, rank, order):
+        """
+        Get the parametrised NumPy ND array type.
 
-    def __init__(self, dtype, rank, order):
+        Get the parametrised NumPy ND array type.
+
+        Parameters
+        ----------
+        dtype : NumpyNumericType | PythonNativeBool | GenericType
+            The internal datatype of the object (GenericType is allowed for external
+            libraries, e.g. MPI).
+        rank : int
+            The rank of the new NumPy array.
+        order : str
+            The order of the memory layout for the new NumPy array.
+        """
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
         assert rank < 2 or order is not None
+        assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType, CharType))
 
-        if pyccel_stage == 'semantic':
-            assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
+        if rank == 0:
+            return dtype
 
-        self._element_type = dtype
-        self._container_rank = rank
-        self._order = order
-        super().__init__()
+        def __init__(self):
+            self._element_type = dtype
+            self._container_rank = rank
+            self._order = order
+            super().__init__()
+
+        name = 'Numpy{rank}DArrayType_{order}_{type(dtype)}'
+        return type(name, (NumpyNDArrayType,),
+                    {'__init__': __init__})()
 
     @lru_cache
     def __add__(self, other):
@@ -312,7 +318,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             other_f_contiguous = other.order in (None, 'F')
             self_f_contiguous = self.order in (None, 'F')
             order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
-        return NumpyNDArrayType(result_type, rank, order)
+        return NumpyNDArrayType.get_new(result_type, rank, order)
 
     @lru_cache
     def __radd__(self, other):
@@ -343,7 +349,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
         Parameters
         ----------
-        new_type : PyccelType
+        new_type : FixedSizeNumericType
             The new basic type.
 
         Returns
@@ -354,7 +360,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
+        return cls.get_new(self.element_type.switch_basic_type(new_type), self._container_rank, self._order)
 
     def switch_rank(self, new_rank, new_order = None):
         """
@@ -381,7 +387,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             return self.element_type
         else:
             new_order = (new_order or self._order) if new_rank > 1 else None
-            return NumpyNDArrayType(self.element_type, new_rank, new_order)
+            return NumpyNDArrayType.get_new(self.element_type, new_rank, new_order)
 
     def swap_order(self):
         """
@@ -398,7 +404,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
             The new type.
         """
         order = None if self._order is None else ('C' if self._order == 'F' else 'F')
-        return NumpyNDArrayType(self.element_type, self._container_rank, order)
+        return NumpyNDArrayType.get_new(self.element_type, self._container_rank, order)
 
     @property
     def rank(self):
@@ -471,7 +477,4 @@ pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
 original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
 
-if Version(np.__version__) >= Version("2.0.0"):
-    NumpyInt = NumpyInt64Type()
-else:
-    NumpyInt = numpy_precision_map[PrimitiveIntegerType(), np.dtype(int).alignment]
+NumpyInt = NumpyInt64Type()
