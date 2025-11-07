@@ -641,15 +641,6 @@ def test_multi_return_array_array_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_return_arrays_in_expression(language):
     def return_arrays_in_expression():
         def single_return():
@@ -667,15 +658,6 @@ def test_return_arrays_in_expression(language):
     assert np.array_equal(epyccel_function_output, return_arrays_in_expression_output)
     assert epyccel_function_output.dtype == return_arrays_in_expression_output.dtype
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_return_arrays_in_expression2(language):
     def return_arrays_in_expression2(n : int):
         def single_return(n : int):

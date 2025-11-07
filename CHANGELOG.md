@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 -   Add support for keyword-only arguments.
 -   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
+-   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
+-   #601 : Add C support for nested functions.
 -   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
@@ -43,6 +45,7 @@ All notable changes to this project will be documented in this file.
 -   #2452 : Fix default Pyccel compiler on command line to use `PYCCEL_DEFAULT_COMPILER` environment variable.
 -   #2447 : Fix returning an empty tuple.
 -   #2456 : Fix Python reference counting when returning a boolean from a function.
+-   #2458 : Fix incoherent import printing in Python and `.pyi` files.
 -   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   #2462 : Fix erroneous additional import in stub file.
 -   Rename `main` function when translating to C.
@@ -56,10 +59,16 @@ All notable changes to this project will be documented in this file.
 -   Install STC to use it as a library instead of selectively compiling.
 -   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
 -   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
+-   #2465 : Change default name of `__init__` functions in Fortran translations.
+-   #2405 : Change generated names in C to include the module in the name for multi-file collision handling.
+-   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
+-   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
+-   \[INTERNALS\] Stop using `os.chdir` during Pyccel execution (absolute paths guarantee identical behaviour).
+-   \[INTERNALS\] Use inheritance to handle parametrised types. Identity operators should no longer be used for type checking.
 
 ### Deprecated
 
@@ -67,6 +76,8 @@ All notable changes to this project will be documented in this file.
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
+-   #2474 : Drop support for Python 3.9, test with Python 3.14.
+-   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27

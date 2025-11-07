@@ -12,7 +12,6 @@ import sys
 import re
 from collections import OrderedDict
 from itertools import chain
-from packaging.version import Version
 
 import numpy as np
 
@@ -45,7 +44,7 @@ from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, Pri
 from pyccel.ast.datatypes import PrimitiveCharacterType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType, HomogeneousContainerType
 from pyccel.ast.datatypes import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType, DictType
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, FixedSizeType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, FixedSizeType, FinalType
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
@@ -90,8 +89,6 @@ from pyccel.parser.scope import Scope
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 # TODO: add examples
 
@@ -185,12 +182,6 @@ math_function_to_fortran = {
 }
 
 INF = math_constants['inf']
-
-_default_methods = {
-    '__new__' : 'alloc',
-    '__init__': 'create',
-    '__del__' : 'free',
-}
 
 #==============================================================================
 iso_c_binding = {
@@ -413,17 +404,11 @@ class FCodePrinter(CodePrinter):
         for method in expr.methods:
             if not method.is_inline:
                 m_name = method.name
-                if m_name in _default_methods:
-                    suggested_name = _default_methods[m_name]
-                    scope.rename_function(method, suggested_name)
                 method.cls_name = scope.get_new_name(f'{name}_{method.name}')
         for i in expr.interfaces:
             for f in i.functions:
                 if not f.is_inline:
                     i_name = f.name
-                    if i_name in _default_methods:
-                        suggested_name = _default_methods[i_name]
-                        scope.rename_function(f, suggested_name)
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
     def _define_gFTL_element(self, element_type, imports_and_macros, element_name):
@@ -521,7 +506,7 @@ class FCodePrinter(CodePrinter):
                 defs, undefs = self._define_gFTL_element(element_type, imports_and_macros, 'T')
                 imports_and_macros.extend([*defs,
                                            MacroDefinition(type_name, expr_type),
-                                           MacroDefinition(f'{type_name}Iterator', IteratorType(expr_type)),
+                                           MacroDefinition(f'{type_name}Iterator', IteratorType.get_new(expr_type)),
                                            Import(LiteralString(f'{type_name.lower()}/template.inc'), Module('_', (), ())),
                                            MacroUndef(type_name),
                                            MacroUndef(f'{type_name}Iterator'),
@@ -535,9 +520,9 @@ class FCodePrinter(CodePrinter):
                 key_defs, key_undefs = self._define_gFTL_element(key_type, imports_and_macros, 'Key')
                 val_defs, val_undefs = self._define_gFTL_element(value_type, imports_and_macros, 'T')
                 imports_and_macros.extend([*key_defs, *val_defs,
-                                           MacroDefinition('Pair', PairType(key_type, value_type)),
+                                           MacroDefinition('Pair', PairType.get_new(key_type, value_type)),
                                            MacroDefinition('Map', expr_type),
-                                           MacroDefinition('MapIterator', IteratorType(expr_type)),
+                                           MacroDefinition('MapIterator', IteratorType.get_new(expr_type)),
                                            Import(LiteralString('map/template.inc'), Module('_', (), ())),
                                            MacroUndef('Pair'),
                                            MacroUndef('Map'),
@@ -548,7 +533,7 @@ class FCodePrinter(CodePrinter):
 
             typename = self._print(expr_type)
             mod_name = f'{typename}_mod'
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_types[expr_type] = module
@@ -614,7 +599,7 @@ class FCodePrinter(CodePrinter):
             else:
                 raise NotImplementedError(f"Unknown gFTL import for type {expr_type}")
 
-            module = Module(mod_name, (), (), scope = Scope(), imports = imports_and_macros,
+            module = Module(mod_name, (), (), scope = Scope(name = mod_name, scope_type = 'module'), imports = imports_and_macros,
                                        is_external = True)
 
             self._generated_gFTL_extensions[expr_type] = module
@@ -1214,7 +1199,7 @@ class FCodePrinter(CodePrinter):
 
         else:
             class_type = expr.class_type
-            pair_type = self._print(PairType(class_type.key_type, class_type.value_type))
+            pair_type = self._print(PairType.get_new(class_type.key_type, class_type.value_type))
             args = ', '.join(f'{pair_type}({self._print(k)}, {self._print(v)})' for k,v in expr)
             list_arg = f'[{args}]'
             dict_type = self._print(class_type)
@@ -1299,7 +1284,7 @@ class FCodePrinter(CodePrinter):
             _shape = PyccelArrayShapeElement(list_obj, index_element)
             if isinstance(index_element, PyccelUnarySub) and isinstance(index_element.args[0], LiteralInteger):
                 index_element = PyccelMinus(_shape, index_element.args[0], simplify = True)
-            tmp_iter = self.scope.get_temporary_variable(IteratorType(list_obj.class_type),
+            tmp_iter = self.scope.get_temporary_variable(IteratorType.get_new(list_obj.class_type),
                     name = f'{list_obj}_iter')
             code = (f'{tmp_iter} = {target} % begin() + {self._print(index_element)}\n'
                     f'{lhs} = {tmp_iter} % of()\n'
@@ -1925,7 +1910,7 @@ class FCodePrinter(CodePrinter):
         dtype           = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
-        is_const        = var.is_const
+        is_const        = isinstance(expr_type, FinalType)
         is_optional     = var.is_optional
         is_private      = var.is_private
         is_alias        = var.is_alias and not isinstance(dtype, BindCPointer)
@@ -2263,8 +2248,11 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(class_type, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
-            Pyccel_del_args = [FunctionCallArgument(var)]
-            return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
+            if Pyccel__del:
+                Pyccel_del_args = [FunctionCallArgument(var)]
+                return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
+            else:
+                return ''
 
         if var.is_alias or isinstance(class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             return ''
@@ -2388,16 +2376,9 @@ class FCodePrinter(CodePrinter):
             return interface
 
         if funcs[0].cls_name:
-            for k, m in list(_default_methods.items()):
-                name = name.replace(k, m)
             cls_name = expr.cls_name
             if not (cls_name == '__UNDEFINED__'):
                 name = '{0}_{1}'.format(cls_name, name)
-        else:
-            for i in _default_methods:
-                # because we may have a class Point with init: Point___init__
-                if i in name:
-                    name = name.replace(i, _default_methods[i])
         interface = 'interface ' + name +'\n'
         for f in funcs:
             interface += 'module procedure ' + str(f.name)+'\n'
@@ -2675,9 +2656,9 @@ class FCodePrinter(CodePrinter):
                 errors.report("Iterating over a temporary object. This may cause compilation issues or cause calculations to be carried out twice",
                         severity='warning', symbol=expr)
             var_code = self._print(var)
-            iterator = self.scope.get_temporary_variable(IteratorType(iterable_type),
+            iterator = self.scope.get_temporary_variable(IteratorType.get_new(iterable_type),
                     name = suggested_name + 'iter')
-            last = self.scope.get_temporary_variable(IteratorType(iterable_type),
+            last = self.scope.get_temporary_variable(IteratorType.get_new(iterable_type),
                     name = suggested_name + 'last')
             if isinstance(iterable, DictItems):
                 key = self._print(expr.target[0])
@@ -3304,7 +3285,7 @@ class FCodePrinter(CodePrinter):
         arg = expr.args[0]
         arg_code = self._print(arg)
         if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
-            func_name = 'csgn' if numpy_v1 else 'csign'
+            func_name = 'csign'
             func = PyccelFunctionDef(func_name, NumpySign)
             self.add_import(Import('pyc_math_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'
@@ -3592,8 +3573,12 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        for k, m in _default_methods.items():
-            f_name = f_name.replace(k, m)
+
+        if func.is_imported:
+            f_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            f_name = self.scope.get_import_alias(expr.interface, 'functions')
+
         args   = expr.args
         func_result_variables = func.scope.collect_all_tuple_elements(func.results.var) \
                                     if func.scope else [func.results.var]

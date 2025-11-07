@@ -465,15 +465,6 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_multi_imports_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -633,23 +624,10 @@ def test_hope_benchmarks( test_file, language ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
+                                        "scripts/import_syntax/collisions3.py",
                                         "scripts/import_syntax/collisions5.py",
                                         ] )
 def test_import_syntax(test_file, language):
-    pyccel_test(test_file, language=language)
-
-#------------------------------------------------------------------------------
-@pytest.mark.parametrize("test_file", ["scripts/import_syntax/collisions3.py"])
-@pytest.mark.parametrize("language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Collisions are not handled in C"),
-            pytest.mark.c]
-        )
-    )
-)
-def test_import_syntax_cfail(test_file, language):
     pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
@@ -658,15 +636,6 @@ def test_import_syntax_cfail(test_file, language):
                                         "scripts/import_syntax/collisions2.py",
                                         "scripts/runtest_import_mod_project_as.py",
                                         ] )
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Collisions are not handled in C"),
-            pytest.mark.c]
-        )
-    )
-)
 @pytest.mark.xdist_incompatible
 def test_import_syntax_user_as( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py",
@@ -685,15 +654,6 @@ def test_import_syntax_user(test_file, language):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Collisions are not handled in C"),
-            pytest.mark.c]
-        )
-    )
-)
 @pytest.mark.xdist_incompatible
 def test_import_collisions(language):
     pyccel_test("scripts/import_syntax/collisions4.py",
@@ -969,15 +929,6 @@ def test_container_type_print(language):
         assert rx.search(lang_out)
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
@@ -1076,15 +1027,6 @@ def test_exit(language, test_file):
     assert lang_out == pyth_out
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled. And chained imports (see #756)"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_init_collisions( language ):
     test_mod  = get_abs_path("scripts/module_init2.py")
     test_prog = get_abs_path("scripts/runtest_module_init2.py")
@@ -1123,28 +1065,13 @@ def test_function(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
-            pytest.mark.c]
-        )
-    )
-)
-@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
@@ -1333,3 +1260,36 @@ def test_varkwargs():
     pyccel_test("scripts/runtest_varkwargs.py",
                 language = 'python',
                 output_dtype = str)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_import_2(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_import_2.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_other_func.py",
+                                "scripts/inlining/inline_using_import.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
+def test_inline_using_named_import(language):
+    pyccel_test("scripts/inlining/runtest_inline_using_named_import.py",
+                dependencies = ["scripts/inlining/my_func.py",
+                                "scripts/inlining/my_func2.py",
+                                "scripts/inlining/inline_using_named_import.py"],
+                language = language,
+                output_dtype = float)

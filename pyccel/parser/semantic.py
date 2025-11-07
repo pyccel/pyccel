@@ -73,7 +73,7 @@ from pyccel.ast.class_defs import get_cls_base, SetClass
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType
+from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType, FinalType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType, DictType, TypeAlias
 from pyccel.ast.datatypes import original_type_to_pyccel_type
@@ -382,7 +382,7 @@ class SemanticParser(BasicParser):
         Scope
             The new scope for the function.
         """
-        child = self.scope.new_child_scope(syntactic_name, **kwargs)
+        child = self.scope.new_child_scope(syntactic_name, 'function', **kwargs)
         child.local_used_symbols[syntactic_name] = semantic_name
         child.python_names[semantic_name] = syntactic_name
 
@@ -515,8 +515,6 @@ class SemanticParser(BasicParser):
         list
             A list of variables.
         """
-        # this only works if called on a function scope
-        # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
         for sub_container in container.loops:
@@ -751,7 +749,7 @@ class SemanticParser(BasicParser):
             if isinstance(managed_var, Variable):
                 managed_mem = managed_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(managed_var.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(managed_var.class_type),
                                        self.scope.get_new_name(f'{managed_var.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)
@@ -798,7 +796,7 @@ class SemanticParser(BasicParser):
             if isinstance(pointer, Variable):
                 managed_mem = pointer.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
                 if not managed_mem:
-                    mem_var = Variable(MemoryHandlerType(pointer.class_type),
+                    mem_var = Variable(MemoryHandlerType.get_new(pointer.class_type),
                                        self.scope.get_new_name(f'{pointer.name}_mem'),
                                        shape=None, memory_handling='heap')
                     self.scope.insert_variable(mem_var)
@@ -1138,7 +1136,6 @@ class SemanticParser(BasicParser):
             The class that implicit __init__ and __del__ methods should be created for.
         """
         class_type = expr.class_type
-        methods = expr.methods
         cls_scope = expr.scope
 
         init_func = cls_scope.functions['__init__']
@@ -1157,7 +1154,7 @@ class SemanticParser(BasicParser):
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
-            del_name = cls_scope.get_new_name('__del__')
+            del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
@@ -1483,10 +1480,10 @@ class SemanticParser(BasicParser):
             cls_name = cls_base_syntactic[0].name
             cls_base = self.scope.find(cls_name, 'classes')
             cls_scope = cls_base.scope
-            new_scope = cls_scope
+            syntactic_scope = cls_scope
         else:
             func_scope = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
-            new_scope = func_scope
+            syntactic_scope = func_scope
         # The function call might be in a completely different scope from the FunctionDef
         # Store the current scope and go to the parent scope of the FunctionDef
         old_scope = self._scope
@@ -1495,10 +1492,17 @@ class SemanticParser(BasicParser):
 
         # Walk up scope to root to find names of relevant scopes
         scope_names = []
-        while new_scope.parent_scope is not None:
-            new_scope = new_scope.parent_scope
-            if not new_scope.name is None:
-                scope_names.append(new_scope.name)
+        while syntactic_scope.parent_scope is not None:
+            syntactic_scope = syntactic_scope.parent_scope
+            if syntactic_scope.name is not None:
+                scope_names.append(syntactic_scope.name)
+
+        # Remove name of module scope. This is not needed to walk down the scope
+        # starting from the module scope
+        scope_names.pop()
+
+        # Module scope is shared between syntactic and semantic stage
+        new_scope = syntactic_scope
 
         # Use scope_names to find semantic scopes
         for n in scope_names[::-1]:
@@ -1527,15 +1531,6 @@ class SemanticParser(BasicParser):
         self._scope = old_scope
         self._current_function_name = old_current_function_name
         self._current_function = old_current_function
-        # Remove the old_func from the imports dict and Assign the new annotated one
-        if old_func.is_imported:
-            scope = self.scope
-            while new_name not in scope.imports['functions']:
-                scope = scope.parent_scope
-            assert old_func is scope.imports['functions'].get(new_name)
-            func = func.clone(new_name, is_imported=True)
-            func.set_current_user_node(mod)
-            scope.imports['functions'][new_name] = func
 
         return func
 
@@ -1756,8 +1751,10 @@ class SemanticParser(BasicParser):
             else:
                 symbolic_var = self.scope.find(lhs, 'symbolic_aliases')
                 if symbolic_var:
-                    errors.report(f"{lhs} variable represents a symbolic concept. Its value cannot be changed.",
-                            severity='fatal')
+                    errors.report(f"Variable '{lhs}' represents a symbolic concept. Its value cannot be changed.",
+                            severity='fatal',
+                            bounding_box=(self.current_ast_node.lineno,
+                                self.current_ast_node.col_offset))
                 var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
@@ -2329,23 +2326,13 @@ class SemanticParser(BasicParser):
         UnionTypeAnnotation
             The type annotation described by this object.
         """
-        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
-            syntactic_annotation = args[0]
-            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                pyccel_stage.set_stage('syntactic')
-                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-                pyccel_stage.set_stage('semantic')
-            annotation = self._visit(syntactic_annotation)
-            for t in annotation.type_list:
-                t.is_const = True
-            return annotation
-        elif isinstance(base, UnionTypeAnnotation):
+        if isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
-            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType()))
+            return UnionTypeAnnotation(VariableTypeAnnotation(InhomogeneousTupleType.get_new()))
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
@@ -2354,14 +2341,14 @@ class SemanticParser(BasicParser):
                 dtype = base.class_type
                 if dtype.rank != 0:
                     raise errors.report("NumPy element must be a scalar type", severity='fatal', symbol=expr)
-                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
+                class_type = NumpyNDArrayType.get_new(numpy_process_dtype(dtype), rank, order)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
                 try:
                     dtype = numpy_process_dtype(dtype_cls.static_type())
                 except AttributeError:
                     errors.report(f"Unrecognised datatype {dtype_cls}", severity='fatal', symbol=expr)
-                class_type = NumpyNDArrayType(dtype, rank, order)
+                class_type = NumpyNDArrayType.get_new(dtype, rank, order)
             return VariableTypeAnnotation(class_type)
 
         if not any(isinstance(a, Slice) for a in args):
@@ -2375,7 +2362,7 @@ class SemanticParser(BasicParser):
                 syntactic_annotation = self._convert_syntactic_object_to_type_annotation(args[0])
                 internal_datatypes = self._visit(syntactic_annotation)
                 class_type = HomogeneousTupleType if dtype_cls is TupleType else dtype_cls
-                type_annotations = [VariableTypeAnnotation(class_type(u.class_type), u.is_const)
+                type_annotations = [VariableTypeAnnotation(class_type.get_new(u.class_type))
                                     for u in internal_datatypes.type_list]
                 return UnionTypeAnnotation(*type_annotations)
             elif len(args) == 2 and dtype_cls is DictType:
@@ -2383,14 +2370,14 @@ class SemanticParser(BasicParser):
                 syntactic_val_annotation = self._convert_syntactic_object_to_type_annotation(args[1])
                 key_types = self._visit(syntactic_key_annotation)
                 val_types = self._visit(syntactic_val_annotation)
-                type_annotations = [VariableTypeAnnotation(dtype_cls(k.class_type, v.class_type)) \
+                type_annotations = [VariableTypeAnnotation(dtype_cls.get_new(k.class_type, v.class_type)) \
                                     for k,v in zip(key_types.type_list, val_types.type_list)]
                 return UnionTypeAnnotation(*type_annotations)
             elif dtype_cls is TupleType:
                 syntactic_annotations = [self._convert_syntactic_object_to_type_annotation(a) for a in args]
                 types = [self._visit(a).type_list for a in syntactic_annotations]
                 internal_datatypes = list(product(*types))
-                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType(*[ui.class_type for ui in u]), True)
+                type_annotations = [VariableTypeAnnotation(InhomogeneousTupleType.get_new(*[ui.class_type for ui in u]))
                                     for u in internal_datatypes]
                 return UnionTypeAnnotation(*type_annotations)
             else:
@@ -2595,7 +2582,7 @@ class SemanticParser(BasicParser):
             return PyccelFunctionDef('Final', TypingFinal)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
-            return VariableTypeAnnotation(class_type(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
+            return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
         elif isinstance(env_var, typing.TypeVar):
             constraints = [self.env_var_to_pyccel(c) for c in env_var.__constraints__]
             return TypingTypeVar(env_var.__name__, *constraints,
@@ -2701,10 +2688,14 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
+        if not self.is_stub_file:
+            self.scope.insert_symbol('__init__', object_type = 'function')
+            self.scope.insert_symbol('__del__', object_type = 'function')
+
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
-        if not self.is_header_file:
+        if not self.is_stub_file:
             for f in expr.funcs:
                 self.insert_function(f)
         else:
@@ -2731,7 +2722,7 @@ class SemanticParser(BasicParser):
         if mod_name is None:
             mod_name = expr.name
         else:
-            self.scope.insert_symbol(mod_name)
+            self.scope.insert_symbol(mod_name, 'module')
         self._mod_name = mod_name
         if isinstance(expr.name, AsName):
             name_suffix = expr.name.name
@@ -2748,7 +2739,8 @@ class SemanticParser(BasicParser):
             prog_syntactic_scope = expr.program.scope
             self.scope = mod_scope.new_child_scope(prog_name,
                     used_symbols = prog_syntactic_scope.local_used_symbols.copy(),
-                    original_symbols = prog_syntactic_scope.python_names.copy())
+                    original_symbols = prog_syntactic_scope.python_names.copy(),
+                    scope_type = 'program')
             prog_scope = self.scope
 
             imports = [self._visit(i) for i in expr.program.imports]
@@ -2777,10 +2769,6 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        classes = self.scope.classes.values()
-        for c in classes:
-            self._create_class_destructor(c)
-
         for f in self.scope.functions.values():
             assert f.is_semantic or f.is_inline
 
@@ -2791,12 +2779,14 @@ class SemanticParser(BasicParser):
 
         comment_types = (Header, EmptyNode, Comment, CommentBlock)
 
-        if not all(isinstance(l, comment_types) for l in init_func_body):
+        if self.is_stub_file:
+            init_func = self.scope.functions.get('__init__', None)
+        elif not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True, is_temp = True)
-            syntactic_init_func_name = name_suffix+'__init'
-            init_func_name = self.scope.get_new_name(syntactic_init_func_name)
+            syntactic_init_func_name = '__init__'
+            init_func_name = self.scope.get_expected_name(syntactic_init_func_name)
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(syntactic_init_func_name, init_func_name)
             for b in init_func_body:
@@ -2843,28 +2833,33 @@ class SemanticParser(BasicParser):
             # loop variables. They must be moved so the symbol is found when the variable is eventually
             # inserted into the scope.
             unused_symbols = [n for n in self.scope.local_used_symbols \
-                              if self.scope.find(n) is None and n != mod_name]
+                              if self.scope.find(n) is None and n not in (mod_name, '__del__')]
             for s in unused_symbols:
                 self.scope.remove_symbol(s)
                 init_scope.insert_symbol(s)
 
-        if init_func:
-            syntactic_free_func_name = name_suffix+'__free'
-            free_func_name = self.scope.get_new_name(syntactic_free_func_name)
+        if init_func is None:
+            self.scope.remove_symbol('__init__')
+
+        if self.is_stub_file:
+            free_func = self.scope.functions.get('__del__', None)
+        elif init_func:
+            syntactic_free_func_name = '__del__'
+            free_func_name = self.scope.get_expected_name(syntactic_free_func_name)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
             import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
                                 if imp.source in self.d_parsers]
-            import_frees = [f if f.name in imp.target else \
-                             f.clone(next(i.target for i in imp.target \
-                                        if isinstance(i, AsName) and i.name == f.name)) \
+            import_frees = [next(t.object for t in imp.target if t.name == f.name) \
                             for f,imp in zip(import_frees, pyccelised_imports) if f]
+            assert all(f.is_imported for f in import_frees)
 
             if deallocs or import_frees:
                 # If there is anything that needs deallocating when the module goes out of scope
                 # create a deallocation function
                 import_free_calls = [f() for f in import_frees if f is not None]
+
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
@@ -2874,6 +2869,14 @@ class SemanticParser(BasicParser):
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
+        if free_func is None:
+            self.scope.remove_symbol('__del__')
+
+        classes = self.scope.classes.values()
+        if not self.is_stub_file:
+            for c in classes:
+                self._create_class_destructor(c)
+
         funcs = []
         interfaces = []
         for f in self.scope.functions.values():
@@ -2882,10 +2885,10 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        # in the case of a header file, we need to convert all headers to
+        # in the case of a stub file, we need to convert all headers to
         # FunctionDef etc ...
 
-        if self.is_header_file:
+        if self.is_stub_file:
             if self.metavars.get('external', False):
                 for f in funcs:
                     f.is_external = True
@@ -3004,12 +3007,6 @@ class SemanticParser(BasicParser):
         res_type = self._visit(expr.result)
         return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_type))
 
-    def _visit_TypingFinal(self, expr):
-        annotation = self._visit(expr.arg)
-        for t in annotation:
-            t.is_const = True
-        return annotation
-
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
         value = None if expr.value is None else self._visit(expr.value)
@@ -3035,7 +3032,7 @@ class SemanticParser(BasicParser):
                     cls = self.scope.find(str(dtype), 'classes')
                     if cls:
                         init_method = cls.get_method('__init__', expr)
-                        if not init_method.is_semantic:
+                        if not init_method.is_semantic and not self.is_stub_file:
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
@@ -3327,8 +3324,7 @@ class SemanticParser(BasicParser):
                 else:
                     shape = None
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = shape,
-                        is_const = t.is_const, is_optional = False,
+                        shape = shape, is_optional = False,
                         memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
@@ -3417,53 +3413,49 @@ class SemanticParser(BasicParser):
         if isinstance(first, Module):
 
             if rhs_name in first:
-                imp = self.scope.find(_get_name(lhs), 'imports')
+                scope = self.scope
+                imp = scope.find(_get_name(lhs), 'imports')
 
                 new_name = rhs_name
+                rhs_obj = first[rhs_name]
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
-                        new_name = self.scope.get_new_name(rhs_name)
+                        new_name = scope.get_new_name(rhs_name)
 
                         # Save the import target that has been used
-                        imp.define_target(AsName(first[rhs_name], PyccelSymbol(new_name)))
+                        imp.define_target(AsName(rhs_obj, new_name))
+                        source_mod = _get_name(lhs)
+                        while source_mod not in scope.imports['imports']:
+                            scope = scope.parent_scope
+
+                if isinstance(rhs_obj, PyccelFunctionDef):
+                    assert new_name not in scope.imports['functions'] or scope.imports['functions'][new_name] == rhs_obj
+                    scope.imports['functions'][new_name] = rhs_obj
                 elif isinstance(rhs, FunctionCall):
-                    self.scope.imports['functions'][new_name] = first[rhs_name]
+                    if new_name not in scope.imports['functions']:
+                        m = rhs_obj.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                        rhs_obj = rhs_obj.clone(rhs_obj.name, is_imported = True)
+                        scope.imports['functions'][new_name] = rhs_obj
+                        rhs_obj.set_current_user_node(m)
                 elif isinstance(rhs, ConstructorCall):
-                    self.scope.imports['classes'][new_name] = first[rhs_name]
+                    assert new_name not in scope.imports['classes']
+                    scope.imports['classes'][new_name] = rhs_obj
                 elif isinstance(rhs, Variable):
-                    self.scope.imports['variables'][new_name] = rhs
+                    assert new_name not in scope.imports['variables']
+                    scope.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args)
-                    func  = first[rhs_name]
-                    if new_name != rhs_name:
-                        if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
-                            func  = func.clone(new_name)
-                    pyccel_stage.set_stage('syntactic')
-                    syntactic_call = FunctionCall(func, args)
-                    current_user_nodes = expr.get_all_user_nodes()
-                    if len(current_user_nodes) == 1:
-                        syntactic_call.set_current_user_node(current_user_nodes[0])
-                    else:
-                        # If the DottedName has multiple users look for the relevant Assign
-                        # This happens if an Assign node was created to handle the expression
-                        # E.g. when the statement is found in a Return node.
-                        syntactic_call.set_current_user_node(next(u for u in current_user_nodes if isinstance(u, Assign)))
-                    pyccel_stage.set_stage('semantic')
-                    if first.__module__.startswith('pyccel.'):
-                        self.insert_import(first.name, AsName(func, new_name), _get_name(lhs))
-                    return self._handle_function(syntactic_call, func, args)
+                    return self._handle_function(expr, func = rhs_obj, args = args)
                 elif isinstance(rhs, Constant):
-                    var = first[rhs_name]
                     if new_name != rhs_name:
-                        var.name = new_name
-                    return var
+                        rhs_obj.name = new_name
+                    return rhs_obj
                 else:
                     # If object is something else (eg. dict)
-                    var = first[rhs_name]
-                    return var
+                    return rhs_obj
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr, severity='fatal')
@@ -3656,21 +3648,8 @@ class SemanticParser(BasicParser):
 
             cls = self.scope.find(name, 'classes')
             d_methods = cls.methods_as_dict
-            method = d_methods.pop('__init__', None)
+            init_method = d_methods.pop('__init__', None)
 
-            if not method.is_semantic:
-                if method.is_inline:
-                    errors.report("An __init__ method cannot be inlined",
-                            severity='fatal', symbol=expr)
-                method = self._annotate_the_called_function_def(method, args)
-
-            if method is None:
-
-                # TODO improve case of class with the no __init__
-
-                errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='error')
             dtype = cls.class_type
             cls_def = cls
             d_var = {'class_type' : dtype,
@@ -3686,36 +3665,48 @@ class SemanticParser(BasicParser):
             else:
                 lhs = self.scope.get_new_name()
 
-            if isinstance(lhs, AnnotatedPyccelSymbol):
-                annotation = self._visit(lhs.annotation)
-                if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != method.arguments[0].var.class_type:
-                    errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
-                            symbol=annotation, severity='error')
-                lhs = lhs.name
+            if init_method is not None:
+                if not init_method.is_semantic:
+                    if init_method.is_inline:
+                        errors.report("An __init__ method cannot be inlined",
+                                severity='fatal', symbol=expr)
+                    init_method = self._annotate_the_called_function_def(init_method, args)
 
-            cls_variable = self._assign_lhs_variable(lhs, d_var,
-                                    rhs = method.results.var,
-                                    new_expressions = new_expression,
-                                    is_augassign = False)
+                if isinstance(lhs, AnnotatedPyccelSymbol):
+                    annotation = self._visit(lhs.annotation)
+                    if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != init_method.arguments[0].var.class_type:
+                        errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
+                                symbol=annotation, severity='error')
+                    lhs = lhs.name
+
+                cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                        rhs = init_method.results.var,
+                                        new_expressions = new_expression,
+                                        is_augassign = False)
+                args = (FunctionCallArgument(cls_variable), *args)
+
+                args = self._sort_function_call_args(init_method.arguments, args)
+                self._check_argument_compatibility(args, init_method.arguments,
+                                init_method, init_method.is_elemental)
+
+                new_expr = ConstructorCall(init_method, args, cls_variable)
+
+                for a, f_a in zip(new_expr.args, init_method.arguments):
+                    if f_a.persistent_target:
+                        val = a.value
+                        if isinstance(val, Variable):
+                            a.value.is_target = True
+                            self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
+                        else:
+                            errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
+                                    severity='error', symbol=expr)
+            else:
+                cls_variable = self._assign_lhs_variable(lhs, d_var,
+                                        rhs = None,
+                                        new_expressions = new_expression,
+                                        is_augassign = False)
+                new_expr = EmptyNode()
             self._additional_exprs[-1].extend(new_expression)
-            args = (FunctionCallArgument(cls_variable), *args)
-
-            args = self._sort_function_call_args(method.arguments, args)
-            self._check_argument_compatibility(args, method.arguments,
-                            method, method.is_elemental)
-
-            new_expr = ConstructorCall(method, args, cls_variable)
-
-            for a, f_a in zip(new_expr.args, method.arguments):
-                if f_a.persistent_target:
-                    val = a.value
-                    if isinstance(val, Variable):
-                        a.value.is_target = True
-                        self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
-                    else:
-                        errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
-                                severity='error', symbol=expr)
-
             self._allocs[-1].add(cls_variable)
             return new_expr
         else:
@@ -3729,17 +3720,7 @@ class SemanticParser(BasicParser):
                     if func is not None:
                         func = PyccelFunctionDef(env_var.__name__, func)
                     mod_name = env_var.__module__
-                    if mod_name:
-                        recognised_mod = recognised_source(mod_name)
-                    elif mod_name is None and isinstance(env_var, BuiltinFunctionType):
-                        # Handling of BuiltinFunctionType is necessary for Python 3.9 (NumPy 1.* doesn't specify __module__)
-                        mod_name = str(env_var).split(' of ',1)[-1].split(' object ',1)[0]
-                        while mod_name and not recognised_source(mod_name):
-                            mod_name = mod_name.rsplit('.', 1)[0]
-
-                        recognised_mod = len(mod_name) != 0
-                    else:
-                        recognised_mod = False
+                    recognised_mod = (mod_name is not None) and recognised_source(mod_name)
 
                     if func is None and recognised_mod:
                         pyccel_stage.set_stage('syntactic')
@@ -3780,7 +3761,7 @@ class SemanticParser(BasicParser):
                 lhs_scope_name = lhs.name
             lhs = lhs.name
 
-            if semantic_lhs_var.class_type is TypeAlias():
+            if isinstance(semantic_lhs_var.class_type, TypeAlias):
                 pyccel_stage.set_stage('syntactic')
                 if isinstance(rhs, LiteralString):
                     try:
@@ -3920,7 +3901,7 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _build_ListExtend or _build_PythonSetFunction
-        if isinstance(rhs, (For, CodeBlock, ConstructorCall)):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
 
         elif isinstance(rhs, FunctionCall):
@@ -4147,13 +4128,13 @@ class SemanticParser(BasicParser):
         for l, r in zip(lhs,rhs):
             if isinstance(l, PythonTuple):
                 for li in l:
-                    if li.is_const:
+                    if isinstance(li.class_type, FinalType):
                         # If constant (can't use annotations on tuple assignment)
                         errors.report("Cannot modify variable marked as Final",
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
-                if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
+                if isinstance(l.class_type, FinalType) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or \
                         any(not isinstance(u, (Allocate, PyccelArrayShapeElement)) for u in l.get_all_user_nodes())):
                     # If constant and not the initialising declaration of a constant variable
                     errors.report("Cannot modify variable marked as Final",
@@ -4218,7 +4199,7 @@ class SemanticParser(BasicParser):
 
     def _visit_AugAssign(self, expr):
         lhs = self._visit(expr.lhs)
-        if lhs.is_const:
+        if isinstance(lhs.class_type, FinalType):
             errors.report("Cannot modify variable marked as Final",
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 symbol=lhs, severity='error')
@@ -4509,14 +4490,14 @@ class SemanticParser(BasicParser):
                           List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
                            symbol=expr, severity='error')
         try:
-            class_type = type_container[conversion_func.cls_name](class_type)
+            class_type = type_container[conversion_func.cls_name].get_new(class_type)
         except TypeError:
             if class_type.rank > 0:
                 errors.report("ND comprehension expressions cannot be saved directly to an array yet.\n"+PYCCEL_RESTRICTION_TODO,
                               symbol=expr,
                               severity='fatal')
 
-            class_type = type_container[conversion_func.cls_name](numpy_process_dtype(class_type), rank=1, order=None)
+            class_type = type_container[conversion_func.cls_name].get_new(numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         d_var['shape'] = (dim,)
         d_var['cls_base'] = get_cls_base(class_type)
@@ -4828,19 +4809,22 @@ class SemanticParser(BasicParser):
         func = insertion_scope.functions.get(python_name, None)
         if func:
             if func.is_semantic:
-                if self.is_header_file:
-                    # Only Interfaces should be revisited in a header file
+                if self.is_stub_file:
+                    # Only Interfaces should be revisited in a stub file
                     assert isinstance(func, Interface)
                     existing_semantic_funcs = [*func.functions]
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators:
-            low_level_decs = decorators['low_level']
-            assert len(low_level_decs) == 1
-            arg = low_level_decs[0].args[0].value
-            assert isinstance(arg, LiteralString)
-            name = PyccelSymbol(arg.python_value)
+        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
+            if 'low_level' in decorators:
+                low_level_decs = decorators['low_level']
+                assert len(low_level_decs) == 1
+                arg = low_level_decs[0].args[0].value
+                assert isinstance(arg, LiteralString)
+                name = PyccelSymbol(arg.python_value)
+            else:
+                name = python_name
             if 'overload' not in decorators:
                 insertion_scope.remove_symbol(python_name)
                 insertion_scope.insert_low_level_symbol(python_name, name)
@@ -4913,7 +4897,7 @@ class SemanticParser(BasicParser):
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if is_interface and 'low_level' not in decorators:
-                name, _ = self.scope.get_new_incremented_symbol(interface_name, interface_idx)
+                name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
 
             insertion_scope.python_names[name] = python_name
 
@@ -5122,12 +5106,29 @@ class SemanticParser(BasicParser):
         replace_map = {}
 
         pyccel_stage.set_stage('syntactic')
+        imports = list(expr.imports)
         global_scope_import_targets = {}
         if expr.is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
             mod = self.d_parsers[mod_name].semantic_parser.ast
 
-            global_symbols = set(expr.body.get_attribute_nodes(PyccelSymbol))
+            global_symbols = set()
+            to_examine = [expr.body]
+            while to_examine:
+                remaining_to_examine = []
+                for ex in to_examine:
+                    if isinstance(ex, DottedName) and isinstance(ex.name[-1], FunctionCall):
+                        global_symbols.add(ex.name[0])
+                        remaining = ex.name[-1].get_attribute_nodes((PyccelSymbol, DottedName))
+                        remaining.remove(ex.name[-1].funcdef)
+                        global_symbols.update(s for s in remaining if not isinstance(s, DottedName))
+                        remaining_to_examine.extend(s for s in remaining if isinstance(s, DottedName))
+                    else:
+                        symbols = ex.get_attribute_nodes((PyccelSymbol, DottedName))
+                        global_symbols.update(s for s in symbols if not isinstance(s, DottedName))
+                        remaining_to_examine.extend(s for s in symbols if isinstance(s, DottedName))
+                to_examine = remaining_to_examine
+
             global_symbols.difference_update(expr.scope.local_used_symbols)
 
             for v in global_symbols:
@@ -5138,14 +5139,24 @@ class SemanticParser(BasicParser):
                         if v in import_type:
                             imported_obj = import_type[v]
                             break
-                    if imported_obj:
-                        import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
-                    if self.scope.symbol_in_use(v):
-                        new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
-                        replace_map[v] = new_v
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                    if isinstance(imported_obj, Module):
+                        # Insert an imported module as a new Import object
+                        new_v = v
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(v)
+                            replace_map[v] = new_v
+                        source = mod.scope.find(v, 'imports').source
+                        mod_import = source if source == new_v else AsName(source, new_v)
+                        imports.append(Import(mod_import))
                     else:
-                        global_scope_import_targets.setdefault(import_mod_name, []).append(v)
+                        if imported_obj:
+                            import_mod_name = imported_obj.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
+                        if self.scope.symbol_in_use(v):
+                            new_v = self.scope.get_new_name(self.scope.get_expected_name(v))
+                            replace_map[v] = new_v
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(AsName(v, new_v))
+                        else:
+                            global_scope_import_targets.setdefault(import_mod_name, []).append(v)
 
         # Swap in the function call arguments to replace the variables representing
         # the arguments of the inlined function
@@ -5215,8 +5226,10 @@ class SemanticParser(BasicParser):
                           else EmptyNode() for r in returns]
         expr.body.substitute(returns, replace_return, invalidate = False)
 
-        imports = list(expr.imports)
-        imports.extend(Import(m_name, targets) for m_name, targets in global_scope_import_targets.items())
+        new_imports = [Import(m_name, targets) for m_name, targets in global_scope_import_targets.items()]
+        for i in new_imports:
+            i.set_current_ast(function_call.python_ast)
+        imports.extend(new_imports)
         pyccel_stage.set_stage('semantic')
 
         import_init_calls = [self._visit(i) for i in imports]
@@ -5322,6 +5335,10 @@ class SemanticParser(BasicParser):
             assert isinstance(arg, LiteralString)
             name = PyccelSymbol(arg.python_value)
             self.scope.insert_low_level_symbol(expr.name, name)
+        elif self.is_stub_file:
+            self.scope.remove_symbol(expr.name)
+            name = expr.name
+            self.scope.insert_low_level_symbol(expr.name, name)
         else:
             name = self.scope.get_expected_name(expr.name)
 
@@ -5332,7 +5349,7 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
-        cls_scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+        cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
@@ -5479,7 +5496,7 @@ class SemanticParser(BasicParser):
             # using repr.
             # TODO shall we improve it?
 
-            p       = self.d_parsers[source_target]
+            p       = self.d_parsers[source]
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
@@ -5496,11 +5513,18 @@ class SemanticParser(BasicParser):
                         if n in d_son:
                             e = d_son[n]
                             if entry == 'functions':
-                                container[entry][t] = e.clone(t, is_imported=True)
-                                m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-                                container[entry][t].set_current_user_node(m)
+                                if t in container[entry]:
+                                    existing_e = container[entry][t]
+                                    assert existing_e.is_imported
+                                    assert e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0] is \
+                                            existing_e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                else:
+                                    assert t not in container[entry]
+                                    container[entry][t] = e.clone(e.name, is_imported=True)
+                                    m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                    container[entry][t].set_current_user_node(m)
                             elif entry == 'variables':
-                                container[entry][t] = e.clone(t)
+                                container[entry][t] = e.clone(e.name)
                             else:
                                 container[entry][t] = e
                             targets[t] = e
@@ -5534,21 +5558,20 @@ class SemanticParser(BasicParser):
             if import_init:
                 old_name = import_init.name
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_init, new_name))
 
-                if new_name != old_name:
-                    import_init = import_init.clone(new_name)
-                    container['functions'][old_name] = import_init
+                import_init = import_init.clone(import_init.name, is_imported = True)
+                targets.append(AsName(import_init, new_name))
+                container['functions'][new_name] = import_init
 
                 result  = import_init()
 
             if import_free:
                 old_name = import_free.name
                 new_name = self.scope.get_new_name(old_name)
-                targets.append(AsName(import_free, new_name))
 
-                if new_name != old_name:
-                    import_free = import_free.clone(new_name)
+                import_free = import_free.clone(import_free.name, is_imported = True)
+                targets.append(AsName(import_free, new_name))
+                container['functions'][new_name] = import_free
 
             mod = p.semantic_parser.ast
 
@@ -6291,7 +6314,7 @@ class SemanticParser(BasicParser):
                 assert len(assigns) == 1
                 lhs = assigns[0].lhs
             d_var = {
-                    'class_type' : HomogeneousSetType(class_type.element_type),
+                    'class_type' : HomogeneousSetType.get_new(class_type.element_type),
                     'shape' : arg.shape,
                     'cls_base' : SetClass,
                     'memory_handling' : 'heap'

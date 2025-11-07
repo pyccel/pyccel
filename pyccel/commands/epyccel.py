@@ -268,9 +268,6 @@ def epyccel_seq(function_class_or_module, *,
     object
         Return accelerated Python module and function.
     """
-    # Store current directory
-    base_dirpath = os.getcwd()
-
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
@@ -337,34 +334,27 @@ def epyccel_seq(function_class_or_module, *,
         os.makedirs(folder, exist_ok=True)
         os.makedirs(epyccel_dirpath, exist_ok=True)
 
-        # Change working directory to '__epyccel__'
-        os.chdir(epyccel_dirpath)
-
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
-        try:
-            # Generate shared library
-            execute_pyccel(pymod_filename,
-                           verbose         = verbose,
-                           time_execution  = time_execution,
-                           language        = language,
-                           compiler_family = compiler_family_or_config,
-                           flags           = flags,
-                           wrapper_flags   = wrapper_flags,
-                           include         = include,
-                           libdir          = libdir,
-                           modules         = (),
-                           libs            = libs,
-                           debug           = debug,
-                           accelerators    = accelerators,
-                           output_name     = module_name,
-                           conda_warnings  = conda_warnings,
-                           context_dict    = context_dict)
-        finally:
-            # Change working directory back to starting point
-            os.chdir(base_dirpath)
+        # Generate shared library
+        execute_pyccel(pymod_filename,
+                       verbose         = verbose,
+                       time_execution  = time_execution,
+                       language        = language,
+                       compiler_family = compiler_family_or_config,
+                       flags           = flags,
+                       wrapper_flags   = wrapper_flags,
+                       include         = include,
+                       libdir          = libdir,
+                       modules         = (),
+                       libs            = libs,
+                       debug           = debug,
+                       accelerators    = accelerators,
+                       output_name     = module_name,
+                       conda_warnings  = conda_warnings,
+                       context_dict    = context_dict)
 
 
         # Import shared library

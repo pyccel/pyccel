@@ -17,7 +17,7 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, CustomDataType, TupleType,
+from .datatypes import (PyccelType, CustomDataType, FinalType, TupleType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
@@ -1047,10 +1047,19 @@ class Module(ScopedAstNode):
         self._is_external = is_external
 
         if pyccel_stage != "syntactic":
-            self._internal_dictionary = {v.name:v for v in variables}
-            self._internal_dictionary.update({f.name:f for f in funcs})
-            self._internal_dictionary.update({i.name:i for i in interfaces})
-            self._internal_dictionary.update({c.name:c for c in classes})
+            def get_name(o):
+                """ Get the syntactic/Python name of the object """
+                n = o.name
+                if o.pyccel_staging == 'syntactic':
+                    return n
+                else:
+                    return scope.get_python_name(n) if scope else n
+
+            self._internal_dictionary = {get_name(v) : v for v in variables}
+            self._internal_dictionary.update({get_name(f) : f for f in funcs})
+            self._internal_dictionary.update({get_name(i) : i for i in interfaces})
+            self._internal_dictionary.update({get_name(c) : c for c in classes})
+
             import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
                                 for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
@@ -1563,7 +1572,7 @@ class FunctionDefArgument(TypedAstNode):
         if pyccel_stage != "syntactic":
             if isinstance(self.var, Variable):
                 self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
-                        and not self.var.is_const and not isinstance(self.var.class_type, TupleType)
+                        and not isinstance(self.var.class_type, FinalType) and not isinstance(self.var.class_type, TupleType)
             else:
                 # If var is not a Variable it is a FunctionAddress
                 self._inout = False
@@ -2221,9 +2230,7 @@ class FunctionDef(ScopedAstNode):
         # Outside of semantic stage, if the scope is provided then the original name
         # of the function should be retrievable from the semantic name using scope.python_names
         assert pyccel_stage != "semantic" or scope is None or \
-                name in scope.python_names
-        assert pyccel_stage != "semantic" or scope is None or \
-                scope.name == scope.python_names[name]
+                is_imported or (name in scope.python_names and scope.name == scope.python_names[name])
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2551,23 +2558,10 @@ class FunctionDef(ScopedAstNode):
         current_pyccel_stage = pyccel_stage.current_stage
         if not self.is_semantic:
             pyccel_stage.set_stage('syntactic')
+        args = (newname,) + args[1:]
         new_func = cls(*args, **kwargs)
-        new_func.rename(newname)
         pyccel_stage.set_stage(current_pyccel_stage)
         return new_func
-
-    def rename(self, newname):
-        """
-        Rename the FunctionDef name
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the FunctionDef
-        """
-
-        self._name = newname
 
     def __getnewargs_ex__(self):
         """

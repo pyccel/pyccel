@@ -10,6 +10,8 @@ Module containing the Parser object
 
 from pathlib import Path
 
+from pyccel.ast.utilities import recognised_source
+
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
@@ -101,6 +103,17 @@ class Parser(object):
     def filename(self):
         """ Python file to be parsed. """
         return self._filename
+
+    @property
+    def original_filename(self) -> Path:
+        """
+        The absolute path to the original Python file that was translated.
+
+        This will be equivalent to the filename, unless the file is a dependency.
+        In that case the filename will be a .pyi file while the original_filename
+        will be a .py file.
+        """
+        return self._original_filename
 
     @property
     def d_parsers(self):
@@ -204,11 +217,11 @@ class Parser(object):
         if self._semantic_parser:
             return self._semantic_parser
 
-        if verbose:
-            print ('>> Calculating semantic annotations :: ', self._filename)
-
         # we first treat all sons to get imports
         self._annotate_sons(verbose=verbose)
+
+        if verbose:
+            print ('>> Calculating semantic annotations :: ', self._filename)
 
         # Create a new semantic parser and store it in object
         parser = SemanticParser(self._syntax_parser,
@@ -261,7 +274,7 @@ class Parser(object):
             The updated dictionary of parsed sons.
         """
 
-        imports     = self.imports
+        imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
@@ -286,7 +299,8 @@ class Parser(object):
             son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
-            d_parsers[source] = son
+            d_parsers[getattr(source, 'name', source)] = son
+            d_parsers.update(son.d_parsers)
 
         return d_parsers
 

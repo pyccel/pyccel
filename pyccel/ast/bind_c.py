@@ -7,6 +7,7 @@
 Module describing all elements of the AST needed to represent elements which appear in a Fortran-C binding
 file.
 """
+from functools import cache
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode
 from pyccel.ast.core import Module, Deallocate
@@ -18,7 +19,6 @@ from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors     import Errors
-from pyccel.utilities.metaclasses import Singleton
 
 errors = Errors()
 
@@ -44,7 +44,7 @@ __all__ = (
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(FixedSizeType, metaclass = Singleton):
+class BindCPointer(FixedSizeType):
     """
     Datatype representing a C pointer in Fortran.
 
@@ -54,27 +54,39 @@ class BindCPointer(FixedSizeType, metaclass = Singleton):
     __slots__ = ()
     _name = 'bindcpointer'
 
-class BindCArrayType(InhomogeneousTupleType):
+class BindCArrayType:
     """
     Datatype for a tuple containing all the information necessary to describe an array.
 
     Datatype for a tuple containing a pointer to array data and integers describing their
     shape and strides.
-
-    Parameters
-    ----------
-    rank : int
-        The rank of the array being described.
-    has_strides : bool
-        Indicates whether strides are used to describe the array.
     """
     __slots__ = ()
     _name = 'BindCArrayType'
 
-    def __init__(self, rank, has_strides):
+    @classmethod
+    @cache
+    def get_new(cls, rank, has_strides):
+        """
+        Get the parametrised BindCArrayType subclass.
+
+        Get the parametrised BindCArrayType subclass.
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array being described.
+        has_strides : bool
+            Indicates whether strides are used to describe the array.
+        """
         shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
-        super().__init__(BindCPointer(), *shape_types, *stride_types)
+        name = 'BindCArray{rank}DType'
+        if has_strides:
+            name += '_strided'
+        super_class_instance = InhomogeneousTupleType.get_new(BindCPointer(), *shape_types, *stride_types)
+        return type(name, (type(super_class_instance), BindCArrayType),
+                    {})()
 
 # =======================================================================================
 #                                   Wrapper classes
@@ -291,33 +303,10 @@ class BindCModuleVariable(Variable):
     --------
     Variable : The super class.
     """
-    __slots__ = ('_f_name',)
+    __slots__ = ()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._f_name = self._name.lower()
-
-    @property
-    def name(self):
-        """
-        The name of the external variable that should be printed in C.
-
-        The name of the external variable that should be printed in C.
-        In order to be compatible with Fortran the name must be printed
-        in lower case letters.
-        """
-        return self._f_name
-
-    @property
-    def indexed_name(self):
-        """
-        The name under which the variable is indexed in the scope.
-
-        The name under which the variable is indexed in the scope. This is
-        important in order to be able to collect the original Python name
-        used by the user in case of collisions.
-        """
-        return self._name
 
 # =======================================================================================
 
