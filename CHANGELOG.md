@@ -49,6 +49,7 @@ All notable changes to this project will be documented in this file.
 -   #2458 : Fix incoherent import printing in Python and `.pyi` files.
 -   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   #2462 : Fix erroneous additional import in stub file.
+-   #2443 : Fix passing non-contiguous slices of arrays.
 -   Rename `main` function when translating to C.
 
 ### Changed
