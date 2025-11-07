@@ -139,7 +139,7 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * Functions : Numpy array handling functions
  */
 
-void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[], bool c_order)
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[], int64_t ubounds[], int64_t strides[], bool c_order)
 {
     PyArrayObject* a = (PyArrayObject*)(arr);
     int nd = PyArray_NDIM(a);
@@ -149,27 +149,37 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int6
     if (base == NULL) {
         npy_intp* np_shape = PyArray_SHAPE(a);
         for (int i = 0; i < nd; ++i) {
-            shape[i] = np_shape[i];
+            base_shape[i] = np_shape[i];
+            ubounds[i] = np_shape[i];
             strides[i] = 1;
         }
     }
     else {
-        npy_intp current_stride = PyArray_ITEMSIZE(a);
+        npy_intp itemsize = PyArray_ITEMSIZE(a);
         npy_intp* np_strides = PyArray_STRIDES(a);
         npy_intp* np_shape = PyArray_SHAPE(a);
         if (c_order) {
-            for (int i = nd-1; i >= 0; --i) {
-                shape[i] = np_shape[i];
-                strides[i] = np_strides[i] / current_stride;
-                current_stride *= (shape[i] * strides[i]);
+            for (int i = 1; i < nd; ++i) {
+                base_shape[i] = np_strides[i-1] / itemsize;
             }
+            strides[nd-1] = np_strides[nd-1] / itemsize;
+            for (int i = 0; i < nd-1; ++i) {
+                strides[i] = np_strides[i] / itemsize / base_shape[i+1];
+            }
+            base_shape[0] = np_shape[0] * strides[0];
         }
         else {
-            for (int i = 0; i < nd; ++i) {
-                shape[i] = np_shape[i];
-                strides[i] = np_strides[i] / current_stride;
-                current_stride *= (shape[i] * strides[i]);
+            for (int i = 0; i < nd-1; ++i) {
+                base_shape[i] = np_strides[i+1] / itemsize;
             }
+            strides[0] = np_strides[0] / itemsize;
+            for (int i = 1; i < nd; ++i) {
+                strides[i] = np_strides[i] / itemsize / base_shape[i-1];
+            }
+            base_shape[nd-1] = np_shape[nd-1] * strides[nd-1];
+        }
+        for (int i = 0; i < nd; ++i) {
+            ubounds[i] = np_shape[i] * strides[i];
         }
     }
 }
