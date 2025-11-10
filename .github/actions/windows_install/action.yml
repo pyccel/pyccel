@@ -14,17 +14,12 @@ runs:
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
-    - uses: msys2/setup-msys2@v2
+    - run: Use MSys2 to install dependencies
+      uses: msys2/setup-msys2@v2
       with:
         msystem: UCRT64
         update: true
-        install: git mingw-w64-ucrt-x86_64-gcc
-    - name: Install  MSYS2 dependencies
-      run: |
-        pacman -S --noconfirm mingw-w64-ucrt-x86_64-lapack
-        pacman -S --noconfirm mingw-w64-x86_64-msmpi
-        pacman -S --noconfirm m4
-      shell: bash
+        install: git mingw-w64-ucrt-x86_64-gcc mingw-w64-x86_64-msmpi m4
     - name: Check environment
       run: |
         echo $CC
