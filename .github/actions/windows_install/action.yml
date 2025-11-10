@@ -20,7 +20,7 @@ runs:
         msystem: MINGW64
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-msmpi m4
-    - name: Check environment
+    - name: Update PATH
       run: |
         which gcc
         which mpicc
@@ -29,8 +29,8 @@ runs:
         for p in $PATH;
         do
           echo "PATH: $(cygpath -w $p)"
-          echo $GITHUB_PATH
-          cygpath -w $p >> $GITHUB_PATH
+          echo $(cypath -u $GITHUB_PATH)
+          cygpath -w $p >> $(cypath -u $GITHUB_PATH)
         done
       shell: msys2 {0}
     - name: Add CC and FC to environment
