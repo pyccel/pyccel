@@ -37,7 +37,7 @@ runs:
         (Get-Command msys2).Path
         msys2 -h
         msys2 -c 'echo $PATH'
-        msys2 -c 'cygpath -w $(echo $PATH | tr ":" "\n")'
+        msys2 -c 'cygpath -w $(echo $PATH | tr ":" "\\n")'
         ls C:\msys64\usr\bin
         ls C:/msys64/mingw64/bin
         echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
