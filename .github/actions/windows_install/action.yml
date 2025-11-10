@@ -30,7 +30,7 @@ runs:
           echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
         done
         echo "MSYSTEM=MSYS" >> $GITHUB_ENV
-        echo "$LD_LIBRARY_PATH"
+        find / -name 'libopenmp.*'
       shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
