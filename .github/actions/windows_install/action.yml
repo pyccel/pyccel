@@ -47,7 +47,7 @@ runs:
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
         echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_PATH/dll_path.pth
       shell: bash
-    - name: Setup Microsoft MPI
+    - name: Complete Microsoft MPI installation
       uses: mpi4py/setup-mpi@v1
       with:
         mpi: msmpi

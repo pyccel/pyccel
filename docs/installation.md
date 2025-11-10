@@ -117,6 +117,16 @@ pacman -S mingw-w64-x86_64-msmpi
 pacman -S mingw-w64-x86_64-lapack
 ```
 
+Download MS MPI runtime and SDK, then install MPI:
+
+```sh
+WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
+curl -L $WEB_ADDRESS/msmpisetup.exe -o msmpisetup.exe
+curl -L $WEB_ADDRESS/msmpisdk.msi -o msmpisdk.msi
+msiexec //i msmpisdk.msi
+./msmpisetup.exe
+```
+
 [As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell Python which directories contain trusted DLLs. In order to use Pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to Python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
 E.g:
 
