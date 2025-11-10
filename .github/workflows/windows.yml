@@ -90,14 +90,6 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
-      - name: Test
-        run: |
-          # Check for .pth capture
-          python -v -c "pass" | grep added
-          pyccel --language=c --openmp tmp_openmp.py -vv
-          python -c "import tmp_openmp"
-        shell: bash
-        working-directory: tests/epyccel/modules
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
