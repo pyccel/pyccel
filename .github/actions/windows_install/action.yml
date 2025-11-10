@@ -34,10 +34,14 @@ runs:
         msys2 -c 'which gcc'
         ls C:/mingw64\bin
         msys2 -c 'which mpicc'
-        ls C:\mingw64\usr\bin
+        (Get-Command msys2).Path
+        msys2 -h
+        ls C:\msys64\usr\bin
+        echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
       shell: powershell
     - name: Add CC and FC to environment
       run: |
+        (Get-Command m4).Path
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
         echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
