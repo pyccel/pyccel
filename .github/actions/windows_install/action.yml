@@ -29,8 +29,8 @@ runs:
         for p in $PATH;
         do
           echo "PATH: $(cygpath -w $p)"
-          echo $(cypath -u $GITHUB_PATH)
-          cygpath -w $p >> $(cypath -u $GITHUB_PATH)
+          echo $(cygpath -u $GITHUB_PATH)
+          cygpath -w $p >> $(cygpath -u $GITHUB_PATH)
         done
       shell: msys2 {0}
     - name: Add CC and FC to environment
