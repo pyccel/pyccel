@@ -99,12 +99,12 @@ PyArray_BASE = FunctionDef(name = 'PyArray_BASE',
 PyArray_SHAPE = FunctionDef(name = 'PyArray_SHAPE',
                             body = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                            results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias')))
+                            results   = FunctionDefResult(Variable(CStackArray.get_new(NumpyInt32Type()), name='s', memory_handling='alias')))
 
 PyArray_STRIDES = FunctionDef(name = 'PyArray_STRIDES',
                             body = [],
                             arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
-                            results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), name='s', memory_handling='alias')))
+                            results   = FunctionDefResult(Variable(CStackArray.get_new(NumpyInt32Type()), name='s', memory_handling='alias')))
 
 PyArray_ITEMSIZE = FunctionDef(name = 'PyArray_ITEMSIZE',
                             body = [],
@@ -116,13 +116,13 @@ pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
                 body      = [],
                 arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
-                results   = FunctionDefResult(Variable(NumpyNDArrayType(GenericType(), 1, None), 'array')))
+                results   = FunctionDefResult(Variable(NumpyNDArrayType.get_new(GenericType(), 1, None), 'array')))
 
 numpy_to_stc_strides = FunctionDef(
                 name      = 'numpy_to_stc_strides',
                 arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'o', memory_handling='alias'))],
                 body      = [],
-                results   = FunctionDefResult(Variable(CStackArray(NumpyInt32Type()), 'strides')))
+                results   = FunctionDefResult(Variable(CStackArray.get_new(NumpyInt32Type()), 'strides')))
 
 # NumPy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
@@ -154,8 +154,8 @@ get_strides_and_shape_from_numpy_array = FunctionDef(
         name = 'get_strides_and_shape_from_numpy_array',
         arguments = [
             FunctionDefArgument(Variable(PyccelPyObject(), 'arr', memory_handling='alias')),
-            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape', memory_handling='alias')),
-            FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'strides', memory_handling='alias')),
+            FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'shape', memory_handling='alias')),
+            FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'strides', memory_handling='alias')),
             FunctionDefArgument(Variable(PythonNativeBool(), 'c_order'))
             ],
         body = [])
@@ -176,7 +176,7 @@ to_pyarray = FunctionDef(name = 'to_pyarray',
                          arguments = [FunctionDefArgument(Variable(CNativeInt(), name = 'nd')),
                                       FunctionDefArgument(Variable(CNativeInt(), name = 'typenum')),
                                       FunctionDefArgument(Variable(VoidType(), name = 'data', memory_handling='alias')),
-                                      FunctionDefArgument(Variable(CStackArray(NumpyInt64Type()), 'shape')),
+                                      FunctionDefArgument(Variable(CStackArray.get_new(NumpyInt64Type()), 'shape')),
                                       FunctionDefArgument(Variable(PythonNativeBool(), 'c_order')),
                                       FunctionDefArgument(Variable(PythonNativeBool(), 'release_memory'))],
                          results = FunctionDefResult(Variable(PyccelPyObject(), name = 'arr', memory_handling='alias'))

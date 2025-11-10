@@ -15,6 +15,7 @@ from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
+from pyccel.ast.datatypes  import FinalType
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
@@ -156,13 +157,13 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            if expr.is_const:
+            if isinstance(expr.class_type, FinalType):
                 return 'const void*'
             else:
                 return 'void*'
         if expr.dtype is Py_ssize_t():
             dtype =  'Py_ssize_t*' if self.is_c_pointer(expr) else 'Py_ssize_t'
-            if expr.is_const:
+            if isinstance(expr.class_type, FinalType):
                 return f'const {dtype}'
             else:
                 return dtype

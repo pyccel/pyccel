@@ -1,4 +1,4 @@
-# MyType variable represents a symbolic concept. Its value cannot be changed.
+# Variable 'MyType' represents a symbolic concept. Its value cannot be changed.
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeAlias
 

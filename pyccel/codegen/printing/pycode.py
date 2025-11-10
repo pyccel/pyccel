@@ -228,9 +228,6 @@ class PythonCodePrinter(CodePrinter):
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
-            if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
-                self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
-                type_annotation = f'Final[{type_annotation}]'
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
             args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)
@@ -1675,14 +1672,10 @@ class PythonCodePrinter(CodePrinter):
         return f"({results})({args})"
 
     def _print_VariableTypeAnnotation(self, expr):
-        dtype = self._print(expr.class_type)
-        if expr.is_const:
-            self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
-            dtype = f'Final[{dtype}]'
-        return dtype
+        return self._print(expr.class_type)
 
-    def _print_TypingFinal(self, expr):
-        annotation = self._print(expr.arg)
+    def _print_FinalType(self, expr):
+        annotation = self._print(expr.underlying_type)
         self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
         return f'Final[{annotation}]'
 
