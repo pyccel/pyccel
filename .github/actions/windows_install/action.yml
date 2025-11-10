@@ -42,9 +42,9 @@ runs:
       shell: powershell
     - name: Allow Python to find trusted DLLs
       run: |
-        find D:/a/_temp/msys64/mingw64/ -name '*.dll'
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_PATH/dll_path.pth
+        echo $SITE_DIR
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_PATH/dll_path.pth
         ls D:/a/_temp/msys64/mingw64/lib
         ls D:/a/_temp/msys64/mingw64/bin
       shell: bash
