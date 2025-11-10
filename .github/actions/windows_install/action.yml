@@ -36,7 +36,10 @@ runs:
         msys2 -c 'which mpicc'
         (Get-Command msys2).Path
         msys2 -h
+        msys2 -c 'echo $PATH'
+        msys2 -c 'cygpath -w $(echo $PATH | tr ":" "\n")'
         ls C:\msys64\usr\bin
+        ls C:/msys64/mingw64/bin
         echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
       shell: powershell
     - name: Add CC and FC to environment
