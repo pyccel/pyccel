@@ -22,10 +22,15 @@ runs:
         install: git mingw-w64-ucrt-x86_64-gcc mingw-w64-x86_64-msmpi m4
     - name: Check environment
       run: |
+        echo "CC:"
         echo $CC
+        echo "FC:"
         echo $FC
+        echo "gcc path:"
         (Get-Command gcc).Path
+        echo "gfortran path:"
         (Get-Command gfortran).Path
+        ls C:\msys64
       shell: powershell
     - name: Add CC and FC to environment
       run: |
