@@ -99,73 +99,22 @@ This requires that the Command Line Tools (CLT) for Xcode are installed.
 ### Windows
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
-We recommend using [Chocolatey](https://chocolatey.org/) to speed up the process, and we provide commands that work in a git-bash sh.
-In an Administrator prompt install git-bash (if needed), a Python3 distribution, and a GCC compiler:
+We recommend using [MSys2](https://www.msys2.org/) to speed up the process, and we provide commands that work in a git-bash sh.
+In an Administrator prompt install git-bash (if needed), a Python3 distribution, a GCC compiler, MPI, CMake and m4:
 
 ```sh
-choco install git
-choco install python3
-choco install mingw
-choco install cmake
-choco install m4
-```
-
-Download x64 BLAS and LAPACK DLLs from <https://icl.cs.utk.edu/lapack-for-windows/lapack/>:
-
-```sh
-WEB_ADDRESS=https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64
-LIBRARY_DIR=/c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
-curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
-curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
-```
-
-Generate static MS C runtime library from corresponding dynamic link library:
-
-```sh
-cd "$LIBRARY_DIR"
-cp $SYSTEMROOT/SysWOW64/vcruntime140.dll .
-gendef vcruntime140.dll
-dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
-cd -
-```
-
-Download MS MPI runtime and SDK, then install MPI:
-
-```sh
-WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
-curl -L $WEB_ADDRESS/msmpisetup.exe -o msmpisetup.exe
-curl -L $WEB_ADDRESS/msmpisdk.msi -o msmpisdk.msi
-./msmpisetup.exe
-msiexec //i msmpisdk.msi
-```
-
-At this point, close and reopen your terminal to refresh all environment variables!
-
-In Administrator git-bash, generate `mpi.mod` for GFortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
-
-```sh
-cd "$MSMPI_INC"
-sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
-sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
-gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
-cd -
-```
-
-Generate static `libmsmpi.a` from `msmpi.dll`:
-
-```sh
-cd "$MSMPI_LIB64"
-cp $SYSTEMROOT/SysWOW64/msmpi.dll .
-gendef msmpi.dll
-dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
-cd -
-```
-
-On Windows it is important that all locations containing DLLs are on the PATH. If you have added any variables to locations which are not on the PATH then you need to add them:
-
-```sh
-echo $PATH
-export PATH=$LIBRARY_DIR;$PATH
+pacman -S git # Install git to be able to clone repo
+pacman -S mingw-w64-x86_64-python3.13 # Install python3 to be able to use Pyccel
+# Install compilers
+pacman -S mingw-w64-x86_64-gcc
+pacman -S mingw-w64-x86_64-gcc-fortran
+# Install compilation tools for multi-file projects and container support
+pacman -S mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-meson
+pacman -S m4
+# Install MPI and Lapack for library support
+pacman -S mingw-w64-x86_64-msmpi
+pacman -S mingw-w64-x86_64-lapack
 ```
 
 [As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell Python which directories contain trusted DLLs. In order to use Pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to Python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
