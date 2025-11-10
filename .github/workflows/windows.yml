@@ -52,7 +52,6 @@ jobs:
     name: Unit tests
     needs: Python_version_picker
 
-
     steps:
       - id: duplicate_check
         uses: fkirc/skip-duplicate-actions@v5
