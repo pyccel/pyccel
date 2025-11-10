@@ -34,7 +34,6 @@ runs:
         msys2 -c 'which gcc'
         ls C:/mingw64\bin
         msys2 -c 'which mpicc'
-        ls C:\msys64\mingw64\usr\bin
         ls C:\mingw64\usr\bin
       shell: powershell
     - name: Add CC and FC to environment
