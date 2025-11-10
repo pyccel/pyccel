@@ -17,7 +17,7 @@ runs:
     - name: Use MSys2 to install dependencies
       uses: msys2/setup-msys2@v2
       with:
-        msystem: UCRT64
+        msystem: MINGW64
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-msmpi m4
     - name: Check environment
