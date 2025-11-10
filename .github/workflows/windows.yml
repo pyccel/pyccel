@@ -93,6 +93,7 @@ jobs:
       - name: Test
         run: |
           pyccel --language=c --openmp tmp_openmp.py -vv
+          dumpbin /DEPENDENTS tmp_openmp.*.pyd
           #objdump -x tmp_openmp.*.pyd
           #ldd tmp_openmp.*.pyd
           python -m pip install dlltracer
