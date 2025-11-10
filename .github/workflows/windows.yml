@@ -86,7 +86,7 @@ jobs:
       - name: Install gFTL
         run: |
           ls
-          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$(pwd)/install -G MinGW Makefiles
+          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$(pwd)/install -G "MinGW Makefiles"
           cmake --build build
           cmake --install build
         shell: bash
