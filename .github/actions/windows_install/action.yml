@@ -26,11 +26,10 @@ runs:
         which mpicc
         echo $PATH
         GITHUB_PATH_COMPATIBLE=$(cygpath -m $GITHUB_PATH)
-        IFS=:
-        for p in $PATH;
-        do
-          echo "PATH: $(cygpath -w $p)"
-          cygpath -w $p >> ${GITHUB_PATH_COMPATIBLE}
+        echo "$PATH" | tr ':' '\n' | while read p; do
+          winpath=$(cygpath -w "$p")
+          echo "PATH: $winpath"
+          echo "$winpath" >> "$GITHUB_PATH_MIXED"
         done
       shell: msys2 {0}
     - name: Add CC and FC to environment
