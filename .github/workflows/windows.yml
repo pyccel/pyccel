@@ -92,9 +92,9 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          pyccel --language=c --openmp tmp_openmp.py
+          pyccel --language=c --openmp tmp_openmp.py -vv
           #objdump -x tmp_openmp.*.pyd
-          ldd tmp_openmp.*.pyd
+          #ldd tmp_openmp.*.pyd
           python -m pip install dlltracer
           python -c "import dlltracer; import sys; tracer = dlltracer.Trace(out=sys.stdout); tracer.__enter__(); import tmp_openmp; tracer.__exit__()"
         shell: bash
