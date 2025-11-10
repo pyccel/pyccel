@@ -42,7 +42,7 @@ runs:
         echo "$PATH" | tr ':' '\n' | while read p; do
           winpath=$(cygpath -w "$p")
           echo "PATH: $winpath"
-          echo "$winpath" >> "$GITHUB_PATH_MIXED"
+          echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
         done
       shell: msys2 {0}
     - name: Add CC and FC to environment
