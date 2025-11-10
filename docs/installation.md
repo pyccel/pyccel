@@ -122,8 +122,8 @@ E.g:
 
 ```python
 import os
-os.add_dll_directory(C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')
-os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')
+os.add_dll_directory('C://msys64/mingw64/lib')
+os.add_dll_directory('C://msys64/mingw64/bin')
 ```
 
 These commands must be run every time a Python instance is opened which will import a Pyccel-generated library.
@@ -131,7 +131,7 @@ These commands must be run every time a Python instance is opened which will imp
 If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [Python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
 
 ```sh
-echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
+echo "import os; os.add_dll_directory('C://msys64/mingw64/lib'); os.add_dll_directory('C://msys64/mingw64/bin')" > $SITE_PATH/dll_path.pth
 ```
 
 (The command may need adapting for your installation locations)
