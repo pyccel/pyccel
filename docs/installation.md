@@ -107,6 +107,7 @@ choco install git
 choco install python3
 choco install mingw
 choco install cmake
+choco install m4
 ```
 
 Download x64 BLAS and LAPACK DLLs from <https://icl.cs.utk.edu/lapack-for-windows/lapack/>:
