@@ -19,32 +19,19 @@ runs:
       with:
         msystem: MINGW64
         update: true
-        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-msmpi m4
-    - name: Test
-      run: |
-        echo $GITHUB_PATH
-        ls $GITHUB_PATH
-      shell: bash
-    - name: Test
-      run: |
-        echo $env:GITHUB_PATH
-        ls $env:GITHUB_PATH
-      shell: powershell
+        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi m4
     - name: Update PATH
       run: |
-        echo $GITHUB_PATH
-        ls -l $GITHUB_PATH
-        which gcc
-        which mpicc
         echo $PATH
         GITHUB_PATH_COMPATIBLE=$(cygpath -m $GITHUB_PATH)
-        ls -l $GITHUB_PATH_COMPATIBLE
         echo "$PATH" | tr ':' '\n' | tac | while read p; do
           winpath=$(cygpath -w "$p")
           echo "PATH: $winpath"
           echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
         done
         echo "MSYSTEM=MSYS" >> $GITHUB_ENV
+        echo "$LD_LIBRARY_PATH"
+        env
       shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
