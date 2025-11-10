@@ -159,8 +159,7 @@ def execute_pyccel_make(files, *,
         try:
             p.parse(verbose=verbose, d_parsers_by_filename = {f.absolute(): p for f, p in parsers.items()})
         except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            errors.report(str(error)+'\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error',
                 traceback=error.__traceback__)
         except PyccelError:
@@ -181,8 +180,7 @@ def execute_pyccel_make(files, *,
         try:
             p.annotate(verbose = verbose)
         except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            errors.report(str(error)+'\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error',
                 traceback=error.__traceback__)
         except PyccelError:
@@ -219,8 +217,7 @@ def execute_pyccel_make(files, *,
         try:
             fname, prog_name = codegen.export(fname)
         except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            errors.report(str(error)+'\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error',
                 traceback=error.__traceback__)
         except PyccelError:
@@ -299,8 +296,7 @@ def execute_pyccel_make(files, *,
 
         build_sys.generate(build_project)
     except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+        errors.report(str(error)+'\n'+PYCCEL_RESTRICTION_TODO,
             severity='error',
             traceback=error.__traceback__)
     except PyccelError:
