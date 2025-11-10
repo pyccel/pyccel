@@ -653,8 +653,6 @@ class CToPythonWrapper(Wrapper):
                                       [Return(self._error_exit_code)]))]
         elif isinstance(orig_var.class_type, FixedSizeNumericType):
             return []
-        elif isinstance(orig_var.class_type, FixedSizeNumericType):
-            return []
         else:
             raise NotImplementedError(f"Unsure how to preserve references for attribute of type {type(orig_var.class_type)}")
 
