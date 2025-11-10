@@ -71,9 +71,9 @@ class MesonHandler(BuildSystemHandler):
                     for d in expr.stdlib_dependencies)})
         deps['m_dep'] = None
         if 'openmp' in self._accelerators:
-            deps.append('openmp')
+            deps['openmp'] = None
         if 'mpi' in self._accelerators:
-            deps.append('mpi')
+            deps['mpi'] = None
         if deps:
             dep_args.append(f"dependencies: [{', '.join(deps)}]")
 
