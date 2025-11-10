@@ -1973,9 +1973,6 @@ class CToPythonWrapper(Wrapper):
             wrapped_var = expr.getter.original_function.results.var
             wrapped_var_elems = expr.getter.original_function.scope.collect_all_tuple_elements(wrapped_var)
 
-        for r in wrapped_var_elems:
-            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, r))
-
         getter_body = [*setup,
                        *arg_code,
                        call,
