@@ -22,30 +22,16 @@ runs:
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-msmpi m4
     - name: Check environment
       run: |
-        echo "CC:"
-        echo $CC
-        echo "FC:"
-        echo $FC
-        echo "gcc path:"
-        (Get-Command gcc).Path
-        echo "gfortran path:"
-        (Get-Command gfortran).Path
-        ls C:\msys64\mingw64\bin
-        msys2 -c 'which gcc'
-        ls C:/mingw64\bin
-        msys2 -c 'which mpicc'
-        (Get-Command msys2).Path
-        msys2 -h
-        msys2 -c 'echo $PATH'
-        msys2 -c "IFS=:; for p in \$PATH; do [ -n \"\$p\" ] && cygpath -w \"\$p\"; done"
-        ls C:\msys64\usr\bin
-        ls C:/msys64/mingw64/bin
-        echo "$PATH"
-        echo "D:\\a\\_temp\\msys64\\mingw64\\bin" >> $GITHUB_PATH
-        echo "D:\\a\\_temp\\msys64\\usr\\local\\bin" >> $GITHUB_PATH
-        echo "D:\\a\\_temp\\msys64\\usr\\bin" >> $GITHUB_PATH
-        echo "D:\\a\\_temp\\msys64\\bin" >> $GITHUB_PATH
-      shell: powershell
+        which gcc
+        which mpicc
+        echo $PATH
+        IFS=:
+        for p in $PATH;
+        do
+          echo "PATH: " cygpath -w $p
+          cygpath -w $p >> $GITHUB_PATH
+        done
+      shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
         (Get-Command m4).Path
