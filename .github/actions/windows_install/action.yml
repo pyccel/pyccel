@@ -28,7 +28,8 @@ runs:
         IFS=:
         for p in $PATH;
         do
-          echo "PATH: " cygpath -w $p
+          echo "PATH: $(cygpath -w $p)"
+          echo $GITHUB_PATH
           cygpath -w $p >> $GITHUB_PATH
         done
       shell: msys2 {0}
