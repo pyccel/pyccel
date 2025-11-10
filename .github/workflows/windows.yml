@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: [devel, main, ebourne_windows_ci]
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
