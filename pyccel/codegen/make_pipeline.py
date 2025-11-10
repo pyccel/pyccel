@@ -73,8 +73,8 @@ def execute_pyccel_make(files, *,
         Path to the working directory. Default is the folder containing the file to be translated.
     language : str, optional
         The target language Pyccel is translating to. Default is 'fortran'.
-    compiler_family : str, optional
-        The compiler used to compile the generated files. Default is 'GNU'.
+    compiler_family : str
+        The compiler used to compile the generated files.
         This can also contain the name of a json file describing a compiler.
     build_system : str, optional
         The build-system used to compile the generated files. Default is 'meson'.
@@ -133,10 +133,6 @@ def execute_pyccel_make(files, *,
         language = 'fortran'
     else:
         language = language.lower()
-
-    # Choose Fortran compiler
-    if compiler_family is None:
-        compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family, debug)
