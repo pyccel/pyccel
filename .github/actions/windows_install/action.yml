@@ -37,7 +37,7 @@ runs:
         (Get-Command msys2).Path
         msys2 -h
         msys2 -c 'echo $PATH'
-        msys2 -c 'cygpath -w $(echo $PATH | tr ":" "\\n")'
+        msys2 -c "IFS=:; for p in \$PATH; do [ -n \"\$p\" ] && cygpath -w \"\$p\"; done"
         ls C:\msys64\usr\bin
         ls C:/msys64/mingw64/bin
         echo "$PATH"
