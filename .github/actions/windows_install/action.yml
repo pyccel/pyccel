@@ -39,14 +39,17 @@ runs:
         echo $PATH
         GITHUB_PATH_COMPATIBLE=$(cygpath -m $GITHUB_PATH)
         ls -l $GITHUB_PATH_COMPATIBLE
-        echo "$PATH" | tr ':' '\n' | while read p; do
+        echo "$PATH" | tr ':' '\n' | tac | while read p; do
           winpath=$(cygpath -w "$p")
           echo "PATH: $winpath"
           echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
         done
+        echo "MSYSTEM=MSYS" >> $GITHUB_ENV
       shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
+        echo $PATH
+        echo $env:PATH
         (Get-Command m4).Path
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
