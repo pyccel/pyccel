@@ -30,7 +30,8 @@ runs:
         (Get-Command gcc).Path
         echo "gfortran path:"
         (Get-Command gfortran).Path
-        ls C:\msys64
+        ls C:\msys64\mingw64
+        ls C:\msys64\mingw64\bin
       shell: powershell
     - name: Add CC and FC to environment
       run: |
