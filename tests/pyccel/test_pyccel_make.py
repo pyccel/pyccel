@@ -97,7 +97,7 @@ def test_project_containers(language, build_system):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode'])
+@pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode', '-vv'])
 def test_flags(language, build_system, extra_flag):
     pyccel_make_test('file4.py', current_folder / 'project_multi_imports',
                      language, build_system, ['-f', 'file1.py', 'file2.py', 'file3.py', 'file4.py', extra_flag],
