@@ -92,9 +92,12 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          python -m pytest test_epyccel_openmp.py -xvs
+          pyccel --language=c tmp_openmp.py
+          objdump -x tmp_openmp.*.pyd
+          python -m pip install dlltracer
+          python -c "import dlltracer; import sys; tracer = dlltracer.Trace(out=sys.stdout); tracer.__enter__(); import tmp_openmp; tracer.__exit__()"
         shell: bash
-        working-directory: tests/epyccel
+        working-directory: tests/epyccel/modules
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
