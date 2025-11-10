@@ -84,14 +84,6 @@ jobs:
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/windows_install
-      - name: Install gFTL
-        run: |
-          ls
-          cmake -S . -B build -DCMAKE_INSTALL_PREFIX=$(pwd)/install -G "MinGW Makefiles"
-          cmake --build build
-          cmake --install build
-        shell: bash
-        working-directory: pyccel/extensions/gFTL
       - name: Install Pyccel with tests
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
