@@ -19,7 +19,7 @@ runs:
       with:
         msystem: MINGW64
         update: true
-        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi m4
+        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4
     - name: Update PATH
       run: |
         echo $PATH
@@ -31,13 +31,9 @@ runs:
         done
         echo "MSYSTEM=MSYS" >> $GITHUB_ENV
         echo "$LD_LIBRARY_PATH"
-        env
       shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
-        echo $PATH
-        echo $env:PATH
-        (Get-Command m4).Path
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
         $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
         echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
@@ -45,3 +41,9 @@ runs:
         echo "CC=$GCC_EXE"
         echo "FC=$GFORTRAN_EXE"
       shell: powershell
+    - name: Allow Python to find trusted DLLs
+      run: |
+        find D:/a/_temp/msys64/mingw64/ -name '*.dll'
+        SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_PATH/dll_path.pth
+      shell: bash
