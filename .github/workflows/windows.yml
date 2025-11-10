@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: [devel, main]
+    branches: [devel, main, ebourne_windows_ci]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -90,7 +90,7 @@ jobs:
           cmake --build build
           cmake --install build
         shell: bash
-        working-.directory: pyccel/extensions/gFTL
+        working-directory: pyccel/extensions/gFTL
       - name: Install Pyccel with tests
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
