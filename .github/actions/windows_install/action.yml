@@ -40,7 +40,11 @@ runs:
         msys2 -c 'cygpath -w $(echo $PATH | tr ":" "\\n")'
         ls C:\msys64\usr\bin
         ls C:/msys64/mingw64/bin
-        echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
+        echo "$PATH"
+        echo "D:\\a\\_temp\\msys64\\mingw64\\bin" >> $GITHUB_PATH
+        echo "D:\\a\\_temp\\msys64\\usr\\local\\bin" >> $GITHUB_PATH
+        echo "D:\\a\\_temp\\msys64\\usr\\bin" >> $GITHUB_PATH
+        echo "D:\\a\\_temp\\msys64\\bin" >> $GITHUB_PATH
       shell: powershell
     - name: Add CC and FC to environment
       run: |
