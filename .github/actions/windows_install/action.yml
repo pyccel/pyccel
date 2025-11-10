@@ -44,15 +44,18 @@ runs:
       run: |
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
         echo $SITE_DIR
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_PATH/dll_path.pth"
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_PATH/sitecustomize.py"
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_DIR/dll_path.pth
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_DIR/sitecustomize.py
+        ls $SITE_DIR
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_DIR/dll_path_4.pth"
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_DIR/sitecustomize4.py"
         ls $SITE_DIR
         SITE_DIR_UNIX=$(cygpath -u $SITE_DIR)
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_PATH_UNIX/dll_path_2.pth
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_PATH_UNIX/sitecustomize2.py
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_DIR_UNIX/dll_path_2.pth
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > $SITE_DIR_UNIX/sitecustomize2.py
         ls $SITE_DIR
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_PATH_UNIX/dll_path_3.pth"
-        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_PATH_UNIX/sitecustomize3.py"
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_DIR_UNIX/dll_path_3.pth"
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin'); print('added')" > "$SITE_DIR_UNIX/sitecustomize3.py"
         ls $SITE_DIR
       shell: bash
     - name: Complete Microsoft MPI installation
