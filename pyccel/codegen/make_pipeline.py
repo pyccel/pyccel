@@ -41,15 +41,15 @@ build_system_handler = {'cmake': CMakeHandler,
 # [..]_dirpath is the full (absolute) path of a directory
 
 def execute_pyccel_make(files, *,
-                   verbose         = 0,
-                   time_execution  = False,
-                   folder          = None,
-                   language        = None,
-                   compiler_family = None,
-                   build_system    = None,
-                   debug           = None,
-                   accelerators    = (),
-                   conda_warnings  = 'basic'):
+                   verbose,
+                   time_execution,
+                   folder,
+                   language,
+                   compiler_family,
+                   build_system,
+                   debug = None,
+                   accelerators,
+                   conda_warnings):
     """
     Run Pyccel-make on the provided files.
 
@@ -65,27 +65,27 @@ def execute_pyccel_make(files, *,
     ----------
     files : list[Path]
         The Python files to be translated.
-    verbose : int, default=0
+    verbose : int
         Indicates the level of verbosity.
-    time_execution : bool, default=False
+    time_execution : bool
         Show the time spent in each of Pyccel's internal stages.
-    folder : str, optional
+    folder : str
         Path to the working directory. Default is the folder containing the file to be translated.
-    language : str, optional
-        The target language Pyccel is translating to. Default is 'fortran'.
+    language : str
+        The target language Pyccel is translating to.
     compiler_family : str
         The compiler used to compile the generated files.
         This can also contain the name of a json file describing a compiler.
-    build_system : str, optional
-        The build-system used to compile the generated files. Default is 'meson'.
+    build_system : str
+        The build-system used to compile the generated files.
     debug : bool, optional
         Indicates whether the file should be compiled in debug mode.
         The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
         If no such environment variable exists then the default is False.
-    accelerators : iterable, optional
+    accelerators : iterable
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
-    conda_warnings : str, optional
-        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    conda_warnings : str
+        Specify the level of Conda warnings to display (choices: off, basic, verbose).
     """
     start = time.time()
     timers = {}
@@ -106,7 +106,6 @@ def execute_pyccel_make(files, *,
         """
         print(f'\nERROR at {stage} stage')
         errors.check()
-        os.chdir(base_dirpath)
 
     # Define working directory 'folder'
     if folder is None or folder == "":
@@ -129,10 +128,7 @@ def execute_pyccel_make(files, *,
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
-    if language is None:
-        language = 'fortran'
-    else:
-        language = language.lower()
+    language = language.lower()
 
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family, debug)
@@ -268,7 +264,6 @@ def execute_pyccel_make(files, *,
 
     if language == 'python':
         # Change working directory back to starting point
-        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
@@ -311,7 +306,6 @@ def execute_pyccel_make(files, *,
         errors.check()
 
     # Change working directory back to starting point
-    os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
 
     if time_execution:
