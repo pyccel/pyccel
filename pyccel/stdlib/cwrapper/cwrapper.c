@@ -139,13 +139,44 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * Functions : Numpy array handling functions
  */
 
+/**
+ * Calculate the shapes and strides necessary to pass an array to low-level code.
+ *
+ * If an array is a view on another array then it is passed to low-level code by
+ * saving it into a view with the correct dimensionality and slicing that object.
+ * This function returns the 3 objects necessary for this operation.
+ * Namely:
+ *   - base_shape : The shape of the view with the correct dimensionality.
+ *   - ubounds : The upper bounds of the slice.
+ *   - strides : The strides of the slice.
+ *
+ * E.g.
+ * ```python
+ * a = np.ones((2,3,4,5))
+ * b = a[:,2,::2,:]
+ * ```
+ * Here b has dimensionality 3 so the base_shape, ubounds and strides each contain
+ * 3 elements:
+ *   - base_shape : [4,4,5]
+ *   - ubound : [4,4,5]
+ *   - strides : [3,2,1]
+ * The lbound is handled with offsets. This calculation is already carried out by
+ * NumPy. The data pointer is provided with the offset.
+ *
+ * @param[in] arr The array we wish to pass.
+ * @param[out] base_shape The shape of the view before slicing.
+ * @param[out] ubounds The upper bounds of the slice.
+ * @param[out] strides The strides of the slice.
+ * @param[in] c_order True if the array has C-ordering, False otherwise.
+ */
 void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[], int64_t ubounds[], int64_t strides[], bool c_order)
 {
+    // Get information about the array
     PyArrayObject* a = (PyArrayObject*)(arr);
     int nd = PyArray_NDIM(a);
 
+    // Determine whether the array is a sub-view of a different array
     PyArrayObject* base = (PyArrayObject*)PyArray_BASE(a);
-
     if (base == NULL) {
         npy_intp* np_shape = PyArray_SHAPE(a);
         for (int i = 0; i < nd; ++i) {
@@ -155,11 +186,13 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[],
         }
     }
     else {
+        // Calculate base_shape, ubounds, strides
         npy_intp itemsize = PyArray_ITEMSIZE(a);
         npy_intp* np_strides = PyArray_STRIDES(a);
         npy_intp* np_shape = PyArray_SHAPE(a);
         int64_t current_shape = itemsize;
         if (c_order) {
+            // If code is C-ordered then the smallest stride is the last element
             strides[nd-1] = np_strides[nd-1] / itemsize;
             for (int i = nd-1; i >= 1; --i) {
                 base_shape[i] = np_strides[i-1] / current_shape;
@@ -169,6 +202,7 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[],
             base_shape[0] = np_shape[0] * strides[0];
         }
         else {
+            // If code is F-ordered then the smallest stride is the first element
             strides[0] = np_strides[0] / itemsize;
             for (int i = 0; i < nd-1; ++i) {
                 base_shape[i] = np_strides[i+1] / current_shape;
@@ -308,7 +342,7 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank, bool allow_empty)
  *
  * 	Parameters	:
  *		a 	  : python array object
- *      flag  : desired order
+ *      flag  : A flag that is recognised by NumPy's PyArray_CHKFLAGS function.
  * 	Returns		:
  *		return NULL if no error occurred otherwise it will return the
  *      message to be reported in a TypeError exception
