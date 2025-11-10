@@ -6238,9 +6238,9 @@ def test_copy(language):
         return b
 
     arr_1d = randint(min_int, max_int, size=5)
-    arr_2d = uniform(-100,  100, size=(3,4))
-    arr_3d = (uniform(-100, 100, size=(3,4,5)) \
-            + uniform(-100, 100, size=(3,4,5))*1j).T
+    arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3,4))
+    arr_3d = (uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5)) \
+            + uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5))*1j).T
 
     funcs = [(f.__name__, f, epyccel(f, language=language)) for f in (copy_array, copy_array_to_F, copy_array_to_C)]
 
