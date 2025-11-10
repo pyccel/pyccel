@@ -99,7 +99,7 @@ This requires that the Command Line Tools (CLT) for Xcode are installed.
 ### Windows
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
-We recommend using [MSys2](https://www.msys2.org/) to speed up the process, and we provide commands that work in a git-bash sh.
+We recommend using [MSys2](https://www.msys2.org/) to speed up the process, and we provide commands that work in a git-bash terminal.
 In an Administrator prompt install git-bash (if needed), a Python3 distribution, a GCC compiler, MPI, CMake and m4:
 
 ```sh
