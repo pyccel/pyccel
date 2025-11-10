@@ -32,6 +32,8 @@ runs:
         (Get-Command gfortran).Path
         ls C:\msys64\mingw64
         ls C:\msys64\mingw64\bin
+        msys2 --help
+        msys2 -c 'which gcc'
       shell: powershell
     - name: Add CC and FC to environment
       run: |
