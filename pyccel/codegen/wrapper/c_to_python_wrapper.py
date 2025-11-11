@@ -1953,7 +1953,7 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
-        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
+        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True, expr.getter)
         res_wrapper = result_wrapping['body']
         c_results = result_wrapping['c_results']
         getter_result = result_wrapping['py_result']
@@ -1966,9 +1966,10 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
+
+            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
-        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
