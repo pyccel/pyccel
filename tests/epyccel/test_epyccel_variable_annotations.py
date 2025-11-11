@@ -122,7 +122,6 @@ def test_final_annotation(language):
 
 def test_final_annotation_transmission(language):
     def final_annotation():
-        from typing import Final
         a : Final[int] = 3
         b = a
         return b
