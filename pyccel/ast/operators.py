@@ -784,6 +784,8 @@ class PyccelMinus(PyccelArithmeticOperator):
                 dtype = cls._calculate_type(arg1, arg2)
                 return convert_to_literal(arg1.python_value - arg2.python_value,
                                           dtype)
+            if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2:
+                return arg1.args[0]
         if isinstance(arg1, LiteralFloat) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
