@@ -13,7 +13,6 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.errors.errors import PyccelError
 from pyccel.utilities.metaclasses import Singleton
 from .basic import iterable
 
@@ -249,110 +248,6 @@ class FinalType:
 
     def __str__(self):
         return f'Final[{self._underlying_type}]'
-
-#==============================================================================
-class AliasType:
-    """
-    A class to get PyccelType subclasses describing alias variables.
-
-    A class to get PyccelType subclasses describing alias variables.
-    """
-    __slots__ = ()
-
-    @classmethod
-    @lru_cache
-    def get_new(cls, underlying_type):
-        """
-        Get the parameterised alias type.
-
-        Get the parameterised alias type Alias[underlying_type].
-
-        Parameters
-        ----------
-        underlying_type : PyccelType
-            The type which is aliased.
-        """
-        assert isinstance(underlying_type, PyccelType)
-        if isinstance(underlying_type, AliasType):
-            return underlying_type
-        if isinstance(underlying_type, StackType):
-            raise PyccelError("Type cannot be both an alias and a stack object.")
-
-        type_class = type(underlying_type)
-        def __init__(self):
-            self._underlying_type = underlying_type
-            type(underlying_type).__init__(self)
-        def __hash__(self):
-            return type_class.__hash__(underlying_type)
-        def __eq__(self, other):
-            return type_class.__eq__(underlying_type, other)
-        def get_underlying_type(self):
-            """
-            Get the type that is indicated as const.
-
-            Get the type that is indicated as const.
-            """
-            return self._underlying_type
-        return type(f'Alias[{type_class.__name__}]', (AliasType, type_class,),
-                    {'__init__' : __init__,
-                     '__hash__' : __hash__,
-                     '__eq__' : __eq__,
-                     'underlying_type': property(get_underlying_type)})()
-
-    def __str__(self):
-        return f'Alias[{self._underlying_type}]'
-
-#==============================================================================
-class StackType:
-    """
-    A class to get PyccelType subclasses describing variables on the stack.
-
-    A class to get PyccelType subclasses describing variables on the stack.
-    """
-    __slots__ = ()
-
-    @classmethod
-    @lru_cache
-    def get_new(cls, underlying_type):
-        """
-        Get the parameterised alias type.
-
-        Get the parameterised alias type Stack[underlying_type].
-
-        Parameters
-        ----------
-        underlying_type : PyccelType
-            The type which is aliased.
-        """
-        assert isinstance(underlying_type, PyccelType)
-        if isinstance(underlying_type, StackType):
-            return underlying_type
-        if isinstance(underlying_type, AliasType):
-            raise PyccelError("Type cannot be both an alias and a stack object.")
-
-        type_class = type(underlying_type)
-        def __init__(self):
-            self._underlying_type = underlying_type
-            type(underlying_type).__init__(self)
-        def __hash__(self):
-            return type_class.__hash__(underlying_type)
-        def __eq__(self, other):
-            return type_class.__eq__(underlying_type, other)
-        def get_underlying_type(self):
-            """
-            Get the type that is indicated as const.
-
-            Get the type that is indicated as const.
-            """
-            return self._underlying_type
-        return type(f'Stack[{type_class.__name__}]', (StackType, type_class,),
-                    {'__init__' : __init__,
-                     '__hash__' : __hash__,
-                     '__eq__' : __eq__,
-                     'underlying_type': property(get_underlying_type)})()
-
-    def __str__(self):
-        return f'Stack[{self._underlying_type}]'
 
 #==============================================================================
 
