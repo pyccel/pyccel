@@ -2331,11 +2331,11 @@ class SemanticParser(BasicParser):
 
         if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
             annotation = self._visit(self._convert_syntactic_object_to_type_annotation(args[0]))
-            if annotation.get_attribute_nodes(TypingAnnotation):
+            if any(isinstance(a.class_type, TypingAnnotation) for a in annotation.type_list):
                 errors.report("Nested Annotated[] type modifiers are not handled.",
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               symbol = expr, severity = 'error')
-            metavars = [self._visit(a.dtype) for a in args[1:]]
+            metavars = [self._visit(a) for a in args[1:]]
             var_metadata = {}
             if 'pointer' in metavars:
                 var_metadata['memory_handling'] = 'alias'
@@ -3419,6 +3419,16 @@ class SemanticParser(BasicParser):
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, (PyccelType, TypingAnnotation)):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
+        elif isinstance(visited_dtype, LiteralString):
+            pyccel_stage.set_stage('syntactic')
+            try:
+                syntactic_a = types_meta.model_from_str(visited_dtype.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
+            annot = syntactic_a.expr
+            pyccel_stage.set_stage('semantic')
+            return self._visit(annot)
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
