@@ -16,6 +16,7 @@ class A:
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
+    @property
     @low_level('runtest_stub__A__x')
     def x(self : 'A') -> 'int':
         ...

@@ -16,6 +16,7 @@ class A:
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
+    @property
     @low_level('x')
     def x(self : 'A') -> 'int':
         ...

@@ -11,10 +11,10 @@ if __name__ == '__main__':
 
     s = Square(p1, p2, p3, p4)
 
-    print(s.get_corner_1())
-    print(s.get_corner_2())
-    print(s.get_corner_3())
-    print(s.get_corner_4())
+    print(s.corner_1)
+    print(s.corner_2)
+    print(s.corner_3)
+    print(s.corner_4)
 
     l = Line(p1, p2)
 
