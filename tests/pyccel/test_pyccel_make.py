@@ -102,3 +102,30 @@ def test_flags(language, build_system, extra_flag):
     pyccel_make_test('file4.py', current_folder / 'project_multi_imports',
                      language, build_system, ['-f', 'file1.py', 'file2.py', 'file3.py', 'file4.py', extra_flag],
                      output_dtype = str)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_output_flag(language, build_system):
+    main_file = 'file4.py'
+    folder = current_folder / 'project_multi_imports'
+    args = ['-f', 'file1.py', 'file2.py', 'file3.py', 'file4.py', '--output', 'outfolder']
+
+    python_output = get_python_output(folder / main_file, cwd = folder)
+
+    p = subprocess.run([shutil.which('pyccel-make'), *args, f'--language={language}',
+                        f'--build-system={build_system}'], cwd=folder, check=True)
+
+    exe_path = (folder / 'outfolder' / main_file).with_suffix('')
+
+    if language == "python":
+        lang_output = get_python_output(exe_path.with_suffix('.py'))
+    else:
+        if sys.platform == "win32":
+            exe_path = exe_path.with_suffix('.exe')
+        p = subprocess.run([exe_path], capture_output = True, text=True, check=True)
+        lang_output = p.stdout
+
+    compare_pyth_fort_output(python_output, lang_output, str, language)
+
+    # Clean up after test
+    shutil.rmtree(folder / 'outfolder', ignore_errors=True)

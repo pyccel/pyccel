@@ -8,6 +8,7 @@ Contains the execute_pyccel function which carries out the main steps required t
 """
 
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -225,7 +226,12 @@ def execute_pyccel_make(files, *,
 
         codegens.append(codegen)
 
-        if language != 'python':
+        if language == 'python':
+            new_location = folder / f
+            if verbose:
+                print(f"cp {fname} {new_location}")
+            shutil.copyfile(fname, new_location)
+        else:
             start_wrapper_creation = time.time()
             wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
             try:
@@ -284,8 +290,9 @@ def execute_pyccel_make(files, *,
         build_project = BuildProject(base_dirpath, targets.values(), printed_languages,
                                      stdlib_deps)
 
-        build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath,
-                                                       verbose, debug, compiler, accelerators)
+        build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, folder,
+                                                       verbose = verbose, debug_mode = debug,
+                                                       compiler = compiler, accelerators = accelerators)
 
         build_sys.generate(build_project)
     except NotImplementedError as error:

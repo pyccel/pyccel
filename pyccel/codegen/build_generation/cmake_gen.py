@@ -68,7 +68,7 @@ class CMakeHandler(BuildSystemHandler):
         kernel_target = expr.name
         mod_name = expr.pyfile.stem
 
-        out_folder = expr.pyfile.parent
+        out_folder = (self._output_dir / expr.pyfile.parent.relative_to(self._root_dir)).as_posix()
 
         args = '\n    '.join([kernel_target, 'STATIC', expr.file.name])
         cmds = [f'add_library({args})\n']
@@ -114,7 +114,7 @@ class CMakeHandler(BuildSystemHandler):
         args = '\n    '.join([f'{kernel_target}_so', 'PUBLIC', '${CMAKE_CURRENT_SOURCE_DIR}'])
         cmds.append(f'target_include_directories({args})\n')
 
-        args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', out_folder.as_posix()])
+        args = '\n    '.join(['TARGETS', f'{kernel_target}_so', 'DESTINATION', out_folder])
         cmds.append(f"install({args})\n")
 
         if expr.is_exe:
@@ -128,7 +128,7 @@ class CMakeHandler(BuildSystemHandler):
             args = '\n    '.join([prog_target, 'PUBLIC', kernel_target])
             cmds.append(f'target_link_libraries({args})')
 
-            args = '\n    '.join(['TARGETS', prog_target, 'DESTINATION', out_folder.as_posix()])
+            args = '\n    '.join(['TARGETS', prog_target, 'DESTINATION', out_folder])
             cmds.append(f"install({args})\n")
 
         return '\n'.join(cmds)

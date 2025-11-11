@@ -230,7 +230,7 @@ class ExternalLibInstaller:
         """
         return self._dest_dir
 
-    def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name):
+    def _check_for_cmake_package(self, pkg_name, languages, options = '', *, target_name):
         """
         Use CMake to search for a package.
 

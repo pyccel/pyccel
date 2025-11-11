@@ -26,6 +26,8 @@ class MesonHandler(BuildSystemHandler):
         The directory where generated files should be outputted.
     root_dir : Path
         The directory from which the pyccel-make command was called.
+    output_dir : Path
+        The directory where the final files should be outputted.
     verbose : int
         The level of verbosity.
     debug_mode : bool
@@ -59,7 +61,8 @@ class MesonHandler(BuildSystemHandler):
         dep_name = f'{expr.name}_dep'
         mod_name = f"'{expr.pyfile.stem}'"
 
-        out_folder = f"'{expr.pyfile.parent.as_posix()}'"
+        out_folder_path = self._output_dir / expr.pyfile.parent.relative_to(self._root_dir)
+        out_folder = f"'{out_folder_path.as_posix()}'"
 
         lib_args = [mod_name, f"'{expr.file.name}'", 'build_by_default: false']
 

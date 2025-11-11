@@ -16,6 +16,8 @@ class BuildSystemHandler:
         The directory where generated files should be outputted.
     root_dir : Path
         The directory from which the pyccel-make command was called.
+    output_dir : Path
+        The directory where the final files should be outputted.
     verbose : int
         The level of verbosity.
     debug_mode : bool
@@ -25,9 +27,10 @@ class BuildSystemHandler:
     accelerators : iterable[str]
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     """
-    def __init__(self, pyccel_dir, root_dir, verbose, debug_mode, compiler, accelerators):
+    def __init__(self, pyccel_dir, root_dir, output_dir, *, verbose, debug_mode, compiler, accelerators):
         self._pyccel_dir = pyccel_dir
         self._root_dir = root_dir
+        self._output_dir = output_dir
         self._verbose = verbose
         self._debug_mode = debug_mode
         self._compiler = compiler
