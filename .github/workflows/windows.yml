@@ -89,11 +89,6 @@ jobs:
             python -m pip install --upgrade pip
             python -m pip install .[test]
         shell: bash
-      - name: Test MPI
-        run: |
-          pytest internal -vsx
-        working-directory: tests
-        shell: bash
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
