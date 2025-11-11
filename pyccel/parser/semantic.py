@@ -835,7 +835,7 @@ class SemanticParser(BasicParser):
             return {'class_type' : SymbolicType()}
 
         class_type = expr.class_type
-        if isinstance(class_type, FinalType):
+        if isinstance(class_type, FinalType) and isinstance(class_type, FixedSizeNumericType):
             class_type = class_type.underlying_type
 
         d_var = {
