@@ -13,6 +13,7 @@ from functools import lru_cache
 
 import numpy
 
+from pyccel.errors.errors import PyccelError
 from pyccel.utilities.metaclasses import Singleton
 from .basic import iterable
 
