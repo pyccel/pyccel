@@ -38,7 +38,7 @@ class TypingFinal(TypedAstNode):
     __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
     name = 'Final'
-    _static_type = FinalType()
+    _static_type = FinalType
 
     def __init__(self, arg):
         self._arg = arg
