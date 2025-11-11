@@ -146,9 +146,17 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * saving it into a view with the correct dimensionality and slicing that object.
  * This function returns the 3 objects necessary for this operation.
  * Namely:
- *   - base_shape : The shape of the view with the correct dimensionality.
+ *   - base_shape : The shape of a view with the correct dimensionality.
  *   - ubounds : The upper bounds of the slice.
  *   - strides : The strides of the slice.
+ *
+ * The view described by the `base_shape` may exceed the domains of the original
+ * array in order to ensure that the dimensions are fully preserved.
+ *
+ * The calculation provides a view which can be sliced to provide the correct data.
+ * This does not mean that the view necessarily ressembles the original object.
+ * In particular strides in non-contiguous dimensions are handled by increasing the
+ * size of the adjacent dimension and pruning the extra information via the ubound.
  *
  * E.g.
  * ```python
@@ -157,9 +165,9 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * ```
  * Here b has dimensionality 3 so the base_shape, ubounds and strides each contain
  * 3 elements:
- *   - base_shape : [4,4,5]
- *   - ubound : [4,4,5]
- *   - strides : [3,2,1]
+ *   - base_shape : [2,6,10]
+ *   - ubound : [2,2,5]
+ *   - strides : [1,1,1]
  * The lbound is handled with offsets. This calculation is already carried out by
  * NumPy. The data pointer is provided with the offset.
  *
@@ -194,25 +202,26 @@ void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[],
         if (c_order) {
             // If code is C-ordered then the smallest stride is the last element
             strides[nd-1] = np_strides[nd-1] / itemsize;
+            ubounds[nd-1] = (np_shape[nd-1] - 1) * strides[nd-1] + 1;
             for (int i = nd-1; i >= 1; --i) {
                 base_shape[i] = np_strides[i-1] / current_shape;
                 current_shape *= base_shape[i];
-                strides[i-1] = np_strides[i-1] / current_shape;
+                strides[i-1] = 1;
+                ubounds[i-1] = np_shape[i-1];
             }
             base_shape[0] = np_shape[0] * strides[0];
         }
         else {
             // If code is F-ordered then the smallest stride is the first element
             strides[0] = np_strides[0] / itemsize;
+            ubounds[0] = (np_shape[0] - 1) * strides[0] + 1;
             for (int i = 0; i < nd-1; ++i) {
                 base_shape[i] = np_strides[i+1] / current_shape;
                 current_shape *= base_shape[i];
-                strides[i+1] = np_strides[i+1] / current_shape;
+                strides[i+1] = 1;
+                ubounds[i+1] = np_shape[i+1];
             }
             base_shape[nd-1] = np_shape[nd-1] * strides[nd-1];
-        }
-        for (int i = 0; i < nd; ++i) {
-            ubounds[i] = np_shape[i] * strides[i];
         }
     }
 }
