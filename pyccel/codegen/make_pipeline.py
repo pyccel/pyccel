@@ -269,6 +269,8 @@ def execute_pyccel_make(files, *,
             print_timers(start, timers)
         return
 
+    start_build_system_printing = time.time()
+
     for f, p in parsers.items():
         targets[f.absolute()].add_dependencies(*(targets[s.filename] for s in p.sons))
 
@@ -295,11 +297,15 @@ def execute_pyccel_make(files, *,
         # Raise a new error to avoid a large traceback
         raise PyccelCodegenError('Code generation failed') from None
 
+    timers['Build system printing'] = time.time() - start_build_system_printing
+
     if errors.has_errors():
         handle_error('build system generation')
         raise PyccelCodegenError('Build system generation failed')
 
+    start_compilation = time.time()
     build_sys.compile()
+    timers['Compilation'] = time.time() - start_compilation
 
     # Print all warnings now
     if errors.has_warnings():
