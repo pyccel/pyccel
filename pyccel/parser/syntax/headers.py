@@ -44,11 +44,39 @@ class Header(object):
         super().__init__(**kwargs)
 
 class DoubleQuotedStr(BasicStmt):
+    """
+    A double quoted string containing type information.
+
+    A double quoted string containing type information. This is particularly
+    useful for typing.Annotated.
+
+    Parameters
+    ----------
+    contents : str
+        The expression in the string.
+
+    **kwargs : dict
+        TextX keyword arguments.
+    """
     def __init__(self, contents, **kwargs):
         self.contents = contents
         super().__init__(**kwargs)
 
 class SingleQuotedStr(BasicStmt):
+    """
+    A single quoted string containing type information.
+
+    A single quoted string containing type information. This is particularly
+    useful for typing.Annotated.
+
+    Parameters
+    ----------
+    contents : str
+        The expression in the string.
+
+    **kwargs : dict
+        TextX keyword arguments.
+    """
     def __init__(self, contents, **kwargs):
         self.contents = contents
         super().__init__(**kwargs)
