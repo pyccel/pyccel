@@ -834,10 +834,14 @@ class SemanticParser(BasicParser):
         if not isinstance(expr, TypedAstNode):
             return {'class_type' : SymbolicType()}
 
+        class_type = expr.class_type
+        if isinstance(class_type, FinalType):
+            class_type = class_type.underlying_type
+
         d_var = {
-                'class_type' : expr.class_type,
+                'class_type' : class_type,
                 'shape'      : expr.shape,
-                'cls_base'   : self.scope.find(str(expr.class_type), 'classes') or get_cls_base(expr.class_type),
+                'cls_base'   : self.scope.find(str(class_type), 'classes') or get_cls_base(class_type),
                 'memory_handling' : 'heap' if expr.rank > 0 else 'stack'
             }
 
@@ -871,13 +875,13 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PythonTuple):
 
-            if isinstance(expr.class_type, HomogeneousTupleType):
+            if isinstance(class_type, HomogeneousTupleType):
                 d_var['shape'] = get_shape_of_multi_level_container(expr)
             return d_var
 
         elif isinstance(expr, (DictGetItem, DictGet)):
 
-            d_var['memory_handling'] = 'alias' if not isinstance(expr.class_type, FixedSizeNumericType) else 'stack'
+            d_var['memory_handling'] = 'alias' if not isinstance(class_type, FixedSizeNumericType) else 'stack'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
