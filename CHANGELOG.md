@@ -11,10 +11,21 @@ All notable changes to this project will be documented in this file.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
 -   #1585 : Add support for `np.divide` and its alias `np.true_divide`.
 -   #2390 : Add support for `np.expm1`.
--   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
+-   #2420 : Add `@low_level` decorator.
+-   Allow installed versions of gFTL and STC to be used if they can be discovered by `pkg-config`.
+-   Add support for positional arguments.
+-   Add support for keyword-only arguments.
+-   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
+-   #2382 : Allow functions to be called from a function being translated via `epyccel`.
+-   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
+-   #601 : Add C support for nested functions.
+-   Add badge for Documentation workflow to `README.md`.
+-   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
+-   #2268 : Fix reallocation detection for lists, sets, and dictionaries.
 -   #2306 : Fix Python containers as arguments to interface functions.
 -   #2407 : Fix bad memory handling for multi-level containers.
 -   #2408 : Fix bug when inlining a call to a function with no return, via a dotted function call.
@@ -28,7 +39,21 @@ All notable changes to this project will be documented in this file.
 -   #2431 : Fix missing type checks for functions called by functions with variable argument types.
 -   #2433 : Fix shape calculation for resized class member variables.
 -   #2426 : Fix bug when specifying ND array shape with a tuple variable.
+-   #2096 : Fix saving a list comprehension into a slice.
+-   #2401 : Fix an unreported, undetected race condition when running 2 Pyccel instances which install the same library to different folders.
+-   #2440 : Fix incorrect handling of shapes and strides of Fortran-order multi-dimensional array that is C contiguous.
+-   #2441 : Fix function call pointer result assignment in Fortran.
+-   #2452 : Fix default Pyccel compiler on command line to use `PYCCEL_DEFAULT_COMPILER` environment variable.
+-   #2447 : Fix returning an empty tuple.
+-   #2456 : Fix Python reference counting when returning a boolean from a function.
+-   #2458 : Fix incoherent import printing in Python and `.pyi` files.
+-   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
+-   #2462 : Fix erroneous additional import in stub file.
+-   #2479 : Fix missing `@property` decorator in stub files.
+-   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
+-   #2443 : Fix passing non-contiguous slices of arrays.
 -   #2436 : Fix list comprehension with variable slice containing negative indices as an iterable.
+-   Rename `main` function when translating to C.
 
 ### Changed
 
@@ -36,10 +61,20 @@ All notable changes to this project will be documented in this file.
 -   #2386 : Changed the name of the generated file `bind_c_X.f90` to `bind_c_X_wrapper.f90`.
 -   Update STC to v6.0-beta2.
 -   #2414 : Ensure printing of imports from Fortran intrinsic libraries is done in a reproducible way (by sorting).
+-   Install STC to use it as a library instead of selectively compiling.
+-   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
+-   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
+-   #2465 : Change default name of `__init__` functions in Fortran translations.
+-   #2405 : Change generated names in C to include the module in the name for multi-file collision handling.
+-   #2488 : Use MPI wrapper executables to compile MPI code on Windows.
+-   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
+-   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
+-   \[INTERNALS\] Stop using `os.chdir` during Pyccel execution (absolute paths guarantee identical behaviour).
+-   \[INTERNALS\] Use inheritance to handle parametrised types. Identity operators should no longer be used for type checking.
 
 ### Deprecated
 
@@ -47,6 +82,8 @@ All notable changes to this project will be documented in this file.
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
+-   #2474 : Drop support for Python 3.9, test with Python 3.14.
+-   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 
 ## \[2.0.1\] - 2025-06-27

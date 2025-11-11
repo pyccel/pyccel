@@ -8,7 +8,6 @@ import functools
 from itertools import chain, product
 import re
 import sys
-from packaging.version import Version
 
 import numpy as np
 
@@ -35,7 +34,7 @@ from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, Poin
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
@@ -79,7 +78,6 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
 
-numpy_v1 = Version(np.__version__) < Version("2.0.0")
 
 errors = Errors()
 
@@ -408,7 +406,7 @@ class CCodePrinter(CodePrinter):
             return a.is_optional or any(a is bi for b in self._additional_args for bi in b)
 
         if isinstance(a.class_type, (CustomDataType, HomogeneousContainerType, DictType)) \
-                and a.is_argument and not a.is_const:
+                and a.is_argument and not isinstance(a.class_type, FinalType):
             return True
 
         return a.is_alias or a.is_optional or \
@@ -658,29 +656,6 @@ class CCodePrinter(CodePrinter):
             keyraw = '{' + split + f',{split}'.join(args) + split + '}'
         return f'c_make({dtype}, {keyraw})'
 
-    def rename_imported_methods(self, expr):
-        """
-        Rename class methods from user-defined imports.
-
-        This function is responsible for renaming methods of classes from
-        the imported modules, ensuring that the names are correct
-        by prefixing them with their class names.
-
-        Parameters
-        ----------
-        expr : iterable[ClassDef]
-            The ClassDef objects found in the module being renamed.
-        """
-        for classDef in expr:
-            class_scope = classDef.scope
-            for method in classDef.methods:
-                if not method.is_inline:
-                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
-            for interface in classDef.interfaces:
-                for func in interface.functions:
-                    if not func.is_inline:
-                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
-
     def _handle_numpy_functional(self, expr, ElementExpression, start_val = None):
         """
         Print code describing a NumPy functional for object.
@@ -728,7 +703,7 @@ class CCodePrinter(CodePrinter):
 
             loop_scope = self.scope.create_new_loop_scope()
             iter_var_name = loop_scope.get_new_name()
-            iter_var = Variable(IteratorType(class_type), iter_var_name)
+            iter_var = Variable(IteratorType.get_new(class_type), iter_var_name)
             iter_ref_var = DottedVariable(arg_var.class_type.element_type, 'ref',
                         memory_handling='alias', lhs=iter_var)
 
@@ -1000,11 +975,7 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
         self._current_module = expr
-        for item in expr.imports:
-            if item.source_module and item.source_module is not self._current_module:
-                self.rename_imported_methods(item.source_module.classes)
-        self.rename_imported_methods(expr.classes)
-        body    = ''.join(self._print(i) for i in expr.body)
+        body    = '\n'.join(self._print(i) for i in expr.body)
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
@@ -1518,7 +1489,7 @@ class CCodePrinter(CodePrinter):
             return 'cstr'
 
         elif in_container:
-            return self.get_c_type(MemoryHandlerType(dtype))
+            return self.get_c_type(MemoryHandlerType.get_new(dtype))
 
         elif isinstance(dtype, (NumpyNDArrayType, HomogeneousTupleType)):
             element_type = self.get_c_type(dtype.datatype, in_container = True).replace(' ', '_')
@@ -1592,25 +1563,22 @@ class CCodePrinter(CodePrinter):
         'int64_t'
 
         For an object accessed via a pointer:
-        >>> v = Variable(NumpyNDArrayType(PythonNativeInt(), 1, None), 'x', is_optional=True)
+        >>> v = Variable(NumpyNDArrayType.get_new(PythonNativeInt(), 1, None), 'x', is_optional=True)
         >>> self.get_declare_type(v)
         'array_int64_1d*'
         """
         class_type = expr.class_type
 
-        if isinstance(expr.class_type, CStackArray):
-            dtype = self.get_c_type(expr.class_type.element_type)
-        elif isinstance(expr.class_type, (HomogeneousContainerType, DictType)):
-            dtype = self.get_c_type(expr.class_type)
+        if isinstance(class_type, CStackArray):
+            dtype = self.get_c_type(class_type.element_type)
+        elif isinstance(class_type, (HomogeneousContainerType, DictType)):
+            dtype = self.get_c_type(class_type)
         elif isinstance(class_type, MemoryHandlerType):
             dtype = self.get_c_type(class_type.element_type) + '_mem'
         else:
             dtype = self.get_c_type(expr.class_type)
 
-        if getattr(expr, 'is_const', False):
-            dtype = f'const {dtype}'
-
-        if self.is_c_pointer(expr) and not isinstance(expr.class_type, CStackArray):
+        if self.is_c_pointer(expr) and not isinstance(class_type, CStackArray):
             return f'{dtype}*'
         else:
             return dtype
@@ -1684,7 +1652,6 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
         result_vars = [v for v in expr.scope.collect_all_tuple_elements(expr.results.var) \
                             if v and not v.is_argument]
 
@@ -1700,8 +1667,16 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         elif n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
+            self._additional_args.append([])
         else:
             ret_type = self.get_c_type(VoidType())
+            self._additional_args.append([])
+
+        for v in expr.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                self._additional_args[-1].append(v)
+                arg_vars.append(v)
+        arg_vars = [ai for a in arg_vars for ai in expr.scope.collect_all_tuple_elements(a)]
 
         name = expr.name
         if not arg_vars:
@@ -1719,8 +1694,7 @@ class CCodePrinter(CodePrinter):
                                 else get_arg_declaration(var) for var in arg_vars]
             arg_code = ', '.join(arg_code_list)
 
-        if self._additional_args :
-            self._additional_args.pop()
+        self._additional_args.pop()
 
         static = 'static ' if expr.is_static else ''
 
@@ -2011,8 +1985,11 @@ class CCodePrinter(CodePrinter):
             return ''.join(self._print(Deallocate(v)) for v in var)
         if isinstance(var.dtype, CustomDataType):
             variable_address = self._print(ObjectAddress(var))
-            Pyccel__del = var.cls_base.scope.find('__del__').name
-            return f"{Pyccel__del}({variable_address});\n" + code
+            Pyccel__del = var.cls_base.scope.find('__del__')
+            if Pyccel__del:
+                return f"{Pyccel__del.name}({variable_address});\n" + code
+            else:
+                return code
         elif isinstance(var.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if var.is_alias:
                 return code
@@ -2112,7 +2089,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csgn' if numpy_v1 else 'csign'
+            func = 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
 
@@ -2322,15 +2299,23 @@ class CCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
 
+        sep = self._print(SeparatorComment(40))
+
+        inner_funcs = ''.join(self._print(f).removeprefix(sep).removesuffix(sep) + '\n' for f in expr.functions)
+
         self.set_scope(expr.scope)
 
-        arguments = [a.var for a in expr.arguments]
         # Collect results filtering out Nil()
         results = [r for r in self.scope.collect_all_tuple_elements(expr.results.var) \
                 if isinstance(r, Variable)]
         returning_tuple = isinstance(expr.results.var.class_type, InhomogeneousTupleType)
         if len(results) > 1 or returning_tuple:
             self._additional_args.append(results)
+        else:
+            self._additional_args.append([])
+        for v in expr.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                self._additional_args[-1].append(v)
 
         body  = self._print(expr.body)
         decs = [Declare(i, value=(Nil() if i.is_alias and isinstance(i.class_type, (VoidType, BindCPointer)) else None))
@@ -2349,14 +2334,13 @@ class CCodePrinter(CodePrinter):
                                             v.is_temp]
             body += ''.join(self._print(Deallocate(v)) for v in extra_deallocs)
 
-        sep = self._print(SeparatorComment(40))
-        if self._additional_args :
-            self._additional_args.pop()
+        self._additional_args.pop()
         for i in expr.imports:
             self.add_import(i)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
         parts = [sep,
+                 inner_funcs,
                  docstring,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
                  decs,
@@ -2373,7 +2357,7 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            arg_val = a.value or Nil()
+            arg_val = a.value
             f = f.var
             if self.is_c_pointer(f):
                 if isinstance(arg_val, Variable):
@@ -2394,6 +2378,11 @@ class CCodePrinter(CodePrinter):
             args = args[:1] + self._temporary_args + args[1:]
         else:
             args = self._temporary_args + args
+
+        for v in func.global_vars:
+            if not v.get_direct_user_nodes(lambda m: isinstance(m, Module)):
+                args.append(ObjectAddress(v))
+
         self._temporary_args = []
         args = ', '.join(self._print(ai) for a in args for ai in self.scope.collect_all_tuple_elements(a))
 
@@ -2621,7 +2610,7 @@ class CCodePrinter(CodePrinter):
                 isinstance(iterable.variable.class_type, (DictType, HomogeneousSetType, HomogeneousListType)):
             var = iterable.variable
             iterable_type = var.class_type
-            counter = Variable(IteratorType(iterable_type), indices[0].name)
+            counter = Variable(IteratorType.get_new(iterable_type), indices[0].name)
             c_type = self.get_c_type(iterable_type)
             iterable_code = self._print(var)
             for_code = f'for (c_each ({self._print(counter)}, {c_type}, {iterable_code}))'
@@ -2996,6 +2985,13 @@ class CCodePrinter(CodePrinter):
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
         return methods + interfaces
+
+    #================== Tuple methods =================
+
+    def _print_PythonTuple(self, expr):
+        class_type = self.get_c_type(expr.class_type)
+        args = ', '.join(self._print(a) for a in expr.args)
+        return f'cspan_make({class_type}, {{{args}}})'
 
     #================== List methods ==================
     def _print_ListAppend(self, expr):

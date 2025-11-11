@@ -11,8 +11,6 @@ objects defined in Python.h.
 """
 import re
 
-from pyccel.utilities.metaclasses import Singleton
-
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -111,7 +109,7 @@ __all__ = (
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(FixedSizeType, metaclass=Singleton):
+class PyccelPyObject(FixedSizeType):
     """
     Datatype representing a `PyObject`.
 
@@ -121,7 +119,7 @@ class PyccelPyObject(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
+class PyccelPyClassType(FixedSizeType):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -131,7 +129,7 @@ class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyclasstype'
 
-class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
+class PyccelPyTypeObject(FixedSizeType):
     """
     Datatype representing a `PyTypeObject`.
 
@@ -238,14 +236,21 @@ class PyArg_ParseTupleNode(PyccelAstNode):
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
 
-        i = 0
-        while i < len(c_func_args) and not c_func_args[i].has_default:
-            i+=1
-        self._flags = 'O'*i
+        self._flags = ''
+        has_default = False
+        has_keyword = False
+        for a in c_func_args:
+            if a.has_default and not has_default:
+                self._flags += '|'
+                has_default = True
+            if a.is_kwonly and not has_keyword:
+                self._flags += '$'
+                has_keyword = True
+            self._flags += 'O'
 
-        if i < len(c_func_args):
-            self._flags += '|'
-            self._flags += 'O'*(len(c_func_args)-i)
+        if any(a.is_vararg or a.is_kwarg for a in c_func_args):
+            errors.report("Variadic arguments (*args, **kwargs) are not yet supported in the wrapper.",
+                          symbol=c_func_args, severity='error')
 
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
@@ -535,6 +540,9 @@ class PyModule(Module):
         modules.
         See: https://docs.python.org/3/extending/extending.html .
 
+    module_def_name : str
+        The name of the structure which defined the module.
+
     **kwargs : dict
         See Module.
 
@@ -542,18 +550,15 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations', '_import_func')
+    __slots__ = ('_external_funcs', '_declarations', '_import_func', '_module_def_name')
     _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
 
     def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
-                        import_func = None, **kwargs):
+                        import_func, module_def_name, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
-        if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (), (),
-                            FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
-        else:
-            self._import_func = import_func
+        self._module_def_name = module_def_name
+        self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property
@@ -604,6 +609,16 @@ class PyModule(Module):
         is done.
         """
         return self._import_func
+
+    @property
+    def module_def_name(self):
+        """
+        The name of the PyModuleDef object describing the module.
+
+        The name of the PyModuleDef object describing the module and
+        its contents for Python.
+        """
+        return self._module_def_name
 
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
@@ -762,6 +777,7 @@ class PyClassDef(ClassDef):
     _attribute_nodes = ClassDef._attribute_nodes + ('_magic_methods',)
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
+        assert isinstance(original_class, ClassDef)
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name

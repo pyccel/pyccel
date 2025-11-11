@@ -583,20 +583,27 @@ class PythonTuple(TypedAstNode):
     prefer_inhomogeneous : bool, default=False
         A boolean that can be used to ensure that the tuple is stocked as an
         inhomogeneous object even if it could be homogeneous.
+    class_type : PyccelType, optional
+        The final type of the tuple. This is necessary to create a printable
+        empty tuple. Otherwise it is not used.
     """
     __slots__ = ('_args','_is_homogeneous', '_shape', '_class_type')
     _iterable = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args, prefer_inhomogeneous = False):
+    def __init__(self, *args, prefer_inhomogeneous = False, class_type = None):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
-            self._class_type = HomogeneousTupleType(GenericType())
+            if class_type is None:
+                self._class_type = InhomogeneousTupleType.get_new()
+                self._is_homogeneous = False
+            else:
+                self._class_type = class_type
+                self._is_homogeneous = isinstance(class_type, HomogeneousTupleType)
             self._shape = (LiteralInteger(0),)
-            self._is_homogeneous = False
             return
 
         # Get possible types of elements
@@ -608,7 +615,7 @@ class PythonTuple(TypedAstNode):
         self._shape = (LiteralInteger(len(args)),)
 
         if any(isinstance(d, SymbolicType) for d in unique_element_types):
-            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._class_type = InhomogeneousTupleType.get_new(*[a.class_type for a in args])
             self._is_homogeneous = False
             return
 
@@ -628,12 +635,12 @@ class PythonTuple(TypedAstNode):
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             if contains_pointers:
-                self._class_type = InhomogeneousTupleType(*element_types)
+                self._class_type = InhomogeneousTupleType.get_new(*element_types)
             else:
-                self._class_type = HomogeneousTupleType(unique_element_types.popitem()[1])
+                self._class_type = HomogeneousTupleType.get_new(unique_element_types.popitem()[1])
 
         else:
-            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._class_type = InhomogeneousTupleType.get_new(*[a.class_type for a in args])
 
         assert self._class_type.shape_is_compatible(self._shape)
 
@@ -769,7 +776,7 @@ class PythonList(TypedAstNode):
             return
         elif len(args) == 0:
             self._shape = (LiteralInteger(0),)
-            self._class_type = HomogeneousListType(GenericType())
+            self._class_type = HomogeneousListType.get_new(GenericType())
             return
         arg0 = args[0]
         is_homogeneous = arg0.class_type is not GenericType() and \
@@ -783,7 +790,7 @@ class PythonList(TypedAstNode):
         else:
             raise TypeError("Can't create an inhomogeneous list")
 
-        self._class_type = HomogeneousListType(dtype)
+        self._class_type = HomogeneousListType.get_new(dtype)
 
     def __iter__(self):
         return self._args.__iter__()
@@ -884,7 +891,7 @@ class PythonSet(TypedAstNode):
             return
         elif len(args) == 0:
             self._shape = (LiteralInteger(0),)
-            self._class_type = HomogeneousSetType(GenericType())
+            self._class_type = HomogeneousSetType.get_new(GenericType())
             return
 
         arg0 = args[0]
@@ -899,7 +906,7 @@ class PythonSet(TypedAstNode):
         else:
             raise TypeError("Can't create an inhomogeneous set")
 
-        self._class_type = HomogeneousSetType(elem_type)
+        self._class_type = HomogeneousSetType.get_new(elem_type)
 
     def __iter__(self):
         return self._args.__iter__()
@@ -987,7 +994,7 @@ class PythonDict(PyccelFunction):
             raise TypeError("Unpacking values in a dictionary is not yet supported.")
         elif len(keys) == 0:
             self._shape = (LiteralInteger(0),)
-            self._class_type = DictType(GenericType(), GenericType())
+            self._class_type = DictType.get_new(GenericType(), GenericType())
             return
 
         key0 = keys[0]
@@ -998,7 +1005,7 @@ class PythonDict(PyccelFunction):
                            all(val0.class_type == v.class_type for v in values[1:])
 
         if homogeneous_keys and homogeneous_vals:
-            self._class_type = DictType(key0.class_type, val0.class_type)
+            self._class_type = DictType.get_new(key0.class_type, val0.class_type)
 
             self._shape = (LiteralInteger(len(keys)), )
         else:
@@ -1354,7 +1361,7 @@ class PythonZip(Iterable):
                 self._length = min(lengths)
             else:
                 self._length = PythonMin(*[PythonLen(a) for a in self.args])
-            self._class_type = InhomogeneousTupleType(*[a.class_type for a in args])
+            self._class_type = InhomogeneousTupleType.get_new(*[a.class_type for a in args])
         super().__init__(1)
 
     @property

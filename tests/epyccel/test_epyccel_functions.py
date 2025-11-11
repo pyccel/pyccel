@@ -492,3 +492,68 @@ def test_lambda_2(language):
     val = randint(20)
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
+
+def test_argument_types():
+    def f(a : int, /, b : int, *args : int, c : int, **kwargs : int):
+        my_sum = sum(v for v in kwargs.values())
+        return my_sum + 2*a + 3*b + 5*c + 7*sum(args)
+
+    epyc_f = epyccel(f, language = 'python')
+    a = 8
+    b = 9
+    c = 25
+    args = (7, 14, 21)
+    kwargs = {'d': 11, 'f': 13}
+    assert f(a, b, *args, c=c, **kwargs) == epyc_f(a, b, *args, c=c, **kwargs)
+
+def test_positional_only_arguments(language):
+    def f(a : int, /, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b) == epyc_f(a, b)
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a=a, b=b)
+
+def test_keyword_only_arguments(language):
+    def f(a : int, *, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a, b)
+
+def test_lambda_usage(language):
+    f = lambda x: x+1 # pylint: disable=unnecessary-lambda-assignment
+
+    def g(a : 'int64[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,), dtype=np.int64)
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)
+
+def test_func_usage(language):
+    def f(x : int):
+        return x+1
+
+    def g(a : 'int64[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,), dtype=np.int64)
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)

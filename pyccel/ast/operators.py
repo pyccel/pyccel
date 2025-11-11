@@ -793,6 +793,8 @@ class PyccelMinus(PyccelArithmeticOperator):
                 dtype = cls._calculate_type(arg1, arg2)
                 return convert_to_literal(arg1.python_value - arg2.python_value,
                                           dtype)
+            elif isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2:
+                return arg1.args[0]
             elif arg1 == 0:
                 return PyccelUnarySub(arg2)
 

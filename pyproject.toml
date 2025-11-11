@@ -8,7 +8,7 @@ dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 authors = [
     { name = "Pyccel development team" },
 ]
@@ -17,12 +17,14 @@ keywords = [
 ]
 dependencies = [
     "filelock >= 3.4.0",
-    "numpy >= 1.16, != 2.0.*",
+    "numpy >= 2.1",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "packaging",
     "immutabledict >= 4.0.0",
+    "ninja",
+    "meson",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +41,7 @@ test = [
 
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel"
+pyccel-wrap = "pyccel.commands.pyccel_wrap:pyccel_wrap_command"
 pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
 pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
 
@@ -66,7 +69,12 @@ include = [
   "pyccel/stdlib/**/*.f90",
   "pyccel/stdlib/**/*.inc",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/STC/src/*.c"
+  "pyccel/extensions/STC/src/*",
+  "pyccel/extensions/STC/tests/*",
+  "pyccel/extensions/STC/examples/*",
+  "pyccel/extensions/STC/Makefile",
+  "pyccel/extensions/STC/meson.build",
+  "pyccel/extensions/STC/meson_options.txt"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]

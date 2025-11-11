@@ -84,7 +84,9 @@ PyObject	*Complex64_to_NumpyComplex(float complex *c)
 //-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
 {
-	return (*b) ? Py_True : Py_False;
+    PyObject* result = (*b) ? Py_True : Py_False;
+    Py_INCREF(result);
+    return result;
 }
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
@@ -137,37 +139,89 @@ PyObject	*Float_to_NumpyDouble(float *d)
  * Functions : Numpy array handling functions
  */
 
-void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t shape[], int64_t strides[])
+/**
+ * Calculate the shapes and strides necessary to pass an array to low-level code.
+ *
+ * If an array is a view on another array then it is passed to low-level code by
+ * saving it into a view with the correct dimensionality and slicing that object.
+ * This function returns the 3 objects necessary for this operation.
+ * Namely:
+ *   - base_shape : The shape of a view with the correct dimensionality.
+ *   - ubounds : The upper bounds of the slice.
+ *   - strides : The strides of the slice.
+ *
+ * The view described by the `base_shape` may exceed the domains of the original
+ * array in order to ensure that the dimensions are fully preserved.
+ *
+ * The calculation provides a view which can be sliced to provide the correct data.
+ * This does not mean that the view necessarily ressembles the original object.
+ * In particular strides in non-contiguous dimensions are handled by increasing the
+ * size of the adjacent dimension and pruning the extra information via the ubound.
+ *
+ * E.g.
+ * ```python
+ * a = np.ones((2,3,4,5))
+ * b = a[:,2,::2,:]
+ * ```
+ * Here b has dimensionality 3 so the base_shape, ubounds and strides each contain
+ * 3 elements:
+ *   - base_shape : [2,6,10]
+ *   - ubound : [2,2,5]
+ *   - strides : [1,1,1]
+ * The lbound is handled with offsets. This calculation is already carried out by
+ * NumPy. The data pointer is provided with the offset.
+ *
+ * @param[in] arr The array we wish to pass.
+ * @param[out] base_shape The shape of the view before slicing.
+ * @param[out] ubounds The upper bounds of the slice.
+ * @param[out] strides The strides of the slice.
+ * @param[in] c_order True if the array has C-ordering, False otherwise.
+ */
+void get_strides_and_shape_from_numpy_array(PyObject* arr, int64_t base_shape[], int64_t ubounds[], int64_t strides[], bool c_order)
 {
+    // Get information about the array
     PyArrayObject* a = (PyArrayObject*)(arr);
     int nd = PyArray_NDIM(a);
 
+    // Determine whether the array is a sub-view of a different array
     PyArrayObject* base = (PyArrayObject*)PyArray_BASE(a);
-
     if (base == NULL) {
         npy_intp* np_shape = PyArray_SHAPE(a);
         for (int i = 0; i < nd; ++i) {
-            shape[i] = np_shape[i];
+            base_shape[i] = np_shape[i];
+            ubounds[i] = np_shape[i];
             strides[i] = 1;
         }
     }
     else {
-        npy_intp current_stride = PyArray_ITEMSIZE(a);
+        // Calculate base_shape, ubounds, strides
+        npy_intp itemsize = PyArray_ITEMSIZE(a);
         npy_intp* np_strides = PyArray_STRIDES(a);
         npy_intp* np_shape = PyArray_SHAPE(a);
-        if (PyArray_CHKFLAGS(a, NPY_ARRAY_C_CONTIGUOUS)) {
-            for (int i = nd-1; i >= 0; --i) {
-                shape[i] = np_shape[i];
-                strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+        int64_t current_shape = itemsize;
+        if (c_order) {
+            // If code is C-ordered then the smallest stride is the last element
+            strides[nd-1] = np_strides[nd-1] / itemsize;
+            ubounds[nd-1] = (np_shape[nd-1] - 1) * strides[nd-1] + 1;
+            for (int i = nd-1; i >= 1; --i) {
+                base_shape[i] = np_strides[i-1] / current_shape;
+                current_shape *= base_shape[i];
+                strides[i-1] = 1;
+                ubounds[i-1] = np_shape[i-1];
             }
+            base_shape[0] = np_shape[0] * strides[0];
         }
         else {
-            for (int i = 0; i < nd; ++i) {
-                shape[i] = np_shape[i];
-                strides[i] = np_strides[i] / current_stride;
-                current_stride *= shape[i];
+            // If code is F-ordered then the smallest stride is the first element
+            strides[0] = np_strides[0] / itemsize;
+            ubounds[0] = (np_shape[0] - 1) * strides[0] + 1;
+            for (int i = 0; i < nd-1; ++i) {
+                base_shape[i] = np_strides[i+1] / current_shape;
+                current_shape *= base_shape[i];
+                strides[i+1] = 1;
+                ubounds[i+1] = np_shape[i+1];
             }
+            base_shape[nd-1] = np_shape[nd-1] * strides[nd-1];
         }
     }
 }
@@ -297,7 +351,7 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank, bool allow_empty)
  *
  * 	Parameters	:
  *		a 	  : python array object
- *      flag  : desired order
+ *      flag  : A flag that is recognised by NumPy's PyArray_CHKFLAGS function.
  * 	Returns		:
  *		return NULL if no error occurred otherwise it will return the
  *      message to be reported in a TypeError exception
@@ -307,18 +361,37 @@ static char* _check_pyarray_rank(PyArrayObject *a, int rank, bool allow_empty)
  */
 static char* _check_pyarray_order(PyArrayObject *a, int flag)
 {
-	if (flag == NO_ORDER_CHECK)
-		return NULL;
+    if (flag == NO_ORDER_CHECK)
+        return NULL;
 
-	if (!PyArray_CHKFLAGS(a, flag))
-	{
-		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
+    bool valid = true;
+    if (flag == NPY_ARRAY_C_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i = 1; i<nd; ++i) {
+            valid = valid & (np_strides[i-1] >= np_strides[i]);
+        }
+    }
+    else if (flag == NPY_ARRAY_F_CONTIGUOUS) {
+        int nd = PyArray_NDIM(a);
+        npy_intp* np_strides = PyArray_STRIDES(a);
+        for (int i = 1; i<nd; ++i) {
+            valid = valid & (np_strides[i-1] <= np_strides[i]);
+        }
+    }
+    else {
+        valid = PyArray_CHKFLAGS(a, flag);
+    }
+
+    if (!valid)
+    {
+        char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
         char* error = (char *)malloc(200);
-		sprintf(error, "argument does not have the expected ordering (%c)", order);
-		return error;
-	}
+        sprintf(error, "argument does not have the expected ordering (%c)", order);
+        return error;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 

@@ -33,13 +33,6 @@ gfort_info = {'exec' : 'gfortran',
                   },
               }
 
-if sys.platform == "win32":
-    gfort_info['mpi_exec'] = 'gfortran'
-    gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
-    gfort_info['mpi']['libs']     = ('msmpi',)
-    gfort_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gfort_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
-
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
@@ -126,7 +119,7 @@ clang_info = {'exec': 'clang',
 #------------------------------------------------------------
 flang_info = {
             'exec': 'flang',
-            'mpi_exec': 'mpif90',
+            'mpi_exec': 'mpifort',
             'module_output_flag': '-J',
             'debug_flags': ("-g", "-O0",),
             'release_flags': ("-O3",),
@@ -151,14 +144,6 @@ if sys.platform == "darwin":
     gcc_info['openmp']['libs']     = ('omp',)
     gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
     gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
-
-elif sys.platform == "win32":
-
-    gcc_info['mpi_exec'] = 'gcc'
-    gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
-    gcc_info['mpi']['libs']     = ('msmpi',)
-    gcc_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gcc_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
