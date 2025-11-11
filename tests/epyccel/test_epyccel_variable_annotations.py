@@ -120,6 +120,15 @@ def test_final_annotation(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(final_annotation, language=language)
 
+def test_final_annotation_transmission(language):
+    def final_annotation():
+        a : Final[int] = 3
+        b = a
+        return b
+
+    epyc_final_annotation = epyccel(final_annotation, language=language)
+    assert final_annotation() == epyc_final_annotation()
+
 def test_homogeneous_tuple_annotation(language):
     def homogeneous_tuple_annotation():
         a : tuple[int, ...]
