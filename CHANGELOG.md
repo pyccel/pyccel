@@ -51,6 +51,7 @@ All notable changes to this project will be documented in this file.
 -   #2462 : Fix erroneous additional import in stub file.
 -   #2479 : Fix missing `@property` decorator in stub files.
 -   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
+-   #2443 : Fix passing non-contiguous slices of arrays.
 -   Rename `main` function when translating to C.
 
 ### Changed

@@ -1135,22 +1135,25 @@ class CToPythonWrapper(Wrapper):
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
         data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
                             memory_handling='alias')
-        shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+        base_shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_base_shape'),
+                            shape = (orig_var.rank,))
+        ubound_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_ubound'),
                             shape = (orig_var.rank,))
         stride_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
                             shape = (orig_var.rank,))
         self.scope.insert_variable(data_var)
-        self.scope.insert_variable(shape_var)
+        self.scope.insert_variable(base_shape_var)
+        self.scope.insert_variable(ubound_var)
         self.scope.insert_variable(stride_var)
 
         get_data = AliasAssign(data_var, PyArray_DATA(ObjectAddress(pyarray_collect_arg)))
         get_strides_and_shape = get_strides_and_shape_from_numpy_array(
-                                        ObjectAddress(collect_arg), shape_var, stride_var,
+                                        ObjectAddress(collect_arg), base_shape_var, ubound_var, stride_var,
                                         convert_to_literal(orig_var.order != 'F'))
 
         body = [get_data, get_strides_and_shape]
 
-        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
+        return {'body': body, 'data':data_var, 'shape':base_shape_var, 'ubounds': ubound_var, 'strides':stride_var}
 
     def _call_wrapped_function(self, func, args, results):
         """
@@ -2390,22 +2393,27 @@ class CToPythonWrapper(Wrapper):
         body = parts['body']
         shape = parts['shape']
         strides = parts['strides']
+        ubounds = parts['ubounds']
         shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
         stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        ubound_elems = [IndexedElement(ubounds, i) for i in range(orig_var.rank)]
         args = [parts['data']] + shape_elems + stride_elems
         default_body = [AliasAssign(parts['data'], Nil())] + \
                 [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 0) for s in ubound_elems] + \
                 [Assign(s, 1) for s in stride_elems]
 
         if is_bind_c_argument:
             rank = orig_var.rank
             arg_var = Variable(BindCArrayType.get_new(rank, True), self.scope.get_new_name(orig_var.name),
-                        shape = (LiteralInteger(rank*2+1),))
+                        shape = (LiteralInteger(rank*3+1),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
             for i,s in enumerate(shape):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
-            for i,s in enumerate(strides):
+            for i,s in enumerate(ubounds):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+2*rank+1)), s)
 
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
@@ -2427,10 +2435,8 @@ class CToPythonWrapper(Wrapper):
                                     allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
-
-        body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
-        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+        body.append(Allocate(arg_var, shape=tuple(shape_elems), status='unallocated', like=args[0]))
+        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, u, s) for s, u in zip(stride_elems, ubound_elems)])))
 
         collect_arg = sliced_arg_var
         if orig_var.is_optional:
