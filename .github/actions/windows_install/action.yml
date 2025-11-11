@@ -50,3 +50,9 @@ runs:
       uses: mpi4py/setup-mpi@v1
       with:
         mpi: msmpi
+    - name: Complete Microsoft MPI installation
+      run: |
+        mpifort --showme
+        ls D:/a/_temp/msys64/mingw64/include
+        mpifort D:/a/_temp/msys64/mingw64/share/test/msmpi/hello_mpi.f90
+
