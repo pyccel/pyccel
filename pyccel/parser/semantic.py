@@ -2335,7 +2335,8 @@ class SemanticParser(BasicParser):
                 errors.report("Nested Annotated[] type modifiers are not handled.",
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               symbol = expr, severity = 'error')
-            metavars = [self._visit(a) for a in args[1:]]
+            metavars = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else self._visit(a)
+                        for a in args[1:]]
             var_metadata = {}
             if 'pointer' in metavars:
                 var_metadata['memory_handling'] = 'alias'
