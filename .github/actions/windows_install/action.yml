@@ -52,10 +52,12 @@ runs:
         mpi: msmpi
     - name: Complete Microsoft MPI installation
       run: |
-        ls D:/a/_temp/msys64/mingw64/include
-        mpifort D:/a/_temp/msys64/mingw64/share/test/msmpi/hello_mpi.f90
-        which mpifort
-        cat $(which mpifort)
-        mpicc --showme
+        #ls D:/a/_temp/msys64/mingw64/include
+        mpifort D:/a/_temp/msys64/mingw64/share/test/msmpi/hello_mpi.f90 -o hello_mpi
+        ls
+        ./hello_mpi.exe
+        #which mpifort
+        #cat $(which mpifort)
+        #mpicc --showme
         mpifort -v D:/a/_temp/msys64/mingw64/share/test/msmpi/hello_mpi.f90
       shell: bash
