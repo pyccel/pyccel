@@ -230,7 +230,7 @@ class ExternalLibInstaller:
         """
         return self._dest_dir
 
-    def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name = None):
+    def _check_for_cmake_package(self, pkg_name, languages, options = '', target_name):
         """
         Use CMake to search for a package.
 
@@ -246,7 +246,7 @@ class ExternalLibInstaller:
         options : iterable[str], optional
             Any additional options that should be passed to find_package.
             E.g. COMPONENTS.
-        target_name : str, optional
+        target_name : str
             The name of the package target. By default this is assumed to be
             the same as the pkg_name (e.g. HDF5::HDF5).
 
@@ -259,9 +259,6 @@ class ExternalLibInstaller:
         # If cmake is not installed then exit
         if not cmake:
             return None
-
-        if target_name is None:
-            target_name = pkg_name
 
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as build_dir:
             # Write a minimal CMakeLists.txt
