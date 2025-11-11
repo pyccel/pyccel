@@ -50,7 +50,8 @@ def execute_pyccel_make(files, *,
                    build_system,
                    debug = None,
                    accelerators,
-                   conda_warnings):
+                   conda_warnings,
+                   build_code):
     """
     Run Pyccel-make on the provided files.
 
@@ -87,6 +88,8 @@ def execute_pyccel_make(files, *,
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose).
+    build_code : bool
+        Indicates if the build commands should be run.
     """
     start = time.time()
     timers = {}
@@ -310,9 +313,10 @@ def execute_pyccel_make(files, *,
         handle_error('build system generation')
         raise PyccelCodegenError('Build system generation failed')
 
-    start_compilation = time.time()
-    build_sys.compile()
-    timers['Compilation'] = time.time() - start_compilation
+    if build_code:
+        start_compilation = time.time()
+        build_sys.compile()
+        timers['Compilation'] = time.time() - start_compilation
 
     # Print all warnings now
     if errors.has_warnings():

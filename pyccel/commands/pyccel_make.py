@@ -94,6 +94,8 @@ def pyccel_make_command() -> None:
                         help='Show internal messages.')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
                         help='Specify the level of Conda warnings to display (default: basic).')
+    group.add_argument('-t', '--convert-only', action='store_true',
+                       help='Stop Pyccel after translation to the target language, before build.')
     # ...
     # ...
     args = parser.parse_args()
@@ -154,6 +156,7 @@ def pyccel_make_command() -> None:
                             build_system = args.build_system,
                             debug = args.debug,
                             accelerators = accelerators,
-                            conda_warnings  = args.conda_warnings)
+                            conda_warnings = args.conda_warnings,
+                            build_code = not args.convert_only)
     except PyccelError:
         sys.exit(1)
