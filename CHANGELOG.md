@@ -19,8 +19,9 @@ All notable changes to this project will be documented in this file.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
 -   #601 : Add C support for nested functions.
--   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
--   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
+-   Add badge for Documentation workflow to `README.md`.
+-   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -48,6 +49,9 @@ All notable changes to this project will be documented in this file.
 -   #2458 : Fix incoherent import printing in Python and `.pyi` files.
 -   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   #2462 : Fix erroneous additional import in stub file.
+-   #2479 : Fix missing `@property` decorator in stub files.
+-   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
+-   #2443 : Fix passing non-contiguous slices of arrays.
 -   Rename `main` function when translating to C.
 
 ### Changed
@@ -61,6 +65,7 @@ All notable changes to this project will be documented in this file.
 -   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
 -   #2465 : Change default name of `__init__` functions in Fortran translations.
 -   #2405 : Change generated names in C to include the module in the name for multi-file collision handling.
+-   #2488 : Use MPI wrapper executables to compile MPI code on Windows.
 -   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
