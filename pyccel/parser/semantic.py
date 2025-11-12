@@ -5307,7 +5307,7 @@ class SemanticParser(BasicParser):
             assert expr.results
             assign = body.body[-1]
             semantic_lhs = self._visit(lhs)
-            if isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
+            if len(returns) == 1 and isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
                 self._additional_exprs[-1].extend(body.body[:-1])
                 self.scope.remove_variable(semantic_lhs)
                 try:
