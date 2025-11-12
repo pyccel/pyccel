@@ -684,10 +684,11 @@ class IndexedElement(TypedAstNode):
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
                             _shape = start if a.stop is None else PyccelMinus.make_simplified(start, stop)
-                            step = PyccelUnarySub(step)
+                            step = step.args[0]
 
                         _shape = MathCeil(PyccelDiv.make_simplified(_shape, step))
                     new_shape.append(_shape)
+
             if isinstance(base.class_type, HomogeneousTupleType):
                 new_shape.extend(shape[1:])
             new_rank = len(new_shape)
