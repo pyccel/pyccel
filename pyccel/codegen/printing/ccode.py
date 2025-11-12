@@ -574,7 +574,7 @@ class CCodePrinter(CodePrinter):
         var = expr
         dtype = self.get_c_type(var.dtype)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
+        tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, var.alloc_shape))
 
         order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
 
