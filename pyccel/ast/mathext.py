@@ -793,7 +793,7 @@ class MathCeil(MathFunctionInt):
         if isinstance(x, Literal):
             return LiteralInteger(math.ceil(x.python_value), dtype = cls._class_type)
         else:
-            return super().__new__()
+            return super().__new__(cls)
 
     def __init__(self, x):
         super().__init__(x)
@@ -817,7 +817,7 @@ class MathFloor(MathFunctionInt):
         if isinstance(x, Literal):
             return LiteralInteger(math.floor(x.python_value), dtype = cls._class_type)
         else:
-            return super().__new__()
+            return super().__new__(cls)
 
     def __init__(self, x):
         super().__init__(x)
