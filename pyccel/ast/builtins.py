@@ -425,7 +425,7 @@ class PythonEnumerate(Iterable):
         """
         index = self._indices[0]
         if index.is_temp:
-            return [PyccelAdd(index, self.start, simplify=True),
+            return [PyccelAdd.make_simplified(index, self.start),
                     self.element[index]]
         else:
             return [self.element[index]]

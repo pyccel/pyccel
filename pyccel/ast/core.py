@@ -201,7 +201,7 @@ class Duplicate(TypedAstNode):
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
+        self._shape      = tuple(s if i!= 0 else PyccelMul.make_simplified(s, length) for i,s in enumerate(val.shape))
         self._class_type = val.class_type
 
         self._val       = val

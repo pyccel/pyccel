@@ -675,18 +675,18 @@ class IndexedElement(TypedAstNode):
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
                     if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
+                        start = PyccelAdd.make_simplified(s, start)
                     if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                        stop = PyccelAdd.make_simplified(s, stop)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                    _shape = stop if start is None else PyccelMinus.make_simplified(stop, start)
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                            _shape = start if a.stop is None else PyccelMinus.make_simplified(start, stop)
                             step = PyccelUnarySub(step)
 
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                        _shape = MathCeil(PyccelDiv.make_simplified(_shape, step))
                     new_shape.append(_shape)
             if isinstance(base.class_type, HomogeneousTupleType):
                 new_shape.extend(shape[1:])
@@ -769,9 +769,9 @@ class IndexedElement(TypedAstNode):
                         if i.step == 1 or i.step is None:
                             incr = current_arg
                         else:
-                            incr = PyccelMul(i.step, current_arg, simplify = True)
+                            incr = PyccelMul.make_simplified(i.step, current_arg)
                         if i.start != 0 and i.start is not None:
-                            incr = PyccelAdd(i.start, incr, simplify = True)
+                            incr = PyccelAdd.make_simplified(i.start, incr)
                     i = incr
                     j += 1
                 new_indexes.append(i)
