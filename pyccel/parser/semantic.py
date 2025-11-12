@@ -442,8 +442,7 @@ class SemanticParser(BasicParser):
             try:
                 class_def = prefix.cls_base
             except AttributeError:
-                class_def = get_cls_base(prefix.class_type) or \
-                            self.scope.find(str(prefix.class_type), 'classes')
+                class_def = self.get_cls_base(prefix.class_type)
 
             attr_name = name.name[-1]
             class_scope = class_def.scope
@@ -873,7 +872,7 @@ class SemanticParser(BasicParser):
         d_var = {
                 'class_type' : class_type,
                 'shape'      : expr.shape,
-                'cls_base'   : self.scope.find(str(class_type), 'classes') or get_cls_base(class_type),
+                'cls_base'   : self.get_cls_base(class_type),
                 'memory_handling' : 'heap' if expr.rank > 0 else 'stack'
             }
 
@@ -1082,7 +1081,7 @@ class SemanticParser(BasicParser):
                         severity='fatal', symbol=expr)
             return UnionTypeAnnotation(*[VariableTypeAnnotation(t) for t in possible_types])
         class_type = arg1.class_type
-        class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+        class_base = self.get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
         magic_method = None
         if magic_method_name:
@@ -1090,7 +1089,7 @@ class SemanticParser(BasicParser):
             if magic_method is None:
                 arg2 = visited_args[1]
                 class_type = arg2.class_type
-                class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                class_base = self.get_cls_base(class_type)
                 magic_method_name = '__r'+magic_method_name[2:]
                 magic_method = class_base.get_method(magic_method_name)
                 if magic_method:
@@ -3245,7 +3244,7 @@ class SemanticParser(BasicParser):
 
             return self._extract_indexed_from_var(var, args, expr)
         else:
-            cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            cls_base = self.get_cls_base(class_type)
             method = cls_base.get_method('__getitem__')
             if method:
                 class_args = self._handle_function_args([FunctionCallArgument(a) for a in expr.indices])
@@ -3350,7 +3349,7 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                cls_base = self.get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
                 elif isinstance(class_type, HomogeneousTupleType):
@@ -3501,9 +3500,7 @@ class SemanticParser(BasicParser):
 
         d_var = self._infer_type(first)
         class_type = d_var['class_type']
-        cls_base = get_cls_base(class_type)
-        if cls_base is None:
-            cls_base = self.scope.find(str(class_type), 'classes')
+        cls_base = self.get_cls_base(class_type)
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
@@ -3623,7 +3620,7 @@ class SemanticParser(BasicParser):
             else:
                 return LiteralFalse()
 
-        container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
+        container_base = self.get_cls_base(container_type)
         contains_method = container_base.get_method('__contains__',
                         raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
@@ -4262,7 +4259,7 @@ class SemanticParser(BasicParser):
             magic_method_name = magic_method_map[operator]
             increment_magic_method_name = '__i' + magic_method_name[2:]
             class_type = lhs.class_type
-            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            class_base = self.get_cls_base(class_type)
             increment_magic_method = class_base.get_method(increment_magic_method_name)
             args = [FunctionCallArgument(lhs), FunctionCallArgument(rhs)]
             if increment_magic_method:
@@ -4536,7 +4533,7 @@ class SemanticParser(BasicParser):
             class_type = type_container[conversion_func.cls_name].get_new(numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         d_var['shape'] = (dim,)
-        d_var['cls_base'] = get_cls_base(class_type)
+        d_var['cls_base'] = self.get_cls_base(class_type)
 
         # ...
         # TODO [YG, 30.10.2020]:
@@ -6298,7 +6295,7 @@ class SemanticParser(BasicParser):
         if isinstance(arg, LiteralString):
             return LiteralInteger(len(arg.python_value))
         elif isinstance(arg.class_type, CustomDataType):
-            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            class_base = self.get_cls_base(class_type)
             magic_method = class_base.get_method('__len__')
             if magic_method:
                 return self._handle_function(expr, magic_method, function_call_args)
@@ -6414,7 +6411,7 @@ class SemanticParser(BasicParser):
 
             elif expected_type:
                 class_type = obj.class_type
-                cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
+                cls_base_to_insert = [self.get_cls_base(class_type)]
                 possible_types = {class_type}
                 while cls_base_to_insert:
                     cls_base = cls_base_to_insert.pop()
