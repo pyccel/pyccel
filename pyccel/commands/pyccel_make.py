@@ -41,9 +41,10 @@ def pyccel_make_command() -> None:
     group.add_argument('-f', '--files', nargs='+', type=Path,
             help="A list of files to be translated as a project.")
     group.add_argument('-g', '--glob', type=str,
-            help="A glob that should be used to recognise files to be translated as a project.")
+            help=("A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
+                  "Note: quote the pattern to prevent shell expansion."))
     group.add_argument('-d', '--file-descr', type=Path,
-            help="A file containing a list of all the files to be translated as a project.")
+            help="A file where each line is the name of a file, this set of files are the files to be translated as a project.")
 
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
