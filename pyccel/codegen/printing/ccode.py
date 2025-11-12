@@ -574,8 +574,7 @@ class CCodePrinter(CodePrinter):
         var = expr
         dtype = self.get_c_type(var.dtype)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(
-            lambda x,y: PyccelMul(x,y), var.alloc_shape))
+        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
 
         order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
 
@@ -1926,8 +1925,7 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
 
-            tot_shape = self._print(functools.reduce(
-                lambda x,y: PyccelMul.make_simplified(x,y), expr.shape))
+            tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, expr.shape))
             c_type = self.get_c_type(variable.class_type)
             element_type = self.get_c_type(variable.class_type.element_type)
 
