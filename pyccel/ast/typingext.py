@@ -67,7 +67,7 @@ class TypingAnnotation(TypedAstNode):
     ----------
     arg : SyntacticTypeAnnotation
         The annotation which is annotated.
-    *metadata : object
+    **metadata : object
         The metadata providing additional information about the variable being
         declared.
     """
