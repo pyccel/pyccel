@@ -10,6 +10,7 @@ Module containing the Parser object
 from pathlib import Path
 
 from pyccel.errors.errors    import Errors
+from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.ast.utilities import recognised_source
 
 from pyccel.parser.base      import get_filename_from_import
@@ -281,6 +282,12 @@ class Parser(object):
 
         imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
+
+        if (None, None) in source_to_filename.values():
+            unfound_modules = ', '.join(i for i, f in source_to_filename.items() if f == (None, None))
+            errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=unfound_modules,
+                          filename = self._filename, severity='fatal')
+
         for imp, (filename_py, stashed_file) in source_to_filename.items():
             if filename_py in d_parsers_by_filename:
                 source_to_filename[imp] = (filename_py, filename_py)

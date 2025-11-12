@@ -24,12 +24,10 @@ from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
 
-from pyccel.errors.errors   import Errors, ErrorsMode
-from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
+from pyccel.errors.errors   import ErrorsMode
 
 #==============================================================================
 
-errors = Errors()
 error_mode = ErrorsMode()
 
 #==============================================================================
@@ -70,17 +68,11 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     Returns
     -------
     filename : pathlib.Path
-        Absolute path to the Python file being imported.
+        Absolute path to the Python file being imported. None if not found.
     stashed_filename : pathlib.Path
         Absolute path to the .pyi version of the Python file being imported.
         If none exists then the absolute path to the Python file being imported.
-
-    Raises
-    ------
-    PyccelError
-        Error raised when the module_name cannot be found.
-        Error raised when the file imports a file that has not been translated.
-        Error raised when the file imports a file that has been changed since its last translation.
+        None if Python file is not found.
     """
 
     if (isinstance(module_name, AsName)):
@@ -111,8 +103,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
                 except ImportError:
                     pass
             if package is None:
-                errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
-                                severity='fatal')
+                return None, None
             filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
     else:
         filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
@@ -137,8 +128,7 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
         abs_pyi_fname = filename_pyi.absolute()
         return abs_pyi_fname, abs_pyi_fname
     else:
-        raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module_name,
-                      severity='fatal')
+        return None, None
 
 #==============================================================================
 class BasicParser(object):
