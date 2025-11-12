@@ -673,8 +673,10 @@ class PyccelAdd(PyccelArithmeticOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
         """
         if isinstance(arg2, PyccelUnarySub):
             return PyccelMinus.make_simplified(arg1, arg2.args[0])
@@ -772,8 +774,10 @@ class PyccelMul(PyccelArithmeticOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
         """
         if (arg1 == 1):
             return arg2
@@ -829,8 +833,10 @@ class PyccelMinus(PyccelArithmeticOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
         """
         if isinstance(arg2, PyccelUnarySub):
             return PyccelAdd.make_simplified(arg1, arg2.args[0])
@@ -899,8 +905,10 @@ class PyccelDiv(PyccelArithmeticOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
         """
         if (arg2 == 1):
             return arg1
@@ -1191,8 +1199,10 @@ class PyccelGt(PyccelComparisonOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
         """
 
         if all(isinstance(a, Literal) or isinstance(a, PyccelUnarySub) and isinstance(a.args[0], Literal)
