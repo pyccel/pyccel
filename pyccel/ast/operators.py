@@ -693,6 +693,8 @@ class PyccelAdd(PyccelArithmeticOperator):
 
         if isinstance(arg1, PyccelMinus) and arg1.args[1] == arg2:
             return arg1.args[0]
+        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelAdd(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
 
         return cls(arg1, arg2)
 
@@ -853,6 +855,10 @@ class PyccelMinus(PyccelArithmeticOperator):
             return arg1
         if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2:
             return arg1.args[0]
+        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelAdd(arg1.args[0], PyccelMinus.make_simplified(arg1.args[1], arg2))
+        if isinstance(arg1, PyccelMinus) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelMinus(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
 
         return cls(arg1, arg2)
 
