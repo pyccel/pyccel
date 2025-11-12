@@ -68,7 +68,7 @@ from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 from pyccel.ast.core import AllDeclaration
 
-from pyccel.ast.class_defs import get_cls_base, SetClass
+from pyccel.ast.class_defs import get_builtin_cls_base, SetClass
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
@@ -552,6 +552,38 @@ class SemanticParser(BasicParser):
                 severity='fatal')
         else:
             return result
+
+    def get_cls_base(self, class_type):
+        """
+        Determine the base class of an object.
+
+        From the type, determine the base class of an object.
+
+        Parameters
+        ----------
+        class_type : DataType
+            The Python type of the object.
+
+        Returns
+        -------
+        ClassDef
+            A class definition describing the base class of an object.
+
+        Raises
+        ------
+        NotImplementedError
+            Raised if the base class cannot be found.
+        """
+        # Extract type in case of qualifier (e.g. Final)
+        while hasattr(class_type, 'underlying_type'):
+            class_type = class_type.underlying_type
+
+        scope_class = self.scope.find(str(class_type), 'classes')
+
+        if scope_class:
+            return scope_class
+        else:
+            return get_builtin_cls_base(class_type)
 
     def insert_import(self, name, target, storage_name = None):
         """
