@@ -790,7 +790,7 @@ class PyccelMul(PyccelArithmeticOperator):
             dtype = cls._calculate_type(arg1, arg2)
             return convert_to_literal(arg1.python_value * arg2.python_value,
                                       dtype)
-        return cls(arg1, args)
+        return cls(arg1, arg2)
 
     def __repr__(self):
         return f'{repr(self.args[0])} * {repr(self.args[1])}'
@@ -1338,7 +1338,7 @@ class PyccelOr(PyccelBooleanOperator):
     _precedence = 4
 
     @classmethod
-    def make_simplified(cls, arg1, arg2):
+    def make_simplified(cls, *args):
         """
         Call the class constructor after making any simplifications to the expression.
 
