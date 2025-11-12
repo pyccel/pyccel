@@ -1951,8 +1951,7 @@ class CCodePrinter(CodePrinter):
                 declaration_type = self.get_declare_type(expr.like)
                 malloc_size = f'sizeof({declaration_type})'
                 if variable.rank:
-                    tot_shape = self._print(functools.reduce(
-                        lambda x,y: PyccelMul.make_simplified(x,y), expr.shape))
+                    tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, expr.shape))
                     malloc_size = f'{malloc_size} * ({tot_shape})'
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
