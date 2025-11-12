@@ -1510,11 +1510,8 @@ class FCodePrinter(CodePrinter):
         arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         arg_code = self._get_node_without_gFTL(arg)
         if expr.axis:
-            axis = expr.axis
-            if arg.order != 'F':
-                axis = PyccelMinus.make_simplified(LiteralInteger(arg.rank), expr.axis)
-            else:
-                axis = LiteralInteger(expr.axis.python_value + 1)
+            axis_val = expr.axis.python_value
+            axis = LiteralInteger((axis_val + 1) if arg.order == 'F' else (arg.rank - axis_val))
             code = f'Norm2({arg_code},{self._print(axis)})'
         else:
             code = f'Norm2({arg_code})'
