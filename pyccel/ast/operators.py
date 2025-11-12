@@ -694,7 +694,7 @@ class PyccelAdd(PyccelArithmeticOperator):
 
         return cls(arg1, arg2)
 
-    def __new__(self, arg1, arg2):
+    def __new__(cls, arg1, arg2):
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -838,6 +838,9 @@ class PyccelMinus(PyccelArithmeticOperator):
             dtype = cls._calculate_type(arg1, arg2)
             return convert_to_literal(arg1.python_value - arg2.python_value,
                                       dtype)
+
+        class_type = cls._calculate_type(arg1, arg2)
+
         if class_type == arg2.class_type and arg1 == 0:
             return PyccelUnarySub(arg2)
         if class_type == arg1.class_type and arg2 == 0:
@@ -902,8 +905,11 @@ class PyccelDiv(PyccelArithmeticOperator):
         if (arg2 == 1):
             return arg1
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            class_type = cls._calculate_type(arg1, arg2)
             return convert_to_literal(arg1.python_value / arg2.python_value,
                                       class_type)
+
+        return cls(arg1, arg2)
 
     @classmethod
     def _calculate_type(cls, arg1, arg2):
