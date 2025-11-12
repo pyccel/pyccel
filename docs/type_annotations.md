@@ -188,3 +188,24 @@ type MyType = float
 def set_i(x : 'MyType[:]', i : 'int', val : MyType):
     x[i] = val
 ```
+
+## Annotated types
+
+Python provides the class `typing.Annotated` to allow variables to be annotated with context-specific metadata (<https://docs.python.org/3/library/typing.html#typing.Annotated>). Pyccel supports this class if it is encountered in user code. It also leverages this mechanism to describe types in more detail in stub files. In particular pointers and stack arrays can be declared with this notation.
+E.g.
+
+
+```python
+from typing import Annotated
+arr : 'Annotated[int[:], "pointer"]' # Equivalent to Fortran notation : integer(i64), pointer :: arr(:)
+arr2 : 'Annotated[int[:], "stack"]' = np.ones(8) # Equivalent to Fortran notation : integer(i64) :: arr2(0:7)
+```
+
+This syntax can be combined with other existing syntaxes. E.g.
+
+```python
+from typing import TypeVar, Annotated
+T = TypeVar('T', 'int[:]', 'float[:]')
+arr : Annotated[T, 'pointer']
+arr2 : Annotated[T, 'stack'] = np.ones(8)
+```
