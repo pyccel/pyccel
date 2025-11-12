@@ -12,7 +12,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple, PythonDict
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
-from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
+from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef, ClassDef
 from pyccel.ast.core       import Interface, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
@@ -694,13 +694,14 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_AsName(self, expr):
         target = self._print(expr.local_alias)
-        if isinstance(expr.object, VariableTypeAnnotation):
+        renamed_object = expr.object
+        if isinstance(renamed_object, VariableTypeAnnotation):
             return target
 
         name = self._print(expr.name)
-        if isinstance(expr.object, FunctionDef):
-            if expr.object.scope and not expr.object.is_inline:
-                name = self._print(expr.object.scope.get_python_name(expr.name))
+        if isinstance(renamed_object, (FunctionDef, ClassDef)):
+            if renamed_object.scope and not getattr(renamed_object, 'is_inline', False):
+                name = self._print(renamed_object.scope.get_python_name(expr.name))
 
         if name == target:
             return name
