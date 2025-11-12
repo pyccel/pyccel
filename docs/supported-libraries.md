@@ -13,6 +13,6 @@ We additionally have support for the specified functions from the following libr
 -   `numpy` : See [NumPy functions](./numpy-functions.md).
 -   `scipy` : `constants.pi`
 -   `sys` : `exit`
--   `typingext` : `Final`
+-   `typingext` : `Final`, `overload`, `TypeAlias`, `TypeVar`
 
 If you need support for a library which is not mentioned here, please open a [discussion](https://github.com/pyccel/pyccel/discussions/categories/ideas) and we will investigate whether this can be added simply.
