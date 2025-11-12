@@ -691,7 +691,8 @@ class PyccelAdd(PyccelArithmeticOperator):
         if class_type == arg1.class_type and arg2 == 0:
             return arg1
 
-        if isinstance(arg1, PyccelMinus) and arg1.args[1] == arg2:
+        if isinstance(arg1, PyccelMinus) and arg1.args[1] == arg2 \
+                and arg1.args[0].class_type == class_type:
             return arg1.args[0]
         if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
             return PyccelAdd(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
@@ -781,21 +782,23 @@ class PyccelMul(PyccelArithmeticOperator):
         arg2 : TypedAstNode
             The second argument passed to the operator.
         """
-        if (arg1 == 1):
+        class_type = cls._calculate_type(arg1, arg2)
+
+        if arg1 == 1 and arg2.class_type == class_type:
             return arg2
-        if (arg2 == 1):
+        if arg2 == 1 and arg2.class_type == class_type:
             return arg1
         if (arg1 == 0 or arg2 == 0):
-            dtype = cls._calculate_type(arg1, arg2)
-            return convert_to_literal(0, dtype)
-        if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
+            return convert_to_literal(0, class_type)
+        if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1) \
+                and arg2.class_type == class_type:
             return PyccelUnarySub(arg2)
-        if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
+        if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1) \
+                and arg1.class_type == class_type:
             return PyccelUnarySub(arg1)
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-            dtype = cls._calculate_type(arg1, arg2)
             return convert_to_literal(arg1.python_value * arg2.python_value,
-                                      dtype)
+                                      class_type)
         return cls(arg1, arg2)
 
     def __repr__(self):
@@ -853,7 +856,8 @@ class PyccelMinus(PyccelArithmeticOperator):
             return PyccelUnarySub(arg2)
         if class_type == arg1.class_type and arg2 == 0:
             return arg1
-        if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2:
+        if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2 \
+                and arg1.args[0].class_type == class_type:
             return arg1.args[0]
         if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
             return PyccelAdd(arg1.args[0], PyccelMinus.make_simplified(arg1.args[1], arg2))
@@ -916,10 +920,10 @@ class PyccelDiv(PyccelArithmeticOperator):
         arg2 : TypedAstNode
             The second argument passed to the operator.
         """
-        if (arg2 == 1):
+        class_type = cls._calculate_type(arg1, arg2)
+        if arg2 == 1 and arg1.class_type == class_type:
             return arg1
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-            class_type = cls._calculate_type(arg1, arg2)
             return convert_to_literal(arg1.python_value / arg2.python_value,
                                       class_type)
 
