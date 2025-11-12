@@ -17,7 +17,7 @@ from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, 
 from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
-from .operators import (PyccelMinus, PyccelDiv, PyccelMul, PyccelLt,
+from .operators import (PyccelMinus, PyccelDiv, PyccelMul, PyccelLt, PyccelUnarySub,
                         PyccelAdd, IfTernaryOperator)
 from .numpytypes import NumpyNDArrayType
 
@@ -708,28 +708,33 @@ class IndexedElement(TypedAstNode):
 
             for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
-                    start, stop = LiteralInteger(0), s
+                    default_start, default_stop = LiteralInteger(0), s
 
+                    start = a.start
+                    stop  = a.stop
                     step  = a.step
                     negative_step = negative_idxs_possible
                     try:
                         if int(step) < 0:
                             step = step.args[0]
                             negative_step = False
+                            default_start = PyccelUnarySub(LiteralInteger(1))
+                            default_stop = PyccelMinus(s, LiteralInteger(1))
+                            start, stop = stop, start
                     except TypeError:
                         pass
 
-                    start = unpack_bound(a.start, start, s)
-                    stop = unpack_bound(a.stop, stop, s)
+                    start = unpack_bound(start, default_start, s)
+                    stop = unpack_bound(stop, default_stop, s)
 
                     if start == 0:
                         _shape = stop # Can't be done with simplify kwarg due to potential recursion
                     else:
                         _shape = PyccelMinus(stop, start, simplify=True)
                     if step is not None:
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                         if negative_step:
                             _shape = MathFabs(_shape)
+                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             if isinstance(base.class_type, HomogeneousTupleType):
                 new_shape.extend(shape[1:])
