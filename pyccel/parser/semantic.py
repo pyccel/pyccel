@@ -5307,7 +5307,8 @@ class SemanticParser(BasicParser):
             assert expr.results
             assign = body.body[-1]
             semantic_lhs = self._visit(lhs)
-            if len(returns) == 1 and isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
+            if len(returns) == 1 and not isinstance(semantic_lhs.class_type, TupleType) \
+                    and isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
                 self._additional_exprs[-1].extend(body.body[:-1])
                 self.scope.remove_variable(semantic_lhs)
                 try:
@@ -5317,7 +5318,7 @@ class SemanticParser(BasicParser):
                 self._pointer_targets[-1].pop(semantic_lhs, None)
                 return self._visit(assign.rhs)
             else:
-                self._additional_exprs[-1].extend(body)
+                self._additional_exprs[-1].append(body)
                 return semantic_lhs
 
     def _visit_PythonPrint(self, expr):
