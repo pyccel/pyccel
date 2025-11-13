@@ -577,7 +577,12 @@ class SemanticParser(BasicParser):
         while hasattr(class_type, 'underlying_type'):
             class_type = class_type.underlying_type
 
-        scope_class = self.scope.find(str(class_type), 'classes')
+        try:
+            name = self.scope.get_import_alias(class_type, 'cls_constructs')
+        except RuntimeError:
+            name = class_type.name
+
+        scope_class = self.scope.find(name, 'classes')
 
         if scope_class:
             return scope_class
