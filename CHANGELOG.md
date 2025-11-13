@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
 -   #601 : Add C support for nested functions.
+-   #2497 : Add support for LAPACK's `zgbtrf` and `zgbtrs` in `pyccel.stdlib.internals`.
+-   #2497 : Add support for passing 1D arguments as `b` argument to LAPACK's `sgbtrs`, `dgbtrs`, and `zgbtrs` in `pyccel.stdlib.internals`.
 -   Add badge for Documentation workflow to `README.md`.
 -   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.

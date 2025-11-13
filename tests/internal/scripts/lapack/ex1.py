@@ -27,6 +27,7 @@ def test_1():
 
     a = zeros((lda,n), order='F')
     b = zeros((1,n), order='F')
+    b_1d = zeros(n)
 
     b[0]   = 1.0
     b[n-1] = 1.0
@@ -45,6 +46,8 @@ def test_1():
 
     dgbtrs('n', n, ml, mu, int32(1), a, lda, ipiv, b, n, info)
 #    assert info == 0
+
+    dgbtrs('n', n, ml, mu, int32(1), a, lda, ipiv, b_1d, n, info)
 
 def test_2():
     n = int32(3)

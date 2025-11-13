@@ -9,6 +9,7 @@ SymPy
 SymPy's
 BLAS
 LAPACK
+LAPACK's
 MPI
 OpenMP
 Fortran
