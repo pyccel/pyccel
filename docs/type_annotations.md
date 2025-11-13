@@ -194,7 +194,6 @@ def set_i(x : 'MyType[:]', i : 'int', val : MyType):
 Python provides the class `typing.Annotated` to allow variables to be annotated with context-specific metadata (<https://docs.python.org/3/library/typing.html#typing.Annotated>). Pyccel supports this class if it is encountered in user code. It also leverages this mechanism to describe types in more detail in stub files. In particular pointers and stack arrays can be declared with this notation.
 E.g.
 
-
 ```python
 from typing import Annotated
 arr : 'Annotated[int[:], "pointer"]' # Equivalent to Fortran notation : integer(i64), pointer :: arr(:)
