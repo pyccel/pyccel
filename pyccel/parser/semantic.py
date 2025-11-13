@@ -5571,8 +5571,7 @@ class SemanticParser(BasicParser):
                 targets = [AsName(mod, source_target)]
 
             for n, cls in container['classes'].items():
-                cls_construct = p.scope.cls_constructs[cls.name]
-                self.scope.imports['cls_constructs'][n] = cls_construct
+                self.scope.imports['cls_constructs'][n] = cls.class_type
 
             # ... meta variables
 
