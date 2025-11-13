@@ -104,3 +104,7 @@ def functional_negative_indices(arg : 'int[:]'):
 def functional_reverse(arg : 'int[:]'):
     a = [ai*2 for ai in arg[::-1]]
     return len(a), a[0], a[1], a[2], a[3]
+
+def functional_indexed_iterator(arg : 'int[:]'):
+    a = [ai*2 for ai in arg[3:9:2]]
+    return len(a), a[0], a[1], a[2]

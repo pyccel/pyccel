@@ -102,3 +102,6 @@ def test_functional_negative_indices(language):
 
 def test_functional_reverse(language):
     compare_epyccel(functionals.functional_reverse, language, arange(4))
+
+def test_functional_reverse(language):
+    compare_epyccel(functionals.functional_indexed_iterator, language, arange(10))
