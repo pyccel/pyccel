@@ -1625,7 +1625,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         cls_variable = expr.cls_variable
-        cls_name = cls_variable.cls_base.name
+        try:
+            cls_name = self.scope.get_import_alias(cls_variable.class_type, 'cls_constructs')
+        except RuntimeError:
+            cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
         if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
             return f"{cls_variable} = {cls_name}({args})\n"
@@ -1721,8 +1724,11 @@ class PythonCodePrinter(CodePrinter):
         return 'str'
 
     def _print_CustomDataType(self, expr):
-        # TODO: Check if CustomDataType is imported from another file
-        return expr.name
+        try:
+            name = self.scope.get_import_alias(expr, 'cls_constructs')
+        except RuntimeError:
+            name = expr.low_level_name
+        return name
 
     def _print_NumpyNumericType(self, expr):
         name = str(expr).removeprefix('numpy.')
