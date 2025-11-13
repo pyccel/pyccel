@@ -6409,7 +6409,7 @@ def test_assign_slice(language):
     assert np.array_equal(f1(a, 10), f2(a, 10))
 
 def test_assign_slice_alow_neg(language):
-    f1 = arrays.assign_slice_alow_neg
+    f1 = arrays.assign_slice_allow_neg
     f2 = epyccel(f1, language = language)
 
     a = arrays.a_1d
