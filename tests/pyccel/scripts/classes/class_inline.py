@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from typing import Final
 import numpy as np
-from pyccel.decorators import pure, inline
 from importable import calculate_sum
+from pyccel.decorators import pure, inline
 
 class MyClass:
     def __init__(self, n : int):
