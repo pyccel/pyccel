@@ -5316,7 +5316,9 @@ class SemanticParser(BasicParser):
                 except KeyError:
                     pass
                 self._pointer_targets[-1].pop(semantic_lhs, None)
-                return self._visit(assign.rhs)
+                rhs = assign.rhs
+                rhs.remove_user_node(assign, invalidate = False)
+                return self._visit(rhs)
             else:
                 self._additional_exprs[-1].append(body)
                 return semantic_lhs
