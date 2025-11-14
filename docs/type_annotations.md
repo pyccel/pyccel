@@ -200,7 +200,7 @@ arr : 'Annotated[int[:], "pointer"]' # Equivalent to Fortran notation : integer(
 arr2 : 'Annotated[int[:], "stack"]' = np.ones(8) # Equivalent to Fortran notation : integer(i64) :: arr2(0:7)
 ```
 
-This syntax can be combined with other existing syntaxes. E.g.
+This syntax can be combined with other type related concepts. E.g.
 
 ```python
 from typing import TypeVar, Annotated
