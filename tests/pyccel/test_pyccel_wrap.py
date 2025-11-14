@@ -114,6 +114,10 @@ def test_class_accessors(language):
     py_out, l_out = check_pyccel_wrap_and_call_translation('class_property', 'runtest_class_property', language)
     compare_pyth_fort_output(py_out, l_out, int, language)
 
+def test_class_renaming(language):
+    py_out, l_out = check_pyccel_wrap_and_call_translation('class_renaming', 'runtest_class_renaming', language)
+    compare_pyth_fort_output(py_out, l_out, int, language)
+
 def test_array_methods():
     # C is not tested as compiling array dependencies by hand is harder than necessary for the test
     py_out, l_out = check_pyccel_wrap_and_call_translation('array_methods', 'runtest_array_methods', 'fortran')
