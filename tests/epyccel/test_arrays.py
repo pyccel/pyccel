@@ -1904,10 +1904,11 @@ def test_multiple_stack_array_2(language):
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Stack arrays are deallocated as cspan only stores a pointer"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("python", marks = pytest.mark.python),
     ]
 )
 def test_return_stack_array(language):
