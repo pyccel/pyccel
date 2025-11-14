@@ -172,7 +172,6 @@ class FortranToCWrapper(Wrapper):
         # Ensure renamed datatypes are mapped to their new name
         self.scope.imports['cls_constructs'].update(expr.scope.imports['cls_constructs'])
 
-
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()

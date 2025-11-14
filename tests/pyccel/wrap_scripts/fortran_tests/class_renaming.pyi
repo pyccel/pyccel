@@ -17,4 +17,3 @@ class Counter:
     @property
     def value(self) -> int: ...
 
-
