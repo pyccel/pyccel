@@ -8,7 +8,7 @@ void Counter__create(struct class_renaming__Counter* self, int64_t start)
 }
 /*........................................*/
 /*........................................*/
-void Counter__free(const struct class_renaming__Counter* self)
+void Counter__free(struct class_renaming__Counter* self)
 {
     self->value = INT64_C(-1);
 }
