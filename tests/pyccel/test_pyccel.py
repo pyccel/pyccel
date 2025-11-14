@@ -669,7 +669,7 @@ def test_import_collisions_builtins(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-def test_class_import(language):
+def test_class_import_as(language):
     pyccel_test("scripts/import_syntax/from_cls_mod_import_as_user.py",
                 dependencies = ["scripts/import_syntax/user_cls_mod.py"],
                 language=language)
