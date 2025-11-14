@@ -2312,11 +2312,15 @@ class FCodePrinter(CodePrinter):
         return f"{iterable_type}_Iterator"
 
     def _print_CustomDataType(self, expr):
+        assert type(expr).__mro__[1] is CustomDataType
         try:
             name = self.scope.get_import_alias(expr, 'cls_constructs')
         except RuntimeError:
             name = expr.low_level_name
         return name
+
+    def _print_FinalType(self, expr):
+        return self._print(expr.underlying_type)
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
