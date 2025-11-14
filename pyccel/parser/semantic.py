@@ -2962,12 +2962,15 @@ class SemanticParser(BasicParser):
                 import_free  = free_func()
                 program_body.insert2body(import_free)
 
+            used_datatypes = {v.class_type for v in program_body.get_attribute_nodes(Variable)}
+
             imports = list(container['imports'].values())
             for i in self.scope.imports['imports'].values():
                 target = []
                 for t in i.target:
-                    local_t = self.scope.find(t.name)
-                    if local_t and program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,)):
+                    local_t = self.scope.find(t.local_alias)
+                    if local_t and (program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,))
+                                    or (isinstance(local_t, ClassDef) and local_t.class_type in used_datatypes)):
                         target.append(t)
                 if target:
                     imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
