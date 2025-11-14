@@ -1725,7 +1725,7 @@ class PythonCodePrinter(CodePrinter):
         try:
             name = self.scope.get_import_alias(expr, 'cls_constructs')
         except RuntimeError:
-            name = expr.low_level_name
+            name = expr.name
         return name
 
     def _print_NumpyNumericType(self, expr):
