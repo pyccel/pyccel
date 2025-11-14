@@ -9,4 +9,4 @@ struct MethodCheck {
 
 void stash_value(struct MethodCheck* self, int64_t val);
 
-#endif // class_no_init_H
+#endif // CLASS_NO_INIT_H
