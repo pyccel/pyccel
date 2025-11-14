@@ -844,6 +844,12 @@ def test_classes_type_print(language):
     rx = re.compile(r'\bA\b')
     assert rx.search(lang_out)
 
+def test_class_inline_array(language):
+    pyccel_test("scripts/classes/class_inline.py",
+                dependencies = ["scripts/classes/importable.py"],
+                language = language,
+                output_dtype = float)
+
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",

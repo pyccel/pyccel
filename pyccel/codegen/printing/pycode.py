@@ -896,10 +896,8 @@ class PythonCodePrinter(CodePrinter):
             func_name = self.scope.get_import_alias(func, 'functions')
         elif expr.interface and expr.interface.is_imported:
             func_name = self.scope.get_import_alias(expr.interface, 'functions')
-        elif expr.interface:
-            func_name = expr.interface_name
         else:
-            func_name = expr.func_name
+            func_name = func.scope.get_python_name(func.name)
 
         # No need to print module init/del functions in Python
         if func.scope.get_python_name(func.name) in ('__init__', '__del__') and \
