@@ -2312,7 +2312,8 @@ class FCodePrinter(CodePrinter):
         return f"{iterable_type}_Iterator"
 
     def _print_CustomDataType(self, expr):
-        assert type(expr).__mro__[1] is CustomDataType
+        while hasattr(expr, 'underlying_type'):
+             expr = expr.underlying_type
         try:
             name = self.scope.get_import_alias(expr, 'cls_constructs')
         except RuntimeError:
