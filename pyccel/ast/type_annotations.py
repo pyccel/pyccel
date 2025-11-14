@@ -242,7 +242,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : str | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName | LiteralString
         The dtype named in the type annotation.
 
     order : str | None
