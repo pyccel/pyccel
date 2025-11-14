@@ -410,7 +410,7 @@ def test_str_declaration(language):
 def test_unknown_annotation(language):
     def unknown_annotation():
         a : Annotated[int, ">10"] = 15
-        return 15
+        return a
 
     # Initialize singleton that stores Pyccel errors
     errors = Errors()
