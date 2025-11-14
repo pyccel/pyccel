@@ -54,6 +54,7 @@ All notable changes to this project will be documented in this file.
 -   #2479 : Fix missing `@property` decorator in stub files.
 -   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
 -   #2443 : Fix passing non-contiguous slices of arrays.
+-   #2436 : Fix list comprehension with variable slice containing negative indices as an iterable.
 -   #2496 : Fix renaming classes when importing.
 -   Rename `main` function when translating to C.
 
@@ -69,6 +70,7 @@ All notable changes to this project will be documented in this file.
 -   #2465 : Change default name of `__init__` functions in Fortran translations.
 -   #2405 : Change generated names in C to include the module in the name for multi-file collision handling.
 -   #2488 : Use MPI wrapper executables to compile MPI code on Windows.
+-   #2494 : Avoid creating unnecessary pointers when inlining functions.
 -   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
