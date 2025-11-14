@@ -1829,6 +1829,10 @@ def assign_slice(a : 'int[:]', n : int):
     m = len(a)
     a[n::2] = [2*i for i in range((m-n+1)//2)]
 
+@allow_negative_index('a')
+def assign_slice_allow_neg(a : 'int[:]', n : int):
+    a[:n] = [2*i for i in range(n)]
+
 #==============================================================================
 # Indexing
 #==============================================================================
