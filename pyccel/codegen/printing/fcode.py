@@ -2320,9 +2320,6 @@ class FCodePrinter(CodePrinter):
             name = expr.low_level_name
         return name
 
-    def _print_FinalType(self, expr):
-        return self._print(expr.underlying_type)
-
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
