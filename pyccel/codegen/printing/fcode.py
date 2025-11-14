@@ -2313,7 +2313,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_CustomDataType(self, expr):
         while hasattr(expr, 'underlying_type'):
-             expr = expr.underlying_type
+            expr = expr.underlying_type
         try:
             name = self.scope.get_import_alias(expr, 'cls_constructs')
         except RuntimeError:
