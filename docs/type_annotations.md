@@ -209,4 +209,4 @@ arr : Annotated[T, 'pointer']
 arr2 : Annotated[T, 'stack'] = np.ones(8)
 ```
 
-:Note: It is currently not advised to use pointer annotations in files passed to pyccel-wrap. The annotation does not currently provide a way to indicate what the pointer is pointing at. This will lead to incorrect deallocation.
+:Note: It is currently not advised to use pointer annotations in files passed to `pyccel-wrap`. The annotation does not currently provide a way to indicate what the pointer is pointing at. This will lead to incorrect deallocation.
