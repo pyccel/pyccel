@@ -231,7 +231,7 @@ class Parser(object):
                                 verbose = verbose)
         self._semantic_parser = parser
         parser.metavars.setdefault('printer_imports', '')
-        # Get all possible printer imports. Use a dict for reproducable ordering
+        # Get all possible printer imports. Use a dict for reproducible ordering
         printer_imports = {p.metavars['printer_imports']: None for p in self.sons}
         printer_imports[parser.metavars['printer_imports']] = None
         printer_imports.pop('', None)
