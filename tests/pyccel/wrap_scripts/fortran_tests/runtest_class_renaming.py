@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring
+# pylint: disable=missing-module-docstring,missing-function-docstring
 from typing import Final
 from class_renaming import Counter
 
