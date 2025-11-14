@@ -1903,6 +1903,11 @@ def test_multiple_stack_array_2(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+def test_return_stack_array(language):
+    f1 = arrays.return_stack_array
+    f2 = epyccel(f1, language = language)
+    assert check_array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
 #==============================================================================
