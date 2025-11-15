@@ -1384,7 +1384,7 @@ class SemanticParser(BasicParser):
         else:
             is_inline = func.is_inline if isinstance(func, FunctionDef) else False
             if is_inline:
-                return self._visit_InlineFunctionDef(func, args, expr)
+                return self._visit_InlineFunctionCall(func, args, expr)
             elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
 
@@ -2800,7 +2800,7 @@ class SemanticParser(BasicParser):
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
-            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
+            if not f.is_semantic:
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
@@ -4903,9 +4903,10 @@ class SemanticParser(BasicParser):
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         if any(a.annotation is None for a in expr.arguments):
-            errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
-                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            if not is_inline:
+                errors.report(MISSING_TYPE_ANNOTATIONS,
+                        symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                              bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
             return EmptyNode()
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
@@ -5138,7 +5139,7 @@ class SemanticParser(BasicParser):
 
         return EmptyNode()
 
-    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+    def _visit_InlineFunctionCall(self, expr, function_call_args, function_call):
         """
         Visit an inline function definition to add the code to the calling scope.
 
