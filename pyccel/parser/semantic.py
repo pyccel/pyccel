@@ -5161,6 +5161,7 @@ class SemanticParser(BasicParser):
         function_call : FunctionCall
             The syntactic function call being expanded to a function definition.
         """
+        is_imported = expr.is_imported
         if expr.pyccel_staging != 'syntactic':
             if isinstance(expr, Interface):
                 expr = expr.functions[0].syntactic_expr
@@ -5178,7 +5179,7 @@ class SemanticParser(BasicParser):
         pyccel_stage.set_stage('syntactic')
         imports = list(expr.imports)
         global_scope_import_targets = {}
-        if expr.is_imported:
+        if is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
             mod = self.d_parsers[mod_name].semantic_parser.ast
 
