@@ -1382,7 +1382,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, (FunctionDef, Interface)) else False
+            is_inline = getattr(func, 'is_inline', False)
             if is_inline:
                 return self._visit_InlineFunctionCall(func, args, expr)
             elif not func.is_semantic:
@@ -4874,7 +4874,8 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
+        if 'low_level' in decorators or (self.is_stub_file and
+                not python_name.startswith('__') and not expr.is_inline):
             if 'low_level' in decorators:
                 low_level_decs = decorators['low_level']
                 assert len(low_level_decs) == 1
@@ -4955,6 +4956,7 @@ class SemanticParser(BasicParser):
 
         # this for the case of a function without arguments => no headers
         interface_name = expr.scope.get_expected_name(python_name)
+        assert interface_name in self.scope._used_symbols.values()
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
