@@ -2762,6 +2762,7 @@ class InlineFunctionDef(FunctionDef):
         args, kwargs = super().__getnewargs_ex__()
         kwargs['namespace_imports'] = self._namespace_imports
         kwargs['global_funcs'] = self._global_funcs
+        kwargs['syntactic_expr'] = self.syntactic_expr
         return args, kwargs
 
 
