@@ -722,7 +722,7 @@ class FCodePrinter(CodePrinter):
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if i.is_semantic)
+            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if i.is_semantic and not i.is_private)
 
         func_strings = []
         # Get class functions
@@ -2341,7 +2341,7 @@ class FCodePrinter(CodePrinter):
         example_func = interface_funcs[0]
 
         # ... we don't print 'hidden' functions
-        if example_func.is_inline:
+        if not example_func.is_semantic:
             return ''
 
         if example_func.results:
@@ -2494,7 +2494,7 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        if expr.is_inline:
+        if not expr.is_semantic:
             return ''
         self.set_scope(expr.scope)
 
