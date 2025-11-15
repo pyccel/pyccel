@@ -942,15 +942,15 @@ class CCodePrinter(CodePrinter):
             classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
             func_blocks.append('')
             for method in classDef.methods:
-                if not method.is_inline:
+                if method.is_semantic:
                     func_blocks[-1] += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     func_blocks[-1] += f"{self.function_signature(func)};\n"
             classes += "};\n"
-        func_blocks.append(''.join(f"{self.function_signature(f)};\n" for f in expr.module.funcs if not f.is_inline))
+        func_blocks.append(''.join(f"{self.function_signature(f)};\n" for f in expr.module.funcs if f.is_semantic))
 
-        func_blocks.extend(''.join(f"{self.function_signature(f)};\n" for f in i.functions if not f.is_inline)
+        func_blocks.extend(''.join(f"{self.function_signature(f)};\n" for f in i.functions if f.is_semantic)
                            for i in expr.module.interfaces)
 
         funcs = '\n'.join(f for f in func_blocks if f)
@@ -2296,7 +2296,7 @@ class CCodePrinter(CodePrinter):
         return ''.join(self._print(f) for f in expr.functions)
 
     def _print_FunctionDef(self, expr):
-        if expr.is_inline:
+        if not expr.is_semantic:
             return ''
 
         sep = self._print(SeparatorComment(40))
