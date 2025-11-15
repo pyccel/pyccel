@@ -1382,7 +1382,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else False
+            is_inline = func.is_inline if isinstance(func, (FunctionDef, Interface)) else False
             if is_inline:
                 return self._visit_InlineFunctionCall(func, args, expr)
             elif not func.is_semantic:
@@ -4898,6 +4898,9 @@ class SemanticParser(BasicParser):
         is_private         = expr.is_private
         is_inline          = expr.is_inline
 
+        if is_inline and is_private:
+            return EmptyNode()
+
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
@@ -5103,6 +5106,7 @@ class SemanticParser(BasicParser):
                 global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
                         if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
+                func_kwargs['syntactic_expr'] = expr
                 cls = InlineFunctionDef
             else:
                 cls = FunctionDef
@@ -5155,6 +5159,11 @@ class SemanticParser(BasicParser):
         function_call : FunctionCall
             The syntactic function call being expanded to a function definition.
         """
+        if expr.pyccel_staging != 'syntactic':
+            if isinstance(expr, Interface):
+                expr = expr.functions[0].syntactic_expr
+            else:
+                expr = expr.syntactic_expr
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
         if assign:
