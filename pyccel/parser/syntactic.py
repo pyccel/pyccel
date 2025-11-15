@@ -910,7 +910,7 @@ class SyntaxParser(BasicParser):
 
         name = PyccelSymbol(stmt.name)
 
-        if not isinstance(self._context[-1], ast.Module):
+        if not isinstance(self._context[-2], ast.Module):
             self.scope.insert_symbol(name, 'function')
 
         new_name = self.scope.get_expected_name(name)
