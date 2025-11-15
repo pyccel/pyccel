@@ -2633,17 +2633,23 @@ class InlineFunctionDef(FunctionDef):
         The imports available in the function Scope.
     global_funcs : iterable, optional
         The global functions used in the function.
+    syntactic_expr : InlineFunctionDef
+        The syntactic version of the inline function.
+        This is used for printing the stub file.
+        The semantic version is only used fro wrapping.
     **kwargs : dict
         The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
-            '_global_funcs')
+            '_global_funcs', '_syntactic_expr')
 
-    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, syntactic_expr = None, **kwargs):
+        assert pyccel_stage == 'syntactic' or syntactic_expr is not None
         if namespace_imports is not None:
             assert isinstance(namespace_imports, dict)
         self._namespace_imports = namespace_imports
         self._global_funcs = tuple(global_funcs) if global_funcs is not None else None
+        self._syntactic_expr = syntactic_expr
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -2660,6 +2666,17 @@ class InlineFunctionDef(FunctionDef):
         """ The objects in the scope which are available due to imports
         """
         return self._namespace_imports
+
+    @property
+    def syntactic_expr(self):
+        """
+        The syntactic version of the inline function.
+
+        The syntactic version of the inline function.
+        This is used for printing the stub file and inlining the call.
+        The semantic version is only used for wrapping.
+        """
+        return self._syntactic_expr
 
     def swap_in_args(self, args, new_local_vars):
         """ Modify the body of the function by replacing the arguments
