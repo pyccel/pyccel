@@ -2935,6 +2935,15 @@ class Interface(PyccelAstNode):
         """
         return self._functions[0].is_inline
 
+    @property
+    def is_private(self):
+        """
+        Indicates if the interface function is private.
+
+        Indicates if the interface function is private.
+        """
+        return self._functions[0].is_private
+
     def rename(self, newname):
         """
         Rename the Interface name to a newname.
