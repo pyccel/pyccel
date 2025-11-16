@@ -2378,12 +2378,12 @@ class SemanticParser(BasicParser):
             metavars = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else self._visit(a)
                         for a in args[1:]]
             var_metadata = {}
-            if 'pointer' in metavars:
+            if 'alias' in metavars:
                 var_metadata['memory_handling'] = 'alias'
-                metavars.remove('pointer')
+                metavars.remove('alais')
             if 'stack' in metavars:
                 if 'memory_handling' in var_metadata:
-                    errors.report("An object cannot be both a pointer to an object stored elsewhere and a stack allocated object.",
+                    errors.report("An object cannot be both an alias for an object stored elsewhere and a stack allocated object.",
                               bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                               symbol = expr, severity = 'error')
                 var_metadata['memory_handling'] = 'stack'

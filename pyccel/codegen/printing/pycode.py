@@ -231,7 +231,7 @@ class PythonCodePrinter(CodePrinter):
             if isinstance(obj, Variable):
                 if obj.is_alias:
                     self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
-                    type_annotation = f'Annotated[{type_annotation}, "pointer"]'
+                    type_annotation = f'Annotated[{type_annotation}, "alias"]'
                 elif obj.on_stack and obj.rank:
                     self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
                     type_annotation = f'Annotated[{type_annotation}, "stack"]'
