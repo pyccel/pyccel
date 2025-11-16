@@ -49,6 +49,8 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False, 
             shutil.rmtree( file_name, ignore_errors=True)
         elif not os.path.isfile(file_name) and recursive:
             pyccel_clean(file_name, recursive, remove_shared_libs, remove_programs)
+            if not os.listdir(file_name):
+                os.rmdir(file_name)
         elif f.endswith('.pyccel'):
             os.remove(file_name)
         elif remove_shared_libs and f.endswith(ext_suffix):
