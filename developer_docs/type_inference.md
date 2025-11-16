@@ -48,7 +48,7 @@ In order to make it easier to handle the result of `pyccel.parser.semantic.Seman
 These objects contain all the information necessary to create a Variable from a type annotation.
 
 The type annotations themselves are formed with normal Pyccel AST objects, e.g. `IndexedElement(PyccelFunctionDef(PythonTuple), PyccelFunctionDef(NumpyInt32()))`.
-AST objects that can represent a type inherit from `TypedAstNode` and have a `_static_type` class property. If the class represents an exact type (e.g. `NumpyInt32`) then the static type is an instance of the represented data type. If thie class represents a parametrisable type (e.g. `PythonTuple`), then the static type is the type of the superclass of datatype that will be parametrised using `get_new` (see the next section for more details).
+AST objects that can represent a type inherit from `TypedAstNode` and have a `_static_type` class property. If the class represents an exact type (e.g. `NumpyInt32`) then the static type is an instance of the represented data type. If this class represents a parametrisable type (e.g. `PythonTuple`), then the static type is the type of the superclass of datatype that will be parametrised using `get_new` (see the next section for more details).
 
 ### Inferring types from assignments
 
