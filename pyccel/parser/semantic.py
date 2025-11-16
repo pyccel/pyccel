@@ -4964,7 +4964,7 @@ class SemanticParser(BasicParser):
 
         # this for the case of a function without arguments => no headers
         interface_name = expr.scope.get_expected_name(python_name)
-        assert interface_name in insertion_scope._used_symbols.values()
+        assert interface_name in insertion_scope.local_used_symbols.values()
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
