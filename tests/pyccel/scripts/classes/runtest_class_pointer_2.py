@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 from class_pointer_2 import A, B
 
 if __name__ == '__main__':
