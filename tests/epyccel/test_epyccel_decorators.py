@@ -18,7 +18,7 @@ def test_private(lang):
 
     # Attribute error when extracting f from module
     with pytest.raises(AttributeError):
-        g = epyccel(f, language=lang)
+        epyccel(f, language=lang)
 
 def test_inline_1_out(language):
     def f():
