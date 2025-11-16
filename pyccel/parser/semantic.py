@@ -2380,7 +2380,7 @@ class SemanticParser(BasicParser):
             var_metadata = {}
             if 'alias' in metavars:
                 var_metadata['memory_handling'] = 'alias'
-                metavars.remove('alais')
+                metavars.remove('alias')
             if 'stack' in metavars:
                 if 'memory_handling' in var_metadata:
                     errors.report("An object cannot be both an alias for an object stored elsewhere and a stack allocated object.",
