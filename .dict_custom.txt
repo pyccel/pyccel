@@ -113,6 +113,8 @@ destructor's
 Valgrind
 variadic
 subclasses
+superclass
+superclasses
 oneAPI
 getter
 setter

@@ -2504,6 +2504,11 @@ class FCodePrinter(CodePrinter):
             return ''
         self.set_scope(expr.scope)
 
+        for r in expr.scope.collect_all_tuple_elements(expr.results.var):
+            if r.rank and r.memory_handling == 'stack' and \
+                    any(not isinstance(s, LiteralInteger) for s in r.alloc_shape):
+                errors.report("Can't return a stack array of unknown size",
+                              symbol=r, severity='error')
 
         name = expr.cls_name or expr.name
 

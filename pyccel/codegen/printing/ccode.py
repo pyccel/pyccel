@@ -2299,6 +2299,11 @@ class CCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
 
+        for r in expr.scope.collect_all_tuple_elements(expr.results.var):
+            if r.rank and r.memory_handling == 'stack':
+                errors.report("Can't return a stack array from C code",
+                              symbol=r, severity='error')
+
         sep = self._print(SeparatorComment(40))
 
         inner_funcs = ''.join(self._print(f).removeprefix(sep).removesuffix(sep) + '\n' for f in expr.functions)

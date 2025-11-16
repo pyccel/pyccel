@@ -1297,3 +1297,10 @@ def test_inline_using_named_import(language):
                                 "scripts/inlining/inline_using_named_import.py"],
                 language = language,
                 output_dtype = float)
+
+#------------------------------------------------------------------------------
+def test_classes_array_property(language):
+    pyccel_test("scripts/classes/runtest_classes_array_property.py",
+                dependencies = ["scripts/classes/classes_array_property.py"],
+                language = language,
+                output_dtype = float)
