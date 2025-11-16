@@ -2841,8 +2841,8 @@ class SemanticParser(BasicParser):
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        for f in self.scope.functions.values():
-            assert f.is_semantic or f.is_inline
+        assert all(f.is_semantic or f.is_inline or errors.has_errors()
+                   for f in self.scope.functions.values())
 
         variables = self.get_variables(self.scope)
         init_func = None
