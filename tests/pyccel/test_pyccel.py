@@ -1307,7 +1307,7 @@ def test_classes_array_property(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-def test_classes_array_property(language):
+def test_classes_pointer_import(language):
     cwd = get_abs_path("scripts/classes")
     test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
 
