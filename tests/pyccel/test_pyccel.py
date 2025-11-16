@@ -1280,7 +1280,7 @@ def test_inline_using_import(language):
     if language != 'python':
         test_abspath = get_abs_path(test_file)
 
-        cwd = os.path.dirname(test_file)
+        cwd = os.path.dirname(test_abspath)
         pyth_out = get_python_output(test_abspath, cwd)
         lang_out = get_lang_output(os.path.splitext(test_abspath)[0], language)
         compare_pyth_fort_output(pyth_out, lang_out, float, language)
