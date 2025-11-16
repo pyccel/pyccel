@@ -4907,6 +4907,18 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         python_name = expr.name
+        is_private         = expr.is_private
+        is_inline          = expr.is_inline
+
+        if is_inline and is_private:
+            return EmptyNode()
+
+        if any(a.annotation is None for a in expr.arguments):
+            if not is_inline:
+                errors.report(MISSING_TYPE_ANNOTATIONS,
+                        symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                              bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            return EmptyNode()
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
@@ -4952,22 +4964,10 @@ class SemanticParser(BasicParser):
         docstring          = self._visit(expr.docstring) if expr.docstring else expr.docstring
         is_pure            = expr.is_pure
         is_elemental       = expr.is_elemental
-        is_private         = expr.is_private
-        is_inline          = expr.is_inline
-
-        if is_inline and is_private:
-            return EmptyNode()
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
-
-        if any(a.annotation is None for a in expr.arguments):
-            if not is_inline:
-                errors.report(MISSING_TYPE_ANNOTATIONS,
-                        symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
-                              bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
-            return EmptyNode()
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
