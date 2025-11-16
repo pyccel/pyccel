@@ -119,7 +119,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal, TypingTypeVar
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar, TypingAnnotation
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -2369,6 +2369,36 @@ class SemanticParser(BasicParser):
         if isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
+            annotation = self._visit(self._convert_syntactic_object_to_type_annotation(args[0]))
+            if any(isinstance(a.class_type, TypingAnnotation) for a in annotation.type_list):
+                errors.report("Nested Annotated[] type modifiers are not handled.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+            metavars = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else self._visit(a)
+                        for a in args[1:]]
+            var_metadata = {}
+            if 'alias' in metavars:
+                var_metadata['memory_handling'] = 'alias'
+                metavars.remove('alias')
+            if 'stack' in metavars:
+                if 'memory_handling' in var_metadata:
+                    errors.report("An object cannot be both an alias for an object stored elsewhere and a stack allocated object.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+                var_metadata['memory_handling'] = 'stack'
+                metavars.remove('stack')
+            if metavars:
+                errors.report(f"Unrecognised annotations have been ignored ({metavars})",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity='warning')
+            if var_metadata:
+                assert isinstance(annotation, UnionTypeAnnotation)
+                assert all(isinstance(t, VariableTypeAnnotation) for t in annotation.type_list)
+                return UnionTypeAnnotation(*[TypingAnnotation(d, **var_metadata) for d in annotation.type_list])
+            else:
+                return annotation
+
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
@@ -2620,6 +2650,8 @@ class SemanticParser(BasicParser):
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
             return PyccelFunctionDef('Final', TypingFinal)
+        elif env_var is typing.Annotated:
+            return PyccelFunctionDef('Annotated', TypingAnnotation)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
             return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
@@ -3357,6 +3389,11 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
+                var_kwargs = kwargs.copy()
+                if isinstance(class_type, TypingAnnotation):
+                    var_kwargs.update(class_type.metadata)
+                    assert isinstance(class_type.arg, VariableTypeAnnotation)
+                    class_type = class_type.arg.class_type
                 cls_base = self.get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
@@ -3366,10 +3403,11 @@ class SemanticParser(BasicParser):
                     shape = (None,)*class_type.container_rank
                 else:
                     shape = None
+                if 'memory_handling' not in var_kwargs:
+                    var_kwargs['memory_handling'] = array_memory_handling if class_type.rank > 0 else 'stack'
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape, is_optional = False,
-                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
-                        **kwargs)
+                        **var_kwargs)
                 possible_args.append(v)
                 if isinstance(class_type, InhomogeneousTupleType):
                     for i, t in enumerate(class_type):
@@ -3423,8 +3461,18 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
-        elif isinstance(visited_dtype, PyccelType):
+        elif isinstance(visited_dtype, (PyccelType, TypingAnnotation)):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
+        elif isinstance(visited_dtype, LiteralString):
+            pyccel_stage.set_stage('syntactic')
+            try:
+                syntactic_a = types_meta.model_from_str(visited_dtype.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
+            annot = syntactic_a.expr
+            pyccel_stage.set_stage('semantic')
+            return self._visit(annot)
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
