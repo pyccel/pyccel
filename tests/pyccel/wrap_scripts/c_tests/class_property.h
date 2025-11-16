@@ -14,4 +14,4 @@ static inline int64_t Counter__get_value(const struct Counter* self) {
     return self->value;
 }
 
-#endif // class_property_H
+#endif // CLASS_PROPERTY_H

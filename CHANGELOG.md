@@ -55,6 +55,8 @@ All notable changes to this project will be documented in this file.
 -   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
 -   #2443 : Fix passing non-contiguous slices of arrays.
 -   #2436 : Fix list comprehension with variable slice containing negative indices as an iterable.
+-   #2496 : Fix renaming classes when importing.
+-   #2500 : Fix bad chaining of `stdlib` imports.
 -   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
 -   Rename `main` function when translating to C.
 

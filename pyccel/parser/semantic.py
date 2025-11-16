@@ -577,7 +577,12 @@ class SemanticParser(BasicParser):
         while hasattr(class_type, 'underlying_type'):
             class_type = class_type.underlying_type
 
-        scope_class = self.scope.find(str(class_type), 'classes')
+        try:
+            name = self.scope.get_import_alias(class_type, 'cls_constructs')
+        except RuntimeError:
+            name = class_type.name
+
+        scope_class = self.scope.find(name, 'classes')
 
         if scope_class:
             return scope_class
@@ -2989,12 +2994,15 @@ class SemanticParser(BasicParser):
                 import_free  = free_func()
                 program_body.insert2body(import_free)
 
+            used_datatypes = {v.class_type for v in program_body.get_attribute_nodes(Variable)}
+
             imports = list(container['imports'].values())
             for i in self.scope.imports['imports'].values():
                 target = []
                 for t in i.target:
-                    local_t = self.scope.find(t.name)
-                    if local_t and program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,)):
+                    local_t = self.scope.find(t.local_alias)
+                    if local_t and (program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,))
+                                    or (isinstance(local_t, ClassDef) and local_t.class_type in used_datatypes)):
                         target.append(t)
                 if target:
                     imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
@@ -5658,7 +5666,8 @@ class SemanticParser(BasicParser):
                 container['variables'][source_target] = mod
                 targets = [AsName(mod, source_target)]
 
-            self.scope.imports['cls_constructs'].update(p.scope.cls_constructs)
+            for n, cls in container['classes'].items():
+                self.scope.imports['cls_constructs'][n] = cls.class_type
 
             # ... meta variables
 
