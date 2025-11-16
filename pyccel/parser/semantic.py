@@ -5114,7 +5114,7 @@ class SemanticParser(BasicParser):
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
                 global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
-                        if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
+                        if self.scope.find(f.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
                 func_kwargs['syntactic_expr'] = expr
                 cls = InlineFunctionDef
