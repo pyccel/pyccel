@@ -1,5 +1,3 @@
-
-
 py_dep = py.dependency()
 numpy_dep = dependency('numpy')
 

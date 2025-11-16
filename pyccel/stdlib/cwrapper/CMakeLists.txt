@@ -1,5 +1,3 @@
-
-
 add_library(cwrapper OBJECT cwrapper.c)
 
 target_include_directories(cwrapper
