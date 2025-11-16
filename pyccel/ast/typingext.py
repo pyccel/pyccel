@@ -62,7 +62,8 @@ class TypingAnnotation(TypedAstNode):
 
     Class representing a call to the typing.Annotated construct. A "call" to this
     object looks like an IndexedElement. This is because types are involved. It
-    allows 
+    allows additional context information to be provided to describe variables.
+    E.g. the memory handling.
 
     Parameters
     ----------
