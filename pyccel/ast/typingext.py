@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the typing module understood by pyccel
 """
+from immutabledict import immutabledict
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
@@ -96,7 +97,7 @@ class TypingAnnotation(TypedAstNode):
 
         The metadata providing additional information about the variable being declared.
         """
-        return self._metadata
+        return immutabledict(self._metadata)
 
 #==============================================================================
 class TypingTypeAlias(TypedAstNode):
