@@ -1417,10 +1417,18 @@ class PythonCodePrinter(CodePrinter):
 
         type_var_declarations = self._get_type_var_declarations()
 
-        # Print interface functions (one function with multiple decorators describes the problem)
         # Insert existing imports so new imports don't cause duplicates
         for i in expr.imports:
             self.add_import(i)
+            source = i.source
+            if source in pyccel_builtin_import_registry:
+                self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
+                                        for t in i.target if not isinstance(t.object, (Module, VariableTypeAnnotation)) and \
+                                                           t.name != t.local_alias)
+
+        imports = ''.join(self._print(i) for i in expr.imports)
+
+        # Print interface functions (one function with multiple decorators describes the problem)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) \
