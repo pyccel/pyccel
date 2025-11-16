@@ -1820,9 +1820,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
-
         self.scope.insert_symbol(expr.name)
-        self._python_object_map[get_val_arg] = getter_args[0]
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj, 'self')
