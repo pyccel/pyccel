@@ -661,20 +661,18 @@ def test_import_collisions(language):
             language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled in C"),
-            pytest.mark.c]
-        )
-    )
-)
 @pytest.mark.xdist_incompatible
 def test_import_collisions_builtins(language):
     pyccel_test("scripts/import_syntax/collisions6.py",
             dependencies = ["scripts/import_syntax/user_mod_builtin_conflict.py"],
             language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_class_import_as(language):
+    pyccel_test("scripts/import_syntax/from_cls_mod_import_as_user.py",
+                dependencies = ["scripts/import_syntax/user_cls_mod.py"],
+                language=language)
 
 #------------------------------------------------------------------------------
 # Numpy sum required
@@ -843,6 +841,12 @@ def test_classes_type_print(language):
 
     rx = re.compile(r'\bA\b')
     assert rx.search(lang_out)
+
+def test_class_inline_array(language):
+    pyccel_test("scripts/classes/class_inline.py",
+                dependencies = ["scripts/classes/importable.py"],
+                language = language,
+                output_dtype = float)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible

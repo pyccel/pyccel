@@ -17,8 +17,8 @@ from .datatypes import PyccelType, InhomogeneousTupleType, HomogeneousListType, 
 from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .literals  import LiteralInteger, Nil, LiteralEllipsis
-from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
-                        PyccelUnarySub, PyccelAdd)
+from .operators import (PyccelMinus, PyccelDiv, PyccelMul, PyccelLt, PyccelUnarySub,
+                        PyccelAdd, IfTernaryOperator)
 from .numpytypes import NumpyNDArrayType
 
 errors = Errors()
@@ -660,6 +660,24 @@ class IndexedElement(TypedAstNode):
         else:
             self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
+        def make_positive(idx, shape):
+            """
+            Use the shape to convert a literal negative index to a positive index.
+            """
+            if isinstance(idx, Slice):
+                return Slice(make_positive(idx.start, shape),
+                             make_positive(idx.stop, shape),
+                             idx.step)
+            else:
+                try:
+                    if int(idx) < 0:
+                        return PyccelAdd(shape, idx, simplify=True)
+                except TypeError:
+                    pass
+                return idx
+
+        self._indices = tuple(make_positive(idx, shape[i]) for i, idx in enumerate(self._indices))
+
         if isinstance(base.class_type, InhomogeneousTupleType):
             assert len(self._indices) == 1 and isinstance(self._indices[0], LiteralInteger)
             self._class_type = base.class_type[self._indices[0]]
@@ -668,24 +686,54 @@ class IndexedElement(TypedAstNode):
         else:
             # Calculate new shape
             new_shape = []
-            from .mathext import MathCeil
+            from .mathext import MathCeil, MathFabs
+
+            negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
+
+            def unpack_bound(bound, default, size):
+                """ Get a valid start/stop value from a slice. """
+                if bound is None:
+                    return default
+                else:
+                    try:
+                        if int(bound) < 0:
+                            return PyccelAdd(bound, size)
+                    except TypeError:
+                        if negative_idxs_possible:
+                            return IfTernaryOperator(PyccelLt(bound, LiteralInteger(0)),
+                                                     PyccelAdd(bound, size),
+                                                     bound)
+                    return bound
+
+
             for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
+                    default_start, default_stop = LiteralInteger(0), s
+
                     start = a.start
-                    stop  = a.stop if a.stop is not None else s
+                    stop  = a.stop
                     step  = a.step
-                    if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
-                    if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                    negative_step = negative_idxs_possible
+                    try:
+                        if int(step) < 0:
+                            step = step.args[0]
+                            negative_step = False
+                            default_start = PyccelUnarySub(LiteralInteger(1))
+                            default_stop = PyccelMinus(s, LiteralInteger(1))
+                            start, stop = stop, start
+                    except TypeError:
+                        pass
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                    start = unpack_bound(start, default_start, s)
+                    stop = unpack_bound(stop, default_stop, s)
+
+                    if start == 0:
+                        _shape = stop # Can't be done with simplify kwarg due to potential recursion
+                    else:
+                        _shape = PyccelMinus(stop, start, simplify=True)
                     if step is not None:
-                        if isinstance(step, PyccelUnarySub):
-                            start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                            step = PyccelUnarySub(step)
-
+                        if negative_step:
+                            _shape = MathFabs(_shape)
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             if isinstance(base.class_type, HomogeneousTupleType):
@@ -760,21 +808,36 @@ class IndexedElement(TypedAstNode):
             new_indexes = []
             j = 0
             base = self.base
-            for i in self.indices:
-                if isinstance(i, Slice) and j<len(args):
+
+            negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
+
+            for i, idx in enumerate(self.indices):
+                if isinstance(idx, Slice) and j<len(args):
                     current_arg = args[j]
                     if isinstance(current_arg, Slice):
                         raise NotImplementedError("Can't extract a slice from a slice")
                     else:
-                        if i.step == 1 or i.step is None:
+                        if idx.step == 1 or idx.step is None:
                             incr = current_arg
                         else:
-                            incr = PyccelMul(i.step, current_arg, simplify = True)
-                        if i.start != 0 and i.start is not None:
-                            incr = PyccelAdd(i.start, incr, simplify = True)
-                    i = incr
+                            incr = PyccelMul(idx.step, current_arg, simplify = True)
+                        if idx.start != 0 and idx.start is not None:
+                            incr = PyccelAdd(idx.start, incr, simplify = True)
+                        elif idx.start is None:
+                            try:
+                                negative_step_possible = negative_idxs_possible or int(idx.step) < 0
+                            except TypeError:
+                                negative_step_possible = False
+                            if negative_step_possible:
+                                if idx.stop is None:
+                                    incr = PyccelAdd(PyccelMinus(base.shape[i],
+                                                                 LiteralInteger(1), simplify=True),
+                                                     incr, simplify = True)
+                                else:
+                                    incr = PyccelAdd(idx.stop, incr, simplify = True)
+                    idx = incr
                     j += 1
-                new_indexes.append(i)
+                new_indexes.append(idx)
             return IndexedElement(base, *new_indexes)
         else:
             return IndexedElement(self, *args)

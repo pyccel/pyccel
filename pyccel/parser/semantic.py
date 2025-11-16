@@ -577,7 +577,12 @@ class SemanticParser(BasicParser):
         while hasattr(class_type, 'underlying_type'):
             class_type = class_type.underlying_type
 
-        scope_class = self.scope.find(str(class_type), 'classes')
+        try:
+            name = self.scope.get_import_alias(class_type, 'cls_constructs')
+        except RuntimeError:
+            name = class_type.name
+
+        scope_class = self.scope.find(name, 'classes')
 
         if scope_class:
             return scope_class
@@ -2957,12 +2962,15 @@ class SemanticParser(BasicParser):
                 import_free  = free_func()
                 program_body.insert2body(import_free)
 
+            used_datatypes = {v.class_type for v in program_body.get_attribute_nodes(Variable)}
+
             imports = list(container['imports'].values())
             for i in self.scope.imports['imports'].values():
                 target = []
                 for t in i.target:
-                    local_t = self.scope.find(t.name)
-                    if local_t and program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,)):
+                    local_t = self.scope.find(t.local_alias)
+                    if local_t and (program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,))
+                                    or (isinstance(local_t, ClassDef) and local_t.class_type in used_datatypes)):
                         target.append(t)
                 if target:
                     imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
@@ -4400,8 +4408,29 @@ class SemanticParser(BasicParser):
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                variables.append(handle_iterable_variable(var, a.variable, body.scope))
-                stop = a.variable.shape[0]
+                iter_var = a.variable
+                if isinstance(iter_var, IndexedElement):
+                    base = iter_var.base
+                    variables.append(handle_iterable_variable(var, base, body.scope))
+                    iter_slice = iter_var.indices[0]
+                    if iter_slice.start:
+                        start = iter_slice.start
+                    if iter_slice.stop:
+                        stop = iter_slice.stop
+                    else:
+                        stop = base.shape[0]
+                    if iter_slice.step:
+                        step = iter_slice.step
+                    if getattr(base, 'allows_negative_indexes', False) and \
+                            any(not is_literal_integer(s) for s in (start, stop, step)):
+                        # An if ternary expression cannot be easily expressed via sympy for shape calculations
+                        errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE +
+                                      f'This problem is related to the fact that {base.name} allows negative indexes.',
+                                      bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                      severity='error')
+                else:
+                    variables.append(handle_iterable_variable(var, a.variable, body.scope))
+                    stop = a.variable.shape[0]
 
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
@@ -4423,6 +4452,11 @@ class SemanticParser(BasicParser):
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
+            try:
+                if step < 0:
+                    start, stop = stop, start
+            except TypeError:
+                pass
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
@@ -4578,7 +4612,6 @@ class SemanticParser(BasicParser):
         else:
             for operation in operations:
                 expr.loops[-1].insert2body(self._visit(operation))
-
 
         loops = [self._visit(i) for i in loops]
         if assign:
@@ -5305,8 +5338,23 @@ class SemanticParser(BasicParser):
             return body
         else:
             assert expr.results
-            self._additional_exprs[-1].append(body)
-            return self._visit(lhs)
+            assign = body.body[-1]
+            semantic_lhs = self._visit(lhs)
+            if len(returns) == 1 and (isinstance(semantic_lhs.class_type, FixedSizeNumericType) or semantic_lhs.is_alias) \
+                    and isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
+                self._additional_exprs[-1].extend(body.body[:-1])
+                self.scope.remove_variable(semantic_lhs)
+                try:
+                    self._allocs[-1].remove(semantic_lhs)
+                except KeyError:
+                    pass
+                self._pointer_targets[-1].pop(semantic_lhs, None)
+                rhs = assign.rhs
+                rhs.remove_user_node(assign, invalidate = False)
+                return self._visit(rhs)
+            else:
+                self._additional_exprs[-1].append(body)
+                return semantic_lhs
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
@@ -5570,7 +5618,8 @@ class SemanticParser(BasicParser):
                 container['variables'][source_target] = mod
                 targets = [AsName(mod, source_target)]
 
-            self.scope.imports['cls_constructs'].update(p.scope.cls_constructs)
+            for n, cls in container['classes'].items():
+                self.scope.imports['cls_constructs'][n] = cls.class_type
 
             # ... meta variables
 
