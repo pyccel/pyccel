@@ -58,6 +58,7 @@ All notable changes to this project will be documented in this file.
 -   #2496 : Fix renaming classes when importing.
 -   #2500 : Fix bad chaining of `stdlib` imports.
 -   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
+-   #2291 : Fix duplicate imports in Python and stub files.
 -   Rename `main` function when translating to C.
 
 ### Changed
