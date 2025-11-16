@@ -11,4 +11,4 @@ void Adder__free(struct Adder* self);
 int64_t Adder__add_0000(struct Adder* self, int64_t x, int64_t y);
 double Adder__add_0001(struct Adder* self, double x, double y);
 
-#endif // class_overloaded_methods_H
+#endif // CLASS_OVERLOADED_METHODS_H

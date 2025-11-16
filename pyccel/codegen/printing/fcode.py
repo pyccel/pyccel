@@ -2312,7 +2312,13 @@ class FCodePrinter(CodePrinter):
         return f"{iterable_type}_Iterator"
 
     def _print_CustomDataType(self, expr):
-        return expr.low_level_name
+        while hasattr(expr, 'underlying_type'):
+            expr = expr.underlying_type
+        try:
+            name = self.scope.get_import_alias(expr, 'cls_constructs')
+        except RuntimeError:
+            name = expr.low_level_name
+        return name
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
