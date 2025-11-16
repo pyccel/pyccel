@@ -27,10 +27,12 @@ def pyccel_make_test(main_file, folder, language, build_system, args, output_dty
     Parameters
     ----------
     main_file : str
-        The file containing the `__main__` implementation.
+        The file (relative to folder) containing the `__main__` implementation.
     folder : Path
-        The folder in which the test is found.
-    build_system : str
+        The absolute path to the folder in which the test is found.
+    language : {'c', 'fortran', 'python'}
+        The language used for translation.
+    build_system : {'cmake', 'meson'}
         The build system that should be used for compilation.
     args : iterable[str]
         The additional arguments that should be passed to pyccel-make. This must
