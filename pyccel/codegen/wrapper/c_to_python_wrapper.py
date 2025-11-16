@@ -1086,6 +1086,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [del_function(c_obj),
                     Deallocate(c_obj)]
+        body.append(AliasAssign(c_obj, Nil()))
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
@@ -1819,7 +1820,9 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+
         self.scope.insert_symbol(expr.name)
+        self._python_object_map[get_val_arg] = getter_args[0]
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj, 'self')
@@ -1836,8 +1839,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=None, status='unallocated'),
-                    AliasAssign(new_res_val, attrib),
+            body = [AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
@@ -1964,15 +1966,11 @@ class CToPythonWrapper(Wrapper):
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
-        if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
-
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
-
-            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
+        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
@@ -2865,7 +2863,8 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
+            if not c_res.is_alias:
+                setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
