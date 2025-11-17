@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-Contains the execute_pyccel function which carries out the main steps required to execute pyccel
+Contains the `execute_pyccel_make` function which carries out the main steps required to execute Pyccel on a multi-file project.
 """
 
 import os
