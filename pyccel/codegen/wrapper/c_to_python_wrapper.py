@@ -2861,8 +2861,7 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            if not c_res.is_alias:
-                setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
+            setup.append(Allocate(c_res, shape=None, status='unallocated', like=orig_var))
             result = PointerCast(c_res, cast_type = orig_var)
             body = []
 
