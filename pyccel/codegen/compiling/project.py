@@ -92,7 +92,8 @@ class CompileTarget:
         The absolute path to the low-level translation of the program.
 
         The absolute path to the low-level translation of the program found
-        in the Python file (if the file contained a program).
+        in the Python file (if the file contained a program). None, if the
+        file didn't contain a program.
         """
         return self._program_file
 
