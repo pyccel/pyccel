@@ -123,6 +123,8 @@ def pyccel_make_command() -> None:
     for f in files:
         if not f.exists():
             errors.report(f"File not found : {f}", severity='error')
+        if f.suffix != '.py':
+            errors.report(f"Expected Python file, received : {f}", severity='error')
 
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
