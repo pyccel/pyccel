@@ -7,6 +7,7 @@
 Module providing objects that are useful for describing the compilation of a project
 via the pyccel-make command.
 """
+from collections.abs import Iterable
 from pathlib import Path
 from pyccel.errors.errors  import Errors
 
@@ -159,7 +160,7 @@ class DirTarget:
         An iterable of the CompileTarget objects which are found in this directory.
     """
     __slots__ = ('_folder', '_targets', '_dependencies')
-    def __init__(self, folder, compile_targets : list[CompileTarget]):
+    def __init__(self, folder, compile_targets : Iterable[CompileTarget]):
         # Group compile targets by subdirectory
         dirs = {}
         for c in compile_targets:
