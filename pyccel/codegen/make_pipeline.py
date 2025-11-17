@@ -105,8 +105,8 @@ def execute_pyccel_make(files, *,
 
     def handle_error(stage):
         """
-        Unified way to handle errors: print formatted error message, then move
-        to original working directory. Caller should then raise exception.
+        Unified way to handle errors: print formatted error message.
+        Caller should then raise exception.
         """
         print(f'\nERROR at {stage} stage')
         errors.check()
