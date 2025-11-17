@@ -2635,8 +2635,8 @@ class InlineFunctionDef(FunctionDef):
         The global functions used in the function.
     syntactic_expr : InlineFunctionDef
         The syntactic version of the inline function.
-        This is used for printing the stub file.
-        The semantic version is only used fro wrapping.
+        This is used for printing the stub file and inlining the call.
+        The semantic version is only used for wrapping.
     **kwargs : dict
         The FunctionDef class keyword arguments.   
     """
