@@ -160,7 +160,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
         A compiler that can be used to compile dependencies.
     pyccel_dirpath : str | Path
         The path in which the Pyccel output is generated (__pyccel__).
-    mod_obj : CompileObj
+    mod_obj : CompileObj | CompileTarget
         The object that we are aiming to copile.
     language : str
         The language in which code is being printed.
