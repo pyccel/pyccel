@@ -349,10 +349,14 @@ module boo
 end module boo
 ```
 
+## Private
+
+The `@private` decorator indicates that a function is private to a module. Private functions cannot be imported by other modules, and are not exposed to Python.
+
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
-Type annotations are optional for functions with the `@inline` decorator, however unannotated functions will not be exposed back to Python in the shared library.
+Type annotations are optional for functions with both the `@inline and the `@private`` decorator.
 
 ### Basic Example
 
