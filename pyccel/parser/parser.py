@@ -287,7 +287,7 @@ class Parser(object):
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
 
         if (None, None) in source_to_filename.values():
-            unfound_modules = ', '.join(getattr(i, 'name', i) for i, f in source_to_filename.items() if f == (None, None))
+            unfound_modules = ', '.join(str(getattr(i, 'name', i)) for i, f in source_to_filename.items() if f == (None, None))
             errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=unfound_modules,
                           filename = self._filename, severity='fatal')
 
