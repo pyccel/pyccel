@@ -72,7 +72,10 @@ def execute_pyccel_make(files, *,
     time_execution : bool
         Show the time spent in each of Pyccel's internal stages.
     folder : str
-        Path to the working directory. Default is the folder containing the file to be translated.
+        Path to the directory where output files are created. Generated files are created
+        following the same folder structure as found in the folder where the command line
+        tool is called. Default is the folder where the command line tool is called.
+        The __pyccel__ directory is created inside this folder.
     language : str
         The target language Pyccel is translating to.
     compiler_family : str
