@@ -402,12 +402,12 @@ class FCodePrinter(CodePrinter):
         scope = expr.scope
         name = expr.name.lower()
         for method in expr.methods:
-            if not method.is_inline:
+            if method.is_semantic:
                 m_name = method.name
                 method.cls_name = scope.get_new_name(f'{name}_{method.name}')
         for i in expr.interfaces:
             for f in i.functions:
-                if not f.is_inline:
+                if f.is_semantic:
                     i_name = f.name
                     f.cls_name = scope.get_new_name(f'{name}_{f.name}')
 
@@ -707,7 +707,7 @@ class FCodePrinter(CodePrinter):
         # ...
         public_decs = ''.join(f'public :: {n}\n' for n in chain(
                                       (c.name for c in expr.classes),
-                                      (f.name for f in funcs_to_print if not f.is_private and not f.is_inline),
+                                      (f.name for f in funcs_to_print if not f.is_private and f.is_semantic),
                                       (v.name for v in expr.variables if not v.is_private)))
 
         # ...
@@ -722,7 +722,7 @@ class FCodePrinter(CodePrinter):
                           'end interface\n')
         else:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if not i.is_inline)
+            public_decs += ''.join(f'public :: {i.name}\n' for i in expr.interfaces if i.is_semantic and not i.is_private)
 
         func_strings = []
         # Get class functions
@@ -2347,7 +2347,7 @@ class FCodePrinter(CodePrinter):
         example_func = interface_funcs[0]
 
         # ... we don't print 'hidden' functions
-        if example_func.is_inline:
+        if not example_func.is_semantic:
             return ''
 
         if example_func.results:
@@ -2500,7 +2500,7 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        if expr.is_inline:
+        if not expr.is_semantic:
             return ''
         self.set_scope(expr.scope)
 
@@ -2515,7 +2515,7 @@ class FCodePrinter(CodePrinter):
         sig_parts = self.function_signature(expr, name)
         bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
-        functions = [f for f in expr.functions if not f.is_inline]
+        functions = [f for f in expr.functions if f.is_semantic]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
@@ -2580,9 +2580,9 @@ class FCodePrinter(CodePrinter):
         aliases = []
         names   = []
         methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
-                if not method.is_inline)
+                if method.is_semantic)
         for i in expr.interfaces:
-            names = ','.join(f.cls_name for f in i.functions if not f.is_inline)
+            names = ','.join(f.cls_name for f in i.functions if f.is_semantic)
             if names:
                 methods += f'generic, public :: {i.name} => {names}\n'
                 methods += f'procedure :: {names}\n'
@@ -2599,9 +2599,9 @@ class FCodePrinter(CodePrinter):
         decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
-        cls_methods = [i for i in expr.methods if not i.is_inline]
+        cls_methods = [i for i in expr.methods if i.is_semantic]
         for i in expr.interfaces:
-            cls_methods +=  [j for j in i.functions if not j.is_inline]
+            cls_methods +=  [j for j in i.functions if j.is_semantic]
 
         methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
