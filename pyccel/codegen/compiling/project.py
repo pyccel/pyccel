@@ -201,12 +201,12 @@ class DirTarget:
         # If the sorting failed print an error showing the circular dependency
         if deps:
             cycle = [next(c for c in deps)]
-            while len(cycle) < 2 or cycle[-1] != cycle[0]:
+            while len(cycle) < 2 or cycle[-1] not in cycle[:-1]:
                 c = cycle[-1]
                 unfulfilled_dep = next(d for d in deps[c] if d not in placed)
-                cycle.append(next(c for c in deps if getattr(c, 'pyfile', getattr(c, 'folder')) == unfulfilled_dep))
+                cycle.append(next(c for c in deps if (c.pyfile if isinstance(c, CompileTarget) else c.folder) == unfulfilled_dep))
 
-            cycle_example = ' -> '.join(str(getattr(c, 'pyfile', c.folder)) for c in cycle)
+            cycle_example = ' -> '.join(str((c.pyfile if isinstance(c, CompileTarget) else c.folder)) for c in cycle)
 
             errors.report(f"Found circular dependencies between directories: {cycle_example}",
                          severity='fatal')
