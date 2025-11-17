@@ -144,7 +144,7 @@ def test_output_flag(language, build_system):
     )
 )
 def test_circular_dependencies(language, build_system):
-    p = subprocess.run([shutil.which('pyccel-make'), '-g', 'runtest.py', 'src/folder1/file1.py',
+    p = subprocess.run([shutil.which('pyccel-make'), '-f', 'runtest.py', 'src/folder1/file1.py',
                         'src/folder2/file2.py', 'src/folder1/file3.py', f'--language={language}',
                         f'--build-system={build_system}'], cwd=current_folder / 'project_circular_imports',
                        check=False, capture_output=True, text=True)
