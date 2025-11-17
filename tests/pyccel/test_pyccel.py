@@ -1313,3 +1313,22 @@ def test_classes_array_property(language):
                 dependencies = ["scripts/classes/classes_array_property.py"],
                 language = language,
                 output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_classes_pointer_import(language):
+    cwd = get_abs_path("scripts/classes")
+    test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
+
+    pyth_out = get_python_output(test_file, cwd)
+
+    dependency = get_abs_path("scripts/classes/class_pointer_2.py")
+    compile_pyccel(cwd, dependency, f"--language={language}")
+
+    pyth_interface_out = get_python_output(test_file, cwd)
+    assert pyth_out == pyth_interface_out
+
+    compile_pyccel(cwd, test_file, f"--language={language}")
+
+    lang_out = get_lang_output(test_file, language)
+    compare_pyth_fort_output(pyth_out, lang_out, float, language)
