@@ -148,8 +148,7 @@ class DirTarget:
     Class describing a folder containing compilation targets.
 
     Class describing a folder containing compilation targets. This class sorts
-    the compilation targets to ensure that they all objects are printed before
-    they are used.
+    the compilation targets to ensure they are compiled before they are used.
 
     Parameters
     ----------
