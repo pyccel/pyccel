@@ -1,5 +1,4 @@
 #$ header metavar printer_imports="gFTL_extensions/Vector_integer8_mod"
-from typing import Final, TypeVar
 from typing import Final, TypeVar, overload
 from pyccel.decorators import low_level
 from numpy import float64

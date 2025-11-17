@@ -1420,8 +1420,18 @@ class PythonCodePrinter(CodePrinter):
 
         type_var_declarations = self._get_type_var_declarations()
 
+        # Insert existing imports so new imports don't cause duplicates
+        for i in expr.imports:
+            self.add_import(i)
+            source = i.source
+            if source in pyccel_builtin_import_registry:
+                self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
+                                        for t in i.target if not isinstance(t.object, (Module, VariableTypeAnnotation)) and \
+                                                           t.name != t.local_alias)
+
+        imports = ''.join(self._print(i) for i in expr.imports)
+
         # Print interface functions (one function with multiple decorators describes the problem)
-        imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) \
@@ -1444,7 +1454,7 @@ class PythonCodePrinter(CodePrinter):
         if free_func:
             self._ignore_funcs.append(free_func)
 
-        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+        imports = ''.join(self._print(i) for i in self._additional_imports.values())
 
         body = '\n'.join((type_var_declarations, interfaces, funcs, classes, init_body))
 
@@ -1470,6 +1480,9 @@ class PythonCodePrinter(CodePrinter):
         self.set_scope(mod.scope)
         type_var_declarations = self._get_type_var_declarations()
 
+        # Insert existing imports so new imports don't cause duplicates
+        for i in mod.imports:
+            self.add_import(i)
         init_func = mod.init_func
         var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
@@ -1492,8 +1505,7 @@ class PythonCodePrinter(CodePrinter):
 
             classes += self._indent_codestring(class_body)
 
-        imports  = ''.join(self._print(i) for i in mod.imports)
-        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+        imports = ''.join(self._print(i) for i in self._additional_imports.values())
 
         self.exit_scope()
 
