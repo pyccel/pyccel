@@ -356,7 +356,7 @@ The `@private` decorator indicates that a function is private to a module. Priva
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
-Type annotations are optional for functions with both the `@inline and the `@private`` decorator.
+Type annotations are optional for functions with both the `@inline` and the `@private` decorator.
 
 ### Basic Example
 
