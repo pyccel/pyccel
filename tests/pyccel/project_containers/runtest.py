@@ -8,11 +8,11 @@ if __name__ == '__main__':
     squared = square_elements(data)
     total = sum_elements(squared)
 
-    set1 = {1, 2, 3, 2, 4} # pylint:disable=duplicate-value
+    set1 = [1, 2, 3, 2, 4]
     set2 = {2, 3, 5}
 
     unique = unique_elements(set1)
-    common = common_elements(set1, set2)
+    common = common_elements(unique, set2)
 
     print(squared)
     print(total)
