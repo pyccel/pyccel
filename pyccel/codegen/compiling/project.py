@@ -32,9 +32,10 @@ class CompileTarget:
         A dictionary whose keys are the absolute paths to the generated wrapper files,
         and whose values are iterables containing the names of the stdlib targets for
         these additional files.
-    program_file : str | Path, optional
+    program_file : str | Path | None
         The absolute path to the low-level translation of the program found
         in the Python file (if the file contained a program).
+        None if no program is generated.
     stdlib_deps : iterable[str]
         An iterable containing the names of the stdlib targets of this object.
     """
