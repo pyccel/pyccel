@@ -1903,6 +1903,19 @@ def test_multiple_stack_array_2(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Stack arrays are deallocated as cspan only stores a pointer"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
+def test_return_stack_array(language):
+    f1 = arrays.return_stack_array
+    f2 = epyccel(f1, language = language)
+    check_array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
 #==============================================================================
@@ -6403,6 +6416,13 @@ def test_unpacking_2D_of_known_size(language):
 
 def test_assign_slice(language):
     f1 = arrays.assign_slice
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    assert np.array_equal(f1(a, 10), f2(a, 10))
+
+def test_assign_slice_allow_neg(language):
+    f1 = arrays.assign_slice_allow_neg
     f2 = epyccel(f1, language = language)
 
     a = arrays.a_1d

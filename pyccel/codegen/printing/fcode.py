@@ -2307,7 +2307,13 @@ class FCodePrinter(CodePrinter):
         return f"{iterable_type}_Iterator"
 
     def _print_CustomDataType(self, expr):
-        return expr.low_level_name
+        while hasattr(expr, 'underlying_type'):
+            expr = expr.underlying_type
+        try:
+            name = self.scope.get_import_alias(expr, 'cls_constructs')
+        except RuntimeError:
+            name = expr.low_level_name
+        return name
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
@@ -2493,6 +2499,11 @@ class FCodePrinter(CodePrinter):
             return ''
         self.set_scope(expr.scope)
 
+        for r in expr.scope.collect_all_tuple_elements(expr.results.var):
+            if r.rank and r.memory_handling == 'stack' and \
+                    any(not isinstance(s, LiteralInteger) for s in r.alloc_shape):
+                errors.report("Can't return a stack array of unknown size",
+                              symbol=r, severity='error')
 
         name = expr.cls_name or expr.name
 
