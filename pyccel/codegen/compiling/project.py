@@ -40,8 +40,7 @@ class CompileTarget:
         An iterable containing the names of the stdlib targets of this object.
     """
     __slots__ = ('_name', '_pyfile', '_file', '_wrapper_files',
-                 '_program_file', '_dependencies', '_stdlib_deps',
-                 '_wrapper_stdlib_deps')
+                 '_program_file', '_dependencies', '_stdlib_deps')
     def __init__(self, name, pyfile, file, wrapper_files, program_file, stdlib_deps):
         self._name = name
         self._pyfile = pyfile
