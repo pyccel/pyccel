@@ -20,7 +20,7 @@ def pyccel_make_command() -> None:
 
     The command line interface allowing pyccel-make to be called.
     """
-    parser = argparse.ArgumentParser(description="Pyccel's project command line interface.",
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
             add_help = False)
 
     #... Help and Version
@@ -36,15 +36,15 @@ def pyccel_make_command() -> None:
 
     # ...
     group = parser.add_argument_group('File specification',
-            description = "One of the below methods can be used to specify which files should be translated."
+            description = "Use one of the below methods to specify which files should be translated."
             ).add_mutually_exclusive_group(required=True)
-    group.add_argument('-f', '--files', nargs='+', type=Path,
+    group.add_argument('-f', '--files', nargs='+', type=Path, metavar='FILE',
             help="A list of files to be translated as a project.")
     group.add_argument('-g', '--glob', type=str,
             help=("A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
                   "Note: quote the pattern to prevent shell expansion."))
     group.add_argument('-d', '--file-descr', type=Path,
-            help="A file where each line is the name of a file, this set of files are the files to be translated as a project.")
+            help="A UTF-8 text file containing the paths to the files to be translated as a project. One path (relative or absolute) per line.")
 
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
@@ -53,7 +53,7 @@ def pyccel_make_command() -> None:
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.lower)
     group.add_argument('--build-system', choices=('meson', 'cmake'), default='meson',
-                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
+                       help='Chosen build system for translation, i.e. the tool that will be used to compile the generated code (default: meson).',
                        type=str.lower)
 
     # ... Compiler options
@@ -69,6 +69,9 @@ def pyccel_make_command() -> None:
                                 default=None,
                                 metavar='CONFIG.json',
                                 help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+
+    # ... Additional compiler options
+    group = parser.add_argument_group('Additional compiler options')
     group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
                         help='Compile the code with debug flags, or not.\n' \
                         ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
@@ -114,20 +117,20 @@ def pyccel_make_command() -> None:
     elif args.file_descr:
         with open(args.file_descr, 'r', encoding='utf-8') as f:
             files = [Path(fname.strip()) for fname in f.readlines()]
-
-        for f in files:
-            if not f.exists():
-                errors.report(f"File not found : {f}", severity='error')
-
-        cwd = os.getcwd()
-        files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
-
-        errors.check()
-
-        if errors.has_errors():
-            sys.exit(1)
     else:
         raise NotImplementedError("No file specified")
+
+    for f in files:
+        if not f.exists():
+            errors.report(f"File not found : {f}", severity='error')
+
+    cwd = os.getcwd()
+    files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
+
+    errors.check()
+
+    if errors.has_errors():
+        sys.exit(1)
 
     accelerators = []
     if args.mpi:
