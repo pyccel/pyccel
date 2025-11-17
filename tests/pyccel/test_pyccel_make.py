@@ -136,3 +136,17 @@ def test_output_flag(language, build_system):
 
     # Clean up after test
     shutil.rmtree(folder / 'outfolder', ignore_errors=True)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
+)
+def test_circular_dependencies(language, build_system):
+    p = subprocess.run([shutil.which('pyccel-make'), '-g', '**/*.py', f'--language={language}',
+                        f'--build-system={build_system}'], cwd=current_folder / 'project_circular_imports', check=False,
+                       capture_output=True, text=True)
+
+    assert p.returncode != 0
+    assert "Found circular dependencies between directories" in p.stdout
