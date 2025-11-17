@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from ..folder1.file1 import base_value
 
 def add_five():
