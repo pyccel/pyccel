@@ -50,12 +50,12 @@ class MesonHandler(BuildSystemHandler):
         Parameters
         ----------
         expr : CompileTarget
-            The CMake target that should be compiled.
+            The meson target that should be compiled.
 
         Returns
         -------
         str
-            The CMake code describing the target(s).
+            The meson code describing the target(s).
         """
         obj_lib = f'{expr.name}_objs'
         dep_name = f'{expr.name}_dep'
