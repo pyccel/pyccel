@@ -4914,10 +4914,9 @@ class SemanticParser(BasicParser):
             return EmptyNode()
 
         if any(a.annotation is None for a in expr.arguments):
-            if not is_inline:
-                errors.report(MISSING_TYPE_ANNOTATIONS,
-                        symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
-                              bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
             return EmptyNode()
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
