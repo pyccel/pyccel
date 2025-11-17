@@ -272,11 +272,8 @@ class BuildProject:
     """
     def __init__(self, root_dir, compile_targets, languages, stdlib_deps):
         self._root_dir = Path(root_dir)
-
         self._dir_info = DirTarget(self._root_dir, compile_targets)
-
         self._languages = languages
-
         self._stdlib_deps = stdlib_deps
 
     @property
