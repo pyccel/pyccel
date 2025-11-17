@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
-from numpy import equal, array
+from numpy import equal, array, arange
 import pytest
 
 
@@ -97,3 +97,11 @@ def test_functional_filter_and_transform(language):
 def test_functional_with_multiple_conditions(language):
     compare_epyccel(functionals.functional_with_multiple_conditions, language)
 
+def test_functional_negative_indices(language):
+    compare_epyccel(functionals.functional_negative_indices, language, arange(10))
+
+def test_functional_reverse(language):
+    compare_epyccel(functionals.functional_reverse, language, arange(4))
+
+def test_functional_indexed_iterator(language):
+    compare_epyccel(functionals.functional_indexed_iterator, language, arange(10))

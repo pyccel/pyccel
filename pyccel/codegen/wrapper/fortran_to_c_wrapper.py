@@ -169,6 +169,9 @@ class FortranToCWrapper(Wrapper):
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr),
                    *expr.imports]
 
+        # Ensure renamed datatypes are mapped to their new name
+        self.scope.imports['cls_constructs'].update(expr.scope.imports['cls_constructs'])
+
         self._wrapper_names_dict[expr.name] = name
 
         self.exit_scope()
@@ -839,9 +842,11 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
 
+        shape = orig_var.shape if memory_handling == 'stack' else None
+
         # Allocatable is not returned so it must appear in local scope
         local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling, shape = None)
+                            memory_handling = memory_handling, shape = shape)
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):

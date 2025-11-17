@@ -68,7 +68,7 @@ from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 from pyccel.ast.core import AllDeclaration
 
-from pyccel.ast.class_defs import get_cls_base, SetClass
+from pyccel.ast.class_defs import get_builtin_cls_base, SetClass
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
@@ -119,7 +119,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal, TypingTypeVar
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar, TypingAnnotation
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -442,8 +442,7 @@ class SemanticParser(BasicParser):
             try:
                 class_def = prefix.cls_base
             except AttributeError:
-                class_def = get_cls_base(prefix.class_type) or \
-                            self.scope.find(str(prefix.class_type), 'classes')
+                class_def = self.get_cls_base(prefix.class_type)
 
             attr_name = name.name[-1]
             class_scope = class_def.scope
@@ -552,6 +551,43 @@ class SemanticParser(BasicParser):
                 severity='fatal')
         else:
             return result
+
+    def get_cls_base(self, class_type):
+        """
+        Determine the base class of an object.
+
+        From the type, determine the base class of an object.
+
+        Parameters
+        ----------
+        class_type : DataType
+            The Python type of the object.
+
+        Returns
+        -------
+        ClassDef
+            A class definition describing the base class of an object.
+
+        Raises
+        ------
+        NotImplementedError
+            Raised if the base class cannot be found.
+        """
+        # Extract type in case of qualifier (e.g. Final)
+        while hasattr(class_type, 'underlying_type'):
+            class_type = class_type.underlying_type
+
+        try:
+            name = self.scope.get_import_alias(class_type, 'cls_constructs')
+        except RuntimeError:
+            name = class_type.name
+
+        scope_class = self.scope.find(name, 'classes')
+
+        if scope_class:
+            return scope_class
+        else:
+            return get_builtin_cls_base(class_type)
 
     def insert_import(self, name, target, storage_name = None):
         """
@@ -841,7 +877,7 @@ class SemanticParser(BasicParser):
         d_var = {
                 'class_type' : class_type,
                 'shape'      : expr.shape,
-                'cls_base'   : self.scope.find(str(class_type), 'classes') or get_cls_base(class_type),
+                'cls_base'   : self.get_cls_base(class_type),
                 'memory_handling' : 'heap' if expr.rank > 0 else 'stack'
             }
 
@@ -1050,7 +1086,7 @@ class SemanticParser(BasicParser):
                         severity='fatal', symbol=expr)
             return UnionTypeAnnotation(*[VariableTypeAnnotation(t) for t in possible_types])
         class_type = arg1.class_type
-        class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+        class_base = self.get_cls_base(class_type)
         magic_method_name = magic_method_map.get(type(expr), None)
         magic_method = None
         if magic_method_name:
@@ -1058,7 +1094,7 @@ class SemanticParser(BasicParser):
             if magic_method is None:
                 arg2 = visited_args[1]
                 class_type = arg2.class_type
-                class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                class_base = self.get_cls_base(class_type)
                 magic_method_name = '__r'+magic_method_name[2:]
                 magic_method = class_base.get_method(magic_method_name)
                 if magic_method:
@@ -2333,6 +2369,36 @@ class SemanticParser(BasicParser):
         if isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
+            annotation = self._visit(self._convert_syntactic_object_to_type_annotation(args[0]))
+            if any(isinstance(a.class_type, TypingAnnotation) for a in annotation.type_list):
+                errors.report("Nested Annotated[] type modifiers are not handled.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+            metavars = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else self._visit(a)
+                        for a in args[1:]]
+            var_metadata = {}
+            if 'alias' in metavars:
+                var_metadata['memory_handling'] = 'alias'
+                metavars.remove('alias')
+            if 'stack' in metavars:
+                if 'memory_handling' in var_metadata:
+                    errors.report("An object cannot be both an alias for an object stored elsewhere and a stack allocated object.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+                var_metadata['memory_handling'] = 'stack'
+                metavars.remove('stack')
+            if metavars:
+                errors.report(f"Unrecognised annotations have been ignored ({metavars})",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity='warning')
+            if var_metadata:
+                assert isinstance(annotation, UnionTypeAnnotation)
+                assert all(isinstance(t, VariableTypeAnnotation) for t in annotation.type_list)
+                return UnionTypeAnnotation(*[TypingAnnotation(d, **var_metadata) for d in annotation.type_list])
+            else:
+                return annotation
+
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
@@ -2584,6 +2650,8 @@ class SemanticParser(BasicParser):
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
             return PyccelFunctionDef('Final', TypingFinal)
+        elif env_var is typing.Annotated:
+            return PyccelFunctionDef('Annotated', TypingAnnotation)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
             return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
@@ -2926,12 +2994,15 @@ class SemanticParser(BasicParser):
                 import_free  = free_func()
                 program_body.insert2body(import_free)
 
+            used_datatypes = {v.class_type for v in program_body.get_attribute_nodes(Variable)}
+
             imports = list(container['imports'].values())
             for i in self.scope.imports['imports'].values():
                 target = []
                 for t in i.target:
-                    local_t = self.scope.find(t.name)
-                    if local_t and program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,)):
+                    local_t = self.scope.find(t.local_alias)
+                    if local_t and (program_body.is_user_of(local_t, excluded_nodes = (FunctionDef,))
+                                    or (isinstance(local_t, ClassDef) and local_t.class_type in used_datatypes)):
                         target.append(t)
                 if target:
                     imports.append(Import(i.source, target, ignore_at_print = i.ignore, mod = i.source_module))
@@ -3213,7 +3284,7 @@ class SemanticParser(BasicParser):
 
             return self._extract_indexed_from_var(var, args, expr)
         else:
-            cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            cls_base = self.get_cls_base(class_type)
             method = cls_base.get_method('__getitem__')
             if method:
                 class_args = self._handle_function_args([FunctionCallArgument(a) for a in expr.indices])
@@ -3318,7 +3389,12 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
-                cls_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+                var_kwargs = kwargs.copy()
+                if isinstance(class_type, TypingAnnotation):
+                    var_kwargs.update(class_type.metadata)
+                    assert isinstance(class_type.arg, VariableTypeAnnotation)
+                    class_type = class_type.arg.class_type
+                cls_base = self.get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
                 elif isinstance(class_type, HomogeneousTupleType):
@@ -3327,10 +3403,11 @@ class SemanticParser(BasicParser):
                     shape = (None,)*class_type.container_rank
                 else:
                     shape = None
+                if 'memory_handling' not in var_kwargs:
+                    var_kwargs['memory_handling'] = array_memory_handling if class_type.rank > 0 else 'stack'
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape, is_optional = False,
-                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
-                        **kwargs)
+                        **var_kwargs)
                 possible_args.append(v)
                 if isinstance(class_type, InhomogeneousTupleType):
                     for i, t in enumerate(class_type):
@@ -3384,8 +3461,18 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
-        elif isinstance(visited_dtype, PyccelType):
+        elif isinstance(visited_dtype, (PyccelType, TypingAnnotation)):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
+        elif isinstance(visited_dtype, LiteralString):
+            pyccel_stage.set_stage('syntactic')
+            try:
+                syntactic_a = types_meta.model_from_str(visited_dtype.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
+            annot = syntactic_a.expr
+            pyccel_stage.set_stage('semantic')
+            return self._visit(annot)
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
@@ -3469,9 +3556,7 @@ class SemanticParser(BasicParser):
 
         d_var = self._infer_type(first)
         class_type = d_var['class_type']
-        cls_base = get_cls_base(class_type)
-        if cls_base is None:
-            cls_base = self.scope.find(str(class_type), 'classes')
+        cls_base = self.get_cls_base(class_type)
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
@@ -3591,7 +3676,7 @@ class SemanticParser(BasicParser):
             else:
                 return LiteralFalse()
 
-        container_base = self.scope.find(str(container_type), 'classes') or get_cls_base(container_type)
+        container_base = self.get_cls_base(container_type)
         contains_method = container_base.get_method('__contains__',
                         raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
@@ -4230,7 +4315,7 @@ class SemanticParser(BasicParser):
             magic_method_name = magic_method_map[operator]
             increment_magic_method_name = '__i' + magic_method_name[2:]
             class_type = lhs.class_type
-            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            class_base = self.get_cls_base(class_type)
             increment_magic_method = class_base.get_method(increment_magic_method_name)
             args = [FunctionCallArgument(lhs), FunctionCallArgument(rhs)]
             if increment_magic_method:
@@ -4371,8 +4456,29 @@ class SemanticParser(BasicParser):
 
             elif isinstance(a, VariableIterator):
                 var = self.scope.get_expected_name(expr.indices[i])
-                variables.append(handle_iterable_variable(var, a.variable, body.scope))
-                stop = a.variable.shape[0]
+                iter_var = a.variable
+                if isinstance(iter_var, IndexedElement):
+                    base = iter_var.base
+                    variables.append(handle_iterable_variable(var, base, body.scope))
+                    iter_slice = iter_var.indices[0]
+                    if iter_slice.start:
+                        start = iter_slice.start
+                    if iter_slice.stop:
+                        stop = iter_slice.stop
+                    else:
+                        stop = base.shape[0]
+                    if iter_slice.step:
+                        step = iter_slice.step
+                    if getattr(base, 'allows_negative_indexes', False) and \
+                            any(not is_literal_integer(s) for s in (start, stop, step)):
+                        # An if ternary expression cannot be easily expressed via sympy for shape calculations
+                        errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE +
+                                      f'This problem is related to the fact that {base.name} allows negative indexes.',
+                                      bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                                      severity='error')
+                else:
+                    variables.append(handle_iterable_variable(var, a.variable, body.scope))
+                    stop = a.variable.shape[0]
 
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
@@ -4394,6 +4500,11 @@ class SemanticParser(BasicParser):
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
+            try:
+                if step < 0:
+                    start, stop = stop, start
+            except TypeError:
+                pass
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
@@ -4504,7 +4615,7 @@ class SemanticParser(BasicParser):
             class_type = type_container[conversion_func.cls_name].get_new(numpy_process_dtype(class_type), rank=1, order=None)
         d_var['class_type'] = class_type
         d_var['shape'] = (dim,)
-        d_var['cls_base'] = get_cls_base(class_type)
+        d_var['cls_base'] = self.get_cls_base(class_type)
 
         # ...
         # TODO [YG, 30.10.2020]:
@@ -4549,7 +4660,6 @@ class SemanticParser(BasicParser):
         else:
             for operation in operations:
                 expr.loops[-1].insert2body(self._visit(operation))
-
 
         loops = [self._visit(i) for i in loops]
         if assign:
@@ -5276,8 +5386,23 @@ class SemanticParser(BasicParser):
             return body
         else:
             assert expr.results
-            self._additional_exprs[-1].append(body)
-            return self._visit(lhs)
+            assign = body.body[-1]
+            semantic_lhs = self._visit(lhs)
+            if len(returns) == 1 and (isinstance(semantic_lhs.class_type, FixedSizeNumericType) or semantic_lhs.is_alias) \
+                    and isinstance(assign, (Assign, AliasAssign)) and semantic_lhs.name == lhs:
+                self._additional_exprs[-1].extend(body.body[:-1])
+                self.scope.remove_variable(semantic_lhs)
+                try:
+                    self._allocs[-1].remove(semantic_lhs)
+                except KeyError:
+                    pass
+                self._pointer_targets[-1].pop(semantic_lhs, None)
+                rhs = assign.rhs
+                rhs.remove_user_node(assign, invalidate = False)
+                return self._visit(rhs)
+            else:
+                self._additional_exprs[-1].append(body)
+                return semantic_lhs
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
@@ -5541,7 +5666,8 @@ class SemanticParser(BasicParser):
                 container['variables'][source_target] = mod
                 targets = [AsName(mod, source_target)]
 
-            self.scope.imports['cls_constructs'].update(p.scope.cls_constructs)
+            for n, cls in container['classes'].items():
+                self.scope.imports['cls_constructs'][n] = cls.class_type
 
             # ... meta variables
 
@@ -6266,7 +6392,7 @@ class SemanticParser(BasicParser):
         if isinstance(arg, LiteralString):
             return LiteralInteger(len(arg.python_value))
         elif isinstance(arg.class_type, CustomDataType):
-            class_base = self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)
+            class_base = self.get_cls_base(class_type)
             magic_method = class_base.get_method('__len__')
             if magic_method:
                 return self._handle_function(expr, magic_method, function_call_args)
@@ -6382,7 +6508,7 @@ class SemanticParser(BasicParser):
 
             elif expected_type:
                 class_type = obj.class_type
-                cls_base_to_insert = [self.scope.find(str(class_type), 'classes') or get_cls_base(class_type)]
+                cls_base_to_insert = [self.get_cls_base(class_type)]
                 possible_types = {class_type}
                 while cls_base_to_insert:
                     cls_base = cls_base_to_insert.pop()

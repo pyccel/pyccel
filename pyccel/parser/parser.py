@@ -234,8 +234,11 @@ class Parser(object):
                                 verbose = verbose)
         self._semantic_parser = parser
         parser.metavars.setdefault('printer_imports', '')
-        parser.metavars['printer_imports'] += ', '.join(p.metavars['printer_imports'] for p in self.sons)
-        parser.metavars['printer_imports'] = parser.metavars['printer_imports'].strip(', ')
+        # Get all possible printer imports. Use a dict for reproducible ordering
+        printer_imports = {p.metavars['printer_imports']: None for p in self.sons}
+        printer_imports[parser.metavars['printer_imports']] = None
+        printer_imports.pop('', None)
+        parser.metavars['printer_imports'] = ', '.join(printer_imports)
 
         # Return the new semantic parser (maybe used by codegen)
         return parser
