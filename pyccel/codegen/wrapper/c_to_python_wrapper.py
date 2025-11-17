@@ -1966,9 +1966,9 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
+            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
-        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
