@@ -4917,7 +4917,7 @@ class SemanticParser(BasicParser):
         if any(a.annotation is None for a in expr.arguments):
             msg = MISSING_TYPE_ANNOTATIONS
             if is_inline:
-                msg += '\nThe @private decorator can also be used to avoid the reuirement for type annotations on inline functions'
+                msg += '\nThe @private decorator can also be used to avoid the requirement for type annotations on inline functions'
             errors.report(msg,
                     symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
                           bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
