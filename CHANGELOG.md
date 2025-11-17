@@ -59,6 +59,7 @@ All notable changes to this project will be documented in this file.
 -   #2496 : Fix renaming classes when importing.
 -   #2500 : Fix bad chaining of `stdlib` imports.
 -   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
+-   #2506 : Fix returning non-trivial heap class properties.
 -   Rename `main` function when translating to C.
 
 ### Changed
