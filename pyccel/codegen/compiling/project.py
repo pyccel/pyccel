@@ -7,7 +7,7 @@
 Module providing objects that are useful for describing the compilation of a project
 via the pyccel-make command.
 """
-from collections.abs import Iterable
+from collections.abc import Iterable
 from pathlib import Path
 from pyccel.errors.errors  import Errors
 
