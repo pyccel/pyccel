@@ -260,3 +260,9 @@ def test_for_lists_of_lists(language):
     f2 = epyccel( f1, language = language )
 
     assert f1() == f2()
+
+def test_for_unknown_index_slice(language):
+    f1 = loops.for_unknown_index_slice
+    f2 = epyccel( f1, language = language )
+
+    assert f1() == f2()
