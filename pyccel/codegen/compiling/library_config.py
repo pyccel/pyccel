@@ -85,7 +85,7 @@ class StdlibInstaller:
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 
@@ -170,7 +170,7 @@ class CWrapperInstaller(StdlibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 
@@ -389,7 +389,7 @@ class STCInstaller(ExternalLibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object to compile STC if it is not already installed.
 
         Returns
@@ -488,7 +488,7 @@ class GFTLInstaller(ExternalLibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 

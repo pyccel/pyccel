@@ -48,7 +48,7 @@ def generate_extension_modules(import_key, import_node, pyccel_dirpath,
         be printed).
     pyccel_dirpath : str
         The folder where files are being saved.
-    compiler : Compiler
+    compiler : pyccel.codegen.compilers.compiling.Compiler
         A compiler that can be used to compile dependencies.
     include : iterable of strs
         Include directories paths.
@@ -156,7 +156,7 @@ def manage_dependencies(pyccel_imports, compiler, pyccel_dirpath, mod_obj, langu
     ----------
     pyccel_imports : dict[str,Import]
         A dictionary describing imports created by Pyccel that may imply dependencies.
-    compiler : Compiler
+    compiler : pyccel.codegen.compilers.compiling.Compiler
         A compiler that can be used to compile dependencies.
     pyccel_dirpath : str | Path
         The path in which the Pyccel output is generated (__pyccel__).
