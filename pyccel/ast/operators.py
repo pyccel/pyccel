@@ -1556,6 +1556,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         return self._args[2]
 
+    def __str__(self):
+        return f'(({self.value_true}) if ({self.cond}) else ({self.value_false})'
 
 
 #==============================================================================
