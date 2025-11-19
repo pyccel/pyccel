@@ -1387,9 +1387,9 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else False
+            is_inline = getattr(func, 'is_inline', False)
             if is_inline:
-                return self._visit_InlineFunctionDef(func, args, expr)
+                return self._visit_InlineFunctionCall(func, args, expr)
             elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
 
@@ -2837,12 +2837,13 @@ class SemanticParser(BasicParser):
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
-            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
+            if not f.is_semantic:
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        for f in self.scope.functions.values():
-            assert f.is_semantic or f.is_inline
+        if not errors.has_errors():
+            assert all(f.is_semantic or f.is_inline
+                       for f in self.scope.functions.values())
 
         variables = self.get_variables(self.scope)
         init_func = None
@@ -4907,6 +4908,20 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         python_name = expr.name
+        is_private         = expr.is_private
+        is_inline          = expr.is_inline
+
+        if is_inline and is_private:
+            return EmptyNode()
+
+        if any(a.annotation is None for a in expr.arguments):
+            msg = MISSING_TYPE_ANNOTATIONS
+            if is_inline:
+                msg += '\nThe @private decorator can also be used to avoid the requirement for type annotations on inline functions'
+            errors.report(msg,
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            return EmptyNode()
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
@@ -4930,7 +4945,8 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
+        if 'low_level' in decorators or (self.is_stub_file and
+                not python_name.startswith('__') and not expr.is_inline):
             if 'low_level' in decorators:
                 low_level_decs = decorators['low_level']
                 assert len(low_level_decs) == 1
@@ -4951,18 +4967,10 @@ class SemanticParser(BasicParser):
         docstring          = self._visit(expr.docstring) if expr.docstring else expr.docstring
         is_pure            = expr.is_pure
         is_elemental       = expr.is_elemental
-        is_private         = expr.is_private
-        is_inline          = expr.is_inline
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
-
-        if any(a.annotation is None for a in expr.arguments):
-            errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
-                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
-            return EmptyNode()
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
@@ -5009,6 +5017,7 @@ class SemanticParser(BasicParser):
         interface_name = expr.scope.get_expected_name(python_name)
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
+        assert not is_interface or interface_name in insertion_scope.local_used_symbols.values()
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if is_interface and 'low_level' not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
@@ -5156,8 +5165,9 @@ class SemanticParser(BasicParser):
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
                 global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
-                        if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
+                        if self.scope.find(f.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
+                func_kwargs['syntactic_expr'] = expr
                 cls = InlineFunctionDef
             else:
                 cls = FunctionDef
@@ -5194,7 +5204,7 @@ class SemanticParser(BasicParser):
 
         return EmptyNode()
 
-    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+    def _visit_InlineFunctionCall(self, expr, function_call_args, function_call):
         """
         Visit an inline function definition to add the code to the calling scope.
 
@@ -5210,6 +5220,12 @@ class SemanticParser(BasicParser):
         function_call : FunctionCall
             The syntactic function call being expanded to a function definition.
         """
+        is_imported = expr.is_imported
+        if expr.pyccel_staging != 'syntactic':
+            if isinstance(expr, Interface):
+                expr = expr.functions[0].syntactic_expr
+            else:
+                expr = expr.syntactic_expr
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
         if assign:
@@ -5222,7 +5238,7 @@ class SemanticParser(BasicParser):
         pyccel_stage.set_stage('syntactic')
         imports = list(expr.imports)
         global_scope_import_targets = {}
-        if expr.is_imported:
+        if is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
             mod = self.d_parsers[mod_name].semantic_parser.ast
 

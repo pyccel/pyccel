@@ -1269,12 +1269,21 @@ def test_varkwargs():
 @pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import(language):
-    pyccel_test("scripts/inlining/runtest_inline_using_import.py",
+    test_file = "scripts/inlining/runtest_inline_using_import.py"
+    pyccel_test(test_file,
                 dependencies = ["scripts/inlining/my_func.py",
                                 "scripts/inlining/my_other_func.py",
                                 "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
+
+    if language != 'python':
+        test_abspath = get_abs_path(test_file)
+
+        cwd = os.path.dirname(test_abspath)
+        pyth_out = get_python_output(test_abspath, cwd)
+        lang_out = get_lang_output(os.path.splitext(test_abspath)[0], language)
+        compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
@@ -1304,3 +1313,22 @@ def test_classes_array_property(language):
                 dependencies = ["scripts/classes/classes_array_property.py"],
                 language = language,
                 output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_classes_pointer_import(language):
+    cwd = get_abs_path("scripts/classes")
+    test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
+
+    pyth_out = get_python_output(test_file, cwd)
+
+    dependency = get_abs_path("scripts/classes/class_pointer_2.py")
+    compile_pyccel(cwd, dependency, f"--language={language}")
+
+    pyth_interface_out = get_python_output(test_file, cwd)
+    assert pyth_out == pyth_interface_out
+
+    compile_pyccel(cwd, test_file, f"--language={language}")
+
+    lang_out = get_lang_output(test_file, language)
+    compare_pyth_fort_output(pyth_out, lang_out, float, language)
