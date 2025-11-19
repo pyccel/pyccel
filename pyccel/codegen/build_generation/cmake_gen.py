@@ -22,9 +22,9 @@ class CMakeHandler(BuildSystemHandler):
 
     Parameters
     ----------
-    *args : object
+    *args
         See BuildSystemHandler.
-    **kwargs : object
+    **kwargs
         See BuildSystemHandler.
     """
     def __init__(self, *args, **kwargs):
