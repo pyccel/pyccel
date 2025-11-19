@@ -286,7 +286,6 @@ def for_lists_of_lists():
 
 @allow_negative_index('a')
 def for_unknown_index_slice():
-    start = 1
     end = 7
     a = np.arange(10)
     result = 0
