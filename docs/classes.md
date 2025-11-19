@@ -699,7 +699,7 @@ program prog_prog_cls_test
   call obj % Method1(Dummy_0000)
   write(stdout, '(I0, A)', advance="no") obj%param%param1 , ' '
   write(stdout, '(A)', advance="no") '['
-  do i = 0_i64, size(obj%param%param2, kind=i64) - 1_i64 - 1_i64
+  do i = 0_i64, size(obj%param%param2, kind=i64) - 2_i64
     write(stdout, '(F0.15, A)', advance="no") obj%param%param2(i) , ' '
   end do
   write(stdout, '(F0.15, A)', advance="no") obj%param%param2(size(obj% &
