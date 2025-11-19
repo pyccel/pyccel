@@ -132,6 +132,7 @@ class MesonHandler(BuildSystemHandler):
             the enclosing directory, to include this new file.
         """
         targets = []
+        # Visit the compilation or sub-directory targets found in the directory
         for t in expr.targets:
             if isinstance(t, DirTarget):
                 code, subdir_cmd = self._generate_DirTarget(t)
@@ -140,8 +141,10 @@ class MesonHandler(BuildSystemHandler):
                 if self._verbose > 1:
                     print(">>> Printing :: ", filename)
 
+                # Print sub-directory meson.build file
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(code)
+                # Add sub-directory import command to current meson.build file
                 targets.append(subdir_cmd)
             else:
                 targets.append(self._generate_CompileTarget(t))
