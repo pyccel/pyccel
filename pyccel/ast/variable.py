@@ -671,7 +671,7 @@ class IndexedElement(TypedAstNode):
             else:
                 try:
                     if int(idx) < 0:
-                        return PyccelAdd(shape, idx, simplify=True)
+                        return PyccelAdd.make_simplified(shape, idx)
                 except TypeError:
                     pass
                 return idx
