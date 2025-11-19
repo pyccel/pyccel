@@ -32,7 +32,7 @@ class MesonHandler(BuildSystemHandler):
         The level of verbosity.
     debug_mode : bool
         Indicates if we should compile in debug mode.
-    compiler : Compiler
+    compiler : pyccel.codegen.compilers.compiling.Compiler
         The compiler that should be used to compile the code.
     accelerators : iterable[str]
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
@@ -49,7 +49,7 @@ class MesonHandler(BuildSystemHandler):
 
         Parameters
         ----------
-        expr : CompileTarget
+        expr : pyccel.codegen.compilers.compiling.CompileTarget
             The meson target that should be compiled.
 
         Returns
