@@ -825,10 +825,11 @@ class IndexedElement(TypedAstNode):
                             incr = PyccelAdd(idx.start, incr, simplify = True)
                         elif idx.start is None:
                             try:
-                                negative_step_possible = negative_idxs_possible or int(idx.step) < 0
+                                negative_step = int(idx.step) < 0
                             except TypeError:
-                                negative_step_possible = False
-                            if negative_step_possible:
+                                negative_step = False
+                            # Only modify for known negative step, unknown is handled at printing
+                            if negative_step:
                                 if idx.stop is None:
                                     incr = PyccelAdd(PyccelMinus(base.shape[i],
                                                                  LiteralInteger(1), simplify=True),
