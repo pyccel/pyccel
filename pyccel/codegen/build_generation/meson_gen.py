@@ -124,9 +124,12 @@ class MesonHandler(BuildSystemHandler):
 
         Returns
         -------
-        str
-            The string that should be printed in the enclosing meson.build file
-            to include this new file.
+        code : str
+            The codethat should be printed in the meson.build file to describe
+            the targets in this directory.
+        include_code : str
+            The string that should be printed in the meson.build file found in
+            the enclosing directory, to include this new file.
         """
         targets = []
         for t in expr.targets:
