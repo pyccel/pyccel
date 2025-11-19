@@ -1620,6 +1620,8 @@ class CCodePrinter(CodePrinter):
                         mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
                         elem_type = self.get_c_type(var.class_type.element_type)
                         init = f' = {mem_type}_make({elem_type}_init())'
+                    else:
+                        init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -2599,6 +2601,17 @@ class CCodePrinter(CodePrinter):
             else:
                 rhs = self._print(rhs_var)
                 return f'{lhs} = {rhs};\n'
+        elif isinstance(lhs_var, Variable) and lhs_var.is_alias and \
+                isinstance(lhs_var.class_type, (HomogeneousListType, HomogeneousSetType, HomogeneousTupleType, DictType)):
+            managed_mem_lst = lhs_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+            managed_mem = managed_mem_lst[0]
+            managed_var = managed_mem.mem_var
+            lhs = self._print(managed_var)
+            rhs = self._print(rhs_address)
+
+            element_type = self.get_c_type(lhs_var.class_type, in_container = True)
+
+            return f'{lhs} = {element_type}_from_ptr({rhs});\n'
         else:
             lhs = self._print(lhs_address)
             rhs = self._print(rhs_address)
