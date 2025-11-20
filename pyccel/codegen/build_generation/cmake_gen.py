@@ -148,7 +148,7 @@ class CMakeHandler(BuildSystemHandler):
         Returns
         -------
         code : str
-            The codethat should be printed in the meson.build file to describe
+            The code that should be printed in the meson.build file to describe
             the targets in this directory.
         include_code : str
             The string that should be printed in the meson.build file found in
