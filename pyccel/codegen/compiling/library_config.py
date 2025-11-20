@@ -436,6 +436,8 @@ class STCInstaller(ExternalLibInstaller):
                 subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
                                capture_output = (verbose <= 1))
 
+        print(install_dir)
+        print(list(install_dir.glob('**/*.a')))
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
 
