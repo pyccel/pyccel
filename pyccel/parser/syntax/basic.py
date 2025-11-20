@@ -9,33 +9,23 @@ __all__ = ["BasicStmt"]
 class BasicStmt:
     """
     Base class for all objects in Pyccel.
+
+    Conventions:
+
+    1) Every extension class must provide the properties stmt_vars and
+    local_vars
+    2) stmt_vars describes the list of all variables that are
+    created by the statement.
+    3) local_vars describes the list of all local variables to the
+    statement, like the index of a For statement.
+    4) Every extension must implement the update function. This function is
+    called to prepare for the applied property (for example the expr
+    property.).
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         """
         Constructor for the base class.
-
-        Conventions:
-
-        1) Every extension class must provide the properties stmt_vars and
-        local_vars
-        2) stmt_vars describes the list of all variables that are
-        created by the statement.
-        3) local_vars describes the list of all local variables to the
-        statement, like the index of a For statement.
-        4) Every extension must implement the update function. This function is
-        called to prepare for the applied property (for example the expr
-        property.)
-
-        Parameters
-        ==========
-        statements : list
-            list of statements from pyccel.types.ast
-        unallocated: dict
-            a dictionary containing all unallocated variables. later we will
-            have to traverse the AST and allocate them. a (`key`, `value`) of
-            unallocated is such that `key` is the variable name, and `value` are
-            some hints for the allocation.
         """
         self.statements  = []
         self.unallocated = {}
