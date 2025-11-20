@@ -60,6 +60,7 @@ All notable changes to this project will be documented in this file.
 -   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
 -   #2506 : Fix returning non-trivial heap class properties.
 -   #2291 : Fix duplicate imports in Python and stub files.
+-   #2484 : Fix optional `TypeVar` arguments.
 -   Rename `main` function when translating to C.
 
 ### Changed
