@@ -29,9 +29,6 @@ class BasicStmt:
     """
 
     def __init__(self, **kwargs):
-        """
-        Constructor for the base class.
-        """
         self.statements  = []
         self.unallocated = {}
 
