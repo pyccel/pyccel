@@ -66,14 +66,14 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           submodules: true
+      - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: ./.github/actions/windows_install
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           auto-activate-base: true
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
-      - name: Install dependencies
-        if: steps.duplicate_check.outputs.should_skip != 'true'
-        uses: ./.github/actions/windows_install
       - name: Install python dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/conda_installation
