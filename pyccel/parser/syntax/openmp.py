@@ -110,9 +110,18 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
 
 
 class Openmp:
-    """Class for Openmp syntax."""
-    def __init__(self, **kwargs):
-        self.statements = kwargs.pop('statements', [])
+    """
+    Class for OpenMP syntax.
+
+    Class from which OpenMP syntax descriptors inherit.
+
+    Parameters
+    ----------
+    statements : iterable
+        The OpenMP statements.
+    """
+    def __init__(self, statements = ()):
+        self.statements = list(statements)
 
 class OpenmpStmt(BasicStmt):
     """Class representing an OpenMP statement."""
