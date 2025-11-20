@@ -86,12 +86,6 @@ jobs:
           python -m pip install jwt requests
           python ci_tools/setup_check_run.py anaconda_windows
         shell: bash -l -eo pipefail {0}
-      - name: Meson install
-        run: |
-          python -m pytest -rX ${FLAGS} -vsx -m c test_epyccel_lists.py || true
-          cat D:\\a\\pyccel\\pyccel\\tests\\epyccel\\__epyccel__\\__pyccel__\\STC\\build-gnu\\meson-logs\\meson-log.txt
-        working-directory: ./tests/epyccel
-        shell: bash -l -eo pipefail {0}
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
