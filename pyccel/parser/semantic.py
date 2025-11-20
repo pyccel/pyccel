@@ -6507,12 +6507,12 @@ class SemanticParser(BasicParser):
         class_or_tuple = function_call_args[1].value
         if isinstance(class_or_tuple, PythonTuple):
             obj_arg = function_call_args[0]
-            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
-                                for class_type in class_or_tuple], simplify=True)
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+                                for class_type in class_or_tuple])
         elif isinstance(class_or_tuple, UnionTypeAnnotation):
             obj_arg = function_call_args[0]
-            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
-                                for var_annot in class_or_tuple.type_list], simplify=True)
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+                                for var_annot in class_or_tuple.type_list])
         else:
             if isinstance(class_or_tuple, (VariableTypeAnnotation, ClassDef)):
                 expected_type = class_or_tuple.class_type
