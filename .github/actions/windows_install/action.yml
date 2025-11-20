@@ -21,6 +21,12 @@ runs:
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
         path-type: inherit
+    - name: Update to give Msys2 priority
+      run: |
+        echo $PATH
+        echo "$env:MSYS2_ROOT\mingw64\bin" | Out-File -Append -FilePath $env:GITHUB_PATH
+        echo "$env:MSYS2_ROOT\usr\bin"     | Out-File -Append -FilePath $env:GITHUB_PATH
+      shell: powershell
     - name: Add CC and FC to environment
       run: |
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
