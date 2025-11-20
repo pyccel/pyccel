@@ -12,7 +12,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction, PythonTuple, PythonDict
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress, If
-from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
+from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef, ClassDef
 from pyccel.ast.core       import Interface, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, HomogeneousSetType
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
@@ -27,7 +27,7 @@ from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray, NumpyBool
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
 from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
-from pyccel.ast.typingext  import TypingTypeVar, TypingFinal
+from pyccel.ast.typingext  import TypingTypeVar, TypingFinal, TypingAnnotation
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 from pyccel.ast.variable   import DottedName, Variable, IndexedElement
@@ -228,9 +228,13 @@ class PythonCodePrinter(CodePrinter):
                 return self._get_type_annotation(obj.var)
         elif isinstance(obj, (Variable, IndexedElement)):
             type_annotation = self._print(obj.class_type)
-            if obj.is_const and not isinstance(obj.class_type, FixedSizeNumericType):
-                self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
-                type_annotation = f'Final[{type_annotation}]'
+            if isinstance(obj, Variable):
+                if obj.is_alias:
+                    self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
+                    type_annotation = f'Annotated[{type_annotation}, "alias"]'
+                elif obj.on_stack and obj.rank:
+                    self.add_import(Import('typing', [AsName(TypingAnnotation, 'Annotated')]))
+                    type_annotation = f'Annotated[{type_annotation}, "stack"]'
             return f"'{type_annotation}'"
         elif isinstance(obj, FunctionAddress):
             args = ', '.join(self._get_type_annotation(a).strip("'") for a in obj.arguments)
@@ -286,8 +290,9 @@ class PythonCodePrinter(CodePrinter):
             res = f' -> {self._get_type_annotation(result.var)}'
         else:
             res = ' -> None'
+        dec = self._handle_decorators(func.decorators)
         self.exit_scope()
-        return ''.join((wrapping, overload, f"def {name}({args}){res}:\n",
+        return ''.join((dec, wrapping, overload, f"def {name}({args}){res}:\n",
                         self._indent_codestring(body)))
 
     def _handle_decorators(self, decorators):
@@ -512,11 +517,12 @@ class PythonCodePrinter(CodePrinter):
         return '{base}[{indices}]'.format(base=base, indices=indices)
 
     def _print_Interface(self, expr):
+        if expr.is_inline:
+            return self._print(expr.functions[0])
+
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
-            if not isinstance(func, FunctionAddress):
-                func.rename(expr.name)
             func_def_code.append(self._print(func))
 
         # Find all the arguments which lead to the same code snippet.
@@ -579,10 +585,7 @@ class PythonCodePrinter(CodePrinter):
             return code
 
         interface = expr.get_direct_user_nodes(lambda x: isinstance(x, Interface))
-        if self._in_header and interface:
-            name = self._print(expr.scope.get_python_name(expr.name))
-        else:
-            name = self._print(expr.name)
+        name = self._print(expr.scope.get_python_name(expr.name))
 
         self.set_scope(expr.scope)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -701,10 +704,15 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_AsName(self, expr):
         target = self._print(expr.local_alias)
-        if isinstance(expr.object, VariableTypeAnnotation):
+        renamed_object = expr.object
+        if isinstance(renamed_object, VariableTypeAnnotation):
             return target
 
         name = self._print(expr.name)
+        if isinstance(renamed_object, (FunctionDef, ClassDef)):
+            if renamed_object.scope and not getattr(renamed_object, 'is_inline', False):
+                name = self._print(renamed_object.scope.get_python_name(expr.name))
+
         if name == target:
             return name
         else:
@@ -886,10 +894,19 @@ class PythonCodePrinter(CodePrinter):
         func = expr.funcdef
         if func in self._ignore_funcs:
             return ''
-        if expr.interface:
-            func_name = expr.interface_name
+
+        if func.is_imported:
+            func_name = self.scope.get_import_alias(func, 'functions')
+        elif expr.interface and expr.interface.is_imported:
+            func_name = self.scope.get_import_alias(expr.interface, 'functions')
         else:
-            func_name = expr.func_name
+            func_name = func.scope.get_python_name(func.name)
+
+        # No need to print module init/del functions in Python
+        if func.scope.get_python_name(func.name) in ('__init__', '__del__') and \
+                func.is_imported and len(func.arguments) == 0:
+            return ''
+
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             func_name = f'{self._print(args[0])}.{func_name}'
@@ -915,7 +932,9 @@ class PythonCodePrinter(CodePrinter):
 
         source = import_source_swap.get(source, source)
 
-        target = [t for t in expr.target if not isinstance(t.object, Module)]
+        target = [t for t in expr.target if not (isinstance(t.object, Module) or
+                  (isinstance(t.object, FunctionDef) and t.object.scope and
+                   t.object.scope.get_python_name(t.object.name) in ('__init__', '__del__')))]
         mod_target = [t for t in expr.target if isinstance(t.object, Module)]
 
         prefix = ''
@@ -1401,8 +1420,18 @@ class PythonCodePrinter(CodePrinter):
 
         type_var_declarations = self._get_type_var_declarations()
 
+        # Insert existing imports so new imports don't cause duplicates
+        for i in expr.imports:
+            self.add_import(i)
+            source = i.source
+            if source in pyccel_builtin_import_registry:
+                self._aliases.update((pyccel_builtin_import_registry[source][t.name].cls_name, t.local_alias) \
+                                        for t in i.target if not isinstance(t.object, (Module, VariableTypeAnnotation)) and \
+                                                           t.name != t.local_alias)
+
+        imports = ''.join(self._print(i) for i in expr.imports)
+
         # Print interface functions (one function with multiple decorators describes the problem)
-        imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) \
@@ -1425,7 +1454,7 @@ class PythonCodePrinter(CodePrinter):
         if free_func:
             self._ignore_funcs.append(free_func)
 
-        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+        imports = ''.join(self._print(i) for i in self._additional_imports.values())
 
         body = '\n'.join((type_var_declarations, interfaces, funcs, classes, init_body))
 
@@ -1451,12 +1480,15 @@ class PythonCodePrinter(CodePrinter):
         self.set_scope(mod.scope)
         type_var_declarations = self._get_type_var_declarations()
 
+        # Insert existing imports so new imports don't cause duplicates
+        for i in mod.imports:
+            self.add_import(i)
         init_func = mod.init_func
         var_decl = ''.join(f"{mod.scope.get_python_name(v.name)} : {self._get_type_annotation(v)}\n"
                             for v in variables if not v.is_temp)
-        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs \
-                if f not in (mod.init_func, mod.free_func))
-        funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces for f in i.functions)
+        funcs = ''.join(f'{self._function_signature(f)}\n' for f in mod.funcs)
+        funcs += ''.join(f'{self._function_signature(f)}\n' for i in mod.interfaces if not i.is_inline for f in i.functions)
+        funcs += ''.join(f'{self._function_signature(i.functions[0])}\n' for i in mod.interfaces if i.is_inline)
         classes = ''
         for classDef in mod.classes:
             ll_name = classDef.name
@@ -1473,23 +1505,13 @@ class PythonCodePrinter(CodePrinter):
 
             classes += self._indent_codestring(class_body)
 
-        imports  = ''.join(self._print(i) for i in mod.imports)
-        imports += ''.join(self._print(i) for i in self._additional_imports.values())
+        imports = ''.join(self._print(i) for i in self._additional_imports.values())
 
         self.exit_scope()
 
         self._in_header = False
 
-        if init_func:
-            # Collect initialisation body
-            init_if = init_func.get_attribute_nodes(IfSection)[0]
-            # Remove boolean from init_body
-            init_body = init_if.body.body[:-1]
-            init_body = ''.join(self._print(l) for l in init_body)
-        else:
-            init_body = ''
-
-        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs, init_body)
+        return '\n'.join(section for section in (imports, type_var_declarations, var_decl, classes, funcs)
                          if section)
 
     def _print_AllDeclaration(self, expr):
@@ -1611,7 +1633,9 @@ class PythonCodePrinter(CodePrinter):
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        name = self.scope.get_python_name(expr.name)
+        superclasses = ', '.join(self._print(arg) for arg in  expr.superclasses)
+        classDefName = f'class {name}({superclasses}):'
         docstring = self._indent_codestring(self._print(expr.docstring)) if expr.docstring else ''
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
@@ -1622,7 +1646,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         cls_variable = expr.cls_variable
-        cls_name = cls_variable.cls_base.name
+        try:
+            cls_name = self.scope.get_import_alias(cls_variable.class_type, 'cls_constructs')
+        except RuntimeError:
+            cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
         if expr.get_direct_user_nodes(lambda u: isinstance(u, CodeBlock)):
             return f"{cls_variable} = {cls_name}({args})\n"
@@ -1671,14 +1698,10 @@ class PythonCodePrinter(CodePrinter):
         return f"({results})({args})"
 
     def _print_VariableTypeAnnotation(self, expr):
-        dtype = self._print(expr.class_type)
-        if expr.is_const:
-            self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
-            dtype = f'Final[{dtype}]'
-        return dtype
+        return self._print(expr.class_type)
 
-    def _print_TypingFinal(self, expr):
-        annotation = self._print(expr.arg)
+    def _print_FinalType(self, expr):
+        annotation = self._print(expr.underlying_type)
         self.add_import(Import('typing', [AsName(TypingFinal, 'Final')]))
         return f'Final[{annotation}]'
 
@@ -1722,8 +1745,11 @@ class PythonCodePrinter(CodePrinter):
         return 'str'
 
     def _print_CustomDataType(self, expr):
-        # TODO: Check if CustomDataType is imported from another file
-        return expr.name
+        try:
+            name = self.scope.get_import_alias(expr, 'cls_constructs')
+        except RuntimeError:
+            name = expr.name
+        return name
 
     def _print_NumpyNumericType(self, expr):
         name = str(expr).removeprefix('numpy.')

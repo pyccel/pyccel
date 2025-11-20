@@ -10,6 +10,7 @@ import math
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from pyccel.ast.internals import PyccelFunction
+from pyccel.ast.literals  import Literal, LiteralInteger
 from pyccel.ast.variable  import Constant
 
 __all__ = (
@@ -787,6 +788,13 @@ class MathCeil(MathFunctionInt):
     """
     __slots__ = ()
     name = 'ceil'
+
+    def __new__(cls, x):
+        if isinstance(x, Literal):
+            return LiteralInteger(math.ceil(x.python_value), dtype = cls._class_type)
+        else:
+            return super().__new__(cls)
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -804,6 +812,13 @@ class MathFloor(MathFunctionInt):
     """
     __slots__ = ()
     name = 'floor'
+
+    def __new__(cls, x):
+        if isinstance(x, Literal):
+            return LiteralInteger(math.floor(x.python_value), dtype = cls._class_type)
+        else:
+            return super().__new__(cls)
+
     def __init__(self, x):
         super().__init__(x)
 

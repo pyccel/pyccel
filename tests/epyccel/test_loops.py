@@ -113,15 +113,6 @@ def test_product_loop(language):
     f2( y, 4, 11 )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_map_on_1d_array(language):
 
     f1 = loops.map_on_1d_array
@@ -254,18 +245,15 @@ def test_for_expression(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="lists of lists not yet implemented in Fortran. See #2210"),
+            pytest.mark.skip(reason="lists of lists not yet implemented in Fortran. Types defined in other modules"),
             pytest.mark.fortran]
         ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="lists of lists not yet implemented in C. See #2210"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_for_lists_of_lists(language):
     f1 = loops.for_lists_of_lists
-    f2 = epyccel( f1, language = language )
+    f2 = epyccel( f1, language = language, flags='-Werror' )
 
     assert f1() == f2()

@@ -18,6 +18,8 @@ from .core import FunctionDefArgument, FunctionDefResult
 from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import VoidType, GenericType, StringType, PyccelType
 
+from .literals import LiteralString
+
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
@@ -43,15 +45,12 @@ class VariableTypeAnnotation(PyccelAstNode):
     ----------
     class_type : PyccelType
         The requested Python type of the variable.
-
-    is_const : bool, default=False
-        True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_is_const')
+    __slots__ = ('_class_type',)
     _attribute_nodes = ()
-    def __init__(self, class_type : PyccelType, is_const : bool = False):
+
+    def __init__(self, class_type : PyccelType):
         self._class_type = class_type
-        self._is_const = is_const
 
         super().__init__()
 
@@ -75,22 +74,6 @@ class VariableTypeAnnotation(PyccelAstNode):
         this is equal to 0.
         """
         return self.class_type.rank
-
-    @property
-    def is_const(self):
-        """
-        Indicates whether the object will remain constant.
-
-        Returns a boolean which is false if the value of the object can be
-        modified, and true otherwise.
-        """
-        return self._is_const
-
-    @is_const.setter
-    def is_const(self, val):
-        if not isinstance(val, bool):
-            raise TypeError("Is const value should be a boolean")
-        self._is_const = val
 
     def __hash__(self):
         return hash(self.class_type)
@@ -259,7 +242,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : str | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName | LiteralString
         The dtype named in the type annotation.
 
     order : str | None
@@ -275,7 +258,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
             return super().__new__(cls)
 
     def __init__(self, dtype, order = None):
-        if not isinstance(dtype, (str, DottedName, IndexedElement)):
+        if not isinstance(dtype, (str, DottedName, IndexedElement, LiteralString)):
             raise ValueError(f"Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")

@@ -434,7 +434,7 @@ class CmathPolar(PyccelFunction):
     __slots__ = ()
     name = 'polar'
     _shape = (LiteralInteger(2),)
-    _class_type = HomogeneousTupleType(PythonNativeFloat())
+    _class_type = HomogeneousTupleType.get_new(PythonNativeFloat())
 
     def __init__(self, z):
         super().__init__(z)

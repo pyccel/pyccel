@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #221 : Add new `pyccel-make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
@@ -18,8 +19,12 @@ All notable changes to this project will be documented in this file.
 -   Add translation support for variadic arguments (`*args`). The interface with Python is not currently handled.
 -   #2382 : Allow functions to be called from a function being translated via `epyccel`.
 -   #2422 : Add a `pyccel-wrap` command to interface between Python and low-level code.
--   \[INTERNALS\] Added a `Wrappergen` class to group all wrapper generation logic.
--   \[INTERNALS\] Added the `pyccel.codegen.compiling.library_config` module to handle library installation.
+-   #601 : Add C support for nested functions.
+-   #2497 : Add support for LAPACK's `zgbtrf` and `zgbtrs` in `pyccel.stdlib.internals`.
+-   #2497 : Add support for passing 1D arguments as `b` argument to LAPACK's `sgbtrs`, `dgbtrs`, and `zgbtrs` in `pyccel.stdlib.internals`.
+-   Add badge for Documentation workflow to `README.md`.
+-   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
+-   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
 ### Fixed
 
@@ -47,6 +52,16 @@ All notable changes to this project will be documented in this file.
 -   #2458 : Fix incoherent import printing in Python and `.pyi` files.
 -   #2460 : Fix missing error when overwriting a constant (e.g. `np.pi`).
 -   #2462 : Fix erroneous additional import in stub file.
+-   #2479 : Fix missing `@property` decorator in stub files.
+-   #2479 : Fix Fortran wrapping of methods with `@property` decorator returning inhomogeneous tuples.
+-   #2443 : Fix passing non-contiguous slices of arrays.
+-   #2436 : Fix list comprehension with variable slice containing negative indices as an iterable.
+-   #2496 : Fix renaming classes when importing.
+-   #2500 : Fix bad chaining of `stdlib` imports.
+-   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
+-   #2506 : Fix returning non-trivial heap class properties.
+-   #2291 : Fix duplicate imports in Python and stub files.
+-   #2510 : Fix missing initialisation of container aliases in C.
 -   Rename `main` function when translating to C.
 
 ### Changed
@@ -59,11 +74,18 @@ All notable changes to this project will be documented in this file.
 -   #2450 : Use `type(ClassName)` rather than `class(ClassName)` whenever possible for improved performance.
 -   #2451 : Use MinGW Makefiles to install gFTL on Windows when using a MinGW Fortran compiler.
 -   #2465 : Change default name of `__init__` functions in Fortran translations.
+-   #2405 : Change generated names in C to include the module in the name for multi-file collision handling.
+-   #2488 : Use MPI wrapper executables to compile MPI code on Windows.
+-   #2494 : Avoid creating unnecessary pointers when inlining functions.
+-   #2504 : Expose annotated `@inline` functions in the generated Python shared library.
+-   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
 -   \[INTERNALS\] Interface functions are no longer stored in `Module.functions`.
 -   \[INTERNALS\] Scope dictionaries cannot be modified directly from outside the scope.
 -   \[INTERNALS\] Rename `BasicParser.is_header_file` -> `BasicParser.is_stub_file`.
+-   \[INTERNALS\] Stop using `os.chdir` during Pyccel execution (absolute paths guarantee identical behaviour).
+-   \[INTERNALS\] Use inheritance to handle parametrised types. Identity operators should no longer be used for type checking.
 
 ### Deprecated
 
@@ -71,6 +93,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
+-   #2474 : Drop support for Python 3.9, test with Python 3.14.
 -   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 -   \[INTERNALS\] Remove undocumented and untested `stdlib.parallel` folder.

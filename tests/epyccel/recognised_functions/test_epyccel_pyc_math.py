@@ -39,8 +39,6 @@ def test_call_factorial(language):
 
 # -----------------------------------------------------------------------------
 
-# New in version 3.9.
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
 def test_call_lcm(language):
     def call_lcm(x : int, y : int):
         from math import lcm

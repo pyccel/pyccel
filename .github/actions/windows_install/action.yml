@@ -14,107 +14,23 @@ runs:
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
-    - name: Add DLL paths
-      run: |
-        # Add DLL paths for program execution
-        $EXE=(Get-Command gcc).Path
-        echo $EXE
-        $BIN_DIR=(Split-Path -Parent ${EXE}) # Find folder containing c compiler
-        $MINGW_DIR=(Split-Path -Parent ${BIN_DIR}) # Find the enclosing mingw directory
-        echo "MINGW_DIR=${MINGW_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-        # Add DLL paths for python imports
-        $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
-        $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
-        echo "import os; os.add_dll_directory(r'$MINGW_DIR/lib'); os.add_dll_directory(r'$BIN_DIR')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
-      shell: powershell
-    - name: Restore cached Lapack
-      id: cache-lapack-restore
-      uses: actions/cache/restore@v3
+    - name: Use MSys2 to install dependencies
+      uses: msys2/setup-msys2@v2
       with:
-        path: |
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets.cmake
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets-release.cmake
-          C:/mingw64/lib/pkgconfig/lapack.pc
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
-          C:/mingw64/lib/pkgconfig/blas.pc
-          C:/mingw64/lib/libblas.dll.a
-          C:/mingw64/bin/libblas.dll
-          C:/mingw64/lib/liblapack.dll.a
-          C:/mingw64/bin/liblapack.dll
-        key: ${{ runner.os }}-gcc-lapack-v3.12.1
-        restore-keys: |
-          ${{ runner.os }}-gcc-lapack-
-    - name: Install Lapack
-      if: steps.cache-lapack-restore.outputs.cache-hit != 'true'
+        msystem: MINGW64
+        update: true
+        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
+    - name: Update PATH
       run: |
-        # Download and build BLAS and LAPACK from https://github.com/Reference-LAPACK/lapack
-        curl https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.1.tar.gz -o v3.12.1.tar.gz
-        tar -xf v3.12.1.tar.gz
-        cd lapack-3.12.1
-        $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
-        $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
-        cmake  -G "MinGW Makefiles" -D CMAKE_INSTALL_PREFIX="${Env:MINGW_DIR}" -D CMAKE_C_COMPILER="$GCC_EXE" -D CMAKE_Fortran_COMPILER="$GFORTRAN_EXE" -D BUILD_SHARED_LIBS=ON -B build -S .
-        cmake --build build -j 4 --target install
-        ls ${Env:MINGW_DIR}/lib
-        echo "BLAS/LAPACK installed"
-      shell: powershell
-    - name: Save Lapack Cache
-      id: cache-lapack-save
-      uses: actions/cache/save@v3
-      with:
-        path: |
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets.cmake
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-targets-release.cmake
-          C:/mingw64/lib/pkgconfig/lapack.pc
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config.cmake
-          C:/mingw64/lib/cmake/lapack-3.12.0/lapack-config-version.cmake
-          C:/mingw64/lib/pkgconfig/blas.pc
-          C:/mingw64/lib/libblas.dll.a
-          C:/mingw64/bin/libblas.dll
-          C:/mingw64/lib/liblapack.dll.a
-          C:/mingw64/bin/liblapack.dll
-        key: ${{ steps.cache-lapack-restore.outputs.cache-primary-key }}
-    - name: Install MS MPI runtime and SDK
-      run: |
-        #
-        # Download MS MPI runtime and SDK
-        curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
-        curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
-        #
-        # Install MS MPI
-        Start-Process msmpisetup.exe -Wait -ArgumentList '-unattend -verbose'
-        Start-Process msiexec -Wait -ArgumentList '/quiet /i msmpisdk.msi'
-        echo "MS MPI runtime and SDK installed"
-      shell: powershell
-    - name: Setup MPI
-      run: |
-        #refreshenv
-        $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
-        $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
-        echo "C:\\Program Files\\Microsoft MPI\\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "MSMPI_INC=${MSMPI_INC}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "MSMPI_LIB64=${MSMPI_LIB64}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-        # Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
-        # Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
-        #
-        # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
-        pushd "$MSMPI_INC"
-        sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
-        sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
-        gfortran -c -D_WIN64 -D INT_PTR_KIND`(`)=8 -fno-range-check -fallow-invalid-boz  mpi.f90
-        popd
-        #
-        # Generate static libmsmpi.a from msmpi.dll
-        pushd "$MSMPI_LIB64"
-        cp ${env:SYSTEMROOT}\\SysWOW64\\msmpi.dll .
-        gendef msmpi.dll
-        dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
-        popd
-        echo "MS MPI set up for use"
-      shell: powershell
+        echo $PATH
+        GITHUB_PATH_COMPATIBLE=$(cygpath -m $GITHUB_PATH)
+        echo "$PATH" | tr ':' '\n' | tac | while read p; do
+          winpath=$(cygpath -w "$p")
+          echo "PATH: $winpath"
+          echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
+        done
+        echo "MSYSTEM=MSYS" >> $GITHUB_ENV
+      shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
@@ -124,3 +40,13 @@ runs:
         echo "CC=$GCC_EXE"
         echo "FC=$GFORTRAN_EXE"
       shell: powershell
+    - name: Allow Python to find trusted DLLs
+      run: |
+        SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+        echo $SITE_DIR
+        echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_DIR/dll_path.pth
+      shell: bash
+    - name: Complete Microsoft MPI installation
+      uses: mpi4py/setup-mpi@v1
+      with:
+        mpi: msmpi

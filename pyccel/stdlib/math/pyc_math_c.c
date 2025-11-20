@@ -53,12 +53,7 @@ double fsign(double x)
     return (double)((x > 0) - (x < 0));
 }
 
-/* numpy.sign for complex for NumPy v1 */
-double complex csgn(double complex x)
-{
-    return x ? ((!creal(x) && cimag(x) < 0) || (creal(x) < 0) ? -1 : 1) : 0;
-}
-
+/* numpy.sign for complex */
 double complex csign(double complex x)
 {
     double absolute = cabs(x);

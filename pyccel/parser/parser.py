@@ -7,14 +7,17 @@
 """
 Module containing the Parser object
 """
-
 from pathlib import Path
 
+from pyccel.errors.errors    import Errors
+from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.ast.utilities import recognised_source
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
+
+errors = Errors()
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
@@ -231,8 +234,11 @@ class Parser:
                                 verbose = verbose)
         self._semantic_parser = parser
         parser.metavars.setdefault('printer_imports', '')
-        parser.metavars['printer_imports'] += ', '.join(p.metavars['printer_imports'] for p in self.sons)
-        parser.metavars['printer_imports'] = parser.metavars['printer_imports'].strip(', ')
+        # Get all possible printer imports. Use a dict for reproducible ordering
+        printer_imports = {p.metavars['printer_imports']: None for p in self.sons}
+        printer_imports[parser.metavars['printer_imports']] = None
+        printer_imports.pop('', None)
+        parser.metavars['printer_imports'] = ', '.join(printer_imports)
 
         # Return the new semantic parser (maybe used by codegen)
         return parser
@@ -273,9 +279,28 @@ class Parser:
         dict
             The updated dictionary of parsed sons.
         """
+        to_parse = list(d_parsers_by_filename.keys())
+        for p in to_parse:
+            d_parsers_by_filename[p].parse(verbose=verbose, d_parsers_by_filename = d_parsers_by_filename)
 
         imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
         source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
+
+        if (None, None) in source_to_filename.values():
+            unfound_modules = ', '.join(str(getattr(i, 'name', i)) for i, f in source_to_filename.items() if f == (None, None))
+            errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=unfound_modules,
+                          filename = self._filename, severity='fatal')
+
+        for imp, (filename_py, stashed_file) in source_to_filename.items():
+            if filename_py in d_parsers_by_filename:
+                source_to_filename[imp] = (filename_py, filename_py)
+                continue
+            if not stashed_file.exists():
+                errors.report("Imported files must be pyccelised before they can be used.",
+                        symbol=imp, severity='fatal')
+            if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
+                errors.report(f"File {filename_py} has been modified since Pyccel was last run on this file.",
+                        symbol=imp, severity='fatal')
         treated     = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:
