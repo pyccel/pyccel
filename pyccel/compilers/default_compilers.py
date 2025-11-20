@@ -136,14 +136,17 @@ flang_info = {
 
 
 if sys.platform == "darwin":
-    p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
-    HOMEBREW_PREFIX = p.stdout.decode().strip()
-    OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
+    p = subprocess.run([shutil.which('gcc'), '--version'], check=False, capture_output=True,
+                       text=True)
+    if p.returncode == 0 and 'Apple clang' in p.stdout:
+        p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
+        HOMEBREW_PREFIX = p.stdout.decode().strip()
+        OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
 
-    gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
-    gcc_info['openmp']['libs']     = ('omp',)
-    gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
-    gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
+        gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
+        gcc_info['openmp']['libs']     = ('omp',)
+        gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
+        gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
