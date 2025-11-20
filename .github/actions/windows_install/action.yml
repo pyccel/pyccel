@@ -21,25 +21,6 @@ runs:
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
         path-type: inherit
-    - name: Update PATH
-      run: |
-        echo $PATH
-        #GITHUB_PATH_COMPATIBLE=$(cygpath -m $GITHUB_PATH)
-        #echo "$PATH" | tr ':' '\n' | tac | while read p; do
-        #  winpath=$(cygpath -w "$p")
-        #  echo "PATH: $winpath"
-        #  echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
-        #done
-        #echo "MSYSTEM=MSYS" >> $GITHUB_ENV
-      shell: msys2 {0}
-    - name: Update PATH
-      run: |
-        echo $PATH
-      shell: bash
-    - name: Update PATH
-      run: |
-        echo $env:PATH
-      shell: powershell
     - name: Add CC and FC to environment
       run: |
         $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
