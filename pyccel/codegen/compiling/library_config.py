@@ -403,6 +403,7 @@ class STCInstaller(ExternalLibInstaller):
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
         existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        print("EXISTING : ", existing_installation)
         if existing_installation:
             installed_libs['stc'] = existing_installation
             return existing_installation
@@ -418,6 +419,8 @@ class STCInstaller(ExternalLibInstaller):
                 print("OLD")
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)
+
+            print(build_dir, build_dir.exists())
 
             # If the build dir already exists then we have already compiled these files
             if not build_dir.exists():
