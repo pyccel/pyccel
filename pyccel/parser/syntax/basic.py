@@ -21,9 +21,14 @@ class BasicStmt:
     4) Every extension must implement the update function. This function is
     called to prepare for the applied property (for example the expr
     property.).
+
+    Parameters
+    ----------
+    **kwargs
+        Additional unnecessary arguments provided by textx.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Constructor for the base class.
         """
