@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
+from typing import TypeVar
 import pytest
 import numpy as np
 
@@ -96,3 +97,23 @@ def test_changed_precision_arguments(language):
 
     assert mod.get_f() == modnew.get_f()
     assert mod.get_g() == modnew.get_g()
+
+#------------------------------------------------------------------------------
+def test_default_interface_value(language):
+    T = TypeVar('T', float, complex)
+
+    def max_abs(a : T, b : T = 3.0) -> float:
+        if b is None:
+            return abs(a)
+        else:
+            return max(abs(a), abs(b))
+
+    f = epyccel(max_abs, language = language)
+
+    # ...
+    assert f(2.9) == max_abs(2.9)
+    assert f(2.9, 2.3) == max_abs(2.9, 2.3)
+    # ...
+    assert f(2.9+3j) == max_abs(2.9+3j)
+    assert f(2.9+3j, 2.3+4j) == max_abs(2.9+3j, 2.3+4j)
+    # ...
