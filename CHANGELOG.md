@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #221 : Add new `pyccel-make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
@@ -61,6 +62,8 @@ All notable changes to this project will be documented in this file.
 -   #2506 : Fix returning non-trivial heap class properties.
 -   #2291 : Fix duplicate imports in Python and stub files.
 -   #2510 : Fix missing initialisation of container aliases in C.
+-   #2483 : Fix calls to `math.sqrt` using dotted syntax.
+-   #2483 : Fix calls to `cmath.sqrt` using dotted syntax.
 -   Rename `main` function when translating to C.
 
 ### Changed
@@ -77,6 +80,7 @@ All notable changes to this project will be documented in this file.
 -   #2488 : Use MPI wrapper executables to compile MPI code on Windows.
 -   #2494 : Avoid creating unnecessary pointers when inlining functions.
 -   #2504 : Expose annotated `@inline` functions in the generated Python shared library.
+-   #2508 : Place if ternary expressions in parentheses.
 -   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.
