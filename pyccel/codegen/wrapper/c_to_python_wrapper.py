@@ -1086,6 +1086,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [del_function(c_obj),
                     Deallocate(c_obj)]
+        body.append(AliasAssign(c_obj, Nil()))
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
@@ -1292,7 +1293,7 @@ class CToPythonWrapper(Wrapper):
 
         # Wrap functions
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        funcs_to_wrap = [f for f in funcs_to_wrap if not f.is_inline]
+        funcs_to_wrap = [f for f in funcs_to_wrap if f.is_semantic and not f.is_private]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, 'removed_functions', None)
@@ -1302,7 +1303,7 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
 
         # Wrap interfaces
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         module_def_name = self.scope.get_new_name('module')
         init_func = self._build_module_init_function(expr, imports, module_def_name)
@@ -1836,8 +1837,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=None, status='unallocated'),
-                    AliasAssign(new_res_val, attrib),
+            body = [AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
@@ -1964,12 +1964,8 @@ class CToPythonWrapper(Wrapper):
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
-        if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
-
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
-
             res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
@@ -2067,7 +2063,7 @@ class CToPythonWrapper(Wrapper):
         orig_scope = expr.scope
 
         for f in expr.methods:
-            if f.is_inline:
+            if not f.is_semantic:
                 continue
             orig_f = getattr(f, 'original_function', f)
             name = orig_f.name
@@ -2679,7 +2675,7 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
-                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C. " +
                               "Any changes to the list will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:

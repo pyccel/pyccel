@@ -569,6 +569,11 @@ def multiple_stack_array_2():
         s = s + b[i] - a[i] / c[i]
     return s
 
+@stack_array('a')
+def return_stack_array():
+    a = np.zeros(10)
+    return a
+
 #==============================================================================
 # 2D STACK ARRAYS OF REAL
 #==============================================================================
@@ -869,6 +874,10 @@ def array_1d_slice_12(a : 'int[:]'):
     c = -15
     d = -5
     b = a[c:d]
+    return np.sum(b), b[0], b[-1], len(b)
+
+def array_1d_slice_13(a : 'int[:]'):
+    b = a[-5:]
     return np.sum(b), b[0], b[-1], len(b)
 
 #==============================================================================

@@ -147,8 +147,7 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        # We only wrap the non inlined functions
-        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_inline]
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_private]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
@@ -161,7 +160,7 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
+        interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
@@ -205,7 +204,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private or expr.is_inline:
+        if expr.is_private or not expr.is_semantic:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
@@ -700,7 +699,7 @@ class FortranToCWrapper(Wrapper):
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
@@ -822,7 +821,7 @@ class FortranToCWrapper(Wrapper):
                             scope.get_new_name('bound_'+name),
                             memory_handling='alias')
 
-        if isinstance(orig_var, DottedVariable):
+        if isinstance(orig_var, DottedVariable) or orig_var.is_alias:
             ptr_var = orig_var
             body = [CLocFunc(ptr_var, bind_var)]
         else:
@@ -842,9 +841,11 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
 
+        shape = orig_var.shape if memory_handling == 'stack' else None
+
         # Allocatable is not returned so it must appear in local scope
         local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling, shape = None)
+                            memory_handling = memory_handling, shape = shape)
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):

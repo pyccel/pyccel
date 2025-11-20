@@ -113,6 +113,8 @@ destructor's
 Valgrind
 variadic
 subclasses
+superclass
+superclasses
 oneAPI
 getter
 setter
@@ -139,3 +141,4 @@ Makefile
 Makefiles
 parametrised
 parametrisable
+unannotated

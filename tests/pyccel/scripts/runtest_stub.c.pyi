@@ -1,5 +1,4 @@
 #$ header metavar printer_imports="stdlib, stdint, complex, stc/cspan, stdio, inttypes, stc/vec, stdbool, STC_Extensions/List_extensions"
-from typing import Final, TypeVar
 from typing import Final, TypeVar, overload
 from pyccel.decorators import low_level
 from numpy import float64

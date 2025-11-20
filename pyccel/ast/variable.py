@@ -671,7 +671,7 @@ class IndexedElement(TypedAstNode):
             else:
                 try:
                     if int(idx) < 0:
-                        return PyccelAdd(shape, idx, simplify=True)
+                        return PyccelAdd.make_simplified(shape, idx)
                 except TypeError:
                     pass
                 return idx
@@ -730,12 +730,13 @@ class IndexedElement(TypedAstNode):
                     if start == 0:
                         _shape = stop # Can't be done with simplify kwarg due to potential recursion
                     else:
-                        _shape = PyccelMinus(stop, start, simplify=True)
+                        _shape = PyccelMinus.make_simplified(stop, start)
                     if step is not None:
                         if negative_step:
                             _shape = MathFabs(_shape)
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                        _shape = MathCeil(PyccelDiv.make_simplified(_shape, step))
                     new_shape.append(_shape)
+
             if isinstance(base.class_type, HomogeneousTupleType):
                 new_shape.extend(shape[1:])
             new_rank = len(new_shape)
@@ -820,21 +821,21 @@ class IndexedElement(TypedAstNode):
                         if idx.step == 1 or idx.step is None:
                             incr = current_arg
                         else:
-                            incr = PyccelMul(idx.step, current_arg, simplify = True)
+                            incr = PyccelMul.make_simplified(idx.step, current_arg)
                         if idx.start != 0 and idx.start is not None:
-                            incr = PyccelAdd(idx.start, incr, simplify = True)
+                            incr = PyccelAdd.make_simplified(idx.start, incr)
                         elif idx.start is None:
                             try:
-                                negative_step_possible = negative_idxs_possible or int(idx.step) < 0
+                                negative_step = int(idx.step) < 0
                             except TypeError:
-                                negative_step_possible = False
-                            if negative_step_possible:
+                                negative_step = False
+                            # Only modify for known negative step, unknown is handled at printing
+                            if negative_step:
                                 if idx.stop is None:
-                                    incr = PyccelAdd(PyccelMinus(base.shape[i],
-                                                                 LiteralInteger(1), simplify=True),
-                                                     incr, simplify = True)
+                                    incr = PyccelAdd.make_simplified(PyccelMinus.make_simplified(base.shape[i],
+                                                                 LiteralInteger(1)), incr)
                                 else:
-                                    incr = PyccelAdd(idx.stop, incr, simplify = True)
+                                    incr = PyccelAdd.make_simplified(idx.stop, incr)
                     idx = incr
                     j += 1
                 new_indexes.append(idx)

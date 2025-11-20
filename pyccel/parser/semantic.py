@@ -119,7 +119,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
-from pyccel.ast.typingext import TypingFinal, TypingTypeVar
+from pyccel.ast.typingext import TypingFinal, TypingTypeVar, TypingAnnotation
 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -1387,9 +1387,9 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = func.is_inline if isinstance(func, FunctionDef) else False
+            is_inline = getattr(func, 'is_inline', False)
             if is_inline:
-                return self._visit_InlineFunctionDef(func, args, expr)
+                return self._visit_InlineFunctionCall(func, args, expr)
             elif not func.is_semantic:
                 func = self._annotate_the_called_function_def(func, args)
 
@@ -2369,6 +2369,36 @@ class SemanticParser(BasicParser):
         if isinstance(base, UnionTypeAnnotation):
             return UnionTypeAnnotation(*[self._get_indexed_type(t, args, expr) for t in base.type_list])
 
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingAnnotation:
+            annotation = self._visit(self._convert_syntactic_object_to_type_annotation(args[0]))
+            if any(isinstance(a.class_type, TypingAnnotation) for a in annotation.type_list):
+                errors.report("Nested Annotated[] type modifiers are not handled.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+            metavars = [self._visit(a.dtype) if isinstance(a, SyntacticTypeAnnotation) else self._visit(a)
+                        for a in args[1:]]
+            var_metadata = {}
+            if 'alias' in metavars:
+                var_metadata['memory_handling'] = 'alias'
+                metavars.remove('alias')
+            if 'stack' in metavars:
+                if 'memory_handling' in var_metadata:
+                    errors.report("An object cannot be both an alias for an object stored elsewhere and a stack allocated object.",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity = 'error')
+                var_metadata['memory_handling'] = 'stack'
+                metavars.remove('stack')
+            if metavars:
+                errors.report(f"Unrecognised annotations have been ignored ({metavars})",
+                              bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                              symbol = expr, severity='warning')
+            if var_metadata:
+                assert isinstance(annotation, UnionTypeAnnotation)
+                assert all(isinstance(t, VariableTypeAnnotation) for t in annotation.type_list)
+                return UnionTypeAnnotation(*[TypingAnnotation(d, **var_metadata) for d in annotation.type_list])
+            else:
+                return annotation
+
         if len(args) == 0:
             if not (isinstance(base, PyccelFunctionDef) and base.cls_name.static_type() is TupleType):
                 errors.report("Unrecognised type", severity='fatal', symbol=expr)
@@ -2620,6 +2650,8 @@ class SemanticParser(BasicParser):
             return convert_to_literal(env_var, dtype = original_type_to_pyccel_type[type(env_var)])
         elif env_var is typing.Final:
             return PyccelFunctionDef('Final', TypingFinal)
+        elif env_var is typing.Annotated:
+            return PyccelFunctionDef('Annotated', TypingAnnotation)
         elif isinstance(env_var, typing.GenericAlias):
             class_type = self.env_var_to_pyccel(typing.get_origin(env_var)).class_type.static_type()
             return VariableTypeAnnotation(class_type.get_new(*[self.env_var_to_pyccel(a).class_type for a in typing.get_args(env_var)]))
@@ -2805,12 +2837,13 @@ class SemanticParser(BasicParser):
         funcs_to_visit.extend(m for c in self.scope.classes.values() for m in c.methods)
 
         for f in funcs_to_visit:
-            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
+            if not f.is_semantic:
                 assert isinstance(f, FunctionDef)
                 self._visit(f)
 
-        for f in self.scope.functions.values():
-            assert f.is_semantic or f.is_inline
+        if not errors.has_errors():
+            assert all(f.is_semantic or f.is_inline
+                       for f in self.scope.functions.values())
 
         variables = self.get_variables(self.scope)
         init_func = None
@@ -3357,6 +3390,11 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 class_type = t.class_type
+                var_kwargs = kwargs.copy()
+                if isinstance(class_type, TypingAnnotation):
+                    var_kwargs.update(class_type.metadata)
+                    assert isinstance(class_type.arg, VariableTypeAnnotation)
+                    class_type = class_type.arg.class_type
                 cls_base = self.get_cls_base(class_type)
                 if isinstance(class_type, InhomogeneousTupleType):
                     shape = (len(class_type),)
@@ -3366,10 +3404,11 @@ class SemanticParser(BasicParser):
                     shape = (None,)*class_type.container_rank
                 else:
                     shape = None
+                if 'memory_handling' not in var_kwargs:
+                    var_kwargs['memory_handling'] = array_memory_handling if class_type.rank > 0 else 'stack'
                 v = var_class(class_type, name, cls_base = cls_base,
                         shape = shape, is_optional = False,
-                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
-                        **kwargs)
+                        **var_kwargs)
                 possible_args.append(v)
                 if isinstance(class_type, InhomogeneousTupleType):
                     for i, t in enumerate(class_type):
@@ -3423,8 +3462,18 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             dtype = visited_dtype.class_type
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
-        elif isinstance(visited_dtype, PyccelType):
+        elif isinstance(visited_dtype, (PyccelType, TypingAnnotation)):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
+        elif isinstance(visited_dtype, LiteralString):
+            pyccel_stage.set_stage('syntactic')
+            try:
+                syntactic_a = types_meta.model_from_str(visited_dtype.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid annotation. {e.message}",
+                        symbol = self.current_ast_node, severity='fatal')
+            annot = syntactic_a.expr
+            pyccel_stage.set_stage('semantic')
+            return self._visit(annot)
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
@@ -4859,6 +4908,20 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         python_name = expr.name
+        is_private         = expr.is_private
+        is_inline          = expr.is_inline
+
+        if is_inline and is_private:
+            return EmptyNode()
+
+        if any(a.annotation is None for a in expr.arguments):
+            msg = MISSING_TYPE_ANNOTATIONS
+            if is_inline:
+                msg += '\nThe @private decorator can also be used to avoid the requirement for type annotations on inline functions'
+            errors.report(msg,
+                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
+                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
+            return EmptyNode()
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
@@ -4882,7 +4945,8 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if 'low_level' in decorators or (self.is_stub_file and not python_name.startswith('__')):
+        if 'low_level' in decorators or (self.is_stub_file and
+                not python_name.startswith('__') and not expr.is_inline):
             if 'low_level' in decorators:
                 low_level_decs = decorators['low_level']
                 assert len(low_level_decs) == 1
@@ -4903,18 +4967,10 @@ class SemanticParser(BasicParser):
         docstring          = self._visit(expr.docstring) if expr.docstring else expr.docstring
         is_pure            = expr.is_pure
         is_elemental       = expr.is_elemental
-        is_private         = expr.is_private
-        is_inline          = expr.is_inline
 
         not_used = [d for d in decorators if d not in (*def_decorators.__all__, 'property', 'overload')]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
-
-        if any(a.annotation is None for a in expr.arguments):
-            errors.report(MISSING_TYPE_ANNOTATIONS,
-                    symbol=[a for a in expr.arguments if a.annotation is None], severity='error',
-                          bounding_box = (self.current_ast_node.lineno, self.current_ast_node.col_offset))
-            return EmptyNode()
 
         available_type_vars = {n:v for n,v in self._context_dict.items() if isinstance(v, typing.TypeVar)}
         available_type_vars.update(self.scope.collect_all_type_vars())
@@ -4961,6 +5017,7 @@ class SemanticParser(BasicParser):
         interface_name = expr.scope.get_expected_name(python_name)
         interface_counter = 0
         is_interface = len(argument_combinations) > 1 or 'overload' in decorators
+        assert not is_interface or interface_name in insertion_scope.local_used_symbols.values()
         for interface_idx, (arguments, type_var_idx) in enumerate(zip(argument_combinations, type_var_indices)):
             if is_interface and 'low_level' not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(python_name, interface_idx)
@@ -5108,8 +5165,9 @@ class SemanticParser(BasicParser):
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
                 global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) \
-                        if self.scope.find(self.scope.get_python_name(f.name), 'functions')]
+                        if self.scope.find(f.scope.get_python_name(f.name), 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
+                func_kwargs['syntactic_expr'] = expr
                 cls = InlineFunctionDef
             else:
                 cls = FunctionDef
@@ -5146,7 +5204,7 @@ class SemanticParser(BasicParser):
 
         return EmptyNode()
 
-    def _visit_InlineFunctionDef(self, expr, function_call_args, function_call):
+    def _visit_InlineFunctionCall(self, expr, function_call_args, function_call):
         """
         Visit an inline function definition to add the code to the calling scope.
 
@@ -5162,6 +5220,12 @@ class SemanticParser(BasicParser):
         function_call : FunctionCall
             The syntactic function call being expanded to a function definition.
         """
+        is_imported = expr.is_imported
+        if expr.pyccel_staging != 'syntactic':
+            if isinstance(expr, Interface):
+                expr = expr.functions[0].syntactic_expr
+            else:
+                expr = expr.syntactic_expr
         assign = function_call.get_direct_user_nodes(lambda a: isinstance(a, Assign) and not isinstance(a, AugAssign))
         self._current_function.append(expr)
         if assign:
@@ -5174,7 +5238,7 @@ class SemanticParser(BasicParser):
         pyccel_stage.set_stage('syntactic')
         imports = list(expr.imports)
         global_scope_import_targets = {}
-        if expr.is_imported:
+        if is_imported:
             mod_name = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))[0].name
             mod = self.d_parsers[mod_name].semantic_parser.ast
 
@@ -5869,7 +5933,11 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.sqrt` function.
         """
-        func = self.scope.find(func_call.funcdef, 'functions')
+        syntactic_func = func_call.funcdef
+        if isinstance(syntactic_func, PyccelFunctionDef):
+            func = syntactic_func
+        else:
+            func = self.scope.find(syntactic_func, 'functions', raise_if_missing=True)
         arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
@@ -5926,7 +5994,11 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.sqrt` function.
         """
-        func = self.scope.find(func_call.funcdef, 'functions')
+        syntactic_func = func_call.funcdef
+        if isinstance(syntactic_func, PyccelFunctionDef):
+            func = syntactic_func
+        else:
+            func = self.scope.find(syntactic_func, 'functions', raise_if_missing=True)
         arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
@@ -6439,12 +6511,12 @@ class SemanticParser(BasicParser):
         class_or_tuple = function_call_args[1].value
         if isinstance(class_or_tuple, PythonTuple):
             obj_arg = function_call_args[0]
-            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
-                                for class_type in class_or_tuple], simplify=True)
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+                                for class_type in class_or_tuple])
         elif isinstance(class_or_tuple, UnionTypeAnnotation):
             obj_arg = function_call_args[0]
-            return PyccelOr(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
-                                for var_annot in class_or_tuple.type_list], simplify=True)
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+                                for var_annot in class_or_tuple.type_list])
         else:
             if isinstance(class_or_tuple, (VariableTypeAnnotation, ClassDef)):
                 expected_type = class_or_tuple.class_type

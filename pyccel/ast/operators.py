@@ -158,6 +158,21 @@ class PyccelOperator(TypedAstNode):
     __slots__ = ('_args', )
     _attribute_nodes = ('_args',)
 
+    @classmethod
+    def make_simplified(cls, *args):
+        """
+        Call the class constructor after making any simplifications to the expression.
+
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        *args : TypedAstNode
+            The arguments passed to the operator.
+        """
+        return cls(*args)
+
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
@@ -392,7 +407,20 @@ class PyccelNot(PyccelUnaryOperator):
     _precedence = 6
     _class_type = PythonNativeBool()
 
-    def __new__(cls, arg):
+
+    @classmethod
+    def make_simplified(cls, arg):
+        """
+        Call the class constructor after making any simplifications to the expression.
+
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg : TypedAstNode
+            The argument passed to the operator.
+        """
         if isinstance(arg, PyccelEq):
             arg1, arg2 = arg.args
             return PyccelNe(arg1, arg2)
@@ -400,7 +428,7 @@ class PyccelNot(PyccelUnaryOperator):
             arg1, arg2 = arg.args
             return PyccelEq(arg1, arg2)
         else:
-            return super().__new__(cls)
+            return cls(arg)
 
     def _set_type(self):
         """
@@ -631,26 +659,47 @@ class PyccelAdd(PyccelArithmeticOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 12
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
-        if simplify:
-            if isinstance(arg2, PyccelUnarySub):
-                return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            class_type = cls._calculate_type(arg1, arg2)
-            if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                return convert_to_literal(arg1.python_value + arg2.python_value,
-                                          class_type)
-            if class_type == arg2.class_type and arg1 == 0:
-                return arg2
-            if class_type == arg1.class_type and arg2 == 0:
-                return arg1
+    @classmethod
+    def make_simplified(cls, arg1, arg2):
+        """
+        Call the class constructor after making any simplifications to the expression.
 
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
+        """
+        if isinstance(arg2, PyccelUnarySub):
+            return PyccelMinus.make_simplified(arg1, arg2.args[0])
+
+        class_type = cls._calculate_type(arg1, arg2)
+
+        if isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            return convert_to_literal(arg1.python_value + arg2.python_value,
+                                      class_type)
+        if class_type == arg2.class_type and arg1 == 0:
+            return arg2
+        if class_type == arg1.class_type and arg2 == 0:
+            return arg1
+
+        if isinstance(arg1, PyccelMinus) and arg1.args[1] == arg2 \
+                and arg1.args[0].class_type == class_type:
+            return arg1.args[0]
+        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelAdd(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
+
+        return cls(arg1, arg2)
+
+    def __new__(cls, arg1, arg2):
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -661,9 +710,6 @@ class PyccelAdd(PyccelArithmeticOperator):
             return LiteralComplex(arg2, arg1.imag)
         else:
             return super().__new__(cls)
-
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
 
     @classmethod
     def _calculate_type(cls, arg1, arg2):
@@ -717,34 +763,43 @@ class PyccelMul(PyccelArithmeticOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 13
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
-        if simplify:
-            if (arg1 == 1):
-                return arg2
-            if (arg2 == 1):
-                return arg1
-            if (arg1 == 0 or arg2 == 0):
-                dtype = cls._calculate_type(arg1, arg2)
-                return convert_to_literal(0, dtype)
-            if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
-                return PyccelUnarySub(arg2)
-            if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
-                return PyccelUnarySub(arg1)
-            if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype = cls._calculate_type(arg1, arg2)
-                return convert_to_literal(arg1.python_value * arg2.python_value,
-                                          dtype)
-        return super().__new__(cls)
+    @classmethod
+    def make_simplified(cls, arg1, arg2):
+        """
+        Call the class constructor after making any simplifications to the expression.
 
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
+        """
+        class_type = cls._calculate_type(arg1, arg2)
+
+        if arg1 == 1 and arg2.class_type == class_type:
+            return arg2
+        if arg2 == 1 and arg2.class_type == class_type:
+            return arg1
+        if (arg1 == 0 or arg2 == 0):
+            return convert_to_literal(0, class_type)
+        if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1) \
+                and arg2.class_type == class_type:
+            return PyccelUnarySub(arg2)
+        if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1) \
+                and arg1.class_type == class_type:
+            return PyccelUnarySub(arg1)
+        if isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            return convert_to_literal(arg1.python_value * arg2.python_value,
+                                      class_type)
+        return cls(arg1, arg2)
 
     def __repr__(self):
         return f'{repr(self.args[0])} * {repr(self.args[1])}'
@@ -769,23 +824,49 @@ class PyccelMinus(PyccelArithmeticOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 12
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
-        if simplify:
-            if isinstance(arg2, PyccelUnarySub):
-                return PyccelAdd(arg1, arg2.args[0], simplify = True)
-            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype = cls._calculate_type(arg1, arg2)
-                return convert_to_literal(arg1.python_value - arg2.python_value,
-                                          dtype)
-            if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2:
-                return arg1.args[0]
+    @classmethod
+    def make_simplified(cls, arg1, arg2):
+        """
+        Call the class constructor after making any simplifications to the expression.
+
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
+        """
+        if isinstance(arg2, PyccelUnarySub):
+            return PyccelAdd.make_simplified(arg1, arg2.args[0])
+        elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            dtype = cls._calculate_type(arg1, arg2)
+            return convert_to_literal(arg1.python_value - arg2.python_value,
+                                      dtype)
+
+        class_type = cls._calculate_type(arg1, arg2)
+
+        if class_type == arg2.class_type and arg1 == 0:
+            return PyccelUnarySub(arg2)
+        if class_type == arg1.class_type and arg2 == 0:
+            return arg1
+        if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2 \
+                and arg1.args[0].class_type == class_type:
+            return arg1.args[0]
+        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelAdd(arg1.args[0], PyccelMinus.make_simplified(arg1.args[1], arg2))
+        if isinstance(arg1, PyccelMinus) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
+            return PyccelMinus(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
+
+        return cls(arg1, arg2)
+
+    def __new__(cls, arg1 = None, arg2 = None):
         if isinstance(arg1, LiteralFloat) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -796,9 +877,6 @@ class PyccelMinus(PyccelArithmeticOperator):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
             return super().__new__(cls)
-
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
 
     def __repr__(self):
         return f'{repr(self.args[0])} - {repr(self.args[1])}'
@@ -823,21 +901,33 @@ class PyccelDiv(PyccelArithmeticOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 13
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify=False):
-        if simplify:
-            if (arg2 == 1):
-                return arg1
-        return super().__new__(cls)
+    @classmethod
+    def make_simplified(cls, arg1, arg2):
+        """
+        Call the class constructor after making any simplifications to the expression.
 
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
+        """
+        class_type = cls._calculate_type(arg1, arg2)
+        if arg2 == 1 and arg1.class_type == class_type:
+            return arg1
+        if isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            return convert_to_literal(arg1.python_value / arg2.python_value,
+                                      class_type)
+
+        return cls(arg1, arg2)
 
     @classmethod
     def _calculate_type(cls, arg1, arg2):
@@ -1005,21 +1095,15 @@ class PyccelEq(PyccelComparisonOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     op = "=="
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIs(arg1, arg2)
         else:
             return super().__new__(cls)
-
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
 
 class PyccelNe(PyccelComparisonOperator):
     """
@@ -1039,21 +1123,15 @@ class PyccelNe(PyccelComparisonOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     op = "!="
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
+    def __new__(cls, arg1 = None, arg2 = None):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIsNot(arg1, arg2)
         else:
             return super().__new__(cls)
-
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
 
 class PyccelLt(PyccelComparisonOperator):
     """
@@ -1117,24 +1195,33 @@ class PyccelGt(PyccelComparisonOperator):
         The first argument passed to the operator.
     arg2 : TypedAstNode
         The second argument passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     op = ">"
 
-    def __new__(cls, arg1 = None, arg2 = None, simplify = False):
+    @classmethod
+    def make_simplified(cls, arg1, arg2):
+        """
+        Call the class constructor after making any simplifications to the expression.
+
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
+        """
+
         if all(isinstance(a, Literal) or isinstance(a, PyccelUnarySub) and isinstance(a.args[0], Literal)
                 for a in (arg1, arg2)):
             arg1_val = arg1.python_value if isinstance(arg1, Literal) else -arg1.args[0].python_value
             arg2_val = arg2.python_value if isinstance(arg2, Literal) else -arg2.args[0].python_value
             return convert_to_literal(arg1_val > arg2_val)
         else:
-            return super().__new__(cls)
-
-    def __init__(self, arg1, arg2, simplify = False):
-        super().__init__(arg1, arg2)
+            return cls(arg1, arg2)
 
 class PyccelGe(PyccelComparisonOperator):
     """
@@ -1209,26 +1296,33 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Parameters
     ----------
-    *args : tuple of TypedAstNode
+    *args : TypedAstNode
         The arguments passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 5
 
-    def __new__(cls, *args, simplify = False):
-        if simplify:
-            if any(isinstance(a, LiteralFalse) for a in args):
-                return LiteralFalse()
-            if all(isinstance(a, LiteralTrue) for a in args):
-                return LiteralTrue()
-        return super().__new__(cls)
+    @classmethod
+    def make_simplified(cls, *args):
+        """
+        Call the class constructor after making any simplifications to the expression.
 
-    def __init__(self, *args, simplify = False):
-        if simplify:
-            args = tuple(a for a in args if not isinstance(a, LiteralTrue))
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        *args : TypedAstNode
+            The arguments passed to the operator.
+        """
+        if any(isinstance(a, LiteralFalse) for a in args):
+            return LiteralFalse()
+        if all(isinstance(a, LiteralTrue) for a in args):
+            return LiteralTrue()
+        args = tuple(a for a in args if not isinstance(a, LiteralTrue))
+        return cls(*args)
+
+    def __init__(self, *args):
         args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelAnd) else [a]))
         super().__init__(*args)
 
@@ -1259,24 +1353,31 @@ class PyccelOr(PyccelBooleanOperator):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
-    simplify : bool
-        True if the expression should be simplified to be as compact/readable as
-        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 4
 
-    def __new__(cls, *args, simplify = False):
-        if simplify:
-            if any(isinstance(a, LiteralTrue) for a in args):
-                return LiteralTrue()
-            elif all(isinstance(a, LiteralFalse) for a in args):
-                return LiteralFalse()
-        return super().__new__(cls)
+    @classmethod
+    def make_simplified(cls, *args):
+        """
+        Call the class constructor after making any simplifications to the expression.
 
-    def __init__(self, *args, simplify = False):
-        if simplify:
-            args = tuple(a for a in args if not isinstance(a, LiteralFalse))
+        Call the class constructor after making any simplifications to the expression.
+        This method should be overridden by sub-classes.
+
+        Parameters
+        ----------
+        *args : TypedAstNode
+            The arguments passed to the operator.
+        """
+        if any(isinstance(a, LiteralTrue) for a in args):
+            return LiteralTrue()
+        elif all(isinstance(a, LiteralFalse) for a in args):
+            return LiteralFalse()
+        args = tuple(a for a in args if not isinstance(a, LiteralFalse))
+        return cls(*args)
+
+    def __init__(self, *args):
         args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelOr) else [a]))
         super().__init__(*args)
 
@@ -1556,6 +1657,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         return self._args[2]
 
+    def __str__(self):
+        return f'(({self.value_true}) if ({self.cond}) else ({self.value_false})'
 
 
 #==============================================================================
