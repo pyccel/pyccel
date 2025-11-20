@@ -415,11 +415,13 @@ class STCInstaller(ExternalLibInstaller):
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
+                print("OLD")
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)
 
             # If the build dir already exists then we have already compiled these files
             if not build_dir.exists():
+                print("BUILDING")
                 buildtype = 'debug' if compiler.is_debug else 'release'
                 env = os.environ.copy()
                 env['CC'] = compiler.get_exec({}, "c")
