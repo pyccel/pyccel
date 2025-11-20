@@ -414,19 +414,13 @@ class STCInstaller(ExternalLibInstaller):
         assert meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
-        print(pyccel_dirpath / 'STC')
-        print(list((pyccel_dirpath / 'STC').glob('*')))
         with FileLock(install_dir.with_suffix('.lock')):
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
-                print("OLD")
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)
 
-            print(build_dir, build_dir.exists())
-
             # If the build dir already exists then we have already compiled these files
             if not build_dir.exists():
-                print("BUILDING")
                 buildtype = 'debug' if compiler.is_debug else 'release'
                 env = os.environ.copy()
                 env['CC'] = compiler.get_exec({}, "c")
@@ -434,14 +428,20 @@ class STCInstaller(ExternalLibInstaller):
                     print(">> Installing STC with meson")
                 p = subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
                                check = False, cwd = self._src_dir, env = env,
-                               capture_output = (verbose <= 1))
+                               capture_output = True)#(verbose <= 1))
                 print(p.stdout)
                 print(p.stderr)
                 assert p.returncode
-                subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                               capture_output = (verbose == 0))
-                subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                               capture_output = (verbose <= 1))
+                subprocess.run([meson, 'compile', '-C', build_dir], check = False, cwd = pyccel_dirpath,
+                               capture_output = True)#(verbose == 0))
+                print(p.stdout)
+                print(p.stderr)
+                assert p.returncode
+                subprocess.run([meson, 'install', '-C', build_dir], check = False, cwd = pyccel_dirpath,
+                               capture_output = True)#(verbose <= 1))
+                print(p.stdout)
+                print(p.stderr)
+                assert p.returncode
 
         print(install_dir)
         print(list(install_dir.glob('**/*.a')))
