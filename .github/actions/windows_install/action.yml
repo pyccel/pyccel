@@ -30,7 +30,6 @@ runs:
           echo "PATH: $winpath"
           echo "$winpath" >> "$GITHUB_PATH_COMPATIBLE"
         done
-        echo "MSYSTEM=MSYS" >> $GITHUB_ENV
       shell: msys2 {0}
     - name: Add CC and FC to environment
       run: |
