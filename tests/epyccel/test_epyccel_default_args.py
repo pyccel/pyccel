@@ -115,5 +115,5 @@ def test_default_interface_value(language):
     assert f(2.9, 2.3) == max_abs(2.9, 2.3)
     # ...
     assert f(2.9+3j) == max_abs(2.9+3j)
-    assert f(2.9+3j, 2.9+3j) == max_abs(2.9+3j, 2.9+3j)
+    assert f(2.9+3j, 2.3+4j) == max_abs(2.9+3j, 2.3+4j)
     # ...
