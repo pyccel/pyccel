@@ -1619,6 +1619,8 @@ class CCodePrinter(CodePrinter):
                         mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
                         elem_type = self.get_c_type(var.class_type.element_type)
                         init = f' = {mem_type}_make({elem_type}_init())'
+                    else:
+                        init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -2597,10 +2599,20 @@ class CCodePrinter(CodePrinter):
                 rhs = self._print(rhs_var)
                 return f'{lhs} = {rhs};\n'
         else:
-            lhs = self._print(lhs_address)
-            rhs = self._print(rhs_address)
+            managed_mem_lst = lhs_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+            if managed_mem_lst:
+                managed_mem = managed_mem_lst[0]
+                lhs = self._print(managed_mem.mem_var)
+                rhs = self._print(rhs_address)
 
-            return f'{lhs} = {rhs};\n'
+                element_type = self.get_c_type(lhs_var.class_type, in_container = True)
+
+                return f'{lhs} = {element_type}_from_ptr({rhs});\n'
+            else:
+                lhs = self._print(lhs_address)
+                rhs = self._print(rhs_address)
+
+                return f'{lhs} = {rhs};\n'
 
     def _print_For(self, expr):
         self.set_scope(expr.scope)

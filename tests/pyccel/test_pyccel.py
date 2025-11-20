@@ -413,6 +413,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
+@pytest.mark.xdist_incompatible
 def test_relative_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -425,6 +426,7 @@ def test_relative_imports_in_project(language):
             language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_absolute_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -465,6 +467,7 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_multi_imports_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1146,6 +1149,7 @@ def test_concatenation():
         pytest.param("c", marks = pytest.mark.c)
     )
 )
+@pytest.mark.xdist_incompatible
 def test_class_imports(language):
     cwd = get_abs_path('project_class_imports')
 

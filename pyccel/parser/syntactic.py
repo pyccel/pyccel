@@ -146,7 +146,7 @@ class SyntaxParser(BasicParser):
 
             self._scope = Scope(name = inputs.stem, scope_type = 'module')
         else:
-            self._scope = Scope('', scope_type = 'module')
+            self._scope = Scope(name = '', scope_type = 'module')
 
         self._code    = code
         self._context = []
