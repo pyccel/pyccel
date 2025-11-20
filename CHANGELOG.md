@@ -64,6 +64,7 @@ All notable changes to this project will be documented in this file.
 -   #2510 : Fix missing initialisation of container aliases in C.
 -   #2483 : Fix calls to `math.sqrt` using dotted syntax.
 -   #2483 : Fix calls to `cmath.sqrt` using dotted syntax.
+-   #2484 : Fix optional `TypeVar` arguments.
 -   Rename `main` function when translating to C.
 
 ### Changed
