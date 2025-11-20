@@ -2602,8 +2602,7 @@ class CCodePrinter(CodePrinter):
             managed_mem_lst = lhs_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
             if managed_mem_lst:
                 managed_mem = managed_mem_lst[0]
-                managed_var = managed_mem.mem_var
-                lhs = self._print(managed_var)
+                lhs = self._print(managed_mem.mem_var)
                 rhs = self._print(rhs_address)
 
                 element_type = self.get_c_type(lhs_var.class_type, in_container = True)
