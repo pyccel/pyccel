@@ -21,6 +21,18 @@ runs:
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
         path-type: inherit
+    - name: Add CC and FC to environment
+      run: |
+        GCC_EXE=$(which gcc)
+        GFORTRAN_EXE=$(which gfortran)
+        MSYS2_ROOT=$(dirname $(dirname $GCC_EXE))
+        echo "CC=$GCC_EXE" >> $GITHUB_ENV
+        echo "FC=$GFORTRAN_EXE" >> $GITHUB_ENV
+        echo "MSYS2_ROOT=$MSYS2_ROOT" >> $GITHUB_ENV
+        echo "CC=$GCC_EXE"
+        echo "FC=$GFORTRAN_EXE"
+        echo "MSYS2_ROOT=$MSYS2_ROOT"
+      shell: bash
     - name: Update to give Msys2 priority
       run: |
         echo $PATH
@@ -33,15 +45,6 @@ runs:
       run: |
         echo $PATH
       shell: bash
-    - name: Add CC and FC to environment
-      run: |
-        $GCC_EXE=((Get-Command gcc).Path -replace '\\', '/')
-        $GFORTRAN_EXE=((Get-Command gfortran).Path -replace '\\', '/')
-        echo "CC=$GCC_EXE" >> $env:GITHUB_ENV
-        echo "FC=$GFORTRAN_EXE" >> $env:GITHUB_ENV
-        echo "CC=$GCC_EXE"
-        echo "FC=$GFORTRAN_EXE"
-      shell: powershell
     - name: Allow Python to find trusted DLLs
       run: |
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
