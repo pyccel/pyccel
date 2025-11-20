@@ -574,8 +574,7 @@ class CCodePrinter(CodePrinter):
         var = expr
         dtype = self.get_c_type(var.dtype)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(
-            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
+        tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, var.alloc_shape))
 
         order = 'c_COLMAJOR' if var.order == 'F' else 'c_ROWMAJOR'
 
@@ -1408,7 +1407,7 @@ class CCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 for_index = self.scope.get_temporary_variable(PythonNativeInt(), name = 'i')
-                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
+                max_index = PyccelMinus.make_simplified(f.shape[0], LiteralInteger(1))
                 for_range = PythonRange(max_index)
                 print_body = [ FunctionCallArgument(f[for_index]) ]
                 if f.rank == 1:
@@ -1420,7 +1419,7 @@ class CCodePrinter(CodePrinter):
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 if_body = [PythonPrint([FunctionCallArgument(f[max_index]), empty_end], file=expr.file)]
-                if_block = If(IfSection(PyccelGt(f.shape[0], LiteralInteger(0), simplify = True), if_body))
+                if_block = If(IfSection(PyccelGt.make_simplified(f.shape[0], LiteralInteger(0)), if_body))
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
                                                 file=expr.file),
@@ -1620,6 +1619,8 @@ class CCodePrinter(CodePrinter):
                         mem_type = self.get_c_type(var.class_type.element_type, in_container = True)
                         elem_type = self.get_c_type(var.class_type.element_type)
                         init = f' = {mem_type}_make({elem_type}_init())'
+                    else:
+                        init = ' = {0}'
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
@@ -1732,7 +1733,7 @@ class CCodePrinter(CodePrinter):
 
         for i, ind in enumerate(inds):
             if is_literal_integer(ind) and int(ind) < 0:
-                inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
+                inds[i] = PyccelMinus.make_simplified(base_shape[i], ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a tuple
                 if isinstance(ind, tuple) and len(ind) == 1:
@@ -1740,7 +1741,7 @@ class CCodePrinter(CodePrinter):
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
-                        PyccelAdd(base_shape[i], ind, simplify = True), ind)
+                        PyccelAdd.make_simplified(base_shape[i], ind), ind)
 
         if isinstance(base.class_type, HomogeneousListType):
             assign = expr.get_user_nodes(Assign)
@@ -1839,18 +1840,18 @@ class CCodePrinter(CodePrinter):
 
         # negative start and end in slice
         if isinstance(explicit_start, PyccelUnarySub) and isinstance(explicit_start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, explicit_start.args[0], simplify = True)
+            start = PyccelMinus.make_simplified(array_size, explicit_start.args[0])
         elif allow_negative_index and not isinstance(explicit_start, (LiteralInteger, PyccelArrayShapeElement)):
             start = IfTernaryOperator(PyccelLt(explicit_start, LiteralInteger(0)),
-                            PyccelAdd(array_size, explicit_start, simplify = True), explicit_start)
+                            PyccelAdd.make_simplified(array_size, explicit_start), explicit_start)
         else:
             start = _slice.start
 
         if isinstance(explicit_stop, PyccelUnarySub) and isinstance(explicit_stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, explicit_stop.args[0], simplify = True)
+            stop = PyccelMinus.make_simplified(array_size, explicit_stop.args[0])
         elif allow_negative_index and not isinstance(explicit_stop, (LiteralInteger, PyccelArrayShapeElement)):
             stop = IfTernaryOperator(PyccelLt(explicit_stop, LiteralInteger(0)),
-                            PyccelAdd(array_size, explicit_stop, simplify = True), explicit_stop)
+                            PyccelAdd.make_simplified(array_size, explicit_stop), explicit_stop)
         else:
             stop = _slice.stop
 
@@ -1859,14 +1860,14 @@ class CCodePrinter(CodePrinter):
 
         # negative step in slice
         if isinstance(explicit_step, PyccelUnarySub) and isinstance(explicit_step.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
+            start = PyccelMinus.make_simplified(array_size, LiteralInteger(1)) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
             raise NotImplementedError("Negative step not yet handled")
 
         # variable step in slice
         elif allow_negative_index and not isinstance(explicit_step, LiteralInteger):
             start = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_start,
-                                      PyccelMinus(explicit_stop, LiteralInteger(1), simplify = True))
+                                      PyccelMinus.make_simplified(explicit_stop, LiteralInteger(1)))
             stop = IfTernaryOperator(PyccelGt(explicit_step, LiteralInteger(0)), explicit_stop, explicit_start)
             raise NotImplementedError("Negative step not yet handled")
         else:
@@ -1926,8 +1927,7 @@ class CCodePrinter(CodePrinter):
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
 
-            tot_shape = self._print(functools.reduce(
-                lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+            tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, expr.shape))
             c_type = self.get_c_type(variable.class_type)
             element_type = self.get_c_type(variable.class_type.element_type)
 
@@ -1953,8 +1953,7 @@ class CCodePrinter(CodePrinter):
                 declaration_type = self.get_declare_type(expr.like)
                 malloc_size = f'sizeof({declaration_type})'
                 if variable.rank:
-                    tot_shape = self._print(functools.reduce(
-                        lambda x,y: PyccelMul(x,y,simplify=True), expr.shape))
+                    tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, expr.shape))
                     malloc_size = f'{malloc_size} * ({tot_shape})'
                 return f'{var_code} = malloc({malloc_size});\n'
             else:
@@ -2277,7 +2276,7 @@ class CCodePrinter(CodePrinter):
         endpoint_code = ''
         if not isinstance(expr.endpoint, LiteralFalse):
             lhs_source = expr.get_user_nodes(Assign)[0].lhs
-            lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+            lhs_source.substitute(expr.ind, PyccelMinus.make_simplified(expr.num, LiteralInteger(1)))
             lhs = self._print(lhs_source)
 
             if isinstance(expr.endpoint, LiteralTrue):
@@ -2600,10 +2599,20 @@ class CCodePrinter(CodePrinter):
                 rhs = self._print(rhs_var)
                 return f'{lhs} = {rhs};\n'
         else:
-            lhs = self._print(lhs_address)
-            rhs = self._print(rhs_address)
+            managed_mem_lst = lhs_var.get_direct_user_nodes(lambda u: isinstance(u, ManagedMemory))
+            if managed_mem_lst:
+                managed_mem = managed_mem_lst[0]
+                lhs = self._print(managed_mem.mem_var)
+                rhs = self._print(rhs_address)
 
-            return f'{lhs} = {rhs};\n'
+                element_type = self.get_c_type(lhs_var.class_type, in_container = True)
+
+                return f'{lhs} = {element_type}_from_ptr({rhs});\n'
+            else:
+                lhs = self._print(lhs_address)
+                rhs = self._print(rhs_address)
+
+                return f'{lhs} = {rhs};\n'
 
     def _print_For(self, expr):
         self.set_scope(expr.scope)
@@ -3014,7 +3023,7 @@ class CCodePrinter(CodePrinter):
         if expr.index_element:
             self.add_import(Import('stc/vec', AsName(VariableTypeAnnotation(class_type), c_type)))
             if is_literal_integer(expr.index_element) and int(expr.index_element) < 0:
-                idx_code = self._print(PyccelAdd(PythonLen(expr.list_obj), expr.index_element, simplify=True))
+                idx_code = self._print(PyccelAdd.make_simplified(PythonLen(expr.list_obj), expr.index_element))
             else:
                 idx_code = self._print(expr.index_element)
             code = f'{c_type}_pull_elem({list_obj}, {idx_code})'

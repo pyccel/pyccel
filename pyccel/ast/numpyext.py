@@ -881,8 +881,8 @@ class NumpyArange(NumpyNewArray):
         return self._step
 
     def __getitem__(self, index):
-        step = PyccelMul(index, self.step, simplify=True)
-        return PyccelAdd(self.start, step, simplify=True)
+        step = PyccelMul.make_simplified(index, self.step)
+        return PyccelAdd.make_simplified(self.start, step)
 
 #==============================================================================
 class NumpySum(PyccelFunction):
@@ -1122,7 +1122,7 @@ class NumpyLinspace(NumpyNewArray):
         if isinstance(self.endpoint, LiteralFalse):
             self._step = PyccelDiv(PyccelMinus(self._stop, self._start), self.num)
         elif isinstance(self.endpoint, LiteralTrue):
-            self._step = PyccelDiv(PyccelMinus(self._stop, self._start), PyccelMinus(self.num, LiteralInteger(1), simplify=True))
+            self._step = PyccelDiv(PyccelMinus(self._stop, self._start), PyccelMinus.make_simplified(self.num, LiteralInteger(1)))
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 

@@ -2423,6 +2423,14 @@ def test_array_1d_slice_12(language):
 
     assert f1(a) == f2(a)
 
+def test_array_1d_slice_13(language):
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_1
+    f2 = epyccel(f1, language = language)
+
+    assert f1(a) == f2(a)
+
 #==============================================================================
 # TEST : 2d array slices order F
 #==============================================================================

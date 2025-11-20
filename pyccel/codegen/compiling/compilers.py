@@ -642,3 +642,12 @@ class Compiler:
         Check if debug mode is activated.
         """
         return self._debug
+
+    @property
+    def compiler_info(self):
+        """
+        Get the dictionary containing compiler information.
+
+        Get the dictionary containing compiler information. Keys are languages.
+        """
+        return self._compiler_info
