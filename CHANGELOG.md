@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #221 : Add new `pyccel-make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
@@ -60,6 +61,7 @@ All notable changes to this project will be documented in this file.
 -   #2439 : Ensure stub files describe memory access pattern (alias/stack) for objects.
 -   #2506 : Fix returning non-trivial heap class properties.
 -   #2291 : Fix duplicate imports in Python and stub files.
+-   #2510 : Fix missing initialisation of container aliases in C.
 -   #2483 : Fix calls to `math.sqrt` using dotted syntax.
 -   #2483 : Fix calls to `cmath.sqrt` using dotted syntax.
 -   Rename `main` function when translating to C.

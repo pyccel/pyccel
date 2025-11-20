@@ -112,6 +112,7 @@ pacman -S mingw-w64-x86_64-gcc-fortran
 pacman -S mingw-w64-x86_64-cmake
 pacman -S mingw-w64-x86_64-meson
 pacman -S m4
+pacman -S pkg-config
 # Install MPI and Lapack for library support
 pacman -S mingw-w64-x86_64-msmpi
 pacman -S mingw-w64-x86_64-lapack
