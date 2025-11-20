@@ -486,7 +486,11 @@ class CToPythonWrapper(Wrapper):
             possible_types = list(type_to_example_arg.keys())
 
             n_possible_types = len(possible_types)
-            if n_possible_types != 1:
+            if orig_funcs[0].arguments[i].has_default:
+                # The default must have a type that can be deduced so this can be checked
+                # in the wrapper of the implementation
+                pass
+            elif n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
                 for func, a in zip(funcs, interface_args):
                     index = next(i for i, p_t in enumerate(possible_types) if p_t is a.class_type)*step
@@ -502,7 +506,7 @@ class CToPythonWrapper(Wrapper):
                             [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
                                 arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
-            elif not orig_funcs[0].arguments[i].has_default:
+            else:
                 check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body,
                                 allow_empty_arrays = is_bind_c)
                 err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
