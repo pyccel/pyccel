@@ -20,6 +20,7 @@ runs:
         msystem: MINGW64
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
+        path-type: inherit
     - name: Update PATH
       run: |
         echo $PATH
