@@ -5999,7 +5999,6 @@ class SemanticParser(BasicParser):
             func = syntactic_func
         else:
             func = self.scope.find(syntactic_func, 'functions', raise_if_missing=True)
-        func = self.scope.find(func_call.funcdef, 'functions')
         arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
