@@ -5933,7 +5933,11 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.sqrt` function.
         """
-        func = self.scope.find(func_call.funcdef, 'functions')
+        syntactic_func = func_call.funcdef
+        if isinstance(syntactic_func, PyccelFunctionDef):
+            func = syntactic_func
+        else:
+            func = self.scope.find(syntactic_func, 'functions', raise_if_missing=True)
         arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
@@ -5990,7 +5994,11 @@ class SemanticParser(BasicParser):
         TypedAstNode
             A node describing the result of a call to the `cmath.sqrt` function.
         """
-        func = self.scope.find(func_call.funcdef, 'functions')
+        syntactic_func = func_call.funcdef
+        if isinstance(syntactic_func, PyccelFunctionDef):
+            func = syntactic_func
+        else:
+            func = self.scope.find(syntactic_func, 'functions', raise_if_missing=True)
         arg = func_call_args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args

@@ -62,6 +62,8 @@ All notable changes to this project will be documented in this file.
 -   #2506 : Fix returning non-trivial heap class properties.
 -   #2291 : Fix duplicate imports in Python and stub files.
 -   #2510 : Fix missing initialisation of container aliases in C.
+-   #2483 : Fix calls to `math.sqrt` using dotted syntax.
+-   #2483 : Fix calls to `cmath.sqrt` using dotted syntax.
 -   Rename `main` function when translating to C.
 
 ### Changed
