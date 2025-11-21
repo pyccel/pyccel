@@ -33,6 +33,8 @@ runs:
         echo "CC=$GCC_EXE"
         echo "FC=$GFORTRAN_EXE"
         echo "MSYS2_ROOT=$MSYS2_ROOT"
+        echo $(which pkg-config)
+        echo $(which pkg-config.exe)
       shell: bash
     - name: Update to give Msys2 priority
       run: |
@@ -46,6 +48,8 @@ runs:
       run: |
         echo $PATH
         which pkg-config
+        echo $(which pkg-config)
+        echo $(which pkg-config.exe)
       shell: bash
     - name: Allow Python to find trusted DLLs
       run: |
