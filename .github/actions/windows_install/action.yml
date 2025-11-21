@@ -18,6 +18,10 @@ runs:
       run: |
         echo $PATH
       shell: bash
+    - name: Check PATH
+      run: |
+          echo $env:PATH
+      shell: powershell
     - name: Use MSys2 to install dependencies
       id: msys2
       uses: msys2/setup-msys2@v2
@@ -33,10 +37,19 @@ runs:
         echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
         echo $MSYS2_ROOT
+        echo "$MSYS2_ROOT/mingw64/bin"
         echo "$MSYS2_ROOT/mingw64/bin" >> $GITHUB_PATH
         echo "$MSYS2_ROOT/usr/bin" >> $GITHUB_PATH
-        ls "$MSYS2_ROOT/mingw64/bin"
         cat $GITHUB_PATH
+        ls /c/Miniconda/condabin
+      shell: bash
+    - name: Check PATH
+      run: |
+          echo $env:PATH
+      shell: powershell
+    - name: Check PATH
+      run: |
+        echo $PATH
       shell: bash
     - name: Add CC and FC to environment
       run: |
