@@ -26,13 +26,13 @@ runs:
         GCC_EXE=$(which gcc)
         GFORTRAN_EXE=$(which gfortran)
         MSYS2_ROOT=$(dirname $(dirname $GCC_EXE))
-        find $MSYS2_ROOT -name **/pkg-config*
         echo "CC=$GCC_EXE" >> $GITHUB_ENV
         echo "FC=$GFORTRAN_EXE" >> $GITHUB_ENV
         echo "MSYS2_ROOT=$MSYS2_ROOT" >> $GITHUB_ENV
         echo "CC=$GCC_EXE"
         echo "FC=$GFORTRAN_EXE"
         echo "MSYS2_ROOT=$MSYS2_ROOT"
+        ls $MSYS2_ROOT/bin
         echo $(which pkg-config)
         echo $(which pkg-config.exe)
       shell: bash
