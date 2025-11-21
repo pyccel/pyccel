@@ -68,7 +68,7 @@ runs:
         echo $(which pkg-config)
         echo $(which pkg-config.exe)
         which conda
-      shell: git-bash -l
+      shell: git-bash -l {0}
     - name: Update to give Msys2 priority
       run: |
         echo $PATH
