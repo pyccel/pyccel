@@ -32,7 +32,23 @@ from pyccel.stdlib.parallel.mpi import MPI_SUM
 #$ header method communicate(Cart, double [:,:])
 #$ header method reduce(Cart, double)
 
-class Cart(object):
+class Cart:
+    """
+    A class to map MPI's Cart concepts.
+
+    A class to map MPI's Cart concepts. This may need removing with #251.
+
+    Parameters
+    ----------
+    npts : tuple[int, ...]
+        Number of points in each dimension, excluding the ghost regions.
+    pads : tuple[int, ...]
+        Array padding, i.e. number of ghost points in each dimension.
+    periods : tuple[bool, ...]
+        Whether the grid is periodic (true) or not (false) in each dimension.
+    reorder : bool
+        MPI ranking may be reordered (true) or not (false).
+    """
     def __init__(self, npts, pads, periods, reorder):
 
         ntx = npts[0]

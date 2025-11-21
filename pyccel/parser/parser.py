@@ -21,7 +21,7 @@ errors = Errors()
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
-class Parser(object):
+class Parser:
     """
     A wrapper class which handles dependencies between the syntactic and semantic parsers.
 
