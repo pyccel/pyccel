@@ -15,6 +15,7 @@ runs:
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
     - name: Use MSys2 to install dependencies
+      id: msys2
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
@@ -24,7 +25,7 @@ runs:
         location: D:\mingw64
     - name: Update to give Msys2 priority
       run: |
-        MSYS2_ROOT=/d/mingw64
+        MSYS2_ROOT=${{ steps.msys2.outputs.msys2-location }}
         echo "MSYS2_ROOT=$MSYS2_ROOT" >> $GITHUB_ENV
         echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
