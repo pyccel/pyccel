@@ -30,8 +30,8 @@ runs:
         echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
         echo $MSYS2_ROOT
-        echo "$MSYS2_ROOT\\bin" >> $GITHUB_PATH
-        echo "$MSYS2_ROOT\\usr\\bin" >> $GITHUB_PATH
+        echo "$MSYS2_ROOT\\bin" >> $env:GITHUB_PATH
+        echo "$MSYS2_ROOT\\usr\\bin" >> $env:GITHUB_PATH
         cat $GITHUB_PATH
       shell: powershell
     - name: Add CC and FC to environment
