@@ -37,13 +37,14 @@ runs:
       run: |
         echo $PATH
         echo $MSYS2_ROOT
-        echo "$MSYS2_ROOT/mingw64/bin" >> $GITHUB_PATH
+        echo "$MSYS2_ROOT/bin" >> $GITHUB_PATH
         echo "$MSYS2_ROOT/usr/bin" >> $GITHUB_PATH
         cat $GITHUB_PATH
       shell: bash
     - name: Update to give Msys2 priority
       run: |
         echo $PATH
+        which pkg-config
       shell: bash
     - name: Allow Python to find trusted DLLs
       run: |
