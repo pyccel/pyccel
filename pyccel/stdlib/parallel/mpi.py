@@ -40,16 +40,14 @@ class Cart:
 
     Parameters
     ----------
-    npts : tuple[int, int]
-        Number of points in each dimension.
-    pads : tuple[object, object]
-        Integer array of size ndims specifying the number of processes in each
-        dimension.
-    periods : tuple[bool, bool]
-        Logical array of size ndims specifying whether the grid is periodic (true)
-        or not (false) in each dimension.
+    npts : tuple[int, ...]
+        Number of points in each dimension, excluding the ghost regions.
+    pads : tuple[int, ...]
+        Array padding, i.e. number of ghost points in each dimension.
+    periods : tuple[bool, ...]
+        Whether the grid is periodic (true) or not (false) in each dimension.
     reorder : bool
-        Ranking may be reordered (true) or not (false).
+        MPI ranking may be reordered (true) or not (false).
     """
     def __init__(self, npts, pads, periods, reorder):
 

@@ -20,7 +20,15 @@ class BasicStmt:
     statement, like the index of a For statement.
     4) Every extension must implement the update function. This function is
     called to prepare for the applied property (for example the expr
-    property.).
+    1) Every extension class must provide the properties stmt_vars and
+    local_vars.
+    2) stmt_vars describes the list of all variables that are
+    created by the statement.
+    3) local_vars describes the list of all local variables to the
+    statement, like the index of a For statement.
+    4) Every extension must implement the update function. This function is
+    called to prepare for the applied property (for example the expr
+    property).
 
     Parameters
     ----------
