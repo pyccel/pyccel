@@ -14,6 +14,12 @@ runs:
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
+    - name: Create git-bash wrapper to preserve shell
+      run: |
+        $gitbash = (Get-Command bash.exe).Path
+        New-Item -Path "$env:RUNNER_TEMP\gitbash.cmd" -ItemType File -Force -Value "@echo off`n`"$gitbash`" %*"
+        echo "$env:RUNNER_TEMP" >> $env:GITHUB_PATH
+      shell: pwsh
     - name: Use MSys2 to install dependencies
       uses: msys2/setup-msys2@v2
       with:
@@ -45,7 +51,7 @@ runs:
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
         echo $SITE_DIR
         echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_DIR/dll_path.pth
-      shell: bash
+      shell: gitbash -l {0}
     - name: Complete Microsoft MPI installation
       uses: mpi4py/setup-mpi@v1
       with:
