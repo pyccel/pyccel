@@ -25,7 +25,7 @@ runs:
         location: D:\mingw64
     - name: Update to give Msys2 priority
       run: |
-        $MSYS2_ROOT=${{ steps.msys2.outputs.msys2-location }}
+        $MSYS2_ROOT="${{ steps.msys2.outputs.msys2-location }}"
         echo "MSYS2_ROOT=$MSYS2_ROOT" >> $env:GITHUB_ENV
         echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
