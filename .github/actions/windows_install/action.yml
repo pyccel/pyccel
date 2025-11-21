@@ -58,7 +58,6 @@ runs:
       shell: bash
     - name: Add CC and FC to environment
       run: |
-        echo $0
         GCC_EXE=$(which gcc)
         GFORTRAN_EXE=$(which gfortran)
         echo "CC=$GCC_EXE" >> $GITHUB_ENV
@@ -71,21 +70,13 @@ runs:
         type -a conda
         echo "Shell is: $0"
         conda --version
-        which conda
       shell: gitbash -l {0}
-    - name: Update to give Msys2 priority
-      run: |
-        echo $PATH
-        which pkg-config
-        echo $(which pkg-config)
-        echo $(which pkg-config.exe)
-      shell: bash
     - name: Allow Python to find trusted DLLs
       run: |
         SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
         echo $SITE_DIR
         echo "import os; os.add_dll_directory('D:/a/_temp/msys64/mingw64/lib'); os.add_dll_directory('D:/a/_temp/msys64/mingw64/bin')" > $SITE_DIR/dll_path.pth
-      shell: bash
+      shell: gitbash -l {0}
     - name: Complete Microsoft MPI installation
       uses: mpi4py/setup-mpi@v1
       with:
