@@ -431,17 +431,17 @@ class STCInstaller(ExternalLibInstaller):
                                capture_output = True)#(verbose <= 1))
                 print(p.stdout)
                 print(p.stderr)
-                assert p.returncode
+                assert p.returncode == 0
                 subprocess.run([meson, 'compile', '-C', build_dir], check = False, cwd = pyccel_dirpath,
                                capture_output = True)#(verbose == 0))
                 print(p.stdout)
                 print(p.stderr)
-                assert p.returncode
+                assert p.returncode == 0
                 subprocess.run([meson, 'install', '-C', build_dir], check = False, cwd = pyccel_dirpath,
                                capture_output = True)#(verbose <= 1))
                 print(p.stdout)
                 print(p.stderr)
-                assert p.returncode
+                assert p.returncode == 0
 
         print(install_dir)
         print(list(install_dir.glob('**/*.a')))
