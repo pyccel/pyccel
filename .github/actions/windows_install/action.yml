@@ -22,7 +22,6 @@ runs:
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
         path-type: inherit
-        location: D:\mingw64
     - name: Update to give Msys2 priority
       run: |
         $MSYS2_ROOT=$(cygpath -m "${{ steps.msys2.outputs.msys2-location }}")
