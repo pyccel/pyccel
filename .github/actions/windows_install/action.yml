@@ -68,9 +68,6 @@ runs:
         ls $MSYS2_ROOT/mingw64/bin
         echo $(which pkg-config)
         echo $(which pkg-config.exe)
-        type -a conda
-        echo "Shell is: $0"
-        conda --version
       shell: gitbash -l {0}
     - name: Allow Python to find trusted DLLs
       run: |
