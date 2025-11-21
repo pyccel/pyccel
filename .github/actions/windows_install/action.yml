@@ -21,28 +21,29 @@ runs:
         update: true
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-msmpi mingw-w64-x86_64-lapack m4 pkg-config
         path-type: inherit
-    - name: Add CC and FC to environment
-      run: |
-        GCC_EXE=$(which gcc)
-        GFORTRAN_EXE=$(which gfortran)
-        MSYS2_ROOT=$(dirname $(dirname $GCC_EXE))
-        echo "CC=$GCC_EXE" >> $GITHUB_ENV
-        echo "FC=$GFORTRAN_EXE" >> $GITHUB_ENV
-        echo "MSYS2_ROOT=$MSYS2_ROOT" >> $GITHUB_ENV
-        echo "CC=$GCC_EXE"
-        echo "FC=$GFORTRAN_EXE"
-        echo "MSYS2_ROOT=$MSYS2_ROOT"
-        ls $MSYS2_ROOT/bin
-        echo $(which pkg-config)
-        echo $(which pkg-config.exe)
-      shell: bash
+        location: D:\mingw64
     - name: Update to give Msys2 priority
       run: |
+        MSYS2_ROOT=/d/mingw64
+        echo "MSYS2_ROOT=$MSYS2_ROOT" >> $GITHUB_ENV
+        echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
         echo $MSYS2_ROOT
         echo "$(cygpath -w ${MSYS2_ROOT}/bin)" >> $GITHUB_PATH
         echo "$(cygpath -w ${MSYS2_ROOT}/usr/bin)" >> $GITHUB_PATH
         cat $GITHUB_PATH
+      shell: bash
+    - name: Add CC and FC to environment
+      run: |
+        GCC_EXE=$(which gcc)
+        GFORTRAN_EXE=$(which gfortran)
+        echo "CC=$GCC_EXE" >> $GITHUB_ENV
+        echo "FC=$GFORTRAN_EXE" >> $GITHUB_ENV
+        echo "CC=$GCC_EXE"
+        echo "FC=$GFORTRAN_EXE"
+        ls $MSYS2_ROOT/bin
+        echo $(which pkg-config)
+        echo $(which pkg-config.exe)
       shell: bash
     - name: Update to give Msys2 priority
       run: |
