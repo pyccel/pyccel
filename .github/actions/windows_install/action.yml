@@ -25,15 +25,16 @@ runs:
         location: D:\mingw64
     - name: Update to give Msys2 priority
       run: |
-        $MSYS2_ROOT="${{ steps.msys2.outputs.msys2-location }}"
+        $MSYS2_ROOT=$(cygpath -m "${{ steps.msys2.outputs.msys2-location }}")
         echo "MSYS2_ROOT=$MSYS2_ROOT" >> $env:GITHUB_ENV
         echo "MSYS2_ROOT=$MSYS2_ROOT"
         echo $PATH
         echo $MSYS2_ROOT
-        echo "$MSYS2_ROOT\\bin" >> $env:GITHUB_PATH
-        echo "$MSYS2_ROOT\\usr\\bin" >> $env:GITHUB_PATH
+        echo "$MSYS2_ROOT/bin" >> $env:GITHUB_PATH
+        echo "$MSYS2_ROOT/usr/bin" >> $env:GITHUB_PATH
+        ls "$MSYS2_ROOT/bin"
         cat $GITHUB_PATH
-      shell: powershell
+      shell: bash
     - name: Add CC and FC to environment
       run: |
         GCC_EXE=$(which gcc)
