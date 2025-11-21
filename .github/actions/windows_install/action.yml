@@ -14,9 +14,16 @@ runs:
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
+    - name: Create git-bash wrapper
+      run: |
+        $gitbash = (Get-Command bash.exe).Path
+        New-Item -Path "$env:RUNNER_TEMP\git-bash.cmd" -ItemType File -Force -Value "@echo off`n`"$gitbash`" %*"
+        echo "$env:RUNNER_TEMP" >> $env:GITHUB_PATH
+      shell: pwsh
     - name: Check PATH
       run: |
         echo $PATH
+        which bash
       shell: bash
     - name: Check PATH
       run: |
@@ -40,8 +47,6 @@ runs:
         echo "$MSYS2_ROOT/mingw64/bin"
         echo "$MSYS2_ROOT/mingw64/bin" >> $GITHUB_PATH
         echo "$MSYS2_ROOT/usr/bin" >> $GITHUB_PATH
-        cat $GITHUB_PATH
-        ls /c/Miniconda/condabin
       shell: bash
     - name: Check PATH
       run: |
@@ -62,7 +67,8 @@ runs:
         ls $MSYS2_ROOT/mingw64/bin
         echo $(which pkg-config)
         echo $(which pkg-config.exe)
-      shell: bash
+        which conda
+      shell: git-bash -l
     - name: Update to give Msys2 priority
       run: |
         echo $PATH
