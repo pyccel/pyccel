@@ -79,6 +79,7 @@ jobs:
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: msmpi
+          shell: gitbash
       - name: "Setup"
         if: github.event_name != 'push'
         id: token
