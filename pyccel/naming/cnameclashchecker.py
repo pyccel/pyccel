@@ -34,7 +34,7 @@ class CNameClashChecker(LanguageNameClashChecker):
         'array_bool_3d', 'array_float_complex_1d', 'array_float_complex_2d',
         'array_float_complex_3d', 'array_double_complex_1d', 'array_double_complex_2d',
         'array_double_complex_3d', 'c_ALL', 'c_END', 'cspan_slice', 'cspan_transpose',
-        'complex_max', 'complex_min', 'expm1', 'complex_expm1'])
+        'complex_max', 'complex_min', 'expm1', 'complex_expm1', 'main'])
 
     def has_clash(self, name, symbols):
         """
@@ -57,7 +57,7 @@ class CNameClashChecker(LanguageNameClashChecker):
         """
         return name in self.keywords or name in symbols
 
-    def get_collisionless_name(self, name, symbols):
+    def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
         Get a valid name which doesn't collision with symbols or C keywords.
 
@@ -71,17 +71,33 @@ class CNameClashChecker(LanguageNameClashChecker):
             The suggested name.
         symbols : set
             Symbols which should be considered as collisions.
+        prefix : str
+            The prefix that may be added to the name to provide context information.
+        context : str
+            The context where the name will be used.
+        parent_context : str
+            The type of the scope where the object with this name will be saved.
 
         Returns
         -------
         str
             A new name which is collision free.
         """
-        if name in ('__init__', '__del__'):
-            return name
+        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
+        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
+        if context == 'wrapper':
+            # wrapper names are based off names which already have prefixes so there is no
+            # need to add more
+            return self._get_collisionless_name(name, symbols)
+        if name == '__init__':
+            name = 'init'
+        if name == '__del__':
+            name = 'drop'
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
+        if context == 'function' or (parent_context == 'module' and context != 'module'):
+            name = prefix + name
         return self._get_collisionless_name(name, symbols)
 

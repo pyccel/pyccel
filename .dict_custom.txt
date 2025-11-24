@@ -9,6 +9,7 @@ SymPy
 SymPy's
 BLAS
 LAPACK
+LAPACK's
 MPI
 OpenMP
 Fortran
@@ -112,6 +113,8 @@ destructor's
 Valgrind
 variadic
 subclasses
+superclass
+superclasses
 oneAPI
 getter
 setter
@@ -131,3 +134,11 @@ pre
 LLVM
 linter
 inlining
+inlined
+discoverable
+MinGW
+Makefile
+Makefiles
+parametrised
+parametrisable
+unannotated

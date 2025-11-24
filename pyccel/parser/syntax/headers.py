@@ -26,7 +26,7 @@ DEBUG = False
 errors = Errors()
 pyccel_stage = PyccelStage()
 
-class Header(object):
+class Header:
     """
     Class describing a Header in the grammar.
 
@@ -41,6 +41,44 @@ class Header(object):
     """
     def __init__(self, statements = (), **kwargs):
         self.statements = statements
+        super().__init__(**kwargs)
+
+class DoubleQuotedStr(BasicStmt):
+    """
+    A double quoted string containing type information.
+
+    A double quoted string containing type information. This is particularly
+    useful for typing.Annotated.
+
+    Parameters
+    ----------
+    contents : str
+        The expression in the string.
+
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, contents, **kwargs):
+        self.contents = contents
+        super().__init__(**kwargs)
+
+class SingleQuotedStr(BasicStmt):
+    """
+    A single quoted string containing type information.
+
+    A single quoted string containing type information. This is particularly
+    useful for typing.Annotated.
+
+    Parameters
+    ----------
+    contents : str
+        The expression in the string.
+
+    **kwargs : dict
+        TextX keyword arguments.
+    """
+    def __init__(self, contents, **kwargs):
+        self.contents = contents
         super().__init__(**kwargs)
 
 class TrailerSubscriptList(BasicStmt):
@@ -92,7 +130,10 @@ class Type(BasicStmt):
 
         Get the Pyccel object equivalent to this grammar object.
         """
-        dtype = PyccelSymbol(self.dtype)
+        if isinstance(self.dtype, (DoubleQuotedStr, SingleQuotedStr)):
+            dtype = LiteralString(self.dtype.contents)
+        else:
+            dtype = PyccelSymbol(self.dtype)
         order = None
         if self.trailer:
             args = [self.handle_trailer_arg(a) for a in self.trailer.args]
@@ -223,7 +264,7 @@ class MetavarHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
+type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType, DoubleQuotedStr, SingleQuotedStr]
 hdr_classes = [Header,
                MetavarHeaderStmt]
 

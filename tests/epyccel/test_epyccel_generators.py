@@ -122,15 +122,6 @@ def test_expression1(language):
 
     assert np.isclose(f(x), f_epyc(x), rtol=1e-14, atol=1e-14)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C", run=False),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_expression2(language):
     def f(b : 'int64[:]'):
         def incr(x : 'int64'):

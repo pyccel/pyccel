@@ -1,3 +1,4 @@
+# <class 'pyccel.ast.builtins.PythonRange'> cannot be saved to variables
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 # coding: utf-8
 

@@ -33,50 +33,78 @@ runs:
         echo "PYCCEL_DEBUG_MODE=1" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-    - name: Test C translation
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" 2>&1 | tee s1_outfile.out
+    - name: Test translation with uninstalled STC/gFTL
+      run: |
+        python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
+        python -m pytest -rX ${FLAGS} -m fortran test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
+        # Test STC update
+        if [ -n "${SITE_DIR}" ]; then
+          touch ${SITE_DIR}/pyccel/extensions/STC
+          python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
+         fi
       shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests
-      id: pytest_1
+      working-directory: ./tests/epyccel
+      id: pytest_dependencies
     - name: Test folder update
       run: |
          if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
-            touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py 2>&1 | tee s2_outfile.out
+            printf "\n\n" >> ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
+            python -m pytest -n auto -rX ${FLAGS} -m c -k test_array_int32_1d_scalar test_arrays.py 2>&1 | tee stdlib_update_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests/epyccel
+      id: pytest_stdlib_update
+    - name: Install STC and gFTL
+      run: |
+        # Install STC so it can be discovered
+        meson setup build --buildtype release --prefix ~/.local
+        meson compile -C build
+        meson install -C build 2>&1 | tee install_info.txt
+        export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(grep "\.pc" install_info.txt | cut -d ' ' -f 4-)
+        echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> $GITHUB_ENV
+        export cmake_folders=$(dirname $(find ${SITE_DIR}/pyccel/ -name '*.cmake') | sort -u)
+        to_append=$(echo "${cmake_folders}" | paste -sd ":" -)
+        export CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}:${to_append}"
+        echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" >> $GITHUB_ENV
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./pyccel/extensions/STC
+    - name: Test C translation
+      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" 2>&1 | tee c_outfile.out
+      shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-      id: pytest_2
+      id: pytest_c
     - name: Test multi-file C translations
       run: |
-         python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" 2>&1 | tee s3_outfile.out
-         pyccel-clean
+         python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" 2>&1 | tee c_xdist_incompatible_outfile.out
+         pyccel-clean -s
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-      id: pytest_3
+      id: pytest_c_xdist_incompatible
     - name: Test Fortran translations
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee s4_outfile.out
+      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-      id: pytest_4
+      id: pytest_fortran
     - name: Test multi-file Fortran translations
       run: |
-        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee s5_outfile.out
-        pyccel-clean
+        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_xdist_incompatible_outfile.out
+        pyccel-clean -s
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-      id: pytest_5
+      id: pytest_fortran_xdist_incompatible
     - name: Final step
       if: always()
       id: status
       run:
-        python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests "C tests:${{ steps.pytest_1.outcome }}:tests/s1_outfile.out" \
-                       "Verification of stdlib update:${{ steps.pytest_2.outcome }}:tests/s2_outfile.out" \
-                       "Non-parallelisable C tests:${{ steps.pytest_3.outcome }}:tests/s3_outfile.out" \
-                       "Fortran tests:${{ steps.pytest_4.outcome }}:tests/s4_outfile.out" \
-                       "Non-parallelisable Fortran tests:${{ steps.pytest_5.outcome }}:tests/s5_outfile.out"
+        python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests \
+                       "Tests with STC/gFTL uninstalled:${{ steps.pytest_dependencies.outcome }}:tests/install_outfile.out" \
+                       "Verification of stdlib update:${{ steps.pytest_stdlib_update.outcome }}:tests/stdlib_update_outfile.out" \
+                       "C tests:${{ steps.pytest_c.outcome }}:tests/c_outfile.out" \
+                       "Non-parallelisable C tests:${{ steps.pytest_c_xdist_incompatible.outcome }}:tests/c_xdist_incompatible_outfile.out" \
+                       "Fortran tests:${{ steps.pytest_fortran.outcome }}:tests/fortran_outfile.out" \
+                       "Non-parallelisable Fortran tests:${{ steps.pytest_fortran_xdist_incompatible.outcome }}:tests/fortran_xdist_incompatible_outfile.out"
                       
       shell: ${{ inputs.shell_cmd }}
 

@@ -16,10 +16,9 @@ def test_private(lang):
     def f():
         print("hidden")
 
-    g = epyccel(f, language=lang)
-
-    with pytest.raises(NotImplementedError):
-        g()
+    # Attribute error when extracting f from module
+    with pytest.raises(AttributeError):
+        epyccel(f, language=lang)
 
 def test_inline_1_out(language):
     def f():

@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
 import numpy as np
-from pyccel.decorators import inline
+from pyccel.decorators import inline, private
 
 pi = 3.14159
 
@@ -49,6 +49,7 @@ def positron_charge():
     # comment
     return -not_inline()
 
+@private
 @inline
 def add2(a : S, b : S, c : S):
     c[...] = a+b

@@ -8,18 +8,22 @@ class Square:
         self.c = c
         self.d = d
 
-    def get_corner_1(self):
+    @property
+    def corner_1(self):
         x,y = self.a.get_val()
         return x,y
 
-    def get_corner_2(self):
+    @property
+    def corner_2(self):
         x,y = self.b.get_val()
         return x,y
 
-    def get_corner_3(self):
+    @property
+    def corner_3(self):
         x,y = self.c.get_val()
         return x,y
 
-    def get_corner_4(self):
+    @property
+    def corner_4(self):
         x,y = self.d.get_val()
         return x,y

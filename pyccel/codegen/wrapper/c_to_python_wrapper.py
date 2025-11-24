@@ -45,12 +45,13 @@ from pyccel.ast.c_concepts    import CStrStr
 from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import FixedSizeNumericType, HomogeneousTupleType, PythonNativeBool
 from pyccel.ast.datatypes     import HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes     import HomogeneousContainerType
+from pyccel.ast.datatypes     import HomogeneousContainerType, FinalType
 from pyccel.ast.datatypes     import TupleType, CharType, StringType
 from pyccel.ast.internals     import Slice
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse, convert_to_literal
 from pyccel.ast.numpytypes    import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
+from pyccel.ast.numpytypes    import numpy_precision_map
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
@@ -242,7 +243,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map[bound_arg] = func_args[0]
 
         # Create the list of argument names
-        arg_names = [getattr(a.var, 'original_var', a.var).name for a in args]
+        arg_names = ['' if a.is_posonly else getattr(a.var, 'original_var', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
@@ -463,7 +464,7 @@ class CToPythonWrapper(Wrapper):
             which indicate that the function should be chosen.
         """
         args = [a.clone(a.name, is_argument = True) for a in args]
-        func_scope = self.scope.new_child_scope(name)
+        func_scope = self.scope.new_child_scope(name, 'function')
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
         type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
@@ -485,7 +486,11 @@ class CToPythonWrapper(Wrapper):
             possible_types = list(type_to_example_arg.keys())
 
             n_possible_types = len(possible_types)
-            if n_possible_types != 1:
+            if orig_funcs[0].arguments[i].has_default:
+                # The default must have a type that can be deduced so this can be checked
+                # in the wrapper of the implementation
+                pass
+            elif n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
                 for func, a in zip(funcs, interface_args):
                     index = next(i for i, p_t in enumerate(possible_types) if p_t is a.class_type)*step
@@ -501,7 +506,7 @@ class CToPythonWrapper(Wrapper):
                             [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
                                 arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
-            elif not orig_funcs[0].arguments[i].has_default:
+            else:
                 check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body,
                                 allow_empty_arrays = is_bind_c)
                 err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
@@ -551,6 +556,8 @@ class CToPythonWrapper(Wrapper):
         PyFunctionDef
             The new function which raises the error.
         """
+        current_scope = self.scope
+        self.scope = scope
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         if self._error_exit_code is Nil():
             func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
@@ -561,7 +568,9 @@ class CToPythonWrapper(Wrapper):
                         Return(self._error_exit_code)],
                 scope = scope, original_function = original_function)
 
-        self.scope.functions[name] = function
+        self.scope = current_scope
+
+        self.scope.insert_function(function, self.scope.get_python_name(name))
 
         return function
 
@@ -686,7 +695,7 @@ class CToPythonWrapper(Wrapper):
         initialised.append(obj)
         return [if_expr, Py_INCREF(obj)]
 
-    def _build_module_init_function(self, expr, imports):
+    def _build_module_init_function(self, expr, imports, module_def_name):
         """
         Build the function that will be called when the module is first imported.
 
@@ -702,16 +711,19 @@ class CToPythonWrapper(Wrapper):
         imports : list of Import
             A list of any imports that will appear in the PyModule.
 
+        module_def_name : str
+            The name of the structure which defined the module.
+
         Returns
         -------
         PyModInitFunc
             The initialisation function.
         """
-
         mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
+        # The name of the init function is compulsory for the wrapper to work
+        func_name = f'PyInit_{mod_name}'
         # Initialise the scope
-        func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         for v in expr.variables:
@@ -721,13 +733,12 @@ class CToPythonWrapper(Wrapper):
 
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
-        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (n_classes,),
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API', object_type = 'wrapper')
+        API_var = Variable(CStackArray.get_new(BindCPointer()), API_var_name, shape = (n_classes,),
                                     cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
-        module_def_name = self.scope.get_new_name(f'{mod_name}_module')
         body = [AliasAssign(module_var, PyModule_Create(module_def_name)),
                 If(IfSection(PyccelIs(module_var, Nil()), [Return(self._error_exit_code)]))]
 
@@ -762,7 +773,7 @@ class CToPythonWrapper(Wrapper):
         for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
-            class_name = wrapped_class.name
+            class_name = self.scope.get_python_name(wrapped_class.name)
 
             ready_type = PyType_Ready(type_object)
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
@@ -778,8 +789,7 @@ class CToPythonWrapper(Wrapper):
                 continue
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
-            name = getattr(v, 'indexed_name', v.name)
-            var_name = self.scope.get_python_name(name)
+            var_name = self.scope.get_python_name(v.name)
             body.extend(self._add_object_to_mod(module_var, wrapped_var, var_name, initialised))
 
         body.append(Return(module_var))
@@ -814,17 +824,17 @@ class CToPythonWrapper(Wrapper):
         import_func : FunctionDef
             The import function.
         """
-        mod_name = getattr(expr, 'original_module', expr).name
+        mod_name = self.scope.get_python_name(getattr(expr, 'original_module', expr).name)
         # Initialise the scope
-        func_name = self.scope.get_new_name(f'{mod_name}_import')
+        func_name = self.scope.get_new_name('import')
 
-        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(CStackArray(BindCPointer()), API_var_name, shape = (None,),
+        API_var_name = self.scope.insert_symbol(f'Py{mod_name}_API', 'wrapper')
+        API_var = Variable(CStackArray.get_new(BindCPointer()), API_var_name, shape = (None,),
                                     cls_base = StackArrayClass,
                                     memory_handling = 'alias')
         self.scope.insert_variable(API_var)
 
-        func_scope = self.scope.new_child_scope(func_name)
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         ok_code = LiteralInteger(0, dtype=CNativeInt())
@@ -842,7 +852,7 @@ class CToPythonWrapper(Wrapper):
                                                 PyUnicode_FromString(CStrStr(LiteralString(self._sharedlib_dirpath)))),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
-                AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
+                AliasAssign(API_var, PyCapsule_Import(mod_name)),
                 If(IfSection(PyccelEq(PyList_SetItem(current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path),
                                       PyccelUnarySub(LiteralInteger(1))),
                              [Return(self._error_exit_code)])),
@@ -913,10 +923,10 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         if func:
-            func_name = self.scope.get_new_name(f'{func.name}___wrapper')
+            func_name = self.scope.get_new_name(f'{func.name}__wrapper', object_type = 'wrapper')
         else:
-            func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+            func_name = self.scope.get_new_name(f'{class_dtype.name}__new__wrapper')
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
@@ -975,9 +985,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        original_name = original_func.cls_name or original_func.name
-        func_name = self.scope.get_new_name(original_name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_name = self.scope.get_new_name(f'{cls_dtype.name}__init__wrapper')
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
@@ -1030,7 +1039,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = init_function.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[init_function] = function
         self._error_exit_code = Nil()
 
@@ -1061,9 +1070,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        original_name = original_func.cls_name or original_func.name
-        func_name = self.scope.get_new_name(original_name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_name = self.scope.get_new_name(f'{cls_dtype.name}__del__wrapper')
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
 
         # Add the variables to the expected symbols in the scope
@@ -1082,6 +1090,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [del_function(c_obj),
                     Deallocate(c_obj)]
+        body.append(AliasAssign(c_obj, Nil()))
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
@@ -1096,7 +1105,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], body, scope=func_scope,
                 original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[del_function] = function
 
         return function
@@ -1131,21 +1140,25 @@ class CToPythonWrapper(Wrapper):
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
         data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
                             memory_handling='alias')
-        shape_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+        base_shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_base_shape'),
                             shape = (orig_var.rank,))
-        stride_var = Variable(CStackArray(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
+        ubound_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_ubound'),
+                            shape = (orig_var.rank,))
+        stride_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
                             shape = (orig_var.rank,))
         self.scope.insert_variable(data_var)
-        self.scope.insert_variable(shape_var)
+        self.scope.insert_variable(base_shape_var)
+        self.scope.insert_variable(ubound_var)
         self.scope.insert_variable(stride_var)
 
         get_data = AliasAssign(data_var, PyArray_DATA(ObjectAddress(pyarray_collect_arg)))
         get_strides_and_shape = get_strides_and_shape_from_numpy_array(
-                                        ObjectAddress(collect_arg), shape_var, stride_var)
+                                        ObjectAddress(collect_arg), base_shape_var, ubound_var, stride_var,
+                                        convert_to_literal(orig_var.order != 'F'))
 
         body = [get_data, get_strides_and_shape]
 
-        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
+        return {'body': body, 'data':data_var, 'shape':base_shape_var, 'ubounds': ubound_var, 'strides':stride_var}
 
     def _call_wrapped_function(self, func, args, results):
         """
@@ -1251,18 +1264,40 @@ class CToPythonWrapper(Wrapper):
         """
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
+        original_mod = getattr(expr, 'original_module', expr)
+        original_mod_name = original_mod.scope.get_python_name(original_mod.name)
+
+        mod_scope = Scope(name = original_mod_name, used_symbols = scope.local_used_symbols.copy(),
+                          original_symbols = scope.python_names.copy(), scope_type = 'module')
         self.scope = mod_scope
 
         imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
+
+        # Ensure all class types are declared
+        for c in expr.classes:
+            name = c.name
+            python_name = c.scope.get_python_name(name)
+            struct_name = self.scope.get_new_name(f'Py{python_name}Object')
+            dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
+                                    BaseClass=WrapperCustomDataType)()
+
+            type_name = self.scope.get_new_name(f'Py{python_name}Type')
+            wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name, 'class'),
+                                       docstring = c.docstring, class_type = dtype)
+
+            orig_cls_dtype = c.scope.parent_scope.cls_constructs[python_name]
+            self._python_object_map[c] = wrapped_class
+            self._python_object_map[orig_cls_dtype] = dtype
+
+            self.scope.insert_class(wrapped_class, python_name)
 
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
 
         # Wrap functions
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        funcs_to_wrap = [f for f in funcs_to_wrap if not f.is_inline]
+        funcs_to_wrap = [f for f in funcs_to_wrap if f.is_semantic and not f.is_private]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, 'removed_functions', None)
@@ -1272,9 +1307,10 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
 
         # Wrap interfaces
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
-        init_func = self._build_module_init_function(expr, imports)
+        module_def_name = self.scope.get_new_name('module')
+        init_func = self._build_module_init_function(expr, imports, module_def_name)
 
         API_var, import_func = self._build_module_import_function(expr)
 
@@ -1282,11 +1318,11 @@ class CToPythonWrapper(Wrapper):
 
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
-        original_mod = getattr(expr, 'original_module', expr)
         original_mod_name = mod_scope.get_python_name(original_mod.name)
         return PyModule(original_mod_name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = init_func, import_func = import_func)
+                        init_func = init_func, import_func = import_func,
+                        module_def_name = module_def_name)
 
     def _wrap_BindCModule(self, expr):
         """
@@ -1320,8 +1356,10 @@ class CToPythonWrapper(Wrapper):
             external_funcs.append(FunctionDef(f.name, f.arguments, [], f.results, is_header = True, scope = f.scope))
 
         # Add external functions for normal functions
-        for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope))
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for f in expr.funcs)
+        external_funcs.extend(FunctionDef(f.name.lower(), f.arguments, [], f.results, is_header = True, scope = f.scope)
+                              for i in expr.interfaces for f in i.functions)
 
         for c in expr.classes:
             m = c.new_func
@@ -1366,8 +1404,8 @@ class CToPythonWrapper(Wrapper):
             of the type_indicator.
         """
         # Initialise the scope
-        func_name = self.scope.get_new_name(expr.name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', object_type = 'wrapper')
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_funcs = expr.functions
         example_func = original_funcs[0]
@@ -1377,6 +1415,8 @@ class CToPythonWrapper(Wrapper):
         else:
             class_dtype = None
 
+        for f in original_funcs:
+            self._wrap(f)
 
         # Add the variables to the expected symbols in the scope
         for a in example_func.arguments:
@@ -1395,7 +1435,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
 
         # Determine flags which indicate argument type
-        type_check_name = self.scope.get_new_name(expr.name+'_type_check')
+        type_check_name = self.scope.get_new_name(expr.name+'_type_check', object_type = 'wrapper')
         type_check_func, argument_type_flags = self._get_type_check_function(type_check_name, python_arg_objs, original_funcs)
 
         self.scope = func_scope
@@ -1416,12 +1456,13 @@ class CToPythonWrapper(Wrapper):
                     [PyErr_SetString(PyTypeError, CStrStr(LiteralString("Unexpected type combination"))),
                      Return(self._error_exit_code)]))
         body.append(If(*if_sections))
+        result_var = self.get_new_PyObject("result", is_temp=True)
         self.exit_scope()
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
                                      body,
-                                     FunctionDefResult(self.get_new_PyObject("result", is_temp=True)),
+                                     FunctionDefResult(result_var),
                                      scope=func_scope)
         for a in python_args:
             self._python_object_map.pop(a)
@@ -1449,8 +1490,8 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(expr.name+'_wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
+        func_name = self.scope.get_new_name(expr.name+'_wrapper', object_type = 'wrapper')
+        func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
         original_func_name = original_func.scope.get_python_name(original_func.name)
 
@@ -1481,7 +1522,7 @@ class CToPythonWrapper(Wrapper):
             a_var = a.var
             func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
 
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
 
         # Get variables describing the arguments and results that are seen from Python
         python_args = expr.arguments
@@ -1570,7 +1611,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
                 docstring = expr.docstring, original_function = original_func)
 
-        self.scope.functions[func_name] = function
+        self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[expr] = function
 
         if 'property' in original_func.decorators:
@@ -1613,7 +1654,7 @@ class CToPythonWrapper(Wrapper):
         """
 
         collect_arg = self._python_object_map[expr]
-        in_interface = len(expr.get_user_nodes(Interface)) > 0
+        in_interface = len(expr.get_user_nodes(Interface, excluded_nodes = (FunctionCall,))) > 0
         is_bind_c_argument = isinstance(expr.var, BindCVariable)
 
         orig_var = getattr(expr.var, 'original_var', expr.var)
@@ -1685,7 +1726,7 @@ class CToPythonWrapper(Wrapper):
             typenum = numpy_dtype_registry[expr.dtype]
             data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                         lhs=expr)
-            shape_var = DottedVariable(CStackArray(NumpyInt32Type()), 'shape',
+            shape_var = DottedVariable(CStackArray.get_new(NumpyInt32Type()), 'shape',
                         lhs=expr)
             release_memory = False
             return [AliasAssign(py_equiv, to_pyarray(
@@ -1729,7 +1770,7 @@ class CToPythonWrapper(Wrapper):
         data_var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape_var = self.scope.get_temporary_variable(CStackArray(NumpyInt32Type()), name = v.name+'_size',
+        shape_var = self.scope.get_temporary_variable(CStackArray.get_new(NumpyInt32Type()), name = v.name+'_size',
                 shape = (v.rank,))
         shape = [IndexedElement(shape_var, i) for i in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
@@ -1769,7 +1810,8 @@ class CToPythonWrapper(Wrapper):
         """
         lhs = expr.lhs
         class_type = lhs.cls_base
-        python_class_type = self.scope.find(class_type.name, 'classes', raise_if_missing = True)
+        python_class_type = self.scope.find(self.scope.get_python_name(class_type.name),
+                                            'classes', raise_if_missing = True)
         class_scope = python_class_type.scope
 
         class_ptr_attrib = class_scope.find('instance', 'variables', raise_if_missing = True)
@@ -1777,8 +1819,8 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         #                        Create getter
         # ----------------------------------------------------------------------------------
-        getter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_getter')
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_getter', object_type = 'wrapper')
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
@@ -1799,8 +1841,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=None, status='unallocated'),
-                    AliasAssign(new_res_val, attrib),
+            body = [AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
@@ -1823,8 +1864,8 @@ class CToPythonWrapper(Wrapper):
         #                        Create setter
         # ----------------------------------------------------------------------------------
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
-        setter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_setter')
-        setter_scope = self.scope.new_child_scope(setter_name)
+        setter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_setter', object_type = 'wrapper')
+        setter_scope = self.scope.new_child_scope(setter_name, 'function')
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
@@ -1900,8 +1941,8 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         #                        Create getter
         # ----------------------------------------------------------------------------------
-        getter_name = self.scope.get_new_name(f'{class_type.name}_{name}_getter')
-        getter_scope = self.scope.new_child_scope(getter_name)
+        getter_name = self.scope.get_new_name(f'{class_type.name}_{name}_getter', object_type = 'wrapper')
+        getter_scope = self.scope.new_child_scope(getter_name, 'function')
         self.scope = getter_scope
 
         get_val_arg = expr.getter.arguments[0]
@@ -1919,7 +1960,7 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
-        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
+        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True, expr.getter)
         res_wrapper = result_wrapping['body']
         c_results = result_wrapping['c_results']
         getter_result = result_wrapping['py_result']
@@ -1927,14 +1968,11 @@ class CToPythonWrapper(Wrapper):
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
-        if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
-
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
+            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
-        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
@@ -1952,8 +1990,8 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         if expr.setter:
             self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
-            setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
-            setter_scope = self.scope.new_child_scope(setter_name)
+            setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter', object_type = 'wrapper')
+            setter_scope = self.scope.new_child_scope(setter_name, 'function')
             self.scope = setter_scope
 
             original_args = expr.setter.arguments
@@ -2019,25 +2057,17 @@ class CToPythonWrapper(Wrapper):
             The wrapped class definition.
         """
         name = expr.name
-        struct_name = self.scope.get_new_name(f'Py{name}Object')
-        dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+        python_name = expr.scope.get_python_name(name)
 
-        type_name = self.scope.get_new_name(f'Py{name}Type')
-        docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
-                                   docstring = docstring, class_type = dtype)
         bound_class = isinstance(expr, BindCClassDef)
 
-        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
+        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[python_name]
+        wrapped_class = self._python_object_map[expr]
 
-        self._python_object_map[expr] = wrapped_class
-        self._python_object_map[orig_cls_dtype] = dtype
-
-        self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
 
         for f in expr.methods:
-            if f.is_inline:
+            if not f.is_semantic:
                 continue
             orig_f = getattr(f, 'original_function', f)
             name = orig_f.name
@@ -2103,22 +2133,33 @@ class CToPythonWrapper(Wrapper):
         # Imports do not use collision handling as there is not enough context available.
         # This should be fixed when stub files and proper pickling is added
         import_wrapper = False
+        import_scope = None
         for as_name in expr.target:
             t = as_name.object
             if isinstance(t, ClassDef):
-                name = t.name
-                struct_name = f'Py{name}Object'
-                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
-                type_name = f'Py{name}Type'
-                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
+                if import_scope is None:
+                    import_scope = Scope(name = expr.source_module.name,
+                                         used_symbols = expr.source_module.scope.local_used_symbols.copy(),
+                                         original_symbols = expr.source_module.scope.python_names.copy(),
+                                         scope_type = 'module')
+                name = t.scope.get_python_name(t.name)
+                struct_name = import_scope.get_new_name(f'Py{name}Object')
+                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
+                type_name = import_scope.get_new_name(f'Py{name}Type')
+                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = name, scope_type = 'class'), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
-                self.scope.imports['classes'][t.name] = wrapped_class
+                self.scope.imports['classes'][name] = wrapped_class
                 import_wrapper = True
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name, (), (), scope = Scope())
+            mod_spoof_scope = Scope(name=expr.source_module.name, scope_type = 'module')
+            mod_import_func = FunctionDef(mod_spoof_scope.get_new_name('import'), (), (),
+                       FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)))
+            mod_spoof = PyModule(expr.source_module.name, (), (), scope = mod_spoof_scope,
+                                 module_def_name = mod_spoof_scope.get_new_name('module'),
+                                 import_func = mod_import_func)
             return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
@@ -2217,8 +2258,11 @@ class CToPythonWrapper(Wrapper):
         """
         assert not bound_argument
         if arg_var is None:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), new_class = Variable,
-                                    is_argument = False, is_const = False)
+                                    is_argument = False, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
@@ -2349,44 +2393,50 @@ class CToPythonWrapper(Wrapper):
         body = parts['body']
         shape = parts['shape']
         strides = parts['strides']
+        ubounds = parts['ubounds']
         shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
         stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        ubound_elems = [IndexedElement(ubounds, i) for i in range(orig_var.rank)]
         args = [parts['data']] + shape_elems + stride_elems
         default_body = [AliasAssign(parts['data'], Nil())] + \
                 [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 0) for s in ubound_elems] + \
                 [Assign(s, 1) for s in stride_elems]
 
         if is_bind_c_argument:
             rank = orig_var.rank
-            arg_var = Variable(BindCArrayType(rank, True), self.scope.get_new_name(orig_var.name),
-                        shape = (LiteralInteger(rank*2+1),))
+            arg_var = Variable(BindCArrayType.get_new(rank, True), self.scope.get_new_name(orig_var.name),
+                        shape = (LiteralInteger(rank*3+1),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
             for i,s in enumerate(shape):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
-            for i,s in enumerate(strides):
+            for i,s in enumerate(ubounds):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+2*rank+1)), s)
 
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
+        class_type = orig_var.class_type
+        if isinstance(class_type, FinalType):
+            class_type = class_type.underlying_type
         arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, is_optional=False,
                                 memory_handling='alias', new_class = Variable, allows_negative_indexes = False,
-                                is_const = False)
+                                class_type = class_type)
         self.scope.insert_variable(arg_var)
         if orig_var.is_optional:
             sliced_arg_var = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False,
                                     is_optional=False, memory_handling='alias', new_class = Variable,
-                                    allows_negative_indexes = False, is_const = False)
+                                    allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var)
         else:
             sliced_arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
                                     is_optional=False, memory_handling='alias', new_class = Variable,
-                                    allows_negative_indexes = False, is_const = False)
+                                    allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
-
-        body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
-        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+        body.append(Allocate(arg_var, shape=tuple(shape_elems), status='unallocated', like=args[0]))
+        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, u, s) for s, u in zip(stride_elems, ubound_elems)])))
 
         collect_arg = sliced_arg_var
         if orig_var.is_optional:
@@ -2448,10 +2498,10 @@ class CToPythonWrapper(Wrapper):
         size_var = self.scope.get_temporary_variable(PythonNativeInt(), self.scope.get_new_name(f'{orig_var.name}_size'))
 
         if is_bind_c_argument:
-            data_var = Variable(CStackArray(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
+            data_var = Variable(CStackArray.get_new(orig_var.class_type.element_type), self.scope.get_new_name(orig_var.name + '_data'),
                                 memory_handling='alias')
             self.scope.insert_variable(data_var)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(data_var))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(1)), size_var)
@@ -2503,10 +2553,11 @@ class CToPythonWrapper(Wrapper):
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
             #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
+            numpy_dtype = numpy_precision_map[(element_type.primitive_type, element_type.precision)]
+            arr_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, 1, None), self.scope.get_expected_name(orig_var.name),
                                 shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             data = DottedVariable(VoidType(), 'data', lhs=arr_var)
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
@@ -2514,8 +2565,11 @@ class CToPythonWrapper(Wrapper):
             arg_vars = [arg_var]
             body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='heap', new_class = Variable, is_const = False)
+                                    memory_handling='heap', new_class = Variable, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonSet()))
@@ -2542,7 +2596,7 @@ class CToPythonWrapper(Wrapper):
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
         clean_up = []
-        if not orig_var.is_const:
+        if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
                 errors.report("Python built-in containers should be passed as constant arguments when "
                               "translating to languages other than C. Any changes to the set will not "
@@ -2579,11 +2633,12 @@ class CToPythonWrapper(Wrapper):
 
         if is_bind_c_argument:
             element_type = orig_var.class_type.element_type
-            #raise errors.report("Fortran set interface is not yet implemented", severity='fatal', symbol=orig_var)
-            arr_var = Variable(NumpyNDArrayType(element_type, 1, None), self.scope.get_expected_name(orig_var.name),
-                                shape = (size_var,), memory_handling = 'heap')
+            numpy_dtype = numpy_precision_map[(element_type.primitive_type, element_type.precision)]
+            arr_var = Variable(NumpyNDArrayType.get_new(numpy_dtype, 1, None),
+                               self.scope.get_expected_name(orig_var.name),
+                               shape = (size_var,), memory_handling = 'heap')
             self.scope.insert_variable(arr_var, orig_var.name)
-            arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+            arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                         shape = (LiteralInteger(2),))
             data = DottedVariable(VoidType(), 'data', lhs=arr_var)
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), data)
@@ -2591,8 +2646,11 @@ class CToPythonWrapper(Wrapper):
             arg_vars = [arg_var]
             body.append(Allocate(arr_var, shape = (size_var,), status='unallocated'))
         else:
+            class_type = orig_var.class_type
+            if isinstance(class_type, FinalType):
+                class_type = class_type.underlying_type
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
-                                    memory_handling='heap', new_class = Variable, is_const = False)
+                                    memory_handling='heap', new_class = Variable, class_type = class_type)
             self.scope.insert_variable(arg_var, orig_var.name)
             arg_vars = [arg_var]
             body.append(Assign(arg_var, PythonList()))
@@ -2619,9 +2677,9 @@ class CToPythonWrapper(Wrapper):
         body.append(For((idx,), PythonRange(size_var), for_body, scope = for_scope))
 
         clean_up = []
-        if not orig_var.is_const:
+        if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
-                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C. " +
                               "Any changes to the list will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:
@@ -2682,10 +2740,10 @@ class CToPythonWrapper(Wrapper):
 
         if is_bind_c_argument:
             if arg_var is None:
-                data_var = Variable(CStackArray(CharType()), self.scope.get_expected_name(orig_var.name),
-                                    shape = (None,), memory_handling='alias', is_const = True)
+                data_var = Variable(FinalType.get_new(CStackArray.get_new(CharType())), self.scope.get_expected_name(orig_var.name),
+                                    shape = (None,), memory_handling='alias')
                 size_var = Variable(PythonNativeInt(), self.scope.get_new_name(f'{data_var.name}_size'))
-                arg_var = Variable(BindCArrayType(1, False), self.scope.get_new_name(orig_var.name),
+                arg_var = Variable(BindCArrayType.get_new(1, False), self.scope.get_new_name(orig_var.name),
                                     shape = (LiteralInteger(2),))
                 self.scope.insert_variable(data_var, orig_var.name)
                 self.scope.insert_variable(size_var)
@@ -2868,13 +2926,13 @@ class CToPythonWrapper(Wrapper):
         """
         if is_bind_c:
             return self._extract_BindCArrayType_FunctionDefResult(orig_var, funcdef)
-        name = orig_var.name
+        name = self.scope.get_new_name(orig_var.name)
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         c_res = orig_var.clone(name, is_argument = False, memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
         data_var = DottedVariable(VoidType(), 'data', memory_handling='alias',
                     lhs=c_res)
-        shape_var = DottedVariable(CStackArray(PythonNativeInt()), 'shape',
+        shape_var = DottedVariable(CStackArray.get_new(PythonNativeInt()), 'shape',
                     lhs=c_res)
         release_memory = False
         if funcdef:
@@ -2917,7 +2975,7 @@ class CToPythonWrapper(Wrapper):
         py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
         # Result of calling the bind-c function
         data_var = Variable(VoidType(), self.scope.get_new_name(name+'_data'), memory_handling='alias')
-        shape_var = Variable(CStackArray(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
+        shape_var = Variable(CStackArray.get_new(NumpyInt32Type()), self.scope.get_new_name(name+'_shape'),
                         shape = (orig_var.rank,), memory_handling='alias')
         typenum = numpy_dtype_registry[orig_var.dtype]
         # Save so we can find by iterating over func.results
@@ -2972,9 +3030,10 @@ class CToPythonWrapper(Wrapper):
         setup = [l for e in extract_elems for l in e.get('setup', ())]
         c_result_vars = [r for e in extract_elems for r in e['c_results']]
         py_result_vars = [e['py_result'] for e in extract_elems]
-        py_res = self.get_new_PyObject(f'{name}_obj', orig_var.dtype)
+        py_res = self.get_new_PyObject(f'{name}_obj')
         body.append(AliasAssign(py_res, PyTuple_Pack(*[ObjectAddress(r) for r in py_result_vars])))
         body.extend(Py_DECREF(r) for r in py_result_vars)
+
         return {'c_results': PythonTuple(*c_result_vars), 'py_result': py_res, 'body': body, 'setup': setup}
 
     def _extract_HomogeneousContainerType_FunctionDefResult(self, wrapped_var, is_bind_c, funcdef):
@@ -3011,7 +3070,7 @@ class CToPythonWrapper(Wrapper):
             result = wrapped_var.new_var
             ptr_var = funcdef.scope.collect_tuple_element(result[0])
             shape_var = funcdef.scope.collect_tuple_element(result[1])
-            c_res = Variable(CStackArray(orig_var.class_type.element_type),
+            c_res = Variable(CStackArray.get_new(orig_var.class_type.element_type),
                              self.scope.get_new_name(ptr_var.name))
             loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(c_res), loop_size]
@@ -3089,9 +3148,9 @@ class CToPythonWrapper(Wrapper):
             key_ptr_var = funcdef.scope.collect_tuple_element(result[0])
             val_ptr_var = funcdef.scope.collect_tuple_element(result[1])
             shape_var = funcdef.scope.collect_tuple_element(result[2])
-            key_c_res = Variable(CStackArray(orig_var.class_type.key_type),
+            key_c_res = Variable(CStackArray.get_new(orig_var.class_type.key_type),
                              self.scope.get_new_name(key_ptr_var.name))
-            val_c_res = Variable(CStackArray(orig_var.class_type.value_type),
+            val_c_res = Variable(CStackArray.get_new(orig_var.class_type.value_type),
                              self.scope.get_new_name(val_ptr_var.name))
             loop_size = shape_var.clone(self.scope.get_new_name(shape_var.name), is_argument = False)
             c_results = [ObjectAddress(key_c_res), ObjectAddress(val_c_res), loop_size]

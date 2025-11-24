@@ -34,7 +34,7 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "version=3.12" >> $GITHUB_ENV
+        echo "version=3.13" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
@@ -66,7 +66,7 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           submodules: true
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           auto-activate-base: true
@@ -79,20 +79,21 @@ jobs:
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: msmpi
+          shell: gitbash
       - name: "Setup"
         if: github.event_name != 'push'
         id: token
         run: |
           python -m pip install jwt requests
           python ci_tools/setup_check_run.py anaconda_windows
-        shell: bash -l -eo pipefail {0}
+        shell: gitbash -l -eo pipefail {0}
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
         with:
-          shell_cmd: 'bash -l -eo pipefail {0}'
+          shell_cmd: 'gitbash -l -eo pipefail {0}'
           pytest_mark: 'and not external'
       - name: Python tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
@@ -100,14 +101,14 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
         with:
-          shell_cmd: 'bash -l -eo pipefail {0}'
+          shell_cmd: 'gitbash -l -eo pipefail {0}'
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
-        shell: bash -l -eo pipefail {0}
+        shell: gitbash -l -eo pipefail {0}
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
         run:
           python ci_tools/complete_check_run.py 'success'
-        shell: bash -l -eo pipefail {0}
+        shell: gitbash -l -eo pipefail {0}

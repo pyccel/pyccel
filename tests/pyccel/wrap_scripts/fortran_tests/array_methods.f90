@@ -1,0 +1,56 @@
+module array_methods
+  use, intrinsic :: iso_c_binding, only : C_DOUBLE, C_INT
+  implicit none
+
+  type :: ArrayOps
+    real(C_DOUBLE), allocatable :: data(:)
+  contains
+    procedure :: create => create_arrayops
+    procedure :: free => free_arrayops
+    procedure :: set_data => array_set_data
+    procedure :: sum => array_sum
+    procedure :: scale => array_scale
+  end type ArrayOps
+
+contains
+
+  subroutine create_arrayops(this)
+    class(ArrayOps), intent(inout) :: this
+  end subroutine create_arrayops
+
+  subroutine free_arrayops(this)
+    class(ArrayOps), intent(inout) :: this
+    if (allocated(this%data)) then
+      deallocate(this%data)
+    end if
+  end subroutine free_arrayops
+
+  subroutine array_set_data(this, arr, n)
+    class(ArrayOps), intent(inout) :: this
+    real(C_DOUBLE), intent(in) :: arr(n)
+    integer(C_INT), intent(in) :: n
+    if (allocated(this%data)) deallocate(this%data)
+    allocate(this%data(n))
+    this%data = arr
+  end subroutine array_set_data
+
+  function array_sum(this) result(total)
+    class(ArrayOps), intent(in) :: this
+    real(C_DOUBLE) :: total
+    integer :: i
+    total = 0.0d0
+    do i = 1, size(this%data)
+      total = total + this%data(i)
+    end do
+  end function array_sum
+
+  subroutine array_scale(this, factor)
+    class(ArrayOps), intent(inout) :: this
+    real(C_DOUBLE), intent(in) :: factor
+    integer :: i
+    do i = 1, size(this%data)
+      this%data(i) = this%data(i) * factor
+    end do
+  end subroutine array_scale
+
+end module array_methods
