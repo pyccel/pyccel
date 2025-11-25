@@ -1591,11 +1591,16 @@ class SemanticParser(BasicParser):
         mem_in_multirets : bool
             If True, the variable that will be created is found
             in a multi-values return, false otherwise.
+
+        Returns
+        -------
+        bool
+            True if memory chunk was allocated in a function, False otherwise.
         """
         return (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                    and not getattr(rhs.funcdef, 'is_elemental', False) and \
-                                    not isinstance(lhs.class_type, HomogeneousTupleType)) or mem_in_multirets or \
-                                    isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
+                and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                not isinstance(lhs.class_type, HomogeneousTupleType)) or mem_in_multirets or \
+                isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
 
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
                          insertion_scope = None, rhs_scope = None):
