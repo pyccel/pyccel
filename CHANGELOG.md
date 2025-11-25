@@ -65,6 +65,7 @@ All notable changes to this project will be documented in this file.
 -   #2483 : Fix calls to `math.sqrt` using dotted syntax.
 -   #2483 : Fix calls to `cmath.sqrt` using dotted syntax.
 -   #2484 : Fix optional `TypeVar` arguments.
+-   #2406 : Fix bug when returning an expression that is translated to multiple lines.
 -   #2292 : Fix memory leak when memory is allocated in a function.
 -   Rename `main` function when translating to C.
 
