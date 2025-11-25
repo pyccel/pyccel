@@ -2177,6 +2177,21 @@ class FCodePrinter(CodePrinter):
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
         class_type = expr.variable.class_type
+        if expr.alloc_type == 'function':
+            if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
+                if expr.status == 'unallocated':
+                    return ''
+                elif expr.status == 'unknown':
+                    var_code = self._print(expr.variable)
+                    return (f'if (allocated({var_code})) then\n'
+                            f'  deallocate({var_code})\n'
+                             'end if\n')
+
+                elif expr.status == 'allocated':
+                    var_code = self._print(expr.variable)
+                    return f'deallocate({var_code})\n'
+            elif isinstance(class_type, HomogeneousListType) and expr.status != 'unallocated':
+                return self._print(Deallocate(expr.variable))
         if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, CustomDataType)):
             # Transpose indices because of Fortran column-major ordering
             if expr.variable.rank == 0:
@@ -2224,8 +2239,8 @@ class FCodePrinter(CodePrinter):
                 size_code = self._print(expr.shape[0])
                 if expr.status == 'unallocated':
                     return f'call {var_code} % reserve({size_code})\n'
-                return (f'call {var_code} % clear()\n'
-                        f'call {var_code} % reserve({size_code})\n')
+                return self._print(Deallocate(expr.variable)) + \
+                        f'call {var_code} % reserve({size_code})\n'
             else:
                 return ''
         elif isinstance(class_type, (HomogeneousContainerType, DictType, StringType)):
@@ -2249,8 +2264,14 @@ class FCodePrinter(CodePrinter):
             else:
                 return ''
 
-        if var.is_alias or isinstance(class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
+        if var.is_alias or isinstance(class_type, DictType):
             return ''
+        elif isinstance(class_type, HomogeneousListType):
+            var_code = self._print(var)
+            return f'call {var_code} % clear()\ncall {var_code} % reset()\n'
+        elif isinstance(class_type, HomogeneousSetType):
+            var_code = self._print(var)
+            return f'call {var_code} % clear()\n'
         elif isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType, StringType)):
             var_code = self._print(var)
             code  = f'if (allocated({var_code})) deallocate({var_code})\n'

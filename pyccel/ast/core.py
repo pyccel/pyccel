@@ -374,6 +374,9 @@ class Allocate(PyccelAstNode):
         - 'init' refers to direct allocation with predefined data (e.g., `x = [1, 2, 4]`).
         - 'reserve' refers to cases where the container will be appended to.
         - 'resize' refers to cases where the container is populated via indexed elements.
+        - 'function' refers to cases where the container is allocated in a function. It is
+                     still useful to have an allocate node in this case for easy determination
+                     of where deallocations are needed.
 
     Notes
     -----
@@ -404,8 +407,8 @@ class Allocate(PyccelAstNode):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
-        assert alloc_type is None or isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
-        assert alloc_type is None or alloc_type in ('init', 'reserve', 'resize')
+        assert alloc_type in (None, 'init', 'reserve', 'resize', 'function')
+        assert alloc_type in (None, 'function') or isinstance(variable.class_type, (HomogeneousListType, HomogeneousSetType, DictType))
 
         self._variable = variable
         self._shape    = shape

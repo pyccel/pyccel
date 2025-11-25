@@ -1906,6 +1906,8 @@ class CCodePrinter(CodePrinter):
                 free_code = f'{self._print(Deallocate(variable))}'
             if expr.shape[0] is None:
                 return free_code
+            if expr.alloc_type == 'function':
+                return free_code
             size = self._print(expr.shape[0])
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
@@ -1926,6 +1928,8 @@ class CCodePrinter(CodePrinter):
                 free_code += ''.join(("{\n", self._print(Deallocate(variable)), "}\n"))
             elif (expr.status == 'allocated'):
                 free_code += self._print(Deallocate(variable))
+            if expr.alloc_type == 'function':
+                return free_code
 
             tot_shape = self._print(functools.reduce(PyccelMul.make_simplified, expr.shape))
             c_type = self.get_c_type(variable.class_type)
