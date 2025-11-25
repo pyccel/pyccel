@@ -1574,10 +1574,27 @@ class SemanticParser(BasicParser):
 
         return func
 
-    def is_array_declared_in_function(self, lhs, rhs, arr_in_multirets):
+    def is_memory_allocated_in_function(self, lhs, rhs, mem_in_multirets):
+        """
+        Determine whether a memory chunk was allocated in a function.
+
+        Determine whether a memory chunk was allocated in a function. This is
+        important for garbage collection as memory declared in functions will
+        not automatically have associated allocate nodes in the current scope.
+
+        Parameters
+        ----------
+        lhs : Variable
+            The array variable.
+        rhs : TypedAstNode
+            The expression used to define the array variable.
+        mem_in_multirets : bool
+            If True, the variable that will be created is found
+            in a multi-values return, false otherwise.
+        """
         return (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                                     and not getattr(rhs.funcdef, 'is_elemental', False) and \
-                                    not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
+                                    not isinstance(lhs.class_type, HomogeneousTupleType)) or mem_in_multirets or \
                                     isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
 
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
@@ -1865,7 +1882,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory allocation if needed
-                array_declared_in_function = self.is_array_declared_in_function(lhs, rhs, arr_in_multirets)
+                memory_allocated_in_function = self.is_memory_allocated_in_function(lhs, rhs, arr_in_multirets)
                 if lhs.on_heap:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1879,7 +1896,7 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     alloc_type = None
-                    if array_declared_in_function:
+                    if memory_allocated_in_function:
                         alloc_type = 'function'
 
                     # Create Allocate node
@@ -1935,7 +1952,7 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                if array_declared_in_function:
+                if memory_allocated_in_function:
                     know_lhs_shape = True
                 elif isinstance(lhs.dtype, StringType):
                     know_lhs_shape = (lhs.rank == 1) or all(sh is not None for sh in lhs.alloc_shape[:-1])
@@ -1943,7 +1960,7 @@ class SemanticParser(BasicParser):
                     know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
 
                 if isinstance(class_type, (NumpyNDArrayType, HomogeneousTupleType)) and not know_lhs_shape \
-                        and not array_declared_in_function:
+                        and not memory_allocated_in_function:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -2121,8 +2138,8 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
-                    array_declared_in_function = self.is_array_declared_in_function(var, rhs, arr_in_multirets)
-                    alloc_type = 'function' if array_declared_in_function else None
+                    memory_allocated_in_function = self.is_memory_allocated_in_function(var, rhs, arr_in_multirets)
+                    alloc_type = 'function' if memory_allocated_in_function else None
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if alloc_type is None:
                             if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
