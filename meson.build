@@ -11,9 +11,6 @@ project(
   ],
 )
 
-# TODO: Install GFTL
-ff = meson.get_compiler('fortran')
-
 python = import('python').find_installation(pure: false)
 
 stc_src = meson.current_source_dir() / 'pyccel' / 'extensions' / 'STC'
@@ -27,6 +24,45 @@ py_sources = run_command(
 ).stdout().strip().split('\n')
 
 python.install_sources(py_sources, preserve_path: true)
+
+
+ff = meson.get_compiler('fortran')
+cmake_cmd = find_program('cmake')
+
+if cmake_cmd.found()
+  build_dir = buildroot / 'gftl-build'
+  install_dir = buildroot / 'gftl-install'
+  dest_dir = pkgroot / 'pyccel' / 'extensions' / 'gFTL'
+
+  # 1) CMake setup
+  setup = run_command(
+      cmake_cmd,
+      '-S', gftl_src,
+      '-B', build_dir,
+      '-DCMAKE_BUILD_TYPE=Release',
+      '-DCMAKE_INSTALL_PREFIX=' + install_dir,
+    check: true,
+  )
+
+  # 2) CMake compile
+  compile_target = custom_target(
+    'gftl-compile',
+    command: [cmake_cmd, '--build', build_dir],
+    output: 'compile-build'
+  )
+
+  # 3) CMake install (into dest_dir)
+  install_target = custom_target(
+    'gftl',
+    command: [cmake_cmd, '--install', build_dir],
+    input: compile_target,
+    output: 'gftl-install',
+    install: true,
+    install_dir: dest_dir
+  )
+else
+  warning('Couldn\'t find CMake. Containers (list/set/dict) will not be available for Fortran.')
+endif
 
 
 
@@ -70,12 +106,12 @@ foreach tc : toolchains
 
   # 2) meson compile
   compile_target = custom_target(
-    'compile-' + tc,
+    'stc-compile-' + tc,
     command: [
       meson_cmd,
       'compile', '-C', build_dir
     ],
-    output: 'compile-build-' + tc
+    output: 'stc-compile-build-' + tc
   )
 
   # 3) meson install (into dest_dir)
