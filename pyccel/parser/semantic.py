@@ -1597,10 +1597,12 @@ class SemanticParser(BasicParser):
         bool
             True if memory chunk was allocated in a function, False otherwise.
         """
-        return (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                and not getattr(rhs.funcdef, 'is_elemental', False) and \
-                not isinstance(lhs.class_type, HomogeneousTupleType)) or mem_in_multirets or \
-                isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
+        return not isinstance(lhs.class_type, FixedSizeNumericType) and \
+                ((isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
+                  and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                  not isinstance(lhs.class_type, HomogeneousTupleType)) or \
+                 mem_in_multirets or \
+                 isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem)))
 
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
                          insertion_scope = None, rhs_scope = None):
