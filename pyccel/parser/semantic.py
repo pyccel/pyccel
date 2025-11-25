@@ -1574,7 +1574,7 @@ class SemanticParser(BasicParser):
 
         return func
 
-    def is_memory_allocated_in_function(self, lhs, rhs, mem_in_multirets):
+    def is_memory_allocated_in_function(self, lhs, rhs, heap_mem_in_multirets):
         """
         Determine whether a memory chunk was allocated in a function.
 
@@ -1588,8 +1588,8 @@ class SemanticParser(BasicParser):
             The array variable.
         rhs : TypedAstNode
             The expression used to define the array variable.
-        mem_in_multirets : bool
-            If True, the variable that will be created is found
+        heap_mem_in_multirets : bool
+            If True, the variable that will be created in heap memory, is found
             in a multi-values return, False otherwise.
 
         Returns
@@ -1601,10 +1601,10 @@ class SemanticParser(BasicParser):
                 ((isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                   and not getattr(rhs.funcdef, 'is_elemental', False) and \
                   not isinstance(lhs.class_type, HomogeneousTupleType)) or \
-                 mem_in_multirets or \
+                 heap_mem_in_multirets or \
                  isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem)))
 
-    def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
+    def _create_variable(self, name, class_type, rhs, d_lhs, *, heap_mem_in_multirets=False,
                          insertion_scope = None, rhs_scope = None):
         """
         Create a new variable.
@@ -1631,9 +1631,10 @@ class SemanticParser(BasicParser):
         d_lhs : dict
             Dictionary of properties for the new Variable.
 
-        arr_in_multirets : bool, default: False
-            If True, the variable that will be created is an array
-            in multi-values return, false otherwise.
+        heap_mem_in_multirets : bool, default: False
+            If True, the variable that will be created requires a heap
+            memory allocation, and is found in a multi-values return,
+            False otherwise.
 
         insertion_scope : Scope, optional
             The scope where the variable will be inserted. This is used to add any
@@ -1686,7 +1687,7 @@ class SemanticParser(BasicParser):
                 if var is None:
                     elem_d_lhs = self._infer_type( tuple_elem )
 
-                    if not arr_in_multirets:
+                    if not heap_mem_in_multirets:
                         self._ensure_target( tuple_elem, elem_d_lhs )
 
                     elem_type = elem_d_lhs.pop('class_type')
@@ -1754,7 +1755,7 @@ class SemanticParser(BasicParser):
                     d_lhs['memory_handling'] = 'alias'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign = False,
-            arr_in_multirets=False):
+            heap_mem_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
         
@@ -1784,8 +1785,9 @@ class SemanticParser(BasicParser):
             This is necessary as the restrictions on the dtype are less strict in this
             case.
 
-        arr_in_multirets : bool, default=False
-            If True, rhs has an array in its results, otherwise, it should be set to False.
+        heap_mem_in_multirets : bool, default=False
+            If True, rhs has a variable requiring a heap allocation in its results,
+            otherwise, it should be set to False.
             It helps when we don't need lhs to be a pointer in case of a returned array in
             a tuple of results.
 
@@ -1805,7 +1807,7 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is heap array
-            if not arr_in_multirets:
+            if not heap_mem_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
             if isinstance(lhs, DottedName):
@@ -1882,14 +1884,14 @@ class SemanticParser(BasicParser):
                 if not isinstance(lhs, DottedVariable):
                     new_name = self.scope.get_expected_name(name)
                     # Create new variable
-                    lhs = self._create_variable(new_name, class_type, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
+                    lhs = self._create_variable(new_name, class_type, rhs, d_lhs, heap_mem_in_multirets=heap_mem_in_multirets)
 
                     # Add variable to scope
                     self.scope.insert_variable(lhs, name)
 
                 # ...
                 # Add memory allocation if needed
-                memory_allocated_in_function = self.is_memory_allocated_in_function(lhs, rhs, arr_in_multirets)
+                memory_allocated_in_function = self.is_memory_allocated_in_function(lhs, rhs, heap_mem_in_multirets)
                 if lhs.on_heap:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1982,7 +1984,7 @@ class SemanticParser(BasicParser):
                 if isinstance(var, DottedVariable):
                     var = next((a for a in var.lhs.cls_base.attributes if var == a), var)
 
-                self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs, arr_in_multirets)
+                self._ensure_inferred_type_matches_existing(class_type, d_lhs, var, is_augassign, new_expressions, rhs, heap_mem_in_multirets)
 
                 lhs = var
         else:
@@ -1991,7 +1993,7 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _ensure_inferred_type_matches_existing(self, class_type, d_var, var, is_augassign, new_expressions, rhs, arr_in_multirets):
+    def _ensure_inferred_type_matches_existing(self, class_type, d_var, var, is_augassign, new_expressions, rhs, heap_mem_in_multirets):
         """
         Ensure that the inferred type matches the existing variable.
 
@@ -2016,9 +2018,10 @@ class SemanticParser(BasicParser):
         rhs : TypedAstNode
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
-        arr_in_multirets : bool, default: False
-            If True, the variable that will be created is an array
-            in multi-values return, False otherwise.
+        heap_mem_in_multirets : bool, default: False
+            If True, the variable that will be created requires a heap
+            memory allocation, and is found in a multi-values return,
+            False otherwise.
         """
 
         # TODO improve check type compatibility
@@ -2051,7 +2054,7 @@ class SemanticParser(BasicParser):
         elif not is_augassign and not var.is_alias and var.rank > 0 and \
                 isinstance(rhs, (Variable, IndexedElement)) and \
                 not isinstance(var.class_type, (StringType, TupleType)) and \
-                not arr_in_multirets:
+                not heap_mem_in_multirets:
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset),
@@ -2083,7 +2086,7 @@ class SemanticParser(BasicParser):
                 if d_var['shape'][0] == var.shape[0]:
                     rhs_elem = self.scope.collect_tuple_element(var[0])
                     self._ensure_inferred_type_matches_existing(class_type.element_type,
-                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs, arr_in_multirets)
+                            self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs, heap_mem_in_multirets)
                     raise_error = False
                 else:
                     raise_error = True
@@ -2093,7 +2096,7 @@ class SemanticParser(BasicParser):
                     rhs_elem = self.scope.collect_tuple_element(var[i])
                     self._ensure_inferred_type_matches_existing(element_type,
                             self._infer_type(rhs_elem), rhs_elem, is_augassign, new_expressions, rhs,
-                            arr_in_multirets)
+                            heap_mem_in_multirets)
                 raise_error = False
             elif isinstance(var.class_type, HomogeneousTupleType) and \
                     isinstance(class_type, InhomogeneousTupleType):
@@ -2127,7 +2130,7 @@ class SemanticParser(BasicParser):
             if len(previous_allocations) == 0:
                 var.set_init_shape(d_var['shape'])
 
-            memory_allocated_in_function = self.is_memory_allocated_in_function(var, rhs, arr_in_multirets)
+            memory_allocated_in_function = self.is_memory_allocated_in_function(var, rhs, heap_mem_in_multirets)
 
             if d_var['shape'] != shape or memory_allocated_in_function or \
                     (shape and not all(isinstance(s, LiteralInteger) for s in shape)
@@ -2289,7 +2292,7 @@ class SemanticParser(BasicParser):
 
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
-            self._ensure_inferred_type_matches_existing(class_type, d_var, lhs, False, new_expr, None, arr_in_multirets=False)
+            self._ensure_inferred_type_matches_existing(class_type, d_var, lhs, False, new_expr, None, heap_mem_in_multirets=False)
         else:
             lhs_name = self.scope.get_expected_name(lhs_name)
             lhs = Variable(class_type, lhs_name, **d_var)
@@ -4120,7 +4123,7 @@ class SemanticParser(BasicParser):
                         severity='error')
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions,
-                    arr_in_multirets = (isinstance(rhs, FunctionCall) and \
+                    heap_mem_in_multirets = (isinstance(rhs, FunctionCall) and \
                                         not getattr(rhs.funcdef, 'is_elemental', False)))
 
             # If lhs is a purely symbolic object to link tuple elements to their containing tuple
@@ -4139,7 +4142,7 @@ class SemanticParser(BasicParser):
                 for i,(l,r) in enumerate(zip(lhs, rhs.funcdef.results.var)):
                     d = self._infer_type(r)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
-                                                    arr_in_multirets=r.rank>0 ) )
+                                                    heap_mem_in_multirets=r.rank>0 ) )
                 if not isinstance(rhs.class_type, InhomogeneousTupleType):
                     rhs_var = self.scope.get_temporary_variable(rhs.funcdef.results.var)
                     new_expressions.append(Assign(rhs_var, rhs))
@@ -4152,7 +4155,7 @@ class SemanticParser(BasicParser):
                 for i,(l,r) in enumerate(zip(lhs, r_iter)):
                     d = self._infer_type(r)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions,
-                                                    arr_in_multirets=r.rank>0 ) )
+                                                    heap_mem_in_multirets=r.rank>0 ) )
                 lhs = PythonTuple(*new_lhs)
             else:
                 if isinstance(rhs.class_type, InhomogeneousTupleType):
