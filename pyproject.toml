@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling",]
-build-backend = "hatchling.build"
+requires = ["meson-python"]
+build-backend = "mesonpy"
 
 [project]
 name = "pyccel"
@@ -52,35 +52,3 @@ Documentation = "https://pyccel.github.io/pyccel/"
 Source = "https://github.com/pyccel/pyccel"
 Tracker = "https://github.com/pyccel/pyccel/issues"
 Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
-
-[tool.hatch.version]
-path = "pyccel/version.py"
-
-[tool.hatch.build.targets.wheel]
-artifacts = [
-  "*.pyccel",
-  "pyccel/extensions/gFTL/install"
-]
-include = [
-  "pyccel/**/*.py",
-  "pyccel/**/*.pyi",
-  "pyccel/parser/grammar/*.tx",
-  "pyccel/stdlib/**/*.h",
-  "pyccel/stdlib/**/*.c",
-  "pyccel/stdlib/**/*.f90",
-  "pyccel/stdlib/**/*.inc",
-  "pyccel/stdlib/**/CMakeLists.txt",
-  "pyccel/stdlib/**/meson.build",
-  "pyccel/extensions/STC/docs",
-  "pyccel/extensions/STC/include",
-  "pyccel/extensions/STC/src/*",
-  "pyccel/extensions/STC/tests/*",
-  "pyccel/extensions/STC/examples/*",
-  "pyccel/extensions/STC/Makefile",
-  "pyccel/extensions/STC/meson.build",
-  "pyccel/extensions/STC/meson_options.txt"
-]
-
-[tool.hatch.build.targets.wheel.hooks.custom]
-path = "install_scripts/hook.py"
-require-runtime-dependencies = true
