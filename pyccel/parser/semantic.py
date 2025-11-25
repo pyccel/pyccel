@@ -1574,6 +1574,12 @@ class SemanticParser(BasicParser):
 
         return func
 
+    def is_array_declared_in_function(self, lhs, rhs, arr_in_multirets):
+        return (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
+                                    and not getattr(rhs.funcdef, 'is_elemental', False) and \
+                                    not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
+                                    isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
+
     def _create_variable(self, name, class_type, rhs, d_lhs, *, arr_in_multirets=False,
                          insertion_scope = None, rhs_scope = None):
         """
@@ -1859,10 +1865,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory allocation if needed
-                array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and \
-                                            not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets or \
-                                            isinstance(rhs, (ListPop, SetPop, DictPop, DictPopitem, DictGet, DictGetItem))
+                array_declared_in_function = self.is_array_declared_in_function(lhs, rhs, arr_in_multirets)
                 if lhs.on_heap:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -2118,7 +2121,8 @@ class SemanticParser(BasicParser):
                                 self.current_ast_node.col_offset))
 
                 else:
-                    alloc_type = 'function' if isinstance(rhs, (FunctionCall, PyccelFunction)) or arr_in_multirets else None
+                    array_declared_in_function = self.is_array_declared_in_function(var, rhs, arr_in_multirets)
+                    alloc_type = 'function' if array_declared_in_function else None
                     if isinstance(var.class_type, (HomogeneousListType, HomogeneousSetType,DictType)):
                         if alloc_type is None:
                             if isinstance(rhs, (PythonList, PythonDict, PythonSet, FunctionCall)):
