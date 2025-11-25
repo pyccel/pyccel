@@ -2122,7 +2122,8 @@ class SemanticParser(BasicParser):
             if len(previous_allocations) == 0:
                 var.set_init_shape(d_var['shape'])
 
-            if d_var['shape'] != shape or (shape and isinstance(rhs, (FunctionCall, PyccelFunction))):
+            if d_var['shape'] != shape or (shape and not all(isinstance(s, LiteralInteger) for s in shape)
+                                           and isinstance(rhs, (FunctionCall, PyccelFunction))):
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
