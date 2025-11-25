@@ -17,7 +17,7 @@ from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRS
 
 from .builtins  import PythonBool, PythonTuple
 
-from .datatypes import (PyccelType, CustomDataType, TupleType,
+from .datatypes import (PyccelType, CustomDataType, FinalType, TupleType,
                         PythonNativeBool, InhomogeneousTupleType, SymbolicType)
 
 from .internals import PyccelSymbol, PyccelFunction, Iterable
@@ -201,7 +201,7 @@ class Duplicate(TypedAstNode):
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
+        self._shape      = tuple(s if i!= 0 else PyccelMul.make_simplified(s, length) for i,s in enumerate(val.shape))
         self._class_type = val.class_type
 
         self._val       = val
@@ -1050,10 +1050,19 @@ class Module(ScopedAstNode):
         self._is_external = is_external
 
         if pyccel_stage != "syntactic":
-            self._internal_dictionary = {v.name:v for v in variables}
-            self._internal_dictionary.update({f.name:f for f in funcs})
-            self._internal_dictionary.update({i.name:i for i in interfaces})
-            self._internal_dictionary.update({c.name:c for c in classes})
+            def get_name(o):
+                """ Get the syntactic/Python name of the object """
+                n = o.name
+                if o.pyccel_staging == 'syntactic':
+                    return n
+                else:
+                    return scope.get_python_name(n) if scope else n
+
+            self._internal_dictionary = {get_name(v) : v for v in variables}
+            self._internal_dictionary.update({get_name(f) : f for f in funcs})
+            self._internal_dictionary.update({get_name(i) : i for i in interfaces})
+            self._internal_dictionary.update({get_name(c) : c for c in classes})
+
             import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] \
                                 for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
@@ -1566,7 +1575,7 @@ class FunctionDefArgument(TypedAstNode):
         if pyccel_stage != "syntactic":
             if isinstance(self.var, Variable):
                 self._inout = (self.var.rank > 0 or isinstance(self.var.class_type, CustomDataType)) \
-                        and not self.var.is_const and not isinstance(self.var.class_type, TupleType)
+                        and not isinstance(self.var.class_type, FinalType) and not isinstance(self.var.class_type, TupleType)
             else:
                 # If var is not a Variable it is a FunctionAddress
                 self._inout = False
@@ -2224,9 +2233,7 @@ class FunctionDef(ScopedAstNode):
         # Outside of semantic stage, if the scope is provided then the original name
         # of the function should be retrievable from the semantic name using scope.python_names
         assert pyccel_stage != "semantic" or scope is None or \
-                name in scope.python_names
-        assert pyccel_stage != "semantic" or scope is None or \
-                scope.name == scope.python_names[name]
+                is_imported or (name in scope.python_names and scope.name == scope.python_names[name])
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2554,23 +2561,10 @@ class FunctionDef(ScopedAstNode):
         current_pyccel_stage = pyccel_stage.current_stage
         if not self.is_semantic:
             pyccel_stage.set_stage('syntactic')
+        args = (newname,) + args[1:]
         new_func = cls(*args, **kwargs)
-        new_func.rename(newname)
         pyccel_stage.set_stage(current_pyccel_stage)
         return new_func
-
-    def rename(self, newname):
-        """
-        Rename the FunctionDef name
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the FunctionDef
-        """
-
-        self._name = newname
 
     def __getnewargs_ex__(self):
         """
@@ -2642,17 +2636,23 @@ class InlineFunctionDef(FunctionDef):
         The imports available in the function Scope.
     global_funcs : iterable, optional
         The global functions used in the function.
+    syntactic_expr : InlineFunctionDef
+        The syntactic version of the inline function.
+        This is used for printing the stub file and inlining the call.
+        The semantic version is only used for wrapping.
     **kwargs : dict
         The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
-            '_global_funcs')
+            '_global_funcs', '_syntactic_expr')
 
-    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, syntactic_expr = None, **kwargs):
+        assert pyccel_stage == 'syntactic' or syntactic_expr is not None
         if namespace_imports is not None:
             assert isinstance(namespace_imports, dict)
         self._namespace_imports = namespace_imports
         self._global_funcs = tuple(global_funcs) if global_funcs is not None else None
+        self._syntactic_expr = syntactic_expr
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -2669,6 +2669,17 @@ class InlineFunctionDef(FunctionDef):
         """ The objects in the scope which are available due to imports
         """
         return self._namespace_imports
+
+    @property
+    def syntactic_expr(self):
+        """
+        The syntactic version of the inline function.
+
+        The syntactic version of the inline function.
+        This is used for printing the stub file and inlining the call.
+        The semantic version is only used for wrapping.
+        """
+        return self._syntactic_expr
 
     def swap_in_args(self, args, new_local_vars):
         """ Modify the body of the function by replacing the arguments
@@ -2754,6 +2765,7 @@ class InlineFunctionDef(FunctionDef):
         args, kwargs = super().__getnewargs_ex__()
         kwargs['namespace_imports'] = self._namespace_imports
         kwargs['global_funcs'] = self._global_funcs
+        kwargs['syntactic_expr'] = self.syntactic_expr
         return args, kwargs
 
 
@@ -2926,6 +2938,15 @@ class Interface(PyccelAstNode):
          Flag to check if the node is inlined.
         """
         return self._functions[0].is_inline
+
+    @property
+    def is_private(self):
+        """
+        Indicates if the interface function is private.
+
+        Indicates if the interface function is private.
+        """
+        return self._functions[0].is_private
 
     def rename(self, newname):
         """

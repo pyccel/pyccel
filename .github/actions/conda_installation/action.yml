@@ -3,37 +3,40 @@ inputs:
   mpi_type:
     description: 'MPI version used for mpi4py openmpi/mpich/msmpi'
     required: true
+  shell:
+    description: 'Name of shell executable'
+    required: true
 
 runs:
   using: "composite"
   steps:
     - name: Install scipy
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run:
         conda install -c anaconda scipy
     - name: Install tblib
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run:
         conda install -c anaconda tblib
     - name: Install pytest
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run:
         conda install -c anaconda pytest
     - name: Install astunparse
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run:
         conda install -c anaconda astunparse
     - name: Install mpi4py
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run: |
         echo "Using ${{ inputs.mpi_type }}"
         conda install -c conda-forge mpi4py ${{ inputs.mpi_type }}
     - name: Install and update pip
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run: |
         conda install -c anaconda pip
         python -m pip install --upgrade pip
     - name: Install pyccel
-      shell: bash -l {0}
+      shell: ${{ inputs.shell }} -l {0}
       run:
         python -m pip install .[test]

@@ -42,7 +42,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
-from pyccel.ast.datatypes import TypeAlias
+from pyccel.ast.datatypes import TypeAlias, FinalType
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -60,7 +60,6 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
@@ -69,6 +68,7 @@ from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnota
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
+from pyccel.parser.scope       import Scope
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
@@ -144,6 +144,10 @@ class SyntaxParser(BasicParser):
             with open(inputs, 'r', encoding="utf-8") as file:
                 code = file.read()
 
+            self._scope = Scope(name = inputs.stem, scope_type = 'module')
+        else:
+            self._scope = Scope(name = '', scope_type = 'module')
+
         self._code    = code
         self._context = []
 
@@ -209,7 +213,7 @@ class SyntaxParser(BasicParser):
         Scope
             The new scope for the function.
         """
-        child = self.scope.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, 'function', **kwargs)
 
         self._scope = child
         self._current_function_name.append(name)
@@ -399,19 +403,15 @@ class SyntaxParser(BasicParser):
         if len(expr.target) == 0:
             if isinstance(expr.source, AsName):
                 name   = expr.source
-                source = expr.source.name
             else:
                 name   = str(expr.source)
-                source = name
 
-            if not recognised_source(source):
-                container[name] = []
+            container[name] = []
         else:
             source = str(expr.source)
-            if not recognised_source(source):
-                if not source in container.keys():
-                    container[source] = []
-                container[source] += expr.target
+            if not source in container.keys():
+                container[source] = []
+            container[source] += expr.target
 
     #====================================================
     #                 _visit functions
@@ -501,7 +501,7 @@ class SyntaxParser(BasicParser):
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
         mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        name = self.scope.get_new_name(mod_name)
+        name = self.scope.get_new_name(mod_name, object_type = 'module')
         self.scope.python_names[name] = mod_name
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
@@ -737,8 +737,10 @@ class SyntaxParser(BasicParser):
             imp = self._visit(name)
             if isinstance(imp, AsName):
                 source = AsName(self._treat_import_source(imp.object, 0), imp.local_alias)
+                self.scope.insert_symbol(imp.local_alias)
             else:
                 source = self._treat_import_source(imp, 0)
+                self.scope.insert_symbol(imp)
             import_line = Import(source)
             import_line.set_current_ast(stmt)
             self.insert_import(import_line)
@@ -763,6 +765,10 @@ class SyntaxParser(BasicParser):
                               severity='error')
 
             targets.append(s)
+            if isinstance(s, AsName):
+                self.scope.insert_symbol(s.local_alias)
+            else:
+                self.scope.insert_symbol(s)
 
         expr = Import(source, targets)
         self.insert_import(expr)
@@ -903,10 +909,7 @@ class SyntaxParser(BasicParser):
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = PyccelSymbol(stmt.name)
-
-        if not isinstance(self._context[-1], ast.Module):
-            self.scope.insert_symbol(name)
-
+        self.scope.insert_symbol(name, 'function')
         new_name = self.scope.get_expected_name(name)
 
         scope = self.create_new_function_scope(name,
@@ -986,6 +989,8 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
+        targets = [t for target_list in self.scope.imports['imports'].values() for t in target_list]
+
         returns = body.get_attribute_nodes(Return,
                     excluded_nodes = (Assign, FunctionCall, PyccelFunction, FunctionDef))
         if len(returns) == 0 or all(r.expr is Nil() for r in returns):
@@ -998,7 +1003,7 @@ class SyntaxParser(BasicParser):
         else:
             results = self._get_unique_name([r.expr for r in returns],
                                         valid_names = self.scope.local_used_symbols.keys(),
-                                        forbidden_names = argument_names,
+                                        forbidden_names = argument_names.union(targets),
                                         suggestion = 'result')
 
             if result_annotation:
@@ -1058,13 +1063,13 @@ class SyntaxParser(BasicParser):
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
 
         init_method = next((m for m in methods if m.name == '__init__'), None)
-        if init_method is None:
+        if init_method is None and not self.is_stub_file:
             init_name = PyccelSymbol('__init__')
-            self.scope.insert_symbol(init_name)
+            semantic_init_name = self.scope.insert_symbol(init_name, 'function')
             annot = self._treat_type_annotation(stmt, LiteralString(name))
             init_scope = self.create_new_function_scope(init_name,
-                    used_symbols = {init_name: init_name},
-                    original_symbols = {init_name: init_name})
+                    used_symbols = {init_name: semantic_init_name},
+                    original_symbols = {semantic_init_name: init_name})
             self_arg = FunctionDefArgument(AnnotatedPyccelSymbol('self', annot),
                                            annotation=annot,
                                            kwonly=False,
@@ -1434,7 +1439,7 @@ class SyntaxParser(BasicParser):
         assert len(name_lst) == 1
         name = name_lst[0]
 
-        self.scope.insert_symbol(name)
+        self.scope.insert_symbol(name, 'function')
         new_name = self.scope.get_expected_name(name)
         scope = self.create_new_function_scope(name,
                 used_symbols = {name: new_name},
@@ -1493,7 +1498,7 @@ class SyntaxParser(BasicParser):
         name = self._visit(stmt.name)
         self._in_lhs_assign = False
         rhs = self._treat_type_annotation(stmt.value, self._visit(stmt.value))
-        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(TypeAlias(), is_const = True))
+        type_annotation = UnionTypeAnnotation(VariableTypeAnnotation(FinalType.get_new(TypeAlias())))
         return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
 
 #==============================================================================

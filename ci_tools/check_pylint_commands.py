@@ -11,7 +11,8 @@ import sys
 import json
 from git_evaluation_tools import get_diff_as_json
 
-accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],
+accepted_pylint_commands = {re.compile('pyccel/ast/.*types.py'):['no-member', 'protected-access'],
+                            re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],
                             re.compile('.*/TOO_FEW_ARGS.py'):['no-value-for-parameter'],
                             re.compile('.*/UNKNOWN_IMPORT.py'):['unused-import'],
                             re.compile('.*/UNKNOWN_IMPORT2.py'):['unused-import'],

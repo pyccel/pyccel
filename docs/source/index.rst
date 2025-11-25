@@ -34,7 +34,7 @@ Welcome to Pyccel's documentation!
    docs/classes
    docs/containers
    docs/function-pointers-as-arguments
-   docs/header-files
+   docs/low-level-interface
    docs/openmp
 
 .. toctree::

@@ -1,5 +1,4 @@
 #$ header metavar printer_imports="gFTL_extensions/Vector_integer8_mod"
-from typing import Final, TypeVar
 from typing import Final, TypeVar, overload
 from pyccel.decorators import low_level
 from numpy import float64
@@ -12,10 +11,11 @@ class A:
     _x : 'int'
     is_freed : 'bool'
     
-    @low_level('create')
+    @low_level('init')
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
+    @property
     @low_level('x')
     def x(self : 'A') -> 'int':
         ...
@@ -65,17 +65,17 @@ def k(a : 'complex') -> 'tuple[complex, complex, complex]':
 
 @low_level('l_0000')
 @overload
-def l(a : 'int') -> 'tuple[int, ...]':
+def l(a : 'Final[int]') -> 'tuple[int, ...]':
     ...
 
 @low_level('l_0001')
 @overload
-def l(a : 'float') -> 'tuple[float, ...]':
+def l(a : 'Final[float]') -> 'tuple[float, ...]':
     ...
 
 @low_level('l_0002')
 @overload
-def l(a : 'complex') -> 'tuple[complex, ...]':
+def l(a : 'Final[complex]') -> 'tuple[complex, ...]':
     ...
 
 @low_level('p_0000')

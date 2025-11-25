@@ -120,10 +120,10 @@ def execute_pyccel(fname, *,
     """
     start = time.time()
     timers = {}
-    if fname.endswith('.pyh'):
-        syntax_only = True
+    if fname.endswith('.pyi'):
+        semantic_only = True
         if verbose:
-            print("Header file recognised, stopping after syntactic stage")
+            print("Stub file recognised, stopping after semantic stage")
 
     if Path(fname).stem in python_builtin_libs:
         raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
@@ -151,7 +151,6 @@ def execute_pyccel(fname, *,
     def handle_error(stage):
         print('\nERROR at {} stage'.format(stage))
         errors.check()
-        os.chdir(base_dirpath)
 
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
@@ -208,9 +207,6 @@ def execute_pyccel(fname, *,
 
     Scope.name_clash_checker = name_clash_checkers[language]
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
@@ -230,6 +226,10 @@ def execute_pyccel(fname, *,
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
+
+    # Print all warnings now
+    if errors.has_warnings():
+        errors.check()
         return
 
     start_semantic = time.time()
@@ -251,6 +251,10 @@ def execute_pyccel(fname, *,
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
+
+        # Print all warnings now
+        if errors.has_warnings():
+            errors.check()
         return
 
     # -------------------------------------------------------------------------
@@ -281,10 +285,13 @@ def execute_pyccel(fname, *,
         shutil.copyfile(fname, new_location)
 
         # Change working directory back to starting point
-        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
+
+        # Print all warnings now
+        if errors.has_warnings():
+            errors.check()
         return
 
     compile_libs, deps = get_module_and_compile_dependencies(parser)
@@ -315,11 +322,13 @@ def execute_pyccel(fname, *,
         raise
 
     if convert_only:
-        # Change working directory back to starting point
-        os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
+
+        # Print all warnings now
+        if errors.has_warnings():
+            errors.check()
         return
 
     start_compile_target_language = time.time()
@@ -380,8 +389,6 @@ def execute_pyccel(fname, *,
     if errors.has_warnings():
         errors.check()
 
-    # Change working directory back to starting point
-    os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
 
     if time_execution:

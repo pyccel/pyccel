@@ -9,10 +9,6 @@ import modules.openmp as openmp
 from numpy import random
 from numpy import matmul
 from pyccel import epyccel
-#==============================================================================
-
-# Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
-pytestmark = pytest.mark.skip_llvm
 
 #==============================================================================
 
@@ -403,6 +399,7 @@ def test_omp_master(language):
     f1 = epyccel(openmp.omp_master, flags = '-Wall', openmp=True, language=language)
     assert f1() == openmp.omp_master()
 
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang error: not yet implemented: omp.taskloop", language='fortran')
 @pytest.mark.parametrize( 'language', [
             pytest.param("python", marks = [
             pytest.mark.xfail(reason="The result of this test depend on threads, so in python we get different result because we don't use threads."),
@@ -422,13 +419,6 @@ def test_omp_taskloop(language):
             result = result + 1
         assert result == f1(x)
 
-@pytest.mark.parametrize( 'language', [
-            pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Nested functions not handled for C !", run=False),
-            pytest.mark.c]),
-            pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 @pytest.mark.external
 def test_omp_tasks(language):
     f1 = epyccel(openmp.omp_tasks, flags = '-Wall', openmp=True, language=language)

@@ -34,7 +34,7 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "version=3.12" >> $GITHUB_ENV
+        echo "version=3.13" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
@@ -79,6 +79,7 @@ jobs:
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: openmpi
+          shell: bash
       - name: "Setup"
         if: github.event_name != 'push'
         id: token

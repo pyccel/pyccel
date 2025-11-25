@@ -23,7 +23,7 @@ from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
 
-class Scope(object):
+class Scope:
     """
     Class representing all objects defined within a given scope.
 
@@ -58,12 +58,16 @@ class Scope(object):
     symbolic_aliases : dict, optional
         A dictionary which maps indexed tuple elements to variables representing those
         elements. This argument should only be used after the semantic stage.
+
+    scope_type : str
+        The type of the scope being created [module, function, class, loop, program].
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols')
+            '_dummy_counter','_original_symbol', '_dotted_symbols', '_symbol_prefix',
+            '_scope_type')
 
     categories = ('functions','variables','classes',
             'imports', 'symbolic_aliases',
@@ -71,12 +75,25 @@ class Scope(object):
 
     def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
-                    original_symbols = None, symbolic_aliases = None):
+                    original_symbols = None, symbolic_aliases = None,
+                    scope_type):
 
-        self._name    = name
+        assert (name is None) != (not is_loop)
+        assert scope_type in ('module', 'function', 'class', 'loop', 'program')
+
+        self._name = name
+        self._scope_type = scope_type
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}
+
+        prefix_set = ()
+        if parent_scope and parent_scope.symbol_prefix:
+            prefix_set += (parent_scope.symbol_prefix.removesuffix('__'),)
+        if name:
+            prefix_set += (name,)
+
+        self._symbol_prefix = '__'.join((*prefix_set, ''))
 
         self._temporary_variables = []
 
@@ -103,7 +120,7 @@ class Scope(object):
 
         self._dotted_symbols = []
 
-    def new_child_scope(self, name, **kwargs):
+    def new_child_scope(self, name, scope_type, **kwargs):
         """
         Create a new child Scope object which has the current object as parent.
 
@@ -115,6 +132,8 @@ class Scope(object):
         ----------
         name : str
             Name of the new scope, used as a key to retrieve the new scope.
+        scope_type : str
+            The type of the scope being created [module, function, class, loop, program].
         **kwargs : dict
             Keyword arguments passed to __init__() for object initialization.
 
@@ -127,7 +146,7 @@ class Scope(object):
         if ps is not self:
             raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
-        child = Scope(name=name, **kwargs, parent_scope = self)
+        child = Scope(name=name, **kwargs, parent_scope = self, scope_type = scope_type)
 
         self.add_son(name, child)
 
@@ -141,6 +160,15 @@ class Scope(object):
         The name of the scope.
         """
         return self._name
+
+    @property
+    def symbol_prefix(self):
+        """
+        The prefix used for symbols.
+
+        The prefix that may be prepended to symbols for context information.
+        """
+        return self._symbol_prefix
 
     @property
     def imports(self):
@@ -306,11 +334,19 @@ class Scope(object):
         return self._loops
 
     def create_new_loop_scope(self):
-        """ Create a new Scope within the current scope describing
-        a loop (For/While/etc)
+        """
+        Create a new Scope within the current scope describing a loop.
+
+        Create a new Scope within the current scope describing a loop
+        (For/While/etc).
+
+        Returns
+        -------
+        Scope
+            The newly created loop scope.
         """
         new_scope = Scope(decorators=self.decorators, is_loop = True,
-                        parent_scope = self)
+                        parent_scope = self, scope_type = 'loop')
         self.add_loop(new_scope)
         return new_scope
 
@@ -456,7 +492,6 @@ class Scope(object):
             The construct to be inserted.
         """
         name = class_type.name
-        assert name in self._used_symbols
         self._locals['cls_constructs'][name] = class_type
 
     def insert_function(self, func, name):
@@ -492,7 +527,7 @@ class Scope(object):
         """
         self._locals['functions'].pop(name)
 
-    def insert_symbol(self, symbol):
+    def insert_symbol(self, symbol, object_type = 'variable'):
         """
         Add a new symbol to the scope.
 
@@ -507,6 +542,10 @@ class Scope(object):
         ----------
         symbol : PyccelSymbol | AnnotatedPyccelSymbol | DottedName
             The symbol to be added to the scope.
+
+        object_type : str, default=variable
+            The type of the object for which a name is requested (e.g. module, function,
+            class, variable).
 
         Returns
         -------
@@ -523,13 +562,16 @@ class Scope(object):
             if not self.allow_loop_scoping and self.is_loop:
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
-                collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self.all_used_symbols)
-                collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                collisionless_name = self.name_clash_checker.get_collisionless_name(symbol,
+                        self.all_used_symbols, prefix = self._symbol_prefix,
+                        context = object_type, parent_context = self._scope_type)
+                collisionless_symbol = PyccelSymbol(collisionless_name,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
                 return collisionless_symbol
+            else:
+                return self._used_symbols[symbol]
 
     def insert_low_level_symbol(self, python_symbol, low_level_symbol):
         """
@@ -621,7 +663,11 @@ class Scope(object):
 
     @property
     def all_used_symbols(self):
-        """ Get all symbols which already exist in this scope
+        """
+        Get all low-level symbols which already exist in this scope.
+
+        Get a set containing all low-level symbols which already exist
+        in this scope.
         """
         if self.parent_scope:
             symbols = self.parent_scope.all_used_symbols
@@ -631,9 +677,31 @@ class Scope(object):
         return symbols
 
     @property
+    def all_python_symbols(self):
+        """
+        Get all Python symbols which already exist in this scope.
+
+        Get a set containing all Python symbols which already exist
+        in this scope.
+        """
+        if self.parent_scope:
+            symbols = self.parent_scope.all_python_symbols
+        else:
+            symbols = set()
+        symbols.update(self._used_symbols.keys())
+        return symbols
+
+    @property
     def local_used_symbols(self):
-        """ Get all symbols which already exist in this scope
-        excluding enclosing scopes
+        """
+        Get all symbols which already exist in this local scope.
+
+        Get the dictionary describing all symbols which already exist
+        in the local scope. The local scope is this scope excluding
+        enclosing scopes. The dictionary's keys are existing symbols
+        (that were used in the original Python code). Its values are
+        the collisionless symbols that will be used in the low-level
+        code to describe these objects.
         """
         return self._used_symbols
 
@@ -690,7 +758,7 @@ class Scope(object):
 
         return new_symbol, counter
 
-    def get_new_name(self, current_name = None, is_temp = None):
+    def get_new_name(self, current_name = None, *, is_temp = None, object_type = 'variable'):
         """
         Get a new name which does not clash with any names in the current context.
 
@@ -711,16 +779,21 @@ class Scope(object):
             temporary object generated by Pyccel). This is always the case if no
             current_name is provided.
 
+        object_type : str, default=variable
+            The type of the object for which a name is requested (e.g. module, function,
+            class, variable).
+
         Returns
         -------
         PyccelSymbol
             The new name which will be printed in the code.
         """
-        if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
+        if current_name is not None and \
+                not self.name_clash_checker.has_clash(current_name, self.all_python_symbols):
             new_name = PyccelSymbol(current_name, is_temp = is_temp)
-            return self.insert_symbol(new_name)
+            return self.insert_symbol(new_name, object_type = object_type)
 
-        if current_name is None:
+        elif current_name is None:
             assert is_temp is None
             is_temp = True
             # Avoid confusing names by also searching in parent scopes
@@ -734,8 +807,13 @@ class Scope(object):
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
-        new_name = PyccelSymbol(new_name, is_temp = is_temp)
-        return self.insert_symbol(new_name)
+        collisionless_name = self.name_clash_checker.get_collisionless_name(new_name,
+                self.all_used_symbols, prefix = self._symbol_prefix,
+                context = object_type, parent_context = self._scope_type)
+        collisionless_symbol = PyccelSymbol(collisionless_name, is_temp = True)
+        self._used_symbols[collisionless_symbol] = collisionless_symbol
+        self._original_symbol[collisionless_symbol] = collisionless_symbol
+        return self.insert_symbol(collisionless_symbol, object_type)
 
     def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
         """
@@ -801,6 +879,41 @@ class Scope(object):
             return self.parent_scope.get_expected_name(start_name)
         else:
             raise RuntimeError(f"{start_name} does not exist in scope")
+
+    def get_import_alias(self, obj, category = None):
+        """
+        Get the name used to access an imported object in the current scope.
+
+        Get the name used to access an imported object in the current scope.
+        This is different to the current name when the function was imported
+        with import X as Y, but only some languages are capable of renaming
+        methods in this way so the original object's name shouldn't be
+        modified.
+
+        Parameters
+        ----------
+        obj : PyccelAstNode
+            The object we are searching for.
+        category : str, optional
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories.
+            If no value is provided then we look in all categories.
+
+        Returns
+        -------
+        str
+            The name used to access an imported object in the current scope.
+        """
+        for l in ([category] if category else self._locals.keys()):
+            import_obj = self.imports[l]
+            name = next((n for n,o in import_obj.items() if o is obj), None)
+            if name:
+                return name
+
+        if self.parent_scope:
+            return self.parent_scope.get_import_alias(obj, category)
+        else:
+            raise RuntimeError(f"Can't find expected imported object {obj} in scope")
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
