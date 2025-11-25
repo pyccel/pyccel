@@ -650,6 +650,9 @@ class PythonCodePrinter(CodePrinter):
             return 'return\n'
 
         if expr.stmt:
+            to_print = [l for l in expr.stmt.body \
+                            if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
+                                     or isinstance(l, UnpackManagedMemory))]
             # Get expressions that should be printed as they are. Assignments to result variables are not
             # printed as the rhs can be inlined
             if any(expr.stmt.body.index(p) < expr.stmt.body.index(a) for p in to_print for a in expr.stmt.body if isinstance(a, Assign)):
@@ -657,9 +660,6 @@ class PythonCodePrinter(CodePrinter):
                 to_print = expr.stmt.body
                 assigns = {}
             else:
-                to_print = [l for l in expr.stmt.body \
-                                if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable) and l.lhs in result_vars)
-                                         or isinstance(l, UnpackManagedMemory))]
                 # Collect all assignments to easily inline the expressions
                 assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
                 assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
