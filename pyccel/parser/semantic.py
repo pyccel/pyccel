@@ -1590,7 +1590,7 @@ class SemanticParser(BasicParser):
             The expression used to define the array variable.
         mem_in_multirets : bool
             If True, the variable that will be created is found
-            in a multi-values return, false otherwise.
+            in a multi-values return, False otherwise.
 
         Returns
         -------
@@ -1902,9 +1902,7 @@ class SemanticParser(BasicParser):
                         # Array defined outside of a loop will be allocated only once
                         status='unallocated'
 
-                    alloc_type = None
-                    if memory_allocated_in_function:
-                        alloc_type = 'function'
+                    alloc_type = 'function' if memory_allocated_in_function else None
 
                     # Create Allocate node
                     if isinstance(lhs.class_type, InhomogeneousTupleType):
@@ -2020,7 +2018,7 @@ class SemanticParser(BasicParser):
             If is_augassign is False, this value is not used.
         arr_in_multirets : bool, default: False
             If True, the variable that will be created is an array
-            in multi-values return, false otherwise.
+            in multi-values return, False otherwise.
         """
 
         # TODO improve check type compatibility
