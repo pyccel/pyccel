@@ -23,7 +23,7 @@ patterns = [
 
 files = []
 for pattern in patterns:
-    files.extend(Path('.').rglob(pattern))
+    files.extend(Path('.').glob(pattern))
 
 inv_patterns = [
     "pyccel/extensions/**/*.py",
