@@ -25,6 +25,14 @@ py_sources = run_command(
 
 python.install_sources(py_sources, preserve_path: true)
 
+fs = import('fs')
+if not fs.exists('pyccel/extensions/gFTL/README.md')
+  error('Missing the `gFTL` submodule! Run `git submodule update --init` to fix this.')
+endif
+if not fs.exists('pyccel/extensions/STC/README.md')
+  error('Missing the `STC` submodule! Run `git submodule update --init` to fix this.')
+endif
+
 
 ff = meson.get_compiler('fortran')
 cmake_cmd = find_program('cmake')
@@ -75,8 +83,11 @@ toolchains = [
   'nvc',
 ]
 
-meson_cmd = find_program('meson')
-ninja_cmd = find_program('ninja', required : false)  # meson will choose backend
+meson_cmd = find_program('meson', required : true)
+
+if 'pip-build-env-' in meson_cmd.full_path()
+  warning('Build isolation detected. This will break editable installations')
+endif
 
 foreach tc : toolchains
   probe = find_program(tc, required : false)
