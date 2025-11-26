@@ -37,5 +37,7 @@ for pattern in inv_patterns:
         except ValueError:
             pass
 
+files.append(Path('pyccel/extensions/__init__.py'))
+
 print("\n".join(str(f) for f in files if f.is_file()))
 
