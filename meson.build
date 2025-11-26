@@ -31,8 +31,8 @@ cmake_cmd = find_program('cmake')
 
 if cmake_cmd.found()
   build_dir = buildroot / 'gftl-build'
-  install_dir = buildroot / 'gftl-install'
-  dest_dir = pkgroot / 'pyccel' / 'extensions' / 'gFTL'
+  install_dir = buildroot / 'gFTL'
+  dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) CMake setup
   setup = run_command(
@@ -56,7 +56,7 @@ if cmake_cmd.found()
     'gftl',
     command: [cmake_cmd, '--install', build_dir],
     input: compile_target,
-    output: 'gftl-install',
+    output: 'gFTL',
     install: true,
     install_dir: dest_dir
   )
@@ -91,7 +91,7 @@ foreach tc : toolchains
   # Build directory for this toolchain
   build_dir = buildroot / ('stc-build-' + tc)
   install_dir = buildroot / ('stc-install-' + tc)
-  dest_dir = pkgroot / 'pyccel' / 'extensions' / ('stc-install-' + tc)
+  dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) meson setup
   setup = run_command(
