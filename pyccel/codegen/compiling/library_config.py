@@ -34,7 +34,7 @@ errors = Errors()
 stdlib_path = Path(stdlib_folder.__file__).parent
 
 # get path to pyccel/extensions_install/lib_name
-ext_path = importlib.resources.files('pyccel.extensions')
+ext_path = Path(ext_folder.__file__).parent
 
 #------------------------------------------------------------------------------------------
 
@@ -292,6 +292,7 @@ class ExternalLibInstaller:
         else:
             self._discovery_method = 'CMake'
             output = p.stdout.split('\n-- ')
+            print(p.stdout)
             start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
             flags, include_dirs, interface_include_dirs, libs, interface_libs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
             return CompileObj(pkg_name, folder = "", has_target_file = False,
@@ -401,9 +402,30 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family.lower()
 
-        # Use pkg-config to try to locate an existing (system or user) installation
-        # with version >= 5.0 < 6
-        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        sep = ';' if sys.platform == "win32" else ':'
+        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
+
+        installed_extensions = importlib.resources.files(f'pyccel.extensions')
+        stc_installation = installed_extensions.joinpath(f'stc-install-{compiler_family}')
+        try:
+            stc_installation_gen = importlib.resources.as_file(stc_installation)
+        except FileNotFoundError:
+            stc_installation_gen = None
+        if stc_installation_gen:
+            with stc_installation_gen as f:
+                pkgconfig_dir = next(f.glob('**/*.pc')).parent
+                os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
+                                                         if p and Path(p).exists())
+
+                # Use pkg-config to try to locate an existing (system or user) installation
+                # with version >= 5.0 < 6
+                # This must be done in the with statement to ensure pkgconfig_dir exists
+                existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        else:
+            # Use pkg-config to try to locate an existing (system or user) installation
+            # with version >= 5.0 < 6
+            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
         if existing_installation:
             installed_libs['stc'] = existing_installation
             return existing_installation
@@ -439,8 +461,6 @@ class STCInstaller(ExternalLibInstaller):
         libs = ['-lstc', '-lm']
 
         self._discovery_method = 'pkgconfig'
-        sep = ';' if sys.platform == "win32" else ':'
-        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
         os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (*PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
                                                  if p and Path(p).exists())
 
@@ -460,7 +480,7 @@ class GFTLInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("GFTL", src_dir = "gFTL/install")
+        super().__init__("GFTL", src_dir = "gFTL")
 
     @property
     def target_name(self):
@@ -500,7 +520,25 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+        sep = ';' if sys.platform == "win32" else ':'
+        CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
+
+        installed_extensions = importlib.resources.files(f'pyccel.extensions')
+        gftl_installation = installed_extensions.joinpath(f'gFTL-install')
+        try:
+            gftl_installation_gen = importlib.resources.as_file(gftl_installation)
+        except FileNotFoundError:
+            gftl_installation_gen = None
+
+        if gftl_installation_gen:
+            with gftl_installation_gen as f:
+                cmake_dir = next(f.glob('**/*.cmake')).parent
+                os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
+                                                           if s and Path(s).exists())
+                existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+        else:
+            existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+
         if existing_installation:
             installed_libs['gFTL'] = existing_installation
             return existing_installation
@@ -516,8 +554,6 @@ class GFTLInstaller(ExternalLibInstaller):
         installed_libs['gFTL'] = new_obj
 
         self._discovery_method = 'CMake'
-        sep = ';' if sys.platform == "win32" else ':'
-        CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
         os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(dest_dir))
                                                    if s and Path(s).exists())
 
