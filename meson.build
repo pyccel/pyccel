@@ -39,7 +39,7 @@ cmake_cmd = find_program('cmake')
 
 if cmake_cmd.found()
   build_dir = buildroot / 'gftl-build'
-  install_dir = buildroot / 'gFTL'
+  install_dir = buildroot / 'gFTL-install'
   dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) CMake setup
@@ -64,7 +64,7 @@ if cmake_cmd.found()
     'gftl',
     command: [cmake_cmd, '--install', build_dir],
     input: compile_target,
-    output: 'gFTL',
+    output: 'gFTL-install',
     install: true,
     install_dir: dest_dir
   )
@@ -77,10 +77,10 @@ endif
 
 # List of compilers to try
 toolchains = [
-  'gcc',
-  'icx',
-  'clang',
-  'nvc',
+  {'name': 'gnu', 'cc': 'gcc'},
+  {'name': 'intel', 'cc': 'icx'},
+  {'name': 'nvidia', 'cc': 'nvc'},
+  {'name': 'llvm', 'cc': 'clang'},
 ]
 
 meson_cmd = find_program('meson', required : true)
@@ -90,18 +90,18 @@ if 'pip-build-env-' in meson_cmd.full_path()
 endif
 
 foreach tc : toolchains
-  probe = find_program(tc, required : false)
+  probe = find_program(tc['cc'], required : false)
 
   if not probe.found()
-    message('Skipping ' + tc + ' (compiler not found)')
+    message('Skipping ' + tc['name'] + ' (compiler not found)')
     continue
   endif
 
-  message('Building STC with ' + tc)
+  message('Building STC with ' + tc['name'])
 
   # Build directory for this toolchain
-  build_dir = buildroot / ('stc-build-' + tc)
-  install_dir = buildroot / ('stc-install-' + tc)
+  build_dir = buildroot / ('stc-build-' + tc['name'])
+  install_dir = buildroot / ('stc-install-' + tc['name'])
   dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) meson setup
@@ -112,28 +112,28 @@ foreach tc : toolchains
       '--prefix=' + install_dir,
       '--backend=ninja',
     check: true,
-    env: {'CC': tc}
+    env: {'CC': probe.full_path()}
   )
 
   # 2) meson compile
   compile_target = custom_target(
-    'stc-compile-' + tc,
+    'stc-compile-' + tc['name'],
     command: [
       meson_cmd,
       'compile', '-C', build_dir
     ],
-    output: 'stc-compile-build-' + tc
+    output: 'stc-compile-build-' + tc['name']
   )
 
   # 3) meson install (into dest_dir)
   install_target = custom_target(
-    'stc-' + tc,
+    'stc-' + tc['name'],
     command: [
       meson_cmd,
       'install', '-C', build_dir
     ],
     input: compile_target,
-    output: 'stc-install-' + tc,
+    output: 'stc-install-' + tc['name'],
     install: true,
     install_dir: dest_dir
   )
