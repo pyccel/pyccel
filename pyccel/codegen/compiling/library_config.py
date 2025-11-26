@@ -7,6 +7,7 @@
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 import filecmp
+import importlib.resources
 from itertools import chain
 import os
 from pathlib import Path
@@ -33,7 +34,7 @@ errors = Errors()
 stdlib_path = Path(stdlib_folder.__file__).parent
 
 # get path to pyccel/extensions_install/lib_name
-ext_path = Path(ext_folder.__file__).parent
+ext_path = importlib.resources.files('pyccel.extensions')
 
 #------------------------------------------------------------------------------------------
 
@@ -206,7 +207,7 @@ class ExternalLibInstaller:
     """
     def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
-        self._src_dir = ext_path / src_dir
+        self._src_dir = ext_path.joinpath(src_dir)
         self._dest_dir = dest_dir
         self._discovery_method = None
 
