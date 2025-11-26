@@ -369,7 +369,7 @@ class STCInstaller(ExternalLibInstaller):
     """
     def __init__(self):
         super().__init__("stc", src_dir = "STC")
-        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
+        self._compile_obj = CompileObj("stc", folder = self._src_dir.name, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
@@ -415,24 +415,25 @@ class STCInstaller(ExternalLibInstaller):
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
-            if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
-                shutil.rmtree(build_dir)
-                shutil.rmtree(install_dir)
+            with importlib.resources.as_file(self._src_dir) as src_dir:
+                if build_dir.exists() and build_dir.lstat().st_mtime < src_dir.lstat().st_mtime:
+                    shutil.rmtree(build_dir)
+                    shutil.rmtree(install_dir)
 
-            # If the build dir already exists then we have already compiled these files
-            if not build_dir.exists():
-                buildtype = 'debug' if compiler.is_debug else 'release'
-                env = os.environ.copy()
-                env['CC'] = compiler.get_exec({}, "c")
-                if verbose:
-                    print(">> Installing STC with meson")
-                subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                               check = True, cwd = self._src_dir, env = env,
-                               capture_output = (verbose <= 1))
-                subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                               capture_output = (verbose == 0))
-                subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
-                               capture_output = (verbose <= 1))
+                # If the build dir already exists then we have already compiled these files
+                if not build_dir.exists():
+                    buildtype = 'debug' if compiler.is_debug else 'release'
+                    env = os.environ.copy()
+                    env['CC'] = compiler.get_exec({}, "c")
+                    if verbose:
+                        print(">> Installing STC with meson")
+                    subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
+                                   check = True, cwd = src_dir, env = env,
+                                   capture_output = (verbose <= 1))
+                    subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
+                                   capture_output = (verbose == 0))
+                    subprocess.run([meson, 'install', '-C', build_dir], check = True, cwd = pyccel_dirpath,
+                                   capture_output = (verbose <= 1))
 
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
@@ -505,9 +506,10 @@ class GFTLInstaller(ExternalLibInstaller):
             return existing_installation
         dest_dir = Path(pyccel_dirpath) / self._dest_dir
         if not dest_dir.exists():
-            if verbose:
-                print(f">> Creating a link to {self._src_dir} in {dest_dir}")
-            os.symlink(self._src_dir, dest_dir, target_is_directory=True)
+            with importlib.resources.as_file(self._src_dir) as src_dir:
+                if verbose:
+                    print(f">> Creating a link to {src_dir} in {dest_dir}")
+                os.symlink(src_dir, dest_dir, target_is_directory=True)
 
         new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
                           include = (dest_dir / 'GFTL-1.13/include/v2',))
