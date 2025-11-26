@@ -39,7 +39,7 @@ jobs:
     - if: github.event_name == 'push'
       run: |
         echo "version=3.10" >> $GITHUB_ENV
-        echo "editable=['-e', ' ']" >> $GITHUB_ENV
+        echo "editable=['--no-build-isolation -e', ' ']" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
