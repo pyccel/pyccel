@@ -78,6 +78,7 @@ sdist.include = [
   "README.md",
   "pyccel/**/*.py",
   "pyccel/**/*.pyi",
+  "pyccel/CMakeLists.txt",
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
