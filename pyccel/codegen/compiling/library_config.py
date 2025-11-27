@@ -407,6 +407,14 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family.lower()
 
+        # Use pkg-config to try to locate an existing (system or user) installation
+        # with version >= 5.0 < 6
+        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
+        if existing_installation:
+            installed_libs['stc'] = existing_installation
+            return existing_installation
+
         sep = ';' if sys.platform == "win32" else ':'
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
 
@@ -426,12 +434,7 @@ class STCInstaller(ExternalLibInstaller):
                 # with version >= 5.0 < 6
                 # This must be done in the with statement to ensure pkgconfig_dir exists
                 existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
-        else:
-            # Use pkg-config to try to locate an existing (system or user) installation
-            # with version >= 5.0 < 6
-            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
 
-        if existing_installation:
             installed_libs['stc'] = existing_installation
             return existing_installation
 
