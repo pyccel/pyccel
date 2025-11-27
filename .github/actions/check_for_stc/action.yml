@@ -14,7 +14,7 @@ runs:
         stc_folder_gen = importlib.resources.as_file(stc_folder)
         f = stc_folder_gen.__enter__()
         assert f.exists()
-        assert len(f.glob('**/*.h')) > 0
-        assert len(f.glob('**/meson.build')) > 0
+        assert len(list(f.glob('**/*.h'))) > 0
+        assert len(list(f.glob('**/meson.build'))) > 0
         f.__exit__()
 
