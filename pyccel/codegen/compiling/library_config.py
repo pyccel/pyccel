@@ -231,8 +231,7 @@ class ExternalLibInstaller:
         """
         return self._dest_dir
 
-    def _check_for_cmake_package(self, pkg_name, languages, options = '', *, target_name,
-                                 additional_vars = ()):
+    def _check_for_cmake_package(self, pkg_name, languages, options = '', *, target_name):
         """
         Use CMake to search for a package.
 
@@ -251,8 +250,6 @@ class ExternalLibInstaller:
         target_name : str
             The name of the package target. By default this is assumed to be
             the same as the pkg_name (e.g. HDF5::HDF5).
-        additional_vars : iterable[str], optional
-            Any additional CMake variables to be printed.
 
         Returns
         -------
@@ -284,8 +281,6 @@ class ExternalLibInstaller:
                 f.write('message(STATUS "${LIBRARIES}")\n')
                 f.write('message(STATUS "${INTERFACE_LIBRARIES}")\n')
                 f.write('message(STATUS "${LIB_DIRS}")\n')
-                for v in additional_vars:
-                    f.write(f'message(STATUS "${{{v}}}")\n')
 
             # Run cmake configure step in that temp dir
             p = subprocess.run(
@@ -293,20 +288,19 @@ class ExternalLibInstaller:
                 capture_output=True, text=True, check=False)
 
         if p.returncode:
-            return None, None
+            return None
         else:
             self._discovery_method = 'CMake'
             output = p.stdout.split('\n-- ')
             start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
             flags, include_dirs, interface_include_dirs, libs, interface_libs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
-            found_additional_vars = {v: output[start+7+i] for i, v in enumerate(additional_vars)}
             return CompileObj(pkg_name, folder = "", has_target_file = False,
                               include = [i for i in chain(include_dirs.split(','),
                                                           interface_include_dirs.split(',')) if i],
                               flags = [f for f in flags.split(',') if f],
                               libdir = [l for l in libdirs.split(',') if l],
                               libs = [l for l in chain(libs.split(','),
-                                                       interface_libs.split(',')) if l]), found_additional_vars
+                                                       interface_libs.split(',')) if l])
 
     def _check_for_package(self, pkg_name, options = ()):
         """
@@ -405,7 +399,7 @@ class STCInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        compiler_family = compiler.compiler_family.lower()
+        compiler_family = compiler.compiler_family
 
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
@@ -418,14 +412,13 @@ class STCInstaller(ExternalLibInstaller):
         sep = ';' if sys.platform == "win32" else ':'
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
 
-        installed_extensions = importlib.resources.files(f'pyccel.extensions')
-        stc_installation = installed_extensions.joinpath(f'stc-install-{compiler_family}')
         try:
-            stc_installation_gen = importlib.resources.as_file(stc_installation)
-        except FileNotFoundError:
-            stc_installation_gen = None
-        if stc_installation_gen:
-            with stc_installation_gen as f:
+            stc_installation = importlib.resources.files(f'pyccel.extensions.stc_install_{compiler_family}')
+        except ModuleNotFoundError:
+            stc_installation = None
+
+        if stc_installation:
+            with importlib.resources.as_file(stc_installation) as f:
                 pkgconfig_dir = next(f.glob('**/*.pc')).parent
                 os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
                                                          if p and Path(p).exists())
@@ -528,7 +521,7 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        existing_installation,_ = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
 
         if existing_installation:
             installed_libs['gFTL'] = existing_installation
@@ -537,22 +530,13 @@ class GFTLInstaller(ExternalLibInstaller):
         sep = ';' if sys.platform == "win32" else ':'
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
 
-        installed_extensions = importlib.resources.files(f'pyccel.extensions')
-        gftl_installation = installed_extensions.joinpath(f'gFTL-install')
+        gftl_installation = importlib.resources.files(f'pyccel.extensions.gftl_install')
         gftl_installation_gen = importlib.resources.as_file(gftl_installation)
         with gftl_installation_gen as f:
             cmake_dir = next(f.glob('**/*.cmake')).parent
             os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
                                                        if s and Path(s).exists())
-            existing_installation, top_dir_vars = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name,
-                                                                  additional_vars = ('GFTL_TOP_DIR',))
-
-            inc = next(iter(existing_installation.include))
-            tmp_top_dir = inc.parents[-1-inc.parts.index('GFTL-1.13')]
-            top_dir = Path(top_dir_vars['GFTL_TOP_DIR'])
-
-            existing_installation = CompileObj('GFTL', folder = "", has_target_file = False,
-                                               include = [top_dir / inc.relative_to(tmp_top_dir) for inc in existing_installation.include])
+            existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
 
             installed_libs['gFTL'] = existing_installation
 
