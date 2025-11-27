@@ -1,6 +1,6 @@
 [build-system]
-requires = ["meson-python"]
-build-backend = "mesonpy"
+requires = ["scikit-build-core >= 0.9", "meson"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyccel"
@@ -52,3 +52,27 @@ Documentation = "https://pyccel.github.io/pyccel/"
 Source = "https://github.com/pyccel/pyccel"
 Tracker = "https://github.com/pyccel/pyccel/issues"
 Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
+
+[tool.scikit-build]
+# The build type to use when building the project.
+cmake.build-type = "Release"
+
+# The source directory to use when building the project.
+cmake.source-dir = "pyccel"
+
+# Use Make as a fallback if a suitable Ninja executable is not found.
+ninja.make-fallback = true
+
+# The logging level to display.
+logging.level = "INFO"
+
+# If you want build-dir isolation
+#build-dir = "build/{wheel_tag}"
+
+## Optional: pass custom CMake flags
+#cmake.args = [
+#    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+#]
+
+# Optional: ensure RPATH fixup for bundled shared libs
+#wheel.py-api = "cp"
