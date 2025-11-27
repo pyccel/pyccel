@@ -3,7 +3,7 @@ project(${SKBUILD_PROJECT_NAME} LANGUAGES C Fortran)
 
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
-message(STATUS ${SKBUILD_STATE})
+execute_process(COMMAND git submodule update --init)
 
 include(ExternalProject)
 
