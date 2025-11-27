@@ -12,9 +12,8 @@ runs:
         import importlib.resources
         gftl_folder = importlib.resources.files(f'pyccel.extensions.gftl_install')
         gftl_folder_gen = importlib.resources.as_file(gftl_folder)
-        f = gftl_folder_gen.__enter__()
-        assert f.exists()
-        assert len(list(f.glob('**/*.cmake'))) > 0
-        assert len(list(f.glob('**/*.inc'))) > 0
-        f.__exit__()
+        with gftl_folder_gen as f:
+          assert f.exists()
+          assert len(list(f.glob('**/*.cmake'))) > 0
+          assert len(list(f.glob('**/*.inc'))) > 0
 
