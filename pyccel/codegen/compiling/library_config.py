@@ -525,52 +525,35 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
+        existing_installation,_ = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+
+        if existing_installation:
+            installed_libs['gFTL'] = existing_installation
+            return existing_installation
+
         sep = ';' if sys.platform == "win32" else ':'
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
 
         installed_extensions = importlib.resources.files(f'pyccel.extensions')
         gftl_installation = installed_extensions.joinpath(f'gFTL-install')
-        try:
-            gftl_installation_gen = importlib.resources.as_file(gftl_installation)
-        except FileNotFoundError:
-            gftl_installation_gen = None
+        gftl_installation_gen = importlib.resources.as_file(gftl_installation)
+        with gftl_installation_gen as f:
+            cmake_dir = next(f.glob('**/*.cmake')).parent
+            os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
+                                                       if s and Path(s).exists())
+            existing_installation, top_dir_vars = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name,
+                                                                  additional_vars = ('GFTL_TOP_DIR',))
 
-        if gftl_installation_gen:
-            with gftl_installation_gen as f:
-                cmake_dir = next(f.glob('**/*.cmake')).parent
-                os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
-                                                           if s and Path(s).exists())
-                existing_installation, top_dir_vars = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name,
-                                                                      additional_vars = ('GFTL_TOP_DIR',))
+            inc = next(iter(existing_installation.include))
+            tmp_top_dir = inc.parents[-1-inc.parts.index('GFTL-1.13')]
+            top_dir = Path(top_dir_vars['GFTL_TOP_DIR'])
 
-                inc = next(iter(existing_installation.include))
-                tmp_top_dir = inc.parents[-1-inc.parts.index('GFTL-1.13')]
-                top_dir = Path(top_dir_vars['GFTL_TOP_DIR'])
+            existing_installation = CompileObj('GFTL', folder = "", has_target_file = False,
+                                               include = [top_dir / inc.relative_to(tmp_top_dir) for inc in existing_installation.include])
 
-                existing_installation = CompileObj('GFTL', folder = "", has_target_file = False,
-                                                   include = [top_dir / inc.relative_to(tmp_top_dir) for inc in existing_installation.include])
-        else:
-            existing_installation,_ = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
-
-        if existing_installation:
             installed_libs['gFTL'] = existing_installation
-            return existing_installation
-        dest_dir = Path(pyccel_dirpath) / self._dest_dir
-        if not dest_dir.exists():
-            with importlib.resources.as_file(self._src_dir) as src_dir:
-                if verbose:
-                    print(f">> Creating a link to {src_dir} in {dest_dir}")
-                os.symlink(src_dir, dest_dir, target_is_directory=True)
 
-        new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
-                          include = (dest_dir / 'GFTL-1.13/include/v2',))
-        installed_libs['gFTL'] = new_obj
-
-        self._discovery_method = 'CMake'
-        os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(dest_dir))
-                                                   if s and Path(s).exists())
-
-        return new_obj
+        return existing_installation
 
 #------------------------------------------------------------------------------------------
 
