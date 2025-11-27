@@ -10,8 +10,7 @@ runs:
       shell: python
       run: |
         import importlib.resources
-        extensions = importlib.resources.files(f'pyccel.extensions')
-        gftl_folder = extensions.joinpath(f'gFTL-install')
+        gftl_folder = importlib.resources.files(f'pyccel.extensions.gftl_install')
         gftl_folder_gen = importlib.resources.as_file(gftl_folder)
         f = gftl_folder_gen.__enter__()
         assert f.exists()
