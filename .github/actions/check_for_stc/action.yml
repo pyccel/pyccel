@@ -15,6 +15,6 @@ runs:
         f = stc_folder_gen.__enter__()
         assert f.exists()
         assert len(list(f.glob('**/*.h'))) > 0
-        assert len(list(f.glob('**/meson.build'))) > 0
+        assert len(list(f.glob('**/*.pc'))) > 0
         f.__exit__()
 
