@@ -57,7 +57,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**", ".github/workflows/wheel.yml", ".github/actions/**"]'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**", ".github/workflows/sdist.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '["push"]'
 
@@ -76,15 +76,15 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py wheel
+          python ci_tools/setup_check_run.py sdist
         working-directory: ./pyccel_download
         shell: bash
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./pyccel_download/.github/actions/linux_install
-      - name: Install Pyccel from wheel
+      - name: Install Pyccel from sdist
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: sdist_installation
+        id: sdist_creation
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build
@@ -92,7 +92,7 @@ jobs:
           cp dist/*.tar.gz ..
         working-directory: ./pyccel_download
         shell: bash
-      - name: Install Pyccel from wheel
+      - name: Install Pyccel from sdist
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: sdist_installation
         run: |
@@ -109,8 +109,8 @@ jobs:
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          python ci_tools/basic_json_check_output.py --statuses ${{ steps.wheel_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
-          python ci_tools/complete_check_run.py ${{ steps.wheel_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.sdist_creation.outcome }} ${{ steps.sdist_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Sdist creation failed." "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
+          python ci_tools/complete_check_run.py ${{ steps.sdist_creation.outcome }} ${{ steps.sdist_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
         working-directory: ./pyccel_download
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
