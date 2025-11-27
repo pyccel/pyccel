@@ -9,11 +9,13 @@ runs:
     - name: check gFTL installation
       shell: python
       run: |
-        import pyccel
-        from os.path import exists, join
-        pyccel_loc = pyccel.__path__[0]
-        print(pyccel_loc)
-        assert exists(join(pyccel_loc,'extensions/gFTL/install/GFTL-1.13/include/v2'))
-        if ${{ inputs.not_editable }}:
-          assert not exists(join(pyccel_loc,'extensions/gFTL/doc'))
+        import importlib.resources
+        extensions = importlib.resources.files(f'pyccel.extensions')
+        gftl_folder = extensions.joinpath(f'gFTL-install')
+        gftl_folder_gen = importlib.resources.as_file(gftl_folder)
+        f = gftl_folder_gen.__enter__()
+        assert f.exists()
+        assert len(f.glob('**/*.cmake')) > 0
+        assert len(f.glob('**/*.inc')) > 0
+        f.__exit__()
 
