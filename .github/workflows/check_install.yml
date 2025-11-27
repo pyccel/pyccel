@@ -75,6 +75,7 @@ jobs:
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
         uses: actions/setup-python@v5
         with:
