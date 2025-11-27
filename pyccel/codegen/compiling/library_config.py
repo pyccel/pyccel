@@ -127,7 +127,7 @@ class StdlibInstaller:
                 dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, verbose, compiler))
 
         new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
-                          **self._compile_obj_kwargs)
+                          include=(lib_dest_path,), **self._compile_obj_kwargs)
         installed_libs[self._folder] = new_obj
         return new_obj
 
