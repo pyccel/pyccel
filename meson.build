@@ -39,7 +39,6 @@ cmake_cmd = find_program('cmake')
 
 if cmake_cmd.found()
   build_dir = buildroot / 'gftl-build'
-  install_dir = buildroot / 'gFTL-install'
   dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) CMake setup
@@ -48,7 +47,7 @@ if cmake_cmd.found()
       '-S', gftl_src,
       '-B', build_dir,
       '-DCMAKE_BUILD_TYPE=Release',
-      '-DCMAKE_INSTALL_PREFIX=' + install_dir,
+      '-DCMAKE_INSTALL_PREFIX=' + dest_dir,
     check: true,
   )
 
@@ -101,7 +100,6 @@ foreach tc : toolchains
 
   # Build directory for this toolchain
   build_dir = buildroot / ('stc-build-' + tc['name'])
-  install_dir = buildroot / ('stc-install-' + tc['name'])
   dest_dir = pkgroot / 'pyccel' / 'extensions'
 
   # 1) meson setup
@@ -109,7 +107,7 @@ foreach tc : toolchains
       meson_cmd,
       'setup', build_dir, stc_src,
       '--buildtype=release',
-      '--prefix=' + install_dir,
+      '--prefix=' + dest_dir,
       '--backend=ninja',
     check: true,
     env: {'CC': probe.full_path()}
