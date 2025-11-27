@@ -66,13 +66,7 @@ ninja.make-fallback = true
 # The logging level to display.
 logging.level = "INFO"
 
-# If you want build-dir isolation
-#build-dir = "build/{wheel_tag}"
-
-## Optional: pass custom CMake flags
-#cmake.args = [
-#    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
-#]
-
-# Optional: ensure RPATH fixup for bundled shared libs
-#wheel.py-api = "cp"
+[tool.scikit-build.metadata.version]
+# Set version info
+provider = "scikit_build_core.metadata.regex"
+input = "pyccel/version.py"
