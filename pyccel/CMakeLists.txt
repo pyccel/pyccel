@@ -30,23 +30,45 @@ function(install_stc c_compiler compiler_family)
     unset(MY_CC_PATH)
 endfunction()
 
-install_stc(gcc GNU)
-install_stc(icx intel)
-install_stc(nvc nvidia)
-install_stc(clang LLVM)
+if (NOT "${SKBUILD_STATE}" STREQUAL "sdist")
+    install_stc(gcc GNU)
+    install_stc(icx intel)
+    install_stc(nvc nvidia)
+    install_stc(clang LLVM)
+endif()
 
-# Build and pack gFTL ready for installation
-ExternalProject_Add(
-    gftl_install
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/extensions/gFTL
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DGFTL_TOP_DIR=${SKBUILD_PLATLIB_DIR}/GFTL-1.13
-    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>
-    INSTALL_COMMAND ${CMAKE_COMMAND} --install <BINARY_DIR>
-)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/gFTL)
 
-install(DIRECTORY
-    ${CMAKE_BINARY_DIR}/GFTL-1.13
-    DESTINATION ${SKBUILD_PROJECT_NAME}/extensions/gftl_install
-)
-# Create an empty __init__.py so Python treats gFTL as a package
-file(WRITE "${SKBUILD_PLATLIB_DIR}/pyccel/extensions/gftl_install/__init__.py" "")
+if ("${SKBUILD_STATE}" STREQUAL "sdist")
+    # Build and install gFTL
+    execute_process(COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR}/extensions/gFTL -B ${CMAKE_BINARY_DIR}/gFTL -DCMAKE_INSTALL_PREFIX=${CMAKE_SOURCE_DIR}/extensions/gftl_install -DGFTL_TOP_DIR=${SKBUILD_PLATLIB_DIR}/GFTL-1.13
+        COMMAND_ERROR_IS_FATAL ANY
+        COMMAND_ECHO STDOUT
+    )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/gFTL
+        COMMAND_ERROR_IS_FATAL ANY
+        COMMAND_ECHO STDOUT
+    )
+    execute_process(COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR}/gFTL
+        COMMAND_ERROR_IS_FATAL ANY
+        COMMAND_ECHO STDOUT
+    )
+    file(WRITE "${CMAKE_SOURCE_DIR}/extensions/gftl_install/__init__.py" "")
+elseif(NOT EXISTS "${CMAKE_SOURCE_DIR}/extensions/gftl_install/__init__.py")
+    ExternalProject_Add(
+        gftl_install
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/extensions/gFTL
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DGFTL_TOP_DIR=${SKBUILD_PLATLIB_DIR}/GFTL-1.13
+        BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>
+        INSTALL_COMMAND ${CMAKE_COMMAND} --install <BINARY_DIR>
+    )
+
+    install(DIRECTORY
+        ${CMAKE_BINARY_DIR}/GFTL-1.13
+        DESTINATION ${SKBUILD_PROJECT_NAME}/extensions/gftl_install
+    )
+    # Create an empty __init__.py so Python treats gFTL as a package
+    file(WRITE "${SKBUILD_PLATLIB_DIR}/pyccel/extensions/gftl_install/__init__.py" "")
+else()
+    message(STATUS "gFTL files already generated")
+endif()
