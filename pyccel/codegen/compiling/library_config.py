@@ -530,7 +530,7 @@ class GFTLInstaller(ExternalLibInstaller):
         sep = ';' if sys.platform == "win32" else ':'
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
 
-        gftl_installation = importlib.resources.files(f'pyccel.extensions.gftl_install')
+        gftl_installation = importlib.resources.files('pyccel.extensions.gftl_install')
         gftl_installation_gen = importlib.resources.as_file(gftl_installation)
         with gftl_installation_gen as f:
             cmake_dir = next(f.glob('**/*.cmake')).parent
