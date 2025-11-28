@@ -5,7 +5,6 @@
 """ This module contains all literal types
 """
 import numpy as np
-from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import VoidType, PythonNativeInt, PythonNativeBool
@@ -363,7 +362,7 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(Literal, metaclass=Singleton):
+class Nil(Literal):
     """
     Class representing a None object in the code.
 
@@ -406,7 +405,7 @@ class NilArgument(PyccelAstNode):
 
 #------------------------------------------------------------------------------
 
-class LiteralEllipsis(Literal, metaclass=Singleton):
+class LiteralEllipsis(Literal):
     """
     Class representing an Ellipsis object in the code.
 

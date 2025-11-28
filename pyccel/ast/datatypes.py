@@ -13,7 +13,6 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import Singleton
 from .basic import iterable
 
 __all__ = (
@@ -57,7 +56,7 @@ __all__ = (
 )
 
 #==============================================================================
-class PrimitiveType(metaclass=Singleton):
+class PrimitiveType:
     """
     Base class representing types of datatypes.
 
@@ -66,11 +65,6 @@ class PrimitiveType(metaclass=Singleton):
     """
     __slots__ = ()
     _name = '__UNDEFINED__'
-
-    def __init__(self): #pylint: disable=useless-parent-delegation
-        # This __init__ function is required so the Singleton can
-        # always detect a signature
-        super().__init__()
 
     def __str__(self):
         return self._name
@@ -122,7 +116,7 @@ class PrimitiveCharacterType(PrimitiveType):
 
 #==============================================================================
 
-class PyccelType(metaclass=Singleton):
+class PyccelType:
     """
     Base class representing the type of an object.
 
@@ -149,11 +143,6 @@ class PyccelType(metaclass=Singleton):
         Get the name of the pyccel type.
         """
         return self._name
-
-    def __init__(self): #pylint: disable=useless-parent-delegation
-        # This __init__ function is required so the Singleton can
-        # always detect a signature
-        super().__init__()
 
     def __str__(self):
         return self._name

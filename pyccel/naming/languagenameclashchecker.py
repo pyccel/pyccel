@@ -6,10 +6,9 @@
 """
 Superclass for handling name clash problems.
 """
-from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 
-class LanguageNameClashChecker(metaclass = Singleton):
+class LanguageNameClashChecker:
     """
     Class containing functions to help avoid problematic names in a target language.
 
@@ -18,10 +17,6 @@ class LanguageNameClashChecker(metaclass = Singleton):
     a variety of reasons which vary from language to language.
     """
     keywords = None
-
-    def __init__(self): #pylint: disable=useless-parent-delegation
-        # This __init__ function is required so the Singleton can detect a signature
-        super().__init__()
 
     def _get_collisionless_name(self, name, symbols):
         """
