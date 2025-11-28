@@ -79,9 +79,15 @@ elseif(NOT EXISTS "${CMAKE_SOURCE_DIR}/extensions/gftl_install/__init__.py")
     ExternalProject_Add(
         gftl_install
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/extensions/gFTL
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${SKBUILD_PROJECT_NAME}/extensions/gftl_install
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DGFTL_TOP_DIR=${SKBUILD_PLATLIB_DIR}/GFTL-1.13
         BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>
         INSTALL_COMMAND ${CMAKE_COMMAND} --install <BINARY_DIR>
+    )
+
+    # Use install as otherwise files don't seem to be copied as expected
+    install(DIRECTORY
+        ${CMAKE_BINARY_DIR}/GFTL-1.13
+        DESTINATION ${SKBUILD_PROJECT_NAME}/extensions/gftl_install
     )
 
     # Create an empty __init__.py so Python treats gFTL as a package for importlib
