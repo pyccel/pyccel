@@ -100,6 +100,7 @@ pyccel:
 ## Lists/Sets/Dictionaries
 
 Homogeneous lists, sets and dictionaries are implemented using external libraries. In C we rely on [STC](https://github.com/stclib/STC). In Fortran we rely on [gFTL](https://github.com/goddard-Fortran-Ecosystem/gFTL/).
+These packages are provided with Pyccel, but any version of these packages installed locally will take precedent.
 
 For example the following code:
 
