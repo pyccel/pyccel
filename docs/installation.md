@@ -111,11 +111,13 @@ pacman -S mingw-w64-x86_64-gcc-fortran
 # Install compilation tools for multi-file projects and container support
 pacman -S mingw-w64-x86_64-cmake
 pacman -S mingw-w64-x86_64-meson
-pacman -S m4
 pacman -S pkg-config
 # Install MPI and Lapack for library support
 pacman -S mingw-w64-x86_64-msmpi
 pacman -S mingw-w64-x86_64-lapack
+
+# Install if compiling from source
+pacman -S m4
 ```
 
 Download MS MPI runtime and SDK, then install MPI:
