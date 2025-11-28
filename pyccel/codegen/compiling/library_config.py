@@ -438,7 +438,7 @@ class STCInstaller(ExternalLibInstaller):
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
-            if build_dir.exists() and build_dir.lstat().st_mtime < src_dir.lstat().st_mtime:
+            if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)
 
@@ -450,7 +450,7 @@ class STCInstaller(ExternalLibInstaller):
                 if verbose:
                     print(">> Installing STC with meson")
                 subprocess.run([meson, 'setup', build_dir, '--buildtype', buildtype, '--prefix', install_dir],
-                               check = True, cwd = src_dir, env = env,
+                               check = True, cwd = self._src_dir, env = env,
                                capture_output = (verbose <= 1))
                 subprocess.run([meson, 'compile', '-C', build_dir], check = True, cwd = pyccel_dirpath,
                                capture_output = (verbose == 0))
