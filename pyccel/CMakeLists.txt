@@ -24,7 +24,7 @@ function(install_stc c_compiler compiler_family)
         ExternalProject_Add(
             stc_install_${compiler_family}
             SOURCE_DIR ${CMAKE_SOURCE_DIR}/extensions/STC
-            CONFIGURE_COMMAND CC=${MY_CC_PATH} meson setup <BINARY_DIR> <SOURCE_DIR> --buildtype=release --prefix=${SKBUILD_PLATLIB_DIR}/pyccel/extensions/stc_install_${compiler_family} -Dpkgconfig.relocatable=true
+            CONFIGURE_COMMAND env CC=${MY_CC_PATH} meson setup <BINARY_DIR> <SOURCE_DIR> --buildtype=release --prefix=${SKBUILD_PLATLIB_DIR}/pyccel/extensions/stc_install_${compiler_family} -Dpkgconfig.relocatable=true
             BUILD_COMMAND meson compile -C <BINARY_DIR>
             INSTALL_COMMAND meson install -C <BINARY_DIR>
         )
