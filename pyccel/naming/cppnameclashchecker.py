@@ -45,13 +45,13 @@ class CppNameClashChecker(LanguageNameClashChecker):
         """
         return name in self.keywords or name in symbols
 
-    def get_collisionless_name(self, name, symbols):
+    def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
-        Get a valid name which doesn't collision with symbols or C++ keywords.
+        Get a valid name which doesn't collision with symbols or C keywords.
 
         Find a new name based on the suggested name which will not cause
-        conflicts with C++ keywords, does not appear in the provided symbols,
-        and is a valid name in C++ code.
+        conflicts with C keywords, does not appear in the provided symbols,
+        and is a valid name in C code.
 
         Parameters
         ----------
@@ -59,16 +59,22 @@ class CppNameClashChecker(LanguageNameClashChecker):
             The suggested name.
         symbols : set
             Symbols which should be considered as collisions.
+        prefix : str
+            The prefix that may be added to the name to provide context information.
+        context : str
+            The context where the name will be used.
+        parent_context : str
+            The type of the scope where the object with this name will be saved.
 
         Returns
         -------
         str
             A new name which is collision free.
         """
-        if name in ('__init__', '__del__'):
-            return name
+        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
+        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            name = 'operator' + name[1:-2]
+            return name
         if name[0] == '_':
             name = 'private'+name
         return self._get_collisionless_name(name, symbols)
