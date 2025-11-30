@@ -46,7 +46,7 @@ jobs:
         echo "python_version=$version" >> $GITHUB_OUTPUT
       shell: bash
 
-  Wheel-installation:
+  Sdist-installation:
     runs-on: ubuntu-latest
     name: Deploy tests
     needs: Python_version_picker
