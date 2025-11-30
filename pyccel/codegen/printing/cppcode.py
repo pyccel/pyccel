@@ -3,8 +3,10 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-from pyccel.ast.core     import Assign, Declare
-from pyccel.ast.literals import Nil
+from itertools import chain
+from pyccel.ast.core     import Assign, Declare, Import, Module
+from pyccel.ast.datatypes import FinalType
+from pyccel.ast.literals import Nil, LiteralTrue
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import Variable
@@ -13,6 +15,19 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors   import Errors
 
 errors = Errors()
+
+c_imports = {n : Import(n, Module(n, (), ())) for n in
+                ['cassert',
+                 'complex',
+                 'inttypes',
+                 'cmath',
+                 'pyc_math_c',
+                 'stdint',
+                 'stdio',
+                 'stdlib',
+                 'string',
+                 'stc/cstr',
+                 'CSpan_extensions']}
 
 class CppCodePrinter(CodePrinter):
     """
@@ -31,8 +46,8 @@ class CppCodePrinter(CodePrinter):
     prefix_module : str
             A prefix to be added to the name of the module.
     """
-    printmethod = "_ccode"
-    language = "C"
+    printmethod = "_cppcode"
+    language = "C++"
 
     _default_settings = {
         'tabwidth': 4,
@@ -150,6 +165,13 @@ class CppCodePrinter(CodePrinter):
                         body,
                         '\n}\n'))
 
+    def _print_Program(self, expr):
+        # TODO
+        self.set_scope(expr.scope)
+        code = self._print(expr.body)
+        self.exit_scope()
+        return code
+
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
@@ -222,6 +244,45 @@ class CppCodePrinter(CodePrinter):
     def _print_PyccelMul(self, expr):
         return ' * '.join(self._print(a) for a in expr.args)
 
+    def _print_PyccelDiv(self, expr):
+        return ' / '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMod(self, expr):
+        return f'{self._print(expr.args[0])} % {self._print(expr.args[1])}'
+
+    def _print_PyccelUnarySub(self, expr):
+        return f'-{self._print(expr.args[0])}'
+
+    def _print_PyccelUnary(self, expr):
+        return f'+{self._print(expr.args[0])}'
+
+    def _print_PyccelAnd(self, expr):
+        return ' && '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelOr(self, expr):
+        return ' || '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelEq(self, expr):
+        return f'{self._print(expr.args[0])} == {self._print(expr.args[1])}'
+
+    def _print_PyccelNeq(self, expr):
+        return f'{self._print(expr.args[0])} != {self._print(expr.args[1])}'
+
+    def _print_PyccelNot(self, expr):
+        return f'!{self._print(expr.args[0])}'
+
+    def _print_PyccelPow(self, expr):
+        #TODO: complex
+        self.add_import(c_imports['cmath'])
+        return f'std::pow({self._print(expr.args[0])}, {self._print(expr.args[1])})'
+
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return f'({self._print(expr.args[0])})'
+
+    def _print_PyccelFloorDiv(self, expr):
+        # TODO: FLOOR
+        return ' / '.join(self._print(a) for a in expr.args)
+
     def _print_Variable(self, expr):
         name = expr.name
         if expr.is_alias:
@@ -234,7 +295,8 @@ class CppCodePrinter(CodePrinter):
 
         name = var.name
         class_type = self._print(var.class_type)
-        const = ' const' if var.is_const else ''
+        class_type_str = self._print(class_type)
+        const = ' const' if isinstance(class_type, FinalType) else ''
 
         return f'{class_type}{const} {name};\n'
 
@@ -250,10 +312,54 @@ class CppCodePrinter(CodePrinter):
         return 'int'
 
     def _print_PythonNativeFloat(self, expr):
-        return 'float'
+        return 'double'
 
     def _print_PythonNativeComplex(self, expr):
-        return 'complex'
+        self.add_import(c_imports['complex'])
+        return 'complex double'
 
     def _print_StringType(self, expr):
         return 'str'
+
+    def _print_If(self, expr):
+        lines = []
+        condition_setup = []
+        for i, (c, b) in enumerate(expr.blocks):
+            body = self._print(b)
+            if i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
+                if i == 0:
+                    lines.append(body)
+                    break
+                lines.append("else\n")
+            else:
+                # Print condition
+                condition = self._print(c)
+                # Retrieve any additional code which cannot be executed in the line containing the condition
+                condition_setup.append(self._additional_code)
+                self._additional_code = ''
+                # Add the condition to the lines of code
+                line = f"if ({condition})\n"
+                if i == 0:
+                    lines.append(line)
+                else:
+                    lines.append("else " + line)
+            lines.append("{\n")
+            lines.append(body + "}\n")
+        return "".join(chain(condition_setup, lines))
+
+    def _print_Comment(self, expr):
+        comments = self._print(expr.text)
+
+        return f'//{comments}\n'
+
+    def _print_Import(self, expr):
+        #TODO:
+        return ''
+
+    def _print_FunctionCall(self, expr):
+        #TODO:
+        return ''
+
+    def _print_PythonPrint(self, expr):
+        #TODO:
+        return ''
