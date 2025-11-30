@@ -207,7 +207,7 @@ class ExternalLibInstaller:
     """
     def __init__(self, dest_dir, src_dir = None):
         src_dir = src_dir or dest_dir
-        self._src_dir = ext_path.joinpath(src_dir)
+        self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
         self._discovery_method = None
 
