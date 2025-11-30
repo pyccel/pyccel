@@ -11,8 +11,7 @@ runs:
       run: |
         import importlib.resources
         stc_folder = importlib.resources.files(f'pyccel.extensions.stc_install_GNU')
-        stc_folder_gen = importlib.resources.as_file(stc_folder)
-        with stc_folder_gen as f:
+        with importlib.resources.as_file(stc_folder) as f:
           assert f.exists()
           assert len(list(f.glob('**/*.h'))) > 0
           assert len(list(f.glob('**/*.pc'))) > 0
