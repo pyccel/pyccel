@@ -493,6 +493,7 @@ def test_lambda_2(language):
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
 
+@pytest.mark.language_agnostic
 def test_argument_types():
     def f(a : int, /, b : int, *args : int, c : int, **kwargs : int):
         my_sum = sum(v for v in kwargs.values())
