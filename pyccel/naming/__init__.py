@@ -14,5 +14,5 @@ from .pythonnameclashchecker import PythonNameClashChecker
 
 name_clash_checkers = {'fortran':FortranNameClashChecker(),
         'c':CNameClashChecker(),
-        'cpp':CppNameClashChecker(),
+        'c++':CppNameClashChecker(),
         'python':PythonNameClashChecker()}

@@ -307,6 +307,7 @@ else:
 
 #------------------------------------------------------------
 gcc_info.update(python_info)
+gpp_info.update(python_info)
 gfort_info.update(python_info)
 icc_info.update(python_info)
 ifort_info.update(python_info)
@@ -320,7 +321,7 @@ flang_info.update(python_info)
 available_compilers = {
                         'GNU': {
                             'c' : gcc_info,
-                            'cpp' : gpp_info,
+                            'c++' : gpp_info,
                             'fortran' : gfort_info
                             },
                         'intel': {

@@ -14,12 +14,12 @@ from pyccel.codegen.printing.pycode import PythonCodePrinter
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.utilities.stage import PyccelStage
 
-_extension_registry = {'fortran': 'f90', 'c':'c',  'cpp':'cpp', 'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h', 'cpp':'hpp', 'python':None}
+_extension_registry = {'fortran': 'f90', 'c':'c',  'c++':'cpp', 'python':'py'}
+_header_extension_registry = {'fortran': None, 'c':'h', 'c++':'hpp', 'python':None}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
-                        'cpp':CppCodePrinter,
+                        'c++':CppCodePrinter,
                         'python':PythonCodePrinter
                       }
 

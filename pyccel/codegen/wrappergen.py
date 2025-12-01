@@ -11,8 +11,10 @@ from pathlib import Path
 from .codegen import _extension_registry, _header_extension_registry
 from .printing.fcode  import FCodePrinter
 from .printing.cwrappercode  import CWrapperCodePrinter
+from .printing.pybindcode  import PyBindCodePrinter
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 from .wrapper.c_to_python_wrapper import CToPythonWrapper
+from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
 from ..ast.core import ModuleHeader
 from ..errors.errors                        import Errors
 from ..naming import name_clash_checkers
@@ -22,12 +24,14 @@ from ..utilities.stage import PyccelStage
 wrapper_registry = {
         'fortran' : [FortranToCWrapper, CToPythonWrapper],
         'c' : [CToPythonWrapper],
+        'c++' : [CppToPythonWrapper],
         'python' : [],
         }
 
 printer_registry = {
         FortranToCWrapper : FCodePrinter,
         CToPythonWrapper : CWrapperCodePrinter,
+        CppToPythonWrapper : PyBindCodePrinter,
         }
 
 pyccel_stage = PyccelStage()

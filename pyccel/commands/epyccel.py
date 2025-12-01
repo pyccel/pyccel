@@ -222,7 +222,7 @@ def epyccel_seq(function_class_or_module, *,
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
         file so it must include any necessary import statements.
-    language : {'fortran', 'c', 'cpp', 'python'}
+    language : {'fortran', 'c', 'c++', 'python'}
         Language of generated code (default: 'fortran').
     compiler_family : str, optional
         Compiler family for which Pyccel uses a default configuration (default: 'GNU').

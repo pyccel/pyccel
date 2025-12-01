@@ -245,6 +245,9 @@ def pyccel() -> None:
         print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
 
+    if args.language == 'cpp':
+        args.language = 'c++'
+
     try:
         # TODO: prune options
         execute_pyccel(str(filename),
