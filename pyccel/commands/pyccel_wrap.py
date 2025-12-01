@@ -113,9 +113,6 @@ def pyccel_wrap_command() -> None:
     # ...
     filename = args.filename
     compiler = args.compiler_config or args.compiler_family
-    mpi      = args.mpi
-    openmp   = args.openmp
-    openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
     output   = args.output or filename.parent
 
     # ...
