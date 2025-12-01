@@ -33,6 +33,13 @@ runs:
         echo "PYCCEL_DEBUG_MODE=1" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
+    - name: Test language agnostic tests
+      id: pytest_language_agnostic
+      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee lang_outfile.out
+      run: python -m pytest -rX ${FLAGS} -m "not parallel and xdist_incompatible and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee lang_outfile.out
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests
+      id: pytest_c
     - name: Test translation with uninstalled STC/gFTL
       run: |
         python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
@@ -83,13 +90,13 @@ runs:
       working-directory: ./tests
       id: pytest_c_xdist_incompatible
     - name: Test Fortran translations
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_outfile.out
+      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and fortran ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_fortran
     - name: Test multi-file Fortran translations
       run: |
-        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_xdist_incompatible_outfile.out
+        python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel and fortran ${{ inputs.pytest_mark }}" 2>&1 | tee fortran_xdist_incompatible_outfile.out
         pyccel-clean -s
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
@@ -99,6 +106,7 @@ runs:
       id: status
       run:
         python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests \
+                       "Language-agnostic tests:${{ steps.pytest_language_agnostic.outcome }}:tests/lang_outfile.out" \
                        "Tests with STC/gFTL uninstalled:${{ steps.pytest_dependencies.outcome }}:tests/install_outfile.out" \
                        "Verification of stdlib update:${{ steps.pytest_stdlib_update.outcome }}:tests/stdlib_update_outfile.out" \
                        "C tests:${{ steps.pytest_c.outcome }}:tests/c_outfile.out" \
