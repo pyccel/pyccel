@@ -138,10 +138,6 @@ def pyccel_wrap_command() -> None:
         sys.exit(1)
     # ...
 
-    accelerators = args.accelerators
-
-    # ...
-
     # ...
     # this will initialize the singleton ErrorsMode
     # making this setting available everywhere
@@ -161,7 +157,7 @@ def pyccel_wrap_command() -> None:
                        language        = args.language.lower(),
                        compiler_family = str(compiler) if compiler is not None else None,
                        debug           = args.debug,
-                       accelerators    = accelerators,
+                       accelerators    = args.accelerators,
                        folder          = output if output is not None else None,
                        output_name     = filename.stem,
                        conda_warnings  = args.conda_warnings)

@@ -192,10 +192,6 @@ def pyccel() -> None:
         sys.exit(1)
     # ...
 
-    accelerators = args.accelerators
-
-    # ...
-
     # ...
     # this will initialize the singleton ErrorsMode
     # making this settings available everywhere
@@ -227,7 +223,7 @@ def pyccel() -> None:
                        modules         = (),
                        libs            = args.libs,
                        debug           = args.debug,
-                       accelerators    = accelerators,
+                       accelerators    = args.accelerators,
                        folder          = str(output) if output is not None else None,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:

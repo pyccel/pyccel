@@ -111,8 +111,6 @@ def pyccel_make_command() -> None:
     if errors.has_errors():
         sys.exit(1)
 
-    accelerators = args.accelerators
-
     # ...
     # this will initialize the singleton ErrorsMode
     # making this settings available everywhere
@@ -132,7 +130,7 @@ def pyccel_make_command() -> None:
                             compiler_family = args.compiler_family,
                             build_system = args.build_system,
                             debug = args.debug,
-                            accelerators = accelerators,
+                            accelerators = args.accelerators,
                             conda_warnings = args.conda_warnings,
                             build_code = not args.convert_only)
     except PyccelError:
