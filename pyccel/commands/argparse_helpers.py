@@ -5,6 +5,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 import argparse
+import os
 import pathlib
 import sys
 
@@ -67,6 +68,15 @@ def add_compiler_selection(parser):
                                 default=None,
                                 metavar='CONFIG.json',
                                 help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+
+def add_accelerator_selection(parser):
+    group = parser.add_argument_group('Accelerators options')
+    group.add_argument('--mpi', action=AcceleratorAction, nargs=0,
+                       help='Use MPI.')
+    group.add_argument('--openmp', action=AcceleratorAction, nargs=0,
+                       help='Use OpenMP.')
+#    group.add_argument('--openacc', action=AcceleratorAction, nargs=0,
+#                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
 
 class AcceleratorAction(argparse.Action):
     """

@@ -10,7 +10,7 @@ import os
 import argparse
 import pathlib
 
-from .argparse_helpers import add_basic_functionalities, add_compiler_selection
+from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
 
 __all__ = ['MyParser', 'pyccel']
 
@@ -115,13 +115,7 @@ def pyccel() -> None:
     # ...
 
     # ... Accelerators
-    group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--mpi', action='store_true', \
-                       help='Use MPI.')
-    group.add_argument('--openmp', action='store_true', \
-                       help='Use OpenMP.')
-#    group.add_argument('--openacc', action='store_true', \
-#                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
+    add_accelerator_selection(parser)
     # ...
 
     # ... Other options
@@ -204,13 +198,7 @@ def pyccel() -> None:
         sys.exit(1)
     # ...
 
-    accelerators = []
-    if mpi:
-        accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
-    if openacc:
-        accelerators.append("openacc")
+    accelerators = args.accelerators
 
     # ...
 

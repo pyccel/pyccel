@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-from .argparse_helpers import add_basic_functionalities, add_compiler_selection
+from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
 
 def pyccel_make_command() -> None:
     """
@@ -62,13 +62,7 @@ def pyccel_make_command() -> None:
                        help="Folder in which the output is stored (default: FILE's folder).")
 
     # ... Accelerators
-    group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--mpi', action='store_true', \
-                       help='Use MPI.')
-    group.add_argument('--openmp', action='store_true', \
-                       help='Use OpenMP.')
-#    group.add_argument('--openacc', action='store_true', \
-#                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
+    add_accelerator_selection(parser)
     # ...
 
     # ... Other options
@@ -117,13 +111,7 @@ def pyccel_make_command() -> None:
     if errors.has_errors():
         sys.exit(1)
 
-    accelerators = []
-    if args.mpi:
-        accelerators.append("mpi")
-    if args.openmp:
-        accelerators.append("openmp")
-    #if args.openacc:
-    #    accelerators.append("openacc")
+    accelerators = args.accelerators
 
     # ...
     # this will initialize the singleton ErrorsMode
