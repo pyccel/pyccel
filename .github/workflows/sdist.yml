@@ -48,7 +48,7 @@ jobs:
 
   Sdist-installation:
     runs-on: ubuntu-latest
-    name: Deploy tests
+    name: Test deployment
     needs: Python_version_picker
 
     steps:
