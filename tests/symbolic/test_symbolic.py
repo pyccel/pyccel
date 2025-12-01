@@ -27,7 +27,7 @@ T = TypeVar('T', 'float[:]', 'float[:,:]')
 
 @pytest.mark.parametrize( "f", files )
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
-def test_symbolic(f):
+def test_symbolic(f, language):
 
     pyccel = Parser(f, output_folder = os.getcwd())
     pyccel.parse()
@@ -38,7 +38,7 @@ def test_symbolic(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'fortran')
+    codegen = Codegen(ast, name, language)
     codegen.printer.doprint(codegen.ast)
 
     # reset Errors singleton

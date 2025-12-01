@@ -26,6 +26,7 @@ def setup_module( module=None ):
 #==============================================================================
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
+@pytest.mark.fortran
 def test_np_allreduce( ne=15 ):
     """
     Initialize a 1D integer array with the process rank, and sum across
@@ -62,6 +63,7 @@ def test_np_allreduce( ne=15 ):
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
+@pytest.mark.fortran
 def test_np_bcast( ne=15 ):
 
     root  = 0
@@ -86,6 +88,7 @@ def test_np_bcast( ne=15 ):
 # ...
 @pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
 @pytest.mark.mpi
+@pytest.mark.fortran
 def test_np_gather():
 
     root = 0

@@ -118,6 +118,7 @@ def test_class_renaming(language):
     py_out, l_out = check_pyccel_wrap_and_call_translation('class_renaming', 'runtest_class_renaming', language)
     compare_pyth_fort_output(py_out, l_out, int, language)
 
+@pytest.mark.fortran
 def test_array_methods():
     # C is not tested as compiling array dependencies by hand is harder than necessary for the test
     py_out, l_out = check_pyccel_wrap_and_call_translation('array_methods', 'runtest_array_methods', 'fortran')
@@ -131,6 +132,7 @@ def test_class_no_init(language):
     py_out, l_out = check_pyccel_wrap_and_call_translation('class_no_init', 'runtest_class_no_init', language)
     compare_pyth_fort_output(py_out, l_out, int, language)
 
+@pytest.mark.fortran
 def test_class_final_fortran_keyword():
     py_out, _ = check_pyccel_wrap_and_call_translation('final_destroy', 'runtest_final_destroy', 'fortran')
     assert "c allocated, cleaning up" in py_out
