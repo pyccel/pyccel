@@ -73,8 +73,14 @@ class CppNameClashChecker(LanguageNameClashChecker):
         """
         assert context in ('module', 'function', 'class', 'variable', 'wrapper')
         assert parent_context in ('module', 'function', 'class', 'loop', 'program')
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)) and parent_context == 'class':
             return name
+        if name == '__init__':
+            name = 'init'
+        if name == '__del__':
+            name = 'free'
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            name = 'operator' + name[1:-2]
         if name[0] == '_':
             name = 'private'+name
         return self._get_collisionless_name(name, symbols)
