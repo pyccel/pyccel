@@ -14,6 +14,17 @@ if github_debugging:
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("cpp", marks = pytest.mark.cpp),
+        pytest.param("python", marks = pytest.mark.python)
+    ],
+    scope = "session"
+)
+def experimental_language(request):
+    return request.param
+
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope = "session"
