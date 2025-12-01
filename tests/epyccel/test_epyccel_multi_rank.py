@@ -131,9 +131,9 @@ def test_multi_dim_sum(language):
 
 # The remaining tests use np.sum
 
-def test_multi_dim_sum_ones():
+def test_multi_dim_sum_ones(language):
     f1 = multi_rank.multi_dim_sum_ones
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     dims = [randint(1, 10) for _ in range(3)]
     x1 = np.array(rand(*dims)*10, dtype=int)
@@ -147,9 +147,9 @@ def test_multi_dim_sum_ones():
 
     assert np.array_equal( pyccel_result, python_result )
 
-def test_multi_expression_assign():
+def test_multi_expression_assign(language):
     f1 = multi_rank.multi_expression_assign
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -162,9 +162,9 @@ def test_multi_expression_assign():
 
     assert np.array_equal( x1, x2 )
 
-def test_multi_expression_augassign():
+def test_multi_expression_augassign(language):
     f1 = multi_rank.multi_expression_augassign
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -177,9 +177,9 @@ def test_multi_expression_augassign():
 
     assert np.array_equal( x1, x2 )
 
-def test_grouped_expressions():
+def test_grouped_expressions(language):
     f1 = multi_rank.grouped_expressions
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(4,5)*10, dtype=int, order='F')
     x2 = np.copy(x1)
@@ -195,9 +195,9 @@ def test_grouped_expressions():
 
     assert np.array_equal( x1, x2 )
 
-def test_grouped_expressions2():
+def test_grouped_expressions2(language):
     f1 = multi_rank.grouped_expressions2
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(3,4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -213,9 +213,9 @@ def test_grouped_expressions2():
 
     assert np.array_equal( x1, x2 )
 
-def test_dependencies():
+def test_dependencies(language):
     f1 = multi_rank.dependencies
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -228,9 +228,9 @@ def test_dependencies():
 
     assert np.array_equal( x1, x2 )
 
-def test_auto_dependencies():
+def test_auto_dependencies(language):
     f1 = multi_rank.auto_dependencies
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
