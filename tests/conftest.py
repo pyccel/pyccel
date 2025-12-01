@@ -115,17 +115,6 @@ def pytest_sessionstart(session):
         if 'mpi' not in marks:
             pyccel_clean(path_dir)
 
-def pytest_collection_modifyitems(items):
-    """
-    Add all language markers to language-agnostic tests.
-    This is done at collection to ensure -m finds these tests.
-    """
-    for item in items:
-        if pytest.mark.language_agnostic.mark in item.iter_markers():
-            item.add_marker(pytest.mark.fortran)
-            item.add_marker(pytest.mark.c)
-            item.add_marker(pytest.mark.python)
-
 def pytest_runtest_setup(item):
     # Skip on `skip_llvm` marker and environment variable
     if 'skip_llvm' in item.keywords:
