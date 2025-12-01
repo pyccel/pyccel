@@ -11,6 +11,17 @@ if github_debugging:
     import sys
     sys.stdout = sys.stderr
 
+language_markers = ('language_agnostic', 'fortran', 'c', 'python')
+
+@pytest.fixture(autouse=True)
+def check_language_markers(request):
+    """
+    Ensure all tests have a language marker.
+    """
+    markers = [m.name for m in request.node.iter_markers()]
+    assert len(markers) > 0
+    assert any(l in markers for l in language_markers)
+
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -103,6 +114,17 @@ def pytest_sessionstart(session):
         marks = [m.name for m in session.own_markers ]
         if 'mpi' not in marks:
             pyccel_clean(path_dir)
+
+def pytest_collection_modifyitems(items):
+    """
+    Add all language markers to language-agnostic tests.
+    This is done at collection to ensure -m finds these tests.
+    """
+    for item in items:
+        if pytest.mark.language_agnostic.mark in item.iter_markers():
+            item.add_marker(pytest.mark.fortran)
+            item.add_marker(pytest.mark.c)
+            item.add_marker(pytest.mark.python)
 
 def pytest_runtest_setup(item):
     # Skip on `skip_llvm` marker and environment variable
