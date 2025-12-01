@@ -25,7 +25,7 @@ __epyccel__*
 
 build
 *egg*
-*dist*
+dist/*
 
 doc/_build
 doc/source

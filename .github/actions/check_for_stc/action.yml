@@ -9,10 +9,10 @@ runs:
     - name: check stc installation
       shell: python
       run: |
-        import pyccel, os
-        from os.path import exists, join
-        pyccel_loc = pyccel.__path__[0]
-        print(pyccel_loc)
-        print("${{ inputs.not_editable }}")
-        assert exists(join(pyccel_loc,'extensions/STC/include/stc'))
+        import importlib.resources
+        stc_folder = importlib.resources.files(f'pyccel.extensions.stc_install_GNU')
+        with importlib.resources.as_file(stc_folder) as f:
+          assert f.exists()
+          assert len(list(f.glob('**/*.h'))) > 0
+          assert len(list(f.glob('**/*.pc'))) > 0
 
