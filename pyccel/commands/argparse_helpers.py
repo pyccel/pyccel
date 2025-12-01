@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 import argparse
 import pathlib
+import sys
 
 __all__ = (
         'file_type',
@@ -39,6 +40,33 @@ def file_type(suffixes):
             raise argparse.ArgumentTypeError("Wrong file extension. Expecting one of: {', '.join(suffixes)}")
         return path.absolute()
     return check_path
+
+def add_basic_functionalities(parser):
+    #... Help and Version
+    import pyccel
+    version = pyccel.__version__
+    libpath = pyccel.__path__[0]
+    python  = f'python {sys.version_info.major}.{sys.version_info.minor}'
+    message = f'pyccel {version} from {libpath} ({python})'
+
+    group = parser.add_argument_group('Basic options')
+    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
+    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
+    # ...
+
+def add_compiler_selection(parser):
+    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
+    compiler_group = group.add_mutually_exclusive_group(required=False)
+    compiler_group.add_argument('--compiler-family',
+                                type=str,
+                                default=os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU'),
+                                metavar='FAMILY',
+                                help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
+    compiler_group.add_argument('--compiler-config',
+                                type=pathlib.Path,
+                                default=None,
+                                metavar='CONFIG.json',
+                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
 
 class AcceleratorAction(argparse.Action):
     """

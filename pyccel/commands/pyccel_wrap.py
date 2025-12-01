@@ -13,6 +13,8 @@ import os
 import argparse
 import pathlib
 
+from .argparse_helpers import add_basic_functionalities
+
 __all__ = ['pyccel_wrap_command']
 
 #==============================================================================
@@ -46,15 +48,7 @@ def pyccel_wrap_command() -> None:
     #...
 
     #... Help and Version
-    import pyccel
-    version = pyccel.__version__
-    libpath = pyccel.__path__[0]
-    python  = f'python {sys.version_info.major}.{sys.version_info.minor}'
-    message = f'pyccel {version} from {libpath} ({python})'
-
-    group = parser.add_argument_group('Basic options')
-    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
-    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
+    add_basic_functionalities(parser)
     # ...
 
     # ... backend compiler options

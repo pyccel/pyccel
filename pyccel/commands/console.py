@@ -10,6 +10,8 @@ import os
 import argparse
 import pathlib
 
+from .argparse_helpers import add_basic_functionalities, add_compiler_selection
+
 __all__ = ['MyParser', 'pyccel']
 
 #==============================================================================
@@ -54,15 +56,7 @@ def pyccel() -> None:
     #...
 
     #... Help and Version
-    import pyccel
-    version = pyccel.__version__
-    libpath = pyccel.__path__[0]
-    python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
-
-    group = parser.add_argument_group('Basic options')
-    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
-    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
+    add_basic_functionalities(parser)
     # ...
 
     # ... compiler syntax, semantic and codegen
@@ -83,18 +77,7 @@ def pyccel() -> None:
                        type=str.lower)
 
     # ... Compiler options
-    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
-    compiler_group = group.add_mutually_exclusive_group(required=False)
-    compiler_group.add_argument('--compiler-family',
-                                type=str,
-                                default=os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU'),
-                                metavar='FAMILY',
-                                help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
-    compiler_group.add_argument('--compiler-config',
-                                type=pathlib.Path,
-                                default=None,
-                                metavar='CONFIG.json',
-                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+    add_compiler_selection(parser)
 
     # ... Additional compiler options
     group = parser.add_argument_group('Additional compiler options')
