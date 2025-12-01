@@ -564,6 +564,7 @@ def test_expressions(language):
             output_dtype = types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_generic_functions(language):
     pyccel_test("scripts/runtest_generic_functions.py",
             dependencies = "scripts/generic_functions.py",
