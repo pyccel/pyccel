@@ -38,7 +38,7 @@ def test_symbolic(f, language):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, language)
+    codegen = Codegen(ast, name, language, verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # reset Errors singleton
