@@ -128,7 +128,7 @@ def pyccel() -> None:
                         help='Show internal messages.')
     group.add_argument('--export-compiler-config', action='store_true', \
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
 
@@ -149,9 +149,6 @@ def pyccel() -> None:
     openmp   = args.openmp
     openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
     output   = args.output or filename.parent
-
-    if not args.conda_warnings:
-        args.conda_warnings = 'basic'
 
     # ...
     if args.export_compiler_config:

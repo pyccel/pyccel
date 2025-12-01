@@ -96,7 +96,7 @@ def pyccel_wrap_command() -> None:
                         help='Show internal messages.')
     group.add_argument('--time-execution', action='store_true', \
                         help='Print the time spent in each section of the execution.')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
                         help='Specify the level of Conda warnings to display (default: basic).')
     # ...
 
@@ -117,9 +117,6 @@ def pyccel_wrap_command() -> None:
     openmp   = args.openmp
     openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
     output   = args.output or filename.parent
-
-    if not args.conda_warnings:
-        args.conda_warnings = 'basic'
 
     # ...
     # ... report error
