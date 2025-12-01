@@ -821,6 +821,9 @@ class CppCodePrinter(CodePrinter):
         args = ', '.join(self._print(a) for a in args)
 
         call_code = f'{func.name}({args})'
+        if func.is_imported:
+            mod, = func.get_direct_user_nodes(lambda m: isinstance(m, Module))
+            call_code = f'{mod.name}::{call_code}'
         if func.results.var is not Nil():
             return call_code
         else:
