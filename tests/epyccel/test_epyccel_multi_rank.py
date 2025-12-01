@@ -147,6 +147,15 @@ def test_multi_dim_sum_ones(language):
 
     assert np.array_equal( pyccel_result, python_result )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_multi_expression_assign(language):
     f1 = multi_rank.multi_expression_assign
     f2 = epyccel( f1, language=language )
@@ -162,6 +171,15 @@ def test_multi_expression_assign(language):
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_multi_expression_augassign(language):
     f1 = multi_rank.multi_expression_augassign
     f2 = epyccel( f1, language=language )
@@ -177,6 +195,15 @@ def test_multi_expression_augassign(language):
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_grouped_expressions(language):
     f1 = multi_rank.grouped_expressions
     f2 = epyccel( f1, language=language )
@@ -195,6 +222,15 @@ def test_grouped_expressions(language):
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_grouped_expressions2(language):
     f1 = multi_rank.grouped_expressions2
     f2 = epyccel( f1, language=language )
