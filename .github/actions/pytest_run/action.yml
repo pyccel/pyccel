@@ -35,11 +35,11 @@ runs:
       working-directory: ./tests
     - name: Test language agnostic tests
       id: pytest_language_agnostic
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee lang_outfile.out
-      run: python -m pytest -rX ${FLAGS} -m "not parallel and xdist_incompatible and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee lang_outfile.out
+      run: |
+          python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee lang_outfile.out
+          python -m pytest -rX ${FLAGS} -m "not parallel and xdist_incompatible and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee -a lang_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-      id: pytest_c
     - name: Test translation with uninstalled STC/gFTL
       run: |
         python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
