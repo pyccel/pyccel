@@ -17,6 +17,7 @@ from importlib.machinery import ExtensionFileLoader
 
 from filelock import FileLock, Timeout
 
+from pyccel.utilities.stage    import PyccelStage
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
 from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
@@ -338,6 +339,7 @@ def epyccel_seq(function_class_or_module, *,
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
+        pyccel_stage = PyccelStage()
         try:
             # Generate shared library
             execute_pyccel(pymod_filename,

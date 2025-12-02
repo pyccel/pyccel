@@ -1,6 +1,9 @@
 """
 Module describing things that are in common between different build system handlers.
 """
+from pyccel.utilities.stage import PyccelStage
+
+pyccel_stage = PyccelStage()
 
 class BuildSystemHandler:
     """
