@@ -358,8 +358,8 @@ def epyccel_seq(function_class_or_module, *,
                            output_name     = module_name,
                            conda_warnings  = conda_warnings,
                            context_dict    = context_dict)
-        except PyccelError:
-            raise PyccelError("Translation failed")
+        except PyccelError as err:
+            raise err
         finally:
             pyccel_stage.pyccel_finished()
             print(errors)
