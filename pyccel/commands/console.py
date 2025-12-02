@@ -15,7 +15,17 @@ from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel']
 
-def setup_pyccel_parser(parser):
+def setup_pyccel_compile_parser(parser):
+    """
+    Add the pyccel-compile arguments to the parser.
+
+    Add the pyccel-compile arguments to the parser for command line arguments.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
+    """
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=check_file_type(('.py','.json')),
@@ -111,7 +121,7 @@ def pyccel_compile_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
                       add_help=False)
 
-    setup_pyccel_parser(parser)
+    setup_pyccel_compile_parser(parser)
 
     # ...
     args = parser.parse_args()

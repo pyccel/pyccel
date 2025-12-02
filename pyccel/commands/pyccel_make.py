@@ -56,7 +56,17 @@ class FileDescriptionAction(argparse.Action):
         # Save result
         setattr(namespace, self.dest, files)
 
-def setup_pyccel_make(parser):
+def setup_pyccel_make_parser(parser):
+    """
+    Add the pyccel-make arguments to the parser.
+
+    Add the pyccel-make arguments to the parser for command line arguments.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
+    """
     #... Help and Version
     add_basic_functionalities(parser)
 
@@ -112,7 +122,7 @@ def pyccel_make_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
             add_help = False)
     # ...
-    setup_pyccel_make(parser)
+    setup_pyccel_make_parser(parser)
     # ...
     args = parser.parse_args()
 

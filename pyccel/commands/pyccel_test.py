@@ -222,21 +222,17 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Return the final return code
     return retcode
 
-
-def pyccel_test_command():
+def setup_pyccel_test_parser(parser):
     """
-    Command line wrapper around the pyccel_test function.
+    Add the pyccel-test arguments to the parser.
 
-    A wrapper around the pyccel_test function which allows
-    command line arguments to be passed to the function.
+    Add the pyccel-test arguments to the parser for command line arguments.
 
-    Returns
-    -------
-    pytest.ExitCode
-        The pytest return code.
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
     """
-    parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
-
     parser.add_argument('--dry-run', action='store_true',
         help='Run all steps without actually running the tests.')
 
@@ -252,6 +248,22 @@ def pyccel_test_command():
 
     parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
         help="Do not run the parallel tests.")
+
+def pyccel_test_command():
+    """
+    Command line wrapper around the pyccel_test function.
+
+    A wrapper around the pyccel_test function which allows
+    command line arguments to be passed to the function.
+
+    Returns
+    -------
+    pytest.ExitCode
+        The pytest return code.
+    """
+    parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
+
+    setup_pyccel_test_parser(parser)
 
     # Parse the command line arguments
     args = parser.parse_args()

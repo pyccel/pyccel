@@ -18,7 +18,17 @@ from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
 
-def setup_pyccel_wrap(parser):
+def setup_pyccel_wrap_parser(parser):
+    """
+    Add the pyccel-wrap arguments to the parser.
+
+    Add the pyccel-wrap arguments to the parser for command line arguments.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
+    """
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=check_file_type(('.pyi',)),
@@ -94,7 +104,7 @@ def pyccel_wrap_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
                       add_help=False)
     # ...
-    setup_pyccel_wrap(parser)
+    setup_pyccel_wrap_parser(parser)
     # ...
     args = parser.parse_args()
     # ...
