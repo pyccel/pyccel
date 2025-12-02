@@ -13,18 +13,7 @@ import pathlib
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import check_file_type, add_common_settings
 
-__all__ = ['MyParser', 'pyccel']
-
-#==============================================================================
-class MyParser(argparse.ArgumentParser):
-    """
-    Custom argument parser for printing help message in case of an error.
-    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
-    """
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
+__all__ = ['pyccel']
 
 #==============================================================================
 def pyccel() -> None:
@@ -47,7 +36,7 @@ def pyccel() -> None:
     generated for the corresponding block of code.
     """
 
-    parser = MyParser(description="Pyccel's command line interface.",
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
                       add_help=False)
 
     # ... Positional arguments
