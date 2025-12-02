@@ -12,6 +12,8 @@ from importlib.metadata import Distribution
 
 from .argparse_helpers import add_version_flag
 
+PYCCEL_TEST_DESCR = 'Run tests to check installation.'
+
 install_msg = """
 In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
 You can do this by running one of the following commands:

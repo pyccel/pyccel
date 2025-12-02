@@ -17,6 +17,8 @@ from pathlib import Path
 from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import add_common_settings, check_file_type
 
+PYCCEL_MAKE_DESCR = 'Translate and compile multiple Python files in a project.'
+
 class GlobAction(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs):
         self._type_check = type

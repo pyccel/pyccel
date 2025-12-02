@@ -18,6 +18,8 @@ from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
 
+PYCCEL_WRAP_DESCR = 'Create the wrapper to allow code to be called from Python.'
+
 def setup_pyccel_wrap_parser(parser):
     """
     Add the pyccel-wrap arguments to the parser.

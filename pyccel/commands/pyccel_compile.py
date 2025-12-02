@@ -15,6 +15,8 @@ from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel']
 
+PYCCEL_COMPILE_DESCR = 'Translate and compile a single Python file.'
+
 def setup_pyccel_compile_parser(parser):
     """
     Add the pyccel-compile arguments to the parser.
@@ -113,6 +115,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
                           symbol=cext,
                           severity='error')
         else:
+            pyccel_config(filename)
             execute_pyccel('',
                            compiler_family = str(compiler) if compiler is not None else None,
                            compiler_export_file = filename)
