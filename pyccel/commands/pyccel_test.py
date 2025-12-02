@@ -7,6 +7,7 @@
 import json
 import os
 import pathlib
+import sys
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
@@ -75,8 +76,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     assert isinstance(folder, (pathlib.Path, type(None)))
     assert isinstance(dry_run, bool)
     assert isinstance(verbose, int)
-
-    import sys
 
     # Pyccel must be installed
     try:
