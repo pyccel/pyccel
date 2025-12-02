@@ -12,7 +12,9 @@ import pathlib
 import sys
 
 from .argparse_helpers import add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import check_file_type, add_common_settings
+    # TODO: Uncomment for v2.3 to check for existence and file type
+#from .argparse_helpers import check_file_type, add_common_settings
+from .argparse_helpers import add_common_settings
 from .pyccel_config import pyccel_config
 
 __all__ = ['pyccel']
