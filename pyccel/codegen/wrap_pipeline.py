@@ -135,8 +135,8 @@ def execute_pyccel_wrap(fname, *,
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
-        parser.parse(verbose=verbose)
+    parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
+    parser.parse(verbose=verbose)
 
     if errors.has_errors():
         raise PyccelSyntaxError('Syntax step failed')
