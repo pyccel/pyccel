@@ -6,7 +6,7 @@ Pyccel now supports describing libraries written in low-level languages, directl
 
 This gives you two benefits at once:
 
-- The `pyccel-wrap` command allows you to call the compiled code directly from Python.
+- The `pyccel wrap` command allows you to call the compiled code directly from Python.
 
 - Pyccel understands those calls, so when you translate Python to C/Fortran code using Pyccel, the calls are re-emitted as direct calls to the original routines.
 
@@ -29,7 +29,7 @@ In practice, the `.pyi` file creates a two-way bridge between Python and low-lev
 
 - Write a `.pyi` stub with precise types and minimal build metadata.
 
-- Wrap the library with a Python interface using `pyccel-wrap` to make it callable from Python.
+- Wrap the library with a Python interface using `pyccel wrap` to make it callable from Python.
 
 - Develop in Python using the interface to the low-level code.
 
@@ -250,10 +250,10 @@ class Counter:
     def display(self, scale: float) -> None: ...
 ```
 
-We then run `pyccel-wrap`
+We then run `pyccel wrap`
 
 ```bash
-pyccel-wrap class_property.pyi
+pyccel wrap class_property.pyi
 ```
 
 This generates a file `class_property.cpython-313-x86_64-linux-gnu.so` which is directly usable from Python.
@@ -310,10 +310,10 @@ class Counter:
     def display(self, scale: float) -> None: ...
 ```
 
-We then run `pyccel-wrap`
+We then run `pyccel wrap`
 
 ```bash
-pyccel-wrap class_property.pyi
+pyccel wrap class_property.pyi
 ```
 
 This generates a file `class_property.cpython-313-x86_64-linux-gnu.so` which is directly usable from Python.
