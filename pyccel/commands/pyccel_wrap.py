@@ -18,30 +18,7 @@ from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
 
-#==============================================================================
-def pyccel_wrap_command() -> None:
-    """
-    Pyccel console command.
-
-    The Pyccel console command allows translating Python files using Pyccel in
-    a command-line environment. This function takes no parameters and sets up
-    an argument parser for the Pyccel command line interface.
-
-    The command line interface requires a Python file to be specified, and it
-    supports various options such as specifying the output language (C,
-    Fortran, or Python), compiler settings, and flags for accelerators like
-    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
-    debugging, and exporting compile information. Unless the user requires the
-    process to stop after a specific stage, Pyccel will execute the full
-    translation and compilation process until a C Python extension module is
-    generated, which can then be imported in Python. In addition, if the input
-    file contains an `if __name__ == '__main__':` block, an executable will be
-    generated for the corresponding block of code.
-    """
-
-    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                      add_help=False)
-
+def setup_pyccel_wrap(parser):
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=check_file_type(('.pyi',)),
@@ -92,31 +69,48 @@ def pyccel_wrap_command() -> None:
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Stop Pyccel after generating the wrapper files but before building the Python extension file.')
     add_common_settings(group)
-    # ...
 
+#==============================================================================
+def pyccel_wrap_command() -> None:
+    """
+    Pyccel console command.
+
+    The Pyccel console command allows translating Python files using Pyccel in
+    a command-line environment. This function takes no parameters and sets up
+    an argument parser for the Pyccel command line interface.
+
+    The command line interface requires a Python file to be specified, and it
+    supports various options such as specifying the output language (C,
+    Fortran, or Python), compiler settings, and flags for accelerators like
+    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
+    debugging, and exporting compile information. Unless the user requires the
+    process to stop after a specific stage, Pyccel will execute the full
+    translation and compilation process until a C Python extension module is
+    generated, which can then be imported in Python. In addition, if the input
+    file contains an `if __name__ == '__main__':` block, an executable will be
+    generated for the corresponding block of code.
+    """
+
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
+                      add_help=False)
+    # ...
+    setup_pyccel_wrap(parser)
     # ...
     args = parser.parse_args()
     # ...
 
+def pyccel_wrap(*, filename, output, **kwargs) -> None:
     # Imports
     from pyccel.errors.errors     import PyccelError
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
-
-    # ...
-    filename = args.filename
-    output   = args.output or filename.parent
     # ...
 
     try:
         execute_pyccel_wrap(filename,
-                       convert_only    = args.convert_only,
-                       verbose         = args.verbose,
-                       time_execution  = args.time_execution,
-                       language        = args.language,
-                       compiler_family = args.compiler,
-                       debug           = args.debug,
-                       accelerators    = args.accelerators,
-                       folder          = output,
-                       conda_warnings  = args.conda_warnings)
+                       folder          = output or filename.parent,
+                       **kwargs)
     except PyccelError:
-        sys.exit(1)
+        pass
+
+    errors.check()
+    sys.exit(errors.has_errors())
