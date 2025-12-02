@@ -159,8 +159,9 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
 
     # Commands to run the tests:
     cmd_1 = ['-ra', '-m (xdist_incompatible)']
+    cmd_3 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
     cmd_2 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and not python and not c)', '-n', 'auto']
+    cmd_3 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
     cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 

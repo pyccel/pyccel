@@ -21,16 +21,19 @@ def get_files_from_folder(foldername):
 
 @pytest.mark.parametrize("f", get_files_from_folder('blas'))
 @pytest.mark.external
+@pytest.mark.fortran
 def test_blas(f):
     execute_pyccel(f, libs=['blas'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('lapack'))
 @pytest.mark.external
+@pytest.mark.fortran
 def test_lapack(f):
     execute_pyccel(f, libs=['blas', 'lapack'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
 @pytest.mark.external
+@pytest.mark.fortran
 def test_mpi(f):
     execute_pyccel(f, accelerators=['mpi'])
 
