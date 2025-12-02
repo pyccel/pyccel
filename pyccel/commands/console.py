@@ -149,8 +149,8 @@ def pyccel() -> None:
     output   = args.output or filename.parent
 
     # ...
+    cext = filename.suffix
     if args.export_compiler_config:
-        cext = filename.suffix
         if cext == '':
             filename = filename.with_suffix('.json')
         elif cext != '.json':
@@ -166,10 +166,14 @@ def pyccel() -> None:
                        compiler_family = str(compiler) if compiler is not None else None,
                        compiler_export_file = filename)
         sys.exit(0)
-
-    # ...
-    if args.convert_only or args.syntax_only or args.semantic_only:
-        compiler = None
+    elif cext != '.py':
+        errors = Errors()
+        # severity is error to avoid needing to catch exception
+        errors.report('Wrong file extension. Expecting `py`, but found',
+                      symbol=cext,
+                      severity='error')
+        errors.check()
+        sys.exit(1)
 
     # ...
     # this will initialize the singleton ErrorsMode
