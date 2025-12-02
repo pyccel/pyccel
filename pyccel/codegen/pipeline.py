@@ -215,11 +215,6 @@ def execute_pyccel(fname, *,
         if time_execution:
             print_timers(start, timers)
 
-    # Print all warnings now
-    if errors.has_warnings():
-        errors.check()
-        return
-
     start_semantic = time.time()
     # Annotate abstract syntax Tree
     parser.annotate(verbose = verbose)
@@ -232,10 +227,6 @@ def execute_pyccel(fname, *,
     if semantic_only:
         if time_execution:
             print_timers(start, timers)
-
-        # Print all warnings now
-        if errors.has_warnings():
-            errors.check()
         return
 
     # -------------------------------------------------------------------------
@@ -263,9 +254,6 @@ def execute_pyccel(fname, *,
         if time_execution:
             print_timers(start, timers)
 
-        # Print all warnings now
-        if errors.has_warnings():
-            errors.check()
         return
 
     compile_libs, deps = get_module_and_compile_dependencies(parser)
@@ -294,10 +282,6 @@ def execute_pyccel(fname, *,
     if convert_only:
         if time_execution:
             print_timers(start, timers)
-
-        # Print all warnings now
-        if errors.has_warnings():
-            errors.check()
         return
 
     start_compile_target_language = time.time()

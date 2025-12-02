@@ -360,7 +360,7 @@ def epyccel_seq(function_class_or_module, *,
             raise PyccelError("Translation failed")
         finally:
             pyccel_stage.pyccel_finished()
-            errors.check()
+            print(errors)
 
 
         # Import shared library

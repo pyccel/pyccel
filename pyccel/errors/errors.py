@@ -415,7 +415,8 @@ class Errors(metaclass = Singleton):
             text += f'\nERROR at {self._stage_names[stage]} stage\n'
 
         print_path = (len(self.error_info_map.keys()) > 1)
-        text += f'{PYCCEL}:\n'
+        if self.error_info_map:
+            text += f'{PYCCEL}:\n'
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]

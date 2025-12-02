@@ -114,7 +114,7 @@ def pyccel_wrap_command() -> None:
     except PyccelError:
         pass
 
-    errors.check()
+    print(errors)
     sys.exit(errors.has_errors())
 
 def pyccel_wrap(*, filename, output, **kwargs) -> None:

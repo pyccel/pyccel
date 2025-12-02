@@ -135,7 +135,7 @@ def pyccel_make_command() -> None:
     except PyccelError:
         pass
 
-    errors.check()
+    print(errors)
     sys.exit(errors.has_errors())
 
 def pyccel_make(**kwargs) -> None:
