@@ -118,21 +118,17 @@ def pyccel_make() -> None:
 
     pyccel_make_command(**vars(args))
 
-def pyccel_make_command(files, **kwargs) -> None:
+def pyccel_make_command(**kwargs) -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
 
     errors = Errors()
 
-    cwd = os.getcwd()
-    files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
-
     try:
         execute_pyccel_make(files, **kwargs)
     except PyccelError:
-        errors.check()
-        sys.exit(1)
+        pass
 
     errors.check()
-    sys.exit(0)
+    sys.exit(errors.has_errors())
