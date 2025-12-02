@@ -11,7 +11,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import check_file_type
+from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['MyParser', 'pyccel']
 
@@ -121,16 +121,9 @@ def pyccel() -> None:
 
     # ... Other options
     group = parser.add_argument_group('Other options')
-    group.add_argument('-v', '--verbose', action='count', default = 0,\
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
-    group.add_argument('--time-execution', action='store_true', \
-                        help='Print the time spent in each section of the execution.')
-    group.add_argument('--developer-mode', action='store_true', \
-                        help='Show internal messages.')
-    group.add_argument('--export-compiler-config', action='store_true', \
+    add_common_settings(group)
+    group.add_argument('--export-compiler-config', action='store_true', deprecated=True,
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
-                        help='Specify the level of Conda warnings to display (default: basic).')
     # ...
 
     # ...
@@ -139,7 +132,6 @@ def pyccel() -> None:
 
     # Imports
     from pyccel.errors.errors     import Errors, PyccelError
-    from pyccel.errors.errors     import ErrorsMode
     from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...
@@ -172,20 +164,13 @@ def pyccel() -> None:
                       severity='error')
         errors.check()
         sys.exit(1)
-
-    # ...
-    # this will initialize the singleton ErrorsMode
-    # making this settings available everywhere
-    err_mode = ErrorsMode()
-    if args.developer_mode:
-        err_mode.set_mode('developer')
-    else:
-        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
     if args.language == 'python' and args.output == '':
         print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
+
+    print(args)
 
     try:
         # TODO: prune options

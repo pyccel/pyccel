@@ -14,7 +14,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_basic_functionalities, add_accelerator_selection
-from .argparse_helpers import check_file_type
+from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
 
@@ -91,14 +91,7 @@ def pyccel_wrap_command() -> None:
     group = parser.add_argument_group('Other options')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Stop Pyccel after generating the wrapper files but before building the Python extension file.')
-    group.add_argument('-v', '--verbose', action='count', default = 0,\
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
-    group.add_argument('--developer-mode', action='store_true', \
-                        help='Show internal messages.')
-    group.add_argument('--time-execution', action='store_true', \
-                        help='Print the time spent in each section of the execution.')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
-                        help='Specify the level of Conda warnings to display (default: basic).')
+    add_common_settings(group)
     # ...
 
     # ...
@@ -107,22 +100,11 @@ def pyccel_wrap_command() -> None:
 
     # Imports
     from pyccel.errors.errors     import PyccelError
-    from pyccel.errors.errors     import ErrorsMode
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
 
     # ...
     filename = args.filename
     output   = args.output or filename.parent
-    # ...
-
-    # ...
-    # this will initialize the singleton ErrorsMode
-    # making this setting available everywhere
-    err_mode = ErrorsMode()
-    if args.developer_mode:
-        err_mode.set_mode('developer')
-    else:
-        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
     # ...
 
     try:

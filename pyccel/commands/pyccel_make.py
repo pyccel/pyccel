@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
+from .argparse_helpers import add_common_settings
 
 def pyccel_make_command() -> None:
     """
@@ -67,14 +68,7 @@ def pyccel_make_command() -> None:
 
     # ... Other options
     group = parser.add_argument_group('Other options')
-    group.add_argument('-v', '--verbose', action='count', default = 0,\
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
-    group.add_argument('--time-execution', action='store_true', \
-                        help='Print the time spent in each section of the execution.')
-    group.add_argument('--developer-mode', action='store_true', \
-                        help='Show internal messages.')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
-                        help='Specify the level of Conda warnings to display (default: basic).')
+    add_common_settings(group)
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Stop Pyccel after translation to the target language, before build.')
     # ...
@@ -110,16 +104,6 @@ def pyccel_make_command() -> None:
 
     if errors.has_errors():
         sys.exit(1)
-
-    # ...
-    # this will initialize the singleton ErrorsMode
-    # making this settings available everywhere
-    err_mode = ErrorsMode()
-    if args.developer_mode:
-        err_mode.set_mode('developer')
-    else:
-        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
-    # ...
 
     try:
         execute_pyccel_make(files,
