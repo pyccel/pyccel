@@ -140,12 +140,10 @@ def pyccel() -> None:
     # Imports
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.errors.errors     import ErrorsMode
-    from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...
     filename = args.filename
-    compiler = args.compiler_config or args.compiler_family
     output   = args.output or filename.parent
 
     # ...
@@ -198,12 +196,11 @@ def pyccel() -> None:
                        verbose         = args.verbose,
                        time_execution  = args.time_execution,
                        language        = args.language,
-                       compiler_family = str(compiler) if compiler is not None else None,
+                       compiler_family = args.compiler,
                        flags           = args.flags,
                        wrapper_flags   = args.wrapper_flags,
                        include         = args.include,
                        libdir          = args.libdir,
-                       modules         = (),
                        libs            = args.libs,
                        debug           = args.debug,
                        accelerators    = args.accelerators,

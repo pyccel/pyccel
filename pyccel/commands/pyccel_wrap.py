@@ -112,7 +112,6 @@ def pyccel_wrap_command() -> None:
 
     # ...
     filename = args.filename
-    compiler = args.compiler_config or args.compiler_family
     output   = args.output or filename.parent
     # ...
 
@@ -133,7 +132,7 @@ def pyccel_wrap_command() -> None:
                        verbose         = args.verbose,
                        time_execution  = args.time_execution,
                        language        = args.language.lower(),
-                       compiler_family = str(compiler) if compiler is not None else None,
+                       compiler_family = args.compiler,
                        debug           = args.debug,
                        accelerators    = args.accelerators,
                        folder          = output if output is not None else None,

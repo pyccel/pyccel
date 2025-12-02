@@ -84,11 +84,14 @@ def add_compiler_selection(parser):
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
     compiler_group = group.add_mutually_exclusive_group(required=False)
     compiler_group.add_argument('--compiler-family',
+                                dest='compiler',
                                 choices=available_compilers.keys(),
+                                type=str,
                                 default=default_compiler,
                                 help=f'Compiler family (default: {default_compiler}).')
     compiler_group.add_argument('--compiler-config',
-                                type=check_file_type(('.json',)),
+                                dest='compiler',
+                                type=lambda p: str(check_file_type(('.json',))),
                                 default=None,
                                 metavar='CONFIG.json',
                                 help='Load all compiler information from a JSON file with the given path (relative or absolute).')
@@ -105,6 +108,7 @@ def add_accelerator_selection(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
+    parser.set_defaults(accelerators=[])
     group = parser.add_argument_group('Accelerators options')
     group.add_argument('--mpi', action=AcceleratorAction, nargs=0,
                        help='Use MPI.')
@@ -144,7 +148,4 @@ class AcceleratorAction(argparse.Action):
             `'--mpi'` or `'--openmp'`.
         """
         # Initialise the list if it doesn't exist yet
-        accelerators = getattr(namespace, 'accelerators', [])
-        accelerators.append(self.dest)
-        setattr(namespace, 'accelerators', accelerators)
-
+        namespace.accelerators.append(self.dest)
