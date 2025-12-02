@@ -46,7 +46,7 @@ def setup_pyccel_compile_parser(parser):
 
     group.add_argument('--language', choices=('Fortran', 'C', 'Python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
-                       type=str.lower)
+                       type=str.title)
 
     # ... Compiler options
     add_compiler_selection(parser)
@@ -158,7 +158,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
     if not filename.is_file():
         errors.report(f"File not found: {filename}", severity='error')
 
-    if language == 'python' and output == '':
+    if language == 'Python' and output == '':
         errors.report("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
                       severity='error')
 
@@ -167,6 +167,6 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
         sys.exit(1)
 
     execute_pyccel(str(filename),
-                   language        = language,
+                   language        = language.lower(),
                    folder          = output or filename.parent,
                    **kwargs)

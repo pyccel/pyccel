@@ -42,7 +42,7 @@ def setup_pyccel_wrap_parser(parser):
 
     group.add_argument('--language', choices=('Fortran', 'C'), default='Fortran',
                        help='The language of the code being exposed to Python.',
-                       type=str.lower)
+                       type=str.title)
 
     # ... Compiler options
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
@@ -128,7 +128,7 @@ def pyccel_wrap_command() -> None:
     print(errors)
     sys.exit(errors.has_errors())
 
-def pyccel_wrap(*, filename, output, **kwargs) -> None:
+def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
     """
     Call the pyccel wrap pipeline.
 
@@ -138,6 +138,8 @@ def pyccel_wrap(*, filename, output, **kwargs) -> None:
     ----------
     filename : Path
         Name of the Python file to be translated.
+    language : str
+        The target language Pyccel is translating to.
     output : str
         Path to the working directory.
     **kwargs : dict
@@ -148,5 +150,6 @@ def pyccel_wrap(*, filename, output, **kwargs) -> None:
     # ...
 
     execute_pyccel_wrap(filename,
-                   folder          = output or filename.parent,
-                   **kwargs)
+                        language = language.lower(),
+                        folder = output or filename.parent,
+                        **kwargs)

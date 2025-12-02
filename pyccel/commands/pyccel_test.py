@@ -168,7 +168,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
-    if language != 'all':
+    if language != 'All':
         cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
         relevant_language = [True,
                 *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
@@ -192,7 +192,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         if verbose:
             cmd_mpi += ['-' + 'v' * verbose]
         if language != 'all':
-            cmd_mpi.append(f'-m={language}')
+            cmd_mpi.append(f'-m={language.lower()}')
         print()
         print(desc_mpi)
         print(f'> {" ".join(cmd_mpi)}')
@@ -245,8 +245,8 @@ def setup_pyccel_test_parser(parser):
     parser.add_argument('--folder', type=pathlib.Path, default=None,
         help="Run tests located in custom folder (default: use Pyccel's distribution).")
 
-    parser.add_argument('--language', choices=('fortran', 'c', 'python', 'all'), default='all',
-        help='Target language for translation, i.e. the main language of the generated code (default: all).',
+    parser.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
+        help='Target language for translation, i.e. the main language of the generated code (default: All).',
         type=str.lower)
 
     parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',

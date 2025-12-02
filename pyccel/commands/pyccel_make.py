@@ -125,7 +125,7 @@ def setup_pyccel_make_parser(parser):
 
     group.add_argument('--language', choices=('Fortran', 'C', 'Python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
-                       type=str.lower)
+                       type=str.title)
     group.add_argument('--build-system', choices=('meson', 'cmake'), default='meson',
                        help='Chosen build system for translation, i.e. the tool that will be used to compile the generated code (default: meson).',
                        type=str.lower)
@@ -185,7 +185,7 @@ def pyccel_make_command() -> None:
     print(errors)
     sys.exit(errors.has_errors())
 
-def pyccel_make(**kwargs) -> None:
+def pyccel_make(*, language, **kwargs) -> None:
     """
     Call the pyccel make pipeline.
 
@@ -193,10 +193,12 @@ def pyccel_make(**kwargs) -> None:
 
     Parameters
     ----------
+    language : str
+        The target language Pyccel is translating to.
     **kwargs : dict
         See execute_pyccel_make.
     """
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
 
-    execute_pyccel_make(**kwargs)
+    execute_pyccel_make(language = language.lower(), **kwargs)
