@@ -7,7 +7,6 @@
 import argparse
 import pathlib
 import sys
-import warnings
 
 from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean_loop, PYCCEL_CLEAN_DESCR
 from .pyccel_compile import setup_pyccel_compile_parser, pyccel, PYCCEL_COMPILE_DESCR
@@ -63,7 +62,7 @@ def pyccel_command() -> None:
 
     try:
         kwargs = vars(parser.parse_args())
-    except Exception as e:
+    except argparse.ArgumentError:
         print("warning: Using pyccel with no sub-command will be deprecated in v2.3. Please use pyccel compile.",
               file=sys.stderr)
         argv = ('compile', *argv)
