@@ -85,13 +85,13 @@ def add_compiler_selection(parser):
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
     compiler_group = group.add_mutually_exclusive_group(required=False)
     compiler_group.add_argument('--compiler-family',
-                                dest='compiler',
+                                dest='compiler_family',
                                 choices=available_compilers.keys(),
                                 type=str,
                                 default=default_compiler,
                                 help=f'Compiler family (default: {default_compiler}).')
     compiler_group.add_argument('--compiler-config',
-                                dest='compiler',
+                                dest='compiler_family',
                                 type=lambda p: str(check_file_type(('.json',))),
                                 default=None,
                                 metavar='CONFIG.json',
