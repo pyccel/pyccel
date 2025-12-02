@@ -14,6 +14,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_basic_functionalities, add_accelerator_selection
+from .argparse_helpers import check_file_type
 
 __all__ = ['pyccel_wrap_command']
 
@@ -43,7 +44,7 @@ def pyccel_wrap_command() -> None:
 
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=pathlib.Path,
+    group.add_argument('filename', metavar='FILE', type=check_file_type(('.pyi',)),
                        help='Path (relative or absolute) to the Python stub file describing the low-level code.')
     #...
 
@@ -105,37 +106,14 @@ def pyccel_wrap_command() -> None:
     # ...
 
     # Imports
-    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import PyccelError
     from pyccel.errors.errors     import ErrorsMode
-    from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
 
     # ...
     filename = args.filename
     compiler = args.compiler_config or args.compiler_family
     output   = args.output or filename.parent
-
-    # ...
-    # ... report error
-    if filename.is_file():
-        fext = filename.suffix
-        if fext != '.pyi':
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
-                            symbol=fext,
-                            severity='error')
-            errors.check()
-            sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                        symbol=filename,
-                        severity='error')
-        errors.check()
-        sys.exit(1)
     # ...
 
     # ...

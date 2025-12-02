@@ -11,6 +11,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
+from .argparse_helpers import check_file_type
 
 __all__ = ['MyParser', 'pyccel']
 
@@ -51,7 +52,7 @@ def pyccel() -> None:
 
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=pathlib.Path,
+    group.add_argument('filename', metavar='FILE', type=check_file_type(('.py','.json')),
                         help='Path (relative or absolute) to the Python file to be translated.')
     #...
 
@@ -169,28 +170,6 @@ def pyccel() -> None:
     # ...
     if args.convert_only or args.syntax_only or args.semantic_only:
         compiler = None
-
-    # ... report error
-    if filename.is_file():
-        fext = filename.suffix
-        if fext not in ['.py', '.pyi']:
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
-                            symbol=fext,
-                            severity='error')
-            errors.check()
-            sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                        symbol=filename,
-                        severity='error')
-        errors.check()
-        sys.exit(1)
-    # ...
 
     # ...
     # this will initialize the singleton ErrorsMode
