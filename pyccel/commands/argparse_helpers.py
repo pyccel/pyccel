@@ -161,7 +161,15 @@ class ErrorModeSelector(argparse.Action):
 
     Class describing an action which sets the error mode to the value saved in the
     const argument.
+
+    Parameters
+    ----------
+    **kwargs : dict
+        See argparse.Action.
     """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         err_mode = ErrorsMode()
         err_mode.set_mode(self.const)
