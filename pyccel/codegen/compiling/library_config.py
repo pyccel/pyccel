@@ -7,6 +7,7 @@
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 import filecmp
+import importlib.resources
 from itertools import chain
 import os
 from pathlib import Path
@@ -126,7 +127,7 @@ class StdlibInstaller:
                 dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, verbose, compiler))
 
         new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
-                          **self._compile_obj_kwargs)
+                          include=(lib_dest_path,), **self._compile_obj_kwargs)
         installed_libs[self._folder] = new_obj
         return new_obj
 
@@ -243,7 +244,7 @@ class ExternalLibInstaller:
             The name of the package.
         languages : iterable[str]
             The languages that the project will use with this package.
-        options : iterable[str], optional
+        options : str, optional
             Any additional options that should be passed to find_package.
             E.g. COMPONENTS.
         target_name : str
@@ -368,7 +369,7 @@ class STCInstaller(ExternalLibInstaller):
     """
     def __init__(self):
         super().__init__("stc", src_dir = "STC")
-        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
+        self._compile_obj = CompileObj("stc", folder = self._src_dir.name, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
@@ -398,12 +399,35 @@ class STCInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        compiler_family = compiler.compiler_family.lower()
+        compiler_family = compiler.compiler_family
 
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
         existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
         if existing_installation:
+            installed_libs['stc'] = existing_installation
+            return existing_installation
+
+        sep = ';' if sys.platform == "win32" else ':'
+        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
+
+        try:
+            stc_installation = importlib.resources.files(f'pyccel.extensions.stc_install_{compiler_family}')
+        except ModuleNotFoundError:
+            stc_installation = None
+
+        if stc_installation:
+            with importlib.resources.as_file(stc_installation) as f:
+                pkgconfig_dir = next(f.glob('**/*.pc')).parent
+                os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
+                                                         if p and Path(p).exists())
+
+                # Use pkg-config to try to locate an existing (system or user) installation
+                # with version >= 5.0 < 6
+                # This must be done in the with statement to ensure pkgconfig_dir exists
+                existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
             installed_libs['stc'] = existing_installation
             return existing_installation
 
@@ -437,8 +461,6 @@ class STCInstaller(ExternalLibInstaller):
         libs = ['-lstc', '-lm']
 
         self._discovery_method = 'pkgconfig'
-        sep = ';' if sys.platform == "win32" else ':'
-        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
         os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (*PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
                                                  if p and Path(p).exists())
 
@@ -458,7 +480,7 @@ class GFTLInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("GFTL", src_dir = "gFTL/install")
+        super().__init__("GFTL", src_dir = "gFTL")
 
     @property
     def target_name(self):
@@ -499,26 +521,24 @@ class GFTLInstaller(ExternalLibInstaller):
             library.
         """
         existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+
         if existing_installation:
             installed_libs['gFTL'] = existing_installation
             return existing_installation
-        dest_dir = Path(pyccel_dirpath) / self._dest_dir
-        if not dest_dir.exists():
-            if verbose:
-                print(f">> Creating a link to {self._src_dir} in {dest_dir}")
-            os.symlink(self._src_dir, dest_dir, target_is_directory=True)
 
-        new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
-                          include = (dest_dir / 'GFTL-1.13/include/v2',))
-        installed_libs['gFTL'] = new_obj
-
-        self._discovery_method = 'CMake'
         sep = ';' if sys.platform == "win32" else ':'
         CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
-        os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(dest_dir))
-                                                   if s and Path(s).exists())
 
-        return new_obj
+        gftl_installation = importlib.resources.files('pyccel.extensions.gftl_install')
+        with importlib.resources.as_file(gftl_installation) as f:
+            cmake_dir = next(f.glob('**/*.cmake')).parent
+            os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
+                                                       if s and Path(s).exists())
+            existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+
+            installed_libs['gFTL'] = existing_installation
+
+        return existing_installation
 
 #------------------------------------------------------------------------------------------
 

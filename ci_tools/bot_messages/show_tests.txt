@@ -13,6 +13,7 @@ The following is a list of keywords which can be used to run tests. Tests in bol
 - pr_tests : Runs all the tests marked in bold.
 - check_install : Checks that files have been correctly generated and installed by the installation process.
 - editable_check_install : Checks that files have been correctly generated and installed by the editable installation process.
+- sdist : Checks that files have been correctly generated and packaged into the sdist and can be used to generate a wheel.
 - wheel : Checks that files have been correctly generated and packaged into the wheel.
 - anaconda_linux : Runs the unit tests on a linux system using anaconda for python.
 - anaconda_windows : Runs the unit tests on a windows system using anaconda for python.

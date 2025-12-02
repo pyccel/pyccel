@@ -1,4 +1,4 @@
-name: Installation
+name: Sdist-installation
 
 on:
   workflow_dispatch:
@@ -7,9 +7,6 @@ on:
         required: true
         type: string
       ref:
-        required: false
-        type: string
-      editable_string:
         required: false
         type: string
       check_run_id:
@@ -33,33 +30,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
-      python_version: ${{ steps.set-matrix.outputs.python_version }}
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      python_version: ${{ steps.set-python_version.outputs.python_version }}
     steps:
     - if: github.event_name == 'push'
       run: |
         echo "version=3.10" >> $GITHUB_ENV
-        echo "editable=['-e', ' ']" >> $GITHUB_ENV
       shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
-        echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
       shell: bash
-    - id: set-matrix
+    - id: set-python_version
       run: |
         echo "python_version=$version" >> $GITHUB_OUTPUT
-        echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
       shell: bash
 
-  Installation:
+  Sdist-installation:
     runs-on: ubuntu-latest
-    name: Deploy tests
+    name: Test deployment
     needs: Python_version_picker
-
-    strategy:
-      matrix: ${{fromJson(needs.Python_version_picker.outputs.matrix)}}
 
     steps:
       - id: duplicate_check
@@ -67,7 +57,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**", ".github/workflows/check_install.yml", ".github/actions/**"]'
+          paths: '["pyccel/**", "pyproject.toml", "install_scripts/**", ".github/workflows/sdist.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '["push"]'
 
@@ -75,6 +65,8 @@ jobs:
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          submodules: true
+          path: pyccel_download
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
         uses: actions/setup-python@v5
         with:
@@ -84,35 +76,42 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py check_install
+          python ci_tools/setup_check_run.py sdist
+        working-directory: ./pyccel_download
+        shell: bash
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        uses: ./.github/actions/linux_install
-      - name: Install Pyccel
+        uses: ./pyccel_download/.github/actions/linux_install
+      - name: Install Pyccel from sdist
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: installation
+        id: sdist_creation
         run: |
           python -m pip install --upgrade pip
-          echo "python -m pip install ${{ matrix.editable_string }} ."
-          python -m pip install ${{ matrix.editable_string }} .
+          python -m pip install --upgrade build
+          python -m build --sdist
+          cp dist/*.tar.gz ..
+        working-directory: ./pyccel_download
+        shell: bash
+      - name: Install Pyccel from sdist
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: sdist_installation
+        run: |
+          python -m pip install *.tar.gz
         shell: bash
       - name: Check for STC installation
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: stc_check
-        uses: ./.github/actions/check_for_stc
-        with:
-          not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True'}}"
+        uses: ./pyccel_download/.github/actions/check_for_stc
       - name: Check for gFTL installation
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: gFTL_check
-        uses: ./.github/actions/check_for_gftl
-        with:
-          not_editable: "${{ matrix.editable_string == '-e' && 'False' || 'True' }}"
+        uses: ./pyccel_download/.github/actions/check_for_gftl
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          python ci_tools/basic_json_check_output.py --statuses ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
-          python ci_tools/complete_check_run.py ${{ steps.installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.sdist_creation.outcome }} ${{ steps.sdist_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}} --reasons "Sdist creation failed." "Installation failed." "STC was not found during installation." "gFTL was not found during installation."
+          python ci_tools/complete_check_run.py ${{ steps.sdist_creation.outcome }} ${{ steps.sdist_installation.outcome }} ${{ steps.stc_check.outcome }} ${{ steps.gFTL_check.outcome}}
+        working-directory: ./pyccel_download
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
         run:
