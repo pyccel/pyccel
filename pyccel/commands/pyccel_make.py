@@ -44,7 +44,7 @@ def pyccel_make_command() -> None:
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
 
-    group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
+    group.add_argument('--language', choices=('Fortran', 'C', 'Python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.lower)
     group.add_argument('--build-system', choices=('meson', 'cmake'), default='meson',
@@ -69,7 +69,7 @@ def pyccel_make_command() -> None:
     # ... Other options
     group = parser.add_argument_group('Other options')
     add_common_settings(group)
-    group.add_argument('-t', '--convert-only', action='store_true',
+    group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
                        help='Stop Pyccel after translation to the target language, before build.')
     # ...
     # ...
@@ -77,7 +77,6 @@ def pyccel_make_command() -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
-    from pyccel.errors.errors     import ErrorsMode
 
     errors = Errors()
 
@@ -116,6 +115,6 @@ def pyccel_make_command() -> None:
                             debug = args.debug,
                             accelerators = args.accelerators,
                             conda_warnings = args.conda_warnings,
-                            build_code = not args.convert_only)
+                            build_code = args.build_code)
     except PyccelError:
         sys.exit(1)

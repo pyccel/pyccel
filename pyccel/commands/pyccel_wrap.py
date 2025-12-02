@@ -57,7 +57,7 @@ def pyccel_wrap_command() -> None:
 
     group.add_argument('--language', choices=('Fortran', 'C'), default='Fortran',
                        help='The language of the code being exposed to Python.',
-                       type=str.title)
+                       type=str.lower)
 
     # ... Compiler options
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
@@ -108,17 +108,15 @@ def pyccel_wrap_command() -> None:
     # ...
 
     try:
-        # TODO: prune options
         execute_pyccel_wrap(filename,
                        convert_only    = args.convert_only,
                        verbose         = args.verbose,
                        time_execution  = args.time_execution,
-                       language        = args.language.lower(),
+                       language        = args.language,
                        compiler_family = args.compiler,
                        debug           = args.debug,
                        accelerators    = args.accelerators,
-                       folder          = output if output is not None else None,
-                       output_name     = filename.stem,
+                       folder          = output,
                        conda_warnings  = args.conda_warnings)
     except PyccelError:
         sys.exit(1)

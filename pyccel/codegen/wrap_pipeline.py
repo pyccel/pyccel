@@ -47,7 +47,6 @@ def execute_pyccel_wrap(fname, *,
                    compiler_family,
                    debug,
                    accelerators,
-                   output_name,
                    conda_warnings):
     """
     Run Pyccel on the provided code.
@@ -81,8 +80,6 @@ def execute_pyccel_wrap(fname, *,
         If no such environment variable exists then the default is False.
     accelerators : iterable
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
-    output_name : str
-        Name of the generated module. Default is the same name as the translated file.
     conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
@@ -94,6 +91,8 @@ def execute_pyccel_wrap(fname, *,
     # Reset Errors singleton before parsing a new file
     errors = Errors()
     errors.reset()
+
+    output_name = fname.stem
 
     # Store current directory and add it to sys.path
     # variable to imitate Python's import behavior
