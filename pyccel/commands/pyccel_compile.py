@@ -32,7 +32,10 @@ def setup_pyccel_compile_parser(parser):
     """
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=check_file_type(('.py','.json')),
+
+    # TODO: Uncomment for v2.3 to check for existence and file type
+    #group.add_argument('filename', metavar='FILE', check_file_type(('.py',)),
+    group.add_argument('filename', metavar='FILE', type=pathlib.Path,
                         help='Path (relative or absolute) to the Python file to be translated.')
     # ...
 
@@ -132,6 +135,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
         print("warning: The flag --export-compiler-config is deprecated and will be removed in v2.3. Please use pyccel config.", file=sys.stderr)
         if cext == '':
             filename = filename.with_suffix('.json')
+            cext = '.json'
         if cext != '.json':
             # severity is error to avoid needing to catch exception
             errors.report('Wrong file extension. Expecting `json`, but found',
@@ -149,6 +153,8 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
                       symbol=cext,
                       severity='error')
     # ...
+    if not filename.is_file():
+        errors.report(f"File not found: {filename}", severity='error')
 
     if language == 'python' and output == '':
         errors.report("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
