@@ -15,7 +15,46 @@ import sys
 from pathlib import Path
 
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import add_common_settings
+from .argparse_helpers import add_common_settings, check_file_type
+
+class GlobAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs):
+        self._type_check = type
+        super().__init__(option_strings, dest, nargs=None, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Get files
+        files = [Path(f) for f in glob.glob(values, recursive=True)]
+
+        # Check types
+        try:
+            for f in files:
+                self._type_check(f)
+        except argparse.ArgumentTypeError as err:
+            raise argparse.ArgumentError(self, message=err) from err
+
+        # Save result
+        setattr(namespace, self.dest, files)
+
+class FileDescriptionAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs):
+        self._type_check = type
+        super().__init__(option_strings, dest, nargs=None, type=Path, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Get files
+        with open(values, 'r', encoding='utf-8') as f:
+            files = [Path(fname.strip()) for fname in f.readlines()]
+
+        # Check types
+        try:
+            for f in files:
+                self._type_check(f)
+        except argparse.ArgumentTypeError as err:
+            raise argparse.ArgumentError(self, message=err) from err
+
+        # Save result
+        setattr(namespace, self.dest, files)
 
 def setup_pyccel_make(parser):
     #... Help and Version
@@ -27,10 +66,10 @@ def setup_pyccel_make(parser):
             ).add_mutually_exclusive_group(required=True)
     group.add_argument('-f', '--files', nargs='+', type=check_file_type(('.py',)), metavar='FILE',
             help="A list of files to be translated as a project.")
-    group.add_argument('-g', '--glob', type=str,
+    group.add_argument('-g', '--glob', dest='files', action=GlobAction, type=check_file_type(('.py',)),
             help=("A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
                   "Note: quote the pattern to prevent shell expansion."))
-    group.add_argument('-d', '--file-descr', type=Path,
+    group.add_argument('-d', '--file-descr', dest='files', action=FileDescriptionAction, type=check_file_type(('.py',)),
             help="A UTF-8 text file containing the paths to the files to be translated as a project. One path (relative or absolute) per line.")
 
     # ... backend compiler options
@@ -51,7 +90,7 @@ def setup_pyccel_make(parser):
     group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
                         help='Compile the code with debug flags, or not.\n' \
                         ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
-    group.add_argument('--output', type=Path, default = None,\
+    group.add_argument('--output', type=Path, default = None, dest='folder',
                        help="Folder in which the output is stored (default: FILE's folder).")
 
     # ... Accelerators
@@ -79,36 +118,15 @@ def pyccel_make() -> None:
 
     pyccel_make_command(**vars(args))
 
-def pyccel_make_command(files, glob, file_descr, **kwargs) -> None:
+def pyccel_make_command(files, **kwargs) -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
 
     errors = Errors()
 
-    if args.files:
-        files = args.files
-    elif args.glob:
-        files = [Path(f) for f in glob.glob(args.glob, recursive=True)]
-    elif args.file_descr:
-        with open(args.file_descr, 'r', encoding='utf-8') as f:
-            files = [Path(fname.strip()) for fname in f.readlines()]
-    else:
-        raise NotImplementedError("No file specified")
-
-    for f in files:
-        if not f.exists():
-            errors.report(f"File not found : {f}", severity='error')
-        if f.suffix != '.py':
-            errors.report(f"Expected Python file, received : {f}", severity='error')
-
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
-
-    errors.check()
-
-    if errors.has_errors():
-        sys.exit(1)
 
     try:
         execute_pyccel_make(files, **kwargs)
