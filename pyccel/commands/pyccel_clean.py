@@ -95,7 +95,7 @@ def pyccel_clean_command():
 
     args = parser.parse_args()
 
-    print("warning: The pyccel-clean command will be deprecated in v2.3. Please use pyccel clean.", file=sys.stderr)
+    print("warning: The pyccel-clean command is deprecated and will be removed in v2.3. Please use pyccel clean.", file=sys.stderr)
 
     pyccel_clean_loop(**vars(args))
 

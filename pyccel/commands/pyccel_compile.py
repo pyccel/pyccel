@@ -93,20 +93,41 @@ def setup_pyccel_compile_parser(parser):
     group = parser.add_argument_group('Other options')
     add_common_settings(group)
     group.add_argument('--export-compiler-config', action='store_true',
-                        help='Export all compiler information to a JSON file with the given path (relative or absolute).')
+                        help='Export all compiler information to a JSON file with the given path (relative or absolute). '
+                       'This flag is deprecated and will be removed in v2.3. Please use pyccel config instead.')
     # ...
 
 
 def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
+    """
+    Call the pyccel pipeline.
+
+    Handle the deprecated --export-compiler-config command and call the pyccel pipeline.
+
+    Parameters
+    ----------
+    filename : Path
+        Name of the Python file to be translated.
+    language : str
+        The target language Pyccel is translating to.
+    output : str
+        Path to the working directory. Default is the folder containing the file to be translated.
+    compiler_export_file : bool
+        Indicates if compiler information should be exported.
+    **kwargs : dict
+        See execute_pyccel.
+    """
     # Imports
-    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import Errors
     from pyccel.codegen.pipeline  import execute_pyccel
 
     errors = Errors()
     # ...
+    # To be removed with v2.3
+    # ...
     cext = filename.suffix
     if export_compiler_config:
-        print("warning: The flag --export-compiler-config is deprecated. Please use pyccel config.", file=sys.stderr)
+        print("warning: The flag --export-compiler-config is deprecated and will be removed in v2.3. Please use pyccel config.", file=sys.stderr)
         if cext == '':
             filename = filename.with_suffix('.json')
         if cext != '.json':

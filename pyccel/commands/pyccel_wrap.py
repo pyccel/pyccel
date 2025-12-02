@@ -111,7 +111,7 @@ def pyccel_wrap_command() -> None:
     args = parser.parse_args()
     # ...
 
-    print("warning: The pyccel-wrap command will be deprecated in v2.3. Please use pyccel wrap.", file=sys.stderr)
+    print("warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use pyccel wrap.", file=sys.stderr)
 
     try:
         pyccel_wrap(**vars(args))

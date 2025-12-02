@@ -63,7 +63,7 @@ def pyccel_command() -> None:
     try:
         kwargs = vars(parser.parse_args())
     except argparse.ArgumentError:
-        print("warning: Using pyccel with no sub-command will be deprecated in v2.3. Please use pyccel compile.",
+        print("warning: Using pyccel with no sub-command is deprecated and will be removed in v2.3. Please use pyccel compile.",
               file=sys.stderr)
         argv = ('compile', *argv)
         parser.exit_on_error=True
