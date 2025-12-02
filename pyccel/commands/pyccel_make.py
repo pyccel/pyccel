@@ -17,15 +17,7 @@ from pathlib import Path
 from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import add_common_settings
 
-def pyccel_make_command() -> None:
-    """
-    Pyccel console command.
-
-    The command line interface allowing pyccel-make to be called.
-    """
-    parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
-            add_help = False)
-
+def setup_pyccel_make(parser):
     #... Help and Version
     add_basic_functionalities(parser)
 
@@ -71,9 +63,23 @@ def pyccel_make_command() -> None:
     add_common_settings(group)
     group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
                        help='Stop Pyccel after translation to the target language, before build.')
+
+def pyccel_make() -> None:
+    """
+    Pyccel console command.
+
+    The command line interface allowing pyccel-make to be called.
+    """
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
+            add_help = False)
     # ...
+    setup_pyccel_make(parser)
     # ...
     args = parser.parse_args()
+
+    pyccel_make_command(**vars(args))
+
+def pyccel_make_command(files, glob, file_descr, **kwargs) -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
@@ -105,16 +111,10 @@ def pyccel_make_command() -> None:
         sys.exit(1)
 
     try:
-        execute_pyccel_make(files,
-                            verbose = args.verbose,
-                            time_execution = args.time_execution,
-                            folder = args.output,
-                            language = args.language,
-                            compiler_family = args.compiler_family,
-                            build_system = args.build_system,
-                            debug = args.debug,
-                            accelerators = args.accelerators,
-                            conda_warnings = args.conda_warnings,
-                            build_code = args.build_code)
+        execute_pyccel_make(files, **kwargs)
     except PyccelError:
+        errors.check()
         sys.exit(1)
+
+    errors.check()
+    sys.exit(0)
