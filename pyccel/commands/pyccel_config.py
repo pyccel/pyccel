@@ -26,7 +26,7 @@ def setup_pyccel_config_parser(parser):
                         help='The file that the parser information should be exported to.')
 
     # ... Compiler options
-    add_compiler_selection(parser)
+    add_compiler_selection(export_parser)
 
 def pyccel_config(filename, **kwargs):
     """
