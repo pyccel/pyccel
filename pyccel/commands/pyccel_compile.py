@@ -119,7 +119,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
         The target language Pyccel is translating to.
     output : str
         Path to the working directory.
-    compiler_export_file : bool
+    export_compiler_config : bool
         Indicates if compiler information should be exported.
     **kwargs : dict
         See execute_pyccel.

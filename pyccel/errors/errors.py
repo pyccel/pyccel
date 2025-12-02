@@ -412,7 +412,8 @@ class Errors(metaclass = Singleton):
         errors = [err for err_list in self.error_info_map.values() for err in err_list if err.severity != 'warning']
         if errors:
             stage = next(e.stage for e in errors if e.severity != 'warning')
-            text += f'\nERROR at {self._stage_names[stage]} stage\n'
+            if stage is not None:
+                text += f'\nERROR at {self._stage_names[stage]} stage\n'
 
         print_path = (len(self.error_info_map.keys()) > 1)
         if self.error_info_map:

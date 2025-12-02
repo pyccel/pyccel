@@ -26,7 +26,15 @@ class PyccelStage(metaclass = Singleton):
         self._stage = None
 
     def set_stage(self, stage):
-        """ Set the current treatment stage
+        """
+        Set the current treatment stage.
+
+        Set the current treatment stage.
+
+        Parameters
+        ----------
+        stage : str
+            One of the valid stages.
         """
         assert stage in ('syntactic', 'semantic', 'codegen', 'cwrapper', 'compilation', 'buildgen')
         self._stage = stage
