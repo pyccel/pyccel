@@ -108,44 +108,10 @@ def add_accelerator_selection(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    parser.set_defaults(accelerators=[])
     group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--mpi', action=AcceleratorAction, nargs=0,
+    group.add_argument('--mpi', dest='accelerators', action='append_const', const='mpi',
                        help='Use MPI.')
-    group.add_argument('--openmp', action=AcceleratorAction, nargs=0,
+    group.add_argument('--openmp', dest='accelerators', action='append_const', const='openmp',
                        help='Use OpenMP.')
-#    group.add_argument('--openacc', action=AcceleratorAction, nargs=0,
+#    group.add_argument('--openacc', dest='accelerators', action='append_const', const='openacc',
 #                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
-
-# -----------------------------------------------------------------------------------------
-class AcceleratorAction(argparse.Action):
-    """
-    A class to describe the action which groups accelerators into one output.
-
-    A class to describe the action which groups accelerators passed as input
-    to argparse via flags (e.g. `--mpi`) into a single list (accelerators=[mpi]).
-    """
-    def __call__(self, parser, namespace, values, option_string):
-        """
-        The function called by argparse when the argument is passed.
-
-        This method is invoked automatically by argparse when an argument using
-        this action is encountered. It ensures that the name of each accelerator
-        flag (e.g., `mpi` or `openmp`) is added to a shared `accelerators`
-        list within the parsed arguments namespace.
-
-        Parameters
-        ----------
-        parser : argparse.ArgumentParser
-            The argument parser instance that is processing the command line.
-        namespace : argparse.Namespace
-            The namespace object holding attributes for all parsed arguments.
-        values : NoneType
-            The value(s) associated with the argument. For flag arguments with
-            `nargs=0`, this will be `None`.
-        option_string : str, optional
-            The specific option string that triggered this action, such as
-            `'--mpi'` or `'--openmp'`.
-        """
-        # Initialise the list if it doesn't exist yet
-        namespace.accelerators.append(self.dest)
