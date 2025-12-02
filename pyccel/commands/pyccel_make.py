@@ -129,6 +129,8 @@ def pyccel_make_command() -> None:
     # ...
     args = parser.parse_args()
 
+    print("warning: The pyccel-make command will be deprecated in v2.3. Please use pyccel make.", file=sys.stderr)
+
     from pyccel.errors.errors     import Errors, PyccelError
 
     errors = Errors()

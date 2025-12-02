@@ -7,6 +7,7 @@
 """
 import os
 import shutil
+import sys
 import sysconfig
 from argparse import ArgumentParser
 
@@ -93,6 +94,8 @@ def pyccel_clean_command():
     add_version_flag(parser)
 
     args = parser.parse_args()
+
+    print("warning: The pyccel-clean command will be deprecated in v2.3. Please use pyccel clean.", file=sys.stderr)
 
     pyccel_clean_loop(**vars(args))
 
