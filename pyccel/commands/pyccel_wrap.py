@@ -109,6 +109,8 @@ def pyccel_wrap_command() -> None:
     args = parser.parse_args()
     # ...
 
+    pyccel_wrap(**vars(args))
+
 def pyccel_wrap(*, filename, output, **kwargs) -> None:
     # Imports
     from pyccel.errors.errors     import PyccelError
