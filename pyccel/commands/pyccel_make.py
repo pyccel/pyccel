@@ -177,7 +177,7 @@ def pyccel_make_command() -> None:
     errors = Errors()
 
     try:
-        pyccel_make_command(**vars(args))
+        pyccel_make(**vars(args))
     except PyccelError:
         pass
 
