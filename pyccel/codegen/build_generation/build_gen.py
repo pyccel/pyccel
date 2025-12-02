@@ -35,3 +35,4 @@ class BuildSystemHandler:
         self._debug_mode = debug_mode
         self._compiler = compiler
         self._accelerators = accelerators
+        pyccel_stage.set_stage('buildgen')

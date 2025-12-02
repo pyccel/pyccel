@@ -17,6 +17,8 @@ class PyccelStage(metaclass = Singleton):
     - semantic
     - codegen
     - cwrapper
+    - compilation
+    - buildgen
 
     When Pyccel is not executing the stage is None.
     """
@@ -26,7 +28,7 @@ class PyccelStage(metaclass = Singleton):
     def set_stage(self, stage):
         """ Set the current treatment stage
         """
-        assert stage in ('syntactic', 'semantic', 'codegen', 'cwrapper')
+        assert stage in ('syntactic', 'semantic', 'codegen', 'cwrapper', 'compilation', 'buildgen')
         self._stage = stage
 
     def __eq__(self, other):
@@ -47,6 +49,8 @@ class PyccelStage(metaclass = Singleton):
         - semantic
         - codegen
         - cwrapper
+        - compilation
+        - buildgen
         indicating the current stage.
         """
         return self._stage
