@@ -171,13 +171,17 @@ def pyccel_make_command() -> None:
     print("warning: The pyccel-make command is deprecated and will be removed in v2.3. Please use pyccel make.", file=sys.stderr)
 
     from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.utilities.stage   import PyccelStage
 
+    pyccel_stage = PyccelStage()
     errors = Errors()
+
     try:
         pyccel_make_command(**vars(args))
     except PyccelError:
         pass
 
+    pyccel_stage.pyccel_finished()
     print(errors)
     sys.exit(errors.has_errors())
 

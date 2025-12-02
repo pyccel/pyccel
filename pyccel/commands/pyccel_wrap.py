@@ -114,7 +114,9 @@ def pyccel_wrap_command() -> None:
     print("warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use pyccel wrap.", file=sys.stderr)
 
     from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.utilities.stage   import PyccelStage
 
+    pyccel_stage = PyccelStage()
     errors = Errors()
 
     try:
@@ -122,6 +124,7 @@ def pyccel_wrap_command() -> None:
     except PyccelError:
         pass
 
+    pyccel_stage.pyccel_finished()
     print(errors)
     sys.exit(errors.has_errors())
 
