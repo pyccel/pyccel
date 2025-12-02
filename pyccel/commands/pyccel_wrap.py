@@ -13,7 +13,7 @@ import os
 import argparse
 import pathlib
 
-from .argparse_helpers import add_version_flag, add_accelerator_selection
+from .argparse_helpers import add_version_flag, add_accelerator_selection, add_compiler_selection
 from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
@@ -45,18 +45,7 @@ def setup_pyccel_wrap_parser(parser):
                        type=str.title)
 
     # ... Compiler options
-    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
-    compiler_group = group.add_mutually_exclusive_group(required=False)
-    compiler_group.add_argument('--compiler-family',
-                                type=str,
-                                default=os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU'),
-                                metavar='FAMILY',
-                                help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
-    compiler_group.add_argument('--compiler-config',
-                                type=pathlib.Path,
-                                default=None,
-                                metavar='CONFIG.json',
-                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+    add_compiler_selection(parser)
 
     # ... Additional compiler options
     group = parser.add_argument_group('Additional compiler options')
