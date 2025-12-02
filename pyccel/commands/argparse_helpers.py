@@ -43,7 +43,7 @@ def check_file_type(suffixes):
         if not path.is_file():
             raise argparse.ArgumentTypeError(f"File not found: {path}")
         if path.suffix not in suffixes:
-            raise argparse.ArgumentTypeError(f"Wrong file extension. Expecting one of: {', '.join(suffixes)}")
+            raise argparse.ArgumentTypeError(f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}")
         return path.absolute()
     return check_path
 
