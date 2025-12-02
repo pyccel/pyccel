@@ -4,14 +4,16 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+""" Module containing scripts to handle the pyccel compile sub-command.
+"""
 
-import sys
-import os
 import argparse
 import pathlib
+import sys
 
-from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
+from .argparse_helpers import add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import check_file_type, add_common_settings
+from .pyccel_config import pyccel_config
 
 __all__ = ['pyccel']
 
@@ -138,7 +140,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
         else:
             pyccel_config(filename)
             execute_pyccel('',
-                           compiler_family = str(compiler) if compiler is not None else None,
+                           compiler_family = kwargs['compiler_family'],
                            compiler_export_file = filename)
             sys.exit(0)
     elif cext != '.py':

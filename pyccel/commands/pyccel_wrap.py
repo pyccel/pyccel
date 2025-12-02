@@ -141,7 +141,6 @@ def pyccel_wrap(*, filename, output, **kwargs) -> None:
         See execute_pyccel_wrap.
     """
     # Imports
-    from pyccel.errors.errors     import PyccelError
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
     # ...
 

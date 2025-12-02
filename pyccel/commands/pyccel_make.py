@@ -10,7 +10,6 @@ File containing the pyccel-make command line interface.
 
 import argparse
 import glob
-import os
 import sys
 from pathlib import Path
 
@@ -20,7 +19,27 @@ from .argparse_helpers import add_common_settings, check_file_type
 PYCCEL_MAKE_DESCR = 'Translate and compile multiple Python files in a project.'
 
 class GlobAction(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs):
+    """
+    Class describing a glob argument.
+
+    Class describing a glob argument. The action saves the files matching
+    the glob to the specified destination. The type check is used on the
+    located files.
+
+    Parameters
+    ----------
+    option_strings : obj
+        See argparse.Action.
+    dest : str
+        The name of the attribute where the files are saved.
+    nargs : int, optional
+        The number of arguments that can be passed to this flag.
+    type : Function, optional
+        A function which can be used to check the type fo the files.
+    **kwargs : dict
+        See argparse.Action.
+    """
+    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs): #pylint: disable=redefined-builtin
         self._type_check = type
         super().__init__(option_strings, dest, nargs=None, **kwargs)
 
@@ -39,7 +58,27 @@ class GlobAction(argparse.Action):
         setattr(namespace, self.dest, files)
 
 class FileDescriptionAction(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs):
+    """
+    Class describing an argument which collects files listed in another file.
+
+    Class describing an argument which collects files listed in another file.
+    The action saves the listed files to the specified destination. The type
+    check is used on the located files.
+
+    Parameters
+    ----------
+    option_strings : obj
+        See argparse.Action.
+    dest : str
+        The name of the attribute where the files are saved.
+    nargs : int, optional
+        The number of arguments that can be passed to this flag.
+    type : Function, optional
+        A function which can be used to check the type fo the files.
+    **kwargs : dict
+        See argparse.Action.
+    """
+    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs): #pylint: disable=redefined-builtin
         self._type_check = type
         super().__init__(option_strings, dest, nargs=None, type=Path, **kwargs)
 
@@ -156,4 +195,4 @@ def pyccel_make(**kwargs) -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
 
-    execute_pyccel_make(files, **kwargs)
+    execute_pyccel_make(**kwargs)

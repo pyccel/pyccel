@@ -100,6 +100,18 @@ def pyccel_clean_command():
     pyccel_clean_loop(**vars(args))
 
 def pyccel_clean_loop(folders, **kwargs):
+    """
+    Call the pyccel clean command in a loop over multiple folders.
+
+    Call the pyccel clean command in a loop over multiple folders.
+
+    Parameters
+    ----------
+    folders : iterable[str]
+        The folders which should be cleaned.
+    **kwargs : dict
+        See pyccel_clean.
+    """
     if len(folders)==0:
         pyccel_clean(None, **kwargs)
     else:
