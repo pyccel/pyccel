@@ -114,7 +114,7 @@ def setup_pyccel_make_parser(parser):
 
 def pyccel_make_command() -> None:
     """
-    Pyccel console command.
+    Pyccel-make console command.
 
     The command line interface allowing pyccel-make to be called.
     """
@@ -143,6 +143,16 @@ def pyccel_make_command() -> None:
     sys.exit(errors.has_errors())
 
 def pyccel_make(**kwargs) -> None:
+    """
+    Call the pyccel make pipeline.
+
+    Import and call the pyccel make pipeline.
+
+    Parameters
+    ----------
+    **kwargs : dict
+        See execute_pyccel_make.
+    """
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
 

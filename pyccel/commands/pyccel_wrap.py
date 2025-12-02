@@ -113,6 +113,10 @@ def pyccel_wrap_command() -> None:
 
     print("warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use pyccel wrap.", file=sys.stderr)
 
+    from pyccel.errors.errors     import Errors, PyccelError
+
+    errors = Errors()
+
     try:
         pyccel_wrap(**vars(args))
     except PyccelError:
@@ -122,6 +126,20 @@ def pyccel_wrap_command() -> None:
     sys.exit(errors.has_errors())
 
 def pyccel_wrap(*, filename, output, **kwargs) -> None:
+    """
+    Call the pyccel wrap pipeline.
+
+    Import and call the pyccel wrap pipeline.
+
+    Parameters
+    ----------
+    filename : Path
+        Name of the Python file to be translated.
+    output : str
+        Path to the working directory.
+    **kwargs : dict
+        See execute_pyccel_wrap.
+    """
     # Imports
     from pyccel.errors.errors     import PyccelError
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
