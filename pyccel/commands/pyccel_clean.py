@@ -91,7 +91,7 @@ def pyccel_clean_command():
 
 def pyccel_clean(folders, **kwargs):
     if len(folders)==0:
-        pyccel_clean_folder(None, **kwargs)
+        pyccel_clean_path(None, **kwargs)
     else:
         for f in folders:
-            pyccel_clean_folder(f, **kwargs)
+            pyccel_clean_path(f, **kwargs)
