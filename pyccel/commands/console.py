@@ -88,7 +88,7 @@ def setup_pyccel_parser(parser):
     # ...
 
 #==============================================================================
-def pyccel() -> None:
+def pyccel_compile_command() -> None:
     """
     Pyccel console command.
 
@@ -120,7 +120,7 @@ def pyccel() -> None:
     pyccel_compile_command(**vars(args))
 
 
-def pyccel_compile_command(*, filename, language, output, export_compiler_config, **kwargs):
+def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
     # Imports
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.codegen.pipeline  import execute_pyccel

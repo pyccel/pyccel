@@ -103,7 +103,7 @@ def setup_pyccel_make(parser):
     group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
                        help='Stop Pyccel after translation to the target language, before build.')
 
-def pyccel_make() -> None:
+def pyccel_make_command() -> None:
     """
     Pyccel console command.
 
@@ -118,7 +118,7 @@ def pyccel_make() -> None:
 
     pyccel_make_command(**vars(args))
 
-def pyccel_make_command(**kwargs) -> None:
+def pyccel_make(**kwargs) -> None:
 
     from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
