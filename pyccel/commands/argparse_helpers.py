@@ -48,11 +48,11 @@ def check_file_type(suffixes):
     return check_path
 
 # -----------------------------------------------------------------------------------------
-def add_basic_functionalities(parser):
+def add_version_flag(parser):
     """
-    Add basic functionalities to argument parser.
+    Add version flag to argument parser.
 
-    Add basic functionalities such as a help and a version message to argument parser.
+    Add version flag to argument parser.
 
     Parameters
     ----------
@@ -64,9 +64,7 @@ def add_basic_functionalities(parser):
     python  = f'python {sys.version_info.major}.{sys.version_info.minor}'
     message = f'pyccel {version} from {libpath} ({python})'
 
-    group = parser.add_argument_group('Basic options')
-    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
-    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
+    parser.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
 
 # -----------------------------------------------------------------------------------------
 def add_compiler_selection(parser):

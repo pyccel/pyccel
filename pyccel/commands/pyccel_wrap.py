@@ -13,7 +13,7 @@ import os
 import argparse
 import pathlib
 
-from .argparse_helpers import add_basic_functionalities, add_accelerator_selection
+from .argparse_helpers import add_version_flag, add_accelerator_selection
 from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
@@ -34,10 +34,6 @@ def setup_pyccel_wrap_parser(parser):
     group.add_argument('filename', metavar='FILE', type=check_file_type(('.pyi',)),
                        help='Path (relative or absolute) to the Python stub file describing the low-level code.')
     #...
-
-    #... Help and Version
-    add_basic_functionalities(parser)
-    # ...
 
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
@@ -102,14 +98,24 @@ def pyccel_wrap_command() -> None:
     """
 
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                      add_help=False)
+                      add_help=True)
+
+    #... Help and Version
+    add_version_flag(parser)
+    # ...
     # ...
     setup_pyccel_wrap_parser(parser)
     # ...
     args = parser.parse_args()
     # ...
 
-    pyccel_wrap(**vars(args))
+    try:
+        pyccel_wrap(**vars(args))
+    except PyccelError:
+        pass
+
+    errors.check()
+    sys.exit(errors.has_errors())
 
 def pyccel_wrap(*, filename, output, **kwargs) -> None:
     # Imports
@@ -117,12 +123,6 @@ def pyccel_wrap(*, filename, output, **kwargs) -> None:
     from pyccel.codegen.wrap_pipeline  import execute_pyccel_wrap
     # ...
 
-    try:
-        execute_pyccel_wrap(filename,
-                       folder          = output or filename.parent,
-                       **kwargs)
-    except PyccelError:
-        pass
-
-    errors.check()
-    sys.exit(errors.has_errors())
+    execute_pyccel_wrap(filename,
+                   folder          = output or filename.parent,
+                   **kwargs)

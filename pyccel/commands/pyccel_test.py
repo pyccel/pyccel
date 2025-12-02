@@ -10,6 +10,8 @@ import pathlib
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
+from .argparse_helpers import add_version_flag
+
 install_msg = """
 In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
 You can do this by running one of the following commands:
@@ -261,7 +263,10 @@ def pyccel_test_command():
     pytest.ExitCode
         The pytest return code.
     """
-    parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
+    parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = True)
+
+    #... Help and Version
+    add_version_flag(parser)
 
     setup_pyccel_test_parser(parser)
 
@@ -274,6 +279,3 @@ def pyccel_test_command():
 
     return retcode
 
-
-if __name__ == '__main__':
-    pyccel_test_command()

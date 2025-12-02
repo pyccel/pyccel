@@ -146,12 +146,6 @@ def execute_pyccel(fname, *,
     base_dirpath = os.getcwd()
     sys.path.insert(0, base_dirpath)
 
-    # Unified way to handle errors: print formatted error message, then move
-    # to original working directory. Caller should then raise exception.
-    def handle_error(stage):
-        print('\nERROR at {} stage'.format(stage))
-        errors.check()
-
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
     pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
@@ -210,20 +204,14 @@ def execute_pyccel(fname, *,
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
-    try:
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
-        parser.parse(verbose=verbose)
-    except PyccelError:
-        handle_error('parsing (syntax)')
-        raise
+    parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
+    parser.parse(verbose=verbose)
     if errors.has_errors():
-        handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
     timers["Syntactic Stage"] = time.time() - start_syntax
 
     if syntax_only:
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
 
@@ -234,21 +222,14 @@ def execute_pyccel(fname, *,
 
     start_semantic = time.time()
     # Annotate abstract syntax Tree
-    try:
-        parser.annotate(verbose = verbose)
-    except PyccelError:
-        handle_error('annotation (semantic)')
-        # Raise a new error to avoid a large traceback
-        raise PyccelSemanticError('Semantic step failed') from None
+    parser.annotate(verbose = verbose)
 
     if errors.has_errors():
-        handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
     timers["Semantic Stage"] = time.time() - start_semantic
 
     if semantic_only:
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
 
@@ -262,17 +243,11 @@ def execute_pyccel(fname, *,
     semantic_parser = parser.semantic_parser
     start_codegen = time.time()
     # Generate .f90 file
-    try:
-        codegen = Codegen(semantic_parser, module_name, language, verbose)
-        fname = os.path.join(pyccel_dirpath, module_name)
-        fname, prog_name = codegen.export(fname)
-    except PyccelError:
-        handle_error('code generation')
-        # Raise a new error to avoid a large traceback
-        raise PyccelCodegenError('Code generation failed') from None
+    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    fname = os.path.join(pyccel_dirpath, module_name)
+    fname, prog_name = codegen.export(fname)
 
     if errors.has_errors():
-        handle_error('code generation')
         raise PyccelCodegenError('Code generation failed')
 
     timers["Codegen Stage"] = time.time() - start_codegen
@@ -285,7 +260,6 @@ def execute_pyccel(fname, *,
         shutil.copyfile(fname, new_location)
 
         # Change working directory back to starting point
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
 
@@ -314,15 +288,10 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-    try:
-        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
-                language, verbose, convert_only)
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
+    manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
+            language, verbose, convert_only)
 
     if convert_only:
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
 
@@ -332,51 +301,40 @@ def execute_pyccel(fname, *,
         return
 
     start_compile_target_language = time.time()
+    pyccel_stage.set_stage('compilation')
     # Compile code to modules
-    try:
-        compiler.compile_module(compile_obj=mod_obj,
-                output_folder=pyccel_dirpath,
+    compiler.compile_module(compile_obj=mod_obj,
+            output_folder=pyccel_dirpath,
+            language=language,
+            verbose=verbose)
+
+
+    if codegen.is_program:
+        prog_obj = CompileObj(file_name = prog_name,
+                folder       = pyccel_dirpath,
+                dependencies = (mod_obj,),
+                prog_target  = module_name)
+        generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
+                output_folder=folder,
                 language=language,
                 verbose=verbose)
-    except Exception:
-        handle_error('compilation')
-        raise
 
+    timers["Compilation without wrapper"] = time.time() - start_compile_target_language
 
-    try:
-        if codegen.is_program:
-            prog_obj = CompileObj(file_name = prog_name,
-                    folder       = pyccel_dirpath,
-                    dependencies = (mod_obj,),
-                    prog_target  = module_name)
-            generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=folder,
-                    language=language,
-                    verbose=verbose)
-
-        timers["Compilation without wrapper"] = time.time() - start_compile_target_language
-
-        # Create shared library
-        generated_filepath, shared_lib_timers = create_shared_library(codegen,
-                                               mod_obj,
-                                               language = language,
-                                               wrapper_flags = wrapper_flags,
-                                               pyccel_dirpath = pyccel_dirpath,
-                                               output_dirpath = folder,
-                                               compiler = compiler,
-                                               sharedlib_modname = output_name,
-                                               verbose = verbose)
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
-    except Exception:
-        handle_error('shared library generation')
-        raise
+    # Create shared library
+    generated_filepath, shared_lib_timers = create_shared_library(codegen,
+                                           mod_obj,
+                                           language = language,
+                                           wrapper_flags = wrapper_flags,
+                                           pyccel_dirpath = pyccel_dirpath,
+                                           output_dirpath = folder,
+                                           compiler = compiler,
+                                           sharedlib_modname = output_name,
+                                           verbose = verbose)
 
     timers.update(shared_lib_timers)
 
     if errors.has_errors():
-        handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation failed')
 
     if verbose:
@@ -384,12 +342,6 @@ def execute_pyccel(fname, *,
 
         if codegen.is_program:
             print( '> Executable has been created: {}'.format(generated_program_filepath))
-
-    # Print all warnings now
-    if errors.has_warnings():
-        errors.check()
-
-    pyccel_stage.pyccel_finished()
 
     if time_execution:
         print_timers(start, timers)

@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
+from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import add_common_settings, check_file_type
 
 class GlobAction(argparse.Action):
@@ -67,9 +67,6 @@ def setup_pyccel_make_parser(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    #... Help and Version
-    add_basic_functionalities(parser)
-
     # ...
     group = parser.add_argument_group('File specification',
             description = "Use one of the below methods to specify which files should be translated."
@@ -120,25 +117,29 @@ def pyccel_make_command() -> None:
     The command line interface allowing pyccel-make to be called.
     """
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
-            add_help = False)
+            add_help = True)
+
+    #... Help and Version
+    add_version_flag(parser)
+
     # ...
     setup_pyccel_make_parser(parser)
     # ...
     args = parser.parse_args()
 
-    pyccel_make_command(**vars(args))
-
-def pyccel_make(**kwargs) -> None:
-
-    from pyccel.codegen.make_pipeline  import execute_pyccel_make
     from pyccel.errors.errors     import Errors, PyccelError
 
     errors = Errors()
-
     try:
-        execute_pyccel_make(files, **kwargs)
+        pyccel_make_command(**vars(args))
     except PyccelError:
         pass
 
     errors.check()
     sys.exit(errors.has_errors())
+
+def pyccel_make(**kwargs) -> None:
+
+    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+
+    execute_pyccel_make(files, **kwargs)

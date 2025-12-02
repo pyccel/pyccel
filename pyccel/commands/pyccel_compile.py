@@ -10,7 +10,7 @@ import os
 import argparse
 import pathlib
 
-from .argparse_helpers import add_basic_functionalities, add_compiler_selection, add_accelerator_selection
+from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import check_file_type, add_common_settings
 
 __all__ = ['pyccel']
@@ -30,9 +30,6 @@ def setup_pyccel_compile_parser(parser):
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('filename', metavar='FILE', type=check_file_type(('.py','.json')),
                         help='Path (relative or absolute) to the Python file to be translated.')
-
-    #... Help and Version
-    add_basic_functionalities(parser)
     # ...
 
     # ... backend compiler options
@@ -93,41 +90,9 @@ def setup_pyccel_compile_parser(parser):
     # ... Other options
     group = parser.add_argument_group('Other options')
     add_common_settings(group)
-    group.add_argument('--export-compiler-config', action='store_true', deprecated=True,
+    group.add_argument('--export-compiler-config', action='store_true',
                         help='Export all compiler information to a JSON file with the given path (relative or absolute).')
     # ...
-
-#==============================================================================
-def pyccel_compile_command() -> None:
-    """
-    Pyccel console command.
-
-    The Pyccel console command allows translating Python files using Pyccel in
-    a command-line environment. This function takes no parameters and sets up
-    an argument parser for the Pyccel command line interface.
-
-    The command line interface requires a Python file to be specified, and it
-    supports various options such as specifying the output language (C,
-    Fortran, or Python), compiler settings, and flags for accelerators like
-    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
-    debugging, and exporting compile information. Unless the user requires the
-    process to stop after a specific stage, Pyccel will execute the full
-    translation and compilation process until a C Python extension module is
-    generated, which can then be imported in Python. In addition, if the input
-    file contains an `if __name__ == '__main__':` block, an executable will be
-    generated for the corresponding block of code.
-    """
-
-    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                      add_help=False)
-
-    setup_pyccel_compile_parser(parser)
-
-    # ...
-    args = parser.parse_args()
-    # ...
-
-    pyccel_compile_command(**vars(args))
 
 
 def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
@@ -139,6 +104,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
     # ...
     cext = filename.suffix
     if export_compiler_config:
+        print("warning: The flag --export-compiler-config is deprecated. Please use pyccel config.", file=sys.stderr)
         if cext == '':
             filename = filename.with_suffix('.json')
         if cext != '.json':
@@ -162,19 +128,11 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
         errors.report("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
                       severity='error')
 
-    errors.check()
-
     if errors.has_errors():
+        print(errors)
         sys.exit(1)
 
-    try:
-        execute_pyccel(str(filename),
-                       language        = language,
-                       folder          = output or filename.parent,
-                       **kwargs)
-    except PyccelError:
-        errors.check()
-        sys.exit(1)
-
-    errors.check()
-    sys.exit(0)
+    execute_pyccel(str(filename),
+                   language        = language,
+                   folder          = output or filename.parent,
+                   **kwargs)
