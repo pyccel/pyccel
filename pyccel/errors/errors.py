@@ -206,6 +206,12 @@ class Errors(metaclass = Singleton):
     A singleton class which contains all functions necessary to
     raise neat user-friendly errors in Pyccel.
     """
+    _stage_names = {'syntactic': 'parsing (syntax)',
+                    'semantic': 'annotation (semantic)',
+                    'printing': 'code generation',
+                    'cwrapper': 'code generation (wrapping)',
+                    'compilation': 'compilation',
+                    'buildgen': 'build system generation'}
 
     def __init__(self):
         self.error_info_map = None
@@ -401,14 +407,15 @@ class Errors(metaclass = Singleton):
         """
         pass
 
-    def check(self):
-        """."""
-        if self.num_messages() > 0:
-            print(self.__str__())
-
     def __str__(self):
+        text = ''
+        errors = [err for err_list in self.error_info_map.values() for err in err_list if err.severity != 'warning']
+        if errors:
+            stage = next(e.stage for e in errors if e.severity != 'warning')
+            text += f'\nERROR at {self._stage_names[stage]} stage\n'
+
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '{}:\n'.format(PYCCEL)
+        text += f'{PYCCEL}:\n'
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
