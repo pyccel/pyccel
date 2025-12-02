@@ -4,6 +4,12 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+"""
+File containing functions that help build argparse.ArgumentParser objects.
+
+File containing functions that help build argparse.ArgumentParser objects. Several of these
+functions are common to multiple sub-commands so the logic can be shared.
+"""
 import argparse
 import os
 import pathlib
@@ -14,8 +20,12 @@ from pyccel.errors.errors     import ErrorsMode
 from pyccel.compilers.default_compilers import available_compilers
 
 __all__ = (
-        'file_type',
-        'AcceleratorAction',
+        'add_accelerator_selection',
+        'add_common_settings',
+        'add_compiler_selection',
+        'add_version_flag',
+        'check_file_type',
+        'ErrorModeSelector',
         )
 
 # -----------------------------------------------------------------------------------------
@@ -119,6 +129,17 @@ def add_accelerator_selection(parser):
 def add_common_settings(parser):
     """
     Add common settings controlling how Pyccel reports progress.
+
+    Add settings controlling how Pyccel reports progress:
+    - verbosity
+    - developer-mode
+    - conda warnings level
+    - time execution
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
     """
     # Set default error mode
     err_mode = ErrorsMode()
