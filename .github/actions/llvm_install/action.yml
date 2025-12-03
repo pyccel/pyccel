@@ -62,7 +62,6 @@ runs:
         export CC=clang
         export CXX=clang++
         ./configure --prefix=/home/linuxbrew/.linuxbrew/opt/openmpi-flang --enable-mpi-fortran=all
-        echo "/home/linuxbrew/.linuxbrew/opt/openmpi-flang/bin" >> $GITHUB_PATH
         make -j
         make install
 
@@ -70,6 +69,22 @@ runs:
         echo "OMPI_CC=clang" >> $GITHUB_ENV
         echo "OMPI_CXX=clang++" >> $GITHUB_ENV
         echo "OMPI_FC=flang" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Save Flang MPI Cache
+      id: cache-flang-mpi-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          /home/linuxbrew/.linuxbrew/opt/openmpi-flang
+        key: ${{ steps.cache-flang-mpi-restore.outputs.cache-primary-key }}
+
+    - name: Ensure installed libraries can be discovered during compilation and runtime
+      run: |
+        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+        echo "CMAKE_PREFIX_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+        echo "/home/linuxbrew/.linuxbrew/opt/openmpi-flang/bin" >> $GITHUB_PATH
       shell: bash
 
     - name: Install LaPack
@@ -81,11 +96,3 @@ runs:
       run:
         sudo apt-get install valgrind
       shell: bash
-
-    - name: Save Flang MPI Cache
-      id: cache-flang-mpi-save
-      uses: actions/cache/save@v3
-      with:
-        path: |
-          /home/linuxbrew/.linuxbrew/opt/openmpi-flang
-        key: ${{ steps.cache-flang-mpi-restore.outputs.cache-primary-key }}
