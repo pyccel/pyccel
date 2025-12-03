@@ -168,6 +168,20 @@ class CppCodePrinter(CodePrinter):
         self._declared_vars.pop()
 
     def _indent_codestring(self, lines):
+        """
+        Indent code to the expected indentation.
+
+        Indent code to the expected indentation.
+
+        Parameters
+        ----------
+        lines : str
+            The lines of code to be printed.
+
+        Returns
+        -------
+            The indented lines of code to be printed.
+        """
         tab = ' '*self._default_settings['tabwidth']
         if lines == '':
             return lines
@@ -845,7 +859,9 @@ class CppCodePrinter(CodePrinter):
         args_str = join_str.join(self._print(a) for a in args)
         if end != '':
             if end == '\n':
-                args_str += ' << std::endl;'
+                args_str += ' << std::endl;\n'
             else:
-                args_str += ' << {self._print(end)};'
+                args_str += ' << {self._print(end)};\n'
+        else:
+            args_str += ';\n'
         return 'std::cout << ' + args_str;
