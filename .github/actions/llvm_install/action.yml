@@ -43,6 +43,24 @@ runs:
         flang --version
       shell: bash
 
+    - name: Install MPI
+      run: |
+        wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.9.tar.gz
+        tar xzf openmpi-5.0.9.tar.gz
+        cd openmpi-5.0.9
+        export FC=flang
+        export CC=clang
+        export CXX=clang++
+        ./configure --prefix=/home/linuxbrew/.linuxbrew/ --enable-mpi-fortran=all
+        make -j
+        make install
+
+        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
+        echo "OMPI_CC=clang" >> $GITHUB_ENV
+        echo "OMPI_CXX=clang++" >> $GITHUB_ENV
+        echo "OMPI_FC=flang" >> $GITHUB_ENV
+      shell: bash
+
     - name: Install LaPack
       run:
         sudo apt-get install libblas-dev liblapack-dev
