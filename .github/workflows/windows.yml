@@ -92,6 +92,8 @@ jobs:
       - name: Test
         run: |
           pyccel-make -d files.txt -vv
+          ls
+          ldd runtest.exe
           ./runtest.exe
         shell: bash
         working-directory: ./tests/pyccel/project_containers
