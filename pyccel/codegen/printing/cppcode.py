@@ -167,7 +167,7 @@ class CppCodePrinter(CodePrinter):
         super().exit_scope()
         self._declared_vars.pop()
 
-    def _indent_codestring(self, lines):
+    def _indent_codestring(self, code):
         """
         Indent code to the expected indentation.
 
@@ -175,19 +175,19 @@ class CppCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        lines : str
-            The lines of code to be printed.
+        code : str
+            The code to be printed.
 
         Returns
         -------
-            The indented lines of code to be printed.
+            The indented code to be printed.
         """
         tab = ' '*self._default_settings['tabwidth']
-        if lines == '':
-            return lines
+        if code == '':
+            return code
         else:
-            # lines ends with \n
-            return tab+lines.replace('\n','\n'+tab).rstrip(' ')
+            # code ends with \n
+            return tab+code.replace('\n','\n'+tab).rstrip(' ')
 
     def _format_code(self, code):
         return code
