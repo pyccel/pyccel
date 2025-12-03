@@ -412,6 +412,9 @@ class CppCodePrinter(CodePrinter):
                         self._indent_codestring(body),
                         '}\n'))
 
+    def _print_FunctionDefArgument(self, expr):
+        return self.get_declare_type(expr.var) + ' ' + expr.var.name
+
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs = expand_to_loops(expr,
