@@ -96,7 +96,8 @@ class MesonHandler(BuildSystemHandler):
                              *(f"'{w.name}'" for w in expr.wrapper_files),
                              f"dependencies: [{ext_deps}]",
                               "install: true",
-                             f"install_dir: {out_folder}"])
+                             f"install_dir: {out_folder}",
+                             "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"])
         wrap_cmd = f'py.extension_module({args})\n'
 
         cmds = [lib_cmd, dep_cmd, wrap_cmd]
@@ -231,7 +232,7 @@ class MesonHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running meson")
 
-        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype]
+        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype, '--prefix', self._pyccel_dir / 'install']
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
