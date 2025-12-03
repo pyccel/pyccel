@@ -247,7 +247,7 @@ def setup_pyccel_test_parser(parser):
 
     parser.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
         help='Target language for translation, i.e. the main language of the generated code (default: All).',
-        type=str.lower)
+        type=str.title)
 
     parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
         help="Do not run the parallel tests.")
