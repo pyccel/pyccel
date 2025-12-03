@@ -4,10 +4,12 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 from itertools import chain
+from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.core     import Assign, Declare, Import, Module, AsName
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.datatypes import PythonNativeFloat, FinalType
+from pyccel.ast.datatypes import HomogeneousSetType, DictType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext import NumpyFloat
@@ -16,6 +18,7 @@ from pyccel.ast.variable import Variable, DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -272,7 +275,7 @@ class CppCodePrinter(CodePrinter):
             rhs_code = self._print(rhs)
             return f'{lhs_code} {Op} {rhs_code}'
         else:
-            errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+            raise errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
 
     def _cast_to(self, expr, dtype):
@@ -602,7 +605,6 @@ class CppCodePrinter(CodePrinter):
         container_type = expr.container.class_type
         element = self._print(expr.element)
         container = self._print(expr.container)
-        c_type = self.get_c_type(expr.container.class_type)
         if isinstance(container_type, (HomogeneousSetType, DictType)):
             # C++ 20
             return f'{container}.contains({element})'
@@ -715,7 +717,7 @@ class CppCodePrinter(CodePrinter):
                     args.append(self._print(arg))
         code_args = ', '.join(args)
         if expr.dtype.primitive_type is PrimitiveIntegerType():
-            cast_type = self.get_c_type(expr.dtype)
+            cast_type = self._print(expr.dtype)
             return f'({cast_type}){func_name}({code_args})'
         return f'{func_name}({code_args})'
 
@@ -734,7 +736,7 @@ class CppCodePrinter(CodePrinter):
         return 'false'
 
     def _print_LiteralImaginaryUnit(self, expr):
-        self.add_import(c_imports['complex'])
+        self.add_import(cpp_imports['complex'])
         return '1i'
 
     def _print_LiteralComplex(self, expr):
@@ -864,4 +866,4 @@ class CppCodePrinter(CodePrinter):
                 args_str += ' << {self._print(end)};\n'
         else:
             args_str += ';\n'
-        return 'std::cout << ' + args_str;
+        return 'std::cout << ' + args_str
