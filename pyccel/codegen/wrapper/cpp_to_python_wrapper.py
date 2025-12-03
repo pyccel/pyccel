@@ -10,6 +10,7 @@ from pyccel.ast.core          import Import
 from pyccel.ast.cwrapper      import PyccelPyObject
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc
 from pyccel.ast.literals      import Nil
+from pyccel.ast.pybind        import FunctionDeclaration
 from pyccel.ast.variable      import Variable
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -85,6 +86,8 @@ class CppToPythonWrapper(Wrapper):
         # TODO: Save classes to the module variable
 
         # TODO: Save functions/interfaces to the module variable
+        for f in expr.funcs:
+            body.append(FunctionDeclaration(f, module_var))
 
         # TODO: Save module variables to the module variable
 
