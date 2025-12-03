@@ -1067,7 +1067,7 @@ class Module(ScopedAstNode):
                                 for i in imports if isinstance(i, Import)}
             self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
-            if init_func:
+            if init_func and init_func.body.body:
                 init_if = init_func.body.body[0]
                 # The init function should always contain an If block unless it is part of a wrapper
                 if isinstance(init_if, If):
