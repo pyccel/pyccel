@@ -106,7 +106,8 @@ class MesonHandler(BuildSystemHandler):
             args = ',\n  '.join((mod_name, f"'{expr.program_file.name}'",
                                  f"dependencies: [{dep_name}]",
                                   "install: true",
-                                 f"install_dir: {out_folder}"))
+                                 f"install_dir: {out_folder}",
+                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"))
             cmds.append(f'prog_{expr.name} = executable({args})\n')
 
         return '\n\n'.join(cmds)
