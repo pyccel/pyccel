@@ -362,7 +362,7 @@ def epyccel_seq(function_class_or_module, *,
             raise err
         finally:
             pyccel_stage.pyccel_finished()
-            print(errors)
+            print(errors, end='')
 
 
         # Import shared library

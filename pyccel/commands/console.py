@@ -82,5 +82,5 @@ def pyccel_command() -> None:
         pass
 
     pyccel_stage.pyccel_finished()
-    print(errors)
+    print(errors, end='')
     sys.exit(errors.has_errors())

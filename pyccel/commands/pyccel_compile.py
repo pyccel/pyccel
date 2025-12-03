@@ -163,7 +163,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
                       severity='error')
 
     if errors.has_errors():
-        print(errors)
+        print(errors, end='')
         sys.exit(1)
 
     execute_pyccel(str(filename),
