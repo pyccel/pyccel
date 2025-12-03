@@ -2,26 +2,14 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+""" Functions for printing PyBind11 code.
+"""
 from pyccel.codegen.printing.cppcode import CppCodePrinter
 
-from pyccel.ast.bind_c     import BindCPointer
-from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray, CStrStr
-from pyccel.ast.core       import FunctionAddress, SeparatorComment
-from pyccel.ast.core       import Import, Module, Declare
-from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
-from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType, Py_ssize_t
-from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
-from pyccel.ast.datatypes  import FinalType
-from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
-from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
-from pyccel.ast.c_concepts import ObjectAddress
-
-from pyccel.errors.errors  import Errors
+from pyccel.ast.core       import SeparatorComment
+from pyccel.ast.core       import Import, Module
 
 __all__ = ("CWrapperCodePrinter", "cwrappercode")
-
-errors = Errors()
 
 module_imports = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
@@ -49,8 +37,9 @@ class PyBindCodePrinter(CppCodePrinter):
     def __init__(self, filename, **settings):
         CppCodePrinter.__init__(self, filename, **settings)
         self._to_free_PyObject_list = []
-        self._function_wrapper_names = dict()
+        self._function_wrapper_names = {}
         self._module_name = None
+        self._current_module = None
 
     #-----------------------------------------------------------------------
     #                              Pybind11 methods

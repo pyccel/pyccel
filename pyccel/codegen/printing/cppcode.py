@@ -3,12 +3,15 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
+""" Functions for printing C++ code.
+"""
 from itertools import chain
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.core     import Assign, Declare, Import, Module, AsName
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
-from pyccel.ast.datatypes import PythonNativeFloat, FinalType
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat
+from pyccel.ast.datatypes import FinalType
 from pyccel.ast.datatypes import HomogeneousSetType, DictType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.low_level_tools import UnpackManagedMemory
@@ -192,8 +195,8 @@ class CppCodePrinter(CodePrinter):
             # code ends with \n
             return tab+code.replace('\n','\n'+tab).rstrip(' ')
 
-    def _format_code(self, code):
-        return code
+    def _format_code(self, lines):
+        return lines
 
     def function_signature(self, expr, print_arg_names = True):
         """
@@ -495,7 +498,6 @@ class CppCodePrinter(CodePrinter):
         need_to_cast = all(a.dtype.primitive_type in (PrimitiveIntegerType(), PrimitiveBooleanType()) for a in expr.args)
         if need_to_cast:
             self.add_import(cpp_imports['pyc_math_cpp'])
-            cast_type = self._print(expr.dtype)
             return f'py_floor_div({self._print(expr.args[0])}, {self._print(expr.args[1])})'
 
         self.add_import(cpp_imports['cmath'])
@@ -763,14 +765,14 @@ class CppCodePrinter(CodePrinter):
         var = expr.variable
 
         name = var.name
-        class_type = self._print(var.class_type)
+        class_type = var.class_type
         class_type_str = self._print(class_type)
         const = ' const' if isinstance(class_type, FinalType) else ''
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
 
-        return f'{static}{external}{class_type}{const} {name};\n'
+        return f'{static}{external}{class_type_str}{const} {name};\n'
 
     def _print_If(self, expr):
         lines = []
@@ -849,7 +851,6 @@ class CppCodePrinter(CodePrinter):
         self.add_import(cpp_imports['iostream'])
         end = '\n'
         sep = LiteralString(' ')
-        code = ''
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
