@@ -11,7 +11,7 @@ if github_debugging:
     import sys
     sys.stdout = sys.stderr
 
-language_markers = ('language_agnostic', 'fortran', 'c', 'python')
+language_markers = ('language_agnostic', 'fortran', 'c', 'cpp', 'python')
 
 @pytest.fixture(autouse=True)
 def check_language_markers(request):
@@ -25,7 +25,7 @@ def check_language_markers(request):
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("cpp", marks = pytest.mark.cpp),
+        pytest.param("c++", marks = pytest.mark.cpp),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope = "session"
