@@ -16,7 +16,6 @@ runs:
         brew install llvm
         brew install flang
         brew install libomp
-        brew install open-mpi
         clang --version
         echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
         echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
@@ -43,16 +42,16 @@ runs:
         flang --version
       shell: bash
 
-    - name: Restore cached Flang MPI
+    - name: Restore cached Clang/Flang MPI
       id: cache-flang-mpi-restore
       uses: actions/cache/restore@v3
       with:
         path: |
-          /home/linuxbrew/.linuxbrew/opt/openmpi-flang
+          /home/linuxbrew/.linuxbrew/opt/openmpi
         key: ${{ runner.os }}-intel-2024
         restore-keys: |
           ${{ runner.os }}-flang-mpi-
-    - name: Install Flang MPI
+    - name: Install Clang/Flang MPI
       if: steps.cache-flang-mpi-restore.outputs.cache-hit != 'true'
       run: |
         wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.9.tar.gz
@@ -61,7 +60,7 @@ runs:
         export FC=flang
         export CC=clang
         export CXX=clang++
-        ./configure --prefix=/home/linuxbrew/.linuxbrew/opt/openmpi-flang --enable-mpi-fortran=all
+        ./configure --prefix=/home/linuxbrew/.linuxbrew/opt/openmpi --enable-mpi-fortran=all
         make -j
         make install
 
@@ -71,21 +70,13 @@ runs:
         echo "OMPI_FC=flang" >> $GITHUB_ENV
       shell: bash
 
-    - name: Save Flang MPI Cache
+    - name: Save Clang/Flang MPI Cache
       id: cache-flang-mpi-save
       uses: actions/cache/save@v3
       with:
         path: |
-          /home/linuxbrew/.linuxbrew/opt/openmpi-flang
+          /home/linuxbrew/.linuxbrew/opt/openmpi
         key: ${{ steps.cache-flang-mpi-restore.outputs.cache-primary-key }}
-
-    - name: Ensure installed libraries can be discovered during compilation and runtime
-      run: |
-        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang/lib:$LIBRARY_PATH" >> $GITHUB_ENV
-        echo "CMAKE_PREFIX_PATH=/home/linuxbrew/.linuxbrew/opt/openmpi-flang:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
-        echo "/home/linuxbrew/.linuxbrew/opt/openmpi-flang/bin" >> $GITHUB_PATH
-      shell: bash
 
     - name: Install LaPack
       run:
