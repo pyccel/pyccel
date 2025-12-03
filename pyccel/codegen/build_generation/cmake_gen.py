@@ -272,7 +272,7 @@ class CMakeHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running CMake")
 
-        setup_cmd = [cmake, '-B', str(self._pyccel_dir / 'build'),
+        setup_cmd = [cmake, '-B', str(self._pyccel_dir / 'build'), '-DCMAKE_VERBOSE_MAKEFILE=ON', '-DMPI_SHOW_CONFIG=ON',
                      f'-DCMAKE_BUILD_TYPE={buildtype}', '-S', str(self._pyccel_dir)]
         if sys.platform == 'win32':
             setup_cmd.append('-G')
