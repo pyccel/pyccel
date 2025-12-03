@@ -78,9 +78,10 @@ jobs:
         shell: bash
       - name: "Test"
         run: |
+            ls
             pyccel-make -f file1.py file2.py file3.py file4.py --mpi --language=fortran --build-system=cmake -vv
         shell: bash
-        working-directory: ./tests/pyccel/project_containers
+        working-directory: ./tests/pyccel/project_multi_imports
       - name: Coverage install
         uses: ./.github/actions/coverage_install
       - name: Fortran/C tests with pytest
