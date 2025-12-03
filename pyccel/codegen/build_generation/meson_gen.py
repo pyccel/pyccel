@@ -232,7 +232,7 @@ class MesonHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running meson")
 
-        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype, '--prefix', self._pyccel_dir / 'install']
+        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype, '--prefix', str(self._pyccel_dir / 'install')]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
