@@ -67,6 +67,8 @@ All notable changes to this project will be documented in this file.
 -   #2484 : Fix optional `TypeVar` arguments.
 -   #2406 : Fix bug when returning an expression that is translated to multiple lines.
 -   #2292 : Fix memory leak when memory is allocated in a function.
+-   #2356 : Fix missing language markers in tests.
+-   #2524 : Fix warning about type conversion in bind-c files.
 -   Rename `main` function when translating to C.
 
 ### Changed
@@ -84,6 +86,7 @@ All notable changes to this project will be documented in this file.
 -   #2494 : Avoid creating unnecessary pointers when inlining functions.
 -   #2504 : Expose annotated `@inline` functions in the generated Python shared library.
 -   #2508 : Place if ternary expressions in parentheses.
+-   #2516 : Install STC with available compilers for faster compilation.
 -   \[INTERNALS\] Ensure low-level names are chosen in the parsing so objects are never renamed in the code generation stage.
 -   \[INTERNALS\] Rename `SetMethod.set_variable` -> `SetMethod.set_obj` as this object is not necessarily a `Variable`.
 -   \[INTERNALS\] Rename `accelerators` variables and arguments to more accurate `extra_compilation_tools` where appropriate.

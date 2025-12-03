@@ -564,8 +564,9 @@ def test_expressions(language):
             output_dtype = types)
 
 #------------------------------------------------------------------------------
-# See issue #756 for c problem
+@pytest.mark.fortran
 def test_generic_functions():
+    # Only testing Fortran for simple compilation outside of Pyccel
     pyccel_test("scripts/runtest_generic_functions.py",
             dependencies = "scripts/generic_functions.py",
             compile_with_pyccel = False,
@@ -872,6 +873,7 @@ def test_interfaces_in_classes( test_file , language):
                                         ] )
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.external
+@pytest.mark.fortran
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
     #pyccel_test(test_file)
@@ -1060,6 +1062,7 @@ def test_module_init_collisions( language ):
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
 
+@pytest.mark.fortran
 def test_function_aliasing():
     pyccel_test("scripts/runtest_function_alias.py",
             language = 'fortran')
@@ -1085,6 +1088,7 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
@@ -1104,6 +1108,7 @@ def test_json():
     assert dict_1 == dict_2
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_ambiguous_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test']
@@ -1122,6 +1127,7 @@ def test_ambiguous_json():
     assert dict_1 == dict_2
 
 @pytest.mark.xdist_incompatible
+@pytest.mark.language_agnostic
 def test_json_relative_path():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
@@ -1130,6 +1136,7 @@ def test_json_relative_path():
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_reserved_file_name():
     with pytest.raises(ValueError) as exc_info:
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
@@ -1138,9 +1145,9 @@ def test_reserved_file_name():
 
 #------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatenation():
+def test_concatenation(language):
     pyccel_test("scripts/concatenation.py",
-                language = 'fortran',
+                language = language,
                 output_dtype=[int]*15+[str])
 
 #------------------------------------------------------------------------------
@@ -1182,12 +1189,12 @@ def test_class_imports(language):
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 #------------------------------------------------------------------------------
-def test_time_execution_flag():
+def test_time_execution_flag(language):
     test_file  = get_abs_path("scripts/runtest_funcs.py")
 
     cwd = get_abs_path("scripts")
 
-    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time-execution"]
+    cmd = [shutil.which("pyccel"), test_file, f"--language={language}", "--time-execution"]
     with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         result, _ = p.communicate()

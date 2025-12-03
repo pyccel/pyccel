@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling",]
-build-backend = "hatchling.build"
+requires = ["scikit-build-core >= 0.9", "meson"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyccel"
@@ -53,17 +53,32 @@ Source = "https://github.com/pyccel/pyccel"
 Tracker = "https://github.com/pyccel/pyccel/issues"
 Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
 
-[tool.hatch.version]
-path = "pyccel/version.py"
+[tool.scikit-build]
+# The build type to use when building the project.
+cmake.build-type = "Release"
 
-[tool.hatch.build.targets.wheel]
-artifacts = [
-  "*.pyccel",
-  "pyccel/extensions/gFTL/install"
-]
-include = [
+# The source directory to use when building the project.
+cmake.source-dir = "pyccel"
+
+# Use Make as a fallback if a suitable Ninja executable is not found.
+ninja.make-fallback = true
+
+# The logging level to display.
+logging.level = "INFO"
+
+# Hook sdist build to insert gFTL compilation and avoid m4 requirement
+sdist.cmake = true
+
+sdist.include = [
+  "AUTHOR",
+  "CHANGELOG.md",
+  "CITATION.cff",
+  "LICENSE",
+  "pyproject.toml",
+  "README.md",
   "pyccel/**/*.py",
   "pyccel/**/*.pyi",
+  "pyccel/CMakeLists.txt",
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
@@ -78,9 +93,13 @@ include = [
   "pyccel/extensions/STC/examples/*",
   "pyccel/extensions/STC/Makefile",
   "pyccel/extensions/STC/meson.build",
-  "pyccel/extensions/STC/meson_options.txt"
+  "pyccel/extensions/STC/meson_options.txt",
+  "pyccel/extensions/gftl_install"
 ]
 
-[tool.hatch.build.targets.wheel.hooks.custom]
-path = "install_scripts/hook.py"
-require-runtime-dependencies = true
+sdist.exclude = ['*']
+
+[tool.scikit-build.metadata.version]
+# Set version info
+provider = "scikit_build_core.metadata.regex"
+input = "pyccel/version.py"

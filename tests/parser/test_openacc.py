@@ -1,11 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-
+import pytest
 from pyccel.parser.syntax.openacc import parse
 
+@pytest.mark.language_agnostic
 def test_parallel():
     d = parse(stmts='#$ acc parallel private(idx)')
 
+@pytest.mark.language_agnostic
 def test_kernels():
     d = parse(stmts='#$ acc kernels')
 

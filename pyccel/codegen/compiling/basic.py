@@ -91,7 +91,9 @@ class CompileObj:
                                             self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._include     = {folder, *(Path(i) for i in include)}
+        self._include     = {*(Path(i) for i in include)}
+        if has_target_file:
+            self._include.add(folder)
         self._libs         = list(libs)
         self._libdir      = set(libdir)
         self._extra_compilation_tools = set(extra_compilation_tools)

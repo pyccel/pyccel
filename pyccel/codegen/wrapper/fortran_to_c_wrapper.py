@@ -29,6 +29,7 @@ from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
+from pyccel.ast.numpyext import NumpyInt32
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type, numpy_precision_map
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
@@ -1113,7 +1114,7 @@ class FortranToCWrapper(Wrapper):
         shape_vars = [Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_shape_{i+1}'))
                          for i in range(rank)]
 
-        body = [Assign(s_v, s) for s_v, s in zip(shape_vars, shape)]
+        body = [Assign(s_v, NumpyInt32(s)) for s_v, s in zip(shape_vars, shape)]
 
         if pointer_target:
             body.append(CLocFunc(orig_var, bind_var))
