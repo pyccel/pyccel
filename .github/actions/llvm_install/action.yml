@@ -51,7 +51,8 @@ runs:
         export FC=flang
         export CC=clang
         export CXX=clang++
-        ./configure --prefix=/home/linuxbrew/.linuxbrew/ --enable-mpi-fortran=all
+        ./configure --prefix=/home/linuxbrew/.linuxbrew/opt/openmpi-flang --enable-mpi-fortran=all
+        echo "/home/linuxbrew/.linuxbrew/opt/openmpi-flang/bin" >> $GITHUB_PATH
         make -j
         make install
 
