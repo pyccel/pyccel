@@ -74,7 +74,7 @@ class FileDescriptionAction(argparse.Action):
     nargs : int, optional
         The number of arguments that can be passed to this flag.
     type : Function, optional
-        A function which can be used to check the type fo the files.
+        A function which can be used to check the type of the files.
     **kwargs : dict
         See argparse.Action.
     """
