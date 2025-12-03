@@ -58,7 +58,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         The verbosity level of the output. The higher the number,
         the more detailed the output will be.
     language : str
-        The target language Pyccel is translating to. Default is 'all'.
+        The target language Pyccel is translating to. Default is 'All'.
     run_mpi : bool
         If True, the function will not run the parallel tests.
 
@@ -191,7 +191,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         cmd_mpi = ['mpirun', '-n', '4', '--oversubscribe', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
         if verbose:
             cmd_mpi += ['-' + 'v' * verbose]
-        if language != 'all':
+        if language != 'All':
             cmd_mpi.append(f'-m={language.lower()}')
         print()
         print(desc_mpi)
