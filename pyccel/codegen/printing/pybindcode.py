@@ -75,3 +75,24 @@ class PyBindCodePrinter(CppCodePrinter):
                         self._print(expr.body),
                         '}\n'))
         return code
+
+    def _print_FunctionDeclaration(self, expr):
+        func = expr.function
+        mod, = func.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        name = func.name
+        args = [f'"{name}"',
+                f'&{mod.name}::{name}']
+        pos_only = True
+        kw_only = False
+        for a in func.arguments:
+            args.append(f'pybind11::arg("{a.name}")')
+            if a.is_posonly != pos_only:
+                args.append(f'pybind11::pos_only()')
+                pos_only = a.is_posonly
+            if a.is_kwonly != kw_only:
+                args.append(f'pybind11::kw_only()')
+                pos_only = a.is_posonly
+        if func.docstring:
+            args.append('pybind11::doc("{func.docstring}")')
+        args_str = ',\n'.join(args)
+        return f'{expr.mod_var}.def({args_str});'
