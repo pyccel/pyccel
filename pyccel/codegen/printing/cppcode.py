@@ -766,6 +766,20 @@ class CppCodePrinter(CodePrinter):
             else:
                 return f'({self._print(expr.real)} + {self._print(expr.imag)}i)'
 
+    def _print_LiteralString(self, expr):
+        format_str = format(expr.python_value)
+        format_str = format_str.replace("\\", "\\\\")\
+                               .replace('\a', '\\a')\
+                               .replace('\b', '\\b')\
+                               .replace('\f', '\\f')\
+                               .replace("\n", "\\n")\
+                               .replace('\r', '\\r')\
+                               .replace('\t', '\\t')\
+                               .replace('\v', '\\v')\
+                               .replace('"', '\\"')\
+                               .replace("'", "\\'")
+        return f'"{expr.python_value}"'
+
     # ------------------------------
     #  Miscellaneous
     # ------------------------------
