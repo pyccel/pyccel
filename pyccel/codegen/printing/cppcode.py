@@ -248,8 +248,9 @@ class CppCodePrinter(CodePrinter):
         str
             The code describing the type of the variable.
         """
-        class_type = self._print(var.class_type)
-        const = ' const' if var.is_const else ''
+        class_type = var.class_type
+        class_type_str = self._print(class_type)
+        const = ' const' if isinstance(class_type, FinalType) else ''
 
         return f'{class_type}{const}'
 
