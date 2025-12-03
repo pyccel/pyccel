@@ -233,6 +233,21 @@ class CppCodePrinter(CodePrinter):
         return f'{result} {name}({args})'
 
     def get_declare_type(self, var):
+        """
+        Get the type of a variable for its declaration.
+
+        Get the type of a variable for its declaration.
+
+        Parameters
+        ----------
+        var : Variable
+            The variable to be declared.
+
+        Returns
+        -------
+        str
+            The code describing the type of the variable.
+        """
         class_type = self._print(var.class_type)
         const = ' const' if var.is_const else ''
 
