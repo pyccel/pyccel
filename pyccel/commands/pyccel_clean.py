@@ -93,6 +93,8 @@ def pyccel_clean_command():
     #... Help and Version
     add_version_flag(parser)
 
+    setup_pyccel_clean_parser(parser)
+
     args = parser.parse_args()
 
     print("warning: The pyccel-clean command is deprecated and will be removed in v2.3. Please use pyccel clean.", file=sys.stderr)
