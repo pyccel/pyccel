@@ -9,7 +9,7 @@ from pyccel.codegen.printing.cppcode import CppCodePrinter
 from pyccel.ast.core       import SeparatorComment
 from pyccel.ast.core       import Import, Module
 
-__all__ = ("CWrapperCodePrinter", "cwrappercode")
+__all__ = ("PyBindCodePrinter",)
 
 module_imports = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
