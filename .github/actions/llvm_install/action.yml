@@ -16,6 +16,7 @@ runs:
         brew install llvm
         brew install flang
         brew install libomp
+        brew install open-mpi
         clang --version
         echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
         echo "/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
@@ -23,8 +24,15 @@ runs:
   
     - name: Ensure installed libraries can be discovered during compilation and runtime
       run: |
+        ls /home/linuxbrew/.linuxbrew/
+        ls /home/linuxbrew/.linuxbrew/opt/
         echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+        echo "CMAKE_PREFIX_PATH=/home/linuxbrew/.linuxbrew:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
+        echo "OMPI_CC=clang" >> $GITHUB_ENV
+        echo "OMPI_CXX=clang++" >> $GITHUB_ENV
+        echo "OMPI_FC=flang" >> $GITHUB_ENV
       shell: bash
 
     - name: Create flang symlink
@@ -35,15 +43,6 @@ runs:
         sudo ln -sf /usr/bin/flang-new /usr/local/bin/flang
         which flang
         flang --version
-      shell: bash
-
-    - name: Install MPI
-      run: |
-        sudo apt-get install -y libopenmpi-dev openmpi-bin
-        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
-        echo "OMPI_CC=clang" >> $GITHUB_ENV
-        echo "OMPI_CXX=clang++" >> $GITHUB_ENV
-        echo "OMPI_FC=flang" >> $GITHUB_ENV
       shell: bash
 
     - name: Install LaPack
