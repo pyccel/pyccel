@@ -24,16 +24,8 @@ runs:
   
     - name: Ensure installed libraries can be discovered during compilation and runtime
       run: |
-        ls /home/linuxbrew/.linuxbrew/
-        echo "-------------------------"
-        ls /home/linuxbrew/.linuxbrew/opt/
-        echo "-------------------------"
-        ls /home/linuxbrew/.linuxbrew/opt/open-mpi
-        echo "-------------------------"
-        ls /home/linuxbrew/.linuxbrew/opt/openmpi
-        echo "-------------------------"
-        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:/home/linuxbrew/.linuxbrew/opt/open-mpi/lib:/home/linuxbrew/.linuxbrew/opt/openmpi/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=/home/linuxbrew/.linuxbrew/lib:/home/linuxbrew/.linuxbrew/opt/libomp/lib:/home/linuxbrew/.linuxbrew/opt/open-mpi/lib:/home/linuxbrew/.linuxbrew/opt/openmpi/lib:$LIBRARY_PATH" >> $GITHUB_ENV
         echo "CMAKE_PREFIX_PATH=/home/linuxbrew/.linuxbrew:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
         echo "OMPI_CC=clang" >> $GITHUB_ENV
