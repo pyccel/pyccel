@@ -190,7 +190,6 @@ class MesonHandler(BuildSystemHandler):
                 dep_str = f"{d}_dep = dependency('{lib_install.name}'"
                 if lib_install.discovery_method == 'CMake':
                     dep_str += f", method : 'cmake', modules : ['{lib_install.name}::{lib_install.target_name}']"
-                    print(f", method : 'cmake', modules : ['{lib_install.name}::{lib_install.target_name}']")
                 dep_str += ")\n"
                 sections.append(dep_str)
             else:
