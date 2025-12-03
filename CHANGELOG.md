@@ -68,6 +68,7 @@ All notable changes to this project will be documented in this file.
 -   #2406 : Fix bug when returning an expression that is translated to multiple lines.
 -   #2292 : Fix memory leak when memory is allocated in a function.
 -   #2356 : Fix missing language markers in tests.
+-   #2524 : Fix warning about type conversion in bind-c files.
 -   Rename `main` function when translating to C.
 
 ### Changed
