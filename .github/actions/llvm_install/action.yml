@@ -48,7 +48,7 @@ runs:
       with:
         path: |
           /home/linuxbrew/.linuxbrew/opt/openmpi
-        key: ${{ runner.os }}-intel-2024
+        key: ${{ runner.os }}-flang-mpi-5.0.9
         restore-keys: |
           ${{ runner.os }}-flang-mpi-
     - name: Install Clang/Flang MPI
