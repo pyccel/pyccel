@@ -141,6 +141,10 @@ def execute_pyccel_make(files, *,
     if len(files) == 0:
         errors.report("No files passed to pyccel make",
                       severity='fatal')
+    else:
+        print("Translating :")
+        for f in files:
+            print("-", f)
 
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
