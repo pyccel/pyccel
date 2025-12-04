@@ -98,7 +98,8 @@ class MesonHandler(BuildSystemHandler):
                              f"dependencies: [{ext_deps}]",
                               "install: true",
                              f"install_dir: {out_folder}",
-                              "gnu_symbol_visibility : 'default'"]
+                              "gnu_symbol_visibility : 'default'",
+                             "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"])
         if 'fortran' in self._languages:
             arg_lst.append("link_language: 'fortran'")
         args = ',\n  '.join(arg_lst)
@@ -111,7 +112,8 @@ class MesonHandler(BuildSystemHandler):
                                  f"dependencies: [{dep_name}]",
                                   "install: true",
                                  f"install_dir: {out_folder}",
-                                  "gnu_symbol_visibility : 'default'"]
+                                  "gnu_symbol_visibility : 'default'",
+                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"))
             if 'fortran' in self._languages:
                 arg_lst.append("link_language: 'fortran'")
             args = ',\n  '.join(arg_lst)
@@ -241,7 +243,7 @@ class MesonHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running meson")
 
-        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype]
+        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype, '--prefix', str(self._pyccel_dir / 'install')]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
