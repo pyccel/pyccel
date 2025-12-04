@@ -96,7 +96,8 @@ class MesonHandler(BuildSystemHandler):
                              *(f"'{w.name}'" for w in expr.wrapper_files),
                              f"dependencies: [{ext_deps}]",
                               "install: true",
-                             f"install_dir: {out_folder}"])
+                             f"install_dir: {out_folder}",
+                             "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"])
         wrap_cmd = f'py.extension_module({args})\n'
 
         cmds = [lib_cmd, dep_cmd, wrap_cmd]
@@ -105,7 +106,8 @@ class MesonHandler(BuildSystemHandler):
             args = ',\n  '.join((mod_name, f"'{expr.program_file.name}'",
                                  f"dependencies: [{dep_name}]",
                                   "install: true",
-                                 f"install_dir: {out_folder}"))
+                                 f"install_dir: {out_folder}",
+                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"))
             cmds.append(f'prog_{expr.name} = executable({args})\n')
 
         return '\n\n'.join(cmds)
@@ -189,7 +191,6 @@ class MesonHandler(BuildSystemHandler):
                 dep_str = f"{d}_dep = dependency('{lib_install.name}'"
                 if lib_install.discovery_method == 'CMake':
                     dep_str += f", method : 'cmake', modules : ['{lib_install.name}::{lib_install.target_name}']"
-                    print(f", method : 'cmake', modules : ['{lib_install.name}::{lib_install.target_name}']")
                 dep_str += ")\n"
                 sections.append(dep_str)
             else:
@@ -231,7 +232,7 @@ class MesonHandler(BuildSystemHandler):
         if self._verbose:
             print(">> Running meson")
 
-        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype]
+        setup_cmd = [meson, 'setup', 'build', '--buildtype', buildtype, '--prefix', str(self._pyccel_dir / 'install')]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         env = os.environ.copy()
