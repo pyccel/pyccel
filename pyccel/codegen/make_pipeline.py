@@ -138,6 +138,10 @@ def execute_pyccel_make(files, *,
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
 
+    if len(files) == 0:
+        errors.report("No files passed to pyccel make",
+                      severity='fatal')
+
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
 
