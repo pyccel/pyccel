@@ -94,12 +94,12 @@ class MesonHandler(BuildSystemHandler):
         ext_deps = ', '.join((dep_name, *ext_std_deps))
 
         arg_lst = [mod_name,
-                             *(f"'{w.name}'" for w in expr.wrapper_files),
-                             f"dependencies: [{ext_deps}]",
-                              "install: true",
-                             f"install_dir: {out_folder}",
-                              "gnu_symbol_visibility : 'default'",
-                             "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"])
+                   *(f"'{w.name}'" for w in expr.wrapper_files),
+                   f"dependencies: [{ext_deps}]",
+                    "install: true",
+                   f"install_dir: {out_folder}",
+                    "gnu_symbol_visibility : 'default'",
+                   "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
         if 'fortran' in self._languages:
             arg_lst.append("link_language: 'fortran'")
         args = ',\n  '.join(arg_lst)
@@ -109,11 +109,11 @@ class MesonHandler(BuildSystemHandler):
 
         if expr.is_exe:
             arg_lst = [mod_name, f"'{expr.program_file.name}'",
-                                 f"dependencies: [{dep_name}]",
-                                  "install: true",
-                                 f"install_dir: {out_folder}",
-                                  "gnu_symbol_visibility : 'default'",
-                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
+                       f"dependencies: [{dep_name}]",
+                        "install: true",
+                       f"install_dir: {out_folder}",
+                        "gnu_symbol_visibility : 'default'",
+                        "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
             if 'fortran' in self._languages:
                 arg_lst.append("link_language: 'fortran'")
             args = ',\n  '.join(arg_lst)
