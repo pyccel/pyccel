@@ -113,7 +113,7 @@ class MesonHandler(BuildSystemHandler):
                                   "install: true",
                                  f"install_dir: {out_folder}",
                                   "gnu_symbol_visibility : 'default'",
-                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"))
+                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
             if 'fortran' in self._languages:
                 arg_lst.append("link_language: 'fortran'")
             args = ',\n  '.join(arg_lst)
