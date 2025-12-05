@@ -100,7 +100,7 @@ class FileDescriptionAction(argparse.Action):
         # Save result
         setattr(namespace, self.dest, files)
 
-def setup_pyccel_make_parser(parser):
+def setup_pyccel_make_parser(parser, add_version=False):
     """
     Add the `pyccel make` arguments to the parser.
 
@@ -150,6 +150,8 @@ def setup_pyccel_make_parser(parser):
 
     # ... Other options
     group = parser.add_argument_group('Other options')
+    if add_version:
+        add_version_flag(group)
     add_common_settings(group)
     group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
                        help='Stop Pyccel after translation to the target language, before build.')
@@ -163,11 +165,8 @@ def pyccel_make_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
             add_help = False)
 
-    #... Help and Version
-    add_version_flag(parser)
-
     # ...
-    setup_pyccel_make_parser(parser)
+    setup_pyccel_make_parser(parser, add_version=True)
     # ...
     args = parser.parse_args()
 
