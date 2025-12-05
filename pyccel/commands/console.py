@@ -53,7 +53,10 @@ def pyccel_command() -> None:
 
     subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
     for key, (parser_setup, exe_func, descr) in sub_commands.items():
-        sparser = subparsers.add_parser(key, help=descr, add_help=False)
+        sparser = subparsers.add_parser(key,
+                                        help=descr,
+                                        description=f"Pyccel's CLI: {descr}",
+                                        add_help=False)
         parser_setup(sparser)
         sparser.set_defaults(func=exe_func)
 
