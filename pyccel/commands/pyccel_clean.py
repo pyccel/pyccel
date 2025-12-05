@@ -1,4 +1,3 @@
-# coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
@@ -100,6 +99,7 @@ def pyccel_clean_command():
     print("warning: The pyccel-clean command is deprecated and will be removed in v2.3. Please use pyccel clean.", file=sys.stderr)
 
     pyccel_clean_loop(**vars(args))
+
 def pyccel_clean_loop(folders, **kwargs):
     """
     Call the `pyccel_clean_single_folder` function in a loop over multiple folders.
