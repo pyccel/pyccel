@@ -5,7 +5,7 @@
 """ Module containing scripts to manage compilation information.
 """
 
-from .argparse_helpers import check_file_type, add_compiler_selection
+from .argparse_helpers import path_with_suffix, add_compiler_selection
 
 PYCCEL_CONFIG_DESCR = 'Compilation configuration management.'
 
@@ -22,7 +22,7 @@ def setup_pyccel_config_parser(parser):
     """
     subparsers = parser.add_subparsers(required=True)
     export_parser = subparsers.add_parser('export')
-    export_parser.add_argument('filename', metavar='FILE', type=check_file_type(('.json',)),
+    export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
                         help='The file that the parser information should be exported to.')
 
     # ... Compiler options

@@ -11,7 +11,7 @@ import sys
 
 from .argparse_helpers import add_compiler_selection, add_accelerator_selection
     # TODO: Uncomment for v2.3 to check for existence and file type
-#from .argparse_helpers import check_file_type, add_common_settings
+#from .argparse_helpers import path_with_suffix, add_common_settings
 from .argparse_helpers import add_common_settings
 from .pyccel_config import pyccel_config
 
@@ -34,7 +34,7 @@ def setup_pyccel_compile_parser(parser):
     group = parser.add_argument_group('Positional arguments')
 
     # TODO: Uncomment for v2.3 to check for existence and file type
-    #group.add_argument('filename', metavar='FILE', check_file_type(('.py',)),
+    #group.add_argument('filename', metavar='FILE', path_with_suffix(('.py',)),
     group.add_argument('filename', metavar='FILE', type=pathlib.Path,
                         help='Path (relative or absolute) to the Python file to be translated.')
     # ...

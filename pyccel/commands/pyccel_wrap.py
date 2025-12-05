@@ -12,7 +12,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_version_flag, add_accelerator_selection, add_compiler_selection
-from .argparse_helpers import check_file_type, add_common_settings
+from .argparse_helpers import path_with_suffix, add_common_settings
 
 __all__ = ['pyccel_wrap_command']
 
@@ -31,7 +31,7 @@ def setup_pyccel_wrap_parser(parser):
     """
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=check_file_type(('.pyi',)),
+    group.add_argument('filename', metavar='FILE', type=path_with_suffix(('.pyi',)),
                        help='Path (relative or absolute) to the Python stub file describing the low-level code.')
     #...
 

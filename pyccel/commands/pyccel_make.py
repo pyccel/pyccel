@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import add_common_settings, check_file_type
+from .argparse_helpers import add_common_settings, path_with_suffix
 
 PYCCEL_MAKE_DESCR = 'Translate and compile multiple Python files in a project.'
 
@@ -110,12 +110,12 @@ def setup_pyccel_make_parser(parser):
     group = parser.add_argument_group('File specification',
             description = "Use one of the below methods to specify which files should be translated."
             ).add_mutually_exclusive_group(required=True)
-    group.add_argument('-f', '--files', nargs='+', type=check_file_type(('.py',)), metavar='FILE',
+    group.add_argument('-f', '--files', nargs='+', type=path_with_suffix(('.py',)), metavar='FILE',
             help="A list of files to be translated as a project.")
-    group.add_argument('-g', '--glob', dest='files', action=GlobAction, type=check_file_type(('.py',)),
+    group.add_argument('-g', '--glob', dest='files', action=GlobAction, type=path_with_suffix(('.py',)),
             help=("A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
                   "Note: quote the pattern to prevent shell expansion."))
-    group.add_argument('-d', '--file-descr', dest='files', action=FileDescriptionAction, type=check_file_type(('.py',)),
+    group.add_argument('-d', '--file-descr', dest='files', action=FileDescriptionAction, type=path_with_suffix(('.py',)),
             help="A UTF-8 text file containing the paths to the files to be translated as a project. One path (relative or absolute) per line.")
 
     # ... backend compiler options

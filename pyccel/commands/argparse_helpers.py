@@ -27,11 +27,13 @@ __all__ = (
         )
 
 # -----------------------------------------------------------------------------------------
-def check_file_type(suffixes):
+def path_with_suffix(suffixes):
     """
-    Check if the input is a type with one of the suffixes.
+    Get the function which returns a Path to a file with one of the suffixes.
 
-    Check if the input is a type with one of the specified suffixes.
+    Get the function which returns a Path to a file with one of the specified
+    suffixes. The function returns a argparse.ArgumentTypeError if the input
+    does not respect the expected file format.
 
     Parameters
     ----------
@@ -43,9 +45,24 @@ def check_file_type(suffixes):
     function
         A function which checks if the argument is of the expected type.
     """
-    def check_path(path_str):
+    def convert_to_path_with_suffix(path_str):
         """
-        Check if path_str describes the path to an existing file with the expected suffix.
+        Covert string to Path with the chosen suffix.
+
+        Parameters
+        ----------
+        path_str : str
+            The string passed to the executable and parsed by argparse.
+
+        Returns
+        -------
+        Path
+            The Path describing the parameter.
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            Raised if the string does not respect the expected format.
         """
         path = pathlib.Path(path_str)
         if not path.is_file():
@@ -53,7 +70,7 @@ def check_file_type(suffixes):
         if path.suffix not in suffixes:
             raise argparse.ArgumentTypeError(f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}")
         return path.absolute()
-    return check_path
+    return convert_to_path_with_suffix
 
 # -----------------------------------------------------------------------------------------
 def add_version_flag(parser):
