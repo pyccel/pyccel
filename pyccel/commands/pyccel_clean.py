@@ -33,7 +33,7 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False, 
 
     Parameters
     ----------
-    path_dir : str, default = current working directory
+    path_dir : str | iter[str], default = current working directory
         The path to the folder which should be cleaned.
 
     recursive : bool, default = True
@@ -51,6 +51,11 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False, 
     """
     if path_dir is None:
         path_dir = os.getcwd()
+    elif not isinstance(path_dir, str):
+        for f in path_dir:
+            pyccel_clean(f, recursive = recursive, remove_shared_libs = remove_shared_libs,
+                         remove_programs = remove_programs)
+        return
 
     files = os.listdir(path_dir)
     for f in files:
@@ -77,8 +82,8 @@ def setup_pyccel_clean_parser(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    parser.add_argument('folders', metavar='N', type=str, nargs='*',
-            help='The folders to be cleaned (default is the current folder')
+    parser.add_argument('path_dir', metavar='FOLDER', type=str, nargs='*', default=(os.getcwd(),),
+            help='The folders to be cleaned (default is the current folder).')
     parser.add_argument('-n', '--not-recursive', action='store_false', dest='recursive',
             help='Only run pyccel-clean in the current directory. Do not recurse into other folders')
     parser.add_argument('-s', '--remove-libs', action='store_true', dest='remove_shared_libs',
@@ -103,23 +108,4 @@ def pyccel_clean_command():
 
     print("Warning: The pyccel-clean command is deprecated and will be removed in v2.3. Please use `pyccel clean` instead.", file=sys.stderr)
 
-    pyccel_clean_loop(**vars(args))
-
-def pyccel_clean_loop(folders, **kwargs):
-    """
-    Call the `pyccel_clean_single_folder` function in a loop over multiple folders.
-
-    Call the `pyccel_clean_single_folder` function in a loop over multiple folders.
-
-    Parameters
-    ----------
-    folders : iterable[str]
-        The folders which should be cleaned.
-    **kwargs : dict
-        See pyccel_clean.
-    """
-    if len(folders)==0:
-        pyccel_clean(None, **kwargs)
-    else:
-        for f in folders:
-            pyccel_clean(f, **kwargs)
+    pyccel_clean(**vars(args))
