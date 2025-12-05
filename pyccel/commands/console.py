@@ -12,7 +12,7 @@ from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESC
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
 from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
-from .argparse_helpers import add_help_flag, add_version_flag, PyccelHelpFormatter
+from .argparse_helpers import add_help_flag, add_version_flag
 
 __all__ = ('pyccel_command',)
 
@@ -36,8 +36,7 @@ def pyccel_command() -> None:
     generated for the corresponding block of code.
     """
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                                     add_help=False, exit_on_error=False,
-                                     formatter_class=PyccelHelpFormatter)
+                                     add_help=False, exit_on_error=False)
 
     group = parser.add_argument_group("Options")
     #... Help and Version
@@ -52,7 +51,7 @@ def pyccel_command() -> None:
                     'wrap':  (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
                     }
 
-    subparsers = parser.add_subparsers(required=True, title='Commands')
+    subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
     for key, (parser_setup, exe_func, descr) in sub_commands.items():
         sparser = subparsers.add_parser(key, help=descr)
         parser_setup(sparser)

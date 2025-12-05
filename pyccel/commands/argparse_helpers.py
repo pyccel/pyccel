@@ -25,19 +25,7 @@ __all__ = (
         'add_version_flag',
         'path_with_suffix',
         'ErrorModeSelector',
-        'PyccelHelpFormatter',
         )
-
-# -----------------------------------------------------------------------------------------
-class PyccelHelpFormatter(argparse.RawDescriptionHelpFormatter):
-    """
-    Argparse help formatter class which does not print the "usage" line for sub-parsers.
-    """
-    def _format_action(self, action):
-        parts = super()._format_action(action)
-        if action.nargs == argparse.PARSER:
-            parts = "\n".join(parts.split("\n")[1:])
-        return parts
 
 # -----------------------------------------------------------------------------------------
 def path_with_suffix(suffixes):
