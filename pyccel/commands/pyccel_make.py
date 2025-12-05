@@ -161,7 +161,7 @@ def pyccel_make_command() -> None:
     Command line wrapper for the deprecated `pyccel-make` command line tool.
     """
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
-            add_help = True)
+            add_help = False)
 
     #... Help and Version
     add_version_flag(parser)
