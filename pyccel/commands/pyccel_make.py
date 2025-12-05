@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import add_common_settings, path_with_suffix
+from .argparse_helpers import add_common_settings, path_with_suffix, deprecation_warning
 
 __all__ = ('pyccel_make',
            'pyccel_make_command',
@@ -165,9 +165,10 @@ def pyccel_make_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
             add_help = False)
 
-    # ...
     setup_pyccel_make_parser(parser, add_version=True)
-    # ...
+
+    print(deprecation_warning('make'), file=sys.stderr)
+
     args = parser.parse_args()
 
     print("Warning: The pyccel-make command is deprecated and will be removed in v2.3. Please use `pyccel make` instead.", file=sys.stderr)

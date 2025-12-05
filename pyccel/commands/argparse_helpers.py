@@ -23,9 +23,52 @@ __all__ = (
         'add_compiler_selection',
         'add_help_flag',
         'add_version_flag',
+        'deprecation_warning',
+        'get_warning_and_line',
         'path_with_suffix',
         'ErrorModeSelector',
         )
+
+# -----------------------------------------------------------------------------------------
+def get_warning_and_line():
+    """
+    Get colored WARNING and LINE strings.
+
+    Get colored WARNING and LINE strings if termcolor is installed, otherwise return
+    plain strings.
+
+    Returns
+    -------
+    tuple[str, str]
+        The WARNING and LINE strings.
+    """
+    try:
+        from termcolor import colored
+        WARNING = colored('WARNING', 'red', attrs=['bold', 'blink'])
+        LINE    = colored('-------', 'red', attrs=['bold', 'blink'])
+    except ImportError:
+        WARNING = 'WARNING'
+        LINE    = '-------'
+    return WARNING, LINE
+
+# -----------------------------------------------------------------------------------------
+def deprecation_warning(tool):
+    """
+    Create a deprecation warning message for an old pyccel-TOOL command.
+
+    Parameters
+    ----------
+    tool : str
+        The name of the tool for which pyccel-TOOL is a deprecated command.
+
+    Returns
+    -------
+    str
+        The deprecation warning message.
+    """
+    WARNING, LINE = get_warning_and_line()
+    message = f"{WARNING}: The pyccel-{tool} command is deprecated and will be removed in v 2.3. Please use `pyccel {tool}` instead."
+    return "\n".join([LINE, message, LINE])
 
 # -----------------------------------------------------------------------------------------
 def path_with_suffix(suffixes):

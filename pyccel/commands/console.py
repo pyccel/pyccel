@@ -12,7 +12,7 @@ from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESC
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
 from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
-from .argparse_helpers import add_help_flag, add_version_flag
+from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
 
 __all__ = ('pyccel_command',)
 
@@ -69,8 +69,10 @@ def pyccel_command() -> None:
         kwargs = vars(parser.parse_args())
     except argparse.ArgumentError as err:
         if 'invalid choice' in err.message:
-            print("warning: Using pyccel with no sub-command is deprecated and will be removed in v2.3. Please use pyccel compile.",
-                  file=sys.stderr)
+            WARNING, LINE = get_warning_and_line()
+            message = f"{WARNING}: Using pyccel with no sub-command is deprecated and will be removed in v2.3."\
+                       " Please use `pyccel compile` instead."
+            print(f"{LINE}\n{message}\n{LINE}", file=sys.stderr)
             argv = ('compile', *argv)
             parser.exit_on_error=True
             kwargs = vars(parser.parse_args(argv))

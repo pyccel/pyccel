@@ -12,7 +12,7 @@ import argparse
 import pathlib
 
 from .argparse_helpers import add_version_flag, add_accelerator_selection, add_compiler_selection
-from .argparse_helpers import path_with_suffix, add_common_settings
+from .argparse_helpers import path_with_suffix, add_common_settings, deprecation_warning
 
 __all__ = ('pyccel_wrap',
            'pyccel_wrap_command',
@@ -83,9 +83,9 @@ def pyccel_wrap_command() -> None:
 
     setup_pyccel_wrap_parser(parser, add_version=True)
 
-    args = parser.parse_args()
+    print(deprecation_warning('wrap'), file=sys.stderr)
 
-    print("Warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use `pyccel wrap` instead.", file=sys.stderr)
+    args = parser.parse_args()
 
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.utilities.stage   import PyccelStage

@@ -10,7 +10,7 @@ import sys
 import sysconfig
 from argparse import ArgumentParser
 
-from .argparse_helpers import add_help_flag, add_version_flag
+from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
 
 __all__ = ('pyccel_clean',
            'pyccel_clean_command',
@@ -105,8 +105,8 @@ def pyccel_clean_command():
 
     setup_pyccel_clean_parser(parser, add_version=True)
 
-    args = parser.parse_args()
+    print(deprecation_warning('clean'), file=sys.stderr)
 
-    print("Warning: The pyccel-clean command is deprecated and will be removed in v2.3. Please use `pyccel clean` instead.", file=sys.stderr)
+    args = parser.parse_args()
 
     pyccel_clean(**vars(args))
