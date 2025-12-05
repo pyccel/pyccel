@@ -25,7 +25,7 @@ class MesonHandler(BuildSystemHandler):
     pyccel_dir : Path
         The directory where generated files should be outputted.
     root_dir : Path
-        The directory from which the pyccel-make command was called.
+        The directory from which the `pyccel make` command was called.
     output_dir : Path
         The directory where the final files should be outputted.
     verbose : int
