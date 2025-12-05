@@ -105,7 +105,7 @@ def add_compiler_selection(parser):
         The parser to be modified.
     """
     default_compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
-    json_file_checker = check_file_type(('.json',))
+    json_file_checker = path_with_suffix(('.json',))
 
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
     compiler_group = group.add_mutually_exclusive_group(required=False)
