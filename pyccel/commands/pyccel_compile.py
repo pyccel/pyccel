@@ -16,7 +16,6 @@ from .argparse_helpers import add_common_settings
 from .pyccel_config import pyccel_config
 
 __all__ = ('pyccel_compile',
-           'pyccel_compile_command',
            'setup_pyccel_compile_parser',
            'PYCCEL_COMPILE_DESCR')
 
