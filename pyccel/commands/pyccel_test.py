@@ -13,6 +13,11 @@ from importlib.metadata import Distribution
 
 from .argparse_helpers import add_version_flag
 
+__all__ = ('pyccel_test',
+           'pyccel_test_command',
+           'setup_pyccel_test_parser',
+           'PYCCEL_TEST_DESCR')
+
 PYCCEL_TEST_DESCR = 'Run tests to check installation.'
 
 install_msg = """

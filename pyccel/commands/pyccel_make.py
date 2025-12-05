@@ -14,6 +14,11 @@ from pathlib import Path
 from .argparse_helpers import add_version_flag, add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import add_common_settings, path_with_suffix
 
+__all__ = ('pyccel_make',
+           'pyccel_make_command',
+           'setup_pyccel_make_parser',
+           'PYCCEL_MAKE_DESCR')
+
 PYCCEL_MAKE_DESCR = 'Translate and compile multiple Python files in a project.'
 
 class GlobAction(argparse.Action):

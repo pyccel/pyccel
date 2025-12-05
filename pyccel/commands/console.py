@@ -14,6 +14,8 @@ from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESC
 from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
 from .argparse_helpers import add_version_flag
 
+__all__ = ('pyccel_command',)
+
 def pyccel_command() -> None:
     """
     Pyccel console command.
