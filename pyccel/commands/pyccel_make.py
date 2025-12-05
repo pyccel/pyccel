@@ -97,9 +97,9 @@ class FileDescriptionAction(argparse.Action):
 
 def setup_pyccel_make_parser(parser):
     """
-    Add the pyccel-make arguments to the parser.
+    Add the `pyccel make` arguments to the parser.
 
-    Add the pyccel-make arguments to the parser for command line arguments.
+    Add the `pyccel make` arguments to the parser for command line arguments.
 
     Parameters
     ----------
@@ -185,9 +185,9 @@ def pyccel_make_command() -> None:
 
 def pyccel_make(*, language, **kwargs) -> None:
     """
-    Call the pyccel make pipeline.
+    Call the `pyccel make` pipeline.
 
-    Import and call the pyccel make pipeline.
+    Import and call the `pyccel make` pipeline.
 
     Parameters
     ----------
