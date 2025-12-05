@@ -21,7 +21,7 @@ __all__ = ('pyccel_wrap',
 
 PYCCEL_WRAP_DESCR = 'Create the wrapper to allow code to be called from Python.'
 
-def setup_pyccel_wrap_parser(parser):
+def setup_pyccel_wrap_parser(parser, add_version=False):
     """
     Add the `pyccel wrap` arguments to the parser.
 
@@ -66,6 +66,8 @@ def setup_pyccel_wrap_parser(parser):
     group = parser.add_argument_group('Other options')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Stop Pyccel after generating the wrapper files but before building the Python extension file.')
+    if add_version:
+        add_version_flag(group)
     add_common_settings(group)
 
 #==============================================================================
@@ -79,14 +81,9 @@ def pyccel_wrap_command() -> None:
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
                       add_help=False)
 
-    #... Help and Version
-    add_version_flag(parser)
-    # ...
-    # ...
-    setup_pyccel_wrap_parser(parser)
-    # ...
+    setup_pyccel_wrap_parser(parser, add_version=True)
+
     args = parser.parse_args()
-    # ...
 
     print("Warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use `pyccel wrap` instead.", file=sys.stderr)
 
