@@ -22,7 +22,7 @@ __all__ = (
         'add_common_settings',
         'add_compiler_selection',
         'add_version_flag',
-        'check_file_type',
+        'path_with_suffix',
         'ErrorModeSelector',
         )
 
