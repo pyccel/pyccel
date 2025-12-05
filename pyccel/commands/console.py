@@ -12,7 +12,7 @@ from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESC
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
 from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
-from .argparse_helpers import add_version_flag
+from .argparse_helpers import add_help_flag, add_version_flag, PyccelHelpFormatter
 
 __all__ = ('pyccel_command',)
 
@@ -36,10 +36,13 @@ def pyccel_command() -> None:
     generated for the corresponding block of code.
     """
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                      add_help=True, exit_on_error=False)
+                                     add_help=False, exit_on_error=False,
+                                     formatter_class=PyccelHelpFormatter)
 
     #... Help and Version
+    add_help_flag(parser)
     add_version_flag(parser)
+    parser._optionals.title = 'Options'
 
     sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean_loop, PYCCEL_CLEAN_DESCR),
                     'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
@@ -49,7 +52,7 @@ def pyccel_command() -> None:
                     'wrap':  (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
                     }
 
-    subparsers = parser.add_subparsers(required=True)
+    subparsers = parser.add_subparsers(required=True, title='Commands')
     for key, (parser_setup, exe_func, descr) in sub_commands.items():
         sparser = subparsers.add_parser(key, help=descr)
         parser_setup(sparser)

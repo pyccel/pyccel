@@ -21,10 +21,23 @@ __all__ = (
         'add_accelerator_selection',
         'add_common_settings',
         'add_compiler_selection',
+        'add_help_flag',
         'add_version_flag',
         'path_with_suffix',
         'ErrorModeSelector',
+        'PyccelHelpFormatter',
         )
+
+# -----------------------------------------------------------------------------------------
+class PyccelHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    """
+    Argparse help formatter class which does not print the "usage" line for sub-parsers.
+    """
+    def _format_action(self, action):
+        parts = super()._format_action(action)
+        if action.nargs == argparse.PARSER:
+            parts = "\n".join(parts.split("\n")[1:])
+        return parts
 
 # -----------------------------------------------------------------------------------------
 def path_with_suffix(suffixes):
@@ -71,6 +84,21 @@ def path_with_suffix(suffixes):
             raise argparse.ArgumentTypeError(f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}")
         return path.absolute()
     return convert_to_path_with_suffix
+
+# -----------------------------------------------------------------------------------------
+def add_help_flag(parser):
+    """
+    Add -h/--help flag to argument parser.
+
+    Add -h/--help flag to argument parser.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
+    """
+    message = 'Show this help message and exit.'
+    parser.add_argument('-h', '--help', action='help', help=message)
 
 # -----------------------------------------------------------------------------------------
 def add_version_flag(parser):
