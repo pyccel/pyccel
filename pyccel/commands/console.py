@@ -53,7 +53,7 @@ def pyccel_command() -> None:
 
     subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
     for key, (parser_setup, exe_func, descr) in sub_commands.items():
-        sparser = subparsers.add_parser(key, help=descr)
+        sparser = subparsers.add_parser(key, help=descr, add_help=False)
         parser_setup(sparser)
         sparser.set_defaults(func=exe_func)
 
@@ -64,12 +64,17 @@ def pyccel_command() -> None:
 
     try:
         kwargs = vars(parser.parse_args())
-    except argparse.ArgumentError:
-        print("warning: Using pyccel with no sub-command is deprecated and will be removed in v2.3. Please use pyccel compile.",
-              file=sys.stderr)
-        argv = ('compile', *argv)
-        parser.exit_on_error=True
-        kwargs = vars(parser.parse_args(argv))
+    except argparse.ArgumentError as err:
+        if 'invalid choice' in err.message:
+            print("warning: Using pyccel with no sub-command is deprecated and will be removed in v2.3. Please use pyccel compile.",
+                  file=sys.stderr)
+            argv = ('compile', *argv)
+            parser.exit_on_error=True
+            kwargs = vars(parser.parse_args(argv))
+        else:
+            print(err)
+            parser.print_usage()
+            sys.exit(2)
 
     from pyccel.errors.errors     import PyccelError, Errors
     from pyccel.utilities.stage   import PyccelStage

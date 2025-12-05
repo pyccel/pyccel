@@ -165,6 +165,7 @@ def add_common_settings(parser):
     Add common settings controlling how Pyccel reports progress.
 
     Add settings controlling how Pyccel reports progress:
+    - help
     - verbosity
     - developer-mode
     - conda warnings level
@@ -179,6 +180,7 @@ def add_common_settings(parser):
     err_mode = ErrorsMode()
     err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
 
+    add_help_flag(parser)
     parser.add_argument('-v', '--verbose', action='count', default = 0,
                         help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
     parser.add_argument('--developer-mode', action=ErrorModeSelector, nargs=0, const='developer',
