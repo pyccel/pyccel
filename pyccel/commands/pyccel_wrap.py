@@ -77,7 +77,7 @@ def pyccel_wrap_command() -> None:
     """
 
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                      add_help=True)
+                      add_help=False)
 
     #... Help and Version
     add_version_flag(parser)
