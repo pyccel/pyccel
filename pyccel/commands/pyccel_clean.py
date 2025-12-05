@@ -14,7 +14,6 @@ from .argparse_helpers import add_version_flag
 
 __all__ = ('pyccel_clean',
            'pyccel_clean_command',
-           'pyccel_clean_loop',
            'setup_pyccel_clean_parser',
            'PYCCEL_CLEAN_DESCR')
 
