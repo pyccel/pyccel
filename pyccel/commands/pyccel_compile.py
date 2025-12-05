@@ -103,7 +103,7 @@ def setup_pyccel_compile_parser(parser):
     # ...
 
 
-def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
+def pyccel_compile(*, filename, language, output, export_compiler_config, **kwargs):
     """
     Call the pyccel pipeline.
 

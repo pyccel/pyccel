@@ -7,7 +7,7 @@ import pathlib
 import sys
 
 from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean_loop, PYCCEL_CLEAN_DESCR
-from .pyccel_compile import setup_pyccel_compile_parser, pyccel, PYCCEL_COMPILE_DESCR
+from .pyccel_compile import setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR
 from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
@@ -40,7 +40,7 @@ def pyccel_command() -> None:
     add_version_flag(parser)
 
     sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean_loop, PYCCEL_CLEAN_DESCR),
-                    'compile' : (setup_pyccel_compile_parser, pyccel, PYCCEL_COMPILE_DESCR),
+                    'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
                     'config': (setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR),
                     'make':  (setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR),
                     'test':  (setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR),
