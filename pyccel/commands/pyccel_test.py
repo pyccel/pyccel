@@ -11,7 +11,7 @@ import sys
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
-from .argparse_helpers import add_version_flag
+from .argparse_helpers import add_help_flag, add_version_flag
 
 __all__ = ('pyccel_test',
            'pyccel_test_command',
@@ -241,6 +241,8 @@ def setup_pyccel_test_parser(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
+    add_help_flag(parser)
+
     parser.add_argument('--dry-run', action='store_true',
         help='Run all steps without actually running the tests.')
 
@@ -268,7 +270,7 @@ def pyccel_test_command():
     pytest.ExitCode
         The pytest return code.
     """
-    parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = True)
+    parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = False)
 
     #... Help and Version
     add_version_flag(parser)
