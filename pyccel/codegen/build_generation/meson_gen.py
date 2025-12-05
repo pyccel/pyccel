@@ -1,5 +1,5 @@
 """
-A module to handle everything related to meson for the pyccel-make command.
+A module to handle everything related to meson for the `pyccel make` command.
 """
 from itertools import chain
 import os
