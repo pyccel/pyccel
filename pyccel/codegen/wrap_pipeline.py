@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 """
 Contains the `execute_pyccel_wrap` function which carries out the main steps required
-to execute the `pyccel-wrap` command.
+to execute the `pyccel wrap` command.
 """
 
 import os

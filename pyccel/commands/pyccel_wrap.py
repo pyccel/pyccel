@@ -3,7 +3,7 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
-File containing the pyccel-wrap command line interface.
+File containing the `pyccel wrap` command line interface.
 """
 
 import sys
