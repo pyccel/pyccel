@@ -5,7 +5,7 @@
 """ Module containing scripts to manage compilation information.
 """
 
-from .argparse_helpers import path_with_suffix, addmake_compiler_selection
+from .argparse_helpers import path_with_suffix, add_compiler_selection
 
 __all__ = ('pyccel_config',
            'setup_pyccel_config_parser',
