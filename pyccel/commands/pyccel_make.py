@@ -151,9 +151,9 @@ def setup_pyccel_make_parser(parser):
 
 def pyccel_make_command() -> None:
     """
-    Pyccel-make console command.
+    Command line wrapper for the deprecated `pyccel-make` command line tool.
 
-    The command line interface allowing pyccel-make to be called.
+    Command line wrapper for the deprecated `pyccel-make` command line tool.
     """
     parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
             add_help = True)
@@ -166,7 +166,7 @@ def pyccel_make_command() -> None:
     # ...
     args = parser.parse_args()
 
-    print("warning: The pyccel-make command is deprecated and will be removed in v2.3. Please use pyccel make.", file=sys.stderr)
+    print("Warning: The pyccel-make command is deprecated and will be removed in v2.3. Please use `pyccel make` instead.", file=sys.stderr)
 
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.utilities.stage   import PyccelStage

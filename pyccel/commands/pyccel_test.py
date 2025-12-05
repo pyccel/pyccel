@@ -227,9 +227,9 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
 
 def setup_pyccel_test_parser(parser):
     """
-    Add the pyccel-test arguments to the parser.
+    Add the `pyccel test` arguments to the parser.
 
-    Add the pyccel-test arguments to the parser for command line arguments.
+    Add the `pyccel test` arguments to the parser for command line arguments.
 
     Parameters
     ----------
@@ -254,10 +254,9 @@ def setup_pyccel_test_parser(parser):
 
 def pyccel_test_command():
     """
-    Command line wrapper around the pyccel_test function.
+    Command line wrapper for the deprecated `pyccel-test` command line tool.
 
-    A wrapper around the pyccel_test function which allows
-    command line arguments to be passed to the function.
+    Command line wrapper for the deprecated `pyccel-test` command line tool.
 
     Returns
     -------

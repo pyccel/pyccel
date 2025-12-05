@@ -68,22 +68,9 @@ def setup_pyccel_wrap_parser(parser):
 #==============================================================================
 def pyccel_wrap_command() -> None:
     """
-    Pyccel console command.
+    Command line wrapper for the deprecated `pyccel-wrap` command line tool.
 
-    The Pyccel console command allows translating Python files using Pyccel in
-    a command-line environment. This function takes no parameters and sets up
-    an argument parser for the Pyccel command line interface.
-
-    The command line interface requires a Python file to be specified, and it
-    supports various options such as specifying the output language (C,
-    Fortran, or Python), compiler settings, and flags for accelerators like
-    MPI, OpenMP, and OpenACC. It also includes options for verbosity,
-    debugging, and exporting compile information. Unless the user requires the
-    process to stop after a specific stage, Pyccel will execute the full
-    translation and compilation process until a C Python extension module is
-    generated, which can then be imported in Python. In addition, if the input
-    file contains an `if __name__ == '__main__':` block, an executable will be
-    generated for the corresponding block of code.
+    Command line wrapper for the deprecated `pyccel-wrap` command line tool.
     """
 
     parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
@@ -98,7 +85,7 @@ def pyccel_wrap_command() -> None:
     args = parser.parse_args()
     # ...
 
-    print("warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use pyccel wrap.", file=sys.stderr)
+    print("Warning: The pyccel-wrap command is deprecated and will be removed in v2.3. Please use `pyccel wrap` instead.", file=sys.stderr)
 
     from pyccel.errors.errors     import Errors, PyccelError
     from pyccel.utilities.stage   import PyccelStage
