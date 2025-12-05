@@ -230,7 +230,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Return the final return code
     return retcode
 
-def setup_pyccel_test_parser(parser):
+def setup_pyccel_test_parser(parser, add_version=False):
     """
     Add the `pyccel test` arguments to the parser.
 
@@ -241,22 +241,27 @@ def setup_pyccel_test_parser(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    add_help_flag(parser)
+    group = parser.add_argument_group('Options')
 
-    parser.add_argument('--dry-run', action='store_true',
+    add_help_flag(group)
+
+    if add_version:
+        add_version_flag(group)
+
+    group.add_argument('--dry-run', action='store_true',
         help='Run all steps without actually running the tests.')
 
-    parser.add_argument('-v', '--verbose', action='count', default=0,
+    group.add_argument('-v', '--verbose', action='count', default=0,
         help='Increase output verbosity (use -v, -vv for more detailed output).')
 
-    parser.add_argument('--folder', type=pathlib.Path, default=None,
+    group.add_argument('--folder', type=pathlib.Path, default=None,
         help="Run tests located in custom folder (default: use Pyccel's distribution).")
 
-    parser.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
+    group.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
         help='Target language for translation, i.e. the main language of the generated code (default: All).',
         type=str.title)
 
-    parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
+    group.add_argument('--no-mpi', action='store_false', dest='run_mpi',
         help="Do not run the parallel tests.")
 
 def pyccel_test_command():
@@ -272,10 +277,7 @@ def pyccel_test_command():
     """
     parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = False)
 
-    #... Help and Version
-    add_version_flag(parser)
-
-    setup_pyccel_test_parser(parser)
+    setup_pyccel_test_parser(parser, add_version=True)
 
     # Parse the command line arguments
     args = parser.parse_args()
