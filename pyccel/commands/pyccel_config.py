@@ -11,9 +11,9 @@ PYCCEL_CONFIG_DESCR = 'Compilation configuration management.'
 
 def setup_pyccel_config_parser(parser):
     """
-    Add the pyccel config arguments to the parser.
+    Add the `pyccel config` arguments to the parser.
 
-    Add the pyccel config arguments to the parser for command line arguments.
+    Add the `pyccel config` arguments to the parser for command line arguments.
 
     Parameters
     ----------
@@ -30,9 +30,9 @@ def setup_pyccel_config_parser(parser):
 
 def pyccel_config(filename, **kwargs):
     """
-    Call the pyccel config pipeline.
+    Call the `pyccel config` pipeline.
 
-    Import and call the pyccel config pipeline.
+    Import and call the `pyccel config` pipeline.
 
     Parameters
     ----------

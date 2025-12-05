@@ -101,11 +101,9 @@ def pyccel_clean_command():
 
     pyccel_clean_loop(**vars(args))
 
-def pyccel_clean_loop(folders, **kwargs):
-    """
-    Call the pyccel clean command in a loop over multiple folders.
+    Call the `pyccel_clean_single_folder` function in a loop over multiple folders.
 
-    Call the pyccel clean command in a loop over multiple folders.
+    Call the `pyccel_clean_single_folder` function in a loop over multiple folders.
 
     Parameters
     ----------

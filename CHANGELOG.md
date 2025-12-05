@@ -99,9 +99,9 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
--   #2522 : Deprecated use of `pyccel` without sub-command.
--   #2522 : Deprecated use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
--   #2522 : Deprecated command-line tools: `pyccel-clean`, `pyccel-make`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
+-   #2522 : Deprecate use of `pyccel` without sub-command.
+-   #2522 : Deprecate use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Deprecate command-line tools: `pyccel-clean`, `pyccel-make`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 
 ### Removed
 

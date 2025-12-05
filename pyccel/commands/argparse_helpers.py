@@ -79,10 +79,10 @@ def add_version_flag(parser):
 # -----------------------------------------------------------------------------------------
 def add_compiler_selection(parser):
     """
-    Add compiler selection flags to argument parser.
+    Add group of compiler selection flags to argument parser.
 
-    Add flags to argument parser to select a compiler. This can be done by family
-    or with a json config file.
+    Add argument group to parser, with flags for selecting a compiler. This can be
+    done by family or with a json config file.
 
     Parameters
     ----------
@@ -110,9 +110,10 @@ def add_compiler_selection(parser):
 # -----------------------------------------------------------------------------------------
 def add_accelerator_selection(parser):
     """
-    Add accelerator flags to argument parser.
+    Add group of accelerator flags to argument parser.
 
-    Add flags to argument parser to select any accelerators to be used in compilation.
+    Add argument group to parser, with flags for selecting any accelerators to be used
+    in compilation.
 
     Parameters
     ----------

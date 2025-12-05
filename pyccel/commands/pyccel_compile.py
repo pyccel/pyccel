@@ -23,9 +23,9 @@ PYCCEL_COMPILE_DESCR = 'Translate and compile a single Python file.'
 
 def setup_pyccel_compile_parser(parser):
     """
-    Add the pyccel-compile arguments to the parser.
+    Add the `pyccel compile` arguments to the parser.
 
-    Add the pyccel-compile arguments to the parser for command line arguments.
+    Add the `pyccel compile` arguments to the parser for command line arguments.
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ def setup_pyccel_compile_parser(parser):
     add_common_settings(group)
     group.add_argument('--export-compiler-config', action='store_true',
                         help='Export all compiler information to a JSON file with the given path (relative or absolute). '
-                       'This flag is deprecated and will be removed in v2.3. Please use pyccel config instead.')
+                       'This flag is deprecated and will be removed in v2.3. Please use `pyccel config` instead.')
     # ...
 
 
@@ -134,7 +134,7 @@ def pyccel(*, filename, language, output, export_compiler_config, **kwargs):
     # ...
     cext = filename.suffix
     if export_compiler_config:
-        print("warning: The flag --export-compiler-config is deprecated and will be removed in v2.3. Please use pyccel config.", file=sys.stderr)
+        print("Warning: The flag --export-compiler-config is deprecated and will be removed in v2.3. Please use `pyccel config` instead.", file=sys.stderr)
         if cext == '':
             filename = filename.with_suffix('.json')
             cext = '.json'

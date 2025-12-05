@@ -119,9 +119,9 @@ def pyccel_wrap_command() -> None:
 
 def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
     """
-    Call the pyccel wrap pipeline.
+    Call the `pyccel wrap` pipeline.
 
-    Import and call the pyccel wrap pipeline.
+    Import and call the `pyccel wrap` pipeline.
 
     Parameters
     ----------
