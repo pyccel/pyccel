@@ -23,9 +23,9 @@ PYCCEL_WRAP_DESCR = 'Create the wrapper to allow code to be called from Python.'
 
 def setup_pyccel_wrap_parser(parser):
     """
-    Add the pyccel-wrap arguments to the parser.
+    Add the `pyccel wrap` arguments to the parser.
 
-    Add the pyccel-wrap arguments to the parser for command line arguments.
+    Add the `pyccel wrap` arguments to the parser for command line arguments.
 
     Parameters
     ----------
