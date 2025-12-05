@@ -14,7 +14,8 @@ import pathlib
 from .argparse_helpers import add_version_flag, add_accelerator_selection, add_compiler_selection
 from .argparse_helpers import path_with_suffix, add_common_settings
 
-__all__ = ['pyccel_wrap_command']
+__all__ = ('pyccel_wrap_command',
+           'pyccel_wrap')
 
 PYCCEL_WRAP_DESCR = 'Create the wrapper to allow code to be called from Python.'
 
