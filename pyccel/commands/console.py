@@ -39,10 +39,10 @@ def pyccel_command() -> None:
                                      add_help=False, exit_on_error=False,
                                      formatter_class=PyccelHelpFormatter)
 
+    group = parser.add_argument_group("Options")
     #... Help and Version
-    add_help_flag(parser)
-    add_version_flag(parser)
-    parser._optionals.title = 'Options'
+    add_help_flag(group)
+    add_version_flag(group)
 
     sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean_loop, PYCCEL_CLEAN_DESCR),
                     'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
