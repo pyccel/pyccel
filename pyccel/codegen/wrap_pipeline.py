@@ -11,7 +11,7 @@ import os
 import sys
 import time
 
-from pyccel.errors.errors          import Errors, PyccelError
+from pyccel.errors.errors          import Errors
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen

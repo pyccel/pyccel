@@ -810,8 +810,6 @@ class IndexedElement(TypedAstNode):
             j = 0
             base = self.base
 
-            negative_idxs_possible = getattr(base, 'allows_negative_indexes', False)
-
             for i, idx in enumerate(self.indices):
                 if isinstance(idx, Slice) and j<len(args):
                     current_arg = args[j]
