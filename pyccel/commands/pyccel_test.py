@@ -11,7 +11,7 @@ import sys
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
-from .argparse_helpers import add_help_flag, add_version_flag
+from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
 
 __all__ = ('pyccel_test',
            'pyccel_test_command',
