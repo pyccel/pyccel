@@ -53,15 +53,20 @@ def execute_pyccel_make(files, *,
                    conda_warnings,
                    build_code):
     """
-    Run Pyccel-make on the provided files.
+    Run `pyccel make` on the provided files.
 
-    Carry out the main steps required to execute Pyccel:
-    - Parses the python file (syntactic stage)
-    - Annotates the abstract syntax tree (semantic stage)
-    - Generates the translated file(s) (codegen stage)
-    - Generates the wrapper file(s) (wrapper stage)
-    - Generates the build system file(s)
-    - Compiles the files to generate executable(s) and/or shared library(s).
+    Translate and compile multiple Python files in a project. For each file:
+    - Parse the Python file (syntactic stage)
+    - Annotate the abstract syntax tree (semantic stage)
+    - Generate the translated file(s) (codegen stage)
+    - Generate the wrapper file (wrapper stage)
+    - Generate the build system file (buildgen stage)
+
+    After all Python files have been processed, the "compilation stage" is run
+    to compile the files and link them to generate executable(s) and/or shared
+    library(s). The build system manages dependencies between the different
+    files, and installs the executables and shared libraries in the correct
+    locations.
 
     Parameters
     ----------

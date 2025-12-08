@@ -73,7 +73,7 @@ def deprecation_warning(tool):
     return "\n".join([LINE, message, LINE])
 
 # -----------------------------------------------------------------------------------------
-def path_with_suffix(suffixes):
+def path_with_suffix(suffixes, must_exist = True):
     """
     Get the function which returns a Path to a file with one of the suffixes.
 
@@ -85,6 +85,8 @@ def path_with_suffix(suffixes):
     ----------
     suffixes : iterable[str]
         An iterable describing the valid suffixes.
+    must_exist : bool, default=True
+        A flag to indicate whether the path passed as argument must exist.
 
     Returns
     -------
@@ -111,7 +113,7 @@ def path_with_suffix(suffixes):
             Raised if the string does not respect the expected format.
         """
         path = pathlib.Path(path_str)
-        if not path.is_file():
+        if must_exist and not path.is_file():
             raise argparse.ArgumentTypeError(f"File not found: {path}")
         if path.suffix not in suffixes:
             raise argparse.ArgumentTypeError(f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}")

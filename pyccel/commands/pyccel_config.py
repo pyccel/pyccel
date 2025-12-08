@@ -26,7 +26,7 @@ def setup_pyccel_config_parser(parser):
     """
     subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
     export_parser = subparsers.add_parser('export', add_help=False, help="Export a compiler configuration to a json file.")
-    export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
+    export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',), must_exist = False),
                         help='The file that the parser information should be exported to.')
 
     # ... Compiler options

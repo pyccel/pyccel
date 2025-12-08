@@ -53,7 +53,7 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
 
 def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language, extra_flags = ()):
     """
-    Check that pyccel-wrap allows a Python file to call a low-level file and that
+    Check that pyccel wrap allows a Python file to call a low-level file and that
     the Python code which calls that low-level file can itself be translated.
 
     Parameters
@@ -89,7 +89,7 @@ def check_pyccel_wrap_and_call_translation(low_level_stem, python_stem, language
         pyccel_flags.append('-vv')
 
     compile_low_level(low_level_stem, cwd, cwd, cwd / pyccel_dirname, language)
-    subprocess.run([shutil.which("pyccel-wrap"), cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
+    subprocess.run([shutil.which("pyccel"), "wrap", cwd / f'{low_level_stem}.pyi', *pyccel_flags], check = True)
     py_run = subprocess.run([sys.executable, python_file], text = True, capture_output = True, cwd = cwd, check = True)
     subprocess.run([shutil.which("pyccel"), python_file, *pyccel_flags], check = True)
 
@@ -171,6 +171,6 @@ def test_convert_only(language):
         pyccel_flags.append('-vv')
 
     compile_low_level('functions', cwd, cwd, cwd / pyccel_mod_dirname, language)
-    p = subprocess.run([shutil.which("pyccel-wrap"), cwd / 'functions.pyi', *pyccel_flags], check = True, text = True, capture_output = True)
+    p = subprocess.run([shutil.which("pyccel"), "wrap", cwd / 'functions.pyi', *pyccel_flags], check = True, text = True, capture_output = True)
     assert 'Time' in p.stdout
     assert (cwd / pyccel_dirname / 'functions_wrapper.c').exists()

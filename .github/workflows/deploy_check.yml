@@ -76,5 +76,5 @@ jobs:
             echo "ERROR: Failed to install pyccel==${TEST_VERSION}."
             exit 1
           fi
-          pyccel-test --folder tests
+          pyccel test --folder tests
         shell: bash
