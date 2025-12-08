@@ -5,6 +5,7 @@
 
 #ifndef         PYC_MATH_C_H
 #define         PYC_MATH_C_H
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <complex>
