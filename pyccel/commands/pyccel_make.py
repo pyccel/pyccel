@@ -100,7 +100,7 @@ class FileDescriptionAction(argparse.Action):
         # Save result
         setattr(namespace, self.dest, files)
 
-def setup_pyccel_make_parser(parser, add_version=False):
+def setup_pyccel_make_parser(parser):
     """
     Add the `pyccel make` arguments to the parser.
 
@@ -110,9 +110,6 @@ def setup_pyccel_make_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
-    add_version : bool, default=False
-        Indicates whether a --version flag should be added to the command.
-        This option will be removed in v2.3.
     """
     # ...
     group = parser.add_argument_group('File specification',
@@ -153,43 +150,9 @@ def setup_pyccel_make_parser(parser, add_version=False):
 
     # ... Other options
     group = parser.add_argument_group('Other options')
-    if add_version:
-        add_version_flag(group)
     add_common_settings(group)
     group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
                        help='Stop Pyccel after translation to the target language, before build.')
-
-def pyccel_make_command() -> None:
-    """
-    Command line wrapper for the deprecated `pyccel-make` command line tool.
-
-    Command line wrapper for the deprecated `pyccel-make` command line tool.
-    """
-    parser = argparse.ArgumentParser(description="Pyccel's command line interface for multi-file projects.",
-            add_help = False)
-
-    setup_pyccel_make_parser(parser, add_version=True)
-
-    print(deprecation_warning('make'), file=sys.stderr)
-
-    args = parser.parse_args()
-
-    print("Warning: The pyccel-make command is deprecated and will be removed in v2.3. Please use `pyccel make` instead.", file=sys.stderr)
-
-    from pyccel.errors.errors     import Errors, PyccelError
-    from pyccel.utilities.stage   import PyccelStage
-
-    pyccel_stage = PyccelStage()
-    errors = Errors()
-
-    try:
-        pyccel_make(**vars(args))
-    except PyccelError:
-        pass
-
-    pyccel_stage.pyccel_finished()
-    print(errors, end='')
-    sys.exit(errors.has_errors())
 
 def pyccel_make(*, language, **kwargs) -> None:
     """

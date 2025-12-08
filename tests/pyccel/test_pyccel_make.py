@@ -22,7 +22,7 @@ def build_system(request):
 #------------------------------------------------------------------------------
 def pyccel_make_test(main_file, folder, language, build_system, args, output_dtype = float):
     """
-    Test the pyccel-make command.
+    Test the pyccel make command.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def pyccel_make_test(main_file, folder, language, build_system, args, output_dty
     build_system : {'cmake', 'meson'}
         The build system that should be used for compilation.
     args : iterable[str]
-        The additional arguments that should be passed to pyccel-make. This must
+        The additional arguments that should be passed to pyccel make. This must
         include a command to specify how the files to be translated are selected.
     output_dtype : type/list of types, default=float
         The types expected as output of the program.
@@ -43,7 +43,7 @@ def pyccel_make_test(main_file, folder, language, build_system, args, output_dty
     """
     python_output = get_python_output(folder / main_file, cwd = folder)
 
-    p = subprocess.run([shutil.which('pyccel-make'), *args, f'--language={language}',
+    p = subprocess.run([shutil.which('pyccel'), 'make', *args, f'--language={language}',
                         f'--build-system={build_system}'], cwd=folder, check=True)
 
     exe_path = (folder / main_file).with_suffix('')
@@ -119,7 +119,7 @@ def test_output_flag(language, build_system):
 
     python_output = get_python_output(folder / main_file, cwd = folder)
 
-    p = subprocess.run([shutil.which('pyccel-make'), *args, f'--language={language}',
+    p = subprocess.run([shutil.which('pyccel'), 'make', *args, f'--language={language}',
                         f'--build-system={build_system}'], cwd=folder, check=True)
 
     exe_path = (folder / 'outfolder' / main_file).with_suffix('')
@@ -144,7 +144,7 @@ def test_output_flag(language, build_system):
     )
 )
 def test_circular_dependencies(language, build_system):
-    p = subprocess.run([shutil.which('pyccel-make'), '-f', 'runtest.py', 'src/folder1/file1.py',
+    p = subprocess.run([shutil.which('pyccel'), 'make', '-f', 'runtest.py', 'src/folder1/file1.py',
                         'src/folder2/file2.py', 'src/folder1/file3.py', f'--language={language}',
                         f'--build-system={build_system}'], cwd=current_folder / 'project_circular_imports',
                        check=False, capture_output=True, text=True)

@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #221 : Add new `pyccel-make` command for multi-file compilation.
+-   #221 : Add new `pyccel make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
@@ -101,7 +101,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2522 : Deprecate use of `pyccel` without sub-command.
 -   #2522 : Deprecate use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
--   #2522 : Deprecate command-line tools: `pyccel-clean`, `pyccel-make`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
+-   #2522 : Deprecate command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 
 ### Removed
 
