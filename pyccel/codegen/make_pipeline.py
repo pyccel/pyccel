@@ -13,9 +13,8 @@ import sys
 import time
 from pathlib import Path
 
-from pyccel.errors.errors          import Errors, PyccelError
+from pyccel.errors.errors          import Errors
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
-from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.build_generation.cmake_gen import CMakeHandler
 from pyccel.codegen.build_generation.meson_gen import MesonHandler

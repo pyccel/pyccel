@@ -7,7 +7,6 @@ File containing the `pyccel wrap` command line interface.
 """
 
 import sys
-import os
 import argparse
 import pathlib
 
