@@ -15,6 +15,7 @@ module_imports = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
             Import('cwrapper', Module('cwrapper',(),()))]
 
+pybind_imports = {'complex': Import('pybind11/complex.h', Module('pybind11/complex.h',(),()))}
 
 class PyBindCodePrinter(CppCodePrinter):
     """
@@ -42,6 +43,19 @@ class PyBindCodePrinter(CppCodePrinter):
         self._current_module = None
 
     #-----------------------------------------------------------------------
+    def _print_NumpyComplex64Type(self, expr):
+        self.add_import(pybind_imports['complex'])
+        return super()._print_NumpyComplex64Type(expr)
+
+    def _print_NumpyComplex128Type(self, expr):
+        self.add_import(pybind_imports['complex'])
+        return super()._print_NumpyComplex64Type(expr)
+
+    def _print_PythonNativeComplex(self, expr):
+        self.add_import(pybind_imports['complex'])
+        return super()._print_NumpyComplex64Type(expr)
+
+    #-----------------------------------------------------------------------
     #                              Pybind11 methods
     #-----------------------------------------------------------------------
 
@@ -55,6 +69,8 @@ class PyBindCodePrinter(CppCodePrinter):
 
         init_func = self._print(expr.init_func)
 
+        funcs = '\n'.join(self._print(f) for f in expr.funcs)
+
         pymod_name = f'{expr.name}_wrapper'
         imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
@@ -64,7 +80,7 @@ class PyBindCodePrinter(CppCodePrinter):
         self._current_module = None
 
         return '\n'.join((f'#define {pymod_name.upper()}\n',
-                          imports, sep, init_func))
+                          imports, sep, funcs, sep, init_func))
 
     def _print_PyModInitFunc(self, expr):
         my_vars = expr.scope.variables
@@ -77,14 +93,15 @@ class PyBindCodePrinter(CppCodePrinter):
         return code
 
     def _print_FunctionDeclaration(self, expr):
-        func = expr.function
-        mod, = func.get_direct_user_nodes(lambda m: isinstance(m, Module))
-        name = func.name
-        args = [f'"{name}"',
-                f'&{mod.name}::{name}']
+        orig_func = expr.orig_function
+        orig_name = orig_func.name
+        wrap_func = expr.function
+        wrap_name = wrap_func.name
+        args = [f'"{orig_name}"',
+                f'&{wrap_name}']
         pos_only = True
         kw_only = False
-        for a in func.arguments:
+        for a in wrap_func.arguments:
             if a.is_posonly != pos_only:
                 args.append(f'pybind11::pos_only()')
                 pos_only = a.is_posonly
@@ -92,7 +109,13 @@ class PyBindCodePrinter(CppCodePrinter):
                 args.append(f'pybind11::kw_only()')
                 pos_only = a.is_posonly
             args.append(f'pybind11::arg("{a.name}")')
-        if func.docstring:
-            args.append(f'pybind11::doc("{func.docstring}")')
+        if orig_func.docstring:
+            args.append(f'pybind11::doc("{orig_func.docstring}")')
         args_str = ',\n'.join(args)
-        return f'{expr.mod_var}.def({args_str});'
+        return f'{expr.mod_var}.def({args_str});\n'
+
+    def _print_Import(self, expr):
+        if expr in pybind_imports.values():
+            return f'#include <{expr.source}>\n'
+        else:
+            return super()._print_Import(expr)
