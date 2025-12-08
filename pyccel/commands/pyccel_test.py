@@ -228,7 +228,7 @@ commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
                 print(p.stderr)
                 retcode = pytest.ExitCode.TESTS_FAILED
 
-    final_retcode = pytest.ExitCode.OK
+    final_retcode = retcode
 
     # Run the tests in the specified order
     for desc, cmd in zip(descriptions, commands):
