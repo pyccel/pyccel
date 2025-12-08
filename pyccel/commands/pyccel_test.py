@@ -42,7 +42,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     single-process tests which must be run one at a time
     are run, and then the single-process tests which can be
     run in parallel are run. The function returns the return
-    code of the pytest command.
+   run in parallel are run. The function exits with the exit
+   code of the pytest command (see `pytest.ExitCode` enum).
 
     If the user stops the tests with Ctrl+C, the function will
     print a message and exit gracefully.
