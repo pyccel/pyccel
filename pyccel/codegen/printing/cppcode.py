@@ -126,7 +126,6 @@ math_function_to_c = {
 cpp_library_headers = {
     "complex",
     "cmath",
-    "inttypes",
     "iostream",
     "string",
     "tuple",
@@ -716,11 +715,35 @@ class CppCodePrinter(CodePrinter):
     def _print_StringType(self, expr):
         return 'str'
 
+    def _print_NumpyInt8Type(self, expr):
+        self.add_import(cpp_imports['cstdint'])
+        return 'std::int8_t'
+
+    def _print_NumpyInt16Type(self, expr):
+        self.add_import(cpp_imports['cstdint'])
+        return 'std::int16_t'
+
+    def _print_NumpyInt32Type(self, expr):
+        self.add_import(cpp_imports['cstdint'])
+        return 'std::int32_t'
+
+    def _print_NumpyInt64Type(self, expr):
+        self.add_import(cpp_imports['cstdint'])
+        return 'std::int64_t'
+
     def _print_NumpyFloat32Type(self, expr):
         return 'float'
 
     def _print_NumpyFloat64Type(self, expr):
         return 'double'
+
+    def _print_NumpyComplex64Type(self, expr):
+        self.add_import(cpp_imports['complex'])
+        return 'std::complex<float>'
+
+    def _print_NumpyComplex128Type(self, expr):
+        self.add_import(cpp_imports['complex'])
+        return 'std::complex<double>'
 
     def _print_InhomogeneousTupleType(self, expr):
         self.add_import(cpp_imports['tuple'])
@@ -926,3 +949,6 @@ class CppCodePrinter(CodePrinter):
         else:
             args_str += ';\n'
         return 'std::cout << ' + args_str
+
+    def _print_EmptyNode(self, expr):
+        return ''
