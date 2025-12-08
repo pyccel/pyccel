@@ -17,6 +17,8 @@ from pyccel.ast.datatypes import PythonNativeFloat
 from pyccel.ast.datatypes import FinalType, StringType
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
+from pyccel.ast.low_level_tools import UnpackManagedMemory
+from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import Variable, DottedName
@@ -31,9 +33,9 @@ cpp_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['cassert',
                  'complex',
                  'cmath',
+                 'cstdint',
                  'iostream',
                  'pyc_math_cpp',
-                 'cstdint',
                  'string',
                  'tuple']}
 
@@ -118,6 +120,7 @@ math_function_to_cpp = {
 cpp_library_headers = {
     "complex",
     "cmath",
+    "cstdint",
     "iostream",
     "string",
     "tuple",
@@ -416,7 +419,10 @@ class CppCodePrinter(CodePrinter):
 
         self.set_scope(expr.scope)
 
-        body = self._print(expr.body)
+        for a in expr.arguments:
+            self._declared_vars[-1].add(a.var)
+
+        body  = self._print(expr.body)
 
         self.exit_scope()
 
@@ -800,6 +806,9 @@ class CppCodePrinter(CodePrinter):
             return f"({cast_type}){func_name}({code_args})"
         return f"{func_name}({code_args})"
 
+    def _print_PythonInt(self, expr):
+        return f'{self._print(expr.class_type)}({self._print(expr.args[0])})'
+
     # ------------------------------
     #  Literals
     # ------------------------------
@@ -873,16 +882,16 @@ class CppCodePrinter(CodePrinter):
 
     def _print_Constant(self, expr):
         if expr == math_constants['inf']:
-            self.add_import(c_imports['math'])
+            self.add_import(cpp_imports['cmath'])
             return 'HUGE_VAL'
         elif expr == math_constants['nan']:
-            self.add_import(c_imports['math'])
+            self.add_import(cpp_imports['cmath'])
             return 'NAN'
         elif expr == math_constants['pi']:
-            self.add_import(c_imports['math'])
+            self.add_import(cpp_imports['cmath'])
             return 'M_PI'
         elif expr == math_constants['e']:
-            self.add_import(c_imports['math'])
+            self.add_import(cpp_imports['cmath'])
             return 'M_E'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
