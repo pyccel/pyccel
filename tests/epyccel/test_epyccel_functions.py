@@ -12,81 +12,81 @@ from pyccel import epyccel
 RTOL = 2e-14
 ATOL = 1e-15
 
-def test_func_no_args_1(language):
+def test_func_no_args_1(experimental_language):
     '''test function with return value but no args'''
     def free_gift():
         gift = 10
         return gift
 
-    c_gift = epyccel(free_gift, language=language, folder='__pyccel__test_folder__')
+    c_gift = epyccel(free_gift, language=experimental_language, folder='__pyccel__test_folder__')
     assert c_gift() == free_gift()
     assert isinstance(c_gift(), type(free_gift()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_gift(unexpected_arg)
 
-def test_func_no_args_2(language):
+def test_func_no_args_2(experimental_language):
     '''test function with negative return value but no args'''
     def p_lose():
         lose = -10
         return lose
 
-    c_lose = epyccel(p_lose, language=language)
+    c_lose = epyccel(p_lose, language=experimental_language)
     assert c_lose() == p_lose()
     assert isinstance(c_lose(), type(p_lose()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_lose(unexpected_arg)
 
-def test_func_no_return_1(language):
+def test_func_no_return_1(experimental_language):
     '''Test function with args and no return '''
     def p_func(x : int):
         x *= 2
 
-    c_func = epyccel(p_func, language=language)
+    c_func = epyccel(p_func, language=experimental_language)
     x = np.random.randint(100)
     assert c_func(x) == p_func(x)
     # Test type return should be NoneType
     x = np.random.randint(100)
     assert isinstance(c_func(x), type(p_func(x)))
 
-def test_func_no_return_2(language):
+def test_func_no_return_2(experimental_language):
     '''Test function with no args and no return '''
     def p_func():
         x = 2
         x *= 2
 
-    c_func = epyccel(p_func, language=language)
+    c_func = epyccel(p_func, language=experimental_language)
     assert c_func() == p_func()
     assert isinstance(c_func(), type(p_func()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_func(unexpected_arg)
 
-def test_func_no_args_f1(language):
+def test_func_no_args_f1(experimental_language):
     def f1():
         from numpy import pi
         value = (2*pi)**(3/2)
         return value
 
-    f = epyccel(f1, language=language)
+    f = epyccel(f1, language=experimental_language)
     assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
-def test_func_return_constant(language):
+def test_func_return_constant(experimental_language):
     def f1():
         from numpy import pi
         return pi
 
-    f = epyccel(f1, language=language)
+    f = epyccel(f1, language=experimental_language)
     assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
 #------------------------------------------------------------------------------
-def test_decorator_f1(language):
+def test_decorator_f1(experimental_language):
     def f1(x : 'int'):
         y = x - 1
         return y
 
-    f = epyccel(f1, language=language)
+    f = epyccel(f1, language=experimental_language)
 
     # ...
     assert f(3) == f1(3)
@@ -241,7 +241,7 @@ def test_arguments_f10(language):
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
-def test_multiple_returns_f11(language):
+def test_multiple_returns_f11(experimental_language):
     def ackermann(m : 'int', n : 'int') -> int:
         if m == 0:
             return n + 1
@@ -250,39 +250,39 @@ def test_multiple_returns_f11(language):
         else:
             return ackermann(m - 1, ackermann(m, n - 1))
 
-    f = epyccel(ackermann, language=language)
+    f = epyccel(ackermann, language=experimental_language)
     assert f(2,3) == ackermann(2,3)
 
-def test_multiple_returns_f12(language):
+def test_multiple_returns_f12(experimental_language):
     def non_negative(i : 'int'):
         if i < 0:
             return False
         else:
             return True
 
-    f = epyccel(non_negative, language=language)
+    f = epyccel(non_negative, language=experimental_language)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
-def test_multiple_returns_f13(language):
+def test_multiple_returns_f13(experimental_language):
     def get_min(a : 'int', b : 'int'):
         if a<b:
             return a
         else:
             return b
 
-    f = epyccel(get_min, language=language)
+    f = epyccel(get_min, language=experimental_language)
     assert f(2,3) == get_min(2,3)
 
-def test_multiple_returns_f14(language):
+def test_multiple_returns_f14(experimental_language):
     def g(x : 'int', y : 'int'):
         return x,y,y,y,x
 
-    f = epyccel(g, language=language)
+    f = epyccel(g, language=experimental_language)
     assert f(2,1) == g(2,1)
 
 
-def test_decorator_f15(language):
+def test_decorator_f15(experimental_language):
     def f15(a : 'bool', b : 'int8', c : 'int16', d : 'int32', e : 'int64'):
         from numpy import int64
         if a:
@@ -290,60 +290,60 @@ def test_decorator_f15(language):
         else:
             return d + e
 
-    f = epyccel(f15, language=language)
+    f = epyccel(f15, language=experimental_language)
     assert f(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
            f15(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
     assert f(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
            f15(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
 
 
-def test_decorator_f16(language):
+def test_decorator_f16(experimental_language):
     def f16(a : 'int16'):
         b = a
         return b
-    f = epyccel(f16, language=language)
+    f = epyccel(f16, language=experimental_language)
     assert f(np.int16(17)) == f16(np.int16(17))
 
-def test_decorator_f17(language):
+def test_decorator_f17(experimental_language):
     def f17(a : 'int8'):
         b = a
         return b
-    f = epyccel(f17, language=language)
+    f = epyccel(f17, language=experimental_language)
     assert f(np.int8(2)) == f17(np.int8(2))
 
-def test_decorator_f18(language):
+def test_decorator_f18(experimental_language):
     def f18(a : 'int32'):
         b = a
         return b
-    f = epyccel(f18, language=language)
+    f = epyccel(f18, language=experimental_language)
     assert f(np.int32(5)) == f18(np.int32(5))
 
-def test_decorator_f19(language):
+def test_decorator_f19(experimental_language):
     def f19(a : 'int64'):
         b = a
         return b
-    f = epyccel(f19, language=language)
+    f = epyccel(f19, language=experimental_language)
     assert f(np.int64(1)) == f19(np.int64(1))
 
-def test_decorator_f20(language):
+def test_decorator_f20(experimental_language):
     def f20(a : 'complex'):
         b = a
         return b
-    f = epyccel(f20, language=language)
+    f = epyccel(f20, language=experimental_language)
     assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
-def test_decorator_f21(language):
+def test_decorator_f21(experimental_language):
     def f21(a : 'complex64'):
         b = a
         return b
-    f = epyccel(f21, language=language)
+    f = epyccel(f21, language=experimental_language)
     assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
-def test_decorator_f22(language):
+def test_decorator_f22(experimental_language):
     def f22(a : 'complex128'):
         b = a
         return b
-    f = epyccel(f22, language=language)
+    f = epyccel(f22, language=experimental_language)
     assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP604 (writing union types as X | Y) implemented in Python 3.10")
@@ -360,17 +360,18 @@ def test_union_type(language):
     assert np.isclose(f(y), square(y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(y), type(square(y)))
 
-def test_return_annotation(language):
+def test_return_annotation(experimental_language):
     def get_2() -> int:
         my_var : int = 2
         return my_var
 
-    f = epyccel(get_2, language=language)
+    f = epyccel(get_2, language=experimental_language)
     assert f() == get_2()
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_argument_type(language):
@@ -386,6 +387,7 @@ def test_wrong_argument_type(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_known_argument_type_in_interface(language):
@@ -403,6 +405,7 @@ def test_wrong_known_argument_type_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_known_argument_type_in_interface_with_default(language):
@@ -420,6 +423,7 @@ def test_wrong_known_argument_type_in_interface_with_default(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_unknown_argument_type_in_interface(language):
@@ -437,6 +441,7 @@ def test_wrong_unknown_argument_type_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_argument_combination_in_interface(language):
@@ -451,6 +456,7 @@ def test_wrong_argument_combination_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_argument_checks_with_interfaces(language):
@@ -472,28 +478,28 @@ def test_container_interface(language):
     assert f({1,2}) == epyc_f({1,2})
     assert f(np.array([1,2])) == epyc_f(np.array([1,2]))
 
-def test_lambda(language):
+def test_lambda(experimental_language):
     def f(a : int):
         f1 = lambda x: x**2 + 1 # pylint: disable=unnecessary-lambda-assignment
         g1 = lambda x: f1(x)**2 + 1 # pylint: disable=unnecessary-lambda-assignment
         return g1(a)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=experimental_language)
     val = randint(20)
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
 
-def test_lambda_2(language):
+def test_lambda_2(experimental_language):
     def f(a : int):
         f2 = lambda x,y: x**2 + y**2 + 1 # pylint: disable=unnecessary-lambda-assignment
         return f2(a, 3*a)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=experimental_language)
     val = randint(20)
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
 
-@pytest.mark.language_agnostic
+@pytest.mark.python
 def test_argument_types():
     def f(a : int, /, b : int, *args : int, c : int, **kwargs : int):
         my_sum = sum(v for v in kwargs.values())
@@ -507,11 +513,11 @@ def test_argument_types():
     kwargs = {'d': 11, 'f': 13}
     assert f(a, b, *args, c=c, **kwargs) == epyc_f(a, b, *args, c=c, **kwargs)
 
-def test_positional_only_arguments(language):
+def test_positional_only_arguments(experimental_language):
     def f(a : int, /, b : int):
         return 2*a + 3*b
 
-    epyc_f = epyccel(f, language = language)
+    epyc_f = epyccel(f, language = experimental_language)
     a = 8
     b = 9
     assert f(a, b) == epyc_f(a, b)
@@ -519,11 +525,11 @@ def test_positional_only_arguments(language):
     with pytest.raises(TypeError):
         epyc_f(a=a, b=b)
 
-def test_keyword_only_arguments(language):
+def test_keyword_only_arguments(experimental_language):
     def f(a : int, *, b : int):
         return 2*a + 3*b
 
-    epyc_f = epyccel(f, language = language)
+    epyc_f = epyccel(f, language = experimental_language)
     a = 8
     b = 9
     assert f(a, b=b) == epyc_f(a, b=b)
