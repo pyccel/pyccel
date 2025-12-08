@@ -1091,16 +1091,17 @@ def test_inline_import(language):
 @pytest.mark.language_agnostic
 def test_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
+    cmd = [shutil.which("pyccel"), 'config', 'export', f'{output_dir}/test.json', '--compiler-family', 'intel']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
     assert dict_1['c']['exec'] == 'icx'
     cmd = [shutil.which("pyccel"),
+           'config',
+           'export',
+           f'{output_dir}/test2.json',
            '--compiler-config',
-           f'{output_dir}/test.json',
-           '--export-compiler-config',
-           f'{output_dir}/test2.json']
+           f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
@@ -1111,15 +1112,16 @@ def test_json():
 @pytest.mark.language_agnostic
 def test_ambiguous_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test']
+    cmd = [shutil.which("pyccel"), 'config', 'export', f'{output_dir}/test']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
     cmd = [shutil.which("pyccel"),
+           'config',
+           'export',
+           f'{output_dir}/test2',
            '--compiler-config',
-           f'{output_dir}/test.json',
-           '--export-compiler-config',
-           f'{output_dir}/test2']
+           f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
@@ -1130,7 +1132,7 @@ def test_ambiguous_json():
 @pytest.mark.language_agnostic
 def test_json_relative_path():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    cmd = [shutil.which("pyccel"), 'config', 'export', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
