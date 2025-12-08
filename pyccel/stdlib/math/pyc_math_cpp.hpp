@@ -42,9 +42,8 @@ template<typename Floating,
              std::enable_if_t<std::is_floating_point<Floating>::value, bool> = true>
 Floating pyc_modulo(Floating a, Floating b)
 {
-    // cppcheck-suppress invalidFunctionArg
     assert(b != 0);
-    Floating modulo = std::fmod(a, b);
+    Floating modulo = std::fmod(a, b); // cppcheck-suppress invalidFunctionArg
     if(!((a < 0) ^ (b < 0)) || modulo == 0)
         return modulo;
     else
