@@ -228,7 +228,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             if retcode == pytest.ExitCode.INTERRUPTED:
                 print("\nTest execution was interrupted by the user, exiting...\n")
                 sys.exit(retcode)
-            pyccel_clean()
+            pyccel_clean(remove_shared_libs = True)
             final_retcode = final_retcode or retcode
 
     # Return the final return code
