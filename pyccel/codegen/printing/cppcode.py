@@ -842,6 +842,23 @@ class CppCodePrinter(CodePrinter):
         else:
             return name
 
+    def _print_Constant(self, expr):
+        if expr == math_constants['inf']:
+            self.add_import(c_imports['math'])
+            return 'HUGE_VAL'
+        elif expr == math_constants['nan']:
+            self.add_import(c_imports['math'])
+            return 'NAN'
+        elif expr == math_constants['pi']:
+            self.add_import(c_imports['math'])
+            return 'M_PI'
+        elif expr == math_constants['e']:
+            self.add_import(c_imports['math'])
+            return 'M_E'
+        else:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
+
     def _print_Declare(self, expr):
         var = expr.variable
 
