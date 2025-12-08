@@ -62,7 +62,7 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir, test_file, options = ""):
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
-    cmd = [shutil.which("pyccel"), test_file]
+    cmd = [shutil.which("pyccel"), "compile", test_file]
     if options != "":
         cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
@@ -1197,7 +1197,7 @@ def test_time_execution_flag(language):
 
     cwd = get_abs_path("scripts")
 
-    cmd = [shutil.which("pyccel"), test_file, f"--language={language}", "--time-execution"]
+    cmd = [shutil.which("pyccel"), "compile", test_file, f"--language={language}", "--time-execution"]
     with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         result, _ = p.communicate()
