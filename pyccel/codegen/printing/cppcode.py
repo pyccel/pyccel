@@ -252,7 +252,7 @@ class CppCodePrinter(CodePrinter):
         class_type_str = self._print(class_type)
         const = ' const' if isinstance(class_type, FinalType) else ''
 
-        return f'{class_type}{const}'
+        return f'{class_type_str}{const}'
 
     def _handle_is_operator(self, Op, expr):
         """
