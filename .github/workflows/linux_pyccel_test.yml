@@ -80,7 +80,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py linux_pyccel-test_cmd
+          python ci_tools/setup_check_run.py linux_pyccel_cmd
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
