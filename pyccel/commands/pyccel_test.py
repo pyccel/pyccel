@@ -213,6 +213,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
                 print(p.stderr)
                 retcode = pytest.ExitCode.TESTS_FAILED
 
+    final_retcode = pytest.ExitCode.OK
+
     # Run the tests in the specified order
     for desc, cmd in zip(descriptions, commands):
         print()
@@ -220,17 +222,17 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         print(f'> pytest {" ".join(cmd)}')
         if dry_run:
             print("Dry run, not executing the tests.")
-            retcode = pytest.ExitCode.OK
         else:
             retcode = pytest.main(cmd)
             print(f"\nPytest return code: {retcode.name}")
             if retcode == pytest.ExitCode.INTERRUPTED:
                 print("\nTest execution was interrupted by the user, exiting...\n")
-                return retcode
+                sys.exit(retcode)
             pyccel_clean()
+            final_retcode = final_retcode or retcode
 
     # Return the final return code
-    sys.exit(retcode)
+    sys.exit(final_retcode)
 
 def setup_pyccel_test_parser(parser, add_version=False):
     """
