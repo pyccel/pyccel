@@ -282,10 +282,10 @@ def pyccel_test_command():
 
     setup_pyccel_test_parser(parser, add_version=True)
 
+    print(deprecation_warning('test'), file=sys.stderr)
+
     # Parse the command line arguments
     args = parser.parse_args()
-
-    print("Warning: The pyccel-test command is deprecated and will be removed in v2.3. Please use `pyccel test` instead.", file=sys.stderr)
 
     print()
     retcode = pyccel_test(**vars(args))
