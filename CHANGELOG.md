@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 -   #2497 : Add support for LAPACK's `zgbtrf` and `zgbtrs` in `pyccel.stdlib.internals`.
 -   #2497 : Add support for passing 1D arguments as `b` argument to LAPACK's `sgbtrs`, `dgbtrs`, and `zgbtrs` in `pyccel.stdlib.internals`.
 -   Add badge for Documentation workflow to `README.md`.
--   #2522 : Add subcommands to the `pyccel` command line tool.
+-   #2522 : Add subcommands to the `pyccel` command line tool (`clean`, `compile`, `config`, `make`, `test`, `wrap`).
 -   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
