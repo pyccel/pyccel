@@ -1,6 +1,9 @@
 """
 Module describing things that are in common between different build system handlers.
 """
+from pyccel.utilities.stage import PyccelStage
+
+pyccel_stage = PyccelStage()
 
 class BuildSystemHandler:
     """
@@ -15,7 +18,7 @@ class BuildSystemHandler:
     pyccel_dir : Path
         The directory where generated files should be outputted.
     root_dir : Path
-        The directory from which the pyccel-make command was called.
+        The directory from which the `pyccel make` command was called.
     output_dir : Path
         The directory where the final files should be outputted.
     verbose : int
@@ -35,3 +38,5 @@ class BuildSystemHandler:
         self._debug_mode = debug_mode
         self._compiler = compiler
         self._accelerators = accelerators
+        self._languages = ()
+        pyccel_stage.set_stage('buildgen')

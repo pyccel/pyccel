@@ -7,8 +7,18 @@
 import json
 import os
 import pathlib
+import sys
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
+
+from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
+
+__all__ = ('pyccel_test',
+           'pyccel_test_command',
+           'setup_pyccel_test_parser',
+           'PYCCEL_TEST_DESCR')
+
+PYCCEL_TEST_DESCR = 'Run tests to check installation.'
 
 install_msg = """
 In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
@@ -53,7 +63,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         The verbosity level of the output. The higher the number,
         the more detailed the output will be.
     language : str
-        The target language Pyccel is translating to. Default is 'all'.
+        The target language Pyccel is translating to. Default is 'All'.
     run_mpi : bool
         If True, the function will not run the parallel tests.
 
@@ -71,8 +81,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     assert isinstance(folder, (pathlib.Path, type(None)))
     assert isinstance(dry_run, bool)
     assert isinstance(verbose, int)
-
-    import sys
 
     # Pyccel must be installed
     try:
@@ -165,7 +173,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
     commands = [cmd_1, cmd_2, cmd_3, cmd_4]
 
-    if language != 'all':
+    if language != 'All':
         cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
         relevant_language = [True,
                 *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
@@ -188,8 +196,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         cmd_mpi = ['mpirun', '-n', '4', '--oversubscribe', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
         if verbose:
             cmd_mpi += ['-' + 'v' * verbose]
-        if language != 'all':
-            cmd_mpi.append(f'-m={language}')
+        if language != 'All':
+            cmd_mpi.append(f'-m={language.lower()}')
         print()
         print(desc_mpi)
         print(f'> {" ".join(cmd_mpi)}')
@@ -222,36 +230,59 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Return the final return code
     return retcode
 
+def setup_pyccel_test_parser(parser, add_version=False):
+    """
+    Add the `pyccel test` arguments to the parser.
+
+    Add the `pyccel test` arguments to the parser for command line arguments.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The parser to be modified.
+    add_version : bool, default=False
+        Indicates whether a --version flag should be added to the command.
+        This option will be removed in v2.3.
+    """
+    group = parser.add_argument_group('Options')
+
+    add_help_flag(group)
+
+    if add_version:
+        add_version_flag(group)
+
+    group.add_argument('--dry-run', action='store_true',
+        help='Run all steps without actually running the tests.')
+
+    group.add_argument('-v', '--verbose', action='count', default=0,
+        help='Increase output verbosity (use -v, -vv for more detailed output).')
+
+    group.add_argument('--folder', type=pathlib.Path, default=None,
+        help="Run tests located in custom folder (default: use Pyccel's distribution).")
+
+    group.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
+        help='Target language for translation, i.e. the main language of the generated code (default: All).',
+        type=str.title)
+
+    group.add_argument('--no-mpi', action='store_false', dest='run_mpi',
+        help="Do not run the parallel tests.")
 
 def pyccel_test_command():
     """
-    Command line wrapper around the pyccel_test function.
+    Command line wrapper for the deprecated `pyccel-test` command line tool.
 
-    A wrapper around the pyccel_test function which allows
-    command line arguments to be passed to the function.
+    Command line wrapper for the deprecated `pyccel-test` command line tool.
 
     Returns
     -------
     pytest.ExitCode
         The pytest return code.
     """
-    parser = ArgumentParser(description='Tool for running the test suite of Pyccel')
+    parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = False)
 
-    parser.add_argument('--dry-run', action='store_true',
-        help='Run all steps without actually running the tests.')
+    setup_pyccel_test_parser(parser, add_version=True)
 
-    parser.add_argument('-v', '--verbose', action='count', default=0,
-        help='Increase output verbosity (use -v, -vv for more detailed output).')
-
-    parser.add_argument('--folder', type=pathlib.Path, default=None,
-        help="Run tests located in custom folder (default: use Pyccel's distribution).")
-
-    parser.add_argument('--language', choices=('fortran', 'c', 'python', 'all'), default='all',
-        help='Target language for translation, i.e. the main language of the generated code (default: all).',
-        type=str.lower)
-
-    parser.add_argument('--no-mpi', action='store_false', dest='run_mpi',
-        help="Do not run the parallel tests.")
+    print(deprecation_warning('test'), file=sys.stderr)
 
     # Parse the command line arguments
     args = parser.parse_args()
@@ -262,6 +293,3 @@ def pyccel_test_command():
 
     return retcode
 
-
-if __name__ == '__main__':
-    pyccel_test_command()

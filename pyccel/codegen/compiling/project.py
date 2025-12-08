@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 """
 Module providing objects that are useful for describing the compilation of a project
-via the pyccel-make command.
+via the `pyccel make` command.
 """
 from collections.abc import Iterable
 from pathlib import Path
