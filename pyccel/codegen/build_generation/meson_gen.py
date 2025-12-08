@@ -1,5 +1,5 @@
 """
-A module to handle everything related to meson for the pyccel-make command.
+A module to handle everything related to meson for the `pyccel make` command.
 """
 from itertools import chain
 import os
@@ -25,7 +25,7 @@ class MesonHandler(BuildSystemHandler):
     pyccel_dir : Path
         The directory where generated files should be outputted.
     root_dir : Path
-        The directory from which the pyccel-make command was called.
+        The directory from which the `pyccel make` command was called.
     output_dir : Path
         The directory where the final files should be outputted.
     verbose : int
@@ -64,7 +64,8 @@ class MesonHandler(BuildSystemHandler):
         out_folder_path = self._output_dir / expr.pyfile.parent.relative_to(self._root_dir)
         out_folder = f"'{out_folder_path.as_posix()}'"
 
-        lib_args = [mod_name, f"'{expr.file.name}'", 'build_by_default: false']
+        lib_args = [mod_name, f"'{expr.file.name}'", 'build_by_default: false',
+                    "gnu_symbol_visibility : 'default'"]
 
         dep_args = ["include_directories: ['.']"]
 
@@ -92,22 +93,30 @@ class MesonHandler(BuildSystemHandler):
                     for deps in expr.wrapper_files.values() for d in deps)}
         ext_deps = ', '.join((dep_name, *ext_std_deps))
 
-        args = ',\n  '.join([mod_name,
-                             *(f"'{w.name}'" for w in expr.wrapper_files),
-                             f"dependencies: [{ext_deps}]",
-                              "install: true",
-                             f"install_dir: {out_folder}",
-                             "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"])
+        arg_lst = [mod_name,
+                   *(f"'{w.name}'" for w in expr.wrapper_files),
+                   f"dependencies: [{ext_deps}]",
+                    "install: true",
+                   f"install_dir: {out_folder}",
+                    "gnu_symbol_visibility : 'default'",
+                   "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
+        if 'fortran' in self._languages:
+            arg_lst.append("link_language: 'fortran'")
+        args = ',\n  '.join(arg_lst)
         wrap_cmd = f'py.extension_module({args})\n'
 
         cmds = [lib_cmd, dep_cmd, wrap_cmd]
 
         if expr.is_exe:
-            args = ',\n  '.join((mod_name, f"'{expr.program_file.name}'",
-                                 f"dependencies: [{dep_name}]",
-                                  "install: true",
-                                 f"install_dir: {out_folder}",
-                                  "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"))
+            arg_lst = [mod_name, f"'{expr.program_file.name}'",
+                       f"dependencies: [{dep_name}]",
+                        "install: true",
+                       f"install_dir: {out_folder}",
+                        "gnu_symbol_visibility : 'default'",
+                        "install_rpath: join_paths(get_option('prefix'), get_option('libdir'))"]
+            if 'fortran' in self._languages:
+                arg_lst.append("link_language: 'fortran'")
+            args = ',\n  '.join(arg_lst)
             cmds.append(f'prog_{expr.name} = executable({args})\n')
 
         return '\n\n'.join(cmds)
@@ -169,6 +178,7 @@ class MesonHandler(BuildSystemHandler):
             A BuildProject object describing all necessary build information
             for the project.
         """
+        self._languages = expr.languages
         languages = ', '.join(f"'{l}'" for l in expr.languages)
         project_decl = f"project('{expr.project_name}', {languages}, meson_version: '>=1.1.0')\n"
 
@@ -203,7 +213,8 @@ class MesonHandler(BuildSystemHandler):
                 f.write("gFTL_extensions_mod = static_library('gFTL_extensions',\n")
                 for file in gFTL_extensions_obj:
                     f.write(f"    '{file.split('/')[-1]}.F90',\n")
-                f.write('    dependencies: [gFTL_dep, gFTL_functions_dep]\n')
+                f.write("    dependencies: [gFTL_dep, gFTL_functions_dep],\n")
+                f.write("    gnu_symbol_visibility : 'default'\n")
                 f.write(')\n')
                 f.write("gFTL_extensions_dep = declare_dependency(link_with: gFTL_extensions_mod)\n")
 

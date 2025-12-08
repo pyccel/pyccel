@@ -1,5 +1,5 @@
 """
-A module to handle everything related to CMake for the pyccel-make command.
+A module to handle everything related to CMake for the `pyccel make` command.
 """
 import os
 from pathlib import Path

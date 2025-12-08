@@ -1,11 +1,10 @@
-# coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
 """
 Contains the `execute_pyccel_wrap` function which carries out the main steps required
-to execute the `pyccel-wrap` command.
+to execute the `pyccel wrap` command.
 """
 
 import os
@@ -47,7 +46,6 @@ def execute_pyccel_wrap(fname, *,
                    compiler_family,
                    debug,
                    accelerators,
-                   output_name,
                    conda_warnings):
     """
     Run Pyccel on the provided code.
@@ -81,8 +79,6 @@ def execute_pyccel_wrap(fname, *,
         If no such environment variable exists then the default is False.
     accelerators : iterable
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
-    output_name : str
-        Name of the generated module. Default is the same name as the translated file.
     conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
@@ -95,19 +91,12 @@ def execute_pyccel_wrap(fname, *,
     errors = Errors()
     errors.reset()
 
+    output_name = fname.stem
+
     # Store current directory and add it to sys.path
     # variable to imitate Python's import behavior
     base_dirpath = os.getcwd()
     sys.path.insert(0, base_dirpath)
-
-    # Unified way to handle errors: print formatted error message, then move
-    # to original working directory. Caller should then raise exception.
-    def handle_error(stage):
-        """
-        Print the error message and revert the folders in order to exit cleanly.
-        """
-        print(f'\nERROR at {stage} stage')
-        errors.check()
 
     # Identify absolute path, directory, and filename
     pymod_filepath = fname.absolute()
@@ -145,29 +134,19 @@ def execute_pyccel_wrap(fname, *,
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
-    try:
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
-        parser.parse(verbose=verbose)
-    except PyccelError:
-        handle_error('parsing (syntax)')
-        raise
+    parser = Parser(pymod_filepath, output_folder = folder, context_dict = {})
+    parser.parse(verbose=verbose)
+
     if errors.has_errors():
-        handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
     timers["Syntactic Stage"] = time.time() - start_syntax
 
     start_semantic = time.time()
     # Annotate abstract syntax Tree
-    try:
-        parser.annotate(verbose = verbose)
-    except PyccelError:
-        handle_error('annotation (semantic)')
-        # Raise a new error to avoid a large traceback
-        raise PyccelSemanticError('Semantic step failed') from None
+    parser.annotate(verbose = verbose)
 
     if errors.has_errors():
-        handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
     timers["Semantic Stage"] = time.time() - start_semantic
@@ -180,22 +159,13 @@ def execute_pyccel_wrap(fname, *,
 
     start_wrapper_creation = time.time()
     wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
-    try:
-        wrappergen.wrap(str(folder))
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
+    wrappergen.wrap(str(folder))
     timers['Wrapper creation'] = time.time() - start_wrapper_creation
 
     start_wrapper_printing = time.time()
-    try:
-        wrapper_files = wrappergen.print(pyccel_dirpath)
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
+    wrapper_files = wrappergen.print(pyccel_dirpath)
 
     if errors.has_errors():
-        handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation step failed')
 
     timers['Wrapper printing'] = time.time() - start_wrapper_printing
@@ -248,11 +218,6 @@ def execute_pyccel_wrap(fname, *,
                                                     verbose = verbose)
 
     timers['Wrapper compilation'] = time.time() - start_compile_wrapper
-
-
-    # Print all warnings now
-    if errors.has_warnings():
-        errors.check()
 
     # Reset pyccel stage
     pyccel_stage.pyccel_finished()

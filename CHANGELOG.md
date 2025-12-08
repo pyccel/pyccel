@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #221 : Add new `pyccel-make` command for multi-file compilation.
+-   #221 : Add new `pyccel make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
 -   #1849 : Add support for lambda functions in assign statements by treating them as inline functions.
@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 -   #2497 : Add support for LAPACK's `zgbtrf` and `zgbtrs` in `pyccel.stdlib.internals`.
 -   #2497 : Add support for passing 1D arguments as `b` argument to LAPACK's `sgbtrs`, `dgbtrs`, and `zgbtrs` in `pyccel.stdlib.internals`.
 -   Add badge for Documentation workflow to `README.md`.
+-   #2522 : Add subcommands to the `pyccel` command line tool (`clean`, `compile`, `config`, `make`, `test`, `wrap`).
 -   \[INTERNALS\] Add a `Wrappergen` class to group all wrapper generation logic.
 -   \[INTERNALS\] Add the `pyccel.codegen.compiling.library_config` module to handle library installation.
 
@@ -97,6 +98,10 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use inheritance to handle parametrised types. Identity operators should no longer be used for type checking.
 
 ### Deprecated
+
+-   #2522 : Deprecate use of `pyccel` without sub-command.
+-   #2522 : Deprecate use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Deprecate command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 
 ### Removed
 

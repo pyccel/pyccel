@@ -17,7 +17,7 @@ The default compiler family is **GNU**. To use a different compiler, the compile
 E.g.
 
 ```shell
-pyccel example.py --compiler-family intel
+pyccel compile example.py --compiler-family intel
 ```
 
 or
@@ -31,7 +31,7 @@ E.g.
 
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel'
-pyccel example.py
+pyccel compile example.py
 ```
 
 The `--compiler-family` flag overrides the default compiler: if this is provided, the environment variable is ignored.
@@ -60,17 +60,17 @@ In addition, the optional acceleration tools `mpi`, `openmp`, and `openacc` requ
 
 Additional information is required for building a C Python extension module as a shared library. This must be provided in a `python` section which must specify the string `shared_suffix`, i.e. the suffix of the shared libraries. The `python` section also contains the same optional entries `flags`, `libs`, `libdir`, and `include` listed above for the accelerators.
 
-The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `--export-compiler-config` flag and provide a target file name.
+The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `pyccel config export` command and provide a target file name.
 E.g.
 
 ```shell
-pyccel --compiler-family intel --export-compiler-config intel.json
+pyccel config export intel.json --compiler-family intel
 ```
 
 once this file has been modified it can then be used with:
 
 ```shell
-pyccel --compiler-config intel.json <file_to_translate>
+pyccel compile --compiler-config intel.json <file_to_translate>
 ```
 
 Instead of using the `--compiler-config` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
@@ -79,9 +79,9 @@ E.g.
 
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel.json'
-pyccel mod1.py
-pyccel mod2.py
-pyccel subdir/mod3.py
+pyccel compile mod1.py
+pyccel compile mod2.py
+pyccel compile subdir/mod3.py
 ...
 ```
 
