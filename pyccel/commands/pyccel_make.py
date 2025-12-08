@@ -8,7 +8,6 @@ File containing the `pyccel make` command line interface.
 
 import argparse
 import glob
-import sys
 from pathlib import Path
 
 from .argparse_helpers import add_compiler_selection, add_accelerator_selection
