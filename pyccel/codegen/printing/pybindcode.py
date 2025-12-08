@@ -85,14 +85,14 @@ class PyBindCodePrinter(CppCodePrinter):
         pos_only = True
         kw_only = False
         for a in func.arguments:
-            args.append(f'pybind11::arg("{a.name}")')
             if a.is_posonly != pos_only:
                 args.append(f'pybind11::pos_only()')
                 pos_only = a.is_posonly
             if a.is_kwonly != kw_only:
                 args.append(f'pybind11::kw_only()')
                 pos_only = a.is_posonly
+            args.append(f'pybind11::arg("{a.name}")')
         if func.docstring:
-            args.append('pybind11::doc("{func.docstring}")')
+            args.append(f'pybind11::doc("{func.docstring}")')
         args_str = ',\n'.join(args)
         return f'{expr.mod_var}.def({args_str});'
