@@ -41,9 +41,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     using pytest. The tests are run in two stages: first, the
     single-process tests which must be run one at a time
     are run, and then the single-process tests which can be
-    run in parallel are run. The function returns the return
-   run in parallel are run. The function exits with the exit
-   code of the pytest command (see `pytest.ExitCode` enum).
+    run in parallel are run. The function exits with the exit
+    code of the pytest command (see `pytest.ExitCode` enum).
 
     If the user stops the tests with Ctrl+C, the function will
     print a message and exit gracefully.
@@ -69,15 +68,14 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     run_mpi : bool
         If True, the function will not run the parallel tests.
 
-    Returns
-    -------
-    pytest.ExitCode
-        The return code of the pytest command. If the tests were
-        interrupted by the user, the return code will be
-        pytest.ExitCode.INTERRUPTED. If the tests failed, the
-        return code will be pytest.ExitCode.TESTS_FAILED.
-        If the tests passed, the return code will be
-        pytest.ExitCode.OK.
+    Notes
+    -----
+    This function exits with `sys.exit(final_retcode)`, where
+    `final_retcode` is one of the Pytest exit codes encoded by the
+    enumeration `pytest.ExitCode`. If the tests were interrupted by
+    the user, the exit code is `pytest.ExitCode.INTERRUPTED`. If the
+    tests failed, the exit code is `pytest.ExitCode.TESTS_FAILED`.
+    If the tests passed, the exit code is `pytest.ExitCode.OK`.
     """
 
     assert isinstance(folder, (pathlib.Path, type(None)))
