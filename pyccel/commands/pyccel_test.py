@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
 from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
+from .pyccel_clean import pyccel_clean
 
 __all__ = ('pyccel_test',
            'pyccel_test_command',
@@ -226,9 +227,10 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             if retcode == pytest.ExitCode.INTERRUPTED:
                 print("\nTest execution was interrupted by the user, exiting...\n")
                 return retcode
+            pyccel_clean()
 
     # Return the final return code
-    return retcode
+    sys.exit(retcode)
 
 def setup_pyccel_test_parser(parser, add_version=False):
     """
