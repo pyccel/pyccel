@@ -60,7 +60,7 @@ In addition, the optional acceleration tools `mpi`, `openmp`, and `openacc` requ
 
 Additional information is required for building a C Python extension module as a shared library. This must be provided in a `python` section which must specify the string `shared_suffix`, i.e. the suffix of the shared libraries. The `python` section also contains the same optional entries `flags`, `libs`, `libdir`, and `include` listed above for the accelerators.
 
-The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `--export-compiler-config` flag and provide a target file name.
+The default compilers can provide examples compatible with your system once Pyccel has been executed at least. To export the JSON file describing your setup, use the `pyccel config export` command and provide a target file name.
 E.g.
 
 ```shell
