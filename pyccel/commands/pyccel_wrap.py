@@ -31,6 +31,9 @@ def setup_pyccel_wrap_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
+    add_version : bool, default=False
+        Indicates whether a --version flag should be added to the command.
+        This option will be removed in v2.3.
     """
     # ... Positional arguments
     group = parser.add_argument_group('Positional arguments')

@@ -80,6 +80,9 @@ def setup_pyccel_clean_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
+    add_version : bool, default=False
+        Indicates whether a --version flag should be added to the command.
+        This option will be removed in v2.3.
     """
     group = parser.add_argument_group('Positional arguments')
     group.add_argument('path_dir', metavar='FOLDER', type=str, nargs='*', default=(os.getcwd(),),

@@ -56,6 +56,8 @@ def deprecation_warning(tool):
     """
     Create a deprecation warning message for an old pyccel-TOOL command.
 
+    Create a deprecation warning message for an old pyccel-TOOL command.
+
     Parameters
     ----------
     tool : str
