@@ -771,6 +771,150 @@ def test_exp_phrase_r_i(language):
     assert isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x,-y), exp_phrase_r_i(x,-y), rtol=RTOL, atol=ATOL)
 
+#--------------------------------- expm1 function ------------------------------#
+def test_expm1_call_i(language):
+    def expm1_call_i(x : 'int'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_i, language = language)
+    x = randint(100)
+    assert isclose(f1(x), expm1_call_i(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_i(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_i(x))
+
+def test_expm1_call_f(language):
+    def expm1_call_f(x : 'float'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = uniform(high=100)
+    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_f(x))
+
+def test_expm1_call_c(language):
+    def expm1_call_c(x : complex):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = uniform(high=100) + uniform(high=100)*1j
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), expm1_call_c(x))
+
+def test_expm1_call_f_array(language):
+    def expm1_call_f(x : 'float[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = uniform(high=100, size=5)
+    assert np.allclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
+
+def test_expm1_call_c_array(language):
+    def expm1_call_c(x : 'complex[:]'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = uniform(high=100, size=5) + uniform(high=100, size=5)*1j
+    assert np.allclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
+    assert np.allclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
+
+def test_expm1_call_cast_f(language):
+    def expm1_call_f(x : 'float32'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_f, language = language)
+    x = np.float32(uniform(high=30))
+    assert isclose(f1(x), expm1_call_f(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), expm1_call_f(x))
+
+def test_expm1_call_cast_c(language):
+    def expm1_call_c(x : 'complex64'):
+        from numpy import expm1
+        return expm1(x)
+
+    f1 = epyccel(expm1_call_c, language = language)
+    x = np.complex64(uniform(high=15) + uniform(high=15)*1j)
+    assert isclose(f1(x), expm1_call_c(x), rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f1(x), expm1_call_c(x))
+
+def test_expm1_phrase_i_i(language):
+    def expm1_phrase_i_i(x : 'int', y : 'int'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_i, language = language)
+    x = randint(100)
+    y = randint(100)
+    assert isclose(f2(x,y), expm1_phrase_i_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_i_i(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_i_i(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_i(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_f_f(language):
+    def expm1_phrase_f_f(x : 'float', y : 'float'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_f_f, language = language)
+    x = uniform(high=100)
+    y = uniform(high=100)
+    assert isclose(f2(x,y), expm1_phrase_f_f(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_f_f(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_f_f(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_f_f(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_i_f(language):
+    def expm1_phrase_i_f(x : 'int', y : 'float'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_f, language = language)
+    x = randint(100)
+    y = uniform(high=100)
+    assert isclose(f2(x,y), expm1_phrase_i_f(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,-y), expm1_phrase_i_f(-x,-y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(-x,y), expm1_phrase_i_f(-x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_f(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_f_i(language):
+    def expm1_phrase_f_i(x : 'float', y : 'int'):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_f_i, language = language)
+    x = uniform(high=100)
+    y = randint(100)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_f_i(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_f_i(x,-y), rtol=RTOL, atol=ATOL)
+
+def test_expm1_phrase_i_c(language):
+    def expm1_phrase_i_c(x : int, y : complex):
+        from numpy import expm1
+        a = expm1(x)+expm1(y)
+        return a
+
+    f2 = epyccel(expm1_phrase_i_c, language = language)
+    x = randint(100)
+    y = uniform(high=100) + uniform(high=100)*1j
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,y), expm1_phrase_i_c(x,y), rtol=RTOL, atol=ATOL)
+    assert isclose(f2(x,-y), expm1_phrase_i_c(x,-y), rtol=RTOL, atol=ATOL)
+
 #--------------------------------- log function ------------------------------#
 def test_log_call_i(language):
     def log_call_i(x : 'int'):
@@ -1192,16 +1336,25 @@ def test_shape_indexed(language):
         a = shape(f)
         return a[0], a[1]
 
+    def test_shape_2d_f(f : 'int[:,:](order=F)'):
+        from numpy import shape
+        a = shape(f)
+        return a[0], a[1]
+
     from numpy import empty
     f1 = epyccel(test_shape_1d, language = language)
     f2 = epyccel(test_shape_2d, language = language)
+    f3 = epyccel(test_shape_2d_f, language = language)
     n1 = randint(1,20)
     n2 = randint(1,20)
     n3 = randint(1,20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
+    x3 = empty((n1,n2,1), dtype = int)
     assert f1(x1) == test_shape_1d(x1)
     assert f2(x2) == test_shape_2d(x2)
+    assert f3(x2.T) == test_shape_2d_f(x2.T)
+    assert f3(x3[0,:,:].T) == test_shape_2d_f(x3[0,:,:].T)
 
 def test_shape_property(language):
     def test_shape_1d(f : 'int[:]'):
@@ -1703,9 +1856,10 @@ def test_empty_order(language):
         return len(s),s[0], s[1]
     def create_empty_shape_F(n : 'int', m : 'int'):
         from numpy import empty, shape
-        a = empty((n,m), order = 'F')
+        p = (n,m)
+        a = empty(p, order = 'F')
         s = shape(a)
-        return len(s),s[0], s[1]
+        return len(s), s[0], s[1], len(p), p[0], p[1]
 
     size_1 = randint(1,10)
     size_2 = randint(1,10)
@@ -6110,3 +6264,45 @@ def test_copy(language):
         assert res_3d_pyt.dtype is res_3d_pyc.dtype
         assert res_3d_pyt.flags.c_contiguous == res_3d_pyc.flags.c_contiguous
         assert res_3d_pyt.flags.f_contiguous == res_3d_pyc.flags.f_contiguous
+
+def test_true_divide(language):
+    def basic_division(a : 'int | float | complex', b : 'int | float | complex'):
+        from numpy import true_divide
+        return true_divide(a,b)
+    def basic_array_division(a : 'int[:] | float[:]', b : 'int | float | complex | int[:] | float[:]'):
+        from numpy import true_divide
+        return true_divide(a,b)
+
+    i = randint(1e6)
+    f = max_float / 2
+    c = max_float / 2 * (1 + 1j)
+    i_arr_1d = randint(min_int, max_int, size=5)
+    f_arr_1d = uniform(min_float/2, max_float/2, size=5)
+
+    # Avoid overflow on macOS
+    if sys.platform == 'darwin' and language=='c':
+        c /= np.sqrt(2)
+
+    epyccel_basic_division = epyccel(basic_division, language=language)
+    epyccel_basic_array_division = epyccel(basic_array_division, language=language)
+
+    assert np.isclose(basic_division(i,i), epyccel_basic_division(i,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(i,f), epyccel_basic_division(i,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(i,c), epyccel_basic_division(i,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,i), epyccel_basic_division(f,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,f), epyccel_basic_division(f,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,c), epyccel_basic_division(f,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,i), epyccel_basic_division(c,i), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,f), epyccel_basic_division(c,f), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(c,c), epyccel_basic_division(c,c), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,i_arr_1d), epyccel_basic_array_division(i_arr_1d,i_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,f_arr_1d), epyccel_basic_array_division(i_arr_1d,f_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,i), epyccel_basic_array_division(i_arr_1d,i), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,f), epyccel_basic_array_division(i_arr_1d,f), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(i_arr_1d,c), epyccel_basic_array_division(i_arr_1d,c), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,i_arr_1d), epyccel_basic_array_division(f_arr_1d,i_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,f_arr_1d), epyccel_basic_array_division(f_arr_1d,f_arr_1d), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,i), epyccel_basic_array_division(f_arr_1d,i), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
+    assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
+    assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)

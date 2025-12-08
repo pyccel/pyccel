@@ -694,19 +694,13 @@ def test_mixed_list_methods(limited_language):
     epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Function in function not implemented in C. See #601"),
-            pytest.mark.c]),
-    ]
-)
-def test_extend_returned_list(language):
+def test_extend_returned_list(limited_language):
     def f():
         def g():
             return [4, 5, 6]
         lst = [1, 2, 3]
         lst.extend(g())
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyccel(f, language=limited_language)
     assert f() == epyc_f()
 
 def test_mutable_indexing(stc_language):
@@ -939,3 +933,14 @@ def test_list_equality_non_matching_types(limited_language):
     assert list_equality(arg_int1, arg_float3) == epyccel_func(arg_int1, arg_float3)
     assert list_equality(arg_int2, arg_float1) == epyccel_func(arg_int2, arg_float1)
     assert list_equality(arg_int3, arg_float1) == epyccel_func(arg_int3, arg_float1)
+
+def test_list_duplicate(language):
+    def list_duplicate(n : int):
+        a = [1] * n
+        b = [1, 2, 3] * n
+        return a, b
+
+    epyccel_func = epyccel(list_duplicate, language = language)
+
+    assert list_duplicate(5) == epyccel_func(5)
+    assert list_duplicate(15) == epyccel_func(15)

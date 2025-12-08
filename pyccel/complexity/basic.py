@@ -10,7 +10,7 @@ from pyccel.parser.parser import Parser
 __all__ = ["Complexity"]
 
 # ...
-class Complexity(object):
+class Complexity:
     """
     Abstract class for complexity computation.
 

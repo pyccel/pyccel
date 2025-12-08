@@ -609,6 +609,17 @@ def test_set_intersection_operator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
+def test_set_intersection_operator_2(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        return a & b
+
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert set(python_result) == set(pyccel_result)
+
 def test_set_intersection_update(language):
     def intersection_int():
         a = {1,2,3,4,8}
@@ -769,3 +780,119 @@ def test_set_is_disjoint(language):
     assert set_is_disjoint(example_set1, example_set2) == epyccel_func(example_set1, example_set2)
     assert set_is_disjoint(example_set1, example_set3) == epyccel_func(example_set1, example_set3)
     assert set_is_disjoint(example_set3, example_set2) == epyccel_func(example_set3, example_set2)
+
+def test_set_difference_int(language):
+    def difference_int():
+        a = {1,2,3}
+        b = {2,3,4}
+        c = a.difference(b)
+        return len(c), c.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_no_args(language):
+    def difference_int():
+        a = {1,2,3,4}
+        c = a.difference()
+        a.add(5)
+        return len(c), c.pop(), c.pop(), c.pop(), c.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_2_args(language):
+    def difference_int():
+        a = {1,2,3,4}
+        b = {5,6,7,2,1}
+        c = {7,6,10,2,3,1}
+        d = a.difference(b, c)
+        return len(d), d.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_int_temporaries(language):
+    def difference_int():
+        c = {1,2,3}.difference({3,4})
+        return len(c), c.pop(), c.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_temporary_set_difference(language):
+    def difference_int():
+        a = {1,2}
+        b = {2}
+        d = a.difference(b).pop()
+        return d
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result == pyccel_result
+
+def test_set_difference_operator(language):
+    def difference_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        c = a - b
+        return len(c), c.pop(), c.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_update(language):
+    def difference_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        a.difference_update(b)
+        return len(a), a.pop(), a.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_multiple_update(language):
+    def difference_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        c = {10,4,20}
+        a.difference_update(b, c)
+        return len(a), a.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])
+
+def test_set_difference_augoperator(language):
+    def difference_int():
+        a = {1,2,3,4}
+        b = {2,3,4}
+        a -= b
+        return len(a), a.pop()
+
+    epyccel_func = epyccel(difference_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = difference_int()
+    assert python_result[0] == pyccel_result[0]
+    assert set(python_result[1:]) == set(pyccel_result[1:])

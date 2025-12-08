@@ -340,13 +340,14 @@ def insert_index(expr, pos, index_var):
         # Add index at the required position
         # Calculate new index to preserve slice behaviour
         if indices[pos].step is not None:
-            index_var = PyccelMul(index_var, indices[pos].step, simplify=True)
+            index_var = PyccelMul.make_simplified(index_var, indices[pos].step)
         if indices[pos].start is not None:
             if is_literal_integer(indices[pos].start) and int(indices[pos].start) < 0:
-                index_var = PyccelAdd(PyccelAdd(base.shape[pos], indices[pos].start, simplify=True),
-                                      index_var, simplify=True)
+                index_var = PyccelAdd.make_simplified(PyccelAdd.make_simplified(base.shape[pos],
+                                                                                indices[pos].start),
+                                                      index_var)
             else:
-                index_var = PyccelAdd(index_var, indices[pos].start, simplify=True)
+                index_var = PyccelAdd.make_simplified(index_var, indices[pos].start)
 
         # Update index
         indices[pos] = index_var
@@ -575,7 +576,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, (PythonTuple, NumpyArray)):
+                and isinstance(line.rhs, (PythonTuple, NumpyArray, PythonList)):
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank > rhs.rank:
@@ -593,7 +594,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     block = LoopCollection(block, s, set([lhs]))
                 result.append(block)
 
-            elif not language_has_vectors:
+            elif not language_has_vectors or isinstance(rhs, PythonList):
                 if isinstance(rhs, NumpyArray):
                     rhs = rhs.arg
 
@@ -615,22 +616,21 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             rhs = line.rhs
             arg1, arg2 = rhs.args
             assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
-            assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True))], arg2)
+            assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd.make_simplified(arg1.shape[0], arg2.shape[0]))], arg2)
             collect_loops([assign1, assign2], indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Duplicate):
             lhs = line.lhs
             rhs = line.rhs
 
-            if not isinstance(rhs.length, LiteralInteger):
+            if not isinstance(rhs.length, LiteralInteger) or int(rhs.length) > 10:
                 if len(indices) == 0:
                     indices.append(new_index(PythonNativeInt(), 'i'))
                 idx = indices[0]
 
-                assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx, simplify=True),
-                                          PyccelMul(rhs.val.shape[0],
-                                                    PyccelAdd(idx, LiteralInteger(1), simplify=True),
-                                                    simplify=True))],
+                assign = Assign(lhs[Slice(PyccelMul.make_simplified(rhs.val.shape[0], idx),
+                                          PyccelMul.make_simplified(rhs.val.shape[0],
+                                                    PyccelAdd.make_simplified(idx, LiteralInteger(1))))],
                                 rhs.val)
 
                 tmp_indices = indices[1:]
@@ -642,10 +642,9 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 result.append(LoopCollection(block, rhs.length, set([lhs])))
 
             else:
-                assigns = [Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], LiteralInteger(idx), simplify=True),
-                                          PyccelMul(rhs.val.shape[0],
-                                              PyccelAdd(LiteralInteger(idx), LiteralInteger(1), simplify=True),
-                                              simplify=True))],
+                assigns = [Assign(lhs[Slice(PyccelMul.make_simplified(rhs.val.shape[0], LiteralInteger(idx)),
+                                          PyccelMul.make_simplified(rhs.val.shape[0],
+                                              PyccelAdd.make_simplified(LiteralInteger(idx), LiteralInteger(1))))],
                                 rhs.val) for idx in range(rhs.length)]
                 collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
 

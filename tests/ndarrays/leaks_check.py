@@ -48,9 +48,8 @@ def arrays_in_multi_returns():
 def type_annotated_numpy_array():
     a : 'float[:]' = ones(5) # pylint: disable=unused-variable
 
-# testing garbage collecting in a Function
-
 if __name__ == '__main__':
+    # testing garbage collecting in a Function
     create_array()
     array_to_pointer()
     view_assign()
@@ -70,3 +69,11 @@ if __name__ == '__main__':
     c = a[1:]
     b = c[:,1:]
     b = c
+
+    # Reassign array allocated by function call
+    z = return_array()
+    z = array([[1,2],[3,4]])
+
+    x = array([5.,6.,7.,8.])
+
+    y,x,s = arrays_in_multi_returns()

@@ -82,6 +82,9 @@ __all__ = [
         'tuple_return_unknown_length',
         'tuple_assignment',
         'return_1_elem_inhomog_tuple',
+        'return_empty_tuple',
+        'return_empty_int_tuple',
+        'return_annotated_empty_tuple',
         ]
 
 def homogeneous_tuple_int():
@@ -537,3 +540,12 @@ def tuple_assignment():
 def return_1_elem_inhomog_tuple():
     a : 'tuple[int]' = (1,)
     return a
+
+def return_empty_tuple():
+    return ()
+
+def return_empty_int_tuple() -> tuple[int,...]:
+    return ()
+
+def return_annotated_empty_tuple() -> tuple[()]:
+    return ()

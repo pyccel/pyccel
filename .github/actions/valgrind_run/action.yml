@@ -5,20 +5,24 @@ runs:
   steps:
     - name: Test with valgrind for memory leaks in ndarrays
       run: |
-        pyccel --language=c --flags="-g -O0" leaks_check.py
+        pyccel compile --language=c --debug leaks_check.py
         valgrind --leak-check=full --error-exitcode=1 ./leaks_check
       shell: bash
       working-directory: ./tests/ndarrays
     
     - name: Test with valgrind for memory leaks in built-in containers
       run: |
-        pyccel --language=c --flags="-g -O0" leaks_check.py
+        pyccel compile --language=c --debug leaks_check.py
         valgrind --leak-check=full --error-exitcode=1 ./leaks_check
-        pyccel-clean -p
-        pyccel --language=fortran --flags="-g -O0" leaks_check.py
-        valgrind --leak-check=full --error-exitcode=1 ./leaks_check
-        pyccel-clean -p
-        pyccel --language=c --flags="-g -O0" nested_leaks_check.py
+        pyccel clean -p
+        if [ "${PYCCEL_DEFAULT_COMPILER}" != "LLVM" ]
+        then
+          # Disable gFTL leak check for LLVM. See #2342
+          pyccel compile --language=fortran --debug leaks_check.py
+          valgrind --leak-check=full --error-exitcode=1 ./leaks_check
+          pyccel clean -p
+        fi
+        pyccel compile --language=c --debug nested_leaks_check.py
         valgrind --leak-check=full --error-exitcode=1 ./nested_leaks_check
       shell: bash
       working-directory: ./tests/stc_containers
