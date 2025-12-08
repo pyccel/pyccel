@@ -162,32 +162,19 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
 
     # Descriptions of the tests:
     desc_1 = "Run the single-process tests which must be run one at a time... [all languages]"
-    desc_2 = "Run the single-process tests which can be run in parallel... [language: C]"
-    desc_3 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
-    desc_4 = "Run the single-process tests which can be run in parallel... [language: Python]"
-    descriptions = [desc_1, desc_2, desc_3, desc_4]
+    desc_2 = "Run the single-process tests which can be run in parallel... [language-agnostic]"
+    desc_3 = "Run the single-process tests which can be run in parallel... [language: C]"
+    desc_4 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
+    desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
+    descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
 
     # Commands to run the tests:
     cmd_1 = ['-ra', '-m (xdist_incompatible)']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
-    cmd_2 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
-    cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
-# Descriptions of the tests:
-desc_1 = "Run the single-process tests which must be run one at a time... [all languages]"
-desc_2 = "Run the single-process tests which can be run in parallel... [language-agnostic]"
-desc_3 = "Run the single-process tests which can be run in parallel... [language: C]"
-desc_4 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
-desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
-descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
-
-# Commands to run the tests:
-cmd_1 = ['-ra', '-m (xdist_incompatible)']
-cmd_2 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
-cmd_3 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
-cmd_4 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
-cmd_5 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
-commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
+    cmd_2 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
+    cmd_3 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
+    cmd_4 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
+    cmd_5 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
+    commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
 
     if language != 'All':
         cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
