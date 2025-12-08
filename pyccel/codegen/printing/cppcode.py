@@ -12,7 +12,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, Pri
 from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat
 from pyccel.ast.datatypes import FinalType
-from pyccel.ast.datatypes import HomogeneousSetType, DictType
+from pyccel.ast.datatypes import HomogeneousSetType, DictType, InhomogeneousTupleType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext import NumpyFloat
@@ -32,7 +32,8 @@ cpp_imports = {n : Import(n, Module(n, (), ())) for n in
                  'iostream',
                  'pyc_math_cpp',
                  'cstdint',
-                 'string']}
+                 'string',
+                 'tuple']}
 
 # dictionary mapping Math function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_MathFunctionBase(self, expr)
@@ -128,6 +129,7 @@ cpp_library_headers = {
     "inttypes",
     "iostream",
     "string",
+    "tuple",
 }
 
 class CppCodePrinter(CodePrinter):
@@ -447,9 +449,23 @@ class CppCodePrinter(CodePrinter):
         if expr.expr is None:
             return 'return;\n'
 
-        return_code = self._print(assigns.get(expr.expr, expr.expr))
+        def get_return_code(return_var):
+            """ Recursive method which replaces any variables in a return statement whose
+            definition is known (via the assigns dict) with the definition. A function is
+            required to handle the recursivity implied by an unknown depth of inhomogeneous
+            tuples.
+            """
+            if isinstance(return_var.class_type, InhomogeneousTupleType):
+                elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
+                return_expr = ', '.join(elem_code)
+                if len(elem_code) == 1:
+                    return_expr += ','
+                return f'std::make_tuple({return_expr})'
+            else:
+                return_expr = assigns.get(return_var, return_var)
+                return self._print(return_expr)
 
-        return prelude + f'return {return_code};\n'
+        return prelude + f'return {get_return_code(expr.expr)};\n'
 
     def _print_Assign(self, expr):
         lhs = expr.lhs
@@ -706,6 +722,11 @@ class CppCodePrinter(CodePrinter):
     def _print_NumpyFloat64Type(self, expr):
         return 'double'
 
+    def _print_InhomogeneousTupleType(self, expr):
+        self.add_import(cpp_imports['tuple'])
+        types = ', '.join(self._print(t) for t in expr)
+        return f'std::tuple<{types}>'
+
     # ------------------------------
     #  Mathematical functions
     # ------------------------------
@@ -782,6 +803,10 @@ class CppCodePrinter(CodePrinter):
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
         return f'"{expr.python_value}"'
+
+    def _print_InhomogeneousTuple(self, expr):
+        args = ', '.join(self._print(a) for a in expr)
+        return f'std::make_tuple({args})'
 
     # ------------------------------
     #  Miscellaneous
