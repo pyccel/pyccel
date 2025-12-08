@@ -1,4 +1,4 @@
-name: Linux unit tests run through the 'pyccel-test' command
+name: Linux unit tests run through the 'pyccel test' command
 
 on:
   workflow_dispatch:
@@ -90,12 +90,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .[test]
         shell: bash
-      - name: Run tests with the pyccel-test command
+      - name: Run tests with the pyccel test command
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pyccel-test
         timeout-minutes: 60
         run: |
-          pyccel-test
+          pyccel test
         shell: bash
       - name: "Post completed"
         if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
