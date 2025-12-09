@@ -1,30 +1,22 @@
-#!/usr/bin/env python
-# coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 #------------------------------------------------------------------------------------------#
-
-import sys
-import os
 import argparse
 import pathlib
+import sys
 
-__all__ = ['MyParser', 'pyccel']
+from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR
+from .pyccel_compile import setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR
+from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
+from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
+from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
+from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
+from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
 
-#==============================================================================
-class MyParser(argparse.ArgumentParser):
-    """
-    Custom argument parser for printing help message in case of an error.
-    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
-    """
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
+__all__ = ('pyccel_command',)
 
-#==============================================================================
-def pyccel() -> None:
+def pyccel_command() -> None:
     """
     Pyccel console command.
 
@@ -43,231 +35,64 @@ def pyccel() -> None:
     file contains an `if __name__ == '__main__':` block, an executable will be
     generated for the corresponding block of code.
     """
+    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
+                                     add_help=False, exit_on_error=False)
 
-    parser = MyParser(description="Pyccel's command line interface.",
-                      add_help=False)
-
-    # ... Positional arguments
-    group = parser.add_argument_group('Positional arguments')
-    group.add_argument('filename', metavar='FILE', type=pathlib.Path,
-                        help='Path (relative or absolute) to the Python file to be translated.')
-    #...
-
+    group = parser.add_argument_group("Options")
     #... Help and Version
-    import pyccel
-    version = pyccel.__version__
-    libpath = pyccel.__path__[0]
-    python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    add_help_flag(group)
+    add_version_flag(group)
 
-    group = parser.add_argument_group('Basic options')
-    group.add_argument('-h', '--help', action='help', help='Show this help message and exit.')
-    group.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
-    # ...
+    sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR),
+                    'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
+                    'config': (setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR),
+                    'make':  (setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR),
+                    'test':  (setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR),
+                    'wrap':  (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
+                    }
 
-    # ... compiler syntax, semantic and codegen
-    group = parser.add_argument_group('Pyccel compiling stages')
-    group.add_argument('-x', '--syntax-only', action='store_true',
-                       help='Stop Pyccel after syntactic parsing, before semantic analysis or code generation.')
-    group.add_argument('-e', '--semantic-only', action='store_true',
-                       help='Stop Pyccel after semantic analysis, before code generation.')
-    group.add_argument('-t', '--convert-only', action='store_true',
-                       help='Stop Pyccel after translation to the target language, before build.')
-    # ...
+    subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
+    for key, (parser_setup, exe_func, descr) in sub_commands.items():
+        sparser = subparsers.add_parser(key,
+                                        help=descr,
+                                        description=f"Pyccel's CLI: {descr}",
+                                        add_help=False)
+        parser_setup(sparser)
+        sparser.set_defaults(func=exe_func)
 
-    # ... backend compiler options
-    group = parser.add_argument_group('Backend selection')
-
-    group.add_argument('--language', choices=('fortran', 'c', 'python'), default='Fortran',
-                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
-                       type=str.lower)
-
-    # ... Compiler options
-    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
-    compiler_group = group.add_mutually_exclusive_group(required=False)
-    compiler_group.add_argument('--compiler-family',
-                                type=str,
-                                default='GNU',
-                                metavar='FAMILY',
-                                help='Compiler family {GNU,intel,PGI,nvidia,LLVM} (default: GNU).')
-    compiler_group.add_argument('--compiler-config',
-                                type=pathlib.Path,
-                                default=None,
-                                metavar='CONFIG.json',
-                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
-
-    # ... Additional compiler options
-    group = parser.add_argument_group('Additional compiler options')
-    group.add_argument('--flags', type=str, \
-                       help='Additional compiler flags.')
-    group.add_argument('--wrapper-flags', type=str, \
-                       help='Additional compiler flags for the wrapper.')
-    group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
-                        help='Compile the code with debug flags, or not.\n' \
-                        ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
-
-    group.add_argument('--include',
-                        type=str,
-                        nargs='*',
-                        dest='include',
-                        default=(),
-                        help='Additional include directories.')
-
-    group.add_argument('--libdir',
-                        type=str,
-                        nargs='*',
-                        dest='libdir',
-                        default=(),
-                        help='Additional library directories.')
-
-    group.add_argument('--libs',
-                        type=str,
-                        nargs='*',
-                        dest='libs',
-                        default=(),
-                        help='Additional libraries to link with.')
-
-    group.add_argument('--output', type=pathlib.Path, default = None,\
-                       help="Folder in which the output is stored (default: FILE's folder).")
-    # ...
-
-    # ... Accelerators
-    group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--mpi', action='store_true', \
-                       help='Use MPI.')
-    group.add_argument('--openmp', action='store_true', \
-                       help='Use OpenMP.')
-#    group.add_argument('--openacc', action='store_true', \
-#                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
-    # ...
-
-    # ... Other options
-    group = parser.add_argument_group('Other options')
-    group.add_argument('-v', '--verbose', action='count', default = 0,\
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
-    group.add_argument('--time-execution', action='store_true', \
-                        help='Print the time spent in each section of the execution.')
-    group.add_argument('--developer-mode', action='store_true', \
-                        help='Show internal messages.')
-    group.add_argument('--export-compiler-config', action='store_true', \
-                        help='Export all compiler information to a JSON file with the given path (relative or absolute).')
-    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'),
-                        help='Specify the level of Conda warnings to display (default: basic).')
-    # ...
-
-    # ...
-    args = parser.parse_args()
-    # ...
-
-    # Imports
-    from pyccel.errors.errors     import Errors, PyccelError
-    from pyccel.errors.errors     import ErrorsMode
-    from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
-    from pyccel.codegen.pipeline  import execute_pyccel
-
-    # ...
-    filename = args.filename
-    compiler = args.compiler_config or args.compiler_family
-    mpi      = args.mpi
-    openmp   = args.openmp
-    openacc  = False  # [YG 17.06.2025] OpenACC is not supported yet
-    output   = args.output or filename.parent
-
-    if not args.conda_warnings:
-        args.conda_warnings = 'basic'
-
-    # ...
-    if args.export_compiler_config:
-        cext = filename.suffix
-        if cext == '':
-            filename = filename.with_suffix('.json')
-        elif cext != '.json':
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Wrong file extension. Expecting `json`, but found',
-                          symbol=cext,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
-
-        execute_pyccel('',
-                       compiler_family = str(compiler) if compiler is not None else None,
-                       compiler_export_file = filename)
-        sys.exit(0)
-
-    # ...
-    if args.convert_only or args.syntax_only or args.semantic_only:
-        compiler = None
-
-    # ... report error
-    if filename.is_file():
-        fext = filename.suffix
-        if fext not in ['.py', '.pyi']:
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
-                            symbol=fext,
-                            severity='error')
-            errors.check()
-            sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                        symbol=filename,
-                        severity='error')
-        errors.check()
-        sys.exit(1)
-    # ...
-
-    accelerators = []
-    if mpi:
-        accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
-    if openacc:
-        accelerators.append("openacc")
-
-    # ...
-
-    # ...
-    # this will initialize the singleton ErrorsMode
-    # making this settings available everywhere
-    err_mode = ErrorsMode()
-    if args.developer_mode:
-        err_mode.set_mode('developer')
-    else:
-        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
-    # ...
-
-    base_dirpath = os.getcwd()
-
-    if args.language == 'python' and args.output == '':
-        print("Cannot output Python file to same folder as this would overwrite the original file. Please specify --output")
-        sys.exit(1)
+    argv = sys.argv[1:]
+    if len(argv) == 0:
+        parser.print_help()
+        sys.exit(2)
 
     try:
-        # TODO: prune options
-        execute_pyccel(str(filename),
-                       syntax_only     = args.syntax_only,
-                       semantic_only   = args.semantic_only,
-                       convert_only    = args.convert_only,
-                       verbose         = args.verbose,
-                       time_execution  = args.time_execution,
-                       language        = args.language,
-                       compiler_family = str(compiler) if compiler is not None else None,
-                       flags           = args.flags,
-                       wrapper_flags   = args.wrapper_flags,
-                       include         = args.include,
-                       libdir          = args.libdir,
-                       modules         = (),
-                       libs            = args.libs,
-                       debug           = args.debug,
-                       accelerators    = accelerators,
-                       folder          = str(output) if output is not None else None,
-                       conda_warnings  = args.conda_warnings)
+        kwargs = vars(parser.parse_args())
+    except argparse.ArgumentError as err:
+        if 'invalid choice' in err.message:
+            WARNING, LINE = get_warning_and_line()
+            message = f"{WARNING}: Using pyccel with no sub-command is deprecated and will be removed in v2.3."\
+                       " Please use `pyccel compile` instead."
+            print(f"{LINE}\n{message}\n{LINE}", file=sys.stderr)
+            argv = ('compile', *argv)
+            parser.exit_on_error=True
+            kwargs = vars(parser.parse_args(argv))
+        else:
+            print(err)
+            parser.print_usage()
+            sys.exit(2)
+
+    from pyccel.errors.errors     import PyccelError, Errors
+    from pyccel.utilities.stage   import PyccelStage
+
+    pyccel_stage = PyccelStage()
+    errors = Errors()
+
+    func = kwargs.pop('func')
+    try:
+        func(**kwargs)
     except PyccelError:
-        sys.exit(1)
-    finally:
-        os.chdir(base_dirpath)
+        pass
+
+    pyccel_stage.pyccel_finished()
+    print(errors, end='')
+    sys.exit(errors.has_errors())

@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import numpy as np
+from pyccel.decorators import allow_negative_index
 
 #==============================================================================
 
@@ -245,7 +247,6 @@ def for_loop3():
     return x
 
 def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
-    import numpy as np
     c = np.zeros_like(a)
     d1 = np.zeros_like(a)
     d2 = np.zeros_like(a)
@@ -264,7 +265,6 @@ def less_than_100(n : int):
     return False
 
 def for_expression():
-    import numpy as np
     c = np.array([1,2,3,4,5])
     d = np.array([2.0,3.0,1.0,9.0,11.0])
     sum_e = 0.0
@@ -283,3 +283,13 @@ def for_lists_of_lists():
             bi[i] = -1
 
     return c[0], c[1], b[0][0], b[0][1], b[1][0], b[1][1]
+
+@allow_negative_index('a')
+def for_unknown_index_slice():
+    end = 7
+    a = np.arange(10)
+    result = 0
+    for ai in a[:end]:
+        result += ai
+
+    return result

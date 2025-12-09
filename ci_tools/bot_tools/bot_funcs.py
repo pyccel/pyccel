@@ -10,23 +10,24 @@ import time
 from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
-        'anaconda_linux': '3.10',
-        'anaconda_windows': '3.12',
-        'coverage': '3.9',
-        'docs': '3.10',
-        'intel': '3.10',
-        'llvm': '3.10',
-        'linux': '3.9',
-        'linux_pyccel-test_cmd': '3.10',
-        'macosx': '3.13',
-        'wheel': '3.9',
-        'check_install': '3.9',
-        'editable_check_install': '3.9',
-        'pyccel_lint': '3.11',
-        'markdown_lint': '3.11',
-        'pylint': '3.9',
-        'spelling': '3.12',
-        'windows': '3.11'
+        'anaconda_linux': '3.11',
+        'anaconda_windows': '3.13',
+        'coverage': '3.10',
+        'docs': '3.11',
+        'intel': '3.11',
+        'llvm': '3.11',
+        'linux': '3.10',
+        'linux_pyccel_test': '3.11',
+        'macosx': '3.14',
+        'wheel': '3.10',
+        'sdist': '3.10',
+        'check_install': '3.10',
+        'editable_check_install': '3.10',
+        'pyccel_lint': '3.12',
+        'markdown_lint': '3.12',
+        'pylint': '3.10',
+        'spelling': '3.13',
+        'windows': '3.12'
         }
 
 test_names = {
@@ -37,9 +38,10 @@ test_names = {
         'intel': "Unit tests on Linux with Intel compiler",
         'llvm': "Unit tests on Linux with LLVM compiler",
         'linux': "Unit tests on Linux",
-        'linux_pyccel-test_cmd': "Unit tests on Linux via the pyccel-test",
+        'linux_pyccel_test': "Unit tests on Linux via the `pyccel test` command",
         'macosx': "Unit tests on MacOSX",
         'wheel': "Test file generation during wheel installation",
+        'sdist': "Test file generation during sdist installation",
         'check_install': "Test file generation during source installation",
         'editable_check_install': "Test file generation during editable source installation",
         'pyccel_lint': "Pyccel best practices",
@@ -56,9 +58,9 @@ test_dependencies = {'coverage':['linux']}
 tests_with_base = ('coverage', 'docs', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
+                'llvm', 'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
 
-pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel')
+pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel', 'llvm')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 

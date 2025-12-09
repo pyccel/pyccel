@@ -14,3 +14,7 @@ def sum_to_n(n : 'int'):
 
 if __name__ == '__main__':
     print(sum_to_n(4))
+
+    f = lambda x: x+3 #pylint: disable=unnecessary-lambda-assignment
+
+    print(f(5))

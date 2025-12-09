@@ -19,9 +19,11 @@ from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals  import LiteralTrue, LiteralFalse
-from .mathext   import MathCeil
+from .mathext   import MathCeil, MathFabs
+from .numpyext  import NumpyFloor
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .operators import PyccelFloorDiv
 from .operators import PyccelEq, PyccelNe, PyccelLt, PyccelLe, PyccelGt, PyccelGe
 from .operators import PyccelAnd, PyccelOr, PyccelNot
 from .variable  import Variable
@@ -107,6 +109,11 @@ def sympy_to_pyccel(expr, symbol_map):
         else:
             return MathCeil(arg)
 
+    elif isinstance(expr, sp.Abs):
+        arg = sympy_to_pyccel(expr.args[0], symbol_map)
+        # Only apply ceiling where appropriate
+        return MathFabs(arg)
+
     elif isinstance(expr, sp.Min):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
         return PythonMin(*args)
@@ -118,6 +125,10 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.Tuple):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
         return PythonTuple(*args)
+
+    elif isinstance(expr, sp.floor):
+        arg = sympy_to_pyccel(expr.args[0], symbol_map)
+        return NumpyFloor(arg)
 
     else:
         raise TypeError(str(type(expr)))
@@ -163,6 +174,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, PyccelDiv):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] / args[1]
+
+    elif isinstance(expr, PyccelFloorDiv):
+        args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
+        return args[0] // args[1]
 
     elif isinstance(expr, PyccelMul):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -225,6 +240,9 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, MathCeil):
         return sp.ceiling(pyccel_to_sympy(expr.args[0], symbol_map, used_names))
+
+    elif isinstance(expr, MathFabs):
+        return sp.Abs(pyccel_to_sympy(expr.args[0], symbol_map, used_names))
 
     elif isinstance(expr, PythonMin):
         args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]

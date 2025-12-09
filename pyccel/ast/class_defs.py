@@ -9,7 +9,8 @@ This module contains all types which define a python class which is automaticall
 from pyccel.ast.builtin_methods.set_methods  import (SetAdd, SetClear, SetCopy, SetPop,
                                                      SetDiscard, SetUpdate, SetUnion,
                                                      SetIntersection, SetIntersectionUpdate,
-                                                     SetIsDisjoint)
+                                                     SetIsDisjoint, SetDifference,
+                                                     SetDifferenceUpdate)
 from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
                                                      ListClear, ListExtend, ListRemove,
                                                      ListCopy, ListSort, ListReverse)
@@ -167,17 +168,21 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('add', func_class = SetAdd ),
             PyccelFunctionDef('clear', func_class = SetClear),
             PyccelFunctionDef('copy', func_class = SetCopy),
+            PyccelFunctionDef('difference', func_class = SetDifference),
+            PyccelFunctionDef('difference_update', func_class = SetDifferenceUpdate),
             PyccelFunctionDef('discard', func_class = SetDiscard),
-            PyccelFunctionDef('pop', func_class = SetPop),
-            PyccelFunctionDef('remove', func_class = SetDiscard),
-            PyccelFunctionDef('union', func_class = SetUnion),
             PyccelFunctionDef('intersection', func_class = SetIntersection),
             PyccelFunctionDef('intersection_update', func_class = SetIntersectionUpdate),
             PyccelFunctionDef('isdisjoint', func_class = SetIsDisjoint),
+            PyccelFunctionDef('pop', func_class = SetPop),
+            PyccelFunctionDef('remove', func_class = SetDiscard),
+            PyccelFunctionDef('union', func_class = SetUnion),
             PyccelFunctionDef('update', func_class = SetUpdate),
             PyccelFunctionDef('__or__', func_class = SetUnion),
             PyccelFunctionDef('__and__', func_class = SetIntersection),
             PyccelFunctionDef('__iand__', func_class = SetIntersectionUpdate),
+            PyccelFunctionDef('__sub__', func_class = SetDifference),
+            PyccelFunctionDef('__isub__', func_class = SetDifferenceUpdate),
             PyccelFunctionDef('__ior__', func_class = SetUpdate),
         ])
 
@@ -254,11 +259,11 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(class_type):
+def get_builtin_cls_base(class_type):
     """
-    Determine the base class of an object.
+    Determine the base class of an object with a built-in datatype.
 
-    From the type, determine the base class of an object.
+    From the type, determine the base class of an object with a built-in datatype.
 
     Parameters
     ----------
@@ -275,7 +280,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, (CustomDataType, SymbolicType, GenericType)):
+    if isinstance(class_type, (SymbolicType, GenericType)):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]

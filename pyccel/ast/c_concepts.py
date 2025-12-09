@@ -6,8 +6,8 @@
 """
 Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
+from functools import cache
 
-from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
 from .datatypes import CharType
@@ -37,27 +37,36 @@ class CNativeInt(FixedSizeNumericType):
 
 #------------------------------------------------------------------------------
 
-class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
+class CStackArray(HomogeneousContainerType):
     """
     A data type representing an array allocated on the stack.
 
     A data type representing an array allocated on the stack.
     E.g. `float a[4];`
-
-    Parameters
-    ----------
-    element_type : FixedSizeType
-        The type of the elements inside the array.
     """
     __slots__ = ('_element_type',)
     _name = 'c_stackarray'
     _container_rank = 1
     _order = None
 
-    def __init__(self, element_type):
-        assert isinstance(element_type, FixedSizeType)
-        self._element_type = element_type
-        super().__init__()
+    @classmethod
+    @cache
+    def get_new(cls, element_type):
+        """
+        Get the parametrised stack array type.
+
+        Get the parametrised CStackArray subclass.
+
+        Parameters
+        ----------
+        element_type : FixedSizeType
+            The type of the elements inside the array.
+        """
+        def __init__(self):
+            self._element_type = element_type
+            HomogeneousContainerType.__init__(self)
+        return type(f'CStackArray{type(element_type).__name__}', (CStackArray,),
+                    {'__init__' : __init__})()
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):

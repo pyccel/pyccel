@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import pytest
 import numpy as np
 from numpy import iinfo, finfo
@@ -40,7 +41,7 @@ def test_array_assigned_dtype(language):
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
 
-    epyccel_func = epyccel(arrays.array_return_first_element, language=language)
+    epyccel_func = epyccel(arrays.array_return_first_element, language=language, verbose=2)
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = arrays.array_return_first_element(integer, integer)
@@ -402,16 +403,6 @@ def test_array_int32_2d_C_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
@@ -472,16 +463,6 @@ def test_array_int32_2d_C_scalar_idiv(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_idiv_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
@@ -575,16 +556,6 @@ def test_array_int32_2d_F_scalar_add(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_add_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_add
@@ -615,16 +586,6 @@ def test_array_int32_2d_F_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
@@ -1942,6 +1903,19 @@ def test_multiple_stack_array_2(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Stack arrays are deallocated as cspan only stores a pointer"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
+def test_return_stack_array(language):
+    f1 = arrays.return_stack_array
+    f2 = epyccel(f1, language = language)
+    check_array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
 #==============================================================================
@@ -2445,6 +2419,14 @@ def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_12
+    f2 = epyccel(f1, language = language)
+
+    assert f1(a) == f2(a)
+
+def test_array_1d_slice_13(language):
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_1
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
@@ -4355,6 +4337,7 @@ def test_array_ndmin_2_order(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_bool_from_other_types(language):
     size = (2, 2)
 
@@ -4375,7 +4358,7 @@ def test_dtype_conversion_to_bool_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_bool(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_bool(integer)
@@ -4393,6 +4376,7 @@ def test_dtype_conversion_to_bool_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int8_from_other_types(language):
     size = (2, 2)
 
@@ -4413,7 +4397,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int8(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int8(integer8)
@@ -4431,6 +4415,7 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int16_from_other_types(language):
     size = (2, 2)
 
@@ -4451,7 +4436,7 @@ def test_dtype_conversion_to_int16_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int16(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int16(integer8)
@@ -4469,6 +4454,7 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int32_from_other_types(language):
     size = (2, 2)
 
@@ -4489,7 +4475,7 @@ def test_dtype_conversion_to_int32_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int32(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int32(integer8)
@@ -4507,6 +4493,7 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_int64_from_other_types(language):
     size = (2, 2)
 
@@ -4527,7 +4514,7 @@ def test_dtype_conversion_to_int64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_int64(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_int64(integer8)
@@ -4544,6 +4531,7 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_float32_from_other_types(language):
     size = (2, 2)
 
@@ -4564,7 +4552,7 @@ def test_dtype_conversion_to_float32_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_float32(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_float32(integer8)
@@ -4600,7 +4588,7 @@ def test_dtype_conversion_to_float64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language, verbose=2)
 
     assert epyccel_func(integer) == arrays.dtype_convert_to_float64(integer)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_float64(integer8)
@@ -4616,6 +4604,7 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
@@ -4635,7 +4624,7 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_cfloat(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_cfloat(integer)
@@ -4670,7 +4659,7 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_cdouble(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_cdouble(integer)
@@ -4688,6 +4677,7 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_pyint_from_other_types(language):
     size = (2, 2)
 
@@ -4708,7 +4698,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_pyint(bl)
     assert epyccel_func(integer) == arrays.dtype_convert_to_pyint(integer)
@@ -4725,6 +4715,7 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_dtype_conversion_to_pyfloat_from_other_types(language):
     size = (2, 2)
 
@@ -4745,7 +4736,7 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language, verbose=2)
 
     assert epyccel_func(bl) == arrays.dtype_convert_to_pyfloat(bl)
     assert epyccel_func(integer8) == arrays.dtype_convert_to_pyfloat(integer8)
@@ -4763,6 +4754,7 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1,2)
 
@@ -4818,7 +4810,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer_1, integer_2, integer_3)
@@ -4836,6 +4828,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1,2)
 
@@ -4891,7 +4884,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8, language=language, verbose=2)
 
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer_1, integer_2, integer_3)
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(b1, b2, b3)
@@ -4909,6 +4902,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1,2)
 
@@ -4964,7 +4958,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer_1, integer_2, integer_3)
@@ -4981,6 +4975,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1,2)
 
@@ -5036,7 +5031,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer_1, integer_2, integer_3)
@@ -5054,6 +5049,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1,2)
 
@@ -5109,7 +5105,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer_1, integer_2, integer_3)
@@ -5126,6 +5122,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1,2)
 
@@ -5181,7 +5178,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer_1, integer_2, integer_3)
@@ -5252,7 +5249,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer_1, integer_2, integer_3)
@@ -5268,6 +5265,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1,2)
 
@@ -5323,7 +5321,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer_1, integer_2, integer_3)
@@ -5393,7 +5391,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer_1, integer_2, integer_3)
@@ -5411,6 +5409,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1,2)
 
@@ -5466,7 +5465,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer_1, integer_2, integer_3)
@@ -5484,6 +5483,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1,2)
 
@@ -5539,7 +5539,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer_1, integer_2, integer_3)
@@ -5557,6 +5557,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1,2)
 
@@ -5612,7 +5613,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer_1, integer_2, integer_3)
@@ -5630,6 +5631,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1,2)
 
@@ -5685,7 +5687,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF, language=language, verbose=2)
 
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer_1, integer_2, integer_3)
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(b1, b2, b3)
@@ -5703,6 +5705,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1,2)
 
@@ -5758,7 +5761,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer_1, integer_2, integer_3)
@@ -5776,6 +5779,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1,2)
 
@@ -5831,7 +5835,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer_1, integer_2, integer_3)
@@ -5849,6 +5853,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1,2)
 
@@ -5904,7 +5909,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer_1, integer_2, integer_3)
@@ -5921,6 +5926,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1,2)
 
@@ -5976,7 +5982,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer_1, integer_2, integer_3)
@@ -6047,7 +6053,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer_1, integer_2, integer_3)
@@ -6063,6 +6069,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 
 
 @pytest.mark.filterwarnings("ignore:overflow")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1,2)
 
@@ -6118,7 +6125,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer_1, integer_2, integer_3)
@@ -6188,7 +6195,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer_1, integer_2, integer_3)
@@ -6206,6 +6213,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1,2)
 
@@ -6261,7 +6269,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer_1, integer_2, integer_3)
@@ -6279,6 +6287,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 @pytest.mark.filterwarnings("ignore:Casting complex values to real discards the imaginary part")
 @pytest.mark.filterwarnings("ignore:overflow")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in cast")
+@pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'LLVM', reason="flang v>20 handles overflows differently", language='fortran')
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1,2)
 
@@ -6334,7 +6343,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
 
-    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF, language=language)
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF, language=language, verbose=2)
 
     assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(b1, b2, b3)
     assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer_1, integer_2, integer_3)
@@ -6412,6 +6421,20 @@ def test_unpacking_2D_of_known_size(language):
     f1 = arrays.unpack_array_2D_of_known_size
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+def test_assign_slice(language):
+    f1 = arrays.assign_slice
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    assert np.array_equal(f1(a, 10), f2(a, 10))
+
+def test_assign_slice_allow_neg(language):
+    f1 = arrays.assign_slice_allow_neg
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    assert np.array_equal(f1(a, 10), f2(a, 10))
 
 ##==============================================================================
 ## TEST INDEXING

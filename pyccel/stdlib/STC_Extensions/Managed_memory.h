@@ -1,4 +1,3 @@
-
 #include <stc/priv/linkage.h>
 
 #ifndef PYCCEL_MANAGED_MEM_H_INCLUDED
@@ -30,7 +29,7 @@ STC_INLINE Self _c_MEMB(_init)(void) { return c_literal(Self){false, NULL}; }
 STC_INLINE Self _c_MEMB(_make)(_m_value val) {
     Self owned;
     owned.is_owning = true;
-    owned.get = _i_malloc(_m_value, 1);
+    owned.get = i_malloc(c_sizeof(_m_value));
     *owned.get = val;
     return owned;
 }
@@ -44,6 +43,10 @@ STC_INLINE Self _c_MEMB(_from_ptr)(_m_value* ptr) {
 
 STC_INLINE Self _c_MEMB(_clone)(const Self self) {
     return _c_MEMB(_from_ptr)(self.get);
+}
+
+STC_INLINE Self _c_MEMB(_steal)(const Self self) {
+    return self;
 }
 
 STC_INLINE void _c_MEMB(_drop)(const Self* self) {
@@ -65,5 +68,6 @@ STC_INLINE _m_value _c_MEMB(_release)(Self self) {
     return out;
 }
 
+#undef _i_is_arc
 #include <stc/priv/linkage2.h>
 #include <stc/priv/template2.h>

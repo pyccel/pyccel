@@ -1,4 +1,3 @@
-# coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
@@ -17,6 +16,7 @@ from importlib.machinery import ExtensionFileLoader
 
 from filelock import FileLock, Timeout
 
+from pyccel.utilities.stage    import PyccelStage
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
 from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
@@ -268,9 +268,6 @@ def epyccel_seq(function_class_or_module, *,
     object
         Return accelerated Python module and function.
     """
-    # Store current directory
-    base_dirpath = os.getcwd()
-
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
@@ -330,20 +327,18 @@ def epyccel_seq(function_class_or_module, *,
 
     # Try is necessary to ensure lock is released
     try:
-        pymod_filename = f'{module_name}.py'
+        pymod_filename = os.path.join(epyccel_dirpath, f'{module_name}.py')
         # ...
 
         # Create new directories if not existing
         os.makedirs(folder, exist_ok=True)
         os.makedirs(epyccel_dirpath, exist_ok=True)
 
-        # Change working directory to '__epyccel__'
-        os.chdir(epyccel_dirpath)
-
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
+        pyccel_stage = PyccelStage()
         try:
             # Generate shared library
             execute_pyccel(pymod_filename,
@@ -362,9 +357,11 @@ def epyccel_seq(function_class_or_module, *,
                            output_name     = module_name,
                            conda_warnings  = conda_warnings,
                            context_dict    = context_dict)
+        except PyccelError as err:
+            raise err
         finally:
-            # Change working directory back to starting point
-            os.chdir(base_dirpath)
+            pyccel_stage.pyccel_finished()
+            print(errors, end='')
 
 
         # Import shared library

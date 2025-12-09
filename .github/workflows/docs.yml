@@ -31,7 +31,7 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
   BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: Documentation (docs, ${{ inputs.python_version || '3.10' }})
+    name: Documentation (docs, ${{ inputs.python_version || '3.11' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
@@ -48,7 +48,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**/*.py", "ci_tools/**/*.py", "**/*.md"]'
+          paths: '["pyccel/**/*.py", "ci_tools/**/*.py", "**/*.md", ".github/workflows/docs.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
@@ -139,10 +139,21 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'compare/docs/build/html'
+      - name: Check tutorial code
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        id: tutorial_check
+        run: |
+          FILES_TO_TEST=$(find tutorials/ -name '*.py')
+          for f in ${FILES_TO_TEST};
+          do
+            python3 $f
+          done
+        shell: bash
+        working-directory: ./compare/docs
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
         run:
-          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }}
+          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }} ${{ steps.tutorial_check.outcome }}
         shell: bash -l {0}
       - name: "Post completed"
         if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'

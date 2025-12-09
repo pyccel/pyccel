@@ -48,24 +48,8 @@ class Codegen:
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
-        self._printer  = None
         self._language = language
         self._verbose  = verbose
-
-        self._stmts = {}
-        _structs = [
-            'imports',
-            'body',
-            'routines',
-            'classes',
-            'modules',
-            'variables',
-            'interfaces',
-            ]
-        for key in _structs:
-            self._stmts[key] = []
-
-        self._collect_statements()
         self._is_program = self.ast.program is not None
 
         # instantiate code_printer
@@ -101,51 +85,13 @@ class Codegen:
         return self._name
 
     @property
-    def imports(self):
-        """Returns the imports of the source code."""
-
-        return self._stmts['imports']
-
-    @property
-    def variables(self):
-        """Returns the variables of the source code."""
-
-        return self._stmts['variables']
-
-    @property
-    def body(self):
-        """Returns the body of the source code, if it is a Program or Module."""
-
-        return self._stmts['body']
-
-    @property
-    def routines(self):
-        """Returns functions/subroutines."""
-
-        return self._stmts['routines']
-
-    @property
-    def classes(self):
-        """Returns the classes if Module."""
-
-        return self._stmts['classes']
-
-    @property
-    def interfaces(self):
-        """Returns the interfaces."""
-
-        return self._stmts['interfaces']
-
-    @property
-    def modules(self):
-        """Returns the modules if Program."""
-
-        return self._stmts['modules']
-
-    @property
     def is_program(self):
-        """Returns True if a Program."""
+        """
+        True if the file is a program.
 
+        True if the file is a program, in other words True if the file contains a
+        `if __name__ == '__main__'` statement.
+        """
         return self._is_program
 
     @property
@@ -153,12 +99,6 @@ class Codegen:
         """Returns the AST."""
 
         return self._ast
-
-    @property
-    def language(self):
-        """Returns the used language"""
-
-        return self._language
 
     def get_printer_imports(self):
         """
@@ -177,28 +117,6 @@ class Codegen:
             for i in self._parser.metavars['printer_imports'].split(','):
                 additional_imports.setdefault(i.strip(), None)
         return additional_imports
-
-    def _collect_statements(self):
-        """Collects statements and split them into routines, classes, etc."""
-
-        scope  = self.parser.scope
-
-        funcs      = []
-        interfaces = []
-
-
-        for i in scope.functions.values():
-            if isinstance(i, FunctionDef) and not i.is_header:
-                funcs.append(i)
-            elif isinstance(i, Interface):
-                interfaces.append(i)
-
-        self._stmts['imports'   ] = list(scope.imports['imports'].values())
-        self._stmts['variables' ] = list(self.parser.get_variables(scope))
-        self._stmts['routines'  ] = funcs
-        self._stmts['classes'   ] = list(scope.classes.values())
-        self._stmts['interfaces'] = interfaces
-        self._stmts['body']       = self.ast
 
 
     def export(self, filename):
@@ -253,7 +171,7 @@ class Codegen:
         if self._verbose:
             print ('>>> Printing :: ', pyi_filename)
         code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
-        if self.language != 'python':
+        if self._language != 'python':
             printer_imports = ', '.join(self.get_printer_imports().keys())
             if printer_imports:
                 code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
@@ -262,7 +180,7 @@ class Codegen:
 
         # print program
         prog_filename = None
-        if self.is_program and self.language != 'python':
+        if self.is_program and self._language != 'python':
             folder = os.path.dirname(filename)
             fname  = os.path.basename(filename)
             prog_filename = os.path.join(folder,"prog_"+fname)

@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 import sys
-from typing import TypeVar
+from typing import TypeVar, Final
 
 import pytest
 import numpy as np
+from numpy.random import randint
 
 from pyccel import epyccel
 
@@ -447,9 +448,113 @@ def test_wrong_argument_combination_in_interface(language):
     with pytest.raises(TypeError):
         epyc_f(3.5, 4)
 
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    clean_test()
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
+)
+def test_argument_checks_with_interfaces(language):
+    from modules import Module_12 as mod
+    modnew = epyccel(mod, language=language)
+    with pytest.raises(TypeError):
+        modnew.times_3(1)
+    with pytest.raises(TypeError):
+        modnew.add_2(1)
+
+def test_container_interface(language):
+    T = TypeVar('T', 'int[:]', list[int], set[int])
+
+    def f(a : Final[T]):
+        return len(a)
+
+    epyc_f = epyccel(f, language=language)
+    assert f([1,2]) == epyc_f([1,2])
+    assert f({1,2}) == epyc_f({1,2})
+    assert f(np.array([1,2])) == epyc_f(np.array([1,2]))
+
+def test_lambda(language):
+    def f(a : int):
+        f1 = lambda x: x**2 + 1 # pylint: disable=unnecessary-lambda-assignment
+        g1 = lambda x: f1(x)**2 + 1 # pylint: disable=unnecessary-lambda-assignment
+        return g1(a)
+
+    epyc_f = epyccel(f, language=language)
+    val = randint(20)
+    assert f(val) == epyc_f(val)
+    assert isinstance(epyc_f(val), type(epyc_f(val)))
+
+def test_lambda_2(language):
+    def f(a : int):
+        f2 = lambda x,y: x**2 + y**2 + 1 # pylint: disable=unnecessary-lambda-assignment
+        return f2(a, 3*a)
+
+    epyc_f = epyccel(f, language=language)
+    val = randint(20)
+    assert f(val) == epyc_f(val)
+    assert isinstance(epyc_f(val), type(epyc_f(val)))
+
+@pytest.mark.language_agnostic
+def test_argument_types():
+    def f(a : int, /, b : int, *args : int, c : int, **kwargs : int):
+        my_sum = sum(v for v in kwargs.values())
+        return my_sum + 2*a + 3*b + 5*c + 7*sum(args)
+
+    epyc_f = epyccel(f, language = 'python')
+    a = 8
+    b = 9
+    c = 25
+    args = (7, 14, 21)
+    kwargs = {'d': 11, 'f': 13}
+    assert f(a, b, *args, c=c, **kwargs) == epyc_f(a, b, *args, c=c, **kwargs)
+
+def test_positional_only_arguments(language):
+    def f(a : int, /, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b) == epyc_f(a, b)
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a=a, b=b)
+
+def test_keyword_only_arguments(language):
+    def f(a : int, *, b : int):
+        return 2*a + 3*b
+
+    epyc_f = epyccel(f, language = language)
+    a = 8
+    b = 9
+    assert f(a, b=b) == epyc_f(a, b=b)
+    with pytest.raises(TypeError):
+        epyc_f(a, b)
+
+def test_lambda_usage(language):
+    f = lambda x: x+1 # pylint: disable=unnecessary-lambda-assignment
+
+    def g(a : 'int64[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,), dtype=np.int64)
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)
+
+def test_func_usage(language):
+    def f(x : int):
+        return x+1
+
+    def g(a : 'int64[:]'):
+        for i, ai in enumerate(a):
+            a[i] = f(ai)
+
+    epyc_g = epyccel(g, language=language)
+    val = randint(20, size=(10,), dtype=np.int64)
+    val_epyc = val.copy()
+    g(val)
+    epyc_g(val_epyc)
+    assert np.array_equal(val, val_epyc)

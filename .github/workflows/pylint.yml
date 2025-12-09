@@ -31,13 +31,13 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.9' }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
   BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
   Linter:
     runs-on: ubuntu-latest
-    name: Python best practices (pylint, ${{ inputs.python_version || '3.9' }})
+    name: Python best practices (pylint, ${{ inputs.python_version || '3.10' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
@@ -46,7 +46,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["**/*.py"]'
+          paths: '["**/*.py", ".github/workflows/pylint.yml", ".github/actions/**"]'
           do_not_skip: '["push"]'
 
       - uses: actions/checkout@v4

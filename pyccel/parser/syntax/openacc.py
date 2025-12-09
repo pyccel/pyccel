@@ -15,14 +15,19 @@ from pyccel.ast.core import AnnotatedComment
 
 DEBUG = False
 
-class Openacc(object):
-    """Class for Openacc syntax."""
-    def __init__(self, **kwargs):
-        """
-        Constructor for Openacc.
+class Openacc:
+    """
+    Class for OpenACC syntax.
 
-        """
-        self.statements = kwargs.pop('statements', [])
+    Class from which OpenACC syntax descriptors inherit.
+
+    Parameters
+    ----------
+    statements : iterable
+        The OpenACC statements.
+    """
+    def __init__(self, statements = ()):
+        self.statements = list(statements)
 
 class AccBasic(BasicStmt):
     pass

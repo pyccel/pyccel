@@ -42,8 +42,8 @@ class CompileObj:
     dependencies : iterable of CompileObjs
         Objects which must also be compiled in order to compile this module/program.
 
-    accelerators : iterable of str
-        Tool used to accelerate the code (e.g. openmp openacc).
+    extra_compilation_tools : iterable of str
+        Tools used which require additional compilation flags/include dirs/libs/etc.
 
     has_target_file : bool, default : True
         If set to false then this flag indicates that the file has no target.
@@ -57,7 +57,7 @@ class CompileObj:
     compilation_in_progress = FileLock('.lock_acquisition.lock')
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_lock_target','_lock_source','_flags','_include','_libs',
-                 '_libdir','_accelerators','_dependencies','_has_target_file')
+                 '_libdir','_extra_compilation_tools','_dependencies','_has_target_file')
     def __init__(self,
                  file_name,
                  folder,
@@ -66,7 +66,7 @@ class CompileObj:
                  libs         = (),
                  libdir      = (),
                  dependencies = (),
-                 accelerators = (),
+                 extra_compilation_tools = (),
                  has_target_file = True,
                  prog_target  = None):
 
@@ -79,11 +79,11 @@ class CompileObj:
         self._module_target = rel_mod_name.with_suffix('.o')
 
         if prog_target:
-            self._prog_target = folder / prog_target
+            self._prog_target = prog_target
         else:
-            self._prog_target = rel_mod_name
+            self._prog_target = self._module_name
         if sys.platform == "win32":
-            self._prog_target = self._prog_target.with_suffix('.exe')
+            self._prog_target = self._prog_target + '.exe'
 
         self._lock_target  = FileLock(str(self.module_target.with_suffix(
                                             self.module_target.suffix + '.lock')))
@@ -91,11 +91,13 @@ class CompileObj:
                                             self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._include     = {folder, *(Path(i) for i in include)}
+        self._include     = {*(Path(i) for i in include)}
+        if has_target_file:
+            self._include.add(folder)
         self._libs         = list(libs)
         self._libdir      = set(libdir)
-        self._accelerators = set(accelerators)
-        self._dependencies = {a.module_target:a for a in dependencies}
+        self._extra_compilation_tools = set(extra_compilation_tools)
+        self._dependencies = {getattr(a, 'module_target', a):a for a in dependencies}
         self._has_target_file = has_target_file
 
     def reset_folder(self, folder):
@@ -292,18 +294,17 @@ class CompileObj:
             self._lock_target.release()
 
     @property
-    def accelerators(self):
+    def extra_compilation_tools(self):
         """
-        Get the names of the accelerators required to compile the file.
+        The name of tools used which require additional compilation information.
 
-        Return a set containing the name of all accelerators required
-        to compile the file. An accelerator is a tool used to add a new
-        capacity to the code. Such an addition requires multiple flags
-        (include/libs/libdir/etc) and is therefore specified separately
-        in the compiler configuration file. Examples of 'accelerators' are:
-        openmp, openacc, python.
+        Return a set containing the name of all tools required additional
+        information to compile the file. This additional informationcan take the
+        form of flags, include directories, libraries, orr library directories.
+        Examples of 'extra_compilation_tools' are: openmp, openacc, python.
         """
-        return self._accelerators.union([da for d in self._dependencies.values() for da in d.accelerators])
+        return self._extra_compilation_tools.union([da for d in self._dependencies.values() \
+                                                       for da in d.extra_compilation_tools])
 
     def __eq__(self, other):
         return self.module_target == other.module_target

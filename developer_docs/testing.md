@@ -20,7 +20,7 @@ Useful flags include:
 - `--lf` : run only the tests which failed the last time they were run.
 - `--ff` : run the tests which failed the last time they were run before running other tests.
 
-Before opening a PR you should always check that the tests that you have added are working correctly. However if possible it is also good to run the full test suite once as changes to the code can sometimes have an unexpected knock-on effect. The command `pyccel-test` runs all tests that appear in the CI.
+Before opening a PR you should always check that the tests that you have added are working correctly. However if possible it is also good to run the full test suite once as changes to the code can sometimes have an unexpected knock-on effect. The command `pyccel test` runs all tests that appear in the CI.
 
 ## Static analysis
 

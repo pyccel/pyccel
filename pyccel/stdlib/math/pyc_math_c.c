@@ -53,12 +53,7 @@ double fsign(double x)
     return (double)((x > 0) - (x < 0));
 }
 
-/* numpy.sign for complex for NumPy v1 */
-double complex csgn(double complex x)
-{
-    return x ? ((!creal(x) && cimag(x) < 0) || (creal(x) < 0) ? -1 : 1) : 0;
-}
-
+/* numpy.sign for complex */
 double complex csign(double complex x)
 {
     double absolute = cabs(x);
@@ -110,6 +105,11 @@ int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits)
             return ((arg + pivot_point) / mul_fact) * mul_fact;
         }
     }
+}
+
+double complex cpyc_expm1(double complex x) {
+    double a = sin(cimag(x) * 0.5);
+    return (expm1(creal(x)) * cos(cimag(x)) - 2. * a * a) + exp(creal(x)) * sin(cimag(x)) * _Complex_I;
 }
 
 extern inline double       pyc_radians(double degrees);

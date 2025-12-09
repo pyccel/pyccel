@@ -11,6 +11,17 @@ if github_debugging:
     import sys
     sys.stdout = sys.stderr
 
+language_markers = ('language_agnostic', 'fortran', 'c', 'python')
+
+@pytest.fixture(autouse=True)
+def check_language_markers(request):
+    """
+    Ensure all tests have a language marker.
+    """
+    markers = [m.name for m in request.node.iter_markers()]
+    assert len(markers) > 0
+    assert any(l in markers for l in language_markers)
+
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -29,6 +40,34 @@ def language(request):
 )
 def stc_language(request):
     return request.param
+
+@pytest.fixture(autouse=True)
+def skipif_by_language(request):
+    """
+    Looks for the decorator `skipif_by_language(condition, *, language, reason)`
+    and skips the test when the condition is met for a given language.
+
+    """
+    mark = request.node.get_closest_marker('skipif_by_language')
+    if mark:
+
+        preamble = "Error evaluating 'skipif_by_language': "
+        assert len(mark.args) == 1, preamble + "you need to specify a boolean condition"
+        assert 'language' in mark.kwargs.keys(), preamble + "you need to specify language=STRING"
+        assert 'reason'   in mark.kwargs.keys(), preamble + "you need to specify reason=STRING"
+
+        condition = mark.args[0]
+        language  = mark.kwargs['language']
+        reason    = mark.kwargs['reason']
+
+        assert isinstance(condition, bool), preamble + "condition must be bool"
+        assert isinstance(language, str), preamble + "language must be str"
+        assert isinstance(reason, str), preamble + "reason must be str"
+
+        assert 'language' in request.fixturenames, preamble + "test must depend on the language fixture"
+
+        if condition and request.getfixturevalue('language') == language:
+            pytest.skip(reason)
 
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):

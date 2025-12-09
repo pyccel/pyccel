@@ -120,10 +120,10 @@ def execute_pyccel(fname, *,
     """
     start = time.time()
     timers = {}
-    if fname.endswith('.pyh'):
-        syntax_only = True
+    if fname.endswith('.pyi'):
+        semantic_only = True
         if verbose:
-            print("Header file recognised, stopping after syntactic stage")
+            print("Stub file recognised, stopping after semantic stage")
 
     if Path(fname).stem in python_builtin_libs:
         raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
@@ -145,13 +145,6 @@ def execute_pyccel(fname, *,
     # variable to imitate Python's import behavior
     base_dirpath = os.getcwd()
     sys.path.insert(0, base_dirpath)
-
-    # Unified way to handle errors: print formatted error message, then move
-    # to original working directory. Caller should then raise exception.
-    def handle_error(stage):
-        print('\nERROR at {} stage'.format(stage))
-        errors.check()
-        os.chdir(base_dirpath)
 
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
@@ -208,57 +201,30 @@ def execute_pyccel(fname, *,
 
     Scope.name_clash_checker = name_clash_checkers[language]
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax-start
     # Parse Python file
-    try:
-        parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
-        parser.parse(verbose=verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-    except PyccelError:
-        handle_error('parsing (syntax)')
-        raise
+    parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
+    parser.parse(verbose=verbose)
     if errors.has_errors():
-        handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
     timers["Syntactic Stage"] = time.time() - start_syntax
 
     if syntax_only:
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
-        return
 
     start_semantic = time.time()
     # Annotate abstract syntax Tree
-    try:
-        parser.annotate(verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-    except PyccelError:
-        handle_error('annotation (semantic)')
-        # Raise a new error to avoid a large traceback
-        raise PyccelSemanticError('Semantic step failed') from None
+    parser.annotate(verbose = verbose)
 
     if errors.has_errors():
-        handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
     timers["Semantic Stage"] = time.time() - start_semantic
 
     if semantic_only:
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
         return
@@ -268,22 +234,11 @@ def execute_pyccel(fname, *,
     semantic_parser = parser.semantic_parser
     start_codegen = time.time()
     # Generate .f90 file
-    try:
-        codegen = Codegen(semantic_parser, module_name, language, verbose)
-        fname = os.path.join(pyccel_dirpath, module_name)
-        fname, prog_name = codegen.export(fname)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-    except PyccelError:
-        handle_error('code generation')
-        # Raise a new error to avoid a large traceback
-        raise PyccelCodegenError('Code generation failed') from None
+    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    fname = os.path.join(pyccel_dirpath, module_name)
+    fname, prog_name = codegen.export(fname)
 
     if errors.has_errors():
-        handle_error('code generation')
         raise PyccelCodegenError('Code generation failed')
 
     timers["Codegen Stage"] = time.time() - start_codegen
@@ -296,10 +251,9 @@ def execute_pyccel(fname, *,
         shutil.copyfile(fname, new_location)
 
         # Change working directory back to starting point
-        os.chdir(base_dirpath)
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
+
         return
 
     compile_libs, deps = get_module_and_compile_dependencies(parser)
@@ -312,7 +266,7 @@ def execute_pyccel(fname, *,
             libs         = compile_libs,
             libdir       = libdir,
             dependencies = modules + list(deps.values()),
-            accelerators = accelerators)
+            extra_compilation_tools = accelerators)
     parser.compile_obj = mod_obj
 
     #------------------------------------------------------
@@ -322,106 +276,56 @@ def execute_pyccel(fname, *,
     #         # Call same function on 'dep'
     #         pass
     #------------------------------------------------------
-    try:
-        manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
-                language, verbose, convert_only)
-    except NotImplementedError as error:
-        errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
+    manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
+            language, verbose, convert_only)
 
     if convert_only:
-        # Change working directory back to starting point
-        os.chdir(base_dirpath)
-        pyccel_stage.pyccel_finished()
         if time_execution:
             print_timers(start, timers)
         return
 
     start_compile_target_language = time.time()
+    pyccel_stage.set_stage('compilation')
     # Compile code to modules
-    try:
-        compiler.compile_module(compile_obj=mod_obj,
-                output_folder=pyccel_dirpath,
+    compiler.compile_module(compile_obj=mod_obj,
+            output_folder=pyccel_dirpath,
+            language=language,
+            verbose=verbose)
+
+
+    if codegen.is_program:
+        prog_obj = CompileObj(file_name = prog_name,
+                folder       = pyccel_dirpath,
+                dependencies = (mod_obj,),
+                prog_target  = module_name)
+        generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
+                output_folder=folder,
                 language=language,
                 verbose=verbose)
-    except Exception:
-        handle_error('compilation')
-        raise
 
+    timers["Compilation without wrapper"] = time.time() - start_compile_target_language
 
-    try:
-        if codegen.is_program:
-            prog_obj = CompileObj(file_name = prog_name,
-                    folder       = pyccel_dirpath,
-                    dependencies = (mod_obj,),
-                    prog_target  = module_name)
-            generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                    output_folder=pyccel_dirpath,
-                    language=language,
-                    verbose=verbose)
-
-        timers["Compilation without wrapper"] = time.time() - start_compile_target_language
-
-        # Create shared library
-        generated_filepath, shared_lib_timers = create_shared_library(codegen,
-                                               mod_obj,
-                                               language = language,
-                                               wrapper_flags = wrapper_flags,
-                                               pyccel_dirpath = pyccel_dirpath,
-                                               compiler = compiler,
-                                               sharedlib_modname = output_name,
-                                               verbose = verbose)
-    except NotImplementedError as error:
-        msg = str(error)
-        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error',
-            traceback=error.__traceback__)
-        handle_error('code generation (wrapping)')
-        raise PyccelCodegenError(msg) from None
-    except PyccelError:
-        handle_error('code generation (wrapping)')
-        raise
-    except Exception:
-        handle_error('shared library generation')
-        raise
+    # Create shared library
+    generated_filepath, shared_lib_timers = create_shared_library(codegen,
+                                           mod_obj,
+                                           language = language,
+                                           wrapper_flags = wrapper_flags,
+                                           pyccel_dirpath = pyccel_dirpath,
+                                           output_dirpath = folder,
+                                           compiler = compiler,
+                                           sharedlib_modname = output_name,
+                                           verbose = verbose)
 
     timers.update(shared_lib_timers)
 
     if errors.has_errors():
-        handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation failed')
 
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    generated_filename = os.path.basename(generated_filepath)
-    target = os.path.join(folder, generated_filename)
-    shutil.move(generated_filepath, target)
-    generated_filepath = target
     if verbose:
         print( '> Shared library has been created: {}'.format(generated_filepath))
 
-    if codegen.is_program:
-        generated_program_filename = os.path.basename(generated_program_filepath)
-        target = os.path.join(folder, generated_program_filename)
-        shutil.move(generated_program_filepath, target)
-        generated_program_filepath = target
-
-        if verbose:
+        if codegen.is_program:
             print( '> Executable has been created: {}'.format(generated_program_filepath))
-
-    # Print all warnings now
-    if errors.has_warnings():
-        errors.check()
-
-    # Change working directory back to starting point
-    os.chdir(base_dirpath)
-    pyccel_stage.pyccel_finished()
 
     if time_execution:
         print_timers(start, timers)

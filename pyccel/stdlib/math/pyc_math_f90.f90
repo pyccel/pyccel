@@ -20,10 +20,10 @@ public :: pyc_gcd, &
           pyc_degrees, &
           amax, &
           amin, &
-          csgn, &
           csign, &
           pyc_bankers_round, &
-          pyc_floor_div
+          pyc_floor_div, &
+          expm1
 
 private
 
@@ -54,14 +54,9 @@ interface amin
     module procedure amin_8
 end interface
 
-interface csgn
-    module procedure numpy_v1_sign_c32
-    module procedure numpy_v1_sign_c64
-end interface csgn
-
 interface csign
-    module procedure numpy_v2_sign_c32
-    module procedure numpy_v2_sign_c64
+    module procedure sign_c32
+    module procedure sign_c64
 end interface csign
 
 interface pyc_bankers_round
@@ -75,6 +70,18 @@ interface pyc_floor_div
     module procedure pyc_floor_div_i32
     module procedure pyc_floor_div_i64
 end interface pyc_floor_div
+
+interface
+   real(f64) pure function c_expm1(x) bind(c, name='expm1')
+     use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE
+     real(f64), intent(in), value :: x
+   end function c_expm1
+end interface
+
+interface expm1
+    module procedure pyc_expm1_f64
+    module procedure pyc_expm1_c64
+end interface expm1
 
 contains
 
@@ -299,51 +306,8 @@ function amin_4(arr) result(min_value)
     return
 
   end function amin_8
-
-
-  elemental function numpy_v1_sign_c32(x) result(Out_0001)
-
-    implicit none
-
-    complex(c32) :: Out_0001
-    complex(c32), value :: x
-    logical :: real_ne_zero ! Condition for x.real different than 0
-    logical :: imag_ne_zero ! Condition for x.imag different than 0
-    real(f32) :: real_sign ! np.sign(x.real)
-    real(f32) :: imag_sign ! np.sign(x.imag)
-
-    real_ne_zero = (real(x) .ne. 0._f32)
-    imag_ne_zero = (aimag(x) .ne. 0._f32)
-    real_sign = sign(1._f32, real(x))
-    imag_sign = sign(merge(1._f32, 0._f32, imag_ne_zero), aimag(x))
-
-    Out_0001 = merge(real_sign, imag_sign, real_ne_zero)
-    return
-
-  end function numpy_v1_sign_c32
   
-  elemental function numpy_v1_sign_c64(x) result(Out_0001)
-
-    implicit none
-
-    complex(c64) :: Out_0001
-    complex(c64), value :: x
-    logical :: real_ne_zero ! Condition for x.real different than 0
-    logical :: imag_ne_zero ! Condition for x.imag different than 0
-    real(f64) :: real_sign ! np.sign(x.real)
-    real(f64) :: imag_sign ! np.sign(x.imag)
-
-    real_ne_zero = (real(x) .ne. 0._f64)
-    imag_ne_zero = (aimag(x) .ne. 0._f64)
-    real_sign = sign(1._f64, real(x))
-    imag_sign = sign(merge(1._f64, 0._f64, imag_ne_zero), aimag(x))
-
-    Out_0001 = merge(real_sign, imag_sign, real_ne_zero)
-    return
-
-  end function numpy_v1_sign_c64
-  
-  elemental function numpy_v2_sign_c32(x) result(Out_0001)
+  elemental function sign_c32(x) result(Out_0001)
     implicit none
 
     complex(c32) :: Out_0001
@@ -358,9 +322,9 @@ function amin_4(arr) result(min_value)
       Out_0001 = x / abs_val
     end if
 
-  end function numpy_v2_sign_c32
+  end function sign_c32
 
-  elemental function numpy_v2_sign_c64(x) result(Out_0001)
+  elemental function sign_c64(x) result(Out_0001)
     implicit none
 
     complex(c64) :: Out_0001
@@ -375,7 +339,7 @@ function amin_4(arr) result(min_value)
       Out_0001 = x / abs_val
     end if
 
-  end function numpy_v2_sign_c64
+  end function sign_c64
 
 pure function pyc_bankers_round_float(arg, ndigits) result(rnd)
 
@@ -454,5 +418,27 @@ elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
   res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i64
 
+elemental pure function pyc_expm1_f64(x) result(Out_0001)
+    implicit none
+    real(f64) :: Out_0001
+    real(f64), value :: x
+
+    Out_0001 = c_expm1(x)
+
+end function pyc_expm1_f64
+
+elemental pure function pyc_expm1_c64(x) result(Out_0001)
+    implicit none
+
+    complex(c64) :: Out_0001
+    complex(c64), value :: x
+
+    real(f64) :: a
+
+    a = sin(aimag(x) * 0.5_f64)
+    Out_0001 = (c_expm1(real(x)) * cos(aimag(x)) - 2._f64 * a * a) + &
+               (exp(real(x)) * sin(aimag(x))) * cmplx(0,1, kind = c64)
+
+end function pyc_expm1_c64
 
 end module pyc_math_f90

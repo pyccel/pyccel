@@ -28,12 +28,12 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
 
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
-    name: Best practices (pyccel_lint, ${{ inputs.python_version || '3.11' }})
+    name: Best practices (pyccel_lint, ${{ inputs.python_version || '3.12' }})
     if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     steps:
@@ -42,7 +42,7 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["**/*.py"]'
+          paths: '["**/*.py", ".github/workflows/pyccel_lint.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 

@@ -10,67 +10,167 @@ import warnings
 
 __all__ = (
     'allow_negative_index',
-    'bypass',
     'elemental',
     'inline',
+    'low_level',
     'private',
     'pure',
     'stack_array',
-    'sympy',
     'types',
 )
 
 
-def sympy(f):
-    return f
-
-def bypass(f):
-    return f
-
 def pure(f):
-    return f
-
-def private(f):
-    return f
-
-def elemental(f):
-    return f
-
-def inline(f):
-    """Indicates that function calls to this function should
-    print the function body directly"""
-    return f
-
-def stack_array(f, *args):
     """
-    Decorator indicates that all arrays mentioned as args should be stored
-    on the stack.
+    Add the pure keyword to the generated Fortran function.
+
+    Pure functions in Fortran are free from side effects. In other words, they
+    can't modify global objects or the arguments of the function, and they must
+    always produce the same output for the same inputs. This enables compiler
+    optimisations like function reordering or parallelisation.
 
     Parameters
     ----------
     f : Function
-        The function to which the decorator is applied
-    args : list of str
-        A list containing the names of all arrays which should be stored on the stack
+        The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
+    """
+    return f
+
+def private(f):
+    """
+    Indicate that a function shouldn't be exposed in the Python interface.
+
+    Indicate that a function shouldn't be exposed in the Python interface. It
+    is translated and can be called by other functions in the module but will
+    not be wrapped.
+
+    Parameters
+    ----------
+    f : Function
+        The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
+    """
+    return f
+
+def elemental(f):
+    """
+    Indicate that the function can also be used element-wise.
+
+    This decorator indicates that the function can be applied element-wise to
+    array arguments. The function operates on scalar inputs and the wrapper
+    will be provided for the annotated arguments, but in the low-level code
+    the function can be called on arrays whose data type matches the arguments.
+
+    Parameters
+    ----------
+    f : Function
+        The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
+    """
+    return f
+
+def inline(f):
+    """
+    Indicate that the function should be inlined in the low-level code.
+
+    This decorator indicates that the function should be inlined where it is
+    called. Calls are replaced with the function body, where the
+    arguments are substituted for the function parameters.
+
+    Parameters
+    ----------
+    f : Function
+        The function to which the decorator is applied.
+
+    Returns
+    -------
+    Function
+        The unchanged function.
+    """
+    return f
+
+def stack_array(*args):
+    """
+    Indicate that arrays should be stored on the stack.
+
+    This decorator indicates that all arrays whose names appear among the
+    arguments should be stored on the stack.
+
+    Parameters
+    ----------
+    *args : str
+        The names of all arrays which should be stored on the stack.
+
+    Returns
+    -------
+    Function
+        The identity decorator which will be applied to the function.
     """
     def identity(f):
         return f
     return identity
 
-def allow_negative_index(f,*args):
+def allow_negative_index(*args):
     """
-    Decorator indicates that all arrays mentioned as args can be accessed with
+    Indicate that arrays can be accessed with negative indexes.
+
+    This decorator indicates that all arrays mentioned as args can be accessed with
     negative indexes. As a result all non-constant indexing uses a modulo
-    function. This can have negative results on the performance
+    function. This can have negative results on the performance.
 
     Parameters
     ----------
-    f : Function
-        The function to which the decorator is applied
-    args : list of str
-        A list containing the names of all arrays which can be accessed
-        with non-constant negative indexes
+    *args : str
+        The names of all arrays which can be accessed with non-constant
+        negative indexes.
+
+    Returns
+    -------
+    Function
+        The identity decorator which will be applied to the function.
     """
     def identity(f):
+        return f
+    return identity
+
+def low_level(low_level_name : str):
+    """
+    Indicate the low-level name of the function being wrapped.
+
+    Indicate the low-level name of the function being wrapped. This decorator
+    is only designed to be used in .pyi files. It maps the name of Python
+    function prototypes to the name of the low-level function it describes.
+    These two names may be different due to naming conflicts, scoping names,
+    or because more explicit names are wanted in Python (e.g. to avoid
+    6 character Fortran names).
+
+    Parameters
+    ----------
+    low_level_name : str
+        The low-level name of the function being described.
+
+    Returns
+    -------
+    Function
+        The identity decorator which will be applied to the function.
+    """
+    def identity(f):
+        """
+        The decorator that will actually be applied in the Python code.
+        This method does nothing.
+        """
         return f
     return identity
