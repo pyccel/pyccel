@@ -27,7 +27,7 @@ jobs:
         run: |
           start_line=$(grep "^## " CHANGELOG.md | head -1)
           today=$(printf '%(%Y-%m-%d)T')
-          expected_start_line="## \[${{ steps.version.outputs.TAG_NAME }}\] - ${today}"
+          expected_start_line="## \[v${{ steps.version.outputs.TAG_NAME }}\] - ${today}"
           if [[ "${start_line}" != "${expected_start_line}" ]]
           then
             echo "The most recent entry in the CHANGELOG doesn't match the expected format."
