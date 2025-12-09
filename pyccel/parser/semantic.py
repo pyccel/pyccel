@@ -1556,10 +1556,8 @@ class SemanticParser(BasicParser):
 
         # Retrieve the annotated function
         if cls_base_syntactic:
-            new_name = cls_scope.get_expected_name(old_name)
             func = cls_scope.find(old_name, 'functions')
         else:
-            new_name = self.scope.get_expected_name(old_name)
             func = self.scope.find(old_name, 'functions')
         assert func is not None
         # Add the Module of the imported function to the new function
