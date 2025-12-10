@@ -101,6 +101,24 @@ gcc_info = {'exec' : 'gcc',
             }
 
 #------------------------------------------------------------
+gpp_info = {'exec' : 'g++',
+            'mpi_exec' : 'mpic++',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-funroll-loops",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
+            'mpi': {
+                },
+            'openmp': {
+                'flags' : ('-fopenmp',),
+                'libs'  : ('gomp',),
+                },
+            'openacc': {
+                'flags' : ("-ta=multicore", "-Minfo=accel"),
+                },
+            }
+
+#------------------------------------------------------------
 clang_info = {'exec': 'clang',
             'mpi_exec': 'mpicc',
             'debug_flags': ("-g", "-O0",),
@@ -289,6 +307,7 @@ else:
 
 #------------------------------------------------------------
 gcc_info.update(python_info)
+gpp_info.update(python_info)
 gfort_info.update(python_info)
 icc_info.update(python_info)
 ifort_info.update(python_info)
@@ -302,6 +321,7 @@ flang_info.update(python_info)
 available_compilers = {
                         'GNU': {
                             'c' : gcc_info,
+                            'c++' : gpp_info,
                             'fortran' : gfort_info
                             },
                         'intel': {
