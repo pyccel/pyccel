@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+## \[2.1.0\] - 2025-12-09
+
+### Added
+
 -   #221 : Add new `pyccel make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
