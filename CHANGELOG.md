@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+## \[2.1.0\] - 2025-12-09
+
+### Added
+
 -   #221 : Add new `pyccel make` command for multi-file compilation.
 -   #1741 : Add support for set method `difference()`.
 -   #1742 : Add support for set method `difference_update()`.
@@ -70,6 +82,8 @@ All notable changes to this project will be documented in this file.
 -   #2292 : Fix memory leak when memory is allocated in a function.
 -   #2356 : Fix missing language markers in tests.
 -   #2524 : Fix warning about type conversion in bind-c files.
+-   #2529 : Fix missing exit code from `pyccel test` command line tool.
+-   #2529 : Fix missing `pyccel clean` call in `pyccel_test`.
 -   Rename `main` function when translating to C.
 
 ### Changed

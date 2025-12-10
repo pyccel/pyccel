@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
 from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
+from .pyccel_clean import pyccel_clean
 
 __all__ = ('pyccel_test',
            'pyccel_test_command',
@@ -40,8 +41,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     using pytest. The tests are run in two stages: first, the
     single-process tests which must be run one at a time
     are run, and then the single-process tests which can be
-    run in parallel are run. The function returns the return
-    code of the pytest command.
+    run in parallel are run. The function exits with the exit
+    code of the pytest command (see `pytest.ExitCode` enum).
 
     If the user stops the tests with Ctrl+C, the function will
     print a message and exit gracefully.
@@ -67,15 +68,14 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     run_mpi : bool
         If True, the function will not run the parallel tests.
 
-    Returns
-    -------
-    pytest.ExitCode
-        The return code of the pytest command. If the tests were
-        interrupted by the user, the return code will be
-        pytest.ExitCode.INTERRUPTED. If the tests failed, the
-        return code will be pytest.ExitCode.TESTS_FAILED.
-        If the tests passed, the return code will be
-        pytest.ExitCode.OK.
+    Notes
+    -----
+    This function exits with `sys.exit(final_retcode)`, where
+    `final_retcode` is one of the Pytest exit codes encoded by the
+    enumeration `pytest.ExitCode`. If the tests were interrupted by
+    the user, the exit code is `pytest.ExitCode.INTERRUPTED`. If the
+    tests failed, the exit code is `pytest.ExitCode.TESTS_FAILED`.
+    If the tests passed, the exit code is `pytest.ExitCode.OK`.
     """
 
     assert isinstance(folder, (pathlib.Path, type(None)))
@@ -160,18 +160,19 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
 
     # Descriptions of the tests:
     desc_1 = "Run the single-process tests which must be run one at a time... [all languages]"
-    desc_2 = "Run the single-process tests which can be run in parallel... [language: C]"
-    desc_3 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
-    desc_4 = "Run the single-process tests which can be run in parallel... [language: Python]"
-    descriptions = [desc_1, desc_2, desc_3, desc_4]
+    desc_2 = "Run the single-process tests which can be run in parallel... [language-agnostic]"
+    desc_3 = "Run the single-process tests which can be run in parallel... [language: C]"
+    desc_4 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
+    desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
+    descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
 
     # Commands to run the tests:
     cmd_1 = ['-ra', '-m (xdist_incompatible)']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
-    cmd_2 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
-    cmd_4 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
-    commands = [cmd_1, cmd_2, cmd_3, cmd_4]
+    cmd_2 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
+    cmd_3 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
+    cmd_4 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
+    cmd_5 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
+    commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
 
     if language != 'All':
         cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
@@ -203,7 +204,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         print(f'> {" ".join(cmd_mpi)}')
         if dry_run:
             print("Dry run, not executing the parallel tests.")
-            retcode = pytest.ExitCode.OK
         else:
             p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
             print(p.stdout)
@@ -212,6 +212,8 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
                 print(p.stderr)
                 retcode = pytest.ExitCode.TESTS_FAILED
 
+    final_retcode = retcode
+
     # Run the tests in the specified order
     for desc, cmd in zip(descriptions, commands):
         print()
@@ -219,16 +221,17 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         print(f'> pytest {" ".join(cmd)}')
         if dry_run:
             print("Dry run, not executing the tests.")
-            retcode = pytest.ExitCode.OK
         else:
             retcode = pytest.main(cmd)
             print(f"\nPytest return code: {retcode.name}")
             if retcode == pytest.ExitCode.INTERRUPTED:
                 print("\nTest execution was interrupted by the user, exiting...\n")
-                return retcode
+                sys.exit(retcode)
+            pyccel_clean(remove_shared_libs = True)
+            final_retcode = final_retcode or retcode
 
     # Return the final return code
-    return retcode
+    sys.exit(final_retcode)
 
 def setup_pyccel_test_parser(parser, add_version=False):
     """
