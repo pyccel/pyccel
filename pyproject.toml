@@ -70,7 +70,7 @@ logging.level = "INFO"
 sdist.cmake = true
 
 sdist.include = [
-  "AUTHOR",
+  "AUTHORS",
   "CHANGELOG.md",
   "CITATION.cff",
   "LICENSE",
