@@ -46,7 +46,6 @@ inline double        pyc_fmodulo(double a, double b)
 
 long long int isign(long long int x);
 double fsign(double x);
-double complex csign(double complex x);
 
 double fpyc_bankers_round(double arg, int64_t ndigits);
 int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
@@ -62,6 +61,16 @@ PY_FLOOR_DIV_TYPE(int8_t)
 PY_FLOOR_DIV_TYPE(int16_t)
 PY_FLOOR_DIV_TYPE(int32_t)
 PY_FLOOR_DIV_TYPE(int64_t)
+
+#define PY_CSIGN_TYPE(TYPE, CABS_FUNC, NAME)                         \
+    static inline TYPE py_sign_type_##NAME(TYPE x) { \
+    __typeof__(CABS_FUNC(x)) absolute = CABS_FUNC(x); \
+    return (TYPE)((absolute == 0.0) ? (TYPE)(0.0 + 0.0 * I) : (x / (TYPE) absolute)); \
+}
+
+PY_CSIGN_TYPE(float complex, cabsf, float_complex);
+PY_CSIGN_TYPE(double complex, cabs, double_complex);
+PY_CSIGN_TYPE(long double complex, cabsl, long_double_complex);
 
 inline double complex complex_min(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);

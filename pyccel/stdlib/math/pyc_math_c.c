@@ -122,3 +122,6 @@ extern inline int8_t py_floor_div_int8_t(int8_t x, int8_t y);
 extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
 extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
 extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);
+extern inline float complex py_csign_float_complex(float complex x);
+extern inline double complex py_csign_double_complex(double complex x);
+extern inline long double complex py_csign_long_double_complex(long double complex x);

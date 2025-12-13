@@ -2087,12 +2087,22 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['pyc_math_c'])
         primitive_type = expr.dtype.primitive_type
         func = ''
+        arg = self._print(expr.args[0])
+
         if isinstance(primitive_type, PrimitiveIntegerType):
             func = 'isign'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
+            if expr.dtype.precision == 4:
+                return f'py_sign_type_float_complex({arg})'
+            elif expr.dtype.precision == 8:
+                return f'py_sign_type_double_complex({arg})'
+            elif expr.dtype.precision == 16:
+                return f'py_sign_type_long_double_complex({arg})'
+            else:
+                raise ValueError(f"Unsupported complex precision: {expr.dtype.precision}")
+
 
         return f'{func}({self._print(expr.args[0])})'
 
