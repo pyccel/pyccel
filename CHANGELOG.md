@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2396 : Add support for NumPy `out` arguments.
+-   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
+
 ### Fixed
 
 ### Changed
