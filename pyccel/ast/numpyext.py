@@ -904,6 +904,8 @@ class NumpySum(PyccelFunction):
         as arg.
     initial : TypedAstNode
         The start value for the sum.
+    where : TypedAstNode
+        Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_axis', '_class_type', '_shape', '_keepdims')
     name = 'sum'
