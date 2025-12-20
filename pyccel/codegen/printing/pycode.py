@@ -1261,6 +1261,18 @@ class PythonCodePrinter(CodePrinter):
         name = self._get_numpy_name(type(expr))
         return f'{name}({args})'
 
+    def _print_NumpySum(self, expr):
+        name = self._get_numpy_name(type(expr))
+        args = [self._print(expr.arg), f'dtype = {self._print(expr.dtype)}']
+        if expr.initial:
+            args.append(f'initial = {self._print(expr.initial)}')
+        if expr.axis:
+            args.append(f'axis = {self._print(expr.axis)}')
+        if expr.rank == expr.arg.rank:
+            args.append(f'keepdims = True')
+        args_code = ', '.join(args)
+        return f'{name}({args_code})'
+
     def _print_ListMethod(self, expr):
         method_name = expr.name
         list_obj = self._print(expr.list_obj)

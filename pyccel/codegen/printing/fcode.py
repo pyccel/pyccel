@@ -1470,8 +1470,12 @@ class FCodePrinter(CodePrinter):
         arg_code = self._get_node_without_gFTL(expr.arg)
         dtype = expr.arg.dtype.primitive_type
         if isinstance(dtype, PrimitiveBooleanType):
-            return f'count({arg_code})'
-        return f'sum({arg_code})'
+            code = f'count({arg_code})'
+        else:
+            code = f'sum({arg_code})'
+        if expr.initial is not None:
+            code = f'{code} + {self._print(expr.initial)}'
+        return code
 
     def _print_NumpyProduct(self, expr):
         arg_code = self._get_node_without_gFTL(expr.arg)

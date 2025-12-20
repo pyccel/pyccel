@@ -2268,7 +2268,9 @@ class CCodePrinter(CodePrinter):
         return self._handle_numpy_functional(expr, PythonMin)
 
     def _print_NumpySum(self, expr):
-        return self._handle_numpy_functional(expr, PyccelAdd, convert_to_literal(0, expr.class_type))
+        initial = convert_to_literal(0, expr.class_type) if expr.initial is None \
+                else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PyccelAdd, initial)
 
     def _print_NumpyLinspace(self, expr):
         start = self._print(expr.start)
