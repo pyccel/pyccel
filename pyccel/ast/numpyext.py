@@ -1008,7 +1008,7 @@ class NumpySum(PyccelFunction):
         new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
         assert len(new_axis) == len(self._axis)
         assert len(indexes) <= self.arg.rank
-        return NumpySum(self.arg[*indexes], axis = PythonTuple(*new_axis),
+        return NumpySum(self.arg[indexes], axis = PythonTuple(*new_axis),
                         dtype = self.dtype, keepdims = self._keepdims,
                         initial = self.initial)
 
