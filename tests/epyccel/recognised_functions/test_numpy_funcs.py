@@ -2605,6 +2605,67 @@ def test_sum_slice_in_if(language):
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
+def test_sum_dtype(language):
+    def sum_call(x : 'int[:]'):
+        return np.sum(x, dtype=float)
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=10)
+    assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), sum_call(x))
+
+def test_sum_axis_2d(language):
+    def sum_call(x : 'int[:,:]'):
+        return np.sum(x, axis=1)
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=(5, 7))
+
+    f_x_pycc = f1(x)
+    f_x_pyth = sum_call(x)
+    assert np.array_equal(f_x_pycc, f_x_pyth)
+
+def test_sum_keepdims(language):
+    def sum_call(x : 'float[:,:]'):
+        return np.sum(x, axis=1, keepdims=True)
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(6, 4)
+    f_x_pycc = f1(x)
+    f_x_pyth = sum_call(x)
+    assert np.allclose(f_x_pycc, f_x_pyth)
+
+def test_sum_initial(language):
+    def sum_call(x : 'int[:]'):
+        return np.sum(x, initial=10)
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=10)
+    f_x_pycc = f1(x)
+    f_x_pyth = sum_call(x)
+    assert f_x_pycc == f_x_pyth
+    assert matching_types(f_x_pycc, f_x_pyth)
+
+def test_sum_axis_keepdims_initial(language):
+    def sum_call(x : 'int[:,:]'):
+        return np.sum(x, axis=0, keepdims=True, initial=5)
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=(4, 6))
+    f_x_pycc = f1(x)
+    f_x_pyth = sum_call(x)
+    assert np.array_equal(f_x_pycc, f_x_pyth)
+
+def test_sum_dtype_axis(language):
+    def sum_call(x : 'int[:,:]'):
+        return np.sum(x, axis=1, dtype=float)
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=(3, 8))
+    f_x_pycc = f1(x)
+    f_x_pyth = sum_call(x)
+    assert np.array_equal(f_x_pycc, f_x_pyth)
+
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin
