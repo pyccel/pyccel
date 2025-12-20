@@ -360,7 +360,12 @@ def insert_index(expr, pos, index_var):
                           insert_index(expr.args[1], pos, index_var))
 
     elif hasattr(expr, '__getitem__'):
-        return expr[index_var]
+        rank = expr.rank
+        if rank > -pos:
+            indices = [Slice(None,None)]*(rank+pos) + [index_var]
+            return expr[*indices]
+        else:
+            return expr[index_var]
 
     else:
         raise NotImplementedError(f"Expansion not implemented for type : {type(expr)}")
