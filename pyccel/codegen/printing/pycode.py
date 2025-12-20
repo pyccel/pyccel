@@ -1272,7 +1272,7 @@ class PythonCodePrinter(CodePrinter):
         if expr.axis:
             args.append(f'axis = {self._print(expr.axis)}')
         if expr.rank == expr.arg.rank:
-            args.append(f'keepdims = True')
+            args.append('keepdims = True')
         args_code = ', '.join(args)
         return f'{name}({args_code})'
 
