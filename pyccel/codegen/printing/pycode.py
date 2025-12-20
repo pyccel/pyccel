@@ -18,7 +18,7 @@ from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType, Hom
 from pyccel.ast.datatypes  import VoidType, DictType, InhomogeneousTupleType, PyccelType
 from pyccel.ast.datatypes  import FixedSizeNumericType
 from pyccel.ast.functionalexpr import FunctionalFor
-from pyccel.ast.internals  import PyccelSymbol
+from pyccel.ast.internals  import PyccelSymbol, Slice
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
@@ -1076,6 +1076,9 @@ class PythonCodePrinter(CodePrinter):
                         i += 1
                 return PythonTuple(*new_lhs)
             lhs = pack_lhs(lhs.args, rhs.class_type)
+
+        if isinstance(lhs, Variable) and lhs.is_argument and lhs.rank:
+            lhs = IndexedElement(lhs, Slice(None, None))
 
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
