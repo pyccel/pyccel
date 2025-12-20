@@ -473,8 +473,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             variables = list(set(variables))
 
             # Check if the expression is already satisfactory
-            if compatible_operation(*variables, *transposed_vars, *is_checks,
-                                    language_has_vectors = language_has_vectors):
+            if compatible_operation(*variables, *transposed_vars, *is_checks, *indexed_funcs,
+                                    language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                 result.append(line)
                 current_level = 0
                 continue
@@ -537,7 +537,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 index = indices[rank+index_depth]
                 new_vars = [insert_index(v, index_depth, index) for v in new_vars]
                 handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
-                if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
+                if compatible_operation(*new_vars, *handled_funcs,
+                                        language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
