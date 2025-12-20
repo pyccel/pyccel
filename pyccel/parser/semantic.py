@@ -34,7 +34,7 @@ from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import PythonMap, PythonBool
+from pyccel.ast.builtins import PythonMap, PythonBool, PythonIsInstance
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
@@ -97,7 +97,7 @@ from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory, M
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
-from pyccel.ast.numpyext import NumpyWhere, NumpyArray
+from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
@@ -5865,7 +5865,7 @@ class SemanticParser(BasicParser):
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
         if nargs == 1:
-            return self._build_NumpyNonZero(func_call, func_call_args)
+            return self._build_NumpyNonZero(func_call, func_call_args, NumpyNonZero)
         return NumpyWhere(*args, **kwargs)
 
     def _build_NumpyNonZero(self, func_call, func_call_args, func):
@@ -6599,11 +6599,11 @@ class SemanticParser(BasicParser):
         class_or_tuple = function_call_args[1].value
         if isinstance(class_or_tuple, PythonTuple):
             obj_arg = function_call_args[0]
-            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)], PythonIsInstance) \
                                 for class_type in class_or_tuple])
         elif isinstance(class_or_tuple, UnionTypeAnnotation):
             obj_arg = function_call_args[0]
-            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)], PythonIsInstance) \
                                 for var_annot in class_or_tuple.type_list])
         else:
             if isinstance(class_or_tuple, (VariableTypeAnnotation, ClassDef)):
