@@ -557,6 +557,19 @@ def test_cos_call_r(language):
     assert matching_types(f1(x), cos_call_r(x))
 
 
+def test_cos_call_out(language):
+    def cos_call(x : 'float[:]', y : 'float[:]'):
+        np.cos(x, out=y)
+
+    f1 = epyccel(cos_call, language = language)
+    x = uniform(high=1e6, size=5)
+    y_epyc = np.empty_like(x)
+    y_pyth = np.empty_like(x)
+    f1(x, y_epyc)
+    cos_call(x, y_pyth)
+    assert np.allclose(y_epyc, y_pyth, rtol=RTOL, atol=ATOL)
+
+
 def test_cos_phrase_i_i(language):
     def cos_phrase_i_i(x : 'int', y : 'int'):
         from numpy import cos
