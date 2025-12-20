@@ -2681,8 +2681,7 @@ def test_sum_dtype_axis(language):
 
 def test_sum_3d_multi_axis(language):
     def sum_call(x : 'float[:,:,:]'):
-        from numpy import sum as np_sum
-        return np_sum(x, axis=(1, 2))
+        return np.sum(x, axis=(1, 2))
 
     f1 = epyccel(sum_call, language=language)
     x = rand(4, 5, 6)
@@ -2690,7 +2689,6 @@ def test_sum_3d_multi_axis(language):
 
 def test_sum_out_axis_2d(language):
     def sum_call(x : 'int[:,:]'):
-        import numpy as np
         out = np.empty(x.shape[0], dtype=x.dtype)
         np.sum(x, axis=1, out=out)
         return out
@@ -2701,7 +2699,6 @@ def test_sum_out_axis_2d(language):
 
 def test_sum_out_axis_keepdims(language):
     def sum_call(x : 'float[:,:]'):
-        import numpy as np
         out = np.empty((x.shape[0], 1), dtype=x.dtype)
         np.sum(x, axis=1, keepdims=True, out=out)
         return out
