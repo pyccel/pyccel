@@ -6158,7 +6158,7 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathSin, 'sin'))
         return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
 
-    def _build_CmathPhase(self, func_call, func_call_args):
+    def _build_CmathPhase(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `cmath.phase`.
 
@@ -6173,6 +6173,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
