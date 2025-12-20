@@ -488,7 +488,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelFunction) \
-                                                            and not f.is_elemental and not hasattr(f, '__getitem__')) \
+                                                            and not f.is_elemental and not (hasattr(f, '__getitem__') and f.rank)) \
                                                             and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
