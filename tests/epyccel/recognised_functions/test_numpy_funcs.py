@@ -2633,7 +2633,7 @@ def test_sum_keepdims(language):
     x = rand(6, 4)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
-    assert np.allclose(f_x_pycc, f_x_pyth)
+    assert np.allclose(f_x_pycc, f_x_pyth, rtol=RTOL, atol=ATOL)
 
 def test_sum_initial(language):
     def sum_call(x : 'int[:]'):
@@ -2665,6 +2665,37 @@ def test_sum_dtype_axis(language):
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.array_equal(f_x_pycc, f_x_pyth)
+
+def test_sum_3d_multi_axis(language):
+    def sum_call(x : 'float[:,:,:]'):
+        from numpy import sum as np_sum
+        return np_sum(x, axis=(1, 2))
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(4, 5, 6)
+    assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
+
+def test_sum_out_axis_2d(language):
+    def sum_call(x : 'int[:,:]'):
+        import numpy as np
+        out = np.empty(x.shape[0], dtype=x.dtype)
+        np.sum(x, axis=1, out=out)
+        return out
+
+    f1 = epyccel(sum_call, language=language)
+    x = randint(99, size=(5, 7))
+    assert np.array_equal(f1(x), sum_call(x))
+
+def test_sum_out_axis_keepdims(language):
+    def sum_call(x : 'float[:,:]'):
+        import numpy as np
+        out = np.empty((x.shape[0], 1), dtype=x.dtype)
+        np.sum(x, axis=1, keepdims=True, out=out)
+        return out
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(6, 4)
+    assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
 def test_min_int(language):
     def min_call(x : 'int[:]'):
