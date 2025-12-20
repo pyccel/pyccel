@@ -363,7 +363,7 @@ def insert_index(expr, pos, index_var):
         rank = expr.rank
         if rank > -pos:
             indices = [Slice(None,None)]*(rank+pos) + [index_var]
-            return expr[*indices]
+            return expr[indices]
         else:
             return expr[index_var]
 

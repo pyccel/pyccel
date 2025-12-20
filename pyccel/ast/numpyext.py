@@ -981,7 +981,7 @@ class NumpySum(PyccelFunction):
         return self._args[1]
 
     def __getitem__(self, args):
-        if not isinstance(args, tuple):
+        if not isinstance(args, (tuple, list)):
             args = (args,)
         indexes = []
         ai = 0
