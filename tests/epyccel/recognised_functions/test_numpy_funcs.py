@@ -2635,6 +2635,15 @@ def test_sum_dtype(language):
     assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sum_call(x))
 
+def test_sum_dtype_2(language):
+    def sum_call(x : 'float[:,:]'):
+        return np.sum(x, dtype=int)
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(6, 4)
+    assert np.array_equal(f1(x), sum_call(x))
+    assert matching_types(f1(x), sum_call(x))
+
 def test_sum_axis_2d(language):
     def sum_call(x : 'int[:,:]'):
         return np.sum(x, axis=1)
@@ -2710,14 +2719,6 @@ def test_sum_out_axis_keepdims(language):
         out = np.empty((x.shape[0], 1), dtype=x.dtype)
         np.sum(x, axis=1, keepdims=True, out=out)
         return out
-
-    f1 = epyccel(sum_call, language=language)
-    x = rand(6, 4)
-    assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
-
-def test_sum_dtype(language):
-    def sum_call(x : 'float[:,:]'):
-        return np.sum(x, dtype=int)
 
     f1 = epyccel(sum_call, language=language)
     x = rand(6, 4)
