@@ -1467,8 +1467,11 @@ class FCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
-        arg_code = self._get_node_without_gFTL(expr.arg)
-        dtype = expr.arg.dtype.primitive_type
+        arg = expr.arg
+        if expr.dtype != arg.dtype:
+            arg = self._apply_cast(expr.dtype, arg)
+        arg_code = self._get_node_without_gFTL(arg)
+        dtype = expr.dtype.primitive_type
         if isinstance(dtype, PrimitiveBooleanType):
             code = f'count({arg_code})'
         else:
