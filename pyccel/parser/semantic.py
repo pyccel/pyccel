@@ -6792,6 +6792,9 @@ class SemanticParser(BasicParser):
                                              is_method = isinstance(expr, DottedName),
                                              use_build_functions = False)
                 lhs = out_arg.value
+                if isinstance(lhs, Variable) and lhs.is_optional:
+                    errors.report(f"Assuming that variable {lhs} is not None",
+                                  severity="warning", symbol=expr)
                 d_var  = self._infer_type(rhs)
                 class_type = d_var.pop('class_type')
                 new_expressions = []
