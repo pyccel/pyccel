@@ -4037,8 +4037,11 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
         elif isinstance(rhs, Assign):
-            new_expressions.append(rhs)
-            rhs = rhs.lhs
+            if getattr(lhs, 'is_temp', False):
+                return rhs
+            else:
+                new_expressions.append(rhs)
+                rhs = rhs.lhs
 
         if isinstance(rhs, FunctionCall):
             func = rhs.funcdef
