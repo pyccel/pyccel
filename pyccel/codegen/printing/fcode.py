@@ -1472,7 +1472,7 @@ class FCodePrinter(CodePrinter):
             arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
         dtype = expr.dtype.primitive_type
-        if isinstance(dtype, PrimitiveBooleanType):
+        if isinstance(arg.dtype, PrimitiveBooleanType):
             code = f'count({arg_code})'
         else:
             code = f'sum({arg_code})'
