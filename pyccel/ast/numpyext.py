@@ -982,6 +982,13 @@ class NumpySum(PyccelFunction):
         return self._args[1]
 
     def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the sum function.
+
+        Get an expression describing the indexed result of the sum function.
+        This is used in the loop unrolling.
+        E.g. for `sum(arr, axis=0)`, this function returns `sum(arr[:,*args], axis=0)`.
+        """
         if not isinstance(args, (tuple, list)):
             args = (args,)
         indexes = []
