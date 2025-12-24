@@ -1474,7 +1474,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = f'sum({arg_code})'
         if expr.initial is not None and expr.initial != 0:
-            code = f'{code} + {self._print(expr.initial)}'
+            code = f'{self._print(expr.initial)} + {code}'
         return code
 
     def _print_NumpyProduct(self, expr):
