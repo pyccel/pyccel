@@ -895,16 +895,17 @@ class NumpySum(PyccelFunction):
     ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
         The array being summed over.
-    axis : None | LiteralInteger | iterable[LiteralInteger]
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
         Axis or axes along which a sum is performed.
-    dtype : PythonType, PyccelFunctionDef, LiteralString
+        If axis is None then a sum is performed over all elements of arg.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
         The data type of the result.
-    keepdims : LiteralTrue | LiteralFalse
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
         Indicates if output arrays should have the same number of dimensions
         as arg.
-    initial : TypedAstNode
+    initial : TypedAstNode, default=None
         The start value for the sum.
-    where : TypedAstNode
+    where : TypedAstNode, default=None
         Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_axis', '_class_type', '_shape', '_keepdims')
@@ -913,7 +914,7 @@ class NumpySum(PyccelFunction):
     def __init__(self, arg, axis=None, dtype=None, keepdims=LiteralFalse(),
                  initial=None, where=None):
         if where is not None:
-            raise TypeError("where argument is not yet supported")
+            raise NotImplementedError("where argument is not yet supported")
         if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
             errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
         assert isinstance(arg, TypedAstNode)
