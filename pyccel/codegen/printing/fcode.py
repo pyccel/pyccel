@@ -1473,7 +1473,7 @@ class FCodePrinter(CodePrinter):
             code = f'count({arg_code})'
         else:
             code = f'sum({arg_code})'
-        if expr.initial is not None:
+        if expr.initial is not None and expr.initial != 0:
             code = f'{code} + {self._print(expr.initial)}'
         return code
 
