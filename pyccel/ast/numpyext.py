@@ -1004,7 +1004,7 @@ class NumpySum(PyccelFunction):
                 if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
                                                           (current_arg.start, current_arg.stop, current_arg.step)):
                     ai += 1
-                elif self._keepdims:
+                elif isinstance(self._keepdims, LiteralTrue):
                     assert args[ai] == 0
                     ai += 1
             else:
@@ -1021,7 +1021,7 @@ class NumpySum(PyccelFunction):
                         initial = self.initial)
 
     def __str__(self):
-        return f'sum({self.arg})'
+        return f'sum({self.arg}, axis={self.axis})'
 
 #==============================================================================
 class NumpyProduct(PyccelFunction):
