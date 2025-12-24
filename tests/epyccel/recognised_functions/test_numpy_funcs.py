@@ -2601,6 +2601,14 @@ def test_sum_property(language):
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
+def test_sum_3d(language):
+    def sum_call(x : 'float[:,:,:]'):
+        return np.sum(x)
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(4, 5, 6)
+    assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
+
 # Skip test if PYCCEL_DEFAULT_COMPILER=LLVM
 @pytest.mark.skip_llvm
 def test_sum_slice_in_if(language):
