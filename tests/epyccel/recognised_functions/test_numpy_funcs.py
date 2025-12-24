@@ -2724,6 +2724,17 @@ def test_sum_out_axis_keepdims(language):
     x = rand(6, 4)
     assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
+def test_sum_out_reference(language):
+    def sum_call(x : 'float[:,:]'):
+        out = np.empty((x.shape[0], 1), dtype=x.dtype)
+        y = np.sum(x, axis=1, keepdims=True, out=out)
+        out[1,0] = -out[1,0]
+        return out[0,0], y[0,0], out[1,0], y[1,0]
+
+    f1 = epyccel(sum_call, language=language)
+    x = rand(6, 4)
+    assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
+
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin
