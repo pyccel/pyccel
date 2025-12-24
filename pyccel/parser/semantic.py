@@ -6766,8 +6766,8 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : DottedName
-            The syntactic DottedName node that represents the call to `.difference()`.
+        expr : FunctionCall | DottedName
+            The syntactic node that represents the call to the `PyccelFunction`.
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
