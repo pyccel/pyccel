@@ -4034,10 +4034,13 @@ class SemanticParser(BasicParser):
                     symbol=expr, severity='error')
 
         # Checking for the result of _build_ListExtend or _build_PythonSetFunction
-        if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode, Assign)):
+        if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
+        elif isinstance(rhs, Assign):
+            new_expressions.append(rhs)
+            rhs = rhs.lhs
 
-        elif isinstance(rhs, FunctionCall):
+        if isinstance(rhs, FunctionCall):
             func = rhs.funcdef
             results = func.results.var
             if results:
