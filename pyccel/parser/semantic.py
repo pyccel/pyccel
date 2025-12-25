@@ -34,7 +34,7 @@ from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet, VariableIterator
 from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import PythonMap, PythonBool
+from pyccel.ast.builtins import PythonMap, PythonBool, PythonIsInstance
 
 from pyccel.ast.builtin_methods.dict_methods import DictKeys
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
@@ -97,7 +97,7 @@ from pyccel.ast.low_level_tools import MemoryHandlerType, UnpackManagedMemory, M
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
-from pyccel.ast.numpyext import NumpyWhere, NumpyArray
+from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
@@ -1349,8 +1349,10 @@ class SemanticParser(BasicParser):
         """
         if isinstance(func, PyccelFunctionDef):
             if use_build_functions:
-                annotation_method = '_build_' + func.cls_name.__name__
-                if hasattr(self, annotation_method):
+                classes = func.cls_name.__mro__
+                annotation_method = next((f'_build_{cls.__name__}' for cls in classes
+                                          if hasattr(self, f'_build_{cls.__name__}')), None)
+                if annotation_method:
                     if isinstance(expr, DottedName):
                         pyccel_stage.set_stage('syntactic')
                         if is_method:
@@ -1362,7 +1364,7 @@ class SemanticParser(BasicParser):
                         for u in expr.get_all_user_nodes():
                             new_expr.set_current_user_node(u)
                         expr = new_expr
-                    return getattr(self, annotation_method)(expr, args)
+                    return getattr(self, annotation_method)(expr, args, func)
 
             argument_description = func.argument_description
             func = func.cls_name
@@ -4034,8 +4036,14 @@ class SemanticParser(BasicParser):
         # Checking for the result of _build_ListExtend or _build_PythonSetFunction
         if isinstance(rhs, (For, CodeBlock, ConstructorCall, EmptyNode)):
             return rhs
+        elif isinstance(rhs, Assign):
+            if getattr(lhs, 'is_temp', False):
+                return rhs
+            else:
+                new_expressions.append(rhs)
+                rhs = rhs.lhs
 
-        elif isinstance(rhs, FunctionCall):
+        if isinstance(rhs, FunctionCall):
             func = rhs.funcdef
             results = func.results.var
             if results:
@@ -5834,7 +5842,7 @@ class SemanticParser(BasicParser):
     #                 _build functions
     #====================================================
 
-    def _build_NumpyWhere(self, func_call, func_call_args):
+    def _build_NumpyWhere(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `numpy.where`.
 
@@ -5850,6 +5858,9 @@ class SemanticParser(BasicParser):
         func_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
 
+        func : PyccelFunction
+            The function being called.
+
         Returns
         -------
         TypedAstNode
@@ -5860,10 +5871,10 @@ class SemanticParser(BasicParser):
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
         if nargs == 1:
-            return self._build_NumpyNonZero(func_call, func_call_args)
+            return self._build_NumpyNonZero(func_call, func_call_args, NumpyNonZero)
         return NumpyWhere(*args, **kwargs)
 
-    def _build_NumpyNonZero(self, func_call, func_call_args):
+    def _build_NumpyNonZero(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `numpy.nonzero`.
 
@@ -5878,6 +5889,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -5897,7 +5911,7 @@ class SemanticParser(BasicParser):
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
 
-    def _build_ListExtend(self, expr, args):
+    def _build_ListExtend(self, expr, args, func):
         """
         Method to navigate the syntactic DottedName node of an `extend()` call.
 
@@ -5916,6 +5930,9 @@ class SemanticParser(BasicParser):
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -5952,7 +5969,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
-    def _build_MathSqrt(self, func_call, func_call_args):
+    def _build_MathSqrt(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `math.sqrt`.
 
@@ -5968,6 +5985,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6013,7 +6033,7 @@ class SemanticParser(BasicParser):
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
-    def _build_CmathSqrt(self, func_call, func_call_args):
+    def _build_CmathSqrt(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `cmath.sqrt`.
 
@@ -6029,6 +6049,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6068,7 +6091,7 @@ class SemanticParser(BasicParser):
 
         return self._handle_function(func_call, func, (arg,), use_build_functions = False)
 
-    def _build_CmathPolar(self, func_call, func_call_args):
+    def _build_CmathPolar(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `cmath.polar`.
 
@@ -6083,6 +6106,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6105,7 +6131,7 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathAtan2, 'atan2'))
         return PythonTuple(r,t)
 
-    def _build_CmathRect(self, func_call, func_call_args):
+    def _build_CmathRect(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `cmath.rect`.
 
@@ -6121,6 +6147,9 @@ class SemanticParser(BasicParser):
         func_call_args : iterable[FunctionCallArgument]
             The 2 semantic arguments passed to the function.
 
+        func : PyccelFunction
+            The function being called.
+
         Returns
         -------
         TypedAstNode
@@ -6135,7 +6164,7 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathSin, 'sin'))
         return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
 
-    def _build_CmathPhase(self, func_call, func_call_args):
+    def _build_CmathPhase(self, func_call, func_call_args, func):
         """
         Method for building the node created by a call to `cmath.phase`.
 
@@ -6151,6 +6180,9 @@ class SemanticParser(BasicParser):
         func_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
 
+        func : PyccelFunction
+            The function being called.
+
         Returns
         -------
         TypedAstNode
@@ -6164,7 +6196,7 @@ class SemanticParser(BasicParser):
             self.insert_import('math', AsName(MathAtan2, 'atan2'))
             return MathAtan2(PythonImag(var), PythonReal(var))
 
-    def _build_PythonTupleFunction(self, func_call, func_args):
+    def _build_PythonTupleFunction(self, func_call, func_args, func):
         """
         Method for building the node created by a call to `tuple()`.
 
@@ -6180,6 +6212,9 @@ class SemanticParser(BasicParser):
         func_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
 
+        func : PyccelFunction
+            The function being called.
+
         Returns
         -------
         PythonTuple
@@ -6193,7 +6228,7 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
-    def _build_NumpyArray(self, expr, func_call_args):
+    def _build_NumpyArray(self, expr, func_call_args, func):
         """
         Method for building the node created by a call to `numpy.array`.
 
@@ -6209,6 +6244,9 @@ class SemanticParser(BasicParser):
 
         func_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6264,7 +6302,7 @@ class SemanticParser(BasicParser):
 
         return NumpyArray(arg, dtype, order, ndmin)
 
-    def _build_SetUpdate(self, expr, args):
+    def _build_SetUpdate(self, expr, args, func):
         """
         Method to navigate the syntactic DottedName node of an `update()` call.
 
@@ -6283,6 +6321,9 @@ class SemanticParser(BasicParser):
 
         args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6327,7 +6368,7 @@ class SemanticParser(BasicParser):
         else:
             return CodeBlock(code)
 
-    def _build_SetUnion(self, expr, function_call_args):
+    def _build_SetUnion(self, expr, function_call_args, func):
         """
         Method to navigate the syntactic DottedName node of a `set.union()` call.
 
@@ -6343,6 +6384,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6382,7 +6426,7 @@ class SemanticParser(BasicParser):
             pyccel_stage.set_stage('semantic')
             return CodeBlock([self._visit(b) for b in body])
 
-    def _build_SetIntersection(self, expr, function_call_args):
+    def _build_SetIntersection(self, expr, function_call_args, func):
         """
         Method to visit a SetIntersection node.
 
@@ -6398,6 +6442,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6429,7 +6476,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(body)
             return lhs
 
-    def _build_PythonLen(self, expr, function_call_args):
+    def _build_PythonLen(self, expr, function_call_args, func):
         """
         Method to visit a PythonLen node.
 
@@ -6445,6 +6492,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6470,7 +6520,7 @@ class SemanticParser(BasicParser):
             raise errors.report(f"__len__ not implemented for type {class_type}",
                     severity='fatal', symbol=expr)
 
-    def _build_PythonSetFunction(self, expr, function_call_args):
+    def _build_PythonSetFunction(self, expr, function_call_args, func):
         """
         Method to visit a PythonSetFunction node.
 
@@ -6486,6 +6536,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6526,7 +6579,7 @@ class SemanticParser(BasicParser):
                 self._additional_exprs[-1].extend(body)
                 return lhs_semantic_var
 
-    def _build_PythonIsInstance(self, expr, function_call_args):
+    def _build_PythonIsInstance(self, expr, function_call_args, func):
         """
         Method to visit a PythonIsInstance node.
 
@@ -6542,6 +6595,9 @@ class SemanticParser(BasicParser):
         function_call_args : iterable[FunctionCallArgument]
             The 2 semantic arguments passed to the function.
 
+        func : PyccelFunction
+            The function being called.
+
         Returns
         -------
         Literal
@@ -6552,11 +6608,11 @@ class SemanticParser(BasicParser):
         class_or_tuple = function_call_args[1].value
         if isinstance(class_or_tuple, PythonTuple):
             obj_arg = function_call_args[0]
-            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)]) \
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(class_type)], PythonIsInstance) \
                                 for class_type in class_or_tuple])
         elif isinstance(class_or_tuple, UnionTypeAnnotation):
             obj_arg = function_call_args[0]
-            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)]) \
+            return PyccelOr.make_simplified(*[self._build_PythonIsInstance(expr, [obj_arg, FunctionCallArgument(var_annot)], PythonIsInstance) \
                                 for var_annot in class_or_tuple.type_list])
         else:
             if isinstance(class_or_tuple, (VariableTypeAnnotation, ClassDef)):
@@ -6590,7 +6646,7 @@ class SemanticParser(BasicParser):
                         severity='error', symbol=expr)
                 return LiteralTrue()
 
-    def _build_ListAppend(self, expr, args):
+    def _build_ListAppend(self, expr, args, func):
         """
         Method to create the semantic ListAppend node.
 
@@ -6604,6 +6660,9 @@ class SemanticParser(BasicParser):
 
         args : iterable[FunctionCallArgument]
             An iterable containing the 1 semantic argument passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6620,7 +6679,7 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(list_obj, append_arg, expr)
         return semantic_node
 
-    def _build_ListInsert(self, expr, args):
+    def _build_ListInsert(self, expr, args, func):
         """
         Method to create the semantic ListInsert node.
 
@@ -6634,6 +6693,9 @@ class SemanticParser(BasicParser):
 
         args : iterable[FunctionCallArgument]
             The 2 semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6650,7 +6712,7 @@ class SemanticParser(BasicParser):
             self._indicate_pointer_target(list_obj, new_elem, expr)
         return semantic_node
 
-    def _build_SetDifference(self, expr, function_call_args):
+    def _build_SetDifference(self, expr, function_call_args, func):
         """
         Method to visit a SetDifference node.
 
@@ -6666,6 +6728,9 @@ class SemanticParser(BasicParser):
 
         function_call_args : iterable[FunctionCallArgument]
             The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
 
         Returns
         -------
@@ -6696,3 +6761,51 @@ class SemanticParser(BasicParser):
         else:
             self._additional_exprs[-1].extend(body)
             return lhs
+
+    def _build_PyccelFunction(self, expr, function_call_args, func):
+        """
+        Generic method to visit a PyccelFunction to handle common arguments.
+
+        Generic method to visit a PyccelFunction. This function detects Numpy functions
+        with a keyword argument `out`. It translates this expression into an Assign node.
+        In all other cases it returns an instance of the PyccelFunction.
+
+        Parameters
+        ----------
+        expr : FunctionCall | DottedName
+            The syntactic node that represents the call to the `PyccelFunction`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
+
+        Returns
+        -------
+        Assign | PyccelFunction
+            A node describing the function call.
+        """
+        cls_func_type = func.cls_name
+        if cls_func_type.__name__.startswith('Numpy'):
+            out_arg = next((a for a in function_call_args if a.keyword == 'out'), None)
+            if out_arg:
+                function_call_args = [a for a in function_call_args if a is not out_arg]
+                rhs = self._handle_function(expr, func, function_call_args,
+                                             is_method = isinstance(expr, DottedName),
+                                             use_build_functions = False)
+                lhs = out_arg.value
+                if isinstance(lhs, Variable) and lhs.is_optional:
+                    errors.report(f"Assuming that variable {lhs} is not None",
+                                  severity="warning", symbol=expr)
+                d_var  = self._infer_type(rhs)
+                class_type = d_var.pop('class_type')
+                new_expressions = []
+                self._ensure_inferred_type_matches_existing(class_type, d_var, lhs,
+                                                            True, new_expressions,
+                                                            rhs, False)
+                return Assign(lhs, rhs)
+
+        return self._handle_function(expr, func, function_call_args,
+                                     is_method = isinstance(expr, DottedName),
+                                     use_build_functions = False)

@@ -894,26 +894,134 @@ class NumpySum(PyccelFunction):
     Parameters
     ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
-        The argument passed to the sum function.
+        The array being summed over.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
+        The data type of the result.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
     """
-    __slots__ = ('_class_type',)
+    __slots__ = ('_axis', '_class_type', '_shape', '_keepdims')
     name = 'sum'
-    _shape = None
 
-    def __init__(self, arg):
-        if not isinstance(arg, TypedAstNode):
-            raise TypeError(f'Unknown type of {type(arg)}.')
-        super().__init__(arg)
-        lowest_possible_type = process_dtype(PythonNativeInt())
-        if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
-                arg.dtype.precision <= lowest_possible_type.precision:
-            self._class_type = lowest_possible_type
+    def __init__(self, arg, axis=None, dtype=None, keepdims=LiteralFalse(),
+                 initial=None, where=None):
+        if where is not None:
+            raise NotImplementedError("where argument is not yet supported")
+        if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
+            errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
+        assert isinstance(arg, TypedAstNode)
+        super().__init__(arg, initial)
+        if dtype is None:
+            lowest_possible_type = process_dtype(PythonNativeInt())
+            if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
+                    arg.dtype.precision <= lowest_possible_type.precision:
+                self._class_type = lowest_possible_type
+            else:
+                self._class_type = process_dtype(arg.dtype)
         else:
-            self._class_type = process_dtype(arg.dtype)
+            self._class_type = process_dtype(dtype)
+
+        self._keepdims = keepdims
+
+        if axis is None:
+            self._shape = None
+        else:
+            if axis.rank == 0 and isinstance(axis.class_type.primitive_type, PrimitiveIntegerType):
+                axis = PythonTuple(axis)
+
+            if axis.rank != 1 or any(not isinstance(a, LiteralInteger) for a in axis):
+                errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
+
+            shape = list(arg.shape)
+            if isinstance(keepdims, LiteralTrue):
+                for a in axis:
+                    shape[a] = LiteralInteger(1)
+            else:
+                shape = tuple(s for i, s in enumerate(shape) if i not in axis)
+
+            rank = len(shape)
+            order = arg.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
+            self._shape = tuple(shape)
+
+        self._axis = axis
 
     @property
     def arg(self):
+        """
+        The array to be summed.
+
+        The array to be summed.
+        """
         return self._args[0]
+
+    @property
+    def axis(self):
+        """
+        Axis or axes along which a sum is performed.
+
+        Axis or axes along which a sum is performed.
+        """
+        return self._axis
+
+    @property
+    def initial(self):
+        """
+        The start value for the sum.
+
+        The start value for the sum.
+        """
+        return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the sum function.
+
+        Get an expression describing the indexed result of the sum function.
+        This is used in the loop unrolling.
+        E.g. for `sum(arr, axis=0)`, this function returns `sum(arr[:,*args], axis=0)`.
+        """
+        if not isinstance(args, (tuple, list)):
+            args = (args,)
+        indexes = []
+        ai = 0
+        ii = 0
+        axis_shift = 0
+        new_axis = []
+        while ai < len(args):
+            if ii in self._axis:
+                new_axis.append(LiteralInteger(ii - axis_shift))
+                indexes.append(Slice(None, None))
+                current_arg = args[ai]
+                if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
+                                                          (current_arg.start, current_arg.stop, current_arg.step)):
+                    ai += 1
+                elif isinstance(self._keepdims, LiteralTrue):
+                    assert args[ai] == 0
+                    ai += 1
+            else:
+                indexes.append(args[ai])
+                if not isinstance(args[ai], Slice):
+                    axis_shift += 1
+                ai += 1
+            ii += 1
+        new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
+        assert len(new_axis) == len(self._axis)
+        assert len(indexes) <= self.arg.rank
+        return NumpySum(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        dtype = self.dtype, keepdims = self._keepdims,
+                        initial = self.initial)
+
+    def __str__(self):
+        return f'sum({self.arg}, axis={self.axis})'
 
 #==============================================================================
 class NumpyProduct(PyccelFunction):
