@@ -813,7 +813,7 @@ class IndexedElement(TypedAstNode):
             for i, idx in enumerate(self.indices):
                 if isinstance(idx, Slice) and j<len(args):
                     current_arg = args[j]
-                    if isinstance(current_arg, Slice):
+                    if isinstance(current_arg, Slice) and not all(a is None for a in (current_arg.start, current_arg.stop, current_arg.step)):
                         raise NotImplementedError("Can't extract a slice from a slice")
                     else:
                         if idx.step == 1 or idx.step is None:
