@@ -555,7 +555,7 @@ def test_bool(language):
     pyccel_test("scripts/bool_comp.py", output_dtype = bool, language = language)
 
 #------------------------------------------------------------------------------
-def test_expressions(language):
+def test_expressions(experimental_language):
     types = [float, complex, int, float, float, int] + [float]*3 + \
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
