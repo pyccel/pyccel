@@ -6,7 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added preliminary support for C++ translations.
+-   Added preliminary support for C++ translations.
+-   #2396 : Add support for NumPy `out` arguments.
+-   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
 
 ### Fixed
 

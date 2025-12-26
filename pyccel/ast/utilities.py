@@ -360,7 +360,12 @@ def insert_index(expr, pos, index_var):
                           insert_index(expr.args[1], pos, index_var))
 
     elif hasattr(expr, '__getitem__'):
-        return expr[index_var]
+        rank = expr.rank
+        if rank > -pos:
+            indices = [Slice(None,None)]*(rank+pos) + [index_var]
+            return expr[indices]
+        else:
+            return expr[index_var]
 
     else:
         raise NotImplementedError(f"Expansion not implemented for type : {type(expr)}")
@@ -473,8 +478,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             variables = list(set(variables))
 
             # Check if the expression is already satisfactory
-            if compatible_operation(*variables, *transposed_vars, *is_checks,
-                                    language_has_vectors = language_has_vectors):
+            if compatible_operation(*variables, *transposed_vars, *is_checks, *indexed_funcs,
+                                    language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                 result.append(line)
                 current_level = 0
                 continue
@@ -483,7 +488,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelFunction) \
-                                                            and not f.is_elemental and not hasattr(f, '__getitem__')) \
+                                                            and not f.is_elemental and not (hasattr(f, '__getitem__') and f.rank)) \
                                                             and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
@@ -537,7 +542,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 index = indices[rank+index_depth]
                 new_vars = [insert_index(v, index_depth, index) for v in new_vars]
                 handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
-                if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
+                if compatible_operation(*new_vars, *handled_funcs,
+                                        language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
