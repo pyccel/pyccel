@@ -4824,16 +4824,6 @@ def test_numpy_prod_array_like_2d(language):
     assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_scalar(language):
 
     def get_norm(a : C):
@@ -4935,16 +4925,6 @@ def test_numpy_norm_scalar(language):
     assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex128_output, test_complex128_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_array_like_1d(language):
 
     def get_norm(arr : 'C[:]'):
@@ -4993,16 +4973,6 @@ def test_numpy_norm_array_like_1d(language):
     assert np.isclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
 
 def test_numpy_norm_array_like_2d(language):
 
@@ -5053,16 +5023,6 @@ def test_numpy_norm_array_like_2d(language):
     assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
 
 def test_numpy_norm_array_like_2d_fortran_order(language):
 
@@ -5130,16 +5090,6 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_array_like_3d(language):
 
     def get_norm(arr : 'C[:,:,:]'):
@@ -5188,16 +5138,6 @@ def test_numpy_norm_array_like_3d(language):
     assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
 
 def test_numpy_norm_array_like_3d_fortran_order(language):
 
