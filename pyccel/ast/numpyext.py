@@ -1813,14 +1813,19 @@ class NumpyNorm(PyccelFunction):
     ----------
     arg : TypedAstNode
         The first argument passed to the function.
+    ord : Literal
+        Order of the norm.
     axis : TypedAstNode, optional
         The second argument passed to the function, indicating the axis along
         which the norm should be calculated.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
     """
     __slots__ = ('_shape','_arg','_class_type')
     name = 'norm'
 
-    def __init__(self, arg, axis=None):
+    def __init__(self, arg, ord = LiteralInteger(2), axis=None, keepdims=LiteralFalse()):
         super().__init__(arg, axis)
         arg_dtype = arg.dtype
         if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
@@ -1829,13 +1834,17 @@ class NumpyNorm(PyccelFunction):
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
         self._arg = PythonTuple(arg) if arg.rank == 0 else arg
-        if self.axis is not None:
+        if isinstance(self.axis, LiteralInteger):
             sh = list(arg.shape)
             del sh[self.axis]
             self._shape = tuple(sh)
             rank = len(self._shape)
             order = None if rank < 2 else arg.order
             self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
+        elif isinstance(self.axis, TupleType):
+            # TODO
+        elif self.axis is not None:
+            raise TypeError("Non-literal value provided for axis")
         else:
             self._shape = None
             self._class_type = dtype
