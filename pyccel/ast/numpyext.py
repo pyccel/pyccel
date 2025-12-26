@@ -290,6 +290,55 @@ def process_dtype(dtype):
     else:
         raise TypeError(f'Unknown type of {dtype}.')
 
+#==============================================================================
+def process_reduction_index(indices, axis, keepdims):
+    """
+    Process the insertion of an index into a reduction function.
+
+    Get the elements necessary to describe the indexed result of the reduction
+    function. This is used in the loop unrolling.
+
+    E.g. for `sum(arr, axis=0)`, the indexed expression is
+    >>> sum(arr[:,*indices], axis=0)
+
+    This function returns the new axis and the indices used to index `arr`.
+
+    Returns
+    -------
+    new_indices : list[TypedAstNode]
+        The indices which will index the argument of the reduction function.
+
+    new_axis : list[LiteralInteger]
+        Axis or axes along which the resulting reduction is performed.
+    """
+    if not isinstance(indices, (tuple, list)):
+        indices = (indices,)
+    new_indices = []
+    ai = 0
+    ii = 0
+    axis_shift = 0
+    new_axis = []
+    while ai < len(indices):
+        if ii in axis:
+            new_axis.append(LiteralInteger(ii - axis_shift))
+            new_indices.append(Slice(None, None))
+            current_arg = indices[ai]
+            if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
+                                                      (current_arg.start, current_arg.stop, current_arg.step)):
+                ai += 1
+            elif isinstance(keepdims, LiteralTrue):
+                assert indices[ai] == 0
+                ai += 1
+        else:
+            new_indices.append(indices[ai])
+            if not isinstance(indices[ai], Slice):
+                axis_shift += 1
+            ai += 1
+        ii += 1
+    new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
+    assert len(new_axis) == len(axis)
+    return new_indices, new_axis
+
 #=======================================================================================
 class NumpyFloat(PythonFloat):
     """
@@ -989,32 +1038,7 @@ class NumpySum(PyccelFunction):
         This is used in the loop unrolling.
         E.g. for `sum(arr, axis=0)`, this function returns `sum(arr[:,*args], axis=0)`.
         """
-        if not isinstance(args, (tuple, list)):
-            args = (args,)
-        indexes = []
-        ai = 0
-        ii = 0
-        axis_shift = 0
-        new_axis = []
-        while ai < len(args):
-            if ii in self._axis:
-                new_axis.append(LiteralInteger(ii - axis_shift))
-                indexes.append(Slice(None, None))
-                current_arg = args[ai]
-                if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
-                                                          (current_arg.start, current_arg.stop, current_arg.step)):
-                    ai += 1
-                elif isinstance(self._keepdims, LiteralTrue):
-                    assert args[ai] == 0
-                    ai += 1
-            else:
-                indexes.append(args[ai])
-                if not isinstance(args[ai], Slice):
-                    axis_shift += 1
-                ai += 1
-            ii += 1
-        new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
-        assert len(new_axis) == len(self._axis)
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
         assert len(indexes) <= self.arg.rank
         return NumpySum(self.arg[indexes], axis = PythonTuple(*new_axis),
                         dtype = self.dtype, keepdims = self._keepdims,
