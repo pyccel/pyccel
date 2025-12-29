@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #2535 : Fix math.inf printing in Python.
+-   #2535 : Fix `math.inf` printing in Python.
 
 ### Changed
 
