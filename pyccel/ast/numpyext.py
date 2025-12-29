@@ -1847,7 +1847,10 @@ class NumpyNorm(PyccelFunction):
         self._axis = axis
         if isinstance(self._axis, LiteralInteger):
             sh = list(arg.shape)
-            del sh[self._axis]
+            if keepdims.python_value:
+                sh[self._axis] = LiteralInteger(1)
+            else:
+                del sh[self._axis]
             self._shape = tuple(sh)
             rank = len(self._shape)
             order = None if rank < 2 else arg.order
