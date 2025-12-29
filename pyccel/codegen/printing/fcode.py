@@ -80,7 +80,7 @@ from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthe
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
-from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.utilities import expand_to_loops, is_literal_integer
 
 from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
@@ -1520,6 +1520,20 @@ class FCodePrinter(CodePrinter):
         arg_code = self._get_node_without_gFTL(arg)
         if expr.order == 2:
             return f'Norm2({arg_code})'
+        elif expr.order == np.inf:
+            return f'maxval(abs({arg_code}))'
+        elif expr.order == -np.inf:
+            return f'minval(abs({arg_code}))'
+        elif expr.order == 0:
+            return f'count({arg_code} != 0)'
+        elif expr.order == 1:
+            return f'sum(abs({arg_code}))'
+        elif expr.order == 1:
+            one = self._print(LiteralFloat(1))
+            return f'{one} / sum({one} / abs({arg_code}))'
+        elif is_literal_integer(expr.order):
+            pow_factor = PyccelDiv(LiteralInteger(1), expr.order)
+            return f'sum(abs({arg_code}) ** {self._print(expr.order)}) ** {self._print(pow_factor)}'
         else:
             raise NotImplementedError("Order")
 
