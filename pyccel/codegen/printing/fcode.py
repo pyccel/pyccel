@@ -1519,7 +1519,7 @@ class FCodePrinter(CodePrinter):
         arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
         if expr.order == 2:
-            return f'Norm2({arg_code})'
+            return f'Norm2([{arg_code}])'
         elif expr.order == np.inf:
             return f'maxval(abs({arg_code}))'
         elif expr.order == -np.inf:
