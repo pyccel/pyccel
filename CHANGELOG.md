@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   # : Fixed math.inf printing in Python.
+
 ### Changed
 
 ### Deprecated
