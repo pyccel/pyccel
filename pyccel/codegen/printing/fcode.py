@@ -76,6 +76,7 @@ from pyccel.ast.numpyext import get_shape_of_multi_level_container
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type, NumpyFloat64Type, NumpyComplex128Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
+from pyccel.ast.operators import PyccelDiv
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -1519,6 +1520,9 @@ class FCodePrinter(CodePrinter):
         arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
         order = expr.order or 2
+        if arg.rank == 0:
+            return f'Norm2([{arg_code}])'
+
         if order == 2:
             return f'Norm2([{arg_code}])'
         elif order == np.inf:
@@ -1526,10 +1530,10 @@ class FCodePrinter(CodePrinter):
         elif order == -np.inf:
             return f'minval(abs({arg_code}))'
         elif order == 0:
-            return f'count({arg_code} != 0)'
+            return f'count({arg_code} /= 0)'
         elif order == 1:
             return f'sum(abs({arg_code}))'
-        elif order == 1:
+        elif order == -1:
             one = self._print(LiteralFloat(1))
             return f'{one} / sum({one} / abs({arg_code}))'
         elif is_literal_integer(order):

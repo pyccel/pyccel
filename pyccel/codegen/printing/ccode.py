@@ -2314,7 +2314,7 @@ class CCodePrinter(CodePrinter):
 
         initial = convert_to_literal(0, expr.dtype)
         if order == np.inf:
-            initial = PyccelSub(math_constants['inf'])
+            initial = PyccelUnarySub(math_constants['inf'])
             element_expression = NumpyAbs
             reduction_expression = PythonMax
         elif order == -np.inf:
@@ -2642,7 +2642,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpyAmax, NumpyAmin)) or isinstance(rhs, PyccelFunction) and hasattr(rhs, '__getitem__'):
+        if isinstance(rhs, (NumpyAmax, NumpyAmin)) or (isinstance(rhs, PyccelFunction) and hasattr(rhs, '__getitem__') and rhs.arg.rank):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)

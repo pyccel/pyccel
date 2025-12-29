@@ -36,6 +36,7 @@ from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, Num
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
+from .operators      import PyccelUnarySub
 from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
@@ -1827,7 +1828,8 @@ class NumpyNorm(PyccelFunction):
     name = 'norm'
 
     def __init__(self, arg, ord = Nil(), axis=None, keepdims=LiteralFalse()):
-        if not isinstance(ord, Literal):
+        if not (isinstance(ord, Literal) or
+                (isinstance(ord, PyccelUnarySub) and isinstance(ord.args[0], Literal))):
             raise TypeError("Order must be a literal value")
         assert isinstance(arg, (Variable, IndexedElement))
         super().__init__(arg, ord)
