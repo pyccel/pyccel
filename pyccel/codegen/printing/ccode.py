@@ -2313,6 +2313,7 @@ class CCodePrinter(CodePrinter):
                 return self._print(NumpyAbs(expr.arg))
 
         initial = convert_to_literal(0, expr.dtype)
+        final_power_required = False
         if order == np.inf:
             initial = PyccelUnarySub(math_constants['inf'])
             element_expression = NumpyAbs
@@ -2336,11 +2337,13 @@ class CCodePrinter(CodePrinter):
                 """ The expression being reduced. """
                 return PyccelDiv(one, NumpyAbs(elem))
             reduction_expression = PyccelAdd
+            final_power_required = True
         elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
             def element_expression(elem):
                 """ The expression being reduced. """
                 return PyccelPow(NumpyAbs(elem), order)
             reduction_expression = PyccelAdd
+            final_power_required = True
         else:
             raise NotImplementedError("Order")
 
@@ -2349,7 +2352,7 @@ class CCodePrinter(CodePrinter):
         else:
             code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
-        if isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+        if final_power_required:
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
             if assign_node:
                 lhs_var = assign_node[0].lhs
