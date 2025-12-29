@@ -5207,6 +5207,38 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.parametrize('order', [0, 1, 2, -1, np.inf, -np.inf, 10])
+def test_norm_vector_ord(language, order):
+    def norm_call(x : 'float[:]'):
+        from numpy.linalg import norm
+        return norm(x, ord=order)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(12)
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
+def test_norm_axis_2d(language):
+    def norm_call(x : 'float[:,:]'):
+        from numpy.linalg import norm
+        return norm(x, axis=1)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(5, 7)
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
+
+def test_norm_axis_keepdims(language):
+    def norm_call(x : 'float[:,:]'):
+        from numpy.linalg import norm
+        return norm(x, axis=1, keepdims=True)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(6, 4)
+    res_ref = norm_call(x)
+    res_cc = f1(x)
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
