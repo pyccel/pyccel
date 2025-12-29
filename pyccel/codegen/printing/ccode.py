@@ -53,14 +53,15 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelDiv, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
@@ -2297,6 +2298,50 @@ class CCodePrinter(CodePrinter):
 
         return ';\n'.join((init_value, endpoint_code))
 
+    def _print_NumpyNorm(self, expr):
+        initial = convert_to_literal(0, expr.dtype)
+        if expr.order == np.inf:
+            initial = PyccelSub(math_constants['inf'])
+            element_expression = lambda tot, elem: PythonMax(tot, NumpyAbs(elem))
+        elif expr.order == -np.inf:
+            initial = math_constants['inf']
+            element_expression = lambda tot, elem: PythonMin(tot, NumpyAbs(elem))
+        elif expr.order == 0:
+            zero = convert_to_literal(0, expr.arg.dtype)
+            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelNe(elem, zero))
+        elif expr.order == 1:
+            element_expression = lambda tot, elem: PyccelAdd(tot, NumpyAbs(elem))
+        elif expr.order == 1:
+            one = convert_to_literal(1, expr.arg.dtype)
+            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelDiv(one, NumpyAbs(elem)))
+        elif is_literal_integer(expr.order):
+            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelPow(NumpyAbs(elem), expr.order))
+        else:
+            raise NotImplementedError("Order")
+        code = self._handle_numpy_functional(expr, element_expression, initial)
+        if is_literal_integer(expr.order) and expr.order != 1:
+            assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+            if assign_node:
+                lhs_var = assign_node[0].lhs
+                prefix = code
+                lhs = self._print(lhs_var)
+            else:
+                prefix = ''
+                lhs = code
+
+            pow_factor = PyccelDiv(LiteralInteger(1), expr.order)
+            if expr.dtype.primitive_type is PrimitiveComplexType():
+                self.add_import(c_imports['complex'])
+                code = f'cpow({lhs}, {self._print(pow_factor)})'
+            else:
+                self.add_import(c_imports['math'])
+                code = f'pow({lhs}, {self._print(pow_factor)})'
+            if assign_node:
+                code = f'{lhs} = {code};\n'
+            return prefix + code
+        else:
+            return code
+
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
 
@@ -2570,7 +2615,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
+        if isinstance(rhs, (NumpyAmax, NumpyAmin)) or isinstance(rhs, PyccelFunction) and hasattr(rhs, '__getitem__'):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
