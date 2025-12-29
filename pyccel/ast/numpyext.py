@@ -29,7 +29,7 @@ from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralString, convert_to_literal
-from .literals       import LiteralTrue, LiteralFalse
+from .literals       import LiteralTrue, LiteralFalse, Literal
 from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
@@ -44,6 +44,7 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'process_dtype',
+    'process_index_for_reduction',
     'process_shape',
     # --- Base classes ---
     'NumpyAutoFill',
@@ -291,7 +292,7 @@ def process_dtype(dtype):
         raise TypeError(f'Unknown type of {dtype}.')
 
 #==============================================================================
-def process_reduction_index(indices, axis, keepdims):
+def process_index_for_reduction(indices, axis, keepdims):
     """
     Process the insertion of an index into a reduction function.
 
@@ -335,7 +336,7 @@ def process_reduction_index(indices, axis, keepdims):
                 axis_shift += 1
             ai += 1
         ii += 1
-    new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
+    new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in axis if int(ai) >= ii)
     assert len(new_axis) == len(axis)
     return new_indices, new_axis
 
@@ -1822,30 +1823,35 @@ class NumpyNorm(PyccelFunction):
         Indicates if output arrays should have the same number of dimensions
         as arg.
     """
-    __slots__ = ('_shape','_arg','_class_type')
+    __slots__ = ('_shape','_arg','_class_type','_axis','_keepdims')
     name = 'norm'
 
     def __init__(self, arg, ord = LiteralInteger(2), axis=None, keepdims=LiteralFalse()):
         if not isinstance(ord, Literal):
             raise TypeError("Order must be a literal value")
-        super().__init__(arg, axis, ord)
+        assert isinstance(arg, (Variable, IndexedElement))
+        super().__init__(arg, ord)
+        self._keepdims = keepdims
         arg_dtype = arg.dtype
         if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
-            arg = NumpyFloat64(arg)
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
         self._arg = PythonTuple(arg) if arg.rank == 0 else arg
-        if isinstance(self.axis, LiteralInteger):
+        if isinstance(axis, (PythonTuple, PythonList)):
+            if len(axis) == 1:
+                axis = axis[0]
+            else:
+                raise NotImplementedError("Only vector norms are currently implemented.")
+        self._axis = axis
+        if isinstance(self._axis, LiteralInteger):
             sh = list(arg.shape)
-            del sh[self.axis]
+            del sh[self._axis]
             self._shape = tuple(sh)
             rank = len(self._shape)
             order = None if rank < 2 else arg.order
             self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
-        elif isinstance(self.axis, TupleType):
-            # TODO
-        elif self.axis is not None:
+        elif self._axis is not None:
             raise TypeError("Non-literal value provided for axis")
         else:
             self._shape = None
@@ -1869,6 +1875,15 @@ class NumpyNorm(PyccelFunction):
         Mimic the behavior of axis argument of numpy.norm in python,
         and dim argument of Norm2 in Fortran.
         """
+        return self._axis
+
+    @property
+    def order(self):
+        """
+        The order of the norm.
+
+        The order of the norm.
+        """
         return self._args[1]
 
     def __getitem__(self, args):
@@ -1879,9 +1894,9 @@ class NumpyNorm(PyccelFunction):
         This is used in the loop unrolling.
         E.g. for `norm(arr, axis=0)`, this function returns `norm(arr[:,*args], axis=0)`.
         """
-        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        indexes, new_axis = process_index_for_reduction(args, (self._axis,), self._keepdims)
         assert len(indexes) <= self.arg.rank
-        return NumpyNorm(self.arg[indexes], axis = PythonTuple(*new_axis),
+        return NumpyNorm(self.arg[indexes], axis = new_axis[0],
                         keepdims = self._keepdims, ord = self.order)
 
 #==============================================================================

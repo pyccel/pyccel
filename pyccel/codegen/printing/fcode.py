@@ -1516,15 +1516,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
-        if expr.axis:
-            axis_val = expr.axis.python_value
-            axis = LiteralInteger((axis_val + 1) if arg.order == 'F' else (arg.rank - axis_val))
-            code = f'Norm2({arg_code},{self._print(axis)})'
+        if expr.order == 2:
+            return f'Norm2({arg_code})'
         else:
-            code = f'Norm2({arg_code})'
-
-        return code
+            raise NotImplementedError("Order")
 
     def _print_NumpyLinspace(self, expr):
 
