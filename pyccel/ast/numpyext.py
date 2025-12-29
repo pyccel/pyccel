@@ -305,6 +305,16 @@ def process_index_for_reduction(indices, axis, keepdims):
 
     This function returns the new axis and the indices used to index `arr`.
 
+    Parameters
+    ----------
+    indices : iterable[TypedAstNode] | TypedAstNode
+        The indices that will index the result of the reduction function.
+    axis : iterable[TypedAstNode]
+        The axis or axes along which the reduction is performed.
+    keepdims : LiteralTrue | LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+
     Returns
     -------
     new_indices : list[TypedAstNode]
@@ -1827,7 +1837,7 @@ class NumpyNorm(PyccelFunction):
     __slots__ = ('_shape','_arg','_class_type','_axis','_keepdims')
     name = 'norm'
 
-    def __init__(self, arg, ord = Nil(), axis=None, keepdims=LiteralFalse()):
+    def __init__(self, arg, ord = Nil(), axis=None, keepdims=LiteralFalse()): #pylint: disable=redefined-builtin
         if not (isinstance(ord, Literal) or
                 (isinstance(ord, PyccelUnarySub) and isinstance(ord.args[0], Literal))):
             raise TypeError("Order must be a literal value")
@@ -1863,13 +1873,19 @@ class NumpyNorm(PyccelFunction):
 
     @property
     def arg(self):
+        """
+        The array whose norm is calculated.
+
+        The array whose norm is calculated.
+        """
         return self._args[0]
 
     @property
     def axis(self):
         """
-        Mimic the behavior of axis argument of numpy.norm in python,
-        and dim argument of Norm2 in Fortran.
+        Axis or axes along which the norm is calculated.
+
+        Axis or axes along which the norm is calculated.
         """
         return self._axis
 
