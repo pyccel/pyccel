@@ -1826,7 +1826,7 @@ class NumpyNorm(PyccelFunction):
     __slots__ = ('_shape','_arg','_class_type','_axis','_keepdims')
     name = 'norm'
 
-    def __init__(self, arg, ord = LiteralInteger(2), axis=None, keepdims=LiteralFalse()):
+    def __init__(self, arg, ord = Nil(), axis=None, keepdims=LiteralFalse()):
         if not isinstance(ord, Literal):
             raise TypeError("Order must be a literal value")
         assert isinstance(arg, (Variable, IndexedElement))

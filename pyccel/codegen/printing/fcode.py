@@ -1518,22 +1518,23 @@ class FCodePrinter(CodePrinter):
         arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
-        if expr.order == 2:
+        order = expr.order or 2
+        if order == 2:
             return f'Norm2([{arg_code}])'
-        elif expr.order == np.inf:
+        elif order == np.inf:
             return f'maxval(abs({arg_code}))'
-        elif expr.order == -np.inf:
+        elif order == -np.inf:
             return f'minval(abs({arg_code}))'
-        elif expr.order == 0:
+        elif order == 0:
             return f'count({arg_code} != 0)'
-        elif expr.order == 1:
+        elif order == 1:
             return f'sum(abs({arg_code}))'
-        elif expr.order == 1:
+        elif order == 1:
             one = self._print(LiteralFloat(1))
             return f'{one} / sum({one} / abs({arg_code}))'
-        elif is_literal_integer(expr.order):
-            pow_factor = PyccelDiv(LiteralInteger(1), expr.order)
-            return f'sum(abs({arg_code}) ** {self._print(expr.order)}) ** {self._print(pow_factor)}'
+        elif is_literal_integer(order):
+            pow_factor = PyccelDiv(LiteralInteger(1), order)
+            return f'sum(abs({arg_code}) ** {self._print(order)}) ** {self._print(pow_factor)}'
         else:
             raise NotImplementedError("Order")
 

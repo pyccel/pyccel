@@ -2300,7 +2300,9 @@ class CCodePrinter(CodePrinter):
         return ';\n'.join((init_value, endpoint_code))
 
     def _print_NumpyNorm(self, expr):
-        if expr.arg.rank == 0 and expr.dtype.primitive_type is PrimitiveComplexType() and expr.order == 2:
+        order = expr.order or LiteralInteger(2)
+
+        if expr.arg.rank == 0 and expr.dtype.primitive_type is PrimitiveComplexType() and order == 2:
             if isinstance(expr.dtype, NumpyComplex64Type):
                 return f'normf({self._print(expr.arg)}'
             elif isinstance(expr.dtype, NumpyComplex128Type):
@@ -2311,27 +2313,27 @@ class CCodePrinter(CodePrinter):
                 return self._print(NumpyAbs(expr.arg))
 
         initial = convert_to_literal(0, expr.dtype)
-        if expr.order == np.inf:
+        if order == np.inf:
             initial = PyccelSub(math_constants['inf'])
             element_expression = NumpyAbs
             reduction_expression = PythonMax
-        elif expr.order == -np.inf:
+        elif order == -np.inf:
             initial = math_constants['inf']
             element_expression = NumpyAbs
             reduction_expression = PythonMin
-        elif expr.order == 0:
+        elif order == 0:
             zero = convert_to_literal(0, expr.arg.dtype)
             element_expression = lambda elem: PyccelNe(elem, zero)
             reduction_expression = PyccelAdd
-        elif expr.order == 1:
+        elif order == 1:
             element_expression = NumpyAbs
             reduction_expression = PyccelAdd
-        elif expr.order == 1:
+        elif order == 1:
             one = convert_to_literal(1, expr.arg.dtype)
             element_expression = lambda elem: PyccelDiv(one, NumpyAbs(elem))
             reduction_expression = PyccelAdd
-        elif is_literal_integer(expr.order):
-            element_expression = lambda elem: PyccelPow(NumpyAbs(elem), expr.order)
+        elif is_literal_integer(order):
+            element_expression = lambda elem: PyccelPow(NumpyAbs(elem), order)
             reduction_expression = PyccelAdd
         else:
             raise NotImplementedError("Order")
@@ -2341,7 +2343,7 @@ class CCodePrinter(CodePrinter):
         else:
             code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
-        if is_literal_integer(expr.order) and expr.order != 1:
+        if is_literal_integer(order) and order != 1:
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
             if assign_node:
                 lhs_var = assign_node[0].lhs
@@ -2354,7 +2356,7 @@ class CCodePrinter(CodePrinter):
             else:
                 prefix = ''
 
-            pow_factor = PyccelDiv(LiteralInteger(1), expr.order)
+            pow_factor = PyccelDiv(LiteralInteger(1), order)
             if expr.dtype.primitive_type is PrimitiveComplexType():
                 self.add_import(c_imports['complex'])
                 code = f'cpow({code}, {self._print(pow_factor)})'
