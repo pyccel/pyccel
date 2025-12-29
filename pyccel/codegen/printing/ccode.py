@@ -57,6 +57,7 @@ from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
+from pyccel.ast.numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -2299,43 +2300,67 @@ class CCodePrinter(CodePrinter):
         return ';\n'.join((init_value, endpoint_code))
 
     def _print_NumpyNorm(self, expr):
+        if expr.arg.rank == 0 and expr.dtype.primitive_type is PrimitiveComplexType() and expr.order == 2:
+            if isinstance(expr.dtype, NumpyComplex64Type):
+                return f'normf({self._print(expr.arg)}'
+            elif isinstance(expr.dtype, NumpyComplex128Type):
+                return f'norm({self._print(expr.arg)}'
+            elif isinstance(expr.dtype, NumpyComplex256Type):
+                return f'norml({self._print(expr.arg)}'
+            else:
+                return self._print(NumpyAbs(expr.arg))
+
         initial = convert_to_literal(0, expr.dtype)
         if expr.order == np.inf:
             initial = PyccelSub(math_constants['inf'])
-            element_expression = lambda tot, elem: PythonMax(tot, NumpyAbs(elem))
+            element_expression = NumpyAbs
+            reduction_expression = PythonMax
         elif expr.order == -np.inf:
             initial = math_constants['inf']
-            element_expression = lambda tot, elem: PythonMin(tot, NumpyAbs(elem))
+            element_expression = NumpyAbs
+            reduction_expression = PythonMin
         elif expr.order == 0:
             zero = convert_to_literal(0, expr.arg.dtype)
-            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelNe(elem, zero))
+            element_expression = lambda elem: PyccelNe(elem, zero)
+            reduction_expression = PyccelAdd
         elif expr.order == 1:
-            element_expression = lambda tot, elem: PyccelAdd(tot, NumpyAbs(elem))
+            element_expression = NumpyAbs
+            reduction_expression = PyccelAdd
         elif expr.order == 1:
             one = convert_to_literal(1, expr.arg.dtype)
-            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelDiv(one, NumpyAbs(elem)))
+            element_expression = lambda elem: PyccelDiv(one, NumpyAbs(elem))
+            reduction_expression = PyccelAdd
         elif is_literal_integer(expr.order):
-            element_expression = lambda tot, elem: PyccelAdd(tot, PyccelPow(NumpyAbs(elem), expr.order))
+            element_expression = lambda elem: PyccelPow(NumpyAbs(elem), expr.order)
+            reduction_expression = PyccelAdd
         else:
             raise NotImplementedError("Order")
-        code = self._handle_numpy_functional(expr, element_expression, initial)
+
+        if expr.arg.rank == 0:
+            code = self._print(element_expression(expr.arg))
+        else:
+            code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
+
         if is_literal_integer(expr.order) and expr.order != 1:
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
             if assign_node:
                 lhs_var = assign_node[0].lhs
-                prefix = code
                 lhs = self._print(lhs_var)
+                if expr.arg.rank == 0:
+                    prefix = ''
+                else:
+                    prefix = code
+                    code = lhs
             else:
                 prefix = ''
-                lhs = code
 
             pow_factor = PyccelDiv(LiteralInteger(1), expr.order)
             if expr.dtype.primitive_type is PrimitiveComplexType():
                 self.add_import(c_imports['complex'])
-                code = f'cpow({lhs}, {self._print(pow_factor)})'
+                code = f'cpow({code}, {self._print(pow_factor)})'
             else:
                 self.add_import(c_imports['math'])
-                code = f'pow({lhs}, {self._print(pow_factor)})'
+                code = f'pow({code}, {self._print(pow_factor)})'
             if assign_node:
                 code = f'{lhs} = {code};\n'
             return prefix + code
