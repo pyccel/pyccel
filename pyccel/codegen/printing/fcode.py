@@ -1516,7 +1516,7 @@ class FCodePrinter(CodePrinter):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
-        arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
+        arg = NumpyAbs(expr.arg)
         arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
         order = expr.order or 2
@@ -1526,19 +1526,20 @@ class FCodePrinter(CodePrinter):
         if order == 2:
             return f'Norm2([{arg_code}])'
         elif order == np.inf:
-            return f'maxval(abs({arg_code}))'
+            return f'maxval({arg_code})'
         elif order == -np.inf:
-            return f'minval(abs({arg_code}))'
+            return f'minval({arg_code})'
         elif order == 0:
-            return f'count({arg_code} /= 0)'
+            return f'count({arg_code} > 0)'
         elif order == 1:
-            return f'sum(abs({arg_code}))'
+            return f'sum({arg_code})'
         elif order == -1:
             one = self._print(LiteralFloat(1))
-            return f'{one} / sum({one} / abs({arg_code}))'
+            return f'{one} / sum({one} / {arg_code})'
         elif is_literal_integer(order):
-            pow_factor = PyccelDiv(LiteralInteger(1), order)
-            return f'sum(abs({arg_code}) ** {self._print(order)}) ** {self._print(pow_factor)}'
+            pow_factor = self._apply_cast(expr.dtype, PyccelDiv.make_simplified(LiteralInteger(1), order))
+            order_code = self._apply_cast(expr.dtype, order)
+            return f'sum({arg_code} ** {order_code}) ** {self._print(pow_factor)}'
         else:
             raise NotImplementedError("Order")
 
