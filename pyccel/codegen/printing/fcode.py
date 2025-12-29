@@ -1536,7 +1536,7 @@ class FCodePrinter(CodePrinter):
         elif order == -1:
             one = self._print(LiteralFloat(1))
             return f'{one} / sum({one} / {arg_code})'
-        elif is_literal_integer(order):
+        elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
             pow_factor = self._apply_cast(expr.dtype, PyccelDiv.make_simplified(LiteralInteger(1), order))
             order_code = self._apply_cast(expr.dtype, order)
             return f'sum({arg_code} ** {order_code}) ** {self._print(pow_factor)}'
