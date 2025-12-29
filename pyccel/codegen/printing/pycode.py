@@ -1237,8 +1237,8 @@ class PythonCodePrinter(CodePrinter):
             args.append(f'axis = {self._print(expr.axis)}')
         if expr.rank == expr.arg.rank:
             args.append('keepdims = True')
-        if expr.initial:
-            args.append(f'initial = {self._print(expr.initial)}')
+        if expr.order:
+            args.append(f'ord = {self._print(expr.order)}')
         arg_code = ', '.join(args)
         return  f"{name}({arg_code})"
 
