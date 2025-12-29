@@ -2343,7 +2343,7 @@ class CCodePrinter(CodePrinter):
         else:
             code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
-        if is_literal_integer(order) and order != 1:
+        if is_literal_integer(order) and order not in (0, 1):
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
             if assign_node:
                 lhs_var = assign_node[0].lhs
