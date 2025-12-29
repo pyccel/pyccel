@@ -1539,7 +1539,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
             pow_factor = self._apply_cast(expr.dtype, PyccelDiv.make_simplified(LiteralInteger(1), order))
             order_code = self._apply_cast(expr.dtype, order)
-            return f'sum({arg_code} ** {order_code}) ** {self._print(pow_factor)}'
+            return f'sum({arg_code} ** {self._print(order_code)}) ** {self._print(pow_factor)}'
         else:
             raise NotImplementedError("Order")
 
