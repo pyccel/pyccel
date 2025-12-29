@@ -1826,7 +1826,9 @@ class NumpyNorm(PyccelFunction):
     name = 'norm'
 
     def __init__(self, arg, ord = LiteralInteger(2), axis=None, keepdims=LiteralFalse()):
-        super().__init__(arg, axis)
+        if not isinstance(ord, Literal):
+            raise TypeError("Order must be a literal value")
+        super().__init__(arg, axis, ord)
         arg_dtype = arg.dtype
         if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
             arg = NumpyFloat64(arg)
@@ -1868,6 +1870,19 @@ class NumpyNorm(PyccelFunction):
         and dim argument of Norm2 in Fortran.
         """
         return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the norm function.
+
+        Get an expression describing the indexed result of the norm function.
+        This is used in the loop unrolling.
+        E.g. for `norm(arr, axis=0)`, this function returns `norm(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyNorm(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims, ord = self.order)
 
 #==============================================================================
 # Numpy universal functions
