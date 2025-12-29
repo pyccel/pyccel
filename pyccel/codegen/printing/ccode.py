@@ -2323,17 +2323,23 @@ class CCodePrinter(CodePrinter):
             reduction_expression = PythonMin
         elif order == 0:
             zero = convert_to_literal(0, expr.arg.dtype)
-            element_expression = lambda elem: PyccelNe(elem, zero)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelNe(elem, zero)
             reduction_expression = PyccelAdd
         elif order == 1:
             element_expression = NumpyAbs
             reduction_expression = PyccelAdd
         elif order == 1:
             one = convert_to_literal(1, expr.arg.dtype)
-            element_expression = lambda elem: PyccelDiv(one, NumpyAbs(elem))
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelDiv(one, NumpyAbs(elem))
             reduction_expression = PyccelAdd
         elif is_literal_integer(order):
-            element_expression = lambda elem: PyccelPow(NumpyAbs(elem), order)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelPow(NumpyAbs(elem), order)
             reduction_expression = PyccelAdd
         else:
             raise NotImplementedError("Order")
