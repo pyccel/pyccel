@@ -1837,7 +1837,6 @@ class NumpyNorm(PyccelFunction):
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
         if isinstance(axis, (PythonTuple, PythonList)):
             if len(axis) == 1:
                 axis = axis[0]
@@ -1859,14 +1858,6 @@ class NumpyNorm(PyccelFunction):
 
     @property
     def arg(self):
-        return self._arg
-
-    @property
-    def python_arg(self):
-        """numpy.norm argument without casting.
-        the actual arg property contains casting methods for C/Fortran,
-        which is not necessary for a Python code, and the casting makes Python language tests fail.
-        """
         return self._args[0]
 
     @property

@@ -1232,10 +1232,15 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         name = self._get_numpy_name(expr)
-        axis = self._print(expr.axis) if expr.axis else None
-        if axis:
-            return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
-        return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
+        args = [self._print(expr.arg)]
+        if expr.axis:
+            args.append(f'axis = {self._print(expr.axis)}')
+        if expr.rank == expr.arg.rank:
+            args.append('keepdims = True')
+        if expr.initial:
+            args.append(f'initial = {self._print(expr.initial)}')
+        arg_code = ', '.join(args)
+        return  f"{name}({arg_code})"
 
     def _print_NumpyNonZero(self, expr):
         name = self._aliases.get(type(expr),'nonzero')
