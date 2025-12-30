@@ -2368,7 +2368,7 @@ class CCodePrinter(CodePrinter):
                 prefix = ''
 
             pow_factor = PyccelDiv(LiteralInteger(1), order)
-            if expr.dtype.primitive_type is PrimitiveComplexType():
+            if arg.dtype.primitive_type is PrimitiveComplexType():
                 self.add_import(c_imports['complex'])
                 code = f'cpow({code}, {self._print(pow_factor)})'
             else:
