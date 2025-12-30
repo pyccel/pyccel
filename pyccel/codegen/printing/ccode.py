@@ -33,7 +33,7 @@ from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType, PythonNativeComplex
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
@@ -58,7 +58,7 @@ from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from pyccel.ast.numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
+from pyccel.ast.numpytypes import NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
