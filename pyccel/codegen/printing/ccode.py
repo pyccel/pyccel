@@ -2333,7 +2333,7 @@ class CCodePrinter(CodePrinter):
         elif order == 1:
             element_expression = NumpyAbs
             reduction_expression = PyccelAdd
-        elif order == 1:
+        elif order == -1:
             one = convert_to_literal(1, arg.dtype)
             def element_expression(elem):
                 """ The expression being reduced. """
