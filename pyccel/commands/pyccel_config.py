@@ -28,12 +28,30 @@ def setup_pyccel_config_parser(parser):
     export_parser = subparsers.add_parser('export', add_help=False, help="Export a compiler configuration to a json file.")
     export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',), must_exist = False),
                         help='The file that the parser information should be exported to.')
+    export_parser.set_defaults(config_func=pyccel_config)
+
+    check_parser = subparsers.add_parser('check', add_help=False, help="Check that a compiler configuration is valid.")
+    check_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
+                        help='The file containing the compiler configuration.')
+    check_parser.set_defaults(config_func=pyccel_config_check)
+
+    register_parser = subparsers.add_parser('register', add_help=False, help="Register a commonly used compiler configuration.")
+    register_parser.add_argument('compiler-family', metavar='FAMILY', type=str,
+                        help='The name that will be used to identify the compiler.')
+    register_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
+                        help='The file containing the compiler configuration.')
+    register_parser.set_defaults(config_func=pyccel_config_check)
 
     # ... Compiler options
     add_compiler_selection(export_parser)
     add_help_flag(export_parser.add_argument_group('Options'))
+    add_help_flag(check_parser.add_argument_group('Options'))
+    add_help_flag(register_parser.add_argument_group('Options'))
 
     add_help_flag(parser.add_argument_group('Options'))
+
+def pyccel_config_dispatch(config_func, **kwargs):
+    config_func(**kwargs)
 
 def pyccel_config(filename, **kwargs):
     """
@@ -50,3 +68,9 @@ def pyccel_config(filename, **kwargs):
     """
     from pyccel.codegen.pipeline  import execute_pyccel
     execute_pyccel('', compiler_export_file = filename, **kwargs)
+
+def pyccel_config_check(filename):
+    pass
+
+def pyccel_config_register(filename):
+    pass
