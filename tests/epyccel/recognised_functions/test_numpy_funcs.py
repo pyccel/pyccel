@@ -5220,7 +5220,7 @@ def test_norm_vector_ord(language, order):
 def test_norm_axis_2d(language):
     def norm_call(x : 'float[:,:]'):
         from numpy.linalg import norm
-        return norm(x, axis=1)
+        return norm(x, axis=(1,))
 
     f1 = epyccel(norm_call, language=language)
     x = rand(5, 7)
