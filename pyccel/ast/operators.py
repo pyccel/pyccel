@@ -385,7 +385,10 @@ class PyccelUnarySub(PyccelUnary):
         return -int(self.args[0])
 
     def __eq__(self, other):
-        return self.args[0] == -other
+        if isinstance(other, int):
+            return self.args[0] == -other
+        else:
+            return super().__eq__(other)
 
     def __hash__(self):
         return hash((PyccelUnarySub, self.args[0]))
