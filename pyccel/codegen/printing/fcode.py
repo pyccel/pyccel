@@ -1516,12 +1516,18 @@ class FCodePrinter(CodePrinter):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
-        arg = NumpyAbs(expr.arg)
+        arg = expr.arg
+        if arg.rank == 0:
+            if isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
+                arg = NumpyAbs(arg)
+            arg = self._apply_cast(expr.dtype, arg)
+            return f'Norm2([{self._print(arg)}])'
+
+        if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+            arg = NumpyAbs(arg)
         arg = self._apply_cast(expr.dtype, arg)
         arg_code = self._get_node_without_gFTL(arg)
         order = expr.order or 2
-        if arg.rank == 0:
-            return f'Norm2([{arg_code}])'
 
         if order == 2:
             return f'Norm2([{arg_code}])'
