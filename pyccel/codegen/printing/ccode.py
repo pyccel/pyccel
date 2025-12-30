@@ -2349,12 +2349,10 @@ class CCodePrinter(CodePrinter):
             lhs_var = assign_node[0].lhs
             lhs = self._print(lhs_var)
             prefix = code
-            code = lhs
 
             pow_factor = PyccelDiv(LiteralInteger(1), order)
             self.add_import(c_imports['math'])
-            code = f'pow({code}, {self._print(pow_factor)})'
-            code = f'{lhs} = {code};\n'
+            code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
             return prefix + code
         else:
             return code
