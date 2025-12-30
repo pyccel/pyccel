@@ -58,7 +58,6 @@ from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from pyccel.ast.numpytypes import NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
