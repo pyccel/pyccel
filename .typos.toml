@@ -7,6 +7,7 @@ extend-ignore-re = ["Big Sur"]
 ND = "ND"
 arange = "arange"
 iterm = "iterm"
+norml = "norml"
 
 # Correct these words
 scop = "scope"
