@@ -2345,19 +2345,16 @@ class CCodePrinter(CodePrinter):
 
         if final_power_required:
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
-            if assign_node:
-                lhs_var = assign_node[0].lhs
-                lhs = self._print(lhs_var)
-                prefix = code
-                code = lhs
-            else:
-                prefix = ''
+            assert assign_node
+            lhs_var = assign_node[0].lhs
+            lhs = self._print(lhs_var)
+            prefix = code
+            code = lhs
 
             pow_factor = PyccelDiv(LiteralInteger(1), order)
             self.add_import(c_imports['math'])
             code = f'pow({code}, {self._print(pow_factor)})'
-            if assign_node:
-                code = f'{lhs} = {code};\n'
+            code = f'{lhs} = {code};\n'
             return prefix + code
         else:
             return code
