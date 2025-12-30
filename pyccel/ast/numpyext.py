@@ -965,8 +965,6 @@ class NumpyReduction(PyccelFunction):
         The start value for the sum.
     where : TypedAstNode, default=None
         Boolean indicating elements to include in the sum.
-    *args : PyccelAstNode
-        Other arguments to be passed to the PyccelFunction superclass.
     """
     __slots__ = ('_axis', '_shape', '_keepdims')
 
