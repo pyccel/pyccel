@@ -957,6 +957,8 @@ class NumpyReduction(PyccelFunction):
     ----------
     arr : list , tuple , PythonTuple, PythonList, Variable
         The array being reduced.
+    *args : PyccelAstNode
+        Other arguments to be passed to the PyccelFunction superclass.
     axis : None | LiteralInteger | iterable[LiteralInteger], optional
         Axis or axes along which the reduction is performed.
         If axis is None then the reduction is performed over all elements of arr.
