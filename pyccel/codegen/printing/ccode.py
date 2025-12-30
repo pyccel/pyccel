@@ -2357,12 +2357,8 @@ class CCodePrinter(CodePrinter):
                 prefix = ''
 
             pow_factor = PyccelDiv(LiteralInteger(1), order)
-            if arg.dtype.primitive_type is PrimitiveComplexType():
-                self.add_import(c_imports['complex'])
-                code = f'cpow({code}, {self._print(pow_factor)})'
-            else:
-                self.add_import(c_imports['math'])
-                code = f'pow({code}, {self._print(pow_factor)})'
+            self.add_import(c_imports['math'])
+            code = f'pow({code}, {self._print(pow_factor)})'
             if assign_node:
                 code = f'{lhs} = {code};\n'
             return prefix + code
