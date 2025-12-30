@@ -2301,8 +2301,12 @@ class CCodePrinter(CodePrinter):
         return ';\n'.join((init_value, endpoint_code))
 
     def _print_NumpyNorm(self, expr):
-        order = expr.order or LiteralInteger(2)
         arg = expr.arg
+        if arg.rank == 0:
+            if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+                arg = NumpyAbs(arg)
+            return self._print(arg)
+        order = expr.order or LiteralInteger(2)
         initial = convert_to_literal(0, expr.dtype)
         final_power_required = False
         if order == np.inf:
