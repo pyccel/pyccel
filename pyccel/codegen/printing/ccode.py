@@ -33,7 +33,7 @@ from pyccel.ast.core      import Module, AsName, FunctionDef, Return
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 from pyccel.ast.c_concepts import CStackArray, CStrStr
 
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType, PythonNativeComplex
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousListType, HomogeneousSetType
@@ -2302,18 +2302,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         order = expr.order or LiteralInteger(2)
-
         arg = expr.arg
-        if arg.rank == 0 and arg.dtype.primitive_type is PrimitiveComplexType():
-            if isinstance(expr.dtype, NumpyComplex64Type):
-                return f'normf({self._print(arg)}'
-            elif isinstance(expr.dtype, NumpyComplex128Type):
-                return f'norm({self._print(arg)}'
-            elif isinstance(expr.dtype, NumpyComplex256Type):
-                return f'norml({self._print(arg)}'
-            else:
-                return self._print(NumpyAbs(arg))
-
         initial = convert_to_literal(0, expr.dtype)
         final_power_required = False
         if order == np.inf:
