@@ -5319,6 +5319,16 @@ def test_norm_vector_ord(language, order):
     x = rand(12)
     assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.parametrize('order', [0, 1, 2, -1, np.inf, -np.inf, 10, 2.2])
+def test_norm_vector_ord_complex(language, order):
+    def norm_call(x : 'complex[:]'):
+        from numpy.linalg import norm
+        return norm(x, ord=order)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(12) + rand(12)*1j
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
 def test_norm_axis_2d(language):
     def norm_call(x : 'float[:,:]'):
         from numpy.linalg import norm
