@@ -54,6 +54,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
+from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
@@ -2651,7 +2652,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpyAmax, NumpyAmin)) or (isinstance(rhs, PyccelFunction) and hasattr(rhs, '__getitem__') and rhs.arg.rank):
+        if isinstance(rhs, (NumpyAmax, NumpyAmin, NumpyReduction))  and rhs.arg.rank:
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
