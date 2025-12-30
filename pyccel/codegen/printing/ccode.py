@@ -2341,21 +2341,15 @@ class CCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Order")
 
-        if arg.rank == 0:
-            code = self._print(element_expression(arg))
-        else:
-            code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
+        code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
         if final_power_required:
             assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
             if assign_node:
                 lhs_var = assign_node[0].lhs
                 lhs = self._print(lhs_var)
-                if arg.rank == 0:
-                    prefix = ''
-                else:
-                    prefix = code
-                    code = lhs
+                prefix = code
+                code = lhs
             else:
                 prefix = ''
 
