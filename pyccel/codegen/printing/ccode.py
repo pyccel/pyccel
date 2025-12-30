@@ -2303,15 +2303,16 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         order = expr.order or LiteralInteger(2)
 
-        if expr.arg.rank == 0 and expr.dtype.primitive_type is PrimitiveComplexType() and order == 2:
+        arg = expr.arg
+        if arg.rank == 0 and arg.dtype.primitive_type is PrimitiveComplexType():
             if isinstance(expr.dtype, NumpyComplex64Type):
-                return f'normf({self._print(expr.arg)}'
+                return f'normf({self._print(arg)}'
             elif isinstance(expr.dtype, NumpyComplex128Type):
-                return f'norm({self._print(expr.arg)}'
+                return f'norm({self._print(arg)}'
             elif isinstance(expr.dtype, NumpyComplex256Type):
-                return f'norml({self._print(expr.arg)}'
+                return f'norml({self._print(arg)}'
             else:
-                return self._print(NumpyAbs(expr.arg))
+                return self._print(NumpyAbs(arg))
 
         initial = convert_to_literal(0, expr.dtype)
         final_power_required = False
@@ -2324,7 +2325,7 @@ class CCodePrinter(CodePrinter):
             element_expression = NumpyAbs
             reduction_expression = PythonMin
         elif order == 0:
-            zero = convert_to_literal(0, expr.arg.dtype)
+            zero = convert_to_literal(0, arg.dtype)
             def element_expression(elem):
                 """ The expression being reduced. """
                 return PyccelNe(elem, zero)
@@ -2333,7 +2334,7 @@ class CCodePrinter(CodePrinter):
             element_expression = NumpyAbs
             reduction_expression = PyccelAdd
         elif order == 1:
-            one = convert_to_literal(1, expr.arg.dtype)
+            one = convert_to_literal(1, arg.dtype)
             def element_expression(elem):
                 """ The expression being reduced. """
                 return PyccelDiv(one, NumpyAbs(elem))
@@ -2348,8 +2349,8 @@ class CCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Order")
 
-        if expr.arg.rank == 0:
-            code = self._print(element_expression(expr.arg))
+        if arg.rank == 0:
+            code = self._print(element_expression(arg))
         else:
             code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
@@ -2358,7 +2359,7 @@ class CCodePrinter(CodePrinter):
             if assign_node:
                 lhs_var = assign_node[0].lhs
                 lhs = self._print(lhs_var)
-                if expr.arg.rank == 0:
+                if arg.rank == 0:
                     prefix = ''
                 else:
                     prefix = code
