@@ -28,11 +28,11 @@ max_int64 = iinfo('int64').max
 min_float = finfo('float').min
 max_float = finfo('float').max
 
-min_float32 = finfo('float32').min
-max_float32 = finfo('float32').max
+min_float32 = finfo('float32').min / 2
+max_float32 = finfo('float32').max / 2
 
-min_float64 = finfo('float64').min
-max_float64 = finfo('float64').max
+min_float64 = finfo('float64').min / 2
+max_float64 = finfo('float64').max / 2
 
 default_numpy_int = np.array([1]).dtype
 
