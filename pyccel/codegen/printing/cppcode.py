@@ -144,8 +144,6 @@ class CppCodePrinter(CodePrinter):
             The name of the file being pyccelised.
     verbose : int
         The level of verbosity.
-    prefix_module : str
-            A prefix to be added to the name of the module.
     """
     printmethod = "_cppcode"
     language = "C++"
@@ -206,6 +204,7 @@ class CppCodePrinter(CodePrinter):
 
         Returns
         -------
+        str
             The indented code to be printed.
         """
         tab = ' '*self._default_settings['tabwidth']
