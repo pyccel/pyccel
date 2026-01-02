@@ -23,6 +23,7 @@ dependencies = [
     "textx >= 2.2",
     "packaging",
     "immutabledict >= 4.0.0",
+    "pybind11",
     "ninja",
     "meson",
 ]
