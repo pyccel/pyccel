@@ -83,6 +83,11 @@ interface expm1
     module procedure pyc_expm1_c64
 end interface expm1
 
+interface cross_product
+    module procedure cross_product_f32
+    module procedure cross_product_f64
+end interface cross_product
+
 contains
 
 ! Implementation of math factorial function
@@ -440,5 +445,57 @@ elemental pure function pyc_expm1_c64(x) result(Out_0001)
                (exp(real(x)) * sin(aimag(x))) * cmplx(0,1, kind = c64)
 
 end function pyc_expm1_c64
+
+subroutine cross_product_f32(a,b,c)
+    real(f32) :: a(:)
+    real(f32) :: b(:)
+    real(f32) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_f32
+
+subroutine cross_product_f64(a,b,c)
+    real(f64) :: a(:)
+    real(f64) :: b(:)
+    real(f64) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_f64
 
 end module pyc_math_f90
