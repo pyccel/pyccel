@@ -163,13 +163,33 @@ class CppCodePrinter(CodePrinter):
         self._additional_imports = {}
         self._additional_code = ''
         self._in_header = False
-        self._declared_vars = []
+
+        # A set describing the variables that have been declared
+        # in the scope.
+        self._declared_vars : list[set[Variable]] = []
 
     def set_scope(self, scope):
+        """
+        Set the current scope.
+
+        Set the current scope and create a new set of all variables that
+        have been declared in this scope. This allows variables to be
+        declared at their first usage.
+
+        Parameters
+        ----------
+        scope : Scope
+            The current scope.
+        """
         self._declared_vars.append(set())
         super().set_scope(scope)
 
     def exit_scope(self):
+        """
+        Exit the current scope and return to the enclosing scope.
+
+        Exit the current scope and return to the enclosing scope.
+        """
         super().exit_scope()
         self._declared_vars.pop()
 
@@ -196,6 +216,21 @@ class CppCodePrinter(CodePrinter):
             return tab+code.replace('\n','\n'+tab).rstrip(' ')
 
     def _format_code(self, lines):
+        """
+        Format the lines of code.
+
+        Format the lines of code.
+
+        Parameters
+        ----------
+        lines : str
+            The unformatted lines of code.
+
+        Returns
+        -------
+        str
+            The formatted lines of code.
+        """
         return lines
 
     def function_signature(self, expr, print_arg_names = True):
