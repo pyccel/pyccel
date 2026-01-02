@@ -11,6 +11,7 @@ import subprocess
 import shutil
 
 from numpy import get_include as get_numpy_include
+import pybind11
 
 from pyccel import __version__ as pyccel_version
 
@@ -317,6 +318,8 @@ nvc_info.update(python_info)
 nvfort_info.update(python_info)
 clang_info.update(python_info)
 flang_info.update(python_info)
+
+gpp_info['python']['include'].append(pybind11.get_include())
 
 available_compilers = {
                         'GNU': {
