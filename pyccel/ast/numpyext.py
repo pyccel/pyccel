@@ -24,6 +24,7 @@ from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
+from .datatypes      import VoidType
 
 from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -36,6 +37,7 @@ from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, Num
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
+from .operators      import PyccelUnarySub
 from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
@@ -2920,6 +2922,68 @@ class NumpyDivide(PyccelDiv):
             if x2_type is not x2_np_type:
                 x2 = DtypePrecisionToCastFunction[x2_np_type](x2)
         super().__init__(x1, x2)
+
+#==============================================================================
+class NumpyCross(PyccelFunction):
+    """
+    Class representing a call to numpy.cross or numpy.linalg.cross in the user code.
+
+    Class representing a call to numpy.cross or numpy.linalg.cross in the user code.
+
+    Parameters
+    ----------
+    a : TypedAstNode
+        The first vector.
+    b : TypedAstNode
+        The second vector.
+    axisa : LiteralInteger, default: -1
+        Axis of `a` that defines the vector(s).
+    axisb : LiteralInteger, default: -1
+        Axis of `b` that defines the vector(s).
+    axisc : LiteralInteger, default: -1
+        Axis of `c` that defines the vector(s).
+    axis : LiteralInteger, optional
+        If defined, the axis of `a`, `b` and `c` that defines the vector(s)
+        and cross product(s).  Overrides `axisa`, `axisb` and `axisc`.
+    c : Variable
+        Argument provided by the semantic parser describing the variable where
+        the result will be saved.
+    """
+    __slots__ = ('_axisa','_axisb','_axisc',)
+
+    _dtype = VoidType()
+    _shape = None
+    name = 'cross'
+
+    def __init__(self, a, b,
+                 axisa = PyccelUnarySub(LiteralInteger(1)),
+                 axisb = PyccelUnarySub(LiteralInteger(1)),
+                 axisc = PyccelUnarySub(LiteralInteger(1)),
+                 axis = Nil(), *, c):
+        axisa_is_not_literal = False
+        axisb_is_not_literal = False
+        axisc_is_not_literal = False
+        axis_is_not_literal = False
+        try:
+            self._axisa = int(axisa)
+        except TypeError:
+            axisa_is_not_literal = True
+        try:
+            self._axisb = int(axisc)
+        except TypeError:
+            axisb_is_not_literal = True
+        try:
+            self._axisc = int(axisb)
+        except TypeError:
+            axisc_is_not_literal = True
+        if axis is not Nil():
+            try:
+                axis_val = int(axis)
+            except TypeError:
+                axis_is_not_literal = True
+        if axisa_is_not_literal or axisb_is_not_literal or axisc_is_not_literal or axis_is_not_literal:
+            errors.report(NON_LITERAL_AXIS, symbol=(axisa, axisb, axisc, axis), severity="fatal")
+        super().__init__(a, b, c)
 
 #==============================================================================
 DtypePrecisionToCastFunction.update({
