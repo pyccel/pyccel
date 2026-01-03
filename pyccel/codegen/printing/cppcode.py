@@ -418,10 +418,9 @@ class CppCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
         body = self._print(expr.body)
         variables = self.scope.variables.values()
-        decs = ''.join(self._print(Declare(v)) for v in variables)
+        decs = ''.join(self._print(Declare(v)) for v in variables if v not in self._declared_vars[-1])
 
         imports = [i for i in chain(expr.imports, self._additional_imports.values()) if not i.ignore]
-        #imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
         self.exit_scope()
         return ''.join((imports,
@@ -941,7 +940,6 @@ class CppCodePrinter(CodePrinter):
             return ''
         else:
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
-        print(expr)
 
     def _print_Deallocate(self, expr):
         variable = expr.variable
