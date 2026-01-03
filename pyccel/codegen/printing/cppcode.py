@@ -308,7 +308,7 @@ class CppCodePrinter(CodePrinter):
             after using this function.
         """
         if expr.dtype != dtype:
-            return f'({self._print(dtype)})' + '({})'
+            return f'static_cast<{self._print(dtype)}>' + '({})'
         return '{}'
 
     #-----------------------------------------------------------------------
@@ -621,7 +621,7 @@ class CppCodePrinter(CodePrinter):
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self._print(expr.dtype)
-        return f'({type_name})({value})'
+        return f'static_cast<{type_name}>({value})'
 
     # ------------------------------
     #  Types
