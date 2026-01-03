@@ -6436,3 +6436,56 @@ def test_true_divide(language):
     assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
     assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
+
+def test_cross_1d(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        return np.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_cross_2d_axis(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        return np.cross(x, y, axis=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(5, 3)
+    y = rand(5, 3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == cross_call(x, y).shape
+
+
+def test_cross_mixed_dimensions(language):
+    def cross_call(x : 'float[:,:]'):
+        y = np.array(x[0:1,:])
+        return np.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(4, 3)
+    assert np.allclose(f1(x), cross_call(x), rtol=RTOL, atol=ATOL)
+
+
+def test_linalg_cross_1d(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        from numpy.linalg import cross
+        return cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_linalg_cross_axis(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy.linalg import cross
+        return cross(x, y, axis=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = np.array(np.array(rand(2, 3)*10, dtype=int), dtype=float)
+    y = np.array(np.array(rand(2, 3)*10, dtype=int), dtype=float)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
