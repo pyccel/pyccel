@@ -704,6 +704,13 @@ class CppCodePrinter(CodePrinter):
     #  Casts
     # ------------------------------
 
+    def _print_PythonBool(self, expr):
+        value = self._print(expr.arg)
+        return f'static_cast<bool>({value})'
+
+    def _print_PythonInt(self, expr):
+        return f'static_cast<{self._print(expr.class_type)}>({self._print(expr.args[0])})'
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self._print(expr.dtype)
@@ -784,6 +791,16 @@ class CppCodePrinter(CodePrinter):
         return f'std::tuple<{types}>'
 
     # ------------------------------
+    #  Built-in functions
+    # ------------------------------
+
+    def _print_PythonReal(self, expr):
+        return f'std::real({self._print(expr.internal_var)})'
+
+    def _print_PythonImag(self, expr):
+        return f'std::imag({self._print(expr.internal_var)})'
+
+    # ------------------------------
     #  Mathematical functions
     # ------------------------------
 
@@ -820,9 +837,6 @@ class CppCodePrinter(CodePrinter):
             cast_type = self._print(expr.dtype)
             return f"({cast_type}){func_name}({code_args})"
         return f"{func_name}({code_args})"
-
-    def _print_PythonInt(self, expr):
-        return f'{self._print(expr.class_type)}({self._print(expr.args[0])})'
 
     # ------------------------------
     #  Literals
