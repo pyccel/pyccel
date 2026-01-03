@@ -365,8 +365,6 @@ nvfort_info.update(python_info)
 clang_info.update(python_info)
 flang_info.update(python_info)
 
-gpp_info['python']['include'].append(pybind11.get_include())
-
 available_compilers = {
                         'GNU': {
                             'c' : gcc_info,
@@ -393,5 +391,10 @@ available_compilers = {
                             'fortran': flang_info
                             },
                         }
+
+for config in available_compilers.values():
+    cpp_config = config.get('c++', None)
+    if cpp_config:
+        cpp_config['python']['include'].append(pybind11.get_include())
 
 vendors = ('GNU','intel','PGI','nvidia','LLVM')
