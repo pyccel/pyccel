@@ -5,12 +5,12 @@ import pytest
 from pyccel import epyccel
 # wp suffix means With Parentheses
 #------------------------------------------------------------------------------
-def test_f1(language):
+def test_f1(experimental_language):
     def f1(x : 'int'):
         a = 5 if x < 5 else x
         return a
 
-    f = epyccel(f1, language = language)
+    f = epyccel(f1, language = experimental_language)
 
     # ...
     assert f(6) == f1(6)
@@ -18,19 +18,19 @@ def test_f1(language):
     # ...
 #------------------------------------------------------------------------------
 
-def test_f2(language):
+def test_f2(experimental_language):
     def f2(x : 'int'):
         a = 5.5 if x < 5 else x
         return a
 
-    f = epyccel(f2, language = language)
+    f = epyccel(f2, language = experimental_language)
 
     # ...
     assert f(6) == f2(6)
     assert f(4) == f2(4)
     # ...
 #------------------------------------------------------------------------------
-def test_f3(language):
+def test_f3(experimental_language):
     def f3(x : 'int'):
         a = x if x < 5 else 5 + 2
         return a
@@ -39,8 +39,8 @@ def test_f3(language):
         a = (x if x < 5 else 5) + 2
         return a
 
-    f = epyccel(f3, language = language)
-    fwp = epyccel(f3wp, language = language)
+    f = epyccel(f3, language = experimental_language)
+    fwp = epyccel(f3wp, language = experimental_language)
 
     # ...
     assert f(6) == f3(6)
@@ -51,7 +51,7 @@ def test_f3(language):
     # ...
 #------------------------------------------------------------------------------
 
-def test_f4(language):
+def test_f4(experimental_language):
     def f4(x : 'int'):
         a = x if x < 5 else 5 >> 2
         return a
@@ -60,8 +60,8 @@ def test_f4(language):
         a = (x if x < 5 else 5) >> 2
         return a
 
-    f = epyccel(f4, language = language)
-    fwp = epyccel(f4wp, language = language)
+    f = epyccel(f4, language = experimental_language)
+    fwp = epyccel(f4wp, language = experimental_language)
 
     # ...
     assert f(6) == f4(6)
@@ -71,7 +71,7 @@ def test_f4(language):
     assert fwp(4) == f4wp(4)
     # ...
 #------------------------------------------------------------------------------
-def test_f5(language):
+def test_f5(experimental_language):
     def f5(x : 'int'):
         a = x if x < 5 else 5 if x == 5 else 5.5
         return a
@@ -80,8 +80,8 @@ def test_f5(language):
         a = x if x < 5 else (5 if x == 5 else 5.5)
         return a
 
-    f = epyccel(f5, language = language)
-    fwp = epyccel(f5wp, language = language)
+    f = epyccel(f5, language = experimental_language)
+    fwp = epyccel(f5wp, language = experimental_language)
 
     # ...
     assert f(6) == f5(6)
@@ -93,7 +93,7 @@ def test_f5(language):
     assert fwp(5) == f5wp(5)
     # ...
 #------------------------------------------------------------------------------
-def test_f6(language):
+def test_f6(experimental_language):
     def f6(x : 'int'):
         # a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         a = x if x < 0 else 1 if x < 5 else complex(0, 1) if x == 5 else 6.5
@@ -103,8 +103,8 @@ def test_f6(language):
         a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         return a
 
-    f = epyccel(f6, language = language)
-    fwp = epyccel(f6wp, language = language)
+    f = epyccel(f6, language = experimental_language)
+    fwp = epyccel(f6wp, language = experimental_language)
 
     # ...
     assert f(6) == f6(6)
@@ -171,7 +171,7 @@ def test_f8(language):
     # ...
 #------------------------------------------------------------------------------
 
-def test_f9(language):
+def test_f9(experimental_language):
     def f9(x : 'int'):
         a = 1 + 2 if x < 5 else 3
         return a
@@ -184,9 +184,9 @@ def test_f9(language):
         a = (1 + 2) if x < 5 else 3
         return a
 
-    f = epyccel(f9, language = language)
-    fwp1 = epyccel(f9wp1, language = language)
-    fwp2 = epyccel(f9wp2, language = language)
+    f = epyccel(f9, language = experimental_language)
+    fwp1 = epyccel(f9wp1, language = experimental_language)
+    fwp2 = epyccel(f9wp2, language = experimental_language)
     # ...
     assert f(6) == f9(6)
     assert f(4) == f9(4)
@@ -199,7 +199,7 @@ def test_f9(language):
     # ...
 #------------------------------------------------------------------------------
 
-def test_f10(language):
+def test_f10(experimental_language):
     def f10(x : 'int'):
         a = 2 if x < 5 else 3 + 1
         return a
@@ -212,9 +212,9 @@ def test_f10(language):
         a = 2 if x < 5 else (3 + 1)
         return a
 
-    f = epyccel(f10, language = language)
-    fwp1 = epyccel(f10wp1, language = language)
-    fwp2 = epyccel(f10wp2, language = language)
+    f = epyccel(f10, language = experimental_language)
+    fwp1 = epyccel(f10wp1, language = experimental_language)
+    fwp2 = epyccel(f10wp2, language = experimental_language)
     # ...
     assert f(6) == f10(6)
     assert f(4) == f10(4)
@@ -227,12 +227,12 @@ def test_f10(language):
     # ...
 #------------------------------------------------------------------------------
 
-def test_f11(language):
+def test_f11(experimental_language):
     def f11(x : 'int'):
         a = 2 if (x + 2)*5 < 5 else 3
         return a
 
-    f = epyccel(f11, language = language)
+    f = epyccel(f11, language = experimental_language)
     # ...
     assert f(6) == f11(6)
     assert f(-4) == f11(-4)
@@ -272,7 +272,7 @@ def test_f12(language):
     # ...
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', (
+@pytest.mark.parametrize( 'experimental_language', (
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="Can't return a string"),
             pytest.mark.fortran]
@@ -281,10 +281,11 @@ def test_f12(language):
             pytest.mark.skip(reason="Can't declare a string"),
             pytest.mark.c]
         ),
+        pytest.param("c++", marks = pytest.mark.cpp),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_f13(language):
+def test_f13(experimental_language):
     def f13(b : bool):
         a = 'hello' if b else 'world!'
         return a
@@ -293,8 +294,8 @@ def test_f13(language):
         a = 'hello' if b1 else ('world' if b2 else 'hello world')
         return a
 
-    f = epyccel(f13, language = language)
-    fwp = epyccel(f13wp, language = language)
+    f = epyccel(f13, language = experimental_language)
+    fwp = epyccel(f13wp, language = experimental_language)
 
     # ...
     assert f(True) == f13(True)
