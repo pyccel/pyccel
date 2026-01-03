@@ -436,8 +436,8 @@ class CppCodePrinter(CodePrinter):
         C++:    (cond ? a : b)
         """
         c = self._print(expr.cond)
-        a = self._print(expr.if_true)
-        b = self._print(expr.if_false)
+        a = self._print(expr.value_true)
+        b = self._print(expr.value_false)
         return f"({c} ? {a} : {b})"
 
 
