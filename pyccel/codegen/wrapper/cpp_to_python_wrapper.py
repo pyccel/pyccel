@@ -275,6 +275,10 @@ class CppToPythonWrapper(Wrapper):
         local_arg = arg_var.clone(arg_var.name)
         return {'body': [], 'wrapper_arg': arg_var, 'func_arg': arg_var}
 
+    def _extract_StringType_FunctionDefArgument(self, arg_var):
+        local_arg = arg_var.clone(arg_var.name)
+        return {'body': [], 'wrapper_arg': arg_var, 'func_arg': arg_var}
+
     def _wrap_FunctionDefResult(self, expr):
         var = expr.var
         return self._extract_FunctionDefResult(var)

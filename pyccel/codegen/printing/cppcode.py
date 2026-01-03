@@ -754,6 +754,14 @@ class CppCodePrinter(CodePrinter):
             imag_code = self._print(imag)
             return f'({real_code} + ({imag_code}) * 1i)'
 
+    def _print_PythonStr(self, expr):
+        arg = expr.args[0]
+        if isinstance(arg.class_type, StringType):
+            return self._print(arg)
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal',
+                          symbol=expr)
+
     # ------------------------------
     #  Types
     # ------------------------------

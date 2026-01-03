@@ -14,12 +14,12 @@ failing_tests = {
         }
 
 @pytest.mark.parametrize('test_func', string_funcs)
-def test_strings(test_func, language):
-    if test_func.__name__ in failing_tests and language=='c':
+def test_strings(test_func, experimental_language):
+    if test_func.__name__ in failing_tests and experimental_language=='c':
         pytest.xfail(failing_tests[test_func.__name__])
 
     f1 = test_func
-    f2 = epyccel( f1, language = language )
+    f2 = epyccel( f1, language = experimental_language )
 
     python_out = f1()
     pyccel_out = f2()
@@ -27,7 +27,7 @@ def test_strings(test_func, language):
     print(pyccel_out)
     assert python_out == pyccel_out
 
-def test_string_compare(language):
+def test_string_compare(experimental_language):
     def str_comp():
         a = 'hello'
         if a == 'world':
@@ -39,18 +39,18 @@ def test_string_compare(language):
         else:
             return 4
 
-    f = epyccel( str_comp, language=language )
+    f = epyccel( str_comp, language = experimental_language )
 
     assert str_comp() == f()
 
-def test_string_argument(language):
+def test_string_argument(experimental_language):
     def str_option_test(option : str):
         if option == 'do this':
             return 1.0
         else:
             return 2.0
 
-    f = epyccel( str_option_test, language=language )
+    f = epyccel( str_option_test, language = experimental_language )
 
     assert str_option_test('do this') == f('do this')
     assert str_option_test('do that') == f('do that')
@@ -62,7 +62,7 @@ def test_string_argument_optional(language):
         else:
             return 2.0
 
-    f = epyccel( str_option_test, language=language )
+    f = epyccel( str_option_test, language = language )
 
     assert str_option_test('do this') == f('do this')
     assert str_option_test('do that') == f('do that')
