@@ -6,15 +6,12 @@
 """ Functions for printing C++ code.
 """
 from itertools import chain
-from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.core     import Assign, Declare, Import, Module, AsName
+from pyccel.ast.core     import Declare, Import, Module, AsName
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
-from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat
+from pyccel.ast.datatypes import PythonNativeFloat
 from pyccel.ast.datatypes import FinalType, StringType
-from pyccel.ast.datatypes import HomogeneousSetType, DictType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
-from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import Variable, DottedName
