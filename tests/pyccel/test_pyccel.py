@@ -729,7 +729,7 @@ def test_print_integers(language):
     pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_print_sp_and_end(language):
+def test_print_sp_and_end(experimental_language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
 
