@@ -3004,33 +3004,85 @@ class NumpyCross(PyccelFunction):
 
     @property
     def a(self):
+        """
+        The first vector in the cross product.
+
+        The first vector in the cross product.
+        """
         return self._args[0]
 
     @property
     def b(self):
+        """
+        The second vector in the cross product.
+
+        The second vector in the cross product.
+        """
         return self._args[1]
 
     @property
     def c(self):
+        """
+        The vector in which the cross product is saved.
+
+        The vector in which the cross product is saved.
+        """
         return self._args[2]
 
     @property
     def axis_a(self):
+        """
+        Axis of `a` that defines the 1D vector where the operator acts.
+
+        Axis of `a` that defines the 1D vector where the operator acts.
+        """
         return self._axisa
 
     @property
     def axis_b(self):
+        """
+        Axis of `b` that defines the 1D vector where the operator acts.
+
+        Axis of `b` that defines the 1D vector where the operator acts.
+        """
         return self._axisb
 
     @property
     def axis_c(self):
+        """
+        Axis of `c` that defines the 1D vector where the operator acts.
+
+        Axis of `c` that defines the 1D vector where the operator acts.
+        """
         return self._axisc
 
     @property
-    def rank(self):
+    def n_indices(self):
+        """
+        The number of indices required to get a 1D cross product expression.
+
+        The number of indices required to get a 1D cross product expression.
+        """
         return self.a.rank - 1
 
     def insert_indices(self, *idxs):
+        """
+        Insert the indices into the arrays.
+
+        Insert the indices into the arrays to get a 1D cross product expression.
+        This function is used by the loop unrolling.
+
+        Parameters
+        ----------
+        *idxs : Variable
+            The indices to be inserted.
+
+        Returns
+        -------
+        NumpyCross
+            The new 1D cross product expression.
+        """
+        assert len(idxs) == self.n_indices
         a_idx = [LiteralInteger(0) if s == 1 else idx
                  for idx,s in zip(idxs, self.a.shape)]
         b_idx = [LiteralInteger(0) if s == 1 else idx

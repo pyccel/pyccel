@@ -656,7 +656,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, NumpyCross) and line.rank:
-            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.rank)]
+            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.n_indices)]
             indices.extend(new_indices)
             block = [line.insert_indices(*new_indices)]
             a_shape = [s for i,s in enumerate(line.a.shape) if i != line.axis_a]
