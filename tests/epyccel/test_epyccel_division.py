@@ -9,11 +9,11 @@ ATOL = 1e-15
 
 # -------------------- simple division ---------------------- #
 
-def test_call_div_i_i(language):
+def test_call_div_i_i(experimental_language):
     def div_i_i(x : int, y : int):
         return x / y
 
-    f = epyccel(div_i_i, language=language)
+    f = epyccel(div_i_i, language=experimental_language)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
 
@@ -22,11 +22,11 @@ def test_call_div_i_i(language):
     assert isclose(f(x, -y), div_i_i(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_i_i(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_i_r(language):
+def test_call_div_i_r(experimental_language):
     def div_i_r(x : int, y : 'float'):
         return x / y
 
-    f = epyccel(div_i_r, language=language)
+    f = epyccel(div_i_r, language=experimental_language)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert isclose(f(x, y), div_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -34,11 +34,11 @@ def test_call_div_i_r(language):
     assert isclose(f(x, -y), div_i_r(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_i_r(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_r_i(language):
+def test_call_div_r_i(experimental_language):
     def div_r_i(x : 'float', y : int):
         return x / y
 
-    f = epyccel(div_r_i, language=language)
+    f = epyccel(div_r_i, language=experimental_language)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert isclose(f(x, y), div_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -46,11 +46,11 @@ def test_call_div_r_i(language):
     assert isclose(f(x, -y), div_r_i(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_r_i(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_r_r(language):
+def test_call_div_r_r(experimental_language):
     def div_r_r(x : 'float', y : 'float'):
         return x / y
 
-    f = epyccel(div_r_r, language=language)
+    f = epyccel(div_r_r, language=experimental_language)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert isclose(f(x, y), div_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -60,11 +60,11 @@ def test_call_div_r_r(language):
 
 # -------------------- Complex division ---------------------- #
 
-def test_call_div_c_c(language):
+def test_call_div_c_c(experimental_language):
     def div_c_c(x : 'complex', y : 'complex'):
         return x / y
 
-    f = epyccel(div_c_c, language=language)
+    f = epyccel(div_c_c, language=experimental_language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_c_c(x, y), rtol=RTOL, atol=ATOL)
@@ -72,11 +72,11 @@ def test_call_div_c_c(language):
     assert isclose(f(x, -y), div_c_c(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_c_c(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_i_c(language):
+def test_call_div_i_c(experimental_language):
     def div_i_c(x : int, y : 'complex'):
         return x / y
 
-    f = epyccel(div_i_c, language=language)
+    f = epyccel(div_i_c, language=experimental_language)
     x = randint(1e5)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_i_c(x, y), rtol=RTOL, atol=ATOL)
@@ -84,11 +84,11 @@ def test_call_div_i_c(language):
     assert isclose(f(x, -y), div_i_c(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_i_c(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_c_i(language):
+def test_call_div_c_i(experimental_language):
     def div_c_i(x : 'complex', y : int):
         return x / y
 
-    f = epyccel(div_c_i, language=language)
+    f = epyccel(div_c_i, language=experimental_language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = randint(low=1, high= 1e2)
     assert isclose(f(x, y), div_c_i(x, y), rtol=RTOL, atol=ATOL)
@@ -96,11 +96,11 @@ def test_call_div_c_i(language):
     assert isclose(f(x, -y), div_c_i(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_c_i(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_r_c(language):
+def test_call_div_r_c(experimental_language):
     def div_r_c(x : 'float', y : 'complex'):
         return x / y
 
-    f = epyccel(div_r_c, language=language)
+    f = epyccel(div_r_c, language=experimental_language)
     x = uniform(high=1e9)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_r_c(x, y), rtol=RTOL, atol=ATOL)
@@ -108,11 +108,11 @@ def test_call_div_r_c(language):
     assert isclose(f(x, -y), div_r_c(x, -y), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x, -y), div_r_c(-x, -y), rtol=RTOL, atol=ATOL)
 
-def test_call_div_c_r(language):
+def test_call_div_c_r(experimental_language):
     def div_c_r(x : 'complex', y : 'float'):
         return x / y
 
-    f = epyccel(div_c_r, language=language)
+    f = epyccel(div_c_r, language=experimental_language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = uniform(low=1e-14, high= 1e3)
     assert isclose(f(x, y), div_c_r(x, y), rtol=RTOL, atol=ATOL)
@@ -165,15 +165,16 @@ def test_call_fdiv_i_i_32(language):
     assert (f(-x, y) == fdiv_i_i(-x, y))
     assert (f(x, -y) == fdiv_i_i(x, -y))
     assert (f(-x, -y) == fdiv_i_i(-x, -y))
+    print(type(f(x, y)))
     assert isinstance(f(x, y), type(fdiv_i_i(x, y)))
 
-def test_call_fdiv_i_i_i(language):
+def test_call_fdiv_i_i_i(experimental_language):
     def fdiv_i_i_i(x : int, y : int, z : int):
         return x // y // z
 
     flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i_i, language=language, flags=flags)
+    f = epyccel(fdiv_i_i_i, language=experimental_language, flags=flags)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
     z = randint(low=1, high= 1e2)
@@ -184,26 +185,26 @@ def test_call_fdiv_i_i_i(language):
     assert (f(-x, -y, z) == fdiv_i_i_i(-x, -y, z))
     assert isinstance(f(x, y, z), type(fdiv_i_i_i(x, y, z)))
 
-def test_call_fdiv_b_b(language):
+def test_call_fdiv_b_b(experimental_language):
     def fdiv_b_b(x : 'bool', y : 'bool'):
         return x // y
 
     flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_b_b, language=language, flags=flags)
+    f = epyccel(fdiv_b_b, language=experimental_language, flags=flags)
     assert (f(True, True) == fdiv_b_b(True, True))
     assert (f(False, True) == fdiv_b_b(False, True))
     assert isinstance(f(True, True), type(fdiv_b_b(True, True)))
 
 
 
-def test_call_fdiv_i_r(language):
+def test_call_fdiv_i_r(experimental_language):
     def fdiv_i_r(x : int, y : 'float'):
         return x // y
 
     flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_r, language=language, flags=flags)
+    f = epyccel(fdiv_i_r, language=experimental_language, flags=flags)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert (f(x, y) == fdiv_i_r(x, y))
@@ -212,13 +213,13 @@ def test_call_fdiv_i_r(language):
     assert (f(-x, -y) == fdiv_i_r(-x, -y))
     assert isinstance(f(x, y), type(fdiv_i_r(x, y)))
 
-def test_call_fdiv_r_i(language):
+def test_call_fdiv_r_i(experimental_language):
     def fdiv_r_i(x : 'float', y : int):
         return x // y
 
     flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_i, language=language, flags=flags)
+    f = epyccel(fdiv_r_i, language=experimental_language, flags=flags)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert (f(x, y) == fdiv_r_i(x, y))
@@ -227,13 +228,13 @@ def test_call_fdiv_r_i(language):
     assert (f(-x, -y) == fdiv_r_i(-x, -y))
     assert isinstance(f(x, y), type(fdiv_r_i(x, y)))
 
-def test_call_fdiv_r_r(language):
+def test_call_fdiv_r_r(experimental_language):
     def fdiv_r_r(x : 'float', y : 'float'):
         return x // y
 
     flags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_r, language=language, flags=flags)
+    f = epyccel(fdiv_r_r, language=experimental_language, flags=flags)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert (f(x, y) == fdiv_r_r(x, y))
