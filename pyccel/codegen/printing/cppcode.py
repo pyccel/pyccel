@@ -8,6 +8,7 @@
 from itertools import chain
 from pyccel.ast.builtins import DtypePrecisionToCastFunction
 from pyccel.ast.core     import Declare, Import, Module, AsName, Assign
+from pyccel.ast.core     import FunctionDef, If, For, While
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
@@ -443,12 +444,19 @@ class CppCodePrinter(CodePrinter):
         for a in expr.arguments:
             self._declared_vars[-1].add(a.var)
 
+        local_vars = list(expr.local_vars)
+        if not expr.results.var.is_temp:
+            local_vars.append(expr.results.var)
+
         body  = self._print(expr.body)
+        decs = [self._print(Declare(v)) for v in local_vars
+                if v not in self._declared_vars[-1]]
 
         self.exit_scope()
 
         return ''.join((self.function_signature(expr),
                         ' {\n',
+                        ''.join(decs),
                         self._indent_codestring(body),
                         '}\n'))
 
@@ -509,7 +517,9 @@ class CppCodePrinter(CodePrinter):
         lhs = expr.lhs
 
         prefix = ''
-        if lhs in self.scope.variables.values() and lhs not in self._declared_vars[-1]:
+        context = expr.get_user_nodes((FunctionDef, If, For, Module, While))
+        if lhs in self.scope.variables.values() and lhs not in self._declared_vars[-1] \
+                and not any(isinstance(c, If) for c in context):
             prefix = self.get_declare_type(lhs) + ' '
             self._declared_vars[-1].add(lhs)
 
@@ -527,8 +537,8 @@ class CppCodePrinter(CodePrinter):
         C++:    (cond ? a : b)
         """
         c = self._print(expr.cond)
-        a = self._print(expr.if_true)
-        b = self._print(expr.if_false)
+        a = self._print(expr.value_true)
+        b = self._print(expr.value_false)
         return f"({c} ? {a} : {b})"
 
 
