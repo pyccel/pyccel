@@ -706,7 +706,7 @@ def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
 
 #------------------------------------------------------------------------------
-def test_print_strings(language):
+def test_print_strings(experimental_language):
     types = str
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
