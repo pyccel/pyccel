@@ -23,7 +23,8 @@ public :: pyc_gcd, &
           csign, &
           pyc_bankers_round, &
           pyc_floor_div, &
-          expm1
+          expm1, &
+          cross_product
 
 private
 
@@ -447,9 +448,9 @@ elemental pure function pyc_expm1_c64(x) result(Out_0001)
 end function pyc_expm1_c64
 
 subroutine cross_product_f32(a,b,c)
-    real(f32) :: a(:)
-    real(f32) :: b(:)
-    real(f32) :: c(:)
+    real(f32), intent(in) :: a(:)
+    real(f32), intent(in) :: b(:)
+    real(f32), intent(out) :: c(:)
 
 #ifndef NDEBUG
     if (size(a) /= 3) then
@@ -473,9 +474,9 @@ subroutine cross_product_f32(a,b,c)
 end subroutine cross_product_f32
 
 subroutine cross_product_f64(a,b,c)
-    real(f64) :: a(:)
-    real(f64) :: b(:)
-    real(f64) :: c(:)
+    real(f64), intent(in) :: a(:)
+    real(f64), intent(in) :: b(:)
+    real(f64), intent(out) :: c(:)
 
 #ifndef NDEBUG
     if (size(a) /= 3) then
