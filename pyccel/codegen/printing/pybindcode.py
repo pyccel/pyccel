@@ -49,11 +49,11 @@ class PyBindCodePrinter(CppCodePrinter):
 
     def _print_NumpyComplex128Type(self, expr):
         self.add_import(pybind_imports['complex'])
-        return super()._print_NumpyComplex64Type(expr)
+        return super()._print_NumpyComplex128Type(expr)
 
     def _print_PythonNativeComplex(self, expr):
         self.add_import(pybind_imports['complex'])
-        return super()._print_NumpyComplex64Type(expr)
+        return super()._print_PythonNativeComplex(expr)
 
     #-----------------------------------------------------------------------
     #                              Pybind11 methods
