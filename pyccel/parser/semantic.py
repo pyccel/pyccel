@@ -6808,7 +6808,7 @@ class SemanticParser(BasicParser):
         lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, self._additional_exprs[-1],
                 heap_mem_in_multirets = False)
         try:
-            cross_call = NumpyCross(*args, **kwargs, c = lhs)
+            cross_call = func(*args, **kwargs, c = lhs)
         except PyccelError as err:
             errors.error_info_map[errors.target][-1].line = expr.python_ast.lineno
             errors.error_info_map[errors.target][-1].column = expr.python_ast.col_offset

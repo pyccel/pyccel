@@ -114,6 +114,7 @@ __all__ = (
     'NumpyCountNonZero',
     'NumpyCross',
     'NumpyImag',
+    'NumpyLinalgCross',
     'NumpyMatmul',
     'NumpyMod',
     'NumpyNDArray',
@@ -3102,6 +3103,30 @@ class NumpyCross(PyccelFunction):
                           c = self.c[c_idx])
 
 #==============================================================================
+class NumpyLinalgCross(NumpyCross):
+    """
+    Class representing a call to numpy.linalg.cross in the user code.
+
+    Class representing a call to numpy.linalg.cross in the user code.
+
+    Parameters
+    ----------
+    a : TypedAstNode
+        The first vector.
+    b : TypedAstNode
+        The second vector.
+    axis : LiteralInteger, optional
+        If defined, the axis of `a`, `b` and `c` that defines the vector(s)
+        and cross product(s).  Overrides `axisa`, `axisb` and `axisc`.
+    c : Variable
+        Argument provided by the semantic parser describing the variable where
+        the result will be saved.
+    """
+    def __init__(self, a, b, axis = Nil(), *, c):
+        super().__init__(a, b, axis = axis, c = c)
+
+
+#==============================================================================
 DtypePrecisionToCastFunction.update({
     PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
@@ -3120,7 +3145,7 @@ DtypePrecisionToCastFunction.update({
 
 numpy_linalg_mod = Module('numpy.linalg', (),
     [PyccelFunctionDef('norm', NumpyNorm),
-     PyccelFunctionDef('cross', NumpyCross)])
+     PyccelFunctionDef('cross', NumpyLinalgCross)])
 
 numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
