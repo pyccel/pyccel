@@ -18,11 +18,11 @@ else:
     RTOL = 2e-14
     ATOL = 1e-15
 
-def test_modulo_int_int(language):
+def test_modulo_int_int(experimental_language):
     def modulo_i_i(x : int, y : int):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_i_i, language=language)
+    f = epyccel(modulo_i_i, language=experimental_language)
     x = randint(0, 1e6)
     y = randint(1, 1e6)
 
@@ -32,11 +32,11 @@ def test_modulo_int_int(language):
     assert modulo_i_i_output == f_output
     assert isinstance(f_output, type(modulo_i_i_output))
 
-def test_modulo_real_real(language):
+def test_modulo_real_real(experimental_language):
     def modulo_r_r(x : 'float', y : 'float'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_r_r, language=language)
+    f = epyccel(modulo_r_r, language=experimental_language)
     x = uniform(low=0, high=1e6)
     y = uniform(low=1, high=1e2)
 
@@ -45,11 +45,11 @@ def test_modulo_real_real(language):
     assert allclose(f_output, modulo_r_r_output, rtol=RTOL, atol=ATOL)
     assert isinstance(f_output, type(modulo_r_r_output))
 
-def test_modulo_real_int(language):
+def test_modulo_real_int(experimental_language):
     def modulo_r_i(x : 'float', y : 'int'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_r_i, language=language)
+    f = epyccel(modulo_r_i, language=experimental_language)
     x = uniform(low=0, high=1e6)
     y = randint(low=1, high=1e6)
 
@@ -59,11 +59,11 @@ def test_modulo_real_int(language):
     assert allclose(f_output, modulo_r_i_output, rtol=RTOL, atol=ATOL)
     assert isinstance(f_output, type(modulo_r_i_output))
 
-def test_modulo_int_real(language):
+def test_modulo_int_real(experimental_language):
     def modulo_i_r(x : 'int', y : 'float'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_i_r, language=language)
+    f = epyccel(modulo_i_r, language=experimental_language)
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e2)
 
@@ -72,13 +72,13 @@ def test_modulo_int_real(language):
     assert allclose(f_output, modulo_i_r_output, rtol=RTOL, atol=ATOL)
     assert isinstance(f_output, type(modulo_i_r_output))
 
-def test_modulo_multiple(language):
+def test_modulo_multiple(experimental_language):
     def modulo_multiple(x : 'int', y : 'float', z : 'int'):
         return x % y % z, -x % y % z, -x % -y % z, -x % -y % -z, \
                x % -y % z, x % -y % -z, x % y % -z, -x % y % -z, \
                    -y % y % y, y % -y % y, y % y % -y
 
-    f = epyccel(modulo_multiple, language=language)
+    f = epyccel(modulo_multiple, language=experimental_language)
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e4)
     z = randint(low=1, high=1e2)
