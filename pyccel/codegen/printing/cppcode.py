@@ -11,7 +11,7 @@ from pyccel.ast.core     import Assign, Declare, Import, Module, AsName
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat
-from pyccel.ast.datatypes import FinalType
+from pyccel.ast.datatypes import FinalType, StringType
 from pyccel.ast.datatypes import HomogeneousSetType, DictType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.low_level_tools import UnpackManagedMemory
@@ -729,7 +729,8 @@ class CppCodePrinter(CodePrinter):
         return 'std::complex<double>'
 
     def _print_StringType(self, expr):
-        return 'str'
+        self.add_import(cpp_imports['string'])
+        return 'std::string'
 
     def _print_NumpyFloat32Type(self, expr):
         return 'float'
@@ -924,10 +925,24 @@ class CppCodePrinter(CodePrinter):
         join_str = f' << {self._print(sep)} << ' if sep != '' else ' << '
         args_str = join_str.join(self._print(a) for a in args)
         if end != '':
+            if args:
+                args_str += ' << '
             if end == '\n':
-                args_str += ' << std::endl;\n'
+                args_str += 'std::endl;\n'
             else:
-                args_str += f' << {self._print(end)};\n'
+                args_str += f'{self._print(end)};\n'
         else:
             args_str += ';\n'
         return 'std::cout << ' + args_str
+
+    def _print_Allocate(self, expr):
+        variable = expr.variable
+        if isinstance(variable.class_type, StringType):
+            return ''
+        else:
+            raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
+        print(expr)
+
+    def _print_Deallocate(self, expr):
+        variable = expr.variable
+        return ''
