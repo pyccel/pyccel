@@ -221,7 +221,7 @@ class CppToPythonWrapper(Wrapper):
         call_args = [a['func_arg'] for a in args_code]
 
         imported_expr = expr.clone(expr.name, is_imported=True)
-        mod, = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
+        mod, = set(expr.get_direct_user_nodes(lambda m: isinstance(m, Module)))
         imported_expr.set_current_user_node(mod)
         if expr.results.var is Nil():
             func_results = FunctionDefResult(Nil())
