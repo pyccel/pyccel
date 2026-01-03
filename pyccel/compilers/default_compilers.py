@@ -153,7 +153,7 @@ icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpiicx',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",'-DNDEBUG',),
-            'general_flags' : ('-fPIC', '-cpp',),
+            'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
                 'flags' : ('-qopenmp',),
