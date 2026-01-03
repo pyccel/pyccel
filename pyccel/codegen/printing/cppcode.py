@@ -661,7 +661,8 @@ class CppCodePrinter(CodePrinter):
         try:
             func_name = math_function_to_c[type_name]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal',
+                          symbol=expr)
 
         if func_name.startswith("pyc"):
             self.add_import(cpp_imports['pyc_math_cpp'])
@@ -832,7 +833,7 @@ class CppCodePrinter(CodePrinter):
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = f.value
             elif f.keyword == 'end'    :   end = f.value
-            else: errors.report(f"{f.keyword} not implemented as a keyworded argument", severity='fatal')
+            else: errors.report(f"{f.keyword} not implemented as a keyworded argument", severity='fatal', symbol=expr)
 
         args = [f.value for f in expr.expr if not f.has_keyword]
         join_str = f' << {self._print(sep)} << ' if sep != '' else ' << '
