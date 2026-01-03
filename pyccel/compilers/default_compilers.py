@@ -136,6 +136,22 @@ clang_info = {'exec': 'clang',
             }
 
 #------------------------------------------------------------
+clangpp_info = {'exec': 'clang++',
+            'mpi_exec': 'mpic++',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("--std=c++20",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
+            },
+            }
+
+#------------------------------------------------------------
 flang_info = {
             'exec': 'flang',
             'mpi_exec': 'mpifort',
@@ -183,6 +199,21 @@ icc_info = {'exec' : 'icx',
             }
 
 #------------------------------------------------------------
+icpp_info = {'exec' : 'icpx',
+            'mpi_exec' : 'mpiicpx',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-funroll-loops",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
+            'openmp': {
+                'flags' : ('-qopenmp',),
+                },
+            'openacc': {
+                'flags' : ("-ta=multicore", "-Minfo=accel"),
+                },
+            }
+
+#------------------------------------------------------------
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
             'debug_flags': ("-g","-O0"),
@@ -204,6 +235,21 @@ nvc_info = {'exec' : 'nvc',
             'release_flags': ("-O3","-Munroll",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
+            'openmp': {
+                'flags' : ('-mp',),
+                },
+            'openacc': {
+                'flags' : ("-acc"),
+                },
+            }
+
+#------------------------------------------------------------
+nvcpp_info = {'exec' : 'nvc++',
+            'mpi_exec' : 'mpic++',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-Munroll",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
             'openmp': {
                 'flags' : ('-mp',),
                 },
@@ -329,6 +375,7 @@ available_compilers = {
                             },
                         'intel': {
                             'c' : icc_info,
+                            'c++' : icpp_info,
                             'fortran' : ifort_info
                             },
                         'PGI': {
@@ -337,10 +384,12 @@ available_compilers = {
                             },
                         'nvidia': {
                            'c' : nvc_info,
+                            'c++': nvcpp_info,
                             'fortran' : nvfort_info
                             },
                         'LLVM': {
                             'c': clang_info,
+                            'c++': clangpp_info,
                             'fortran': flang_info
                             },
                         }
