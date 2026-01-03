@@ -6763,6 +6763,28 @@ class SemanticParser(BasicParser):
             return lhs
 
     def _build_NumpyCross(self, expr, function_call_args, func):
+        """
+        Method to build a NumpyCross node.
+
+        The purpose of this `_build` method is to change the assignment into a
+        function call and create the result variable.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic node that represents the call to `NumpyCross`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing NumpyCross and the allocation node if necessary.
+        """
         assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
         if assign:
             syntactic_lhs = assign[-1].lhs
