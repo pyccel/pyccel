@@ -742,7 +742,7 @@ class CppCodePrinter(CodePrinter):
                 imag = DtypePrecisionToCastFunction[element_type](imag)
             real_code = self._print(real)
             imag_code = self._print(imag)
-            return f'({real_code} + {imag_code} * 1i)'
+            return f'({real_code} + ({imag_code}) * 1i)'
 
     # ------------------------------
     #  Types
