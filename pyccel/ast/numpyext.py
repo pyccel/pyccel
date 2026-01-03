@@ -2951,7 +2951,7 @@ class NumpyCross(PyccelFunction):
     """
     __slots__ = ('_axisa','_axisb','_axisc',)
 
-    _dtype = VoidType()
+    _class_type = VoidType()
     _shape = None
     name = 'cross'
 
@@ -2964,6 +2964,7 @@ class NumpyCross(PyccelFunction):
         axisb_is_not_literal = False
         axisc_is_not_literal = False
         axis_is_not_literal = False
+        axis_val = None
         try:
             self._axisa = int(axisa)
         except TypeError:
@@ -2983,7 +2984,66 @@ class NumpyCross(PyccelFunction):
                 axis_is_not_literal = True
         if axisa_is_not_literal or axisb_is_not_literal or axisc_is_not_literal or axis_is_not_literal:
             errors.report(NON_LITERAL_AXIS, symbol=(axisa, axisb, axisc, axis), severity="fatal")
+
+        if axis_val is not None:
+            self._axisa = axis_val
+            self._axisb = axis_val
+            self._axisc = axis_val
+
+        if self._axisa < 0:
+            self._axisa += a.rank
+        if self._axisb < 0:
+            self._axisb += b.rank
+        if self._axisc < 0:
+            self._axisc += c.rank
+
+        assert a.rank == b.rank == c.rank
+
         super().__init__(a, b, c)
+
+    @property
+    def a(self):
+        return self._args[0]
+
+    @property
+    def b(self):
+        return self._args[1]
+
+    @property
+    def c(self):
+        return self._args[2]
+
+    @property
+    def axis_a(self):
+        return self._axisa
+
+    @property
+    def axis_b(self):
+        return self._axisb
+
+    @property
+    def axis_c(self):
+        return self._axisc
+
+    @property
+    def rank(self):
+        return self.a.rank - 1
+
+    def insert_indices(self, *idxs):
+        a_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.a.shape)]
+        b_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.b.shape)]
+        c_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.c.shape)]
+        a_idx.insert(self._axisa, Slice(None, None))
+        b_idx.insert(self._axisb, Slice(None, None))
+        c_idx.insert(self._axisc, Slice(None, None))
+        return NumpyCross(self.a[*a_idx], self.b[*b_idx],
+                          LiteralInteger(self._axisa),
+                          LiteralInteger(self._axisb),
+                          LiteralInteger(self._axisc),
+                          c = self.c[*c_idx])
 
 #==============================================================================
 DtypePrecisionToCastFunction.update({
@@ -3003,7 +3063,8 @@ DtypePrecisionToCastFunction.update({
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 
 numpy_linalg_mod = Module('numpy.linalg', (),
-    [PyccelFunctionDef('norm', NumpyNorm)])
+    [PyccelFunctionDef('norm', NumpyNorm),
+     PyccelFunctionDef('cross', NumpyCross)])
 
 numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
@@ -3061,6 +3122,7 @@ numpy_funcs = {
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     'divide'    : PyccelFunctionDef('divide'    , NumpyDivide),
     'true_divide' : PyccelFunctionDef('true_divide', NumpyDivide),
+    'cross'     : PyccelFunctionDef('cross'     , NumpyCross),
     # ---
     'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
     'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),
