@@ -999,6 +999,7 @@ def test_assert(language, test_file):
 
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
+    pyccel_commands += " --debug"
 
     compile_pyccel(cwd, test_file, pyccel_commands)
     lang_out = get_lang_exit_value(output_test_file, language)
