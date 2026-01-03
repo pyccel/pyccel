@@ -9,6 +9,7 @@ which creates an interface exposing C++ code to Python using pybind11.
 from pyccel.ast.core          import Import, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import FunctionAddress, FunctionCall, Module, Assign
 from pyccel.ast.core          import Return
+from pyccel.ast.datatypes     import pyccel_type_to_original_type
 from pyccel.ast.cwrapper      import PyccelPyObject
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
 from pyccel.ast.literals      import Nil
@@ -294,6 +295,9 @@ class CppToPythonWrapper(Wrapper):
             severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefResult(self, res_var):
+        out_type = pyccel_type_to_original_type[res_var.class_type]
+        if out_type.__module__ == 'numpy':
+            errors.report("NumPy return types are not yet handled")
         if isinstance(res_var, IndexedElement):
             local_var = Variable(res_var.class_type, self.scope.get_new_name())
             self.scope.insert_symbolic_alias(res_var, local_var)
