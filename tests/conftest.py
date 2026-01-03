@@ -31,6 +31,10 @@ def check_language_markers(request):
     scope = "session"
 )
 def experimental_language(request):
+    """
+    Temporary fixture while working towards C++ support.
+    This is designed to be removed once more complete support is available.
+    """
     return request.param
 
 @pytest.fixture( params=[

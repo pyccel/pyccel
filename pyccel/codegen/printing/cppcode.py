@@ -6,13 +6,13 @@
 """ Functions for printing C++ code.
 """
 from itertools import chain
+from pyccel.ast.core     import Declare, Import, Module, AsName, Assign
 from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.core     import Assign, Declare, Import, Module, AsName
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat
-from pyccel.ast.datatypes import FinalType
-from pyccel.ast.datatypes import HomogeneousSetType, DictType, InhomogeneousTupleType
+from pyccel.ast.datatypes import FinalType, StringType
+from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.mathext  import math_constants
@@ -22,7 +22,7 @@ from pyccel.ast.variable import Variable, DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -147,8 +147,6 @@ class CppCodePrinter(CodePrinter):
             The name of the file being pyccelised.
     verbose : int
         The level of verbosity.
-    prefix_module : str
-            A prefix to be added to the name of the module.
     """
     printmethod = "_cppcode"
     language = "C++"
@@ -166,13 +164,33 @@ class CppCodePrinter(CodePrinter):
         self._additional_imports = {}
         self._additional_code = ''
         self._in_header = False
-        self._declared_vars = []
+
+        # A set describing the variables that have been declared
+        # in the scope.
+        self._declared_vars : list[set[Variable]] = []
 
     def set_scope(self, scope):
+        """
+        Set the current scope.
+
+        Set the current scope and create a new set of all variables that
+        have been declared in this scope. This allows variables to be
+        declared at their first usage.
+
+        Parameters
+        ----------
+        scope : Scope
+            The current scope.
+        """
         self._declared_vars.append(set())
         super().set_scope(scope)
 
     def exit_scope(self):
+        """
+        Exit the current scope and return to the enclosing scope.
+
+        Exit the current scope and return to the enclosing scope.
+        """
         super().exit_scope()
         self._declared_vars.pop()
 
@@ -189,6 +207,7 @@ class CppCodePrinter(CodePrinter):
 
         Returns
         -------
+        str
             The indented code to be printed.
         """
         tab = ' '*self._default_settings['tabwidth']
@@ -199,6 +218,21 @@ class CppCodePrinter(CodePrinter):
             return tab+code.replace('\n','\n'+tab).rstrip(' ')
 
     def _format_code(self, lines):
+        """
+        Format the lines of code.
+
+        Format the lines of code.
+
+        Parameters
+        ----------
+        lines : str
+            The unformatted lines of code.
+
+        Returns
+        -------
+        str
+            The formatted lines of code.
+        """
         return lines
 
     def function_signature(self, expr, print_arg_names = True):
@@ -387,10 +421,9 @@ class CppCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
         body = self._print(expr.body)
         variables = self.scope.variables.values()
-        decs = ''.join(self._print(Declare(v)) for v in variables)
+        decs = ''.join(self._print(Declare(v)) for v in variables if v not in self._declared_vars[-1])
 
         imports = [i for i in chain(expr.imports, self._additional_imports.values()) if not i.ignore]
-        #imports = self.sort_imports(imports)
         imports = ''.join(self._print(i) for i in imports)
         self.exit_scope()
         return ''.join((imports,
@@ -642,19 +675,6 @@ class CppCodePrinter(CodePrinter):
     def _print_PyccelIsNot(self, expr):
         return self._handle_is_operator("!=", expr)
 
-    def _print_PyccelIn(self, expr):
-        container_type = expr.container.class_type
-        element = self._print(expr.element)
-        container = self._print(expr.container)
-        if isinstance(container_type, (HomogeneousSetType, DictType)):
-            # C++ 20
-            return f'{container}.contains({element})'
-        else:
-            # TODO: Lists
-            raise errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = expr,
-                    severity='fatal')
-
 
     # ------------------------------
     #  Bitwise operators
@@ -694,10 +714,14 @@ class CppCodePrinter(CodePrinter):
     #  Casts
     # ------------------------------
 
+    def _print_PythonBool(self, expr):
+        value = self._print(expr.arg)
+        return f'static_cast<bool>({value})'
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self._print(expr.dtype)
-        return f'({type_name})({value})'
+        return f'static_cast<{type_name}>({value})'
 
     # ------------------------------
     #  Types
@@ -718,7 +742,8 @@ class CppCodePrinter(CodePrinter):
         return 'std::complex<double>'
 
     def _print_StringType(self, expr):
-        return 'str'
+        self.add_import(cpp_imports['string'])
+        return 'std::string'
 
     def _print_NumpyInt8Type(self, expr):
         self.add_import(cpp_imports['cstdint'])
@@ -808,6 +833,9 @@ class CppCodePrinter(CodePrinter):
     def _print_LiteralFalse(self, expr):
         return 'false'
 
+    def _print_Nil(self, expr):
+        return 'nullptr'
+
     def _print_LiteralImaginaryUnit(self, expr):
         self.add_import(cpp_imports['complex'])
         return '1i'
@@ -822,8 +850,8 @@ class CppCodePrinter(CodePrinter):
                 return f'({self._print(expr.real)} + {self._print(expr.imag)}i)'
 
     def _print_LiteralString(self, expr):
-        format_str = format(expr.python_value)
-        format_str = format_str.replace("\\", "\\\\")\
+        escaped_str = expr.python_value
+        escaped_str = escaped_str.replace("\\", "\\\\")\
                                .replace('\a', '\\a')\
                                .replace('\b', '\\b')\
                                .replace('\f', '\\f')\
@@ -831,9 +859,8 @@ class CppCodePrinter(CodePrinter):
                                .replace('\r', '\\r')\
                                .replace('\t', '\\t')\
                                .replace('\v', '\\v')\
-                               .replace('"', '\\"')\
-                               .replace("'", "\\'")
-        return f'"{expr.python_value}"'
+                               .replace('"', '\\"')
+        return f'"{escaped_str}"'
 
     def _print_InhomogeneousTuple(self, expr):
         args = ', '.join(self._print(a) for a in expr)
@@ -849,6 +876,17 @@ class CppCodePrinter(CodePrinter):
             return f'(*{name})'
         else:
             return name
+
+    def _print_ObjectAddress(self, expr):
+        obj_code = self._print(expr.obj)
+        if isinstance(expr.obj, ObjectAddress):
+            return f'&{obj_code}'
+        elif obj_code.startswith('(*') and obj_code.endswith(')'):
+            return f'{obj_code[2:-1]}'
+        elif expr.obj.is_alias:
+            return obj_code
+        else:
+            return f'&{obj_code}'
 
     def _print_Constant(self, expr):
         if expr == math_constants['inf']:
@@ -959,21 +997,36 @@ class CppCodePrinter(CodePrinter):
         sep = LiteralString(' ')
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
-            if f.keyword == 'sep'      :   sep = str(f.value)
-            elif f.keyword == 'end'    :   end = str(f.value)
+            if f.keyword == 'sep'      :   sep = f.value
+            elif f.keyword == 'end'    :   end = f.value
             else: errors.report(f"{f.keyword} not implemented as a keyworded argument", severity='fatal')
 
         args = [f.value for f in expr.expr if not f.has_keyword]
-        join_str = ' << {self._print(sep)} << ' if sep != '' else ' << '
+        join_str = f' << {self._print(sep)} << ' if sep != '' else ' << '
         args_str = join_str.join(self._print(a) for a in args)
         if end != '':
+            if args:
+                args_str += ' << '
             if end == '\n':
-                args_str += ' << std::endl;\n'
+                args_str += 'std::endl;\n'
             else:
-                args_str += ' << {self._print(end)};\n'
+                args_str += f'{self._print(end)};\n'
         else:
             args_str += ';\n'
         return 'std::cout << ' + args_str
 
     def _print_EmptyNode(self, expr):
         return ''
+
+    def _print_Allocate(self, expr):
+        variable = expr.variable
+        if isinstance(variable.class_type, StringType):
+            return ''
+        else:
+            raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
+
+    def _print_Deallocate(self, expr):
+        return ''
+
+    def _print_PythonType(self, expr):
+        return self._print(expr.print_string)

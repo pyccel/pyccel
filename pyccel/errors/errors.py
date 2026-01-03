@@ -208,7 +208,7 @@ class Errors(metaclass = Singleton):
     """
     _stage_names = {'syntactic': 'parsing (syntax)',
                     'semantic': 'annotation (semantic)',
-                    'printing': 'code generation',
+                    'codegen': 'code generation',
                     'cwrapper': 'code generation (wrapping)',
                     'compilation': 'compilation',
                     'buildgen': 'build system generation'}

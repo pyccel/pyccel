@@ -1,0 +1,37 @@
+name: Check release candidate
+
+on:
+  pull_request:
+    branches:
+    - 'main'
+
+jobs:
+  check_versioning:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: "Get version from version file"
+        id: version
+        run: |
+          version=$(sed -n 's/__version__ = "\(.*\)"/\1/p' pyccel/version.py)
+          echo "VERSION=${version}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=v${version}" >> $GITHUB_OUTPUT
+          if git show-ref --tags ${TAG_NAME} --quiet
+          then
+            echo "A release with the tag ${TAG_NAME} already exists. Don't forget to update version.py"
+            exit 1
+          fi
+      - name: "Get version from CHANGELOG"
+        id: release_notes
+        run: |
+          start_line=$(grep "^## " CHANGELOG.md | head -1)
+          today=$(printf '%(%Y-%m-%d)T')
+          expected_start_line="## \[${{ steps.version.outputs.VERSION }}\] - ${today}"
+          if [[ "${start_line}" != "${expected_start_line}" ]]
+          then
+            echo "The most recent entry in the CHANGELOG doesn't match the expected format."
+            echo "Expected : ${expected_start_line}"
+            echo "Received : ${start_line}"
+            exit 1
+          fi
