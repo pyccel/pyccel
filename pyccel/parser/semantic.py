@@ -98,7 +98,7 @@ from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, Ma
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
-from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate, NumpyCross
+from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
