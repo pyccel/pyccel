@@ -18,7 +18,7 @@ from pyccel.ast.variable import Variable, DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
