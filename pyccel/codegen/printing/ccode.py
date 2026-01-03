@@ -2297,6 +2297,28 @@ class CCodePrinter(CodePrinter):
 
         return ';\n'.join((init_value, endpoint_code))
 
+    def _print_NumpyCross(self, expr):
+        a = expr.a
+        b = expr.b
+        c = expr.c
+        zero = LiteralInteger(0)
+        one = LiteralInteger(1)
+        two = LiteralInteger(2)
+
+        a_0 = self._print(a[zero])
+        a_1 = self._print(a[one])
+        a_2 = self._print(a[two])
+        b_0 = self._print(b[zero])
+        b_1 = self._print(b[one])
+        b_2 = self._print(b[two])
+        c_0 = self._print(c[zero])
+        c_1 = self._print(c[one])
+        c_2 = self._print(c[two])
+
+        return (f'{c_0} = {a_1} * {b_2} - {a_2} * {b_1};\n'
+                f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
+                f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
+
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
 
@@ -2333,7 +2355,7 @@ class CCodePrinter(CodePrinter):
 
         if len(results) == 1 and not returning_tuple:
             res = results[0]
-            if isinstance(res, Variable) and not res.is_temp:
+            if isinstance(res, Variable) and (not res.is_temp or res.rank):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
