@@ -305,6 +305,14 @@ class CppToPythonWrapper(Wrapper):
             local_var = res_var.clone(res_var.name)
         return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
 
+    def _extract_StringType_FunctionDefResult(self, res_var):
+        if isinstance(res_var, IndexedElement):
+            local_var = Variable(res_var.class_type, self.scope.get_new_name())
+            self.scope.insert_symbolic_alias(res_var, local_var)
+        else:
+            local_var = res_var.clone(res_var.name)
+        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
+
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, res_var):
         info = [self._extract_FunctionDefResult(v) for v in res_var]
         body = [l for i in info for l in i['body']]
