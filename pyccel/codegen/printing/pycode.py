@@ -22,7 +22,7 @@ from pyccel.ast.internals  import PyccelSymbol, Slice
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
-from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
+from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType, NumpyCross
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext   import NumpyNDArray, NumpyBool
 from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
@@ -1275,6 +1275,24 @@ class PythonCodePrinter(CodePrinter):
             args.append('keepdims = True')
         args_code = ', '.join(args)
         return f'{name}({args_code})'
+
+    def _print_NumpyCross(self, expr):
+        a = self._print(expr.a)
+        b = self._print(expr.b)
+        c = self._print(expr.c)
+        axisa = expr.axis_a
+        axisb = expr.axis_b
+        axisc = expr.axis_c
+        cast_name = 'cross'
+        name = self._aliases.get(NumpyCross, cast_name)
+        if axisa == axisb == axisc:
+            if name == cast_name:
+                self.add_import(Import('numpy.linalg', [AsName(NumpyCross, cast_name)]))
+            return f'{c} = {name}({a}, {b}, axis = {axisa})\n'
+        else:
+            if name == cast_name:
+                self.add_import(Import('numpy', [AsName(NumpyCross, cast_name)]))
+            return f'{c} = {name}({a}, {b}, {axisa}, {axisb}, {axisc})\n'
 
     def _print_ListMethod(self, expr):
         method_name = expr.name
