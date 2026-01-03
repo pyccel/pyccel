@@ -955,14 +955,14 @@ def test_log10_phrase(experimental_language):
 
 #--------------------------------- Pow function ------------------------------#
 
-def test_pow_call(experimental_language):
+def test_pow_call(language):
     T = TypeVar('T', int, float)
 
     def pow_call(x : float, y : T):
         from math import pow as my_pow
         return my_pow(x, y)
 
-    f1 = epyccel(pow_call, language = experimental_language)
+    f1 = epyccel(pow_call, language = language)
     high = 10
     # case 1: x > 0
     x = uniform(low=min_float)
