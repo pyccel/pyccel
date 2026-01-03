@@ -85,6 +85,8 @@ interface expm1
 end interface expm1
 
 interface cross_product
+    module procedure cross_product_i32
+    module procedure cross_product_i64
     module procedure cross_product_f32
     module procedure cross_product_f64
 end interface cross_product
@@ -498,5 +500,57 @@ subroutine cross_product_f64(a,b,c)
     c(3) = a(1) * b(2) - a(2) * b(1)
 
 end subroutine cross_product_f64
+
+subroutine cross_product_i32(a,b,c)
+    real(i32), intent(in) :: a(:)
+    real(i32), intent(in) :: b(:)
+    real(i32), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_i32
+
+subroutine cross_product_i64(a,b,c)
+    real(i64), intent(in) :: a(:)
+    real(i64), intent(in) :: b(:)
+    real(i64), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_i64
 
 end module pyc_math_f90

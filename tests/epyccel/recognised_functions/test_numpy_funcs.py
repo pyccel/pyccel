@@ -6459,12 +6459,12 @@ def test_cross_2d_axis(language):
 
 
 def test_cross_mixed_dimensions(language):
-    def cross_call(x : 'float[:,:]'):
+    def cross_call(x : 'int[:,:]'):
         y = np.array(x[0:1,:])
         return np.cross(x, y)
 
     f1 = epyccel(cross_call, language=language)
-    x = rand(4, 3)
+    x = np.array(rand(4, 3), dtype=int)
     assert np.allclose(f1(x), cross_call(x), rtol=RTOL, atol=ATOL)
 
 
