@@ -818,7 +818,7 @@ def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
     pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool, bool])
 
-def test_classes_type_print(language):
+def test_classes_type_print(experimental_language):
     test_file = "scripts/classes/empty_class.py"
 
     rel_test_dir = os.path.dirname(test_file)
