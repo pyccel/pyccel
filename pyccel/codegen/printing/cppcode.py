@@ -445,7 +445,7 @@ class CppCodePrinter(CodePrinter):
             self._declared_vars[-1].add(a.var)
 
         local_vars = list(expr.local_vars)
-        if not expr.results.var.is_temp:
+        if expr.results.var and not expr.results.var.is_temp:
             local_vars.append(expr.results.var)
 
         body  = self._print(expr.body)
