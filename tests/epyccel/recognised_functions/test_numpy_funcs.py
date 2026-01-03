@@ -6458,7 +6458,7 @@ def test_cross_1d_expr(language):
 
 def test_cross_2d_axis(language):
     def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
-        return np.cross(x, y, axis=1)
+        return np.cross(a=x, b=y, axis=1)
 
     f1 = epyccel(cross_call, language=language)
     x = rand(5, 3)
