@@ -98,7 +98,7 @@ from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, Ma
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
-from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
+from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate, NumpyCross
 from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
@@ -6761,6 +6761,28 @@ class SemanticParser(BasicParser):
         else:
             self._additional_exprs[-1].extend(body)
             return lhs
+
+    def _build_NumpyCross(self, expr, function_call_args, func):
+        assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+
+        args = [a.value for a in function_call_args if not a.has_keyword]
+        kwargs = {a.keyword: a.value for a in function_call_args if a.has_keyword}
+
+        if args:
+            a_arg = args[0]
+        else:
+            a_arg = kwargs['a']
+
+        d_var = self._infer_type(a_arg)
+        new_expressions = []
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, new_expressions,
+                heap_mem_in_multirets = False)
+        new_expressions.append(NumpyCross(*args, **kwargs, c = lhs))
+        return CodeBlock(new_expressions)
 
     def _build_PyccelFunction(self, expr, function_call_args, func):
         """
