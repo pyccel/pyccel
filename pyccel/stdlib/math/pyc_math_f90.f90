@@ -502,9 +502,9 @@ subroutine cross_product_f64(a,b,c)
 end subroutine cross_product_f64
 
 subroutine cross_product_i32(a,b,c)
-    real(i32), intent(in) :: a(:)
-    real(i32), intent(in) :: b(:)
-    real(i32), intent(out) :: c(:)
+    integer(i32), intent(in) :: a(:)
+    integer(i32), intent(in) :: b(:)
+    integer(i32), intent(out) :: c(:)
 
 #ifndef NDEBUG
     if (size(a) /= 3) then
@@ -528,9 +528,9 @@ subroutine cross_product_i32(a,b,c)
 end subroutine cross_product_i32
 
 subroutine cross_product_i64(a,b,c)
-    real(i64), intent(in) :: a(:)
-    real(i64), intent(in) :: b(:)
-    real(i64), intent(out) :: c(:)
+    integer(i64), intent(in) :: a(:)
+    integer(i64), intent(in) :: b(:)
+    integer(i64), intent(out) :: c(:)
 
 #ifndef NDEBUG
     if (size(a) /= 3) then

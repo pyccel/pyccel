@@ -6464,7 +6464,7 @@ def test_cross_mixed_dimensions(language):
         return np.cross(x, y)
 
     f1 = epyccel(cross_call, language=language)
-    x = np.array(rand(4, 3), dtype=int)
+    x = np.array(rand(4, 3)*10, dtype=int)
     assert np.allclose(f1(x), cross_call(x), rtol=RTOL, atol=ATOL)
 
 
@@ -6479,13 +6479,24 @@ def test_linalg_cross_1d(language):
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
+def test_linalg_cross_1d_mixed_types(language):
+    def cross_call(x : 'float[:]', y : 'int[:]'):
+        from numpy.linalg import cross
+        return cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = np.array(rand(3)*10, dtype=int)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
 def test_linalg_cross_axis(language):
     def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
         from numpy.linalg import cross
         return cross(x, y, axis=1)
 
     f1 = epyccel(cross_call, language=language)
-    x = np.array(np.array(rand(2, 3)*10, dtype=int), dtype=float)
-    y = np.array(np.array(rand(2, 3)*10, dtype=int), dtype=float)
+    x = rand(2, 3)
+    y = rand(2, 3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 

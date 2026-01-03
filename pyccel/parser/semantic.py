@@ -6777,7 +6777,12 @@ class SemanticParser(BasicParser):
         else:
             a_arg = kwargs['a']
 
-        d_var = self._infer_type(a_arg)
+        if len(args) > 1:
+            b_arg = args[1]
+        else:
+            b_arg = kwargs['b']
+
+        d_var = self._infer_type(PyccelAdd(a_arg, b_arg))
         new_expressions = []
         lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, new_expressions,
                 heap_mem_in_multirets = False)
