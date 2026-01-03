@@ -384,6 +384,21 @@ class CppCodePrinter(CodePrinter):
                         body,
                         'return 0;\n}'))
 
+    def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
+
+        self.set_scope(expr.scope)
+
+        body  = self._print(expr.body)
+
+        self.exit_scope()
+
+        return ''.join((self.function_signature(expr),
+                        ' {\n',
+                        self._indent_codestring(body),
+                        '}\n'))
+
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs = expand_to_loops(expr,
