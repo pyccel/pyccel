@@ -2984,7 +2984,10 @@ class NumpyCross(PyccelFunction):
             except TypeError:
                 axis_is_not_literal = True
         if axisa_is_not_literal or axisb_is_not_literal or axisc_is_not_literal or axis_is_not_literal:
-            errors.report(NON_LITERAL_AXIS, symbol=(axisa, axisb, axisc, axis), severity="fatal")
+            symbol = [a for a,b in zip([axisa, axisb, axisc, axis],
+                                       [axisa_is_not_literal, axisb_is_not_literal, axisc_is_not_literal, axis_is_not_literal])
+                      if b]
+            errors.report(NON_LITERAL_AXIS, symbol=symbol, severity="fatal")
 
         if axis_val is not None:
             self._axisa = axis_val
