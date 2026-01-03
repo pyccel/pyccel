@@ -6808,7 +6808,11 @@ class SemanticParser(BasicParser):
         new_expressions = []
         lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, new_expressions,
                 heap_mem_in_multirets = False)
-        new_expressions.append(NumpyCross(*args, **kwargs, c = lhs))
+        try:
+            new_expressions.append(NumpyCross(*args, **kwargs, c = lhs))
+        except PyccelError as err:
+            errors.error_info_map[errors.target][-1].line = expr.python_ast.lineno
+            errors.error_info_map[errors.target][-1].column = expr.python_ast.col_offset
         return CodeBlock(new_expressions)
 
     def _build_PyccelFunction(self, expr, function_call_args, func):
