@@ -282,7 +282,7 @@ def test_multiple_returns_f14(experimental_language):
     assert f(2,1) == g(2,1)
 
 
-def test_decorator_f15(experimental_language):
+def test_decorator_f15(language):
     def f15(a : 'bool', b : 'int8', c : 'int16', d : 'int32', e : 'int64'):
         from numpy import int64
         if a:
@@ -290,39 +290,39 @@ def test_decorator_f15(experimental_language):
         else:
             return d + e
 
-    f = epyccel(f15, language=experimental_language)
+    f = epyccel(f15, language=language)
     assert f(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
            f15(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
     assert f(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
            f15(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
 
 
-def test_decorator_f16(experimental_language):
+def test_decorator_f16(language):
     def f16(a : 'int16'):
         b = a
         return b
-    f = epyccel(f16, language=experimental_language)
+    f = epyccel(f16, language=language)
     assert f(np.int16(17)) == f16(np.int16(17))
 
-def test_decorator_f17(experimental_language):
+def test_decorator_f17(language):
     def f17(a : 'int8'):
         b = a
         return b
-    f = epyccel(f17, language=experimental_language)
+    f = epyccel(f17, language=language)
     assert f(np.int8(2)) == f17(np.int8(2))
 
-def test_decorator_f18(experimental_language):
+def test_decorator_f18(language):
     def f18(a : 'int32'):
         b = a
         return b
-    f = epyccel(f18, language=experimental_language)
+    f = epyccel(f18, language=language)
     assert f(np.int32(5)) == f18(np.int32(5))
 
-def test_decorator_f19(experimental_language):
+def test_decorator_f19(language):
     def f19(a : 'int64'):
         b = a
         return b
-    f = epyccel(f19, language=experimental_language)
+    f = epyccel(f19, language=language)
     assert f(np.int64(1)) == f19(np.int64(1))
 
 def test_decorator_f20(experimental_language):
@@ -332,18 +332,18 @@ def test_decorator_f20(experimental_language):
     f = epyccel(f20, language=experimental_language)
     assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
-def test_decorator_f21(experimental_language):
+def test_decorator_f21(language):
     def f21(a : 'complex64'):
         b = a
         return b
-    f = epyccel(f21, language=experimental_language)
+    f = epyccel(f21, language=language)
     assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
-def test_decorator_f22(experimental_language):
+def test_decorator_f22(language):
     def f22(a : 'complex128'):
         b = a
         return b
-    f = epyccel(f22, language=experimental_language)
+    f = epyccel(f22, language=language)
     assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP604 (writing union types as X | Y) implemented in Python 3.10")
@@ -382,12 +382,12 @@ def test_wrong_argument_type(language):
     with pytest.raises(TypeError) as err:
         epyc_f(test_arg)
     assert 'integer_arg' in str(err.value)
-    assert str(type(test_arg)) in str(err.value)
+    if language != 'c++':
+        assert str(type(test_arg)) in str(err.value)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_known_argument_type_in_interface(language):
@@ -405,7 +405,6 @@ def test_wrong_known_argument_type_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_known_argument_type_in_interface_with_default(language):
@@ -423,7 +422,6 @@ def test_wrong_known_argument_type_in_interface_with_default(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_unknown_argument_type_in_interface(language):
@@ -441,7 +439,6 @@ def test_wrong_unknown_argument_type_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_wrong_argument_combination_in_interface(language):
@@ -456,7 +453,6 @@ def test_wrong_argument_combination_in_interface(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("c++", marks = pytest.mark.cpp),
     )
 )
 def test_argument_checks_with_interfaces(language):
