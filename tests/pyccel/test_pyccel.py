@@ -708,7 +708,7 @@ def test_elemental(language):
 #------------------------------------------------------------------------------
 def test_print_strings(experimental_language):
     types = str
-    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_strings.py", language=experimental_language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -731,7 +731,7 @@ def test_print_integers(language):
 #------------------------------------------------------------------------------
 def test_print_sp_and_end(experimental_language):
     types = str
-    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_sp_and_end.py", language=experimental_language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_c_arrays(language):
@@ -818,7 +818,7 @@ def test_tuples_in_classes(language):
     test_file = "scripts/classes/tuples_in_classes.py"
     pyccel_test(test_file, language=language, output_dtype = [float, float, float, bool, bool])
 
-def test_classes_type_print(experimental_language):
+def test_classes_type_print(language):
     test_file = "scripts/classes/empty_class.py"
 
     rel_test_dir = os.path.dirname(test_file)
@@ -901,9 +901,9 @@ def test_lapack( test_file ):
     assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
 
 #------------------------------------------------------------------------------
-def test_type_print( language ):
+def test_type_print( experimental_language ):
     pyccel_test("scripts/runtest_type_print.py",
-                language = language, output_dtype=str)
+                language = experimental_language, output_dtype=str)
 
 def test_container_type_print(language):
     test_file = "scripts/runtest_array_type_print.py"
