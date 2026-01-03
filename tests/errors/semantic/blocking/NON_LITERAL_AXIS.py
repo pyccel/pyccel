@@ -1,3 +1,4 @@
+# axis argument must be a literal
 # pylint: disable=missing-module-docstring
 import numpy as np
 
