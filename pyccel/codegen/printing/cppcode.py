@@ -944,3 +944,6 @@ class CppCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         variable = expr.variable
         return ''
+
+    def _print_PythonType(self, expr):
+        return self._print(expr.print_string)
