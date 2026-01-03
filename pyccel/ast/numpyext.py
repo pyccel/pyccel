@@ -3122,6 +3122,8 @@ class NumpyLinalgCross(NumpyCross):
         Argument provided by the semantic parser describing the variable where
         the result will be saved.
     """
+    __slots__ = ()
+
     def __init__(self, a, b, axis = Nil(), *, c):
         super().__init__(a, b, axis = axis, c = c)
 
