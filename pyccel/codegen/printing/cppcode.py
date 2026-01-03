@@ -800,6 +800,19 @@ class CppCodePrinter(CodePrinter):
             else:
                 return f'({self._print(expr.real)} + {self._print(expr.imag)}i)'
 
+    def _print_LiteralString(self, expr):
+        escaped_str = expr.python_value
+        escaped_str = escaped_str.replace("\\", "\\\\")\
+                               .replace('\a', '\\a')\
+                               .replace('\b', '\\b')\
+                               .replace('\f', '\\f')\
+                               .replace("\n", "\\n")\
+                               .replace('\r', '\\r')\
+                               .replace('\t', '\\t')\
+                               .replace('\v', '\\v')\
+                               .replace('"', '\\"')
+        return f'"{escaped_str}"'
+
     # ------------------------------
     #  Miscellaneous
     # ------------------------------
@@ -903,18 +916,18 @@ class CppCodePrinter(CodePrinter):
         sep = LiteralString(' ')
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
-            if f.keyword == 'sep'      :   sep = str(f.value)
-            elif f.keyword == 'end'    :   end = str(f.value)
+            if f.keyword == 'sep'      :   sep = f.value
+            elif f.keyword == 'end'    :   end = f.value
             else: errors.report(f"{f.keyword} not implemented as a keyworded argument", severity='fatal')
 
         args = [f.value for f in expr.expr if not f.has_keyword]
-        join_str = ' << {self._print(sep)} << ' if sep != '' else ' << '
+        join_str = f' << {self._print(sep)} << ' if sep != '' else ' << '
         args_str = join_str.join(self._print(a) for a in args)
         if end != '':
             if end == '\n':
                 args_str += ' << std::endl;\n'
             else:
-                args_str += ' << {self._print(end)};\n'
+                args_str += f' << {self._print(end)};\n'
         else:
             args_str += ';\n'
         return 'std::cout << ' + args_str
