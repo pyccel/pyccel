@@ -1292,7 +1292,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             if name == cast_name:
                 self.add_import(Import('numpy', [AsName(NumpyCross, cast_name)]))
-            return f'{c} = {name}({a}, {b}, {axisa}, {axisb}, {axisc})\n'
+            return f'{c} = {name}({a}, {b}, axisa={axisa}, axisb={axisb}, axisc={axisc})\n'
 
     def _print_ListMethod(self, expr):
         method_name = expr.name

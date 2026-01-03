@@ -6536,11 +6536,11 @@ def test_cross_axisc(language):
 def test_cross_axisa_axisb_axisc(language):
     def cross_call(x : 'float[:,:,:]', y : 'float[:,:,:]'):
         from numpy import cross
-        return cross(x, y, axisa=2, axisb=2, axisc=2)
+        return cross(x, y, axisa=2, axisb=1, axisc=2)
 
     f1 = epyccel(cross_call, language=language)
     x = rand(4, 5, 3)
-    y = rand(4, 5, 3)
+    y = rand(4, 3, 5)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 

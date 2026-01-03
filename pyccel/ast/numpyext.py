@@ -2972,11 +2972,11 @@ class NumpyCross(PyccelFunction):
         except TypeError:
             axisa_is_not_literal = True
         try:
-            self._axisb = int(axisc)
+            self._axisb = int(axisb)
         except TypeError:
             axisb_is_not_literal = True
         try:
-            self._axisc = int(axisb)
+            self._axisc = int(axisc)
         except TypeError:
             axisc_is_not_literal = True
         if axis is not Nil():
