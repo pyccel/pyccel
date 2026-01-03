@@ -6,6 +6,7 @@
 """ Functions for printing C++ code.
 """
 from itertools import chain
+from pyccel.ast.builtins import DtypePrecisionToCastFunction
 from pyccel.ast.core     import Declare, Import, Module, AsName, Assign
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.datatypes import PrimitiveIntegerType, PrimitiveBooleanType, PrimitiveFloatingPointType
@@ -357,7 +358,7 @@ class CppCodePrinter(CodePrinter):
             after using this function.
         """
         if expr.dtype != dtype:
-            return f'({self._print(dtype)})' + '({})'
+            return f'static_cast<{self._print(dtype)}>' + '({})'
         return '{}'
 
     #-----------------------------------------------------------------------
@@ -722,6 +723,23 @@ class CppCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         type_name = self._print(expr.dtype)
         return f'static_cast<{type_name}>({value})'
+
+    def _print_PythonComplex(self, expr):
+        if expr.is_cast:
+            value = self._print(expr.internal_var)
+            type_name = self._print(expr.dtype)
+            return f'static_cast<{type_name}>({value})'
+        else:
+            real = expr.real
+            imag = expr.imag
+            element_type = expr.dtype.element_type
+            if real.class_type != element_type:
+                real = DtypePrecisionToCastFunction[element_type](real)
+            if imag.class_type != element_type:
+                imag = DtypePrecisionToCastFunction[element_type](imag)
+            real_code = self._print(real)
+            imag_code = self._print(imag)
+            return f'({real_code} + {imag_code} * 1i)'
 
     # ------------------------------
     #  Types
