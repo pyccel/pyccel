@@ -24,7 +24,7 @@ if __name__ == '__main__':
     print('The last sentence.')
     print('Preventing\tLine\nBreaks')
     print('"walo" + "walo" == \'hiya walo\'.')
-    print('//\\//\/\/\\/\/\/\\/\/\\/\/\/\\/\/')
+    print('//\\//\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/')
     print("[^_^]")
     print("[-_-]")
     print("[+__+]")
