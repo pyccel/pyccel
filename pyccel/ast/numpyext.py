@@ -3039,11 +3039,11 @@ class NumpyCross(PyccelFunction):
         a_idx.insert(self._axisa, Slice(None, None))
         b_idx.insert(self._axisb, Slice(None, None))
         c_idx.insert(self._axisc, Slice(None, None))
-        return NumpyCross(self.a[*a_idx], self.b[*b_idx],
+        return NumpyCross(self.a[a_idx], self.b[b_idx],
                           LiteralInteger(self._axisa),
                           LiteralInteger(self._axisb),
                           LiteralInteger(self._axisc),
-                          c = self.c[*c_idx])
+                          c = self.c[c_idx])
 
 #==============================================================================
 DtypePrecisionToCastFunction.update({
