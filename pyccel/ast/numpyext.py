@@ -112,6 +112,7 @@ __all__ = (
     'NumpyAmin',
     'NumpyConjugate',
     'NumpyCountNonZero',
+    'NumpyCross',
     'NumpyImag',
     'NumpyMatmul',
     'NumpyMod',
