@@ -7,12 +7,13 @@ Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
 from pyccel.ast.core          import Import, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core          import FunctionAddress, FunctionCall, Module
+from pyccel.ast.core          import FunctionAddress, FunctionCall, Module, Assign
+from pyccel.ast.core          import Return
 from pyccel.ast.cwrapper      import PyccelPyObject
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
 from pyccel.ast.literals      import Nil
 from pyccel.ast.pybind        import FunctionDeclaration
-from pyccel.ast.variable      import Variable
+from pyccel.ast.variable      import Variable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -218,17 +219,25 @@ class CppToPythonWrapper(Wrapper):
         func_args = [a['wrapper_arg'] for a in args_code]
         call_args = [a['func_arg'] for a in args_code]
 
-        func_results = FunctionDefResult(Nil())
-
         imported_expr = expr.clone(expr.name, is_imported=True)
         mod, = expr.get_direct_user_nodes(lambda m: isinstance(m, Module))
         imported_expr.set_current_user_node(mod)
-        body.append(FunctionCall(imported_expr, call_args))
+        if expr.results is Nil():
+            func_results = FunctionDefResult(Nil())
+            body.append(FunctionCall(imported_expr, call_args))
+        else:
+            result_info = self._wrap_FunctionDefResult(expr.results)
+            func_results = FunctionDefResult(result_info['wrapper_result'])
+            call_out = result_info['func_result']
+            body.append(Assign(call_out, FunctionCall(imported_expr, call_args)))
+            self.scope.insert_variable(call_out)
+            body.append(Return(call_out))
 
         self.exit_scope()
 
-        function = PyFunctionDef(func_name, func_args, body, func_results, scope=func_scope,
-                docstring = expr.docstring, original_function = expr)
+        function = PyFunctionDef(func_name, func_args, body, func_results,
+                                 scope=func_scope, docstring = expr.docstring,
+                                 original_function = expr)
 
         self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[expr] = function
@@ -264,3 +273,36 @@ class CppToPythonWrapper(Wrapper):
     def _extract_FixedSizeType_FunctionDefArgument(self, arg_var):
         local_arg = arg_var.clone(arg_var.name)
         return {'body': [], 'wrapper_arg': arg_var, 'func_arg': arg_var}
+
+    def _wrap_FunctionDefResult(self, expr):
+        var = expr.var
+        return self._extract_FunctionDefResult(var)
+
+    def _extract_FunctionDefResult(self, var):
+        if isinstance(var, Variable):
+            self.scope.insert_symbol(var.name)
+        class_type = var.class_type
+
+        classes = type(class_type).__mro__
+        for cls in classes:
+            annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(var)
+
+        # Unknown object, we raise an error.
+        return errors.report(f"Wrapping function results is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO, symbol=var,
+            severity='fatal')
+
+    def _extract_FixedSizeType_FunctionDefResult(self, res_var):
+        if isinstance(res_var, IndexedElement):
+            local_var = Variable(res_var.class_type, self.scope.get_new_name())
+            self.scope.insert_symbolic_alias(res_var, local_var)
+        else:
+            local_var = res_var.clone(res_var.name)
+        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
+
+    def _extract_InhomogeneousTupleType_FunctionDefResult(self, res_var):
+        info = [self._extract_FunctionDefResult(v) for v in res_var]
+        body = [l for i in info for l in i['body']]
+        local_var = res_var.clone(res_var.name, is_temp = False)
+        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}

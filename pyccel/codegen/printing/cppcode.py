@@ -492,7 +492,7 @@ class CppCodePrinter(CodePrinter):
             required to handle the recursivity implied by an unknown depth of inhomogeneous
             tuples.
             """
-            if isinstance(return_var.class_type, InhomogeneousTupleType):
+            if isinstance(return_var.class_type, InhomogeneousTupleType) and getattr(return_var, 'is_temp', True):
                 elem_code = [get_return_code(self.scope.collect_tuple_element(elem)) for elem in return_var]
                 return_expr = ', '.join(elem_code)
                 if len(elem_code) == 1:
