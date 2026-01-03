@@ -288,49 +288,6 @@ class CppCodePrinter(CodePrinter):
 
         return f'{class_type_str}{const}'
 
-    def _handle_is_operator(self, Op, expr):
-        """
-        Get the code to print an `is` or `is not` expression.
-
-        Get the code to print an `is` or `is not` expression. These two operators
-        function similarly so this helper function reduces code duplication.
-
-        Parameters
-        ----------
-        Op : str
-            The C operator representing "is" or "is not".
-
-        expr : PyccelIs/PyccelIsNot
-            The expression being printed.
-
-        Returns
-        -------
-        str
-            The code describing the expression.
-
-        Raises
-        ------
-        PyccelError : Raised if the comparison is poorly defined.
-        """
-
-        lhs, rhs = expr.args
-
-        if Nil() in expr.args:
-            lhs = ObjectAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
-            rhs = ObjectAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
-
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
-            return f'{lhs_code} {Op} {rhs_code}'
-
-        if (lhs.dtype is PythonNativeBool() and rhs.dtype is PythonNativeBool()):
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
-            return f'{lhs_code} {Op} {rhs_code}'
-        else:
-            raise errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
-                          symbol=expr, severity='fatal')
-
     def _cast_to(self, expr, dtype):
         """
         Add a cast to an expression when needed.
@@ -430,21 +387,6 @@ class CppCodePrinter(CodePrinter):
                         body,
                         'return 0;\n}'))
 
-    def _print_FunctionDef(self, expr):
-        if expr.is_inline:
-            return ''
-
-        self.set_scope(expr.scope)
-
-        body  = self._print(expr.body)
-
-        self.exit_scope()
-
-        return ''.join((self.function_signature(expr),
-                        ' {\n',
-                        self._indent_codestring(body),
-                        '}\n'))
-
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs = expand_to_loops(expr,
@@ -459,27 +401,6 @@ class CppCodePrinter(CodePrinter):
             self._additional_code = ''
             body_code += code
         return body_code
-
-    def _print_Pass(self, expr):
-        return '// pass\n'
-
-    def _print_Return(self, expr):
-        if expr.stmt:
-            to_print = [l for l in expr.stmt.body if not ((isinstance(l, Assign) and isinstance(l.lhs, Variable))
-                                                        or isinstance(l, UnpackManagedMemory))]
-            assigns = {a.lhs: a.rhs for a in expr.stmt.body if (isinstance(a, Assign) and isinstance(a.lhs, Variable))}
-            assigns.update({a.out_ptr: a.managed_object for a in expr.stmt.body if isinstance(a, UnpackManagedMemory)})
-            prelude = ''.join(self._print(l) for l in to_print)
-        else:
-            assigns = {}
-            prelude = ''
-
-        if expr.expr is None:
-            return 'return;\n'
-
-        return_code = self._print(assigns.get(expr.expr, expr.expr))
-
-        return prelude + f'return {return_code};\n'
 
     def _print_Assign(self, expr):
         lhs = expr.lhs
@@ -645,25 +566,6 @@ class CppCodePrinter(CodePrinter):
     def _print_PyccelLe(self, expr):
         a, b = expr.args
         return f"{self._print(a)} <= {self._print(b)}"
-
-    def _print_PyccelIs(self, expr):
-        return self._handle_is_operator("==", expr)
-
-    def _print_PyccelIsNot(self, expr):
-        return self._handle_is_operator("!=", expr)
-
-    def _print_PyccelIn(self, expr):
-        container_type = expr.container.class_type
-        element = self._print(expr.element)
-        container = self._print(expr.container)
-        if isinstance(container_type, (HomogeneousSetType, DictType)):
-            # C++ 20
-            return f'{container}.contains({element})'
-        else:
-            # TODO: Lists
-            raise errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = expr,
-                    severity='fatal')
 
 
     # ------------------------------
