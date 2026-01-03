@@ -841,7 +841,6 @@ class CppCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable.class_type}")
 
     def _print_Deallocate(self, expr):
-        variable = expr.variable
         return ''
 
     def _print_PythonType(self, expr):
