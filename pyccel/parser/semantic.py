@@ -6805,15 +6805,20 @@ class SemanticParser(BasicParser):
             b_arg = kwargs['b']
 
         d_var = self._infer_type(PyccelAdd(a_arg, b_arg))
-        new_expressions = []
-        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, new_expressions,
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, self._additional_exprs[-1],
                 heap_mem_in_multirets = False)
         try:
-            new_expressions.append(NumpyCross(*args, **kwargs, c = lhs))
+            cross_call = NumpyCross(*args, **kwargs, c = lhs)
         except PyccelError as err:
             errors.error_info_map[errors.target][-1].line = expr.python_ast.lineno
             errors.error_info_map[errors.target][-1].column = expr.python_ast.col_offset
-        return CodeBlock(new_expressions)
+            raise err
+
+        if assign:
+            return cross_call
+        else:
+            self._additional_exprs[-1].append(cross_call)
+            return self._visit(syntactic_lhs)
 
     def _build_PyccelFunction(self, expr, function_call_args, func):
         """

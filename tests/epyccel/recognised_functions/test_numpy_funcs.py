@@ -6446,6 +6446,15 @@ def test_cross_1d(language):
     y = rand(3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
+def test_cross_1d_expr(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        return np.cross(x, y) + 2
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
 
 def test_cross_2d_axis(language):
     def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
