@@ -395,6 +395,6 @@ available_compilers = {
 for config in available_compilers.values():
     cpp_config = config.get('c++', None)
     if cpp_config:
-        cpp_config['python']['include'].append(pybind11.get_include())
+        cpp_config.setdefault('python', {}).setdefault('include', []).append(pybind11.get_include())
 
 vendors = ('GNU','intel','PGI','nvidia','LLVM')
