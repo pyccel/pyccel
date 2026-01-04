@@ -13,7 +13,7 @@ from pyccel.ast.datatypes     import pyccel_type_to_original_type
 from pyccel.ast.cwrapper      import PyccelPyObject, PyErr_SetString
 from pyccel.ast.cwrapper      import PyNotImplementedError
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
-from pyccel.ast.literals      import Nil
+from pyccel.ast.literals      import Nil, LiteralString
 from pyccel.ast.pybind        import FunctionDeclaration
 from pyccel.ast.variable      import Variable, IndexedElement
 from pyccel.parser.scope      import Scope
