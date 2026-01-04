@@ -133,7 +133,7 @@ class CppToPythonWrapper(Wrapper):
                            self.scope.get_new_name(name),
                            is_temp=True)) for _ in original_function.args]
         function = PyFunctionDef(name = name, arguments = func_args, results = Nil(),
-                body = [PyErr_SetString(PyNotImplementedError, CStrStr(LiteralString(error_msg)))],
+                body = [PyErr_SetString(PyNotImplementedError, LiteralString(error_msg))],
                 scope = scope, original_function = original_function)
 
         self.scope = current_scope
