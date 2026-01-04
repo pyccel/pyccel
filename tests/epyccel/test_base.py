@@ -85,12 +85,12 @@ def test_not_int(experimental_language):
     test.compare_epyccel( 0 )
     test.compare_epyccel( 4 )
 
-def test_compare_is_nil(experimental_language):
-    test = epyccel_test(base.is_nil, lang=experimental_language)
+def test_compare_is_nil(language):
+    test = epyccel_test(base.is_nil, lang=language)
     test.compare_epyccel( None )
 
-def test_compare_is_not_nil(experimental_language):
-    test = epyccel_test(base.is_not_nil, lang=experimental_language)
+def test_compare_is_not_nil(language):
+    test = epyccel_test(base.is_not_nil, lang=language)
     test.compare_epyccel( None )
 
 def test_cast_int(experimental_language):
@@ -168,20 +168,20 @@ def test_pass2_if(experimental_language):
     test.compare_epyccel(0.2)
     test.compare_epyccel(0.0)
 
-def test_use_optional(experimental_language):
-    test = epyccel_test(base.use_optional, lang=experimental_language)
+def test_use_optional(language):
+    test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()
     test.compare_epyccel(6)
 
-def test_check_optional(experimental_language):
-    test = epyccel_test(base.check_optional, lang=experimental_language)
+def test_check_optional(language):
+    test = epyccel_test(base.check_optional, lang=language)
     test.compare_epyccel()
     test.compare_epyccel(6)
     test.compare_epyccel(4)
     test.compare_epyccel(1)
 
-def test_none_equality(experimental_language):
-    test = epyccel_test(base.none_equality, lang=experimental_language)
+def test_none_equality(language):
+    test = epyccel_test(base.none_equality, lang=language)
     test.compare_epyccel()
     test.compare_epyccel(6)
 
