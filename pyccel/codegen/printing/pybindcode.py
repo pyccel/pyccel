@@ -103,10 +103,10 @@ class PyBindCodePrinter(CppCodePrinter):
         kw_only = False
         for a in wrap_func.arguments:
             if a.is_posonly != pos_only:
-                args.append(f'pybind11::pos_only()')
+                args.append('pybind11::pos_only()')
                 pos_only = a.is_posonly
             if a.is_kwonly != kw_only:
-                args.append(f'pybind11::kw_only()')
+                args.append('pybind11::kw_only()')
                 pos_only = a.is_posonly
             args.append(f'pybind11::arg("{a.name}")')
         if orig_func.docstring:
