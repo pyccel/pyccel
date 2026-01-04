@@ -24,7 +24,7 @@ from pyccel.ast.variable import Variable, DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_RESTRICTION_IS_ISNOT
 
 errors = Errors()
 
@@ -759,7 +759,7 @@ class CppCodePrinter(CodePrinter):
         if isinstance(arg.class_type, StringType):
             return self._print(arg)
         else:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal',
+            raise errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal',
                           symbol=expr)
 
     # ------------------------------

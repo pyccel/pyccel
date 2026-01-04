@@ -11,13 +11,14 @@ from pyccel.ast.core          import FunctionAddress, FunctionCall, Module, Assi
 from pyccel.ast.core          import Return, EmptyNode
 from pyccel.ast.datatypes     import pyccel_type_to_original_type
 from pyccel.ast.cwrapper      import PyccelPyObject, PyErr_SetString
+from pyccel.ast.cwrapper      import PyNotImplementedError
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
 from pyccel.ast.literals      import Nil
 from pyccel.ast.pybind        import FunctionDeclaration
 from pyccel.ast.variable      import Variable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_RESTRICTION_IS_ISNOT
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
 from .wrapper                 import Wrapper
 
 errors = Errors()
@@ -190,10 +191,24 @@ class CppToPythonWrapper(Wrapper):
                         module_def_name = None)
 
     def _wrap_FunctionDef(self, expr):
+        """
+        Build a `PyFunctionDef` from a `FunctionDef`.
+
+        Create a `PyFunctionDef` which wraps a C++ `FunctionDef`.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function which can be called from C++.
+
+        Returns
+        -------
+        PyFunctionDef
+            The function which can be called from Python.
+        """
         func_name = self.scope.get_new_name(expr.name+'_wrapper', object_type = 'wrapper')
         func_scope = self.scope.new_child_scope(func_name, 'function')
         self.scope = func_scope
-        original_func_name = expr.scope.get_python_name(expr.name)
         func_scope.insert_symbol(func_name)
 
         if expr.is_private:
@@ -247,6 +262,25 @@ class CppToPythonWrapper(Wrapper):
         return function
 
     def _extract_FunctionDefArgument(self, expr):
+        """
+        Get a pybind11 compatible function argument.
+
+        Get a pybind11 compatible function argument.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_arg : the Variable describing the argument of the wrapped function.
+             - func_arg : the Variable which should be passed to call the C++ function being wrapped.
+        """
         self.scope.insert_symbol(expr.name)
 
         var = expr.var
@@ -273,18 +307,101 @@ class CppToPythonWrapper(Wrapper):
                              symbol=var, severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefArgument(self, arg_var):
+        """
+        Extract the nodes which describe an argument of FixedSizeType.
+
+        Extract the nodes which describe an argument of FixedSizeType.
+        The nodes describe the necessary variables and any code required to
+        unpack those variables.
+
+        Parameters
+        ----------
+        expr : Variable
+            The argument of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_arg : the Variable describing the argument of the wrapped function.
+             - func_arg : the Variable which should be passed to call the C++ function being wrapped.
+        """
         local_arg = arg_var.clone(arg_var.name)
         return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
 
     def _extract_StringType_FunctionDefArgument(self, arg_var):
+        """
+        Extract the nodes which describe an argument of StringType.
+
+        Extract the nodes which describe an argument of StringType.
+        The nodes describe the necessary variables and any code required to
+        unpack those variables.
+
+        Parameters
+        ----------
+        expr : Variable
+            The argument of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_arg : the Variable describing the argument of the wrapped function.
+             - func_arg : the Variable which should be passed to call the C++ function being wrapped.
+        """
         local_arg = arg_var.clone(arg_var.name)
         return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
 
     def _wrap_FunctionDefResult(self, expr):
+        """
+        Get a pybind11 compatible function result.
+
+        Get a pybind11 compatible function result. This function simply
+        calls _extract_FunctionDefResult.
+
+        Parameters
+        ----------
+        expr : FunctionDefResult
+            The result of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_result : the Variable describing the argument of the wrapped function.
+             - func_result : the Variable which should be passed to call the C++ function being wrapped.
+        """
         var = expr.var
         return self._extract_FunctionDefResult(var)
 
     def _extract_FunctionDefResult(self, var):
+        """
+        Get a pybind11 compatible function argument.
+
+        Get a pybind11 compatible function argument. This function takes a
+        Variable or an IndexedElement so it can be called from other extraction
+        functions.
+
+        Parameters
+        ----------
+        expr : Variable | IndexedElement
+            The argument of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_result : the Variable describing the argument of the wrapped function.
+             - func_result : the Variable which should be passed to call the C++ function being wrapped.
+        """
         if isinstance(var, Variable):
             self.scope.insert_symbol(var.name)
         class_type = var.class_type
@@ -300,6 +417,27 @@ class CppToPythonWrapper(Wrapper):
             severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefResult(self, res_var):
+        """
+        Extract the nodes which describe a result of FixedSizeType.
+
+        Extract the nodes which describe a result of FixedSizeType.
+        The nodes describe the necessary variables and any code required to
+        pack those variables.
+
+        Parameters
+        ----------
+        expr : Variable
+            The result of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_result : the Variable describing the argument of the wrapped function.
+             - func_result : the Variable which should be passed to call the C++ function being wrapped.
+        """
         out_type = pyccel_type_to_original_type[res_var.class_type]
         if out_type.__module__ == 'numpy':
             errors.report("NumPy return types are not yet handled")
@@ -311,6 +449,27 @@ class CppToPythonWrapper(Wrapper):
         return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
 
     def _extract_StringType_FunctionDefResult(self, res_var):
+        """
+        Extract the nodes which describe a result of StringType.
+
+        Extract the nodes which describe a result of StringType.
+        The nodes describe the necessary variables and any code required to
+        pack those variables.
+
+        Parameters
+        ----------
+        expr : Variable
+            The result of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_result : the Variable describing the argument of the wrapped function.
+             - func_result : the Variable which should be passed to call the C++ function being wrapped.
+        """
         if isinstance(res_var, IndexedElement):
             local_var = Variable(res_var.class_type, self.scope.get_new_name())
             self.scope.insert_symbolic_alias(res_var, local_var)
@@ -319,7 +478,28 @@ class CppToPythonWrapper(Wrapper):
         return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, res_var):
+        """
+        Extract the nodes which describe a result of InhomogeneousTupleType.
+
+        Extract the nodes which describe a result of InhomogeneousTupleType.
+        The nodes describe the necessary variables and any code required to
+        pack those variables.
+
+        Parameters
+        ----------
+        expr : Variable
+            The result of the C++ function.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with the keys:
+             - body : a list of PyccelAstNodes containing the code which translates
+                        the C++ variable into a pybind11 compatible variable.
+             - wrapper_result : the Variable describing the argument of the wrapped function.
+             - func_result : the Variable which should be passed to call the C++ function being wrapped.
+        """
         info = [self._extract_FunctionDefResult(v) for v in res_var]
         body = [l for i in info for l in i['body']]
         local_var = res_var.clone(res_var.name, is_temp = False)
-        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
+        return {'wrapper_result': local_var, 'func_result': local_var, 'body': body}
