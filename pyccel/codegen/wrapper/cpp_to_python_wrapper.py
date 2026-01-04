@@ -8,16 +8,16 @@ which creates an interface exposing C++ code to Python using pybind11.
 """
 from pyccel.ast.core          import Import, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import FunctionAddress, FunctionCall, Module, Assign
-from pyccel.ast.core          import Return
+from pyccel.ast.core          import Return, EmptyNode
 from pyccel.ast.datatypes     import pyccel_type_to_original_type
-from pyccel.ast.cwrapper      import PyccelPyObject
+from pyccel.ast.cwrapper      import PyccelPyObject, PyErr_SetString
 from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
 from pyccel.ast.literals      import Nil
 from pyccel.ast.pybind        import FunctionDeclaration
 from pyccel.ast.variable      import Variable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_RESTRICTION_IS_ISNOT
 from .wrapper                 import Wrapper
 
 errors = Errors()
@@ -130,9 +130,9 @@ class CppToPythonWrapper(Wrapper):
         self.scope = scope
         func_args = [FunctionDefArgument(Variable(PyccelPyObject(),
                            self.scope.get_new_name(name),
-                           is_temp=True)) for a in func_args]
+                           is_temp=True)) for _ in original_function.args]
         function = PyFunctionDef(name = name, arguments = func_args, results = Nil(),
-                body = [PyErr_Throw(PyNotImplementedError, CStrStr(LiteralString(error_msg)))],
+                body = [PyErr_SetString(PyNotImplementedError, CStrStr(LiteralString(error_msg)))],
                 scope = scope, original_function = original_function)
 
         self.scope = current_scope
@@ -203,7 +203,8 @@ class CppToPythonWrapper(Wrapper):
         # Handle un-wrappable functions
         if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             self.exit_scope()
-            warnings.warn("Functions with functions as arguments will not be callable from Python")
+            errors.report("Functions with functions as arguments will not be callable from Python",
+                          severity='warning', symbol=expr)
             return self._get_untranslatable_function(func_name,
                          func_scope, expr,
                          "Cannot pass a function as an argument")
@@ -268,16 +269,16 @@ class CppToPythonWrapper(Wrapper):
 
 
         # Unknown object, we raise an error.
-        return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO, symbol=var,
-            severity='fatal')
+        return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO,
+                             symbol=var, severity='fatal')
 
     def _extract_FixedSizeType_FunctionDefArgument(self, arg_var):
         local_arg = arg_var.clone(arg_var.name)
-        return {'body': [], 'wrapper_arg': arg_var, 'func_arg': arg_var}
+        return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
 
     def _extract_StringType_FunctionDefArgument(self, arg_var):
         local_arg = arg_var.clone(arg_var.name)
-        return {'body': [], 'wrapper_arg': arg_var, 'func_arg': arg_var}
+        return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
 
     def _wrap_FunctionDefResult(self, expr):
         var = expr.var
