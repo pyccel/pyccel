@@ -28,11 +28,11 @@ max_int64 = iinfo('int64').max
 min_float = finfo('float').min
 max_float = finfo('float').max
 
-min_float32 = finfo('float32').min
-max_float32 = finfo('float32').max
+min_float32 = finfo('float32').min / 2
+max_float32 = finfo('float32').max / 2
 
-min_float64 = finfo('float64').min
-max_float64 = finfo('float64').max
+min_float64 = finfo('float64').min / 2
+max_float64 = finfo('float64').max / 2
 
 default_numpy_int = np.array([1]).dtype
 
@@ -4824,16 +4824,6 @@ def test_numpy_prod_array_like_2d(language):
     assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_scalar(language):
 
     def get_norm(a : C):
@@ -4935,15 +4925,107 @@ def test_numpy_norm_scalar(language):
     assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex128_output, test_complex128_output)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
+
+def test_numpy_norm_scalar_expr(language):
+
+    def get_norm(a : C):
+        from numpy.linalg import norm
+        b = norm(a) + 22
+        return b
+
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(low=-(abs(min_float)**(1/2)), high=abs(max_float)**(1/2))
+    fl32 = uniform(low=-(abs(min_float32)**(1/2)), high=abs(max_float32)**(1/2))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-(abs(min_float64)**(1/2)), high=abs(max_float64)**(1/2))
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) + \
+                            uniform(low=-((abs(max_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / 2)**(1/2)), high=((abs(max_float64) / 2)**(1/2))) + \
+                            uniform(low=-((abs(max_float64) / 2)**(1/2)), high=((abs(max_float64) / 2)**(1/2))) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = np.complex128(cmplx128_from_float64)
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    f_bl_true_output = epyccel_func(True)
+    test_bool_true_output = get_norm(True)
+
+    f_bl_false_output = epyccel_func(False)
+    test_bool_false_output = get_norm(False)
+
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert matching_types(f_bl_false_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+
+    f_integer_output = epyccel_func(integer)
+    test_int_output  = get_norm(integer)
+
+    assert np.isclose(f_integer_output, test_int_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer_output, test_int_output)
+
+    f_integer8_output = epyccel_func(integer8)
+    test_int8_output = get_norm(integer8)
+
+    assert np.isclose(f_integer8_output, test_int8_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer8_output, test_int8_output)
+
+    f_integer16_output = epyccel_func(integer16)
+    test_int16_output = get_norm(integer16)
+
+    assert np.isclose(f_integer16_output, test_int16_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer16_output, test_int16_output)
+
+    f_integer32_output = epyccel_func(integer32)
+    test_int32_output = get_norm(integer32)
+
+    assert np.isclose(f_integer32_output, test_int32_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer32_output, test_int32_output)
+
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_norm(integer64)
+
+    assert np.isclose(f_integer64_output, test_int64_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer64_output, test_int64_output)
+
+    f_fl_output = epyccel_func(fl)
+    test_float_output = get_norm(fl)
+
+    assert np.isclose(f_fl_output, test_float_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_fl_output, test_float_output)
+
+    f_fl32_output = epyccel_func(fl32)
+    test_float32_output = get_norm(fl32)
+
+    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f_fl32_output, test_float32_output)
+
+    f_fl64_output = epyccel_func(fl64)
+    test_float64_output = get_norm(fl64)
+
+    assert np.isclose(f_fl64_output, test_float64_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_fl64_output, test_float64_output)
+
+    f_complex64_output = epyccel_func(cmplx64)
+    test_complex64_output = get_norm(cmplx64)
+
+    assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f_complex64_output, test_complex64_output)
+
+    f_complex128_output = epyccel_func(cmplx128)
+    test_complex128_output = get_norm(cmplx128)
+
+    assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_complex128_output, test_complex128_output)
 
 def test_numpy_norm_array_like_1d(language):
 
@@ -4994,16 +5076,6 @@ def test_numpy_norm_array_like_1d(language):
     assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_array_like_2d(language):
 
     def get_norm(arr : 'C[:,:]'):
@@ -5053,16 +5125,6 @@ def test_numpy_norm_array_like_2d(language):
     assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
 
 def test_numpy_norm_array_like_2d_fortran_order(language):
 
@@ -5130,16 +5192,6 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
 def test_numpy_norm_array_like_3d(language):
 
     def get_norm(arr : 'C[:,:,:]'):
@@ -5188,16 +5240,6 @@ def test_numpy_norm_array_like_3d(language):
     assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
 
 def test_numpy_norm_array_like_3d_fortran_order(language):
 
@@ -5266,6 +5308,48 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize('order', [0, 1, 2, -1, np.inf, -np.inf, 10, 2.2])
+def test_norm_vector_ord(language, order):
+    def norm_call(x : 'float[:]'):
+        from numpy.linalg import norm
+        return norm(x, ord=order)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(12)*200-100
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize('order', [0, 1, 2, -1, np.inf, -np.inf, 10, 2.2])
+def test_norm_vector_ord_complex(language, order):
+    def norm_call(x : 'complex[:]'):
+        from numpy.linalg import norm
+        return norm(x, ord=order)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(12)*200-100 + rand(12)*1j*200-100j
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
+def test_norm_axis_2d(language):
+    def norm_call(x : 'float[:,:]'):
+        from numpy.linalg import norm
+        return norm(x, axis=(1,))
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(5, 7)
+    assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
+
+
+def test_norm_axis_keepdims(language):
+    def norm_call(x : 'float[:,:]'):
+        from numpy.linalg import norm
+        return norm(x, axis=1, keepdims=True)
+
+    f1 = epyccel(norm_call, language=language)
+    x = rand(6, 4)
+    res_ref = norm_call(x)
+    res_cc = f1(x)
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),

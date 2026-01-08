@@ -53,14 +53,16 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
+from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelDiv, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
@@ -2297,6 +2299,64 @@ class CCodePrinter(CodePrinter):
 
         return ';\n'.join((init_value, endpoint_code))
 
+    def _print_NumpyNorm(self, expr):
+        arg = expr.arg
+        if arg.rank == 0:
+            if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+                arg = NumpyAbs(arg)
+            return self._print(arg)
+        order = expr.order or LiteralInteger(2)
+        initial = convert_to_literal(0, expr.dtype)
+        final_power_required = False
+        if order == np.inf:
+            initial = PyccelUnarySub(math_constants['inf'])
+            element_expression = NumpyAbs
+            reduction_expression = PythonMax
+        elif order == -np.inf:
+            initial = math_constants['inf']
+            element_expression = NumpyAbs
+            reduction_expression = PythonMin
+        elif order == 0:
+            zero = convert_to_literal(0, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelNe(elem, zero)
+            reduction_expression = PyccelAdd
+        elif order == 1:
+            element_expression = NumpyAbs
+            reduction_expression = PyccelAdd
+        elif order == -1:
+            one = convert_to_literal(1, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelDiv(one, NumpyAbs(elem))
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelPow(NumpyAbs(elem), order)
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        else:
+            raise NotImplementedError("Order")
+
+        code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
+
+        if final_power_required:
+            assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+            assert assign_node
+            lhs_var = assign_node[0].lhs
+            lhs = self._print(lhs_var)
+            prefix = code
+
+            pow_factor = PyccelDiv(LiteralInteger(1), order)
+            self.add_import(c_imports['math'])
+            code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
+            return prefix + code
+        else:
+            return code
+
     def _print_NumpyCross(self, expr):
         a = expr.a
         b = expr.b
@@ -2592,7 +2652,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
+        if isinstance(rhs, (NumpyAmax, NumpyAmin, NumpyReduction)) and rhs.arg.rank:
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
