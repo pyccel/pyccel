@@ -2630,7 +2630,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpyAmax, NumpyAmin, NumpyReduction))  and rhs.arg.rank:
+        if isinstance(rhs, (NumpyAmax, NumpyAmin, NumpyReduction)) and rhs.arg.rank:
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
