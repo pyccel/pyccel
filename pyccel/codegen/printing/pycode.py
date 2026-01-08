@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 import ast
 import warnings
+import math
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
@@ -21,6 +22,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals  import PyccelSymbol, Slice
 from pyccel.ast.literals   import LiteralTrue, LiteralString, LiteralInteger, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
+from pyccel.ast.mathext    import math_constants
 from pyccel.ast.numpyext   import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import process_dtype as numpy_process_dtype
@@ -1232,10 +1234,15 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         name = self._get_numpy_name(expr)
-        axis = self._print(expr.axis) if expr.axis else None
-        if axis:
-            return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
-        return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
+        args = [self._print(expr.arg)]
+        if expr.axis:
+            args.append(f'axis = {self._print(expr.axis)}')
+        if expr.rank == expr.arg.rank:
+            args.append('keepdims = True')
+        if expr.order:
+            args.append(f'ord = {self._print(expr.order)}')
+        arg_code = ', '.join(args)
+        return  f"{name}({arg_code})"
 
     def _print_NumpyNonZero(self, expr):
         name = self._aliases.get(type(expr),'nonzero')
@@ -1406,6 +1413,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Literal(self, expr):
         dtype = expr.dtype
 
+        val_code = repr(expr.python_value)
+        if expr.python_value in (math.inf, -math.inf):
+            self.add_import(Import('math', [AsName(math_constants['inf'], 'inf')]))
+
         if isinstance(dtype, NumpyNumericType):
             cast_func = DtypePrecisionToCastFunction[dtype]
             type_name = cast_func.__name__.lower()
@@ -1414,9 +1425,9 @@ class PythonCodePrinter(CodePrinter):
             name = self._aliases.get(cast_func, cast_name)
             if is_numpy and name == cast_name:
                 self.add_import(Import('numpy', [AsName(cast_func, cast_name)]))
-            return '{}({})'.format(name, repr(expr.python_value))
+            return f'{name}({val_code})'
         else:
-            return repr(expr.python_value)
+            return val_code
 
     def _print_Print(self, expr):
         args = []

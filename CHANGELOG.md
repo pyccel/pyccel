@@ -8,8 +8,11 @@ All notable changes to this project will be documented in this file.
 
 -   #2396 : Add support for NumPy `out` arguments.
 -   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
+-   #2271 : Add support for `axis`, `keepdims`, `ord` arguments of `numpy.linalg.norm`.
 
 ### Fixed
+
+-   #2535 : Fix `math.inf` printing in Python.
 
 ### Changed
 

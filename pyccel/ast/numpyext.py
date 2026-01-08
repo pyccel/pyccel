@@ -29,13 +29,14 @@ from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralString, convert_to_literal
-from .literals       import LiteralTrue, LiteralFalse
+from .literals       import LiteralTrue, LiteralFalse, Literal
 from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
+from .operators      import PyccelUnarySub
 from .type_annotations import VariableTypeAnnotation, typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant, IndexedElement
 
@@ -44,10 +45,12 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'process_dtype',
+    'process_index_for_reduction',
     'process_shape',
     # --- Base classes ---
     'NumpyAutoFill',
     'NumpyNewArray',
+    'NumpyReduction',
     'NumpyUfuncBase',
     'NumpyUfuncBinary',
     'NumpyUfuncUnary',
@@ -289,6 +292,65 @@ def process_dtype(dtype):
         return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
     else:
         raise TypeError(f'Unknown type of {dtype}.')
+
+#==============================================================================
+def process_index_for_reduction(indices, axis, keepdims):
+    """
+    Process the insertion of an index into a reduction function.
+
+    Get the elements necessary to describe the indexed result of the reduction
+    function. This is used in the loop unrolling.
+
+    E.g. for `sum(arr, axis=0)`, the indexed expression is
+    >>> sum(arr[:,*indices], axis=0)
+
+    This function returns the new axis and the indices used to index `arr`.
+
+    Parameters
+    ----------
+    indices : iterable[TypedAstNode] | TypedAstNode
+        The indices that will index the result of the reduction function.
+    axis : iterable[TypedAstNode]
+        The axis or axes along which the reduction is performed.
+    keepdims : LiteralTrue | LiteralFalse
+        Indicates if the output array should have the same number of dimensions
+        as `arr`.
+
+    Returns
+    -------
+    new_indices : list[TypedAstNode]
+        The indices which will index the argument of the reduction function.
+
+    new_axis : list[LiteralInteger]
+        Axis or axes along which the resulting reduction is performed.
+    """
+    if not isinstance(indices, (tuple, list)):
+        indices = (indices,)
+    new_indices = []
+    ai = 0
+    ii = 0
+    axis_shift = 0
+    new_axis = []
+    while ai < len(indices):
+        if ii in axis:
+            new_axis.append(LiteralInteger(ii - axis_shift))
+            new_indices.append(Slice(None, None))
+            current_arg = indices[ai]
+            if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
+                                                      (current_arg.start, current_arg.stop, current_arg.step)):
+                ai += 1
+            elif isinstance(keepdims, LiteralTrue):
+                assert indices[ai] == 0
+                ai += 1
+        else:
+            new_indices.append(indices[ai])
+            if not isinstance(indices[ai], Slice):
+                axis_shift += 1
+            ai += 1
+        ii += 1
+    new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in axis if int(ai) >= ii)
+    assert len(new_axis) == len(axis)
+    return new_indices, new_axis
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -885,49 +947,37 @@ class NumpyArange(NumpyNewArray):
         return PyccelAdd.make_simplified(self.start, step)
 
 #==============================================================================
-class NumpySum(PyccelFunction):
+class NumpyReduction(PyccelFunction):
     """
-    Represents a call to  numpy.sum for code generation.
+    Represents a call to a NumPy reduction function.
 
-    Represents a call to  numpy.sum for code generation.
+    Represents a call to a NumPy reduction function, e.g. sum.
 
     Parameters
     ----------
-    arg : list , tuple , PythonTuple, PythonList, Variable
-        The array being summed over.
+    arg : list | tuple | PythonTuple | PythonList | Variable
+        The array being reduced.
+    *args : PyccelAstNode
+        Other arguments to be passed to the PyccelFunction superclass.
     axis : None | LiteralInteger | iterable[LiteralInteger], optional
-        Axis or axes along which a sum is performed.
-        If axis is None then a sum is performed over all elements of arg.
-    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
-        The data type of the result.
+        Axis or axes along which the reduction is performed.
+        If axis is None then the reduction is performed over all elements of arr.
     keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
         Indicates if output arrays should have the same number of dimensions
-        as arg.
-    initial : TypedAstNode, default=None
         The start value for the sum.
     where : TypedAstNode, default=None
         Boolean indicating elements to include in the sum.
     """
-    __slots__ = ('_axis', '_class_type', '_shape', '_keepdims')
-    name = 'sum'
+    __slots__ = ('_axis', '_shape', '_keepdims')
 
-    def __init__(self, arg, axis=None, dtype=None, keepdims=LiteralFalse(),
-                 initial=None, where=None):
+    def __init__(self, arg, *args, axis=None, keepdims=LiteralFalse(),
+                 where=None):
         if where is not None:
             raise NotImplementedError("where argument is not yet supported")
         if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
             errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
-        assert isinstance(arg, TypedAstNode)
-        super().__init__(arg, initial)
-        if dtype is None:
-            lowest_possible_type = process_dtype(PythonNativeInt())
-            if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
-                    arg.dtype.precision <= lowest_possible_type.precision:
-                self._class_type = lowest_possible_type
-            else:
-                self._class_type = process_dtype(arg.dtype)
-        else:
-            self._class_type = process_dtype(dtype)
+        assert isinstance(arg, (Variable, IndexedElement))
+        super().__init__(arg, *args)
 
         self._keepdims = keepdims
 
@@ -946,10 +996,6 @@ class NumpySum(PyccelFunction):
                     shape[a] = LiteralInteger(1)
             else:
                 shape = tuple(s for i, s in enumerate(shape) if i not in axis)
-
-            rank = len(shape)
-            order = arg.order
-            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
             self._shape = tuple(shape)
 
         self._axis = axis
@@ -957,20 +1003,65 @@ class NumpySum(PyccelFunction):
     @property
     def arg(self):
         """
-        The array to be summed.
+        The array to be reduced.
 
-        The array to be summed.
+        The array to be reduced.
         """
         return self._args[0]
 
     @property
     def axis(self):
         """
-        Axis or axes along which a sum is performed.
+        Axis or axes along which the reduction is performed.
 
-        Axis or axes along which a sum is performed.
+        Axis or axes along which the reduction is performed.
         """
         return self._axis
+
+#==============================================================================
+class NumpySum(NumpyReduction):
+    """
+    Represents a call to  numpy.sum for code generation.
+
+    Represents a call to  numpy.sum for code generation.
+
+    Parameters
+    ----------
+    a : list | tuple | PythonTuple | PythonList | Variable
+        The array being summed over.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
+        The data type of the result.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
+    """
+    __slots__ = ('_class_type',)
+    name = 'sum'
+
+    def __init__(self, a, axis=None, dtype=None, keepdims=LiteralFalse(),
+                 initial=None, where=None):
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
+        if dtype is None:
+            lowest_possible_type = process_dtype(PythonNativeInt())
+            if isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
+                    a.dtype.precision <= lowest_possible_type.precision:
+                self._class_type = lowest_possible_type
+            else:
+                self._class_type = process_dtype(a.dtype)
+        else:
+            self._class_type = process_dtype(dtype)
+
+        if axis is not None:
+            rank = len(self._shape)
+            order = a.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
     @property
     def initial(self):
@@ -989,32 +1080,7 @@ class NumpySum(PyccelFunction):
         This is used in the loop unrolling.
         E.g. for `sum(arr, axis=0)`, this function returns `sum(arr[:,*args], axis=0)`.
         """
-        if not isinstance(args, (tuple, list)):
-            args = (args,)
-        indexes = []
-        ai = 0
-        ii = 0
-        axis_shift = 0
-        new_axis = []
-        while ai < len(args):
-            if ii in self._axis:
-                new_axis.append(LiteralInteger(ii - axis_shift))
-                indexes.append(Slice(None, None))
-                current_arg = args[ai]
-                if isinstance(current_arg, Slice) and all(slice_val is None for slice_val in
-                                                          (current_arg.start, current_arg.stop, current_arg.step)):
-                    ai += 1
-                elif isinstance(self._keepdims, LiteralTrue):
-                    assert args[ai] == 0
-                    ai += 1
-            else:
-                indexes.append(args[ai])
-                if not isinstance(args[ai], Slice):
-                    axis_shift += 1
-                ai += 1
-            ii += 1
-        new_axis.extend(LiteralInteger(int(ai) - axis_shift) for ai in self._axis if int(ai) >= ii)
-        assert len(new_axis) == len(self._axis)
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
         assert len(indexes) <= self.arg.rank
         return NumpySum(self.arg[indexes], axis = PythonTuple(*new_axis),
                         dtype = self.dtype, keepdims = self._keepdims,
@@ -1779,7 +1845,7 @@ class NumpyZerosLike(PyccelFunction):
         return NumpyZeros(shape, dtype, order)
 
 #==============================================================================
-class NumpyNorm(PyccelFunction):
+class NumpyNorm(NumpyReduction):
     """
     Represents call to `numpy.norm`.
 
@@ -1787,54 +1853,64 @@ class NumpyNorm(PyccelFunction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    x : TypedAstNode
         The first argument passed to the function.
+    ord : Literal
+        Order of the norm.
     axis : TypedAstNode, optional
         The second argument passed to the function, indicating the axis along
         which the norm should be calculated.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as x.
     """
-    __slots__ = ('_shape','_arg','_class_type')
+    __slots__ = ('_class_type',)
     name = 'norm'
 
-    def __init__(self, arg, axis=None):
-        super().__init__(arg, axis)
-        arg_dtype = arg.dtype
+    def __init__(self, x, ord = Nil(), axis=None, keepdims=LiteralFalse()): #pylint: disable=redefined-builtin
+        if not (isinstance(ord, Literal) or
+                (isinstance(ord, PyccelUnarySub) and isinstance(ord.args[0], Literal))):
+            raise TypeError("Order must be a literal value")
+        if isinstance(axis, (PythonTuple, PythonList)):
+            if len(axis) == 1:
+                axis = axis[0]
+            else:
+                raise NotImplementedError("Only vector norms are currently implemented.")
+        super().__init__(x, ord, axis = axis, keepdims = keepdims)
+        arg_dtype = x.dtype
         if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
-            arg = NumpyFloat64(arg)
             dtype = NumpyFloat64Type()
         else:
             dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
-        self._arg = PythonTuple(arg) if arg.rank == 0 else arg
-        if self.axis is not None:
-            sh = list(arg.shape)
-            del sh[self.axis]
-            self._shape = tuple(sh)
-            rank = len(self._shape)
-            order = None if rank < 2 else arg.order
-            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
-        else:
-            self._shape = None
+
+        if self._axis is None:
             self._class_type = dtype
+        else:
+            rank = len(self._shape)
+            order = x.order
+            self._class_type = dtype if self._axis is None else NumpyNDArrayType.get_new(dtype, rank, order)
 
     @property
-    def arg(self):
-        return self._arg
-
-    @property
-    def python_arg(self):
-        """numpy.norm argument without casting.
-        the actual arg property contains casting methods for C/Fortran,
-        which is not necessary for a Python code, and the casting makes Python language tests fail.
+    def order(self):
         """
-        return self._args[0]
+        The order of the norm.
 
-    @property
-    def axis(self):
-        """
-        Mimic the behavior of axis argument of numpy.norm in python,
-        and dim argument of Norm2 in Fortran.
+        The order of the norm.
         """
         return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the norm function.
+
+        Get an expression describing the indexed result of the norm function.
+        This is used in the loop unrolling.
+        E.g. for `norm(arr, axis=0)`, this function returns `norm(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyNorm(self.arg[indexes], axis = new_axis[0],
+                        keepdims = self._keepdims, ord = self.order)
 
 #==============================================================================
 # Numpy universal functions
