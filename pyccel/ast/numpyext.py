@@ -1891,24 +1891,6 @@ class NumpyNorm(NumpyReduction):
             self._class_type = dtype if self._axis is None else NumpyNDArrayType.get_new(dtype, rank, order)
 
     @property
-    def arg(self):
-        """
-        The array whose norm is calculated.
-
-        The array whose norm is calculated.
-        """
-        return self._args[0]
-
-    @property
-    def axis(self):
-        """
-        Axis or axes along which the norm is calculated.
-
-        Axis or axes along which the norm is calculated.
-        """
-        return self._axis
-
-    @property
     def order(self):
         """
         The order of the norm.
