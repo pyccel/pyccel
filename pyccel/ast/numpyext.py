@@ -1045,22 +1045,22 @@ class NumpySum(NumpyReduction):
     __slots__ = ('_class_type',)
     name = 'sum'
 
-    def __init__(self, arg, axis=None, dtype=None, keepdims=LiteralFalse(),
+    def __init__(self, a, axis=None, dtype=None, keepdims=LiteralFalse(),
                  initial=None, where=None):
-        super().__init__(arg, initial, axis = axis, keepdims = keepdims, where = where)
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
         if dtype is None:
             lowest_possible_type = process_dtype(PythonNativeInt())
-            if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
-                    arg.dtype.precision <= lowest_possible_type.precision:
+            if isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) and \
+                    a.dtype.precision <= lowest_possible_type.precision:
                 self._class_type = lowest_possible_type
             else:
-                self._class_type = process_dtype(arg.dtype)
+                self._class_type = process_dtype(a.dtype)
         else:
             self._class_type = process_dtype(dtype)
 
         if axis is not None:
             rank = len(self._shape)
-            order = arg.order
+            order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
     @property
@@ -1853,7 +1853,7 @@ class NumpyNorm(NumpyReduction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    x : TypedAstNode
         The first argument passed to the function.
     ord : Literal
         Order of the norm.
@@ -1862,12 +1862,12 @@ class NumpyNorm(NumpyReduction):
         which the norm should be calculated.
     keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
         Indicates if output arrays should have the same number of dimensions
-        as arg.
+        as x.
     """
     __slots__ = ('_class_type',)
     name = 'norm'
 
-    def __init__(self, arg, ord = Nil(), axis=None, keepdims=LiteralFalse()): #pylint: disable=redefined-builtin
+    def __init__(self, x, ord = Nil(), axis=None, keepdims=LiteralFalse()): #pylint: disable=redefined-builtin
         if not (isinstance(ord, Literal) or
                 (isinstance(ord, PyccelUnarySub) and isinstance(ord.args[0], Literal))):
             raise TypeError("Order must be a literal value")
@@ -1876,8 +1876,8 @@ class NumpyNorm(NumpyReduction):
                 axis = axis[0]
             else:
                 raise NotImplementedError("Only vector norms are currently implemented.")
-        super().__init__(arg, ord, axis = axis, keepdims = keepdims)
-        arg_dtype = arg.dtype
+        super().__init__(x, ord, axis = axis, keepdims = keepdims)
+        arg_dtype = x.dtype
         if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
             dtype = NumpyFloat64Type()
         else:
@@ -1887,7 +1887,7 @@ class NumpyNorm(NumpyReduction):
             self._class_type = dtype
         else:
             rank = len(self._shape)
-            order = arg.order
+            order = x.order
             self._class_type = dtype if self._axis is None else NumpyNDArrayType.get_new(dtype, rank, order)
 
     @property
