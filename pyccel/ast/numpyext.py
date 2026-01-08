@@ -955,7 +955,7 @@ class NumpyReduction(PyccelFunction):
 
     Parameters
     ----------
-    arr : list | tuple | PythonTuple | PythonList | Variable
+    arg : list | tuple | PythonTuple | PythonList | Variable
         The array being reduced.
     *args : PyccelAstNode
         Other arguments to be passed to the PyccelFunction superclass.
@@ -970,14 +970,14 @@ class NumpyReduction(PyccelFunction):
     """
     __slots__ = ('_axis', '_shape', '_keepdims')
 
-    def __init__(self, arr, *args, axis=None, keepdims=LiteralFalse(),
+    def __init__(self, arg, *args, axis=None, keepdims=LiteralFalse(),
                  where=None):
         if where is not None:
             raise NotImplementedError("where argument is not yet supported")
         if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
             errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
-        assert isinstance(arr, (Variable, IndexedElement))
-        super().__init__(arr, *args)
+        assert isinstance(arg, (Variable, IndexedElement))
+        super().__init__(arg, *args)
 
         self._keepdims = keepdims
 
@@ -990,7 +990,7 @@ class NumpyReduction(PyccelFunction):
             if axis.rank != 1 or any(not isinstance(a, LiteralInteger) for a in axis):
                 errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
 
-            shape = list(arr.shape)
+            shape = list(arg.shape)
             if isinstance(keepdims, LiteralTrue):
                 for a in axis:
                     shape[a] = LiteralInteger(1)
