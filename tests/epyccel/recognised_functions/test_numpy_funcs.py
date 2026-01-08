@@ -5316,7 +5316,7 @@ def test_norm_vector_ord(language, order):
         return norm(x, ord=order)
 
     f1 = epyccel(norm_call, language=language)
-    x = rand(12)
+    x = rand(12)*200-100
     assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize('order', [0, 1, 2, -1, np.inf, -np.inf, 10, 2.2])
@@ -5326,7 +5326,7 @@ def test_norm_vector_ord_complex(language, order):
         return norm(x, ord=order)
 
     f1 = epyccel(norm_call, language=language)
-    x = rand(12) + rand(12)*1j
+    x = rand(12)*200-100 + rand(12)*1j*200-100j
     assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
 
 def test_norm_axis_2d(language):
