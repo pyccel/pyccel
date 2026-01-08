@@ -313,8 +313,8 @@ def process_index_for_reduction(indices, axis, keepdims):
     axis : iterable[TypedAstNode]
         The axis or axes along which the reduction is performed.
     keepdims : LiteralTrue | LiteralFalse
-        Indicates if output arrays should have the same number of dimensions
-        as arg.
+        Indicates if the output array should have the same number of dimensions
+        as `arr`.
 
     Returns
     -------
@@ -955,7 +955,7 @@ class NumpyReduction(PyccelFunction):
 
     Parameters
     ----------
-    arr : list , tuple , PythonTuple, PythonList, Variable
+    arr : list | tuple | PythonTuple | PythonList | Variable
         The array being reduced.
     *args : PyccelAstNode
         Other arguments to be passed to the PyccelFunction superclass.
@@ -1027,7 +1027,7 @@ class NumpySum(NumpyReduction):
 
     Parameters
     ----------
-    arg : list , tuple , PythonTuple, PythonList, Variable
+    a : list | tuple | PythonTuple | PythonList | Variable
         The array being summed over.
     axis : None | LiteralInteger | iterable[LiteralInteger], optional
         Axis or axes along which a sum is performed.
