@@ -1003,18 +1003,18 @@ class NumpyReduction(PyccelFunction):
     @property
     def arg(self):
         """
-        The array to be summed.
+        The array to be reduced.
 
-        The array to be summed.
+        The array to be reduced.
         """
         return self._args[0]
 
     @property
     def axis(self):
         """
-        Axis or axes along which a sum is performed.
+        Axis or axes along which the reduction is performed.
 
-        Axis or axes along which a sum is performed.
+        Axis or axes along which the reduction is performed.
         """
         return self._axis
 
