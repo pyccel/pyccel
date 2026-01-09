@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
 -   #2271 : Add support for `axis`, `keepdims`, `ord` arguments of `numpy.linalg.norm`.
 -   #2272 : Add support for `numpy.cross` and `numpy.linalg.cross` for vectors of size 3.
+-   #2541 : Add support for `axis`, `keepdims`, `initial` arguments of `numpy.amin` and `numpy.amax`.
 
 ### Fixed
 
