@@ -1188,7 +1188,8 @@ class SemanticParser(BasicParser):
         deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
         deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
                                      class_type = PythonNativeBool(), is_private=True)
-        expr.add_new_attribute(deallocater)
+        if expr.superclasses == ():
+            expr.add_new_attribute(deallocater)
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
@@ -1284,10 +1285,12 @@ class SemanticParser(BasicParser):
         """
         if elemental:
             def incompatible(i_arg, f_arg):
-                return i_arg.class_type.datatype != f_arg.class_type.datatype
+                return i_arg.class_type.datatype != f_arg.class_type.datatype and \
+                        not isinstance(i_arg.class_type.datatype, type(f_arg.class_type.datatype))
         else:
             def incompatible(i_arg, f_arg):
-                return i_arg.class_type != f_arg.class_type
+                return i_arg.class_type != f_arg.class_type and \
+                        not isinstance(i_arg.class_type, type(f_arg.class_type))
 
         err_msgs = []
         # Compare each set of arguments
@@ -3594,24 +3597,29 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr, severity='fatal')
-        if isinstance(first, ClassDef):
-            errors.report("Static class methods are not yet supported", symbol=expr,
-                    severity='fatal')
 
-        d_var = self._infer_type(first)
-        class_type = d_var['class_type']
-        cls_base = self.get_cls_base(class_type)
+        is_method = True
+        if isinstance(first, ClassDef):
+            cls_base = first
+            is_method = False
+        else:
+            d_var = self._infer_type(first)
+            class_type = d_var['class_type']
+            cls_base = self.get_cls_base(class_type)
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
             method = cls_base.get_method(rhs_name, expr)
 
-            args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
+            if is_method:
+                args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
+            else:
+                args = self._handle_function_args(rhs.args)
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
 
-            return self._handle_function(expr, method, args, is_method = True)
+            return self._handle_function(expr, method, args, is_method = is_method)
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
@@ -5536,12 +5544,17 @@ class SemanticParser(BasicParser):
         else:
             name = self.scope.get_expected_name(expr.name)
 
+        parent = self._find_superclasses(expr)
+
         #  create a new Datatype for the current class
-        dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
+        if parent:
+            base_classes = tuple(type(p.class_type) for p in parent)
+            dtype = DataTypeFactory(name, self.scope.get_python_name(name),
+                                    BaseClass = base_classes)()
+        else:
+            dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
         typenames_to_dtypes[name] = dtype
         self.scope.insert_cls_construct(dtype)
-
-        parent = self._find_superclasses(expr)
 
         cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
