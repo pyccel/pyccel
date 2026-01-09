@@ -3670,15 +3670,22 @@ class FCodePrinter(CodePrinter):
 
         if func.arguments and func.arguments[0].bound_argument:
             class_variable = args[0].value
-            args = args[1:]
             if isinstance(class_variable, FunctionCall):
+                args = args[1:]
                 base = class_variable.funcdef.results.var
                 var = self.scope.get_temporary_variable(base)
 
                 self._additional_code += self._print(Assign(var, class_variable)) + '\n'
                 f_name = f'{self._print(var)} % {f_name}'
             else:
-                f_name = f'{self._print(class_variable)} % {f_name}'
+                found_in_class, = func.get_direct_user_nodes(lambda c: isinstance(c, ClassDef))
+                class_type = class_variable.class_type
+                possible_ambiguity = found_in_class.get_method(func.scope.get_python_name(func.name))
+                if possible_ambiguity and possible_ambiguity.arguments[0].var.class_type is not class_type:
+                    f_name = f'{func.cls_name}'
+                else:
+                    args = args[1:]
+                    f_name = f'{self._print(class_variable)} % {f_name}'
 
         if parent_assign:
             lhs = parent_assign[0].lhs
