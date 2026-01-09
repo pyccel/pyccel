@@ -1221,8 +1221,14 @@ class SemanticParser(BasicParser):
             self._allocs[-1].update(attribute)
             del_method.body.insert2body(*self._garbage_collector(del_method.body))
             self._pointer_targets.pop()
+
+        if expr.superclasses:
+            del_body = [del_method.body] + \
+                    [FunctionCall(s.get_method('__del__'), (argument.var,)) for s in expr.superclasses]
+        else:
+            del_body = [del_method.body]
         condition = If(IfSection(PyccelNot(deallocater),
-                        [del_method.body]+[Assign(deallocater, LiteralTrue())]))
+                        del_body+[Assign(deallocater, LiteralTrue())]))
         del_method.body = [condition]
         self._current_function_name.pop()
 
