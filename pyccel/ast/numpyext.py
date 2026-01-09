@@ -2480,6 +2480,20 @@ class NumpyAmin(NumpyReduction):
         """
         return self._args[1]
 
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the min function.
+
+        Get an expression describing the indexed result of the min function.
+        This is used in the loop unrolling.
+        E.g. for `min(arr, axis=0)`, this function returns `min(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyAmin(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims,
+                        initial = self.initial)
+
 class NumpyAmax(NumpyReduction):
     """
     Represents a call to  numpy.max for code generation.
@@ -2530,6 +2544,20 @@ class NumpyAmax(NumpyReduction):
         The start value for the sum.
         """
         return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the min function.
+
+        Get an expression describing the indexed result of the min function.
+        This is used in the loop unrolling.
+        E.g. for `max(arr, axis=0)`, this function returns `max(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyAmax(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims,
+                        initial = self.initial)
 
     @property
     def is_elemental(self):
