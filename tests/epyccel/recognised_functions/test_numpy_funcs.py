@@ -2812,6 +2812,49 @@ def test_min_property(language):
     x = randint(99, size=10)
     assert f1(x) == min_call(x)
 
+def test_amin_1d(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+
+def test_amin_axis(language):
+    def amin_call(x : 'int[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amin_call(x))
+
+
+def test_amin_keepdims(language):
+    def amin_call(x : 'float[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1, keepdims=True)
+
+    f1 = epyccel(amin_call, language=language)
+    x = rand(5, 7)
+    res_ref = amin_call(x)
+    res_cc  = f1(x)
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amin_initial(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x, initial=50)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+
 def test_max_int(language):
     def max_call(x : 'int[:]'):
         from numpy import amax
@@ -2870,6 +2913,49 @@ def test_max_property(language):
     f1 = epyccel(max_call, language = language)
     x = randint(99, size=10)
     assert f1(x) == max_call(x)
+
+
+def test_amax_1d(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
+
+
+def test_amax_axis(language):
+    def amax_call(x : 'int[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amax_call(x))
+
+
+def test_amax_keepdims(language):
+    def amax_call(x : 'float[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0, keepdims=True)
+
+    f1 = epyccel(amax_call, language=language)
+    x = rand(5, 7)
+    res_ref = amax_call(x)
+    res_cc  = f1(x)
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amax_initial(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x, initial=10)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
 
 
 def test_full_like_basic_int(language):
