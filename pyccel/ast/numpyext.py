@@ -2452,7 +2452,6 @@ class NumpyAmin(NumpyReduction):
     """
     __slots__ = ('_class_type',)
     name = 'amin'
-    _shape = None
 
     def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
         super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
@@ -2466,6 +2465,15 @@ class NumpyAmin(NumpyReduction):
         This method retrieves the argument used in the min function.
         """
         return self._args[0]
+
+    @property
+    def initial(self):
+        """
+        The start value for the sum.
+
+        The start value for the sum.
+        """
+        return self._args[1]
 
 class NumpyAmax(NumpyReduction):
     """
@@ -2490,7 +2498,6 @@ class NumpyAmax(NumpyReduction):
     """
     __slots__ = ('_class_type',)
     name = 'amax'
-    _shape = None
 
     def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
         super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
@@ -2505,6 +2512,14 @@ class NumpyAmax(NumpyReduction):
         """
         return self._args[0]
 
+    @property
+    def initial(self):
+        """
+        The start value for the sum.
+
+        The start value for the sum.
+        """
+        return self._args[1]
 
     @property
     def is_elemental(self):
