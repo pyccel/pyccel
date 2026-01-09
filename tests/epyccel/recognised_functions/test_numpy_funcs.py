@@ -6563,8 +6563,8 @@ def test_cross_mixed_dimensions(language):
 
 def test_linalg_cross_1d(language):
     def cross_call(x : 'float[:]', y : 'float[:]'):
-        from numpy.linalg import cross
-        return cross(x, y)
+        import numpy as np # pylint: disable=reimported
+        return np.linalg.cross(x, y)
 
     f1 = epyccel(cross_call, language=language)
     x = rand(3)
@@ -6574,8 +6574,7 @@ def test_linalg_cross_1d(language):
 
 def test_linalg_cross_1d_mixed_types(language):
     def cross_call(x : 'float[:]', y : 'int[:]'):
-        from numpy.linalg import cross
-        return cross(x, y)
+        return np.linalg.cross(x, y)
 
     f1 = epyccel(cross_call, language=language)
     x = rand(3)
