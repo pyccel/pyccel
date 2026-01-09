@@ -27,6 +27,7 @@ from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
+from .numpyext      import NumpyCross
 from .numpyext      import get_shape_of_multi_level_container
 from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
@@ -653,6 +654,18 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                               PyccelAdd.make_simplified(LiteralInteger(idx), LiteralInteger(1))))],
                                 rhs.val) for idx in range(rhs.length)]
                 collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
+
+        elif isinstance(line, NumpyCross) and line.n_indices:
+            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.n_indices)]
+            indices.extend(new_indices)
+            block = line.insert_indices(*new_indices)
+            a_shape = [s for i,s in enumerate(line.a.shape) if i != line.axis_a]
+            b_shape = [s for i,s in enumerate(line.b.shape) if i != line.axis_b]
+            shape = [a_s if a_s != LiteralInteger(1) else b_s for a_s, b_s in zip(a_shape, b_shape)]
+            modified_vars = {line.a, line.b}
+            for sh in shape[::-1]:
+                block = LoopCollection([block], sh, modified_vars)
+            result.append(block)
 
         else:
             # Save line in top level (no for loop)

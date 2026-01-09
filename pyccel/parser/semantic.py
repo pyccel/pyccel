@@ -6762,6 +6762,64 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(body)
             return lhs
 
+    def _build_NumpyCross(self, expr, function_call_args, func):
+        """
+        Method to build a NumpyCross node.
+
+        The purpose of this `_build` method is to change the assignment into a
+        function call and create the result variable.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic node that represents the call to `NumpyCross`.
+
+        function_call_args : iterable[FunctionCallArgument]
+            The semantic arguments passed to the function.
+
+        func : PyccelFunction
+            The function being called.
+
+        Returns
+        -------
+        CodeBlock
+            CodeBlock containing NumpyCross and the allocation node if necessary.
+        """
+        assign = expr.get_direct_user_nodes(lambda a: isinstance(a, Assign))
+        if assign:
+            syntactic_lhs = assign[-1].lhs
+        else:
+            syntactic_lhs = self.scope.get_new_name()
+
+        args = [a.value for a in function_call_args if not a.has_keyword]
+        kwargs = {a.keyword: a.value for a in function_call_args if a.has_keyword}
+
+        if args:
+            a_arg = args[0]
+        else:
+            a_arg = kwargs['a']
+
+        if len(args) > 1:
+            b_arg = args[1]
+        else:
+            b_arg = kwargs['b']
+
+        d_var = self._infer_type(PyccelAdd(a_arg, b_arg))
+        lhs = self._assign_lhs_variable(syntactic_lhs, d_var, None, self._additional_exprs[-1],
+                heap_mem_in_multirets = False)
+        try:
+            cross_call = func(*args, **kwargs, c = lhs)
+        except PyccelError as err:
+            errors.error_info_map[errors.target][-1].line = expr.python_ast.lineno
+            errors.error_info_map[errors.target][-1].column = expr.python_ast.col_offset
+            raise err
+
+        if assign:
+            return cross_call
+        else:
+            self._additional_exprs[-1].append(cross_call)
+            return self._visit(syntactic_lhs)
+
     def _build_PyccelFunction(self, expr, function_call_args, func):
         """
         Generic method to visit a PyccelFunction to handle common arguments.

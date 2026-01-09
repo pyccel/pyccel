@@ -6520,3 +6520,110 @@ def test_true_divide(language):
     assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
     assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
+
+def test_cross_1d(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        return np.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+def test_cross_1d_expr(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        return np.cross(x, y) + 2
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_cross_2d_axis(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        return np.cross(a=x, b=y, axis=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(5, 3)
+    y = rand(5, 3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == cross_call(x, y).shape
+
+
+def test_cross_mixed_dimensions(language):
+    def cross_call(x : 'int[:,:]'):
+        y = np.array(x[0:1,:])
+        return np.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = np.array(rand(4, 3)*10, dtype=int)
+    assert np.allclose(f1(x), cross_call(x), rtol=RTOL, atol=ATOL)
+
+
+def test_linalg_cross_1d(language):
+    def cross_call(x : 'float[:]', y : 'float[:]'):
+        import numpy as np # pylint: disable=reimported
+        return np.linalg.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = rand(3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_linalg_cross_1d_mixed_types(language):
+    def cross_call(x : 'float[:]', y : 'int[:]'):
+        return np.linalg.cross(x, y)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(3)
+    y = np.array(rand(3)*10, dtype=int)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_linalg_cross_axis(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy.linalg import cross
+        return cross(x, y, axis=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(2, 3)
+    y = rand(2, 3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+
+def test_cross_axisa_axisb(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy import cross
+        return cross(x, y, axisa=1, axisb=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(5, 3)
+    y = rand(5, 3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == cross_call(x, y).shape
+
+
+def test_cross_axisc(language):
+    def cross_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy import cross
+        return cross(x, y, axisc=1)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(5, 3)
+    y = rand(5, 3)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == cross_call(x, y).shape
+
+
+def test_cross_axisa_axisb_axisc(language):
+    def cross_call(x : 'float[:,:,:]', y : 'float[:,:,:]'):
+        from numpy import cross
+        return cross(x, y, axisa=2, axisb=1, axisc=2)
+
+    f1 = epyccel(cross_call, language=language)
+    x = rand(4, 5, 3)
+    y = rand(4, 3, 5)
+    assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == cross_call(x, y).shape
+

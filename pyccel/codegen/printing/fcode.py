@@ -3381,6 +3381,14 @@ class FCodePrinter(CodePrinter):
             order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
             return 'reshape({}, shape=[{}], order=[{}])'.format(arg, shape, order)
 
+    def _print_NumpyCross(self, expr):
+        a, b = self._apply_cast(expr.c.dtype, expr.a, expr.b)
+        a_code = self._print(a)
+        b_code = self._print(b)
+        c_code = self._print(expr.c)
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+        return f'call cross_product({a_code}, {b_code}, {c_code})\n'
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
         function call
