@@ -3111,27 +3111,27 @@ class NumpyCross(PyccelFunction):
     @property
     def axis_a(self):
         """
-        Axis of `a` that defines the 1D vector where the operator acts.
+        Axis of `a` that defines the vector where the operator acts.
 
-        Axis of `a` that defines the 1D vector where the operator acts.
+        Axis of `a` that defines the vector where the operator acts.
         """
         return self._axisa
 
     @property
     def axis_b(self):
         """
-        Axis of `b` that defines the 1D vector where the operator acts.
+        Axis of `b` that defines the vector where the operator acts.
 
-        Axis of `b` that defines the 1D vector where the operator acts.
+        Axis of `b` that defines the vector where the operator acts.
         """
         return self._axisb
 
     @property
     def axis_c(self):
         """
-        Axis of `c` that defines the 1D vector where the operator acts.
+        Axis of `c` that defines the vector where the operator acts.
 
-        Axis of `c` that defines the 1D vector where the operator acts.
+        Axis of `c` that defines the vector where the operator acts.
         """
         return self._axisc
 
