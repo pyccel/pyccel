@@ -32,7 +32,7 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ConstructorCall, ClassDef
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Module, For, If, IfSection
@@ -2620,14 +2620,29 @@ class FCodePrinter(CodePrinter):
 
         name = self._print(expr.name)
         self.set_current_class(name)
-        base = None # TODO: add base in ClassDef
+
+        superclasses = expr.superclasses
+        subclasses = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
 
         decs = ''.join(self._print(Declare(i)) for i in expr.attributes)
 
         aliases = []
         names   = []
-        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
-                if method.is_semantic)
+        if superclasses or subclasses:
+            methods = ''
+            for method in expr.methods:
+                method_name = expr.scope.get_python_name(method.name)
+                overrides = [s.get_method(method_name) for s in chain(superclasses, subclasses)]
+                overrides = [m for m in overrides if m]
+                arg_types = {tuple(a.var.class_type for a in f.arguments[1:]) for f in chain((method,), overrides)}
+                if len(arg_types) == 1:
+                    methods += f'procedure :: {method.name} => {method.cls_name}\n'
+                else:
+                    methods += f'procedure :: {method.cls_name}\n'
+                    methods += f'generic :: {method.name} => {method.cls_name}\n'
+        else:
+            methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
+                    if method.is_semantic)
         for i in expr.interfaces:
             names = ','.join(f.cls_name for f in i.functions if f.is_semantic)
             if names:
@@ -2637,8 +2652,9 @@ class FCodePrinter(CodePrinter):
         self.exit_scope()
 
         sig = 'type'
-        if not(base is None):
-            sig = '{0}, extends({1})'.format(sig, base)
+        if superclasses:
+            base = ', '.join(self._print(c.class_type) for c in superclasses)
+            sig = f'{sig}, extends({base})'
 
         docstring = self._print(expr.docstring) if expr.docstring else ''
         code = f'{sig} :: {name}\n{decs}\n'
