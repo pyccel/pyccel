@@ -1280,7 +1280,7 @@ class CToPythonWrapper(Wrapper):
             python_name = c.scope.get_python_name(name)
             struct_name = self.scope.get_new_name(f'Py{python_name}Object')
             dtype = DataTypeFactory(struct_name, self.scope.get_python_name(struct_name),
-                                    BaseClass=WrapperCustomDataType)()
+                                    BaseClass=(WrapperCustomDataType,))()
 
             type_name = self.scope.get_new_name(f'Py{python_name}Type')
             wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name, 'class'),
@@ -2144,7 +2144,7 @@ class CToPythonWrapper(Wrapper):
                                          scope_type = 'module')
                 name = t.scope.get_python_name(t.name)
                 struct_name = import_scope.get_new_name(f'Py{name}Object')
-                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=WrapperCustomDataType)()
+                dtype = DataTypeFactory(struct_name, struct_name, BaseClass=(WrapperCustomDataType,))()
                 type_name = import_scope.get_new_name(f'Py{name}Type')
                 wrapped_class = PyClassDef(t, struct_name, type_name, Scope(name = name, scope_type = 'class'), class_type = dtype)
                 self._python_object_map[t] = wrapped_class
