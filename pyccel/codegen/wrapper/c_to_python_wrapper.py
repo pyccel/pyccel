@@ -1291,6 +1291,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map[orig_cls_dtype] = dtype
 
             self.scope.insert_class(wrapped_class, python_name)
+            self.scope.insert_class(wrapped_class, dtype.name)
 
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
@@ -2150,6 +2151,7 @@ class CToPythonWrapper(Wrapper):
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
                 self.scope.imports['classes'][name] = wrapped_class
+                self.scope.imports['classes'][dtype.name] = wrapped_class
                 import_wrapper = True
 
         if import_wrapper:
