@@ -24,6 +24,7 @@ from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 from .datatypes      import InhomogeneousTupleType, ContainerType, SymbolicType
+from .datatypes      import VoidType
 
 from .internals      import PyccelFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -113,7 +114,9 @@ __all__ = (
     'NumpyAmin',
     'NumpyConjugate',
     'NumpyCountNonZero',
+    'NumpyCross',
     'NumpyImag',
+    'NumpyLinalgCross',
     'NumpyMatmul',
     'NumpyMod',
     'NumpyNDArray',
@@ -2998,6 +3001,209 @@ class NumpyDivide(PyccelDiv):
         super().__init__(x1, x2)
 
 #==============================================================================
+class NumpyCross(PyccelFunction):
+    """
+    Class representing a call to numpy.cross or numpy.linalg.cross in the user code.
+
+    Class representing a call to numpy.cross or numpy.linalg.cross in the user code.
+
+    Parameters
+    ----------
+    a : TypedAstNode
+        The first vector.
+    b : TypedAstNode
+        The second vector.
+    axisa : LiteralInteger, default: -1
+        Axis of `a` that defines the vector(s).
+    axisb : LiteralInteger, default: -1
+        Axis of `b` that defines the vector(s).
+    axisc : LiteralInteger, default: -1
+        Axis of `c` that defines the vector(s).
+    axis : LiteralInteger, optional
+        If defined, the axis of `a`, `b` and `c` that defines the vector(s)
+        and cross product(s).  Overrides `axisa`, `axisb` and `axisc`.
+    c : Variable
+        Argument provided by the semantic parser describing the variable where
+        the result will be saved.
+    """
+    __slots__ = ('_axisa','_axisb','_axisc',)
+
+    _class_type = VoidType()
+    _shape = None
+    name = 'cross'
+
+    def __init__(self, a, b,
+                 axisa = PyccelUnarySub(LiteralInteger(1)),
+                 axisb = PyccelUnarySub(LiteralInteger(1)),
+                 axisc = PyccelUnarySub(LiteralInteger(1)),
+                 axis = Nil(), *, c):
+        axisa_is_not_literal = False
+        axisb_is_not_literal = False
+        axisc_is_not_literal = False
+        axis_is_not_literal = False
+        axis_val = None
+        try:
+            self._axisa = int(axisa)
+        except TypeError:
+            axisa_is_not_literal = True
+        try:
+            self._axisb = int(axisb)
+        except TypeError:
+            axisb_is_not_literal = True
+        try:
+            self._axisc = int(axisc)
+        except TypeError:
+            axisc_is_not_literal = True
+        if axis is not Nil():
+            try:
+                axis_val = int(axis)
+            except TypeError:
+                axis_is_not_literal = True
+        if axisa_is_not_literal or axisb_is_not_literal or axisc_is_not_literal or axis_is_not_literal:
+            symbol = [a for a,b in zip([axisa, axisb, axisc, axis],
+                                       [axisa_is_not_literal, axisb_is_not_literal, axisc_is_not_literal, axis_is_not_literal])
+                      if b]
+            errors.report(NON_LITERAL_AXIS, symbol=symbol, severity="fatal")
+
+        if axis_val is not None:
+            self._axisa = axis_val
+            self._axisb = axis_val
+            self._axisc = axis_val
+
+        if self._axisa < 0:
+            self._axisa += a.rank
+        if self._axisb < 0:
+            self._axisb += b.rank
+        if self._axisc < 0:
+            self._axisc += c.rank
+
+        assert a.rank == b.rank == c.rank
+
+        super().__init__(a, b, c)
+
+    @property
+    def a(self):
+        """
+        The first vector in the cross product.
+
+        The first vector in the cross product.
+        """
+        return self._args[0]
+
+    @property
+    def b(self):
+        """
+        The second vector in the cross product.
+
+        The second vector in the cross product.
+        """
+        return self._args[1]
+
+    @property
+    def c(self):
+        """
+        The vector in which the cross product is saved.
+
+        The vector in which the cross product is saved.
+        """
+        return self._args[2]
+
+    @property
+    def axis_a(self):
+        """
+        Axis of `a` that defines the vector where the operator acts.
+
+        Axis of `a` that defines the vector where the operator acts.
+        """
+        return self._axisa
+
+    @property
+    def axis_b(self):
+        """
+        Axis of `b` that defines the vector where the operator acts.
+
+        Axis of `b` that defines the vector where the operator acts.
+        """
+        return self._axisb
+
+    @property
+    def axis_c(self):
+        """
+        Axis of `c` that defines the vector where the operator acts.
+
+        Axis of `c` that defines the vector where the operator acts.
+        """
+        return self._axisc
+
+    @property
+    def n_indices(self):
+        """
+        The number of indices required to get a 1D cross product expression.
+
+        The number of indices required to get a 1D cross product expression.
+        """
+        return self.a.rank - 1
+
+    def insert_indices(self, *idxs):
+        """
+        Insert the indices into the arrays.
+
+        Insert the indices into the arrays to get a 1D cross product expression.
+        This function is used by the loop unrolling.
+
+        Parameters
+        ----------
+        *idxs : Variable
+            The indices to be inserted.
+
+        Returns
+        -------
+        NumpyCross
+            The new 1D cross product expression.
+        """
+        assert len(idxs) == self.n_indices
+        a_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.a.shape)]
+        b_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.b.shape)]
+        c_idx = [LiteralInteger(0) if s == 1 else idx
+                 for idx,s in zip(idxs, self.c.shape)]
+        a_idx.insert(self._axisa, Slice(None, None))
+        b_idx.insert(self._axisb, Slice(None, None))
+        c_idx.insert(self._axisc, Slice(None, None))
+        return NumpyCross(self.a[a_idx], self.b[b_idx],
+                          LiteralInteger(self._axisa),
+                          LiteralInteger(self._axisb),
+                          LiteralInteger(self._axisc),
+                          c = self.c[c_idx])
+
+#==============================================================================
+class NumpyLinalgCross(NumpyCross):
+    """
+    Class representing a call to numpy.linalg.cross in the user code.
+
+    Class representing a call to numpy.linalg.cross in the user code.
+
+    Parameters
+    ----------
+    x1 : TypedAstNode
+        The first vector.
+    x2 : TypedAstNode
+        The second vector.
+    axis : LiteralInteger, optional
+        If defined, the axis of `a`, `b` and `c` that defines the vector(s)
+        and cross product(s).  Overrides `axisa`, `axisb` and `axisc`.
+    c : Variable
+        Argument provided by the semantic parser describing the variable where
+        the result will be saved.
+    """
+    __slots__ = ()
+
+    def __init__(self, x1, x2, axis = Nil(), *, c):
+        super().__init__(x1, x2, axis = axis, c = c)
+
+
+#==============================================================================
 DtypePrecisionToCastFunction.update({
     PythonNativeBool()    : NumpyBool,
     NumpyInt8Type()       : NumpyInt8,
@@ -3015,7 +3221,8 @@ DtypePrecisionToCastFunction.update({
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 
 numpy_linalg_mod = Module('numpy.linalg', (),
-    [PyccelFunctionDef('norm', NumpyNorm)])
+    [PyccelFunctionDef('norm', NumpyNorm),
+     PyccelFunctionDef('cross', NumpyLinalgCross)])
 
 numpy_random_mod = Module('numpy.random', (),
     [PyccelFunctionDef('rand'   , NumpyRand),
@@ -3073,6 +3280,7 @@ numpy_funcs = {
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     'divide'    : PyccelFunctionDef('divide'    , NumpyDivide),
     'true_divide' : PyccelFunctionDef('true_divide', NumpyDivide),
+    'cross'     : PyccelFunctionDef('cross'     , NumpyCross),
     # ---
     'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
     'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),

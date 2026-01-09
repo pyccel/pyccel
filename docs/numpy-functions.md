@@ -453,6 +453,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
     -   `where`, `count_nonzero` (Fortran only)
     -   `nonzero` (Fortran only, 1D only)
     -   `copy` (`subok` parameter is not supported)
+    -   `cross`, `numpy.linalg.cross` (dimension 3 only)
 
 -   others:
 
