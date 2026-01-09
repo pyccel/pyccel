@@ -3235,7 +3235,8 @@ class ClassDef(ScopedAstNode):
     __slots__ = ('_name','_attributes','_methods', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring',
                  '_decorators')
-    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
+    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring',
+                        '_superclasses')
 
     def __init__(
         self,
