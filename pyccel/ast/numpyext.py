@@ -2457,6 +2457,11 @@ class NumpyAmin(NumpyReduction):
         super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
         self._class_type = a.dtype
 
+        if axis is not None:
+            rank = len(self._shape)
+            order = a.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
+
     @property
     def arg(self):
         """
@@ -2502,6 +2507,11 @@ class NumpyAmax(NumpyReduction):
     def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
         super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
         self._class_type = a.dtype
+
+        if axis is not None:
+            rank = len(self._shape)
+            order = a.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
     @property
     def arg(self):
