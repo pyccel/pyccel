@@ -3186,9 +3186,9 @@ class NumpyLinalgCross(NumpyCross):
 
     Parameters
     ----------
-    a : TypedAstNode
+    x1 : TypedAstNode
         The first vector.
-    b : TypedAstNode
+    x2 : TypedAstNode
         The second vector.
     axis : LiteralInteger, optional
         If defined, the axis of `a`, `b` and `c` that defines the vector(s)
@@ -3199,8 +3199,8 @@ class NumpyLinalgCross(NumpyCross):
     """
     __slots__ = ()
 
-    def __init__(self, a, b, axis = Nil(), *, c):
-        super().__init__(a, b, axis = axis, c = c)
+    def __init__(self, x1, x2, axis = Nil(), *, c):
+        super().__init__(x1, x2, axis = axis, c = c)
 
 
 #==============================================================================
