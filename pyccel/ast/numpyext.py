@@ -2429,7 +2429,7 @@ class NumpyMod(NumpyUfuncBinary):
                 arg_dtype = arg_class_type
             return process_dtype(arg_dtype)
 
-class NumpyAmin(PyccelFunction):
+class NumpyAmin(NumpyReduction):
     """
     Represents a call to  numpy.min for code generation.
 
@@ -2437,16 +2437,26 @@ class NumpyAmin(PyccelFunction):
 
     Parameters
     ----------
-    arg : array_like
+    a : array_like
         The input array for which the minimum argument is calculated.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_class_type',)
     name = 'amin'
     _shape = None
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._class_type = arg.dtype
+    def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
+        self._class_type = a.dtype
 
     @property
     def arg(self):
@@ -2457,7 +2467,7 @@ class NumpyAmin(PyccelFunction):
         """
         return self._args[0]
 
-class NumpyAmax(PyccelFunction):
+class NumpyAmax(NumpyReduction):
     """
     Represents a call to  numpy.max for code generation.
 
@@ -2465,16 +2475,26 @@ class NumpyAmax(PyccelFunction):
 
     Parameters
     ----------
-    arg : array_like
+    a : array_like
         The input array for which the maximum argument is calculated.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_class_type',)
     name = 'amax'
     _shape = None
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._class_type = arg.dtype
+    def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
+        self._class_type = a.dtype
 
     @property
     def arg(self):
