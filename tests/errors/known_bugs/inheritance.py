@@ -21,7 +21,8 @@ class Point3d(Point2d):
         Point2d.translate(self,a,b)
         #super().translate(a,b)
 
-p = Point2d(0.0, 0.0)
-p.translate(1.0, 2.0)
-p1= Point3d(0.0, 0.0, 0.0)
-p1.translate(1.,2.,3.)
+if __name__ == '__main__':
+    p = Point2d(0.0, 0.0)
+    p.translate(1.0, 2.0)
+    p1= Point3d(0.0, 0.0, 0.0)
+    p1.translate(1.,2.,3.)
