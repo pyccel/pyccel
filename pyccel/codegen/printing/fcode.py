@@ -1895,7 +1895,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = f'minval({arg_code})'
         if expr.initial is not None:
-            code = f'minval({self._print(expr.initial)}, {code})'
+            code = f'minval([{self._print(expr.initial)}, {code}])'
         return code
 
     def _print_PythonMinMax(self, expr):
