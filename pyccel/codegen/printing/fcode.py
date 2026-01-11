@@ -1876,7 +1876,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = f'maxval({arg_code})'
         if expr.initial is not None:
-            code = f'minval([{self._print(expr.initial)}, {code}])'
+            code = f'maxval([{self._print(expr.initial)}, {code}])'
         return code
     
     def _print_NumpyAmin(self, expr):
