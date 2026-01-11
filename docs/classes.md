@@ -9,7 +9,8 @@ Pyccel strives to provide robust support for object-oriented programming concept
 3. [Class Methods](#class-methods)
 4. [Class Properties](#class-properties)
 5. [Magic Methods](#magic-methods)
-6. [Limitations](#limitations)
+6. [Inheritance](#inheritance)
+7. [Limitations](#limitations)
 
 ## Constructor Method
 
@@ -749,6 +750,311 @@ Additionally the following methods are supported in the translation but are lack
 -   `__ror__`
 -   `__contains__`
 
+## Inheritance
+
+Pyccel provides **partial support for class inheritance**, with behaviour depending on the target language. Inheritance is used to share attributes and methods from one class (the *superclass*) to another (the *subclass*).
+
+At present, Pyccel makes several simplifying assumptions:
+
+-   Class objects are treated as having **exact types**.
+    A variable declared to hold an object of class `Base` is assumed to hold **exactly** `Base`, not a subclass.
+-   All methods are assumed to be **final** (i.e. they are not overridden at runtime).
+    This means that methods defined in a superclass are not dynamically overridden in subclasses.
+-   Method calls are resolved at **compile time**, not at runtime.
+    This simplifies code generation but limits polymorphic behaviour. In the future, support for non-final methods will require the use of **abstract base class (ABC) interfaces**, which are not yet implemented.
+
+These assumptions may be relaxed in future releases.
+
+### Fortran backend
+
+Inheritance is supported in the Fortran backend using **Fortran’s intrinsic object-oriented features**, in particular:
+
+-   `extends` for type extension
+-   Type-bound procedures for methods
+
+This allows Pyccel to represent inheritance relationships directly in generated Fortran code.
+
+### C backend
+
+Inheritance support in the C backend is more limited.
+
+-   Only **one superclass** is allowed.
+-   The inheritance relationship is implemented using explicit struct composition and helper functions.
+
+Attempting to use more than one base class when targeting C will result in an error.
+
+### - Python Example
+
+```python
+class Point2d:
+    def __init__(self : 'Point2d', x : float, y : float):
+        self.x = x
+        self.y = y
+
+    def translate(self : 'Point2d', a : float, b : float):
+        self.x = self.x + a
+        self.y = self.y + b
+
+class Point3d(Point2d):
+    def __init__(self : 'Point3d', x : float, y : float, z : float):
+        self.z = z
+        super().__init__(x, y)
+
+    def translate(self : 'Point3d', a : float, b : float, c : float):
+        self.z = self.z + c
+        super().translate(a,b)
+```
+
+### - C File Equivalent
+
+Header file:
+```c
+#ifndef INHERITANCE_H
+#define INHERITANCE_H
+
+#include <stdbool.h>
+#include <stdlib.h>
+
+struct inheritance__Point2d {
+    double x;
+    double y;
+    bool is_freed;
+};
+struct inheritance__Point3d {
+    struct inheritance__Point2d base;
+    double z;
+};
+
+void inheritance__Point2d__init(struct inheritance__Point2d* self, double x, double y);
+void inheritance__Point2d__translate(struct inheritance__Point2d* self, double a, double b);
+void inheritance__Point2d__drop(struct inheritance__Point2d* self);
+
+void inheritance__Point3d__init(struct inheritance__Point3d* self, double x, double y, double z);
+void inheritance__Point3d__translate(struct inheritance__Point3d* self, double a, double b, double c);
+void inheritance__Point3d__drop(struct inheritance__Point3d* self);
+
+#endif // inheritance_H
+```
+
+Source file:
+```c
+#include "inheritance.h"
+
+
+/*........................................*/
+void inheritance__Point2d__init(struct inheritance__Point2d* self, double x, double y)
+{
+    self->is_freed = 0;
+    self->x = x;
+    self->y = y;
+}
+/*........................................*/
+/*........................................*/
+void inheritance__Point2d__translate(struct inheritance__Point2d* self, double a, double b)
+{
+    self->x = self->x + a;
+    self->y = self->y + b;
+}
+/*........................................*/
+/*........................................*/
+void inheritance__Point2d__drop(struct inheritance__Point2d* self)
+{
+    if (!self->is_freed)
+    {
+        // pass
+        self->is_freed = 1;
+    }
+}
+/*........................................*/
+
+
+/*........................................*/
+void inheritance__Point3d__init(struct inheritance__Point3d* self, double x, double y, double z)
+{
+    ((struct inheritance__Point2d*)self)->is_freed = 0;
+    self->z = z;
+    inheritance__Point2d__init((struct inheritance__Point2d*)(self), x, y);
+}
+/*........................................*/
+/*........................................*/
+void inheritance__Point3d__translate(struct inheritance__Point3d* self, double a, double b, double c)
+{
+    self->z = self->z + c;
+    inheritance__Point2d__translate((struct inheritance__Point2d*)(self), a, b);
+}
+/*........................................*/
+/*........................................*/
+void inheritance__Point3d__drop(struct inheritance__Point3d* self)
+{
+    if (!((struct inheritance__Point2d*)self)->is_freed)
+    {
+        // pass
+        inheritance__Point2d__drop((struct inheritance__Point2d*)(self));
+        ((struct inheritance__Point2d*)self)->is_freed = 1;
+    }
+}
+/*........................................*/
+
+```
+
+### - Fortran File Equivalent
+
+```fortran
+module inheritance
+
+  use, intrinsic :: ISO_C_Binding, only : b1 => C_BOOL , f64 => C_DOUBLE
+
+  implicit none
+
+  public :: Point2d
+  public :: Point3d
+
+  private
+
+  type :: Point2d
+    real(f64) :: x
+    real(f64) :: y
+    logical(b1), private :: is_freed
+
+    contains
+    procedure :: point2d_init
+    generic :: init => point2d_init
+    procedure :: point2d_translate
+    generic :: translate => point2d_translate
+    procedure :: free => point2d_free
+  end type Point2d
+
+  type, extends(Point2d) :: Point3d
+    real(f64) :: z
+
+    contains
+    procedure :: point3d_init
+    generic :: init => point3d_init
+    procedure :: point3d_translate
+    generic :: translate => point3d_translate
+    procedure :: free => point3d_free
+  end type Point3d
+
+  contains
+
+
+  !........................................
+
+  recursive subroutine point2d_init(self, x, y)
+
+    implicit none
+
+    class(Point2d), intent(inout) :: self
+    real(f64), value :: x
+    real(f64), value :: y
+
+    self%is_freed = .False._b1
+    self%x = x
+    self%y = y
+
+  end subroutine point2d_init
+
+  !........................................
+
+
+  !........................................
+
+  recursive subroutine point2d_translate(self, a, b)
+
+    implicit none
+
+    class(Point2d), intent(inout) :: self
+    real(f64), value :: a
+    real(f64), value :: b
+
+    self%x = self%x + a
+    self%y = self%y + b
+
+  end subroutine point2d_translate
+
+  !........................................
+
+
+  !........................................
+
+  subroutine point2d_free(self)
+
+    implicit none
+
+    class(Point2d), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine point2d_free
+
+  !........................................
+
+
+
+  !........................................
+
+  subroutine point3d_init(self, x, y, z)
+
+    implicit none
+
+    class(Point3d), intent(inout) :: self
+    real(f64), value :: x
+    real(f64), value :: y
+    real(f64), value :: z
+
+    self%is_freed = .False._b1
+    self%z = z
+    call point2d_init(self, x, y)
+
+  end subroutine point3d_init
+
+  !........................................
+
+
+  !........................................
+
+  subroutine point3d_translate(self, a, b, c)
+
+    implicit none
+
+    class(Point3d), intent(inout) :: self
+    real(f64), value :: a
+    real(f64), value :: b
+    real(f64), value :: c
+
+    self%z = self%z + c
+    call point2d_translate(self, a, b)
+
+  end subroutine point3d_translate
+
+  !........................................
+
+
+  !........................................
+
+  subroutine point3d_free(self)
+
+    implicit none
+
+    class(Point3d), intent(inout) :: self
+
+    if (.not. self%is_freed) then
+      ! pass
+      call point2d_free(self)
+      self%is_freed = .True._b1
+    end if
+
+  end subroutine point3d_free
+
+  !........................................
+
+
+end module inheritance
+```
+
 ## Limitations
 
-It's important to note that Pyccel does not support class inheritance, or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
+It's important to note that Pyccel does not support static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
