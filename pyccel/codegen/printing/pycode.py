@@ -1683,7 +1683,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ClassDef(self, expr):
         name = self.scope.get_python_name(expr.name)
-        superclasses = ', '.join(self._print(arg) for arg in  expr.superclasses)
+        superclasses = ', '.join(arg.name for arg in  expr.superclasses)
         classDefName = f'class {name}({superclasses}):'
         docstring = self._indent_codestring(self._print(expr.docstring)) if expr.docstring else ''
         methods = ''.join(self._print(method) for method in expr.methods)
