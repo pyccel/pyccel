@@ -938,6 +938,13 @@ class CCodePrinter(CodePrinter):
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
+            if classDef.superclasses:
+                if len(classDef.superclasses) > 1:
+                    errors.report("Multiple inheritance is not supported in C translation",
+                                  severity='error', symbol=classDef)
+                superclass, = classDef.superclasses
+                base_name = classDef.scope.get_new_name('base')
+                classes += f'struct {superclass.name} {base_name};\n'
             # Is external is required to avoid the default initialisation of containers
             attrib_decl = [self._print(Declare(var, external=True)) for var in classDef.attributes]
             classes += ''.join(d.removeprefix('extern ') for d in attrib_decl)
@@ -1800,13 +1807,28 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
+        class_type = expr.lhs.class_type
+        class_obj = self.scope.find(class_type.name, 'classes')
+
+        class_obj_containing_attrib = class_obj
+        while not class_obj_containing_attrib.scope.find(expr.name, 'variables', local_only=True):
+            class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
 
         name_code = self._print(expr.name)
-        if self.is_c_pointer(expr.lhs):
-            code = f'{self._print(ObjectAddress(expr.lhs))}->{name_code}'
+        if class_obj_containing_attrib is not class_obj:
+            cast = self._print(class_obj_containing_attrib.class_type)
+            if self.is_c_pointer(expr.lhs):
+                code = f'(({cast}*){self._print(ObjectAddress(expr.lhs))})->{name_code}'
+            else:
+                lhs_code = self._print(expr.lhs)
+                code = f'(({cast}){lhs_code}).{name_code}'
         else:
-            lhs_code = self._print(expr.lhs)
-            code = f'{lhs_code}.{name_code}'
+            if self.is_c_pointer(expr.lhs):
+                code = f'{self._print(ObjectAddress(expr.lhs))}->{name_code}'
+            else:
+                lhs_code = self._print(expr.lhs)
+                code = f'{lhs_code}.{name_code}'
+
         if self.is_c_pointer(expr):
             return f'(*{code})'
         else:
@@ -2453,7 +2475,10 @@ class CCodePrinter(CodePrinter):
             f = f.var
             if self.is_c_pointer(f):
                 if isinstance(arg_val, Variable):
-                    args.append(ObjectAddress(arg_val))
+                    address = ObjectAddress(arg_val)
+                    if type(f.class_type) in type(arg_val.class_type).__mro__:
+                        address = ObjectAddress(PointerCast(address, f))
+                    args.append(address)
                 elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, arg_val)
