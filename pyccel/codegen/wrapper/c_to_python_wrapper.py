@@ -1827,7 +1827,8 @@ class CToPythonWrapper(Wrapper):
                        getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
 
-        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias',
+                             cls_base = lhs.cls_base)
         self.scope.insert_variable(class_obj, 'self')
 
         attrib = expr.clone(expr.name, lhs = class_obj)
@@ -1877,7 +1878,8 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
-            class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+            class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias',
+                             cls_base = lhs.cls_base)
             self.scope.insert_variable(class_obj, 'self')
 
             attrib = expr.clone(expr.name, lhs = class_obj)
