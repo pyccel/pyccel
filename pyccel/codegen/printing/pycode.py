@@ -916,10 +916,15 @@ class PythonCodePrinter(CodePrinter):
 
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
-            func_name = f'{self._print(args[0])}.{func_name}'
+            expected_cls = func.arguments[0].var.cls_base
+            received_cls = self.scope.find(args[0].value.class_type.name, 'classes', raise_if_missing = True)
+            if expected_cls.methods_as_dict[func.name] is not received_cls.methods_as_dict[func.name]:
+                func_name = f'{expected_cls.name}.{func_name}'
+            else:
+                func_name = f'{self._print(args[0])}.{func_name}'
+                args = args[1:]
             if 'property' in func.decorators:
                 return func_name
-            args = args[1:]
         args_str = ', '.join(self._print(i) for i in args)
         code = f'{func_name}({args_str})'
         if expr.funcdef.results:
