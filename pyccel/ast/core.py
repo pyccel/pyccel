@@ -3392,13 +3392,14 @@ class ClassDef(ScopedAstNode):
 
     @property
     def attributes_as_dict(self):
-        """Returns a dictionary that contains all attributes, where the key is the
-        attribute's name."""
+        """
+        Get a dictionary of the class attributes.
+ 
+        Returns a dictionary that contains all attributes, where the key is the
+        attribute's name.
+        """
 
-        d_attributes = {}
-        for i in self.attributes:
-            d_attributes[i.name] = i
-        return d_attributes
+        return {i.name : i for i in self.attributes}
 
     def add_new_attribute(self, attr):
         """
