@@ -1190,6 +1190,7 @@ class SemanticParser(BasicParser):
                                      class_type = PythonNativeBool(), is_private=True)
         if expr.superclasses == ():
             expr.add_new_attribute(deallocater)
+            cls_scope.insert_variable(deallocater)
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
