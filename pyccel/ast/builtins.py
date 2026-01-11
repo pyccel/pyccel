@@ -1724,6 +1724,10 @@ class PythonStr(PyccelFunction):
         super().__init__(arg)
 
 #==============================================================================
+class PythonSuper(PyccelFunction):
+    pass
+
+#==============================================================================
 
 DtypePrecisionToCastFunction = {
         PythonNativeBool()    : PythonBool,
@@ -1754,6 +1758,7 @@ builtin_functions_dict = {
     'set'        : PythonSetFunction,
     'str'        : PythonStr,
     'sum'        : PythonSum,
+    'super'      : PythonSuper,
     'tuple'      : PythonTupleFunction,
     'type'       : PythonType,
     'zip'        : PythonZip,

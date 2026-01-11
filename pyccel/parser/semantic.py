@@ -3618,10 +3618,13 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, FunctionCall):
             method = cls_base.get_method(rhs_name, expr)
 
+            args = self._handle_function_args(rhs.args)
+            if isinstance(lhs, FunctionCall) and lhs.funcdef == 'super':
+                args.insert(0, FunctionCallArgument(self._visit(self._current_function[-1].arguments[0].var)))
+
             if is_method:
-                args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
-            else:
-                args = self._handle_function_args(rhs.args)
+                args.insert(0, FunctionCallArgument(visited_lhs))
+
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
@@ -6887,3 +6890,7 @@ class SemanticParser(BasicParser):
         return self._handle_function(expr, func, function_call_args,
                                      is_method = isinstance(expr, DottedName),
                                      use_build_functions = False)
+
+    def _build_PythonSuper(self, expr, function_call_args, func):
+        self_var = self._visit(self._current_function[-1].arguments[0].var)
+        return self_var.cls_base.superclasses[0]
