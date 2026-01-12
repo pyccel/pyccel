@@ -1186,11 +1186,14 @@ class SemanticParser(BasicParser):
 
         # create a new attribute to check allocation
         deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
-        deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
-                                     class_type = PythonNativeBool(), is_private=True)
         if expr.superclasses == ():
+            deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
+                                         class_type = PythonNativeBool(), is_private=True)
             expr.add_new_attribute(deallocater)
             cls_scope.insert_variable(deallocater)
+        else:
+            deallocater = cls_scope.find('is_freed', 'variables').clone('is_freed', new_class = DottedVariable, lhs = deallocater_lhs)
+
         deallocater_assign = Assign(deallocater, LiteralFalse())
         init_func.body.insert2body(deallocater_assign, back=False)
 
@@ -2816,6 +2819,8 @@ class SemanticParser(BasicParser):
         if not self.is_stub_file:
             self.scope.insert_symbol('__init__', object_type = 'function')
             self.scope.insert_symbol('__del__', object_type = 'function')
+
+        self.scope.clear_classes()
 
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
@@ -5556,18 +5561,21 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
+        parent_scope = self.scope
         #  create a new Datatype for the current class
         if parent:
             base_classes = tuple(type(p.class_type) for p in parent)
             dtype = DataTypeFactory(name, self.scope.get_python_name(name),
                                     BaseClass = base_classes)()
+            base_scope = parent[0].scope
         else:
             dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
+            base_scope = None
         typenames_to_dtypes[name] = dtype
         self.scope.insert_cls_construct(dtype)
 
         cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
-                    original_symbols = expr.scope.python_names.copy())
+                    original_symbols = expr.scope.python_names.copy(), base_scope = base_scope)
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
         attributes = []
@@ -5580,7 +5588,7 @@ class SemanticParser(BasicParser):
                 cls_scope.insert_variable(v)
                 attributes.append(v)
 
-        self.exit_class_scope()
+        self._scope = parent_scope
 
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
