@@ -3662,7 +3662,7 @@ class FCodePrinter(CodePrinter):
                 enclosing_class, = obj_in_class.get_direct_user_nodes(lambda c: isinstance(c, ClassDef))
                 class_type = class_variable.class_type
                 possible_ambiguity = enclosing_class.get_method(semantic_name = func.name)
-                if possible_ambiguity and possible_ambiguity.arguments[0].var.class_type is not class_type:
+                if possible_ambiguity and possible_ambiguity is not func:
                     f_name = f'{func.cls_name}'
                 else:
                     args = args[1:]
