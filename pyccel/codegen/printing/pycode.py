@@ -917,7 +917,10 @@ class PythonCodePrinter(CodePrinter):
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
             expected_cls = func.arguments[0].var.cls_base
-            received_cls = self.scope.find(args[0].value.class_type.name, 'classes', raise_if_missing = True)
+            received_cls = self.scope.find(args[0].value.class_type.name, 'classes')
+            if received_cls is None:
+                cls_type_name = self.scope.get_import_alias(args[0].value.class_type)
+                received_cls = self.scope.find(cls_type_name, 'classes', raise_if_missing = True)
             if expected_cls.get_method(syntactic_name = func_name) is not received_cls.get_method(syntactic_name = func_name):
                 func_name = f'{expected_cls.name}.{func_name}'
             else:
