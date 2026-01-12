@@ -1297,7 +1297,11 @@ class CToPythonWrapper(Wrapper):
             wrapped_class = PyClassDef(c, struct_name, type_name, self.scope.new_child_scope(name, 'class'),
                                        docstring = c.docstring, class_type = dtype)
 
-            orig_cls_dtype = c.scope.parent_scope.cls_constructs[python_name]
+            parent_scope = c.scope.parent_scope
+            while parent_scope.scope_type == 'class':
+                parent_scope = parent_scope.parent_scope
+
+            orig_cls_dtype = parent_scope.cls_constructs[python_name]
             self._python_object_map[c] = wrapped_class
             self._python_object_map[orig_cls_dtype] = dtype
 
@@ -2075,7 +2079,10 @@ class CToPythonWrapper(Wrapper):
 
         bound_class = isinstance(expr, BindCClassDef)
 
-        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[python_name]
+        parent_scope = expr.scope.parent_scope
+        while parent_scope.scope_type == 'class':
+            parent_scope = parent_scope.parent_scope
+        orig_cls_dtype = parent_scope.cls_constructs[python_name]
         wrapped_class = self._python_object_map[expr]
 
         orig_scope = expr.scope
