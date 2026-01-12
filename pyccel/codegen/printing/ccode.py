@@ -1804,15 +1804,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
-        class_obj = self.scope.find(expr.lhs.class_type.name, 'classes')
-        class_obj_containing_attrib = class_obj
+        class_type = expr.lhs.class_type
+        if isinstance(class_type, CustomDataType):
+            class_obj = self.scope.find(expr.lhs.class_type.name, 'classes')
+            class_obj_containing_attrib = class_obj
 
-        if class_obj and class_obj.scope:
-            # class_obj may be None if object was created in wrapper
-            # class_obj.scope may be None for builtins
-            python_name = class_obj.scope.get_python_name(expr.name)
-            while not class_obj_containing_attrib.scope.find(python_name, 'variables', local_only=True):
-                class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
+            if class_obj:
+                # class_obj may be None if object was created in wrapper
+                python_name = class_obj.scope.get_python_name(expr.name)
+                while not class_obj_containing_attrib.scope.find(python_name, 'variables', local_only=True):
+                    class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
+        else:
+            class_obj = None
+            class_obj_containing_attrib = None
 
         name_code = self._print(expr.name)
         if class_obj_containing_attrib is not class_obj:
