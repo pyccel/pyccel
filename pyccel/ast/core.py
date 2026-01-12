@@ -3576,6 +3576,12 @@ class ClassDef(ScopedAstNode):
                     method = None
                 i += 1
 
+        if method is None:
+            for c in self.superclasses:
+                method = c.get_method(name)
+                if method is not None:
+                    break
+
         if method is None and raise_error_from:
             errors.report(f"Can't find method {name} in class {self.name}",
                     severity='fatal', symbol=raise_error_from)
