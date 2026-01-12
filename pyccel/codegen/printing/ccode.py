@@ -1808,13 +1808,14 @@ class CCodePrinter(CodePrinter):
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
         class_obj = expr.lhs.cls_base
-
         class_obj_containing_attrib = class_obj
-        # class_obj may be None if object was created in wrapper
-        # class_obj.scope may be None for builtins
-        while class_obj_containing_attrib and class_obj_containing_attrib.scope and \
-                not class_obj_containing_attrib.scope.find(expr.name, 'variables', local_only=True):
-            class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
+
+        if class_obj and class_obj.scope:
+            # class_obj may be None if object was created in wrapper
+            # class_obj.scope may be None for builtins
+            python_name = class_obj.scope.get_python_name(expr.name)
+            while not class_obj_containing_attrib.scope.find(python_name, 'variables', local_only=True):
+                class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
 
         name_code = self._print(expr.name)
         if class_obj_containing_attrib is not class_obj:
