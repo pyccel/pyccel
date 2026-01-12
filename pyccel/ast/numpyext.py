@@ -991,8 +991,10 @@ class NumpyReduction(PyccelFunction):
                 axis = PythonTuple(axis)
 
             def is_literal_int(i):
+                """ Use a try/except to check if i can be described by a literal integer.
+                """
                 try:
-                    ii = int(i)
+                    int(i)
                     return True
                 except TypeError:
                     return False
