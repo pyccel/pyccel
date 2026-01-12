@@ -6627,3 +6627,47 @@ def test_cross_axisa_axisb_axisc(language):
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
+def test_vecdot_1d_real(language):
+    def vecdot_call(x : 'float[:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(10)
+    y = rand(10)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_vecdot_1d_complex(language):
+    def vecdot_call(x : 'complex[:]', y : 'complex[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(8) + 1j * rand(8)
+    y = rand(8) + 1j * rand(8)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_vecdot_axis_2d(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy import vecdot
+        return vecdot(x, y, axis=1)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(6, 5)
+    y = rand(6, 5)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == vecdot_call(x, y).shape
+
+
+def test_vecdot_mixed_dimensions(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 7)
+    y = rand(7)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
