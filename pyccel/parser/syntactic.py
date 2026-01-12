@@ -1072,7 +1072,7 @@ class SyntaxParser(BasicParser):
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
 
-        default_init_method = superclass.get_method('__init__') if parent else None
+        default_init_method = superclass.get_method(syntactic_name = '__init__') if parent else None
 
         init_method = next((m for m in methods if m.name == '__init__'), default_init_method)
         if init_method is None and not self.is_stub_file:

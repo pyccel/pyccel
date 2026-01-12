@@ -3518,7 +3518,7 @@ class ClassDef(ScopedAstNode):
                                     m.name!=semantic_interface.name) \
                             + (semantic_interface,)
 
-    def get_method(self, name, raise_error_from = None):
+    def get_method(self, *, syntactic_name = None, semantic_name = None, raise_error_from = None):
         """
         Get the method `name` of the current class.
 
@@ -3529,8 +3529,15 @@ class ClassDef(ScopedAstNode):
 
         Parameters
         ----------
-        name : str
+        syntactic_name : str, optional
             The name of the attribute we are looking for.
+            This is the name that appears in the Python code.
+            Either a syntactic_name or a semantic_name must be provided.
+
+        semantic_name : str, optional
+            The name of the attribute we are looking for.
+            This is the name that appears in the translated code.
+            Either a syntactic_name or a semantic_name must be provided.
 
         raise_error_from : PyccelAstNode, optional
             If an error should be raised then this variable should contain
@@ -3547,43 +3554,38 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
-        method = next((i for i in chain(self.methods, self.interfaces) \
-                if i.name == name and i.pyccel_staging == 'syntactic'), None)
-        if method:
-            return method
+        assert (syntactic_name is not None) != (semantic_name is not None)
+        method = None
+        if syntactic_name:
+            method = next((i for i in chain(self.methods, self.interfaces) \
+                    if i.name == syntactic_name and i.pyccel_staging == 'syntactic'), None)
+            if method:
+                return method
 
-        if self.scope is not None:
-            # Collect translated name from scope
-            try:
-                name = self.scope.get_expected_name(name)
-            except RuntimeError:
-                if raise_error_from:
-                    errors.report(f"Can't find method {name} in class {self.name}",
-                            severity='fatal', symbol=raise_error_from)
-                else:
-                    return None
-
-        try:
-            method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
-        except StopIteration:
-            method = None
-            i = 0
-            n_classes = len(self.superclasses)
-            while method is None and i<n_classes:
+            if self.scope is not None:
+                # Collect translated name from scope
                 try:
-                    method = self.superclasses[i].get_method(name, raise_error_from)
-                except StopIteration:
-                    method = None
-                i += 1
+                    semantic_name = self.scope.get_expected_name(syntactic_name)
+                except RuntimeError:
+                    if raise_error_from:
+                        errors.report(f"Can't find method {syntactic_name} in class {self.name}",
+                                severity='fatal', symbol=raise_error_from)
+                    else:
+                        return None
 
-        if method is None:
-            for c in self.superclasses:
-                method = c.get_method(name)
-                if method is not None:
-                    break
+        if semantic_name:
+            try:
+                method = next(i for i in chain(self.methods, self.interfaces) if i.name == semantic_name)
+            except StopIteration:
+                for c in self.superclasses:
+                    method = c.get_method(semantic_name = semantic_name)
+                    if method is not None:
+                        break
 
         if method is None and raise_error_from:
-            errors.report(f"Can't find method {name} in class {self.name}",
+            if syntactic_name is None:
+                syntactic_name = self.scope.get_python_name(semantic_name)
+            errors.report(f"Can't find method {syntactic_name} in class {self.name}",
                     severity='fatal', symbol=raise_error_from)
 
         return method

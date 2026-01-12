@@ -304,26 +304,6 @@ class FCodePrinter(CodePrinter):
 
         self._current_class = name
 
-    def get_method(self, cls_name, method_name):
-        container = self.scope
-        while container:
-            if cls_name in container.classes:
-                cls = container.classes[cls_name]
-                methods = cls.methods_as_dict
-                if method_name in methods:
-                    return methods[method_name]
-                else:
-                    interface_funcs = {f.name:f for i in cls.interfaces for f in i.functions}
-                    if method_name in interface_funcs:
-                        return interface_funcs[method_name]
-                    errors.report(UNDEFINED_METHOD, symbol=method_name,
-                        severity='fatal')
-            container = container.parent_scope
-        if isinstance(method_name, DottedName):
-            return self.get_function(DottedName(method_name.name[1:]))
-        errors.report(UNDEFINED_FUNCTION, symbol=method_name,
-            severity='fatal')
-
     def get_function(self, name):
         container = self.scope
         while container:
@@ -2631,8 +2611,7 @@ class FCodePrinter(CodePrinter):
         if superclasses or subclasses:
             methods = ''
             for method in expr.methods:
-                method_name = expr.scope.get_python_name(method.name)
-                overrides = [s.get_method(method_name) for s in chain(superclasses, subclasses)]
+                overrides = [s.get_method(semantic_name = method.name) for s in chain(superclasses, subclasses)]
                 overrides = [m for m in overrides if m]
                 arg_types = {tuple(a.var.class_type for a in f.arguments[1:]) for f in chain((method,), overrides)}
                 if len(arg_types) == 1:
@@ -3680,7 +3659,7 @@ class FCodePrinter(CodePrinter):
             else:
                 found_in_class, = func.get_direct_user_nodes(lambda c: isinstance(c, ClassDef))
                 class_type = class_variable.class_type
-                possible_ambiguity = found_in_class.get_method(func.scope.get_python_name(func.name))
+                possible_ambiguity = found_in_class.get_method(semantic_name = func.name)
                 if possible_ambiguity and possible_ambiguity.arguments[0].var.class_type is not class_type:
                     f_name = f'{func.cls_name}'
                 else:
