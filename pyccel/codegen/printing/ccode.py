@@ -939,9 +939,6 @@ class CCodePrinter(CodePrinter):
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
             if classDef.superclasses:
-                if len(classDef.superclasses) > 1:
-                    errors.report("Multiple inheritance is not supported in C translation",
-                                  severity='error', symbol=classDef)
                 superclass, = classDef.superclasses
                 base_name = classDef.scope.get_new_name('base')
                 classes += f'struct {superclass.name} {base_name};\n'

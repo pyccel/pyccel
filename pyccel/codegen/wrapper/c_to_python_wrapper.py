@@ -777,9 +777,6 @@ class CToPythonWrapper(Wrapper):
             class_name = self.scope.get_python_name(wrapped_class.name)
 
             if c.superclasses:
-                if len(c.superclasses) > 1:
-                    errors.report("Multiple inheritance is not supported in wrapper",
-                                  severity='error', symbol=classDef)
                 super_dtype = c.superclasses[0].class_type
                 python_cls_base = self.scope.find(super_dtype.name, 'classes', raise_if_missing = True)
                 body.append(AliasAssign(DottedVariable(PyccelPyClassType(), 'tp_base', memory_handling='alias',
