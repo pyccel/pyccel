@@ -752,17 +752,17 @@ Additionally the following methods are supported in the translation but are lack
 
 ## Inheritance
 
-Pyccel provides **partial support for class inheritance**, with behaviour depending on the target language. Inheritance is used to share attributes and methods from one class (the *superclass*) to another (the *subclass*).
+Pyccel provides partial support for class inheritance, with behaviour depending on the target language. Inheritance is used to share attributes and methods from one class (the *superclass*) to another (the *subclass*).
 
 At present, Pyccel makes several simplifying assumptions:
 
--   Only **one superclass** is allowed.
--   Class objects are treated as having **exact types**.
-    A variable declared to hold an object of class `Base` is assumed to hold **exactly** `Base`, not a subclass.
--   All methods are assumed to be **final** (i.e. they are not overridden at runtime).
+-   Only one superclass is allowed.
+-   Class objects are treated as having exact types.
+    A variable declared to hold an object of class `Base` is assumed to hold exactly `Base`, not a subclass.
+-   All methods are assumed to be final (i.e. they are not overridden at runtime).
     This means that methods defined in a superclass are not dynamically overridden in subclasses.
--   Method calls are resolved at **compile time**, not at runtime.
-    This simplifies code generation but limits polymorphic behaviour. In the future, support for non-final methods will require the use of **abstract base class (ABC) interfaces**, which are not yet implemented.
+-   Method calls are resolved at compile time, not at runtime.
+    This simplifies code generation but limits polymorphic behaviour. In the future, support for non-final methods will require the use of abstract base class (ABC) interfaces, which are not yet implemented.
 
 ### - Python Example
 
