@@ -1048,7 +1048,7 @@ class SyntaxParser(BasicParser):
                           severity='error', symbol=stmt)
 
         if parent:
-            superclass = self.scope.find(parent[0], 'classes')
+            superclass = self.scope.find(parent[0], 'classes', raise_if_missing = True)
             scope = self.create_new_class_scope(name, base_scope = superclass.scope)
         else:
             scope = self.create_new_class_scope(name)
