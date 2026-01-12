@@ -1804,7 +1804,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
-        class_obj = expr.lhs.cls_base
+        class_obj = self.scope.find(expr.lhs.class_type.name, 'classes')
         class_obj_containing_attrib = class_obj
 
         if class_obj and class_obj.scope:
