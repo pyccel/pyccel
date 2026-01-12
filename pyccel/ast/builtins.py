@@ -1731,6 +1731,11 @@ class PythonSuper(PyccelFunction):
 
     A class to represent a call to `super()`. This class is entirely handled
     in the semantic parser so the implementation is empty.
+
+    Parameters
+    ----------
+    *args : tuple[]
+        An empty tuple representing the arguments passed to `super()`.
     """
     __slots__ = ()
 
