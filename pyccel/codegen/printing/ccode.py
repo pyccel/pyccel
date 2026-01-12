@@ -2478,7 +2478,7 @@ class CCodePrinter(CodePrinter):
             if self.is_c_pointer(f):
                 if isinstance(arg_val, Variable):
                     address = ObjectAddress(arg_val)
-                    if type(f.class_type) in type(arg_val.class_type).__mro__:
+                    if type(f.class_type) in type(arg_val.class_type).__mro__[1:]:
                         address = ObjectAddress(PointerCast(address, f))
                     args.append(address)
                 elif not self.is_c_pointer(arg_val):
