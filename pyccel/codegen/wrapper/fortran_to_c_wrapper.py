@@ -732,7 +732,8 @@ class FortranToCWrapper(Wrapper):
                         for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties_getters + properties,
-                             docstring = expr.docstring, class_type = expr.class_type)
+                             docstring = expr.docstring, class_type = expr.class_type,
+                             superclasses = expr.superclasses)
 
     def _extract_FunctionDefResult(self, orig_var, orig_func_scope):
         """
