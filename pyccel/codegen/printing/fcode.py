@@ -33,7 +33,7 @@ from pyccel.ast.builtin_methods.set_methods import SetUnion
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall, ClassDef
-from pyccel.ast.core import FunctionCallArgument
+from pyccel.ast.core import FunctionCallArgument, Interface
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Module, For, If, IfSection
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
@@ -3657,9 +3657,11 @@ class FCodePrinter(CodePrinter):
                 self._additional_code += self._print(Assign(var, class_variable)) + '\n'
                 f_name = f'{self._print(var)} % {f_name}'
             else:
-                found_in_class, = func.get_direct_user_nodes(lambda c: isinstance(c, ClassDef))
+                interface = func.get_direct_user_nodes(lambda c: isinstance(c, Interface))
+                obj_in_class = interface[0] if interface else func
+                enclosing_class, = obj_in_class.get_direct_user_nodes(lambda c: isinstance(c, ClassDef))
                 class_type = class_variable.class_type
-                possible_ambiguity = found_in_class.get_method(semantic_name = func.name)
+                possible_ambiguity = enclosing_class.get_method(semantic_name = func.name)
                 if possible_ambiguity and possible_ambiguity.arguments[0].var.class_type is not class_type:
                     f_name = f'{func.cls_name}'
                 else:
