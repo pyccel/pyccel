@@ -2379,6 +2379,42 @@ class CCodePrinter(CodePrinter):
                 f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
                 f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
 
+    def _print_NumpyVecdot(self, expr):
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        lhs_var = assign_node[0].lhs
+        in_arg_vars = (expr.x1, expr.x2)
+        arg_vars = []
+        prefix = ''
+        for a in in_arg_vars:
+            if not isinstance(a, Variable):
+                # This handles slice arguments
+                assert a.rank
+                tmp = self.scope.get_temporary_variable(a.class_type, shape = a.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, a))
+                arg_vars.append(tmp)
+            else:
+                arg_vars.append(a)
+
+        initial = self._print(convert_to_literal(0, expr.dtype))
+        tmp_additional_code = self._additional_code
+        self._additional_code = ''
+        lhs = self._print(lhs_var)
+
+        loop_scope = self.scope.create_new_loop_scope()
+        iter_var_name = loop_scope.get_new_name()
+        iter_var = Variable(PythonNativeInt(), iter_var_name)
+
+        x1, x2 = arg_vars
+        node = self._print(PyccelAdd(lhs_var, PyccelMul(x1[iter_var], x2[iter_var])))
+        body = self._additional_code + f'{lhs} = {node};\n'
+        self._additional_code = tmp_additional_code
+
+        return prefix + (f'{lhs} = {initial};\n'
+                f'for (c_range({iter_var_name}, {self._print(expr.x1.shape[expr.axis[0]])})) {{\n'
+                f'{body}'
+                 '}\n')
+
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
 
