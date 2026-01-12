@@ -5588,7 +5588,7 @@ class SemanticParser(BasicParser):
                 cls_scope.insert_variable(v)
                 attributes.append(v)
 
-        self._scope = parent_scope
+        self.scope = parent_scope
 
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
