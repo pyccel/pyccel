@@ -1178,7 +1178,7 @@ class SemanticParser(BasicParser):
         class_type = expr.class_type
         cls_scope = expr.scope
 
-        init_func = cls_scope.functions['__init__']
+        init_func = expr.get_method('__init__')
 
         if isinstance(init_func, Interface):
             errors.report("Pyccel does not support interface constructor", symbol=init_func,
