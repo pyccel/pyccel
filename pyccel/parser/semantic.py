@@ -6900,5 +6900,27 @@ class SemanticParser(BasicParser):
                                      use_build_functions = False)
 
     def _build_PythonSuper(self, expr, function_call_args, func):
+        """
+        Method to select the class returned by a call to `super()`.
+
+        Method to select the class returned by a call to `super()`.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic node that represents the call to `super()`.
+
+        function_call_args : iterable[]
+            The semantic arguments passed to the function. This should
+            be an empty iterable.
+
+        func : PyccelFunction
+            The function being called (PythonSuper).
+
+        Returns
+        -------
+        ClassDef
+            The description of the class invoked by `super()`.
+        """
         self_var = self._visit(self._current_function[-1].arguments[0].var)
         return self_var.cls_base.superclasses[0]
