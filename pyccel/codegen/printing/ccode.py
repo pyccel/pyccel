@@ -1811,7 +1811,8 @@ class CCodePrinter(CodePrinter):
         class_obj = expr.lhs.cls_base
 
         class_obj_containing_attrib = class_obj
-        while not class_obj_containing_attrib.scope.find(expr.name, 'variables', local_only=True):
+        # class_obj may be None if object was created in wrapper
+        while class_obj_containing_attrib and not class_obj_containing_attrib.scope.find(expr.name, 'variables', local_only=True):
             class_obj_containing_attrib, = class_obj_containing_attrib.superclasses
 
         name_code = self._print(expr.name)

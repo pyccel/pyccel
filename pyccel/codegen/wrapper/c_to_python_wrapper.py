@@ -23,6 +23,7 @@ from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock, For
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
+from pyccel.ast.cwrapper      import PyccelPyClassType
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
@@ -774,6 +775,16 @@ class CToPythonWrapper(Wrapper):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
             class_name = self.scope.get_python_name(wrapped_class.name)
+
+            if c.superclasses:
+                if len(c.superclasses) > 1:
+                    errors.report("Multiple inheritance is not supported in wrapper",
+                                  severity='error', symbol=classDef)
+                super_dtype = c.superclasses[0].class_type
+                python_cls_base = self.scope.find(super_dtype.name, 'classes', raise_if_missing = True)
+                body.append(AliasAssign(DottedVariable(PyccelPyClassType(), 'tp_base', memory_handling='alias',
+                                                       lhs=type_object),
+                                        python_cls_base.type_object))
 
             ready_type = PyType_Ready(type_object)
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
