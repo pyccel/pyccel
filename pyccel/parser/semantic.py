@@ -1191,11 +1191,11 @@ class SemanticParser(BasicParser):
                                          class_type = PythonNativeBool(), is_private=True)
             expr.add_new_attribute(deallocater)
             cls_scope.insert_variable(deallocater)
+
+            deallocater_assign = Assign(deallocater, LiteralFalse())
+            init_func.body.insert2body(deallocater_assign, back=False)
         else:
             deallocater = cls_scope.find('is_freed', 'variables').clone('is_freed', new_class = DottedVariable, lhs = deallocater_lhs)
-
-        deallocater_assign = Assign(deallocater, LiteralFalse())
-        init_func.body.insert2body(deallocater_assign, back=False)
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
