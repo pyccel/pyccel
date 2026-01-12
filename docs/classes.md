@@ -752,7 +752,7 @@ Additionally the following methods are supported in the translation but are lack
 
 ## Inheritance
 
-Pyccel provides partial support for class inheritance, with behaviour depending on the target language. Inheritance is used to share attributes and methods from one class (the *superclass*) to another (the *subclass*).
+Pyccel provides partial support for class inheritance, with behaviour depending on the target language. Inheritance is used to share attributes and methods from one class (the _superclass_) to another (the _subclass_).
 
 At present, Pyccel makes several simplifying assumptions:
 
