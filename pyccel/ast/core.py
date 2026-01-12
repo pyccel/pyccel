@@ -3572,6 +3572,9 @@ class ClassDef(ScopedAstNode):
                                 severity='fatal', symbol=raise_error_from)
                     else:
                         return None
+            else:
+                # If there is no scope then this is a built-in class
+                semantic_name = syntactic_name
 
         if semantic_name:
             try:
