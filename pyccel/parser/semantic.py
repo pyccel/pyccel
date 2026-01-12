@@ -1197,7 +1197,7 @@ class SemanticParser(BasicParser):
         else:
             deallocater = cls_scope.find('is_freed', 'variables').clone('is_freed', new_class = DottedVariable, lhs = deallocater_lhs)
 
-        del_method = expr.methods_as_dict.get('__del__', None)
+        del_method = expr.get_method(syntactic_name = '__del__')
         if del_method is None:
             del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
@@ -3803,8 +3803,7 @@ class SemanticParser(BasicParser):
             # we must not invoke the scope like this
 
             cls = self.scope.find(name, 'classes')
-            d_methods = cls.methods_as_dict
-            init_method = d_methods.pop('__init__', None)
+            init_method = cls.get_method(syntactic_name = '__init__')
 
             dtype = cls.class_type
             cls_def = cls

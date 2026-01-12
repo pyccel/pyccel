@@ -3379,28 +3379,6 @@ class ClassDef(ScopedAstNode):
         """
         return self._decorators
 
-    @property
-    def methods_as_dict(self):
-        """
-        A dictionary containing all methods with Python names as keys.
-
-        A dictionary containing all the methods in the class. The keys are the original
-        Python names of the methods. The values are the methods themselves.
-        """
-        return {self._scope.get_python_name(m.name) if m.is_semantic else m.name: m
-                for m in self.methods}
-
-    @property
-    def attributes_as_dict(self):
-        """
-        Get a dictionary of the class attributes.
- 
-        Returns a dictionary that contains all attributes, where the key is the
-        attribute's name.
-        """
-
-        return {i.name : i for i in self.attributes}
-
     def add_new_attribute(self, attr):
         """
         Add a new attribute to the current class.
