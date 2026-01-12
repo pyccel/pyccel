@@ -1725,7 +1725,12 @@ class PythonStr(PyccelFunction):
 
 #==============================================================================
 class PythonSuper(PyccelFunction):
-    pass
+    """
+    A class to represent a call to `super()`.
+
+    A class to represent a call to `super()`. This class is entirely handled
+    in the semantic parser so the implementation is empty.
+    """
 
 #==============================================================================
 
