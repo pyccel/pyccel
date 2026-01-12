@@ -756,32 +756,13 @@ Pyccel provides **partial support for class inheritance**, with behaviour depend
 
 At present, Pyccel makes several simplifying assumptions:
 
+-   Only **one superclass** is allowed.
 -   Class objects are treated as having **exact types**.
     A variable declared to hold an object of class `Base` is assumed to hold **exactly** `Base`, not a subclass.
 -   All methods are assumed to be **final** (i.e. they are not overridden at runtime).
     This means that methods defined in a superclass are not dynamically overridden in subclasses.
 -   Method calls are resolved at **compile time**, not at runtime.
     This simplifies code generation but limits polymorphic behaviour. In the future, support for non-final methods will require the use of **abstract base class (ABC) interfaces**, which are not yet implemented.
-
-These assumptions may be relaxed in future releases.
-
-### Fortran backend
-
-Inheritance is supported in the Fortran backend using **Fortran’s intrinsic object-oriented features**, in particular:
-
--   `extends` for type extension
--   Type-bound procedures for methods
-
-This allows Pyccel to represent inheritance relationships directly in generated Fortran code.
-
-### C backend
-
-Inheritance support in the C backend is more limited.
-
--   Only **one superclass** is allowed.
--   The inheritance relationship is implemented using explicit struct composition and helper functions.
-
-Attempting to use more than one base class when targeting C will result in an error.
 
 ### - Python Example
 
