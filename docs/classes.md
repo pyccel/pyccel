@@ -789,6 +789,7 @@ class Point3d(Point2d):
 ### - C File Equivalent
 
 Header file:
+
 ```c
 #ifndef INHERITANCE_H
 #define INHERITANCE_H
@@ -818,6 +819,7 @@ void inheritance__Point3d__drop(struct inheritance__Point3d* self);
 ```
 
 Source file:
+
 ```c
 #include "inheritance.h"
 
@@ -875,7 +877,6 @@ void inheritance__Point3d__drop(struct inheritance__Point3d* self)
     }
 }
 /*........................................*/
-
 ```
 
 ### - Fortran File Equivalent
