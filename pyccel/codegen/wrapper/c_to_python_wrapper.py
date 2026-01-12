@@ -780,7 +780,8 @@ class CToPythonWrapper(Wrapper):
 
             if c.superclasses:
                 super_dtype = c.superclasses[0].class_type
-                python_cls_base = self.scope.find(super_dtype.name, 'classes', raise_if_missing = True)
+                py_super_dtype = self._python_object_map[super_dtype]
+                python_cls_base = self.scope.find(py_super_dtype.name, 'classes', raise_if_missing = True)
                 body.append(AliasAssign(DottedVariable(PyccelPyClassType(), 'tp_base', memory_handling='alias',
                                                        lhs=type_object),
                                         python_cls_base.type_object))
