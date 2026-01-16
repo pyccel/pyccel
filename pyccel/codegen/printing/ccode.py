@@ -678,7 +678,8 @@ class CCodePrinter(CodePrinter):
         str
             Code which describes the NumPy functional calculation.
         """
-        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        assign_node = expr.get_direct_user_nodes(
+                lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
         if assign_node:
             lhs_var = assign_node[0].lhs
             arg_var = expr.arg
@@ -2343,19 +2344,25 @@ class CCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Order")
 
+        augassign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, AugAssign))
+
         code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
 
         if final_power_required:
-            assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+            assign_node = expr.get_direct_user_nodes(
+                    lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
             assert assign_node
             lhs_var = assign_node[0].lhs
             lhs = self._print(lhs_var)
-            prefix = code
 
             pow_factor = PyccelDiv(LiteralInteger(1), order)
             self.add_import(c_imports['math'])
-            code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
-            return prefix + code
+            pow_code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
+
+            if augassign_node:
+                self._additional_code += pow_code
+                return code
+            return code + pow_code
         else:
             return code
 
