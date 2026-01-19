@@ -1869,12 +1869,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amax({array_arg})'
+            code = f'amax({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'maxval({arg_code}) /= {zero}'
+            code = f'maxval({arg_code}) /= {zero}'
         else:
-            return f'maxval({arg_code})'
+            code = f'maxval({arg_code})'
+        if expr.initial is not None:
+            code = f'maxval([{self._print(expr.initial)}, {code}])'
+        return code
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
@@ -1885,12 +1888,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amin({array_arg})'
+            code = f'amin({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'minval({arg_code}) /= {zero}'
+            code = f'minval({arg_code}) /= {zero}'
         else:
-            return f'minval({arg_code})'
+            code = f'minval({arg_code})'
+        if expr.initial is not None:
+            code = f'minval([{self._print(expr.initial)}, {code}])'
+        return code
 
     def _print_PythonMinMax(self, expr):
         arg, = expr.args

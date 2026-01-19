@@ -2751,7 +2751,7 @@ def test_min_real(language):
 
     f1 = epyccel(min_call, language = language)
     x = rand(10)
-    assert isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f1(x), min_call(x))
 
 def test_min_complex(language):
     def min_call(x: 'complex128[:]'):
@@ -2760,11 +2760,11 @@ def test_min_complex(language):
 
     f1 = epyccel(min_call, language=language)
     x = randn(10) + 1j * randn(10)
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
     x = randn(10) + 1j
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
     x = 10 + 1j * randn(10)
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
 
 def test_min_bool(language):
     def min_call(x: 'bool[:]'):
@@ -2775,15 +2775,6 @@ def test_min_bool(language):
     x = np.array([True, False, True, False])  # Generating a boolean array
     assert f1(x) == min_call(x)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_phrase(language):
     def min_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import amin
@@ -2793,17 +2784,8 @@ def test_min_phrase(language):
     f2 = epyccel(min_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert isclose(f2(x, y), min_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f2(x, y), min_phrase(x, y))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_property(language):
     def min_call(x : 'int[:]'):
         return x.min()
@@ -2811,6 +2793,60 @@ def test_min_property(language):
     f1 = epyccel(min_call, language = language)
     x = randint(99, size=10)
     assert f1(x) == min_call(x)
+
+def test_amin_1d(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+
+def test_amin_axis(language):
+    def amin_call(x : 'int[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amin_call(x))
+
+
+def test_amin_keepdims(language):
+    def amin_call(x : 'float[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1, keepdims=True)
+
+    f1 = epyccel(amin_call, language=language)
+    x = rand(5, 7)
+    res_ref = amin_call(x)
+    res_cc  = f1(x)
+    assert np.array_equal(res_cc, res_ref)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amin_initial(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x, initial=50)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+def test_amin_out_axis(language):
+    def amin_call(x : 'int[:,:]', out : 'int[:]'):
+        np.amin(x, axis=1, out=out)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=(6, 8))
+    y_epyc = np.empty(6, dtype=int)
+    y_pyth = np.empty(6, dtype=int)
+    f1(x, y_epyc)
+    amin_call(x, y_pyth)
+    assert np.array_equal(y_epyc, y_pyth)
 
 def test_max_int(language):
     def max_call(x : 'int[:]'):
@@ -2828,7 +2864,7 @@ def test_max_real(language):
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
-    assert isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f1(x), max_call(x))
 
 def test_max_complex(language):
     def max_call(x: 'complex128[:]'):
@@ -2837,11 +2873,11 @@ def test_max_complex(language):
 
     f1 = epyccel(max_call, language=language)
     x = randn(10) + 1j * randn(10)
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
     x = randn(10) + 1j
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
     x = 10 + 1j * randn(10)
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
 
 def test_max_bool(language):
     def max_call(x: 'bool[:]'):
@@ -2861,7 +2897,7 @@ def test_max_phrase(language):
     f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert isclose(f2(x, y), max_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f2(x, y), max_phrase(x, y))
 
 def test_max_property(language):
     def max_call(x : 'int[:]'):
@@ -2871,6 +2907,60 @@ def test_max_property(language):
     x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
+
+def test_amax_1d(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
+
+
+def test_amax_axis(language):
+    def amax_call(x : 'int[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amax_call(x))
+
+
+def test_amax_keepdims(language):
+    def amax_call(x : 'float[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0, keepdims=True)
+
+    f1 = epyccel(amax_call, language=language)
+    x = rand(5, 7)
+    res_ref = amax_call(x)
+    res_cc  = f1(x)
+    assert np.array_equal(res_cc, res_ref)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amax_initial(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x, initial=10)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
+
+def test_amax_out_axis(language):
+    def amax_call(x : 'int[:,:]', out : 'int[:]'):
+        np.amax(x, axis=1, out=out)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=(6, 8))
+    y_epyc = np.empty(6, dtype=int)
+    y_pyth = np.empty(6, dtype=int)
+    f1(x, y_epyc)
+    amax_call(x, y_pyth)
+    assert np.array_equal(y_epyc, y_pyth)
 
 def test_full_like_basic_int(language):
     def create_full_like_shape_1d(n : 'int'):

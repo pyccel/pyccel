@@ -1283,6 +1283,30 @@ class PythonCodePrinter(CodePrinter):
         args_code = ', '.join(args)
         return f'{name}({args_code})'
 
+    def _print_NumpyAmin(self, expr):
+        name = self._get_numpy_name(type(expr))
+        args = [self._print(expr.arg)]
+        if expr.initial:
+            args.append(f'initial = {self._print(expr.initial)}')
+        if expr.axis:
+            args.append(f'axis = {self._print(expr.axis)}')
+        if expr.rank == expr.arg.rank:
+            args.append('keepdims = True')
+        args_code = ', '.join(args)
+        return f'{name}({args_code})'
+
+    def _print_NumpyAmax(self, expr):
+        name = self._get_numpy_name(type(expr))
+        args = [self._print(expr.arg)]
+        if expr.initial:
+            args.append(f'initial = {self._print(expr.initial)}')
+        if expr.axis:
+            args.append(f'axis = {self._print(expr.axis)}')
+        if expr.rank == expr.arg.rank:
+            args.append('keepdims = True')
+        args_code = ', '.join(args)
+        return f'{name}({args_code})'
+
     def _print_NumpyCross(self, expr):
         a = self._print(expr.a)
         b = self._print(expr.b)
