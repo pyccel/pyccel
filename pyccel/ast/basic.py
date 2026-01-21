@@ -29,7 +29,7 @@ def iterable(x):
 
     Parameters
     ----------
-    x : object
+    x : Any
         Any Python object to be examined.
 
     Returns
@@ -269,9 +269,9 @@ class PyccelAstNode:
 
         Parameters
         ----------
-        original : object or tuple of objects
+        original : PyccelAstNode | tuple[PyccelAstNode, ...]
                       The original object to be replaced.
-        replacement : object or tuple of objects
+        replacement : PyccelAstNode | tuple[PyccelAstNode, ...]
                       The object which will be inserted instead.
         excluded_nodes : tuple of types
                       Types for which substitute should not be called.
