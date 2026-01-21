@@ -2440,7 +2440,7 @@ class NumpyMod(NumpyUfuncBinary):
                 arg_dtype = arg_class_type
             return process_dtype(arg_dtype)
 
-class NumpyAmin(PyccelFunction):
+class NumpyAmin(NumpyReduction):
     """
     Represents a call to  numpy.min for code generation.
 
@@ -2448,16 +2448,30 @@ class NumpyAmin(PyccelFunction):
 
     Parameters
     ----------
-    arg : array_like
+    a : array_like
         The input array for which the minimum argument is calculated.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_class_type',)
     name = 'amin'
-    _shape = None
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._class_type = arg.dtype
+    def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
+        self._class_type = a.dtype
+
+        if axis is not None:
+            rank = len(self._shape)
+            order = a.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
     @property
     def arg(self):
@@ -2468,7 +2482,30 @@ class NumpyAmin(PyccelFunction):
         """
         return self._args[0]
 
-class NumpyAmax(PyccelFunction):
+    @property
+    def initial(self):
+        """
+        The start value for the sum.
+
+        The start value for the sum.
+        """
+        return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the min function.
+
+        Get an expression describing the indexed result of the min function.
+        This is used in the loop unrolling.
+        E.g. for `min(arr, axis=0)`, this function returns `min(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyAmin(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims,
+                        initial = self.initial)
+
+class NumpyAmax(NumpyReduction):
     """
     Represents a call to  numpy.max for code generation.
 
@@ -2476,16 +2513,30 @@ class NumpyAmax(PyccelFunction):
 
     Parameters
     ----------
-    arg : array_like
+    a : array_like
         The input array for which the maximum argument is calculated.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    initial : TypedAstNode, default=None
+        The start value for the sum.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
     """
     __slots__ = ('_class_type',)
     name = 'amax'
-    _shape = None
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._class_type = arg.dtype
+    def __init__(self, a, axis=None, keepdims=LiteralFalse(), initial=None, where=None):
+        super().__init__(a, initial, axis = axis, keepdims = keepdims, where = where)
+        self._class_type = a.dtype
+
+        if axis is not None:
+            rank = len(self._shape)
+            order = a.order
+            self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
     @property
     def arg(self):
@@ -2496,6 +2547,28 @@ class NumpyAmax(PyccelFunction):
         """
         return self._args[0]
 
+    @property
+    def initial(self):
+        """
+        The start value for the sum.
+
+        The start value for the sum.
+        """
+        return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the min function.
+
+        Get an expression describing the indexed result of the min function.
+        This is used in the loop unrolling.
+        E.g. for `max(arr, axis=0)`, this function returns `max(arr[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyAmax(self.arg[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims,
+                        initial = self.initial)
 
     @property
     def is_elemental(self):

@@ -2261,13 +2261,15 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMax)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMax, initial)
 
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMin)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMin, initial)
 
     def _print_NumpySum(self, expr):
         initial = convert_to_literal(0, expr.dtype) if expr.initial is None \
@@ -2688,7 +2690,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpyAmax, NumpyAmin, NumpyReduction)) and rhs.arg.rank:
+        if isinstance(rhs, NumpyReduction) and rhs.arg.rank:
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
