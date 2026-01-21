@@ -2677,7 +2677,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        env_var : object
+        env_var : Any
             The environment variable.
         name : str, optional
             The name that was used to identify the variable.
