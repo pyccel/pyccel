@@ -235,7 +235,7 @@ def omp_get_place_proc_ids(place_num : 'int32', ids : 'int32[:]'):
     Parameters
     ----------
     place_num : int32
-    ids : array of int32s
+    ids : np.array[int32]
             To be filled by the function
     """
 
@@ -261,7 +261,7 @@ def omp_get_partition_place_nums(place_nums : 'int32[:]'):
 
     Parameters
     ----------
-    place_nums : array of int32s
+    place_nums : np.array[int32]
             To be filled by the function
     """
 
