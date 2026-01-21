@@ -3301,6 +3301,18 @@ class NumpyVecdot(NumpyReduction):
         The first vector.
     x2 : TypedAstNode
         The second vector.
+    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
+    order : str
+        The ordering of the array (C/Fortran).
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The data type passed to the NumPy function.
     """
     __slots__ = ('_class_type', '_shape')
 
