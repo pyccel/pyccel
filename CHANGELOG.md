@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2520 : Fix augmented assignment with NumPy reductions.
 -   #2535 : Fix `math.inf` printing in Python.
 
 ### Changed
