@@ -48,7 +48,7 @@ def get_source_code_and_context(func_or_class):
     -------
     code : list[str]
         A list of strings containing the lines of the source code.
-    context_dict : dict[str, object]
+    context_dict : dict[str, Any]
         A dictionary containing any objects defined in the context
         which may be useful for the function.
 
@@ -265,8 +265,8 @@ def epyccel_seq(function_class_or_module, *,
 
     Returns
     -------
-    object
-        Return accelerated Python module and function.
+    module | class | function
+        Return accelerated Python module, class or function.
     """
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
@@ -475,7 +475,7 @@ def epyccel(
 
     Returns
     -------
-    object
+    function | class | module
         Accelerated function, class or module.
 
     Other Parameters
