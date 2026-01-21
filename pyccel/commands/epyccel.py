@@ -256,7 +256,7 @@ def epyccel_seq(function_class_or_module, *,
         Time the execution of Pyccel's internal stages.
     conda_warnings : {'off', 'basic', 'verbose'}
         Specify the level of Conda warnings to display (default: 'basic').
-    context_dict : dict[str, obj], optional
+    context_dict : dict[str, Any], optional
         A dictionary containing any Python objects from the calling scope which should
         be made available to the translated code. By default any objects that are used
         in the body of the function are made available, as well as any global objects.
@@ -466,7 +466,7 @@ def epyccel(
         If True, set error mode to developer.
     conda_warnings : {'off', 'basic', 'verbose'}
         Specify the level of Conda warnings to display (default: 'basic').
-    context_dict : dict[str, obj], optional
+    context_dict : dict[str, Any], optional
         A dictionary containing any Python objects from the calling scope which should
         be made available to the translated code. By default any objects that are used
         in the body of the function are made available, as well as any global objects.
