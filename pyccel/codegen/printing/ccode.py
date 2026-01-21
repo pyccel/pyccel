@@ -53,14 +53,16 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
+from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelDiv, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
@@ -676,7 +678,8 @@ class CCodePrinter(CodePrinter):
         str
             Code which describes the NumPy functional calculation.
         """
-        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        assign_node = expr.get_direct_user_nodes(
+                lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
         if assign_node:
             lhs_var = assign_node[0].lhs
             arg_var = expr.arg
@@ -2259,13 +2262,15 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMax)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMax, initial)
 
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMin)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMin, initial)
 
     def _print_NumpySum(self, expr):
         initial = convert_to_literal(0, expr.dtype) if expr.initial is None \
@@ -2296,6 +2301,92 @@ class CCodePrinter(CodePrinter):
             init_value = f'floor({init_value})'
 
         return ';\n'.join((init_value, endpoint_code))
+
+    def _print_NumpyNorm(self, expr):
+        arg = expr.arg
+        if arg.rank == 0:
+            if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+                arg = NumpyAbs(arg)
+            return self._print(arg)
+        order = expr.order or LiteralInteger(2)
+        initial = convert_to_literal(0, expr.dtype)
+        final_power_required = False
+        if order == np.inf:
+            initial = PyccelUnarySub(math_constants['inf'])
+            element_expression = NumpyAbs
+            reduction_expression = PythonMax
+        elif order == -np.inf:
+            initial = math_constants['inf']
+            element_expression = NumpyAbs
+            reduction_expression = PythonMin
+        elif order == 0:
+            zero = convert_to_literal(0, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelNe(elem, zero)
+            reduction_expression = PyccelAdd
+        elif order == 1:
+            element_expression = NumpyAbs
+            reduction_expression = PyccelAdd
+        elif order == -1:
+            one = convert_to_literal(1, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelDiv(one, NumpyAbs(elem))
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelPow(NumpyAbs(elem), order)
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        else:
+            raise NotImplementedError("Order")
+
+        augassign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, AugAssign))
+
+        code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
+
+        if final_power_required:
+            assign_node = expr.get_direct_user_nodes(
+                    lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
+            assert assign_node
+            lhs_var = assign_node[0].lhs
+            lhs = self._print(lhs_var)
+
+            pow_factor = PyccelDiv(LiteralInteger(1), order)
+            self.add_import(c_imports['math'])
+            pow_code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
+
+            if augassign_node:
+                self._additional_code += pow_code
+                return code
+            return code + pow_code
+        else:
+            return code
+
+    def _print_NumpyCross(self, expr):
+        a = expr.a
+        b = expr.b
+        c = expr.c
+        zero = LiteralInteger(0)
+        one = LiteralInteger(1)
+        two = LiteralInteger(2)
+
+        a_0 = self._print(a[zero])
+        a_1 = self._print(a[one])
+        a_2 = self._print(a[two])
+        b_0 = self._print(b[zero])
+        b_1 = self._print(b[one])
+        b_2 = self._print(b[two])
+        c_0 = self._print(c[zero])
+        c_1 = self._print(c[one])
+        c_2 = self._print(c[two])
+
+        return (f'{c_0} = {a_1} * {b_2} - {a_2} * {b_1};\n'
+                f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
+                f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
@@ -2333,7 +2424,7 @@ class CCodePrinter(CodePrinter):
 
         if len(results) == 1 and not returning_tuple:
             res = results[0]
-            if isinstance(res, Variable) and not res.is_temp:
+            if isinstance(res, Variable) and (not res.is_temp or res.rank):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
@@ -2570,7 +2661,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
+        if isinstance(rhs, NumpyReduction) and rhs.arg.rank:
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)

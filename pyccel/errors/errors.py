@@ -125,7 +125,7 @@ class ErrorInfo:
         # The parser stage
         self.stage = stage
         # The source file that was the source of this error.
-        self.filename = basename(filename) if filename is not None else ''
+        self.filename = filename or ''
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.

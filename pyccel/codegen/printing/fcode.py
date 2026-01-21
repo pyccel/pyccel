@@ -76,6 +76,7 @@ from pyccel.ast.numpyext import get_shape_of_multi_level_container
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type, NumpyFloat64Type, NumpyComplex128Type
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
+from pyccel.ast.operators import PyccelDiv
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -1515,16 +1516,38 @@ class FCodePrinter(CodePrinter):
         errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
-        arg = NumpyAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
-        arg_code = self._get_node_without_gFTL(arg)
-        if expr.axis:
-            axis_val = expr.axis.python_value
-            axis = LiteralInteger((axis_val + 1) if arg.order == 'F' else (arg.rank - axis_val))
-            code = f'Norm2({arg_code},{self._print(axis)})'
-        else:
-            code = f'Norm2({arg_code})'
+        arg = expr.arg
+        if arg.rank == 0:
+            if isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
+                arg = NumpyAbs(arg)
+            arg = self._apply_cast(expr.dtype, arg)
+            return f'Norm2([{self._print(arg)}])'
 
-        return code
+        if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+            arg = NumpyAbs(arg)
+        arg = self._apply_cast(expr.dtype, arg)
+        arg_code = self._get_node_without_gFTL(arg)
+        order = expr.order or 2
+
+        if order == 2:
+            return f'Norm2([{arg_code}])'
+        elif order == np.inf:
+            return f'maxval({arg_code})'
+        elif order == -np.inf:
+            return f'minval({arg_code})'
+        elif order == 0:
+            return f'count({arg_code} > 0)'
+        elif order == 1:
+            return f'sum({arg_code})'
+        elif order == -1:
+            one = self._print(LiteralFloat(1))
+            return f'{one} / sum({one} / {arg_code})'
+        elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            pow_factor = self._apply_cast(expr.dtype, PyccelDiv.make_simplified(LiteralInteger(1), order))
+            order_code = self._apply_cast(expr.dtype, order)
+            return f'sum({arg_code} ** {self._print(order_code)}) ** {self._print(pow_factor)}'
+        else:
+            raise NotImplementedError("Order")
 
     def _print_NumpyLinspace(self, expr):
 
@@ -1846,12 +1869,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amax({array_arg})'
+            code = f'amax({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'maxval({arg_code}) /= {zero}'
+            code = f'maxval({arg_code}) /= {zero}'
         else:
-            return f'maxval({arg_code})'
+            code = f'maxval({arg_code})'
+        if expr.initial is not None:
+            code = f'maxval([{self._print(expr.initial)}, {code}])'
+        return code
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
@@ -1862,12 +1888,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amin({array_arg})'
+            code = f'amin({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'minval({arg_code}) /= {zero}'
+            code = f'minval({arg_code}) /= {zero}'
         else:
-            return f'minval({arg_code})'
+            code = f'minval({arg_code})'
+        if expr.initial is not None:
+            code = f'minval([{self._print(expr.initial)}, {code}])'
+        return code
 
     def _print_PythonMinMax(self, expr):
         arg, = expr.args
@@ -3357,6 +3386,14 @@ class FCodePrinter(CodePrinter):
             shape = ', '.join(self._print(i) for i in var_shape)
             order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
             return 'reshape({}, shape=[{}], order=[{}])'.format(arg, shape, order)
+
+    def _print_NumpyCross(self, expr):
+        a, b = self._apply_cast(expr.c.dtype, expr.a, expr.b)
+        a_code = self._print(a)
+        b_code = self._print(b)
+        c_code = self._print(expr.c)
+        self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+        return f'call cross_product({a_code}, {b_code}, {c_code})\n'
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
