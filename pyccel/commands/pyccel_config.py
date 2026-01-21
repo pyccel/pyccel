@@ -4,6 +4,8 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing scripts to manage compilation information.
 """
+import json
+import sys
 
 from .argparse_helpers import add_help_flag, path_with_suffix, add_compiler_selection
 
@@ -70,7 +72,62 @@ def pyccel_config(filename, **kwargs):
     execute_pyccel('', compiler_export_file = filename, **kwargs)
 
 def pyccel_config_check(filename):
-    pass
+    with open(filename, 'r') as fp:
+        try:
+            config_contents = json.load(fp)
+        except json.JSONDecodeError:
+            print("File is not in json format", file=sys.stderr)
+            sys.exit(1)
+
+    from pyccel.compilers.default_compilers import available_compilers
+
+    example_compiler = available_compilers['GNU']
+
+    languages = example_compiler.keys()
+
+    if all(k not in languages for k in config_contents):
+        print("First level key should describe languages.", file=sys.stderr)
+        sys.exit(1)
+
+    exitcode = 0
+    for k in config_contents:
+        if k not in languages:
+            print("Unrecognised language :", k)
+            exitcode = 1
+
+    if exitcode:
+        sys.exit(1)
+
+    for lang, lang_config in example_compiler.items():
+        example_config = example_compiler[lang]
+        possible_keys = {k for k,v in example_config.items() if not isinstance(v, dict)}
+        possible_accelerators = {k for k,v in example_config.items() if isinstance(v, dict)}
+        found_keys = set()
+        found_accelerators = set()
+
+        for k,v in lang_config.items():
+            if k in possible_keys:
+                found_keys.add(k)
+            elif k in possible_accelerators:
+                found_accelerators.add(k)
+            else:
+                print(f"Warning: Key {k} in language {lang} is unrecognised")
+
+        for k in possible_keys.difference(found_keys):
+            print(f"Warning: Key {k} not provided for language {lang}. It will default to an empty value")
+
+        for k in found_keys:
+            if not isinstance(lang_config[k], type(example_config[k])):
+                print("Error: Key {k} in language {lang} is associated with a value of the wrong type.")
+                print("Received:", lang_config[k])
+                if isinstance(example_config[k], str):
+                    print("Expected: str")
+                else:
+                    print("Expected: tuple[str]")
+                exitcode = 1
+
+    sys.exit(exitcode)
 
 def pyccel_config_register(filename):
-    pass
+    pyccel_config_check(filename)
+
