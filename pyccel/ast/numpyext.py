@@ -3320,10 +3320,20 @@ class NumpyVecdot(NumpyReduction):
 
     @property
     def x1(self):
+        """
+        The first vector.
+
+        The first vector.
+        """
         return self._args[0]
 
     @property
     def x2(self):
+        """
+        The second vector.
+
+        The second vector.
+        """
         return self._args[1]
 
 
