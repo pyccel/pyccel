@@ -88,12 +88,18 @@ class Compiler:
                 self._compiler_info = json.load(vendor_file)
         else:
             self._compiler_family = vendor
-            if vendor not in vendors:
-                raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
-            try:
-                self._compiler_info = available_compilers[vendor]
-            except KeyError as e:
-                raise NotImplementedError("Compiler not available") from e
+            if vendor in vendors:
+                try:
+                    self._compiler_info = available_compilers[vendor]
+                except KeyError as e:
+                    raise NotImplementedError("Compiler not available") from e
+            else:
+                installed_compiler = pathlib.Path.home() / '.pyccel' / vendor
+                if installed_compiler.exists():
+                    with open(installed_compiler / 'config.json', encoding="utf-8") as vendor_file:
+                        self._compiler_info = json.load(vendor_file)
+                else:
+                    raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
 
         self._debug = debug
         self._language_info = None
