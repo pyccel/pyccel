@@ -106,6 +106,20 @@ def pyccel_config(filename, **kwargs):
     execute_pyccel('', compiler_export_file = filename, **kwargs)
 
 def pyccel_config_check(filename):
+    """
+    Check if a provided configuration conforms to the expected format.
+
+    Check if a provided configuration conforms to the expected format.
+    In particular, first level keys should represent languages and
+    second level keys should be keys that appear in the default compiler
+    configurations. Missing non-compulsory keys raise a warning.
+    Unrecognised keys also raise a warning.
+
+    Parameters
+    ----------
+    filename : Path
+        Name of the JSON file containing the configuration.
+    """
     with open(filename, 'r', encoding='utf-8') as fp:
         try:
             config_contents = json.load(fp)
@@ -177,7 +191,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     compiler_family : str
         The id used to identify the compiler family.
     filename : Path
-        Name of the JSON file where an exported configuration is printed.
+        Name of the JSON file containing the configuration.
     verbose : int, default=0
         Indicates the level of verbosity.
     conda_warnings : str, optional
