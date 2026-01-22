@@ -83,7 +83,7 @@ def pyccel_config(filename, **kwargs):
     execute_pyccel('', compiler_export_file = filename, **kwargs)
 
 def pyccel_config_check(filename):
-    with open(filename, 'r') as fp:
+    with open(filename, 'r', encoding='utf-8') as fp:
         try:
             config_contents = json.load(fp)
         except json.JSONDecodeError:
@@ -109,7 +109,7 @@ def pyccel_config_check(filename):
     if exitcode:
         sys.exit(1)
 
-    for lang, lang_config in example_compiler.items():
+    for lang, lang_config in config_contents.items():
         example_config = example_compiler[lang]
         possible_keys = {k for k,v in example_config.items() if not isinstance(v, dict)}
         possible_accelerators = {k for k,v in example_config.items() if isinstance(v, dict)}
@@ -153,7 +153,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
 
     config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
 
-    with open(filename, 'r') as fp:
+    with open(filename, 'r', encoding='utf-8') as fp:
         config_contents = json.load(fp)
 
     config_contents['pyccel_version'] = pyccel_version
@@ -164,7 +164,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
         print("A compiler with the chosen compiler family name is already registered.")
         sys.exit(1)
 
-    with open(config_dirpath / 'config.json', 'w') as fp:
+    with open(config_dirpath / 'config.json', 'w', encoding='utf-8') as fp:
         json.dump(config_contents, fp, indent=2)
 
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
