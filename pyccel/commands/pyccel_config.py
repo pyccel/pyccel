@@ -33,13 +33,20 @@ def setup_pyccel_config_parser(parser):
     export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',), must_exist = False),
                         help='The file that the parser information should be exported to.')
     export_parser.set_defaults(config_func=pyccel_config)
+    #----------------------------------------------------------------------------
 
     check_parser = subparsers.add_parser('check', add_help=False, help="Check that a compiler configuration is valid.")
     check_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
                         help='The file containing the compiler configuration.')
     check_parser.set_defaults(config_func=pyccel_config_check)
+    #----------------------------------------------------------------------------
 
-    register_parser = subparsers.add_parser('register', add_help=False, help="Register a commonly used compiler configuration.")
+    description = ("Register a commonly used compiler configuration. "
+                   "This allows the configuration to be retrieved by name "
+                   "and pre-compiles library dependencies for this compiler. "
+                   "Compiler registration is  specific to the current user.")
+    register_parser = subparsers.add_parser('register', add_help=False, help="Register a commonly used compiler configuration.",
+                                           description=description)
     register_parser.add_argument('compiler_family', metavar='FAMILY', type=str,
                                  help='The name that will be used to identify the compiler.')
     register_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',)),
@@ -49,21 +56,37 @@ def setup_pyccel_config_parser(parser):
     register_parser.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
                         help='Specify the level of Conda warnings to display (default: basic).')
     register_parser.set_defaults(config_func=pyccel_config_register)
+    #----------------------------------------------------------------------------
 
     remove_parser = subparsers.add_parser('remove', add_help=False, help="Remove a register compiler configuration.")
     remove_parser.add_argument('compiler_family', metavar='FAMILY', type=str,
                            help='The name that identifies the compiler.')
     remove_parser.set_defaults(config_func=pyccel_remove_config)
+    #----------------------------------------------------------------------------
 
     # ... Compiler options
     add_compiler_selection(export_parser)
     add_help_flag(export_parser.add_argument_group('Options'))
     add_help_flag(check_parser.add_argument_group('Options'))
     add_help_flag(register_parser.add_argument_group('Options'))
+    add_help_flag(remove_parser.add_argument_group('Options'))
 
     add_help_flag(parser.add_argument_group('Options'))
 
 def pyccel_config_dispatch(config_func, **kwargs):
+    """
+    Call the correct configuration sub-command.
+
+    Call the correct configuration sub-command. This function is used
+    to fit the generic call structure used in console.py.
+
+    Parameters
+    ----------
+    config_func : function
+        The function that should be called to enact the sub-command.
+    **kwargs : Any
+        The arguments that should be passed to the function.
+    """
     config_func(**kwargs)
 
 def pyccel_config(filename, **kwargs):
@@ -141,6 +164,26 @@ def pyccel_config_check(filename):
         sys.exit(exitcode)
 
 def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
+    """
+    Register a new compiler configuration.
+
+    Register a new compiler configuration under a specified name. This creates
+    a folder ~/.pyccel/compiler_family containing a json file describing the
+    configuration and folders containing the libraries that can be pre-compiled.
+    This therefore speeds up compilation.
+
+    Parameters
+    ----------
+    compiler_family : str
+        The id used to identify the compiler family.
+    filename : Path
+        Name of the JSON file where an exported configuration is printed.
+    verbose : int, default=0
+        Indicates the level of verbosity.
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    """
+    # Check that a valid configuration was registered
     pyccel_config_check(filename)
 
     from pyccel.codegen.compiling.library_config import recognised_libs
@@ -149,15 +192,14 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
 
     installed_libs = {}
 
-    compiler = Compiler(str(filename))
-
-    config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
-
+    # Insert the pyccel version into the configuration to allow detection of
+    # old configurations (and old versions of the associated libraries).
     with open(filename, 'r', encoding='utf-8') as fp:
         config_contents = json.load(fp)
-
     config_contents['pyccel_version'] = pyccel_version
 
+    # Save the compiler configuration
+    config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
     try:
         config_dirpath.mkdir(parents = True)
     except FileExistsError:
@@ -167,13 +209,28 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     with open(config_dirpath / 'config.json', 'w', encoding='utf-8') as fp:
         json.dump(config_contents, fp, indent=2)
 
+    # Build a compiler using the new compiler family
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
+    compiler = Compiler(str(filename))
 
+    # Install STC using the new compiler
     recognised_libs['stc'].install_to(config_dirpath, installed_libs, verbose, compiler)
 
+    # Remove the temporary build directory
     shutil.rmtree(config_dirpath / 'STC' / f'build-{filename.stem}')
 
 def pyccel_remove_config(compiler_family):
+    """
+    Remove a registered configuration.
+
+    Remove a registered configuration by deleting the folder describing
+    it.
+
+    Parameters
+    ----------
+    compiler_family : str
+        The id used to identify the compiler family.
+    """
     config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
     if config_dirpath.exists():
         shutil.rmtree(str(config_dirpath))
