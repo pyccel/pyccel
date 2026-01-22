@@ -431,6 +431,20 @@ class STCInstaller(ExternalLibInstaller):
             installed_libs['stc'] = existing_installation
             return existing_installation
 
+        custom_compiler_path = Path.home() / '.pyccel' / compiler_family
+        if custom_compiler_path.exists():
+            pkgconfig_dir = next(custom_compiler_path.glob('**/*.pc')).parent
+            os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
+                                                     if p and Path(p).exists())
+
+            # Use pkg-config to try to locate an existing (system or user) installation
+            # with version >= 5.0 < 6
+            # This must be done in the with statement to ensure pkgconfig_dir exists
+            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
+            installed_libs['stc'] = existing_installation
+            return existing_installation
+
         # Check if meson can be used to build
         meson = shutil.which('meson')
         ninja = shutil.which('ninja')
