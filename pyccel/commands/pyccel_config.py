@@ -226,13 +226,13 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
 
     # Build a compiler using the new compiler family
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
-    compiler = Compiler(str(filename))
+    compiler = Compiler(compiler_family)
 
     # Install STC using the new compiler
     recognised_libs['stc'].install_to(config_dirpath, installed_libs, verbose, compiler)
 
     # Remove the temporary build directory
-    shutil.rmtree(config_dirpath / 'STC' / f'build-{filename.stem}')
+    shutil.rmtree(config_dirpath / 'STC' / f'build-{compiler_family}')
 
 def pyccel_remove_config(compiler_family):
     """
