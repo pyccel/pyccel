@@ -228,6 +228,8 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family)
 
+    print("Ready to install STC")
+
     # Install STC using the new compiler
     recognised_libs['stc'].install_to(config_dirpath, installed_libs, verbose, compiler)
 

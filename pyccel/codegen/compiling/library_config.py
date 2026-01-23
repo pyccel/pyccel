@@ -406,6 +406,7 @@ class STCInstaller(ExternalLibInstaller):
         existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
 
         if existing_installation:
+            print("Found existing installation", existing_installation)
             installed_libs['stc'] = existing_installation
             return existing_installation
 
