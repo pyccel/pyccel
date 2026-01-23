@@ -1168,6 +1168,9 @@ def test_json_register(language):
     config[language]['debug_flags'] = ['-g', '-O0']
     config[language]['general_flags'] = ['--version']
 
+    current_config_folder = os.environ.get('PYCCEL_CONFIG_HOME', None)
+    os.environ['PYCCEL_CONFIG_HOME'] = get_abs_path(insert_pyccel_folder('.'))
+
     # Check registration
     timing_json_path = f'{output_dir}/timing.json'
     print(timing_json_path)
@@ -1182,7 +1185,7 @@ def test_json_register(language):
     assert p.returncode == 1
 
     cmd = [shutil.which("pyccel"), 'compile', '--compiler-family=compiler_timing',
-           '-v', get_abs_path(f'scripts/funcs.py')]
+           f'--language={language}', '-v', get_abs_path(f'scripts/funcs.py')]
     p = subprocess.run(cmd, check=True, text=True, capture_output=True)
     received_output = p.stdout
 
@@ -1194,9 +1197,10 @@ def test_json_register(language):
     # Check version output is present to ensure new config is being used
     assert expected_output in received_output
 
-    # Remove config to clean up for future runs
-    cmd = [shutil.which("pyccel"), 'config', 'remove', 'compiler_timing']
-    subprocess.run(cmd, check=True)
+    if current_config_folder:
+        os.environ['PYCCEL_CONFIG_HOME'] = current_config_folder
+    else:
+        os.environ.pop('PYCCEL_CONFIG_HOME')
 
 #------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
