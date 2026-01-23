@@ -88,6 +88,7 @@ Passing one of the flags `--compiler-family` or `--compiler-config` still allows
 Alternatively the configuration can be registered.
 This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) is used many times with the same flags.
 When a new compiler family is registered common libraries such as STC are compiled with this compiler. This will speed up compilation of files using this family.
+
 ```shell
 pyccel config register my_intel intel.json
 pyccel compile --compiler-family=my_intel mod1.py
@@ -95,6 +96,7 @@ pyccel compile --compiler-family=my_intel mod2.py
 pyccel compile --compiler-family=my_intel subdir/mod3.py
 ...
 ```
+
 By default, files associated with the new compiler family are saved in a folder named `.pyccel` in the user's home directory. This behaviour can be overridden by setting the environment variable `PYCCEL_CONFIG_HOME`.
 
 ## Utilising Pyccel within the Anaconda environment
