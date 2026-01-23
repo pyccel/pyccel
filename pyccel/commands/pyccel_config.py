@@ -127,7 +127,7 @@ def check_config_paths(config, descriptor):
     exitcode = 0
     for inc in config.get('include', ()):
         inc_path = pathlib.Path(inc)
-        if inc_path.is_relative:
+        if not inc_path.is_absolute():
             print("Error: include path {inc} for {descriptor} should be absolute")
             exitcode = 1
         elif not inc_path.exists():
@@ -135,7 +135,7 @@ def check_config_paths(config, descriptor):
             exitcode = 1
     for libdir in config.get('libdir', ()):
         libdir_path = pathlib.Path(libdir)
-        if libdir_path.is_relative:
+        if not libdir_path.is_absolute():
             print("Error: library directory path {libdir} for {descriptor} should be absolute")
             exitcode = 1
         elif not libdir_path.exists():
@@ -144,7 +144,7 @@ def check_config_paths(config, descriptor):
     for lib in config.get('libs', ()):
         if not lib.startswith('-l'):
             lib_path = pathlib.Path(lib)
-            if lib_path.is_relative:
+            if not lib_path.is_absolue():
                 print("Error: library {lib} for {descriptor} should start with -l or should be an absolute path")
                 exitcode = 1
             elif not lib_path.exists():
@@ -228,7 +228,7 @@ def pyccel_config_check(filename):
 
         for name, a in found_accelerators.items():
             for k,v in a.items():
-                if key not in accelerator_keys:
+                if k not in accelerator_keys:
                     print(f"Warning: Key {k} for accelerator {name} in language {lang} is unrecognised")
                 else:
                     if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
