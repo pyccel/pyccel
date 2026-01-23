@@ -372,7 +372,7 @@ class STCInstaller(ExternalLibInstaller):
         self._compile_obj = CompileObj("stc", folder = self._src_dir.name, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, *, allow_pkg_config = True):
         """
         Install the files to the Pyccel dirpath.
 
@@ -392,6 +392,9 @@ class STCInstaller(ExternalLibInstaller):
             The level of verbosity.
         compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object to compile STC if it is not already installed.
+        allow_pkg_config : bool, default=True
+            Indicates if pkg-config should be used to locate STC before checking for a Pyccel
+            installation.
 
         Returns
         -------
@@ -401,14 +404,14 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family
 
-        # Use pkg-config to try to locate an existing (system or user) installation
-        # with version >= 5.0 < 6
-        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        if allow_pkg_config:
+            # Use pkg-config to try to locate an existing (system or user) installation
+            # with version >= 5.0 < 6
+            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
 
-        if existing_installation:
-            print("Found existing installation", existing_installation)
-            installed_libs['stc'] = existing_installation
-            return existing_installation
+            if existing_installation:
+                installed_libs['stc'] = existing_installation
+                return existing_installation
 
         sep = ';' if sys.platform == "win32" else ':'
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
