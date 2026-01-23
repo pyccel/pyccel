@@ -1185,7 +1185,7 @@ def test_json_register(language):
     assert p.returncode == 1
 
     cmd = [shutil.which("pyccel"), 'compile', '--compiler-family=compiler_timing',
-           f'--language={language}', '-v', get_abs_path(f'scripts/funcs.py')]
+           f'--language={language}', '-v', get_abs_path('scripts/funcs.py')]
     p = subprocess.run(cmd, check=True, text=True, capture_output=True)
     received_output = p.stdout
 
