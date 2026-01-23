@@ -99,8 +99,8 @@ jobs:
         uses: ./.github/actions/coverage_install
       - name: Check register
         run: |
-          pyccel config export my_config.yml
-          pyccel config register my_config my_config.yml -vv
+          pyccel config export my_config.json
+          pyccel config register my_config my_config.json -vv
           pyccel config remove my_config
         shell: bash
       - name: Fortran/C tests with pytest
