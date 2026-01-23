@@ -74,9 +74,7 @@ pyccel compile --compiler-config intel.json <file_to_translate>
 ```
 
 Instead of using the `--compiler-config` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
-This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) is used many times with the same flags.
 E.g.
-
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel.json'
 pyccel compile mod1.py
@@ -86,6 +84,18 @@ pyccel compile subdir/mod3.py
 ```
 
 Passing one of the flags `--compiler-family` or `--compiler-config` still allows the user to retrieve the normal behaviour of Pyccel.
+
+Alternatively the configuration can be registered.
+This is especially useful in large projects where the `pyccel` command (or the `epyccel` Python function) is used many times with the same flags.
+When a new compiler family is registered common libraries such as STC are compiled with this compiler. This will speed up compilation of files using this family.
+```shell
+pyccel config register my_intel intel.json
+pyccel compile --compiler-family=my_intel mod1.py
+pyccel compile --compiler-family=my_intel mod2.py
+pyccel compile --compiler-family=my_intel subdir/mod3.py
+...
+```
+By default, files associated with the new compiler family are saved in a folder named `.pyccel` in the user's home directory. This behaviour can be overridden by setting the environment variable `PYCCEL_CONFIG_HOME`.
 
 ## Utilising Pyccel within the Anaconda environment
 
