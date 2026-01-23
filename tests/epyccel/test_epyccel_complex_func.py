@@ -20,94 +20,94 @@ RTOL = 2e-14
                            mod.create_complex_literal__complex_float,
                            mod.create_complex_literal__complex_complex,
                            mod.cast_complex_literal] )
-def test_create_complex_literal(f, language):
-    f_epyc = epyccel(f, language = language)
+def test_create_complex_literal(f, experimental_language):
+    f_epyc = epyccel(f, language = experimental_language)
     assert f_epyc() == f()
 
-def test_create_complex_var__int_int(language):
+def test_create_complex_var__int_int(experimental_language):
     f = mod.create_complex_var__int_int
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = randint(100)
     b = randint(100)
     assert f_epyc(a,b) == f(a,b)
 
-def test_create_complex_var__int_complex(language):
+def test_create_complex_var__int_complex(experimental_language):
     f = mod.create_complex_var__int_complex
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = randint(100)
     b = complex(randint(100), randint(100))
     assert f_epyc(a,b) == f(a,b)
 
-def test_create_complex_var__complex_float(language):
+def test_create_complex_var__complex_float(experimental_language):
     f = mod.create_complex_var__complex_float
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = complex(randint(100), randint(100))
     b = rand()*100
     assert np.allclose(f_epyc(a,b), f(a,b), rtol=RTOL, atol=ATOL)
 
-def test_create_complex_var__complex_complex(language):
+def test_create_complex_var__complex_complex(experimental_language):
     f = mod.create_complex_var__complex_complex
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = complex(randint(100), randint(100))
     b = complex(randint(100), randint(100))
     assert np.allclose(f_epyc(a,b), f(a,b), rtol=RTOL, atol=ATOL)
 
-def test_create_complex__int_int(language):
+def test_create_complex__int_int(experimental_language):
     f = mod.create_complex__int_int
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = randint(100)
     assert f_epyc(a) == f(a)
 
-def test_create_complex_0__int_int(language):
+def test_create_complex_0__int_int(experimental_language):
     f = mod.create_complex_0__int_int
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = randint(100)
     assert f_epyc(a) == f(a)
 
-def test_create_complex__float_float(language):
+def test_create_complex__float_float(experimental_language):
     f = mod.create_complex__float_float
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = rand()*100
     assert np.allclose(f_epyc(a), f(a), rtol=RTOL, atol=ATOL)
 
-def test_create_complex_0__float_float(language):
+def test_create_complex_0__float_float(experimental_language):
     f = mod.create_complex_0__float_float
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = rand()*100
     assert np.allclose(f_epyc(a), f(a), rtol=RTOL, atol=ATOL)
 
-def test_create_complex__complex_complex(language):
+def test_create_complex__complex_complex(experimental_language):
     f = mod.create_complex__complex_complex
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = complex(randint(100), randint(100))
     assert np.allclose(f_epyc(a), f(a), rtol=RTOL, atol=ATOL)
 
-def test_cast_complex_1(language):
+def test_cast_complex_1(experimental_language):
     f = mod.cast_complex_1
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = np.complex64(complex(randint(100), randint(100)))
     assert np.allclose(f_epyc(a), f(a), rtol = 1e-7, atol = 1e-8)
 
-def test_cast_complex_2(language):
+def test_cast_complex_2(experimental_language):
     f = mod.cast_complex_2
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = np.complex128(complex(randint(100), randint(100)))
     assert np.allclose(f_epyc(a), f(a), rtol=RTOL, atol=ATOL)
 
-def test_cast_float_complex(language):
+def test_cast_float_complex(experimental_language):
     f = mod.cast_float_complex
-    f_epyc = epyccel(f, language = language)
+    f_epyc = epyccel(f, language = experimental_language)
 
     a = rand()*100
     b = complex(randint(100), randint(100))

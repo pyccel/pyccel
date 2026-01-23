@@ -555,12 +555,12 @@ def test_bool(language):
     pyccel_test("scripts/bool_comp.py", output_dtype = bool, language = language)
 
 #------------------------------------------------------------------------------
-def test_expressions(language):
+def test_expressions(experimental_language):
     types = [float, complex, int, float, float, int] + [float]*3 + \
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    pyccel_test("scripts/expressions.py", language=language,
+    pyccel_test("scripts/expressions.py", language=experimental_language,
             output_dtype = types)
 
 #------------------------------------------------------------------------------
@@ -706,9 +706,9 @@ def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
 
 #------------------------------------------------------------------------------
-def test_print_strings(language):
+def test_print_strings(experimental_language):
     types = str
-    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_strings.py", language=experimental_language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -729,9 +729,9 @@ def test_print_integers(language):
     pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_print_sp_and_end(language):
+def test_print_sp_and_end(experimental_language):
     types = str
-    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_sp_and_end.py", language=experimental_language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_c_arrays(language):
@@ -901,9 +901,9 @@ def test_lapack( test_file ):
     assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
 
 #------------------------------------------------------------------------------
-def test_type_print( language ):
+def test_type_print( experimental_language ):
     pyccel_test("scripts/runtest_type_print.py",
-                language = language, output_dtype=str)
+                language = experimental_language, output_dtype=str)
 
 def test_container_type_print(language):
     test_file = "scripts/runtest_array_type_print.py"

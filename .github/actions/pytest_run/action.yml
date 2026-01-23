@@ -33,6 +33,11 @@ runs:
         echo "PYCCEL_DEBUG_MODE=1" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
+    - name: Test C++ translations
+      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) and cpp ${{ inputs.pytest_mark }}" 2>&1 | tee cpp_outfile.out
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests
+      id: pytest_cpp
     - name: Test language agnostic tests
       id: pytest_language_agnostic
       run: |
@@ -112,6 +117,7 @@ runs:
                        "C tests:${{ steps.pytest_c.outcome }}:tests/c_outfile.out" \
                        "Non-parallelisable C tests:${{ steps.pytest_c_xdist_incompatible.outcome }}:tests/c_xdist_incompatible_outfile.out" \
                        "Fortran tests:${{ steps.pytest_fortran.outcome }}:tests/fortran_outfile.out" \
+                       "C++ tests:${{ steps.pytest_cpp.outcome }}:tests/cpp_outfile.out" \
                        "Non-parallelisable Fortran tests:${{ steps.pytest_fortran_xdist_incompatible.outcome }}:tests/fortran_xdist_incompatible_outfile.out"
                       
       shell: ${{ inputs.shell_cmd }}
