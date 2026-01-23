@@ -431,7 +431,7 @@ class STCInstaller(ExternalLibInstaller):
             installed_libs['stc'] = existing_installation
             return existing_installation
 
-        custom_compiler_path = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / compiler_family / 'STC'
+        custom_compiler_path = Path(os.environ.get('PYCCEL_CONFIG_HOME', Path.home() / '.pyccel')) / compiler_family / 'STC'
         if custom_compiler_path.exists():
             pkgconfig_dir = next(custom_compiler_path.glob('**/*.pc')).parent
             os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
