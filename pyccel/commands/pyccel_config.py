@@ -147,6 +147,8 @@ def pyccel_config_check(filename):
     if exitcode:
         sys.exit(1)
 
+    accelerator_keys = ('flags', 'libs', 'libdir', 'include')
+
     for lang, lang_config in config_contents.items():
         example_config = example_compiler[lang]
         possible_keys = {k for k,v in example_config.items() if not isinstance(v, dict)}
@@ -174,6 +176,15 @@ def pyccel_config_check(filename):
                 else:
                     print("Expected: list[str]")
                 exitcode = 1
+
+        for name, a in found_accelerators.items():
+            for k,v in a.items():
+                if key not in accelerator_keys:
+                    print(f"Warning: Key {k} for accelerator {name} in language {lang} is unrecognised")
+                else:
+                    if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
+                        print(f"Error: Key {k} for accelerator {name} in language {lang} is associated with a value of the wrong type.")
+
 
     if exitcode:
         sys.exit(exitcode)
