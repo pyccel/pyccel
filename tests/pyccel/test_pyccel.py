@@ -1176,7 +1176,7 @@ def test_json_register(language):
     print(timing_json_path)
     with open(timing_json_path, 'w', encoding='utf-8') as f:
         json.dump(config, f)
-    cmd = [shutil.which("pyccel"), 'config', 'register', 'compiler_timing', timing_json_path]
+    cmd = [shutil.which("pyccel"), 'config', 'register', 'compiler_timing', timing_json_path, '-vv']
     subprocess.run(cmd, check=True)
 
     # Check that existing compiler-family can't be overwritten

@@ -452,6 +452,7 @@ class STCInstaller(ExternalLibInstaller):
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
         with FileLock(install_dir.with_suffix('.lock')):
+            print(build_dir, build_dir.exists())
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)

@@ -102,6 +102,7 @@ jobs:
           pyccel config export my_config.json
           pyccel config register my_config my_config.json -vv
           pyccel config remove my_config
+          pytest tests/pyccel/test_pyccel.py::test_json_register -vsx
         shell: bash
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
