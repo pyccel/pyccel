@@ -166,12 +166,12 @@ def pyccel_config_check(filename):
 
         for k in found_keys:
             if not isinstance(lang_config[k], type(example_config[k])):
-                print("Error: Key {k} in language {lang} is associated with a value of the wrong type.")
+                print(f"Error: Key {k} in language {lang} is associated with a value of the wrong type.")
                 print("Received:", lang_config[k])
                 if isinstance(example_config[k], str):
                     print("Expected: str")
                 else:
-                    print("Expected: tuple[str]")
+                    print("Expected: list[str]")
                 exitcode = 1
 
     if exitcode:
