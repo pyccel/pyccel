@@ -30,7 +30,7 @@ __all__ = (
         )
 
 compiler_choices = list(available_compilers.keys())
-compiler_choices += [d.stem for d in (pathlib.Path.home() / '.pyccel').iterdir() if d.is_dir]
+compiler_choices += [d.stem for d in pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')).iterdir() if d.is_dir]
 
 # -----------------------------------------------------------------------------------------
 def get_warning_and_line():

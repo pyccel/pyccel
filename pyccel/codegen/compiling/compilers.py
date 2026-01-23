@@ -94,7 +94,7 @@ class Compiler:
                 except KeyError as e:
                     raise NotImplementedError("Compiler not available") from e
             else:
-                installed_compiler = pathlib.Path.home() / '.pyccel' / vendor
+                installed_compiler = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / vendor
                 if installed_compiler.exists():
                     with open(installed_compiler / 'config.json', encoding="utf-8") as vendor_file:
                         self._compiler_info = json.load(vendor_file)

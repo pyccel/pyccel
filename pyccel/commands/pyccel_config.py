@@ -5,6 +5,7 @@
 """ Module containing scripts to manage compilation information.
 """
 import json
+import os
 import pathlib
 import shutil
 import sys
@@ -213,7 +214,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     config_contents['pyccel_version'] = pyccel_version
 
     # Save the compiler configuration
-    config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
+    config_dirpath = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / compiler_family
     try:
         config_dirpath.mkdir(parents = True)
     except FileExistsError:
@@ -245,7 +246,7 @@ def pyccel_remove_config(compiler_family):
     compiler_family : str
         The id used to identify the compiler family.
     """
-    config_dirpath = pathlib.Path.home() / '.pyccel' / compiler_family
+    config_dirpath = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / compiler_family
     if config_dirpath.exists():
         shutil.rmtree(str(config_dirpath))
     else:
