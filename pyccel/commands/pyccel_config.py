@@ -184,6 +184,32 @@ def pyccel_config_check(filename):
                 else:
                     if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
                         print(f"Error: Key {k} for accelerator {name} in language {lang} is associated with a value of the wrong type.")
+                        exitcode = 1
+            for inc in a.get('include', ()):
+                inc_path = pathlib.Path(inc)
+                if inc_path.is_relative:
+                    print("Error: include path {inc} for accelerator {name} in language {lang} should be absolute")
+                    exitcode = 1
+                elif not inc_path.exists():
+                    print("Error: include path {inc} for found for accelerator {name} in language {lang}")
+                    exitcode = 1
+            for libdir in a.get('libdir', ()):
+                libdir_path = pathlib.Path(libdir)
+                if libdir_path.is_relative:
+                    print("Error: library directory path {libdir} for accelerator {name} in language {lang} should be absolute")
+                    exitcode = 1
+                elif not libdir_path.exists():
+                    print("Error: library directory path {libdir} for found for accelerator {name} in language {lang}")
+                    exitcode = 1
+            for lib in a.get('libs', ()):
+                if not lib.startswith('-l'):
+                    lib_path = pathlib.Path(lib)
+                    if lib_path.is_relative:
+                        print("Error: library {lib} for accelerator {name} in language {lang} should start with -l or should be an absolute path")
+                        exitcode = 1
+                    elif not lib_path.exists():
+                        print("Error: library {lib} for accelerator {name} in language {lang} should start with -l or should be a path to an existing file")
+                        exitcode = 1
 
 
     if exitcode:
