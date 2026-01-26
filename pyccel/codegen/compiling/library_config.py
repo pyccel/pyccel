@@ -422,7 +422,6 @@ class STCInstaller(ExternalLibInstaller):
             stc_installation = None
 
         if stc_installation:
-            print("Pip installed version found")
             with importlib.resources.as_file(stc_installation) as f:
                 pkgconfig_dir = next(f.glob('**/*.pc')).parent
                 os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
@@ -438,7 +437,6 @@ class STCInstaller(ExternalLibInstaller):
 
         custom_compiler_path = Path(os.environ.get('PYCCEL_CONFIG_HOME', Path.home() / '.pyccel')) / compiler_family / 'STC'
         if custom_compiler_path.exists():
-            print("Custom compiler version found")
             pkgconfig_dir = next(custom_compiler_path.glob('**/*.pc')).parent
             os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
                                                      if p and Path(p).exists())
@@ -457,9 +455,7 @@ class STCInstaller(ExternalLibInstaller):
         assert meson is not None and ninja is not None
         build_dir = pyccel_dirpath / 'STC' / f'build-{compiler_family}'
         install_dir = pyccel_dirpath / 'STC' / 'install'
-        print(build_dir)
         with FileLock(install_dir.with_suffix('.lock')):
-            print(build_dir, build_dir.exists())
             if build_dir.exists() and build_dir.lstat().st_mtime < self._src_dir.lstat().st_mtime:
                 shutil.rmtree(build_dir)
                 shutil.rmtree(install_dir)
