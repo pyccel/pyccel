@@ -128,27 +128,27 @@ def check_config_paths(config, descriptor):
     for inc in config.get('include', ()):
         inc_path = pathlib.Path(inc)
         if not inc_path.is_absolute():
-            print("Error: include path {inc} for {descriptor} should be absolute")
+            print(f"Error: include path {inc} for {descriptor} should be absolute", file=sys.stderr)
             exitcode = 1
         elif not inc_path.exists():
-            print("Error: include path {inc} for {descriptor} was not found")
+            print(f"Error: include path {inc} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
     for libdir in config.get('libdir', ()):
         libdir_path = pathlib.Path(libdir)
         if not libdir_path.is_absolute():
-            print("Error: library directory path {libdir} for {descriptor} should be absolute")
+            print(f"Error: library directory path {libdir} for {descriptor} should be absolute", file=sys.stderr)
             exitcode = 1
         elif not libdir_path.exists():
-            print("Error: library directory path {libdir} for {descriptor} was not found")
+            print(f"Error: library directory path {libdir} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
     for lib in config.get('libs', ()):
         if not lib.startswith('-l'):
             lib_path = pathlib.Path(lib)
             if not lib_path.is_absolute():
-                print("Error: library {lib} for {descriptor} should start with -l or should be an absolute path")
+                print(f"Error: library {lib} for {descriptor} should start with -l or should be an absolute path", file=sys.stderr)
                 exitcode = 1
             elif not lib_path.exists():
-                print("Error: library {lib} for {descriptor} should start with -l or should be config path to an existing file")
+                print(f"Error: library {lib} for {descriptor} should start with -l or should be config path to an existing file", file=sys.stderr)
                 exitcode = 1
 
     return exitcode
@@ -188,13 +188,13 @@ def pyccel_config_check(filename):
     exitcode = 0
     for k in config_contents:
         if k not in languages:
-            print("Unrecognised language :", k)
+            print("Error: Unrecognised language :", k, file=sys.stderr)
             exitcode = 1
 
     if exitcode:
         sys.exit(1)
 
-    accelerator_keys = ('flags', 'libs', 'libdir', 'include')
+    accelerator_keys = ('flags', 'libs', 'libdir', 'include', 'dependencies')
 
     for lang, lang_config in config_contents.items():
         example_config = example_compiler[lang]
@@ -209,31 +209,32 @@ def pyccel_config_check(filename):
             elif k in possible_accelerators:
                 found_accelerators.add(k)
             else:
-                print(f"Warning: Key {k} in language {lang} is unrecognised")
+                print(f"Warning: Key {k} in language {lang} is unrecognised", file=sys.stderr)
 
         for k in possible_keys.difference(found_keys):
-            print(f"Warning: Key {k} not provided for language {lang}. It will default to an empty value")
+            print(f"Warning: Key {k} not provided for language {lang}. It will default to an empty value", file=sys.stderr)
 
         for k in found_keys:
             if not isinstance(lang_config[k], type(example_config[k])):
-                print(f"Error: Key {k} in language {lang} is associated with a value of the wrong type.")
-                print("Received:", lang_config[k])
+                print(f"Error: Key {k} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
+                print("Received:", lang_config[k], file=sys.stderr)
                 if isinstance(example_config[k], str):
-                    print("Expected: str")
+                    print("Expected: str", file=sys.stderr)
                 else:
-                    print("Expected: list[str]")
+                    print("Expected: list[str]", file=sys.stderr)
                 exitcode = 1
 
         exitcode = exitcode or check_config_paths(lang_config, f"language {lang}")
 
         for acc_name in found_accelerators:
             acc = lang_config[acc_name]
+            possible_keys = accelerator_keys + ('shared_suffix',) if acc_name == 'python' else accelerator_keys
             for k,v in acc.items():
                 if k not in accelerator_keys:
-                    print(f"Warning: Key {k} for accelerator {acc_name} in language {lang} is unrecognised")
+                    print(f"Warning: Key {k} for accelerator {acc_name} in language {lang} is unrecognised", file=sys.stderr)
                 else:
                     if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
-                        print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.")
+                        print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
                         exitcode = 1
                 exitcode = exitcode or check_config_paths(acc, f"accelerator {acc_name} in language {lang}")
 
@@ -281,7 +282,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     try:
         config_dirpath.mkdir(parents = True)
     except FileExistsError:
-        print("A compiler with the chosen compiler family name is already registered.")
+        print("A compiler with the chosen compiler family name is already registered.", file=sys.stderr)
         sys.exit(1)
 
     with open(config_dirpath / 'config.json', 'w', encoding='utf-8') as fp:
@@ -313,5 +314,5 @@ def pyccel_remove_config(compiler_family):
     if config_dirpath.exists():
         shutil.rmtree(str(config_dirpath))
     else:
-        print(f"Configuration not found : {compiler_family}")
+        print(f"Configuration not found : {compiler_family}", file=sys.stderr)
         sys.exit(1)
