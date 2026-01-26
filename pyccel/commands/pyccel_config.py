@@ -226,15 +226,16 @@ def pyccel_config_check(filename):
 
         exitcode = exitcode or check_config_paths(lang_config, f"language {lang}")
 
-        for name, a in found_accelerators.items():
-            for k,v in a.items():
+        for acc_name in found_accelerators.items():
+            acc = lang_config[acc_name]
+            for k,v in acc.items():
                 if k not in accelerator_keys:
                     print(f"Warning: Key {k} for accelerator {name} in language {lang} is unrecognised")
                 else:
                     if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
                         print(f"Error: Key {k} for accelerator {name} in language {lang} is associated with a value of the wrong type.")
                         exitcode = 1
-                exitcode = exitcode or check_config_paths(a, f"accelerator {name} in language {lang}")
+                exitcode = exitcode or check_config_paths(acc, f"accelerator {name} in language {lang}")
 
 
     if exitcode:
