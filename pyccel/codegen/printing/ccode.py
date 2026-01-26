@@ -2104,7 +2104,7 @@ class CCodePrinter(CodePrinter):
             elif expr.dtype.precision == 16:
                 func = f'py_sign_type_long_double_complex({arg})'
             else:
-                raise ValueError(f"Unsupported complex precision: {expr.dtype.precision}")
+                errors.report(f"Unsupported complex precision: {expr.dtype.precision}", severity='fatal', symbol=expr)
 
         return func
 
