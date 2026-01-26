@@ -2093,9 +2093,9 @@ class CCodePrinter(CodePrinter):
         arg = self._print(expr.args[0])
 
         if isinstance(primitive_type, PrimitiveIntegerType):
-            func = 'isign'
+            func = f'isign({arg})'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            func = 'fsign'
+            func = f'fsign({arg})'
         elif isinstance(primitive_type, PrimitiveComplexType):
             if expr.dtype.precision == 4:
                 func = f'py_sign_type_float_complex({arg})'
