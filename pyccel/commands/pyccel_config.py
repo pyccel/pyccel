@@ -142,14 +142,22 @@ def check_config_paths(config, descriptor):
             print(f"Error: library directory path {libdir} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
     for lib in config.get('libs', ()):
-        if not lib.startswith('-l'):
-            lib_path = pathlib.Path(lib)
+        lib_path = pathlib.Path(lib)
+        if len(lib_path.parts) > 1:
             if not lib_path.is_absolute():
-                print(f"Error: library {lib} for {descriptor} should start with -l or should be an absolute path", file=sys.stderr)
+                print(f"Error: library {lib} for {descriptor} should be a library name or an absolute path", file=sys.stderr)
                 exitcode = 1
             elif not lib_path.exists():
-                print(f"Error: library {lib} for {descriptor} should start with -l or should be config path to an existing file", file=sys.stderr)
+                print(f"Error: library {lib} for {descriptor} should be a library name or should be a path to an existing file", file=sys.stderr)
                 exitcode = 1
+    for dep in config.get('dependencies', ()):
+        dep_path = pathlib.Path(dep)
+        if not dep_path.is_absolute():
+            print(f"Error: library directory path {dep} for {descriptor} should be absolute", file=sys.stderr)
+            exitcode = 1
+        elif not dep_path.exists():
+            print(f"Error: library directory path {dep} for {descriptor} was not found", file=sys.stderr)
+            exitcode = 1
 
     return exitcode
 
