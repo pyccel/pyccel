@@ -1141,11 +1141,15 @@ class NumpyMatmul(PyccelFunction):
         The first argument of the matrix multiplication.
     b : TypedAstNode
         The second argument of the matrix multiplication.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
+        The data type of the result.
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
     """
     __slots__ = ('_shape','_class_type')
     name = 'matmul'
 
-    def __init__(self, a ,b):
+    def __init__(self, a, b, *, order='K', dtype=None):
         super().__init__(a, b)
         if pyccel_stage == 'syntactic':
             return
@@ -1156,8 +1160,11 @@ class NumpyMatmul(PyccelFunction):
             raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
-        type_info = NumpyResultType(*args)
-        dtype = process_dtype(type_info.dtype)
+        if dtype is None:
+            type_info = NumpyResultType(*args)
+            dtype = process_dtype(type_info.dtype)
+        else:
+            dtype = process_dtype(dtype)
 
         if not (a.shape is None or b.shape is None):
 
@@ -1172,13 +1179,22 @@ class NumpyMatmul(PyccelFunction):
             rank  = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
-            rank = 2
+            if a.rank > b.rank:
+                rank = a.rank
+                self._shape = list(a.shape)
+                self._shape[-1] = b.shape[-1]
+            else:
+                rank = b.rank
+                self._shape = list(b.shape)
+                self._shape[-1] = a.shape[-1]
 
+        print(rank)
 
-        if a.order == b.order:
-            order = a.order
-        else:
-            order = None if rank < 2 else 'C'
+        if str(order).strip('\'"') in ('K', 'A'):
+            if a.order == b.order:
+                order = a.order
+            else:
+                order = None if rank < 2 else 'C'
 
         self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
@@ -1189,6 +1205,10 @@ class NumpyMatmul(PyccelFunction):
     @property
     def b(self):
         return self._args[1]
+
+    @property
+    def is_elemental(self):
+        return self.rank > 2
 
 #==============================================================================
 class NumpyShape(PyccelFunction):
