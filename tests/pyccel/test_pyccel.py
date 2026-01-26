@@ -1197,6 +1197,9 @@ def test_json_register(language):
     # Check version output is present to ensure new config is being used
     assert expected_output in received_output
 
+    cmd = [shutil.which("pyccel"), 'config', 'remove', 'compiler_timing']
+    subprocess.run(cmd, check=True)
+
     if current_config_folder:
         os.environ['PYCCEL_CONFIG_HOME'] = current_config_folder
     else:
