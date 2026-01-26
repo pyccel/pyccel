@@ -144,7 +144,7 @@ def check_config_paths(config, descriptor):
     for lib in config.get('libs', ()):
         if not lib.startswith('-l'):
             lib_path = pathlib.Path(lib)
-            if not lib_path.is_absolue():
+            if not lib_path.is_absolute():
                 print("Error: library {lib} for {descriptor} should start with -l or should be an absolute path")
                 exitcode = 1
             elif not lib_path.exists():
