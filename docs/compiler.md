@@ -75,6 +75,7 @@ pyccel compile --compiler-config intel.json <file_to_translate>
 
 Instead of using the `--compiler-config` flag, the environment variable `PYCCEL_DEFAULT_COMPILER` can be used to specify the path to the JSON file.
 E.g.
+
 ```shell
 export PYCCEL_DEFAULT_COMPILER='intel.json'
 pyccel compile mod1.py
