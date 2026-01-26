@@ -403,16 +403,6 @@ def test_array_int32_2d_C_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
@@ -473,16 +463,6 @@ def test_array_int32_2d_C_scalar_idiv(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_C_scalar_idiv_stride(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
@@ -576,16 +556,6 @@ def test_array_int32_2d_F_scalar_add(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_add_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_add
@@ -616,16 +586,6 @@ def test_array_int32_2d_F_scalar_sub(language):
     assert np.array_equal( x1, x2 )
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_int32_2d_F_scalar_sub_stride(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
@@ -1943,6 +1903,19 @@ def test_multiple_stack_array_2(language):
     f2 = epyccel(f1, language = language)
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Stack arrays are deallocated as cspan only stores a pointer"),
+            pytest.mark.c]),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
+def test_return_stack_array(language):
+    f1 = arrays.return_stack_array
+    f2 = epyccel(f1, language = language)
+    check_array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
 #==============================================================================
@@ -2446,6 +2419,14 @@ def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_12
+    f2 = epyccel(f1, language = language)
+
+    assert f1(a) == f2(a)
+
+def test_array_1d_slice_13(language):
+    a = arrays.a_1d
+
+    f1 = arrays.array_1d_slice_1
     f2 = epyccel(f1, language = language)
 
     assert f1(a) == f2(a)
@@ -6443,6 +6424,13 @@ def test_unpacking_2D_of_known_size(language):
 
 def test_assign_slice(language):
     f1 = arrays.assign_slice
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    assert np.array_equal(f1(a, 10), f2(a, 10))
+
+def test_assign_slice_allow_neg(language):
+    f1 = arrays.assign_slice_allow_neg
     f2 = epyccel(f1, language = language)
 
     a = arrays.a_1d

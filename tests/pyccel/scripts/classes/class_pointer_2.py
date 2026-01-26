@@ -1,8 +1,10 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
+import numpy as np
 
 class A:
     def __init__(self):
         self.x = 4
+        self.y = np.ones(5)
 
 class B:
     def __init__(self, a : A):

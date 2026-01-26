@@ -7,10 +7,14 @@
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 import filecmp
+import importlib.resources
+from itertools import chain
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+import tempfile
 
 from filelock import FileLock
 
@@ -82,7 +86,7 @@ class StdlibInstaller:
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 
@@ -123,7 +127,7 @@ class StdlibInstaller:
                 dependencies.append(recognised_libs[d].install_to(pyccel_dirpath, installed_libs, verbose, compiler))
 
         new_obj = CompileObj(self._file_name, lib_dest_path, dependencies = dependencies,
-                          **self._compile_obj_kwargs)
+                          include=(lib_dest_path,), **self._compile_obj_kwargs)
         installed_libs[self._folder] = new_obj
         return new_obj
 
@@ -167,7 +171,7 @@ class CWrapperInstaller(StdlibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 
@@ -205,6 +209,98 @@ class ExternalLibInstaller:
         src_dir = src_dir or dest_dir
         self._src_dir = ext_path / src_dir
         self._dest_dir = dest_dir
+        self._discovery_method = None
+
+    @property
+    def discovery_method(self):
+        """
+        Get the standard method for discovering this package (CMake vs pkgconfig).
+
+        Get the standard method for discovering this package (CMake vs pkgconfig). If the
+        method is unknown then None is returned. In this case the method should match the
+        chosen build system.
+        """
+        return self._discovery_method
+
+    @property
+    def name(self):
+        """
+        Get the name by which the package is known in the build system.
+
+        Get the name by which the package is known in the build system.
+        """
+        return self._dest_dir
+
+    def _check_for_cmake_package(self, pkg_name, languages, options = '', *, target_name):
+        """
+        Use CMake to search for a package.
+
+        Use CMake to search for a package. CMake can provide the compilation
+        information.
+
+        Parameters
+        ----------
+        pkg_name : str
+            The name of the package.
+        languages : iterable[str]
+            The languages that the project will use with this package.
+        options : str, optional
+            Any additional options that should be passed to find_package.
+            E.g. COMPONENTS.
+        target_name : str
+            The name of the package target. By default this is assumed to be
+            the same as the pkg_name (e.g. HDF5::HDF5).
+
+        Returns
+        -------
+        CompileObj | None
+            A CompileObj describing the package if it is installed on the system.
+        """
+        cmake = shutil.which('cmake')
+        # If cmake is not installed then exit
+        if not cmake:
+            return None
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as build_dir:
+            # Write a minimal CMakeLists.txt
+            cmakelists_path = os.path.join(build_dir, "CMakeLists.txt")
+            with open(cmakelists_path, "w", encoding='utf-8') as f:
+                f.write(f'project(Test LANGUAGES {languages})\n')
+                f.write('cmake_minimum_required(VERSION 3.28)\n')
+                f.write(f'find_package({pkg_name} REQUIRED {options})\n')
+                f.write(f'get_target_property(FLAGS {pkg_name}::{target_name} COMPILE_FLAGS)\n')
+                f.write(f'get_target_property(INCLUDE_DIRS {pkg_name}::{target_name} INCLUDE_DIRECTORIES)\n')
+                f.write(f'get_target_property(INTERFACE_INCLUDE_DIRS {pkg_name}::{target_name} INTERFACE_INCLUDE_DIRECTORIES)\n')
+                f.write(f'get_target_property(LIBRARIES {pkg_name}::{target_name} LINK_LIBRARIES)\n')
+                f.write(f'get_target_property(INTERFACE_LIBRARIES {pkg_name}::{target_name} INTERFACE_LINK_LIBRARIES)\n')
+                f.write(f'get_target_property(LIB_DIRS {pkg_name}::{target_name} INTERFACE_LINK_DIRECTORIES)\n')
+                f.write(f'message(STATUS "{pkg_name} Found : ${{{pkg_name}_FOUND}}")\n')
+                f.write('message(STATUS "${FLAGS}")\n')
+                f.write('message(STATUS "${INCLUDE_DIRS}")\n')
+                f.write('message(STATUS "${INTERFACE_INCLUDE_DIRS}")\n')
+                f.write('message(STATUS "${LIBRARIES}")\n')
+                f.write('message(STATUS "${INTERFACE_LIBRARIES}")\n')
+                f.write('message(STATUS "${LIB_DIRS}")\n')
+
+            # Run cmake configure step in that temp dir
+            p = subprocess.run(
+                [cmake, "-S", build_dir, "-B", build_dir],
+                capture_output=True, text=True, check=False)
+
+        if p.returncode:
+            return None
+        else:
+            self._discovery_method = 'CMake'
+            output = p.stdout.split('\n-- ')
+            start = next(i for i, l in enumerate(output) if l == f'{pkg_name} Found : 1')
+            flags, include_dirs, interface_include_dirs, libs, interface_libs, libdirs = ('' if o.endswith('NOTFOUND') else o for o in output[start+1:start+7])
+            return CompileObj(pkg_name, folder = "", has_target_file = False,
+                              include = [i for i in chain(include_dirs.split(','),
+                                                          interface_include_dirs.split(',')) if i],
+                              flags = [f for f in flags.split(',') if f],
+                              libdir = [l for l in libdirs.split(',') if l],
+                              libs = [l for l in chain(libs.split(','),
+                                                       interface_libs.split(',')) if l])
 
     def _check_for_package(self, pkg_name, options = ()):
         """
@@ -257,6 +353,7 @@ class ExternalLibInstaller:
                            text = True, check = True)
         assert p.stdout.strip() == ''
 
+        self._discovery_method = 'pkgconfig'
         return CompileObj(pkg_name, folder = "", has_target_file = False,
                           include = include, flags = flags, libdir = libdir,
                           libs = libs)
@@ -271,10 +368,9 @@ class STCInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("STC")
-        self._compile_obj = CompileObj("stc", folder = self._src_dir, has_target_file = False,
+        super().__init__("stc", src_dir = "STC")
+        self._compile_obj = CompileObj("stc", folder = self._src_dir.name, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
-
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
@@ -294,7 +390,7 @@ class STCInstaller(ExternalLibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object to compile STC if it is not already installed.
 
         Returns
@@ -303,12 +399,36 @@ class STCInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        compiler_family = compiler.compiler_family.lower()
+        compiler_family = compiler.compiler_family
 
         # Use pkg-config to try to locate an existing (system or user) installation
         # with version >= 5.0 < 6
         existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
         if existing_installation:
+            installed_libs['stc'] = existing_installation
+            return existing_installation
+
+        sep = ';' if sys.platform == "win32" else ':'
+        PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
+
+        try:
+            stc_installation = importlib.resources.files(f'pyccel.extensions.stc_install_{compiler_family}')
+        except ModuleNotFoundError:
+            stc_installation = None
+
+        if stc_installation:
+            with importlib.resources.as_file(stc_installation) as f:
+                pkgconfig_dir = next(f.glob('**/*.pc')).parent
+                os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
+                                                         if p and Path(p).exists())
+
+                # Use pkg-config to try to locate an existing (system or user) installation
+                # with version >= 5.0 < 6
+                # This must be done in the with statement to ensure pkgconfig_dir exists
+                existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
+            installed_libs['stc'] = existing_installation
             return existing_installation
 
         # Check if meson can be used to build
@@ -340,6 +460,10 @@ class STCInstaller(ExternalLibInstaller):
         libdir = next(install_dir.glob('**/*.a')).parent
         libs = ['-lstc', '-lm']
 
+        self._discovery_method = 'pkgconfig'
+        os.environ['PKG_CONFIG_PATH'] = ':'.join(p for p in (*PKG_CONFIG_PATH, str(libdir / "pkgconfig"))
+                                                 if p and Path(p).exists())
+
         new_obj = CompileObj("stc", folder = "", has_target_file = False,
                           include = (install_dir / 'include',),
                           libdir = (libdir, ), libs = libs)
@@ -356,7 +480,16 @@ class GFTLInstaller(ExternalLibInstaller):
     the installation procedure to be specialised for this library.
     """
     def __init__(self):
-        super().__init__("gFTL", src_dir = "gFTL/install/GFTL-1.13")
+        super().__init__("GFTL", src_dir = "gFTL")
+
+    @property
+    def target_name(self):
+        """
+        The name of the relevant CMake target inside the gFTL package.
+
+        The name of the relevant CMake target inside the gFTL package.
+        """
+        return 'gftl-v2'
 
     def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
         """
@@ -377,7 +510,7 @@ class GFTLInstaller(ExternalLibInstaller):
             library dependencies.
         verbose : int
             The level of verbosity.
-        compiler : Compiler
+        compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object in case the installed dependency needs compiling. This is
             unused in this method.
 
@@ -387,16 +520,25 @@ class GFTLInstaller(ExternalLibInstaller):
             The object that should be added as a dependency to objects that depend on this
             library.
         """
-        dest_dir = Path(pyccel_dirpath) / self._dest_dir
-        if not dest_dir.exists():
-            if verbose:
-                print(f">> Creating a link to {self._src_dir} in {dest_dir}")
-            os.symlink(self._src_dir, dest_dir, target_is_directory=True)
+        existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
 
-        new_obj = CompileObj("gFTL", folder = "gFTL", has_target_file = False,
-                          include = (dest_dir / 'include/v2',))
-        installed_libs['gFTL'] = new_obj
-        return new_obj
+        if existing_installation:
+            installed_libs['gFTL'] = existing_installation
+            return existing_installation
+
+        sep = ';' if sys.platform == "win32" else ':'
+        CMAKE_PREFIX_PATH = os.environ.get('CMAKE_PREFIX_PATH', '').split(sep)
+
+        gftl_installation = importlib.resources.files('pyccel.extensions.gftl_install')
+        with importlib.resources.as_file(gftl_installation) as f:
+            cmake_dir = next(f.glob('**/*.cmake')).parent
+            os.environ['CMAKE_PREFIX_PATH'] = ':'.join(s for s in (*CMAKE_PREFIX_PATH, str(cmake_dir))
+                                                       if s and Path(s).exists())
+            existing_installation = self._check_for_cmake_package('GFTL', 'Fortran', target_name = self.target_name)
+
+            installed_libs['gFTL'] = existing_installation
+
+        return existing_installation
 
 #------------------------------------------------------------------------------------------
 
@@ -414,7 +556,8 @@ recognised_libs = {
                                         dependencies = ('stc',)),
     "gFTL_functions" : StdlibInstaller("gFTL_functions", "gFTL_functions",
                                         has_target_file = False,
-                                        dependencies = ('gFTL',))
+                                        dependencies = ('gFTL',)),
+    "gFTL_extensions" : None
 }
 
 recognised_libs['CSpan_extensions'] = recognised_libs['STC_Extensions']

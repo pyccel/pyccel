@@ -609,6 +609,17 @@ def test_set_intersection_operator(language):
     assert python_result[0] == pyccel_result[0]
     assert set(python_result[1:]) == set(pyccel_result[1:])
 
+def test_set_intersection_operator_2(language):
+    def intersection_int():
+        a = {1,2,3,4,8}
+        b = {5,2,3,7,8}
+        return a & b
+
+    epyccel_func = epyccel(intersection_int, language = language)
+    pyccel_result = epyccel_func()
+    python_result = intersection_int()
+    assert set(python_result) == set(pyccel_result)
+
 def test_set_intersection_update(language):
     def intersection_int():
         a = {1,2,3,4,8}

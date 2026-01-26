@@ -297,7 +297,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
             self._order = order
             super().__init__()
 
-        name = 'Numpy{rank}DArrayType_{order}_{type(dtype)}'
+        name = f'Numpy{rank}DArrayType_{order}_{type(dtype).__name__}'
         return type(name, (NumpyNDArrayType,),
                     {'__init__': __init__})()
 

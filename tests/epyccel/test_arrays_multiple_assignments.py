@@ -187,6 +187,7 @@ def test_creation_in_if_heap_shape(language):
     assert f(c) == g(c)
 
 #==============================================================================
+@pytest.mark.language_agnostic
 def test_Reassign_to_Target():
 
     def f():
@@ -213,6 +214,7 @@ def test_Reassign_to_Target():
     assert error_info.message == TARGET_ALREADY_IN_USE
 
 #==============================================================================
+@pytest.mark.language_agnostic
 def test_Reassign_List_to_Target():
 
     def f():
@@ -243,6 +245,7 @@ def test_Reassign_List_to_Target():
     assert error_found
 
 #==============================================================================
+@pytest.mark.language_agnostic
 def test_Reassign_Set_to_Target():
 
     def f():
@@ -273,6 +276,7 @@ def test_Reassign_Set_to_Target():
     assert error_found
 
 #==============================================================================
+@pytest.mark.language_agnostic
 def test_Reassign_Dict_to_Target():
 
     def f():
@@ -304,6 +308,7 @@ def test_Reassign_Dict_to_Target():
 
 #==============================================================================
 
+@pytest.mark.language_agnostic
 def test_Assign_Between_Allocatables():
 
     def f():
@@ -332,6 +337,7 @@ def test_Assign_Between_Allocatables():
 
 #==============================================================================
 
+@pytest.mark.language_agnostic
 def test_Assign_after_If():
 
     def f(b : bool):

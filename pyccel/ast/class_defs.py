@@ -259,11 +259,11 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(class_type):
+def get_builtin_cls_base(class_type):
     """
-    Determine the base class of an object.
+    Determine the base class of an object with a built-in datatype.
 
-    From the type, determine the base class of an object.
+    From the type, determine the base class of an object with a built-in datatype.
 
     Parameters
     ----------
@@ -280,7 +280,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, (CustomDataType, SymbolicType, GenericType)):
+    if isinstance(class_type, (SymbolicType, GenericType)):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]

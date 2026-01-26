@@ -44,7 +44,7 @@ jobs:
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
-        echo "matrix=[${{ inputs.python_version }}]" >> $GITHUB_ENV
+        echo "matrix=['${{ inputs.python_version }}']" >> $GITHUB_ENV
       shell: bash
     - id: set-matrix
       run: |

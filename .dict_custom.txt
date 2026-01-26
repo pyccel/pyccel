@@ -9,6 +9,7 @@ SymPy
 SymPy's
 BLAS
 LAPACK
+LAPACK's
 MPI
 OpenMP
 Fortran
@@ -112,6 +113,8 @@ destructor's
 Valgrind
 variadic
 subclasses
+superclass
+superclasses
 oneAPI
 getter
 setter
@@ -138,3 +141,6 @@ Makefile
 Makefiles
 parametrised
 parametrisable
+unannotated
+subcommand
+subcommands

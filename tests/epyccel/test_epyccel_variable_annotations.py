@@ -3,11 +3,11 @@
 """ Tests for headers. This ensures intermediate steps are tested before headers are deprecated.
 Once headers are deprecated this file can be removed.
 """
-from typing import Final
+from typing import Final, Annotated
 import pytest
 
 from pyccel import epyccel
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import PyccelSemanticError, Errors
 from pyccel.decorators import allow_negative_index, stack_array
 
 def test_local_type_annotation(language):
@@ -119,6 +119,15 @@ def test_final_annotation(language):
 
     with pytest.raises(PyccelSemanticError):
         epyccel(final_annotation, language=language)
+
+def test_final_annotation_transmission(language):
+    def final_annotation():
+        a : Final[int] = 3
+        b = a
+        return b
+
+    epyc_final_annotation = epyccel(final_annotation, language=language)
+    assert final_annotation() == epyc_final_annotation()
 
 def test_homogeneous_tuple_annotation(language):
     def homogeneous_tuple_annotation():
@@ -397,3 +406,24 @@ def test_str_declaration(language):
 
     epyc_str_declaration = epyccel(str_declaration, language = language)
     assert str_declaration() == epyc_str_declaration()
+
+def test_unknown_annotation(language):
+    def unknown_annotation():
+        a : Annotated[int, ">10"] = 15
+        return a
+
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    epyc_unknown_annotation = epyccel(unknown_annotation, language = language)
+
+    # Check result of pyccelized function
+    assert unknown_annotation() == epyc_unknown_annotation()
+
+    # Check that we got exactly 1 Pyccel warning
+    assert errors.has_warnings()
+    assert errors.num_messages() == 1
+
+    # Check that the warning is correct
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert ">10" in warning_info.symbol

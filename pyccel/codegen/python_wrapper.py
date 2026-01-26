@@ -130,8 +130,9 @@ def create_shared_library(codegen,
 
     for i, (obj, lang, imports) in enumerate(zip(wrapper_compile_objs, printed_languages, gen.get_additional_imports())):
         obj.add_dependencies(*wrapper_compile_objs[:i])
-        manage_dependencies(imports, compiler,
-                pyccel_dirpath, obj, lang, verbose)
+        manage_dependencies(imports, pyccel_dirpath = pyccel_dirpath,
+                            compiler = compiler, mod_obj = obj, language = lang,
+                            verbose = verbose)
 
     #-------------------------------------------
     #               Compile code

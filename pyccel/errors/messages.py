@@ -138,8 +138,6 @@ REDEFINING_VARIABLE = 'Variable already defined'
 
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
 
-INVALID_FILE_DIRECTORY = 'No file or directory of this name'
-INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyi`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS

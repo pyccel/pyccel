@@ -29,6 +29,7 @@ from pyccel.ast.datatypes import PythonNativeInt, CharType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousSetType, HomogeneousListType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
+from pyccel.ast.numpyext import NumpyInt32
 from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type, numpy_precision_map
 from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
 from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
@@ -147,8 +148,7 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        # We only wrap the non inlined functions
-        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_inline]
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_private]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
@@ -161,13 +161,16 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
+        interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
         # Import the module and its dependencies (in case they are used for argument types)
         imports = [Import(self.scope.get_python_name(expr.name), target = expr, mod=expr),
                    *expr.imports]
+
+        # Ensure renamed datatypes are mapped to their new name
+        self.scope.imports['cls_constructs'].update(expr.scope.imports['cls_constructs'])
 
         self._wrapper_names_dict[expr.name] = name
 
@@ -202,7 +205,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private or expr.is_inline:
+        if expr.is_private or not expr.is_semantic:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
@@ -372,27 +375,29 @@ class FortranToCWrapper(Wrapper):
         scope.insert_variable(arg_var)
         scope.insert_variable(bind_var)
 
-        shape   = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_shape_{i+1}', is_argument = True)
-                   for i in range(rank)]
+        base_shape = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_base_shape_{i+1}', is_argument = True)
+                      for i in range(rank)]
         stride  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_stride_{i+1}', is_argument = True)
                    for i in range(rank)]
+        ubound  = [scope.get_temporary_variable(PythonNativeInt(), name=f'{name}_ubound_{i+1}', is_argument = True)
+                   for i in range(rank)]
 
-        orig_size = [PyccelMul(sh,st) for sh,st in zip(shape, stride)]
-        body = [C_F_Pointer(bind_var, arg_var, orig_size[::-1] if order == 'C' else orig_size)]
+        body = [C_F_Pointer(bind_var, arg_var, base_shape[::-1] if order == 'C' else base_shape)]
 
         c_arg_var = Variable(BindCArrayType.get_new(rank, has_strides = True),
                         scope.get_new_name(), is_argument = True,
-                        shape = (LiteralInteger(rank*2+1),))
+                        shape = (LiteralInteger(rank*3+1),))
 
         scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(0)), bind_var)
-        for i,s in enumerate(shape):
+        for i,s in enumerate(base_shape):
             scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+1)), s)
-        for i,s in enumerate(stride):
+        for i,s in enumerate(ubound):
             scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+rank+1)), s)
+        for i,s in enumerate(stride):
+            scope.insert_symbolic_alias(IndexedElement(c_arg_var, LiteralInteger(i+2*rank+1)), s)
 
         start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
-        stop = None
-        indexes = [Slice(start, stop, step) for step in stride]
+        indexes = [Slice(start, PyccelAdd(stop, LiteralInteger(1)), step) for step,stop in zip(stride, ubound)]
 
         f_arg = IndexedElement(arg_var, *indexes)
 
@@ -695,7 +700,7 @@ class FortranToCWrapper(Wrapper):
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         del_method = expr.methods_as_dict.get('__del__', None)
         if del_method is None:
@@ -817,7 +822,7 @@ class FortranToCWrapper(Wrapper):
                             scope.get_new_name('bound_'+name),
                             memory_handling='alias')
 
-        if isinstance(orig_var, DottedVariable):
+        if isinstance(orig_var, DottedVariable) or orig_var.is_alias:
             ptr_var = orig_var
             body = [CLocFunc(ptr_var, bind_var)]
         else:
@@ -837,9 +842,11 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         memory_handling = 'alias' if isinstance(orig_var, DottedVariable) else orig_var.memory_handling
 
+        shape = orig_var.shape if memory_handling == 'stack' else None
+
         # Allocatable is not returned so it must appear in local scope
         local_var = orig_var.clone(scope.get_expected_name(name), new_class = Variable,
-                            memory_handling = memory_handling, shape = None)
+                            memory_handling = memory_handling, shape = shape)
         scope.insert_variable(local_var, name)
 
         if orig_var.is_alias or isinstance(orig_var, DottedVariable):
@@ -1107,7 +1114,7 @@ class FortranToCWrapper(Wrapper):
         shape_vars = [Variable(NumpyInt32Type(), scope.get_new_name(f'{name}_shape_{i+1}'))
                          for i in range(rank)]
 
-        body = [Assign(s_v, s) for s_v, s in zip(shape_vars, shape)]
+        body = [Assign(s_v, NumpyInt32(s)) for s_v, s in zip(shape_vars, shape)]
 
         if pointer_target:
             body.append(CLocFunc(orig_var, bind_var))

@@ -1,4 +1,3 @@
-# coding: utf-8
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
@@ -17,6 +16,7 @@ from importlib.machinery import ExtensionFileLoader
 
 from filelock import FileLock, Timeout
 
+from pyccel.utilities.stage    import PyccelStage
 from pyccel.utilities.strings  import random_string
 from pyccel.codegen.pipeline   import execute_pyccel
 from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
@@ -48,7 +48,7 @@ def get_source_code_and_context(func_or_class):
     -------
     code : list[str]
         A list of strings containing the lines of the source code.
-    context_dict : dict[str, object]
+    context_dict : dict[str, Any]
         A dictionary containing any objects defined in the context
         which may be useful for the function.
 
@@ -256,7 +256,7 @@ def epyccel_seq(function_class_or_module, *,
         Time the execution of Pyccel's internal stages.
     conda_warnings : {'off', 'basic', 'verbose'}
         Specify the level of Conda warnings to display (default: 'basic').
-    context_dict : dict[str, obj], optional
+    context_dict : dict[str, Any], optional
         A dictionary containing any Python objects from the calling scope which should
         be made available to the translated code. By default any objects that are used
         in the body of the function are made available, as well as any global objects.
@@ -265,8 +265,8 @@ def epyccel_seq(function_class_or_module, *,
 
     Returns
     -------
-    object
-        Return accelerated Python module and function.
+    module | class | function
+        Return accelerated Python module, class or function.
     """
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
@@ -327,7 +327,7 @@ def epyccel_seq(function_class_or_module, *,
 
     # Try is necessary to ensure lock is released
     try:
-        pymod_filename = f'{module_name}.py'
+        pymod_filename = os.path.join(epyccel_dirpath, f'{module_name}.py')
         # ...
 
         # Create new directories if not existing
@@ -338,23 +338,30 @@ def epyccel_seq(function_class_or_module, *,
         with open(pymod_filename, 'w', encoding='utf-8') as f:
             f.writelines(code)
 
-        # Generate shared library
-        execute_pyccel(pymod_filename,
-                       verbose         = verbose,
-                       time_execution  = time_execution,
-                       language        = language,
-                       compiler_family = compiler_family_or_config,
-                       flags           = flags,
-                       wrapper_flags   = wrapper_flags,
-                       include         = include,
-                       libdir          = libdir,
-                       modules         = (),
-                       libs            = libs,
-                       debug           = debug,
-                       accelerators    = accelerators,
-                       output_name     = module_name,
-                       conda_warnings  = conda_warnings,
-                       context_dict    = context_dict)
+        pyccel_stage = PyccelStage()
+        try:
+            # Generate shared library
+            execute_pyccel(pymod_filename,
+                           verbose         = verbose,
+                           time_execution  = time_execution,
+                           language        = language,
+                           compiler_family = compiler_family_or_config,
+                           flags           = flags,
+                           wrapper_flags   = wrapper_flags,
+                           include         = include,
+                           libdir          = libdir,
+                           modules         = (),
+                           libs            = libs,
+                           debug           = debug,
+                           accelerators    = accelerators,
+                           output_name     = module_name,
+                           conda_warnings  = conda_warnings,
+                           context_dict    = context_dict)
+        except PyccelError as err:
+            raise err
+        finally:
+            pyccel_stage.pyccel_finished()
+            print(errors, end='')
 
 
         # Import shared library
@@ -459,7 +466,7 @@ def epyccel(
         If True, set error mode to developer.
     conda_warnings : {'off', 'basic', 'verbose'}
         Specify the level of Conda warnings to display (default: 'basic').
-    context_dict : dict[str, obj], optional
+    context_dict : dict[str, Any], optional
         A dictionary containing any Python objects from the calling scope which should
         be made available to the translated code. By default any objects that are used
         in the body of the function are made available, as well as any global objects.
@@ -468,7 +475,7 @@ def epyccel(
 
     Returns
     -------
-    object
+    function | class | module
         Accelerated function, class or module.
 
     Other Parameters

@@ -27,6 +27,15 @@ def test_sqrt_call(language):
     x = rand() + rand()*1j
     assert isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL)
 
+def test_sqrt_mod_call(language):
+    def sqrt_call(x : complex):
+        import cmath
+        return cmath.sqrt(x)
+
+    f1 = epyccel(sqrt_call, language = language)
+    x = rand() + rand()*1j
+    assert isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL)
+
 def test_sqrt_phrase(language):
     def sqrt_phrase(x : complex, y : complex):
         from cmath import sqrt
