@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 
+import pytest
+
 from pyccel.parser.parser   import Parser
 from pyccel.errors.errors   import Errors
 
@@ -30,6 +32,7 @@ def get_functions(filename):
 
     return list(ast.scope.functions.values())
 
+@pytest.mark.language_agnostic
 def test_get_attribute_nodes():
     filename = os.path.join(path_dir, "math.py")
 
@@ -48,6 +51,7 @@ def test_get_attribute_nodes():
     for e in expected:
         assert e in atts
 
+@pytest.mark.language_agnostic
 def test_get_attribute_nodes_exclude():
     filename = os.path.join(path_dir, "math.py")
 
@@ -65,6 +69,7 @@ def test_get_attribute_nodes_exclude():
     assert minus.args[0] == a
     assert minus.args[1] == b
 
+@pytest.mark.language_agnostic
 def test_get_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
@@ -82,6 +87,7 @@ def test_get_user_nodes():
 
     assert len(sums) == 3
 
+@pytest.mark.language_agnostic
 def test_get_user_nodes_excluded():
     filename = os.path.join(path_dir, "math.py")
 
@@ -96,6 +102,7 @@ def test_get_user_nodes_excluded():
     plus_assign = a_var.get_user_nodes(Assign, excluded_nodes = PyccelMinus)
     assert len(plus_assign)==2
 
+@pytest.mark.language_agnostic
 def test_get_all_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
@@ -113,6 +120,7 @@ def test_get_all_user_nodes():
 
     assert len(users) == 4
 
+@pytest.mark.language_agnostic
 def test_get_direct_user_nodes():
     filename = os.path.join(path_dir, "math.py")
 
@@ -130,6 +138,7 @@ def test_get_direct_user_nodes():
 
     assert len(sums) == 2
 
+@pytest.mark.language_agnostic
 def test_substitute():
     filename = os.path.join(path_dir, "math.py")
 
@@ -152,6 +161,7 @@ def test_substitute():
     assert new_var in atts
     assert set(new_var.get_user_nodes(PyccelAstNode)) == set(old_parents)
 
+@pytest.mark.language_agnostic
 def test_substitute_exclude():
     filename = os.path.join(path_dir, "math.py")
 
@@ -177,6 +187,7 @@ def test_substitute_exclude():
     assert len(new_parents.difference(old_parents))==0
     assert len(old_parents.difference(new_parents))==1
 
+@pytest.mark.language_agnostic
 def test_recursive():
     filename = os.path.join(path_dir, "cyclic_dependence.py")
 

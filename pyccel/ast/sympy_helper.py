@@ -19,7 +19,7 @@ from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals  import LiteralTrue, LiteralFalse
-from .mathext   import MathCeil
+from .mathext   import MathCeil, MathFabs
 from .numpyext  import NumpyFloor
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
@@ -108,6 +108,11 @@ def sympy_to_pyccel(expr, symbol_map):
             return arg
         else:
             return MathCeil(arg)
+
+    elif isinstance(expr, sp.Abs):
+        arg = sympy_to_pyccel(expr.args[0], symbol_map)
+        # Only apply ceiling where appropriate
+        return MathFabs(arg)
 
     elif isinstance(expr, sp.Min):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
@@ -235,6 +240,9 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, MathCeil):
         return sp.ceiling(pyccel_to_sympy(expr.args[0], symbol_map, used_names))
+
+    elif isinstance(expr, MathFabs):
+        return sp.Abs(pyccel_to_sympy(expr.args[0], symbol_map, used_names))
 
     elif isinstance(expr, PythonMin):
         args = [pyccel_to_sympy(ee, symbol_map, used_names) for e in expr.args for ee in e]

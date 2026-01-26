@@ -79,12 +79,13 @@ class BindCArrayType:
         has_strides : bool
             Indicates whether strides are used to describe the array.
         """
-        shape_types = (PythonNativeInt(),)*rank
+        base_shape_types = (PythonNativeInt(),)*rank
         stride_types = (PythonNativeInt(),)*rank*has_strides
+        ubound_types = (PythonNativeInt(),)*rank*has_strides
         name = 'BindCArray{rank}DType'
         if has_strides:
             name += '_strided'
-        super_class_instance = InhomogeneousTupleType.get_new(BindCPointer(), *shape_types, *stride_types)
+        super_class_instance = InhomogeneousTupleType.get_new(BindCPointer(), *base_shape_types, *stride_types, *ubound_types)
         return type(name, (type(super_class_instance), BindCArrayType),
                     {})()
 

@@ -62,7 +62,7 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir, test_file, options = ""):
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
-    cmd = [shutil.which("pyccel"), test_file]
+    cmd = [shutil.which("pyccel"), "compile", test_file]
     if options != "":
         cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
@@ -413,6 +413,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
+@pytest.mark.xdist_incompatible
 def test_relative_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -425,6 +426,7 @@ def test_relative_imports_in_project(language):
             language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_absolute_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -465,6 +467,7 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_multi_imports_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -561,8 +564,9 @@ def test_expressions(language):
             output_dtype = types)
 
 #------------------------------------------------------------------------------
-# See issue #756 for c problem
+@pytest.mark.fortran
 def test_generic_functions():
+    # Only testing Fortran for simple compilation outside of Pyccel
     pyccel_test("scripts/runtest_generic_functions.py",
             dependencies = "scripts/generic_functions.py",
             compile_with_pyccel = False,
@@ -661,20 +665,18 @@ def test_import_collisions(language):
             language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "language", (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Collisions are not handled in C"),
-            pytest.mark.c]
-        )
-    )
-)
 @pytest.mark.xdist_incompatible
 def test_import_collisions_builtins(language):
     pyccel_test("scripts/import_syntax/collisions6.py",
             dependencies = ["scripts/import_syntax/user_mod_builtin_conflict.py"],
             language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_class_import_as(language):
+    pyccel_test("scripts/import_syntax/from_cls_mod_import_as_user.py",
+                dependencies = ["scripts/import_syntax/user_cls_mod.py"],
+                language=language)
 
 #------------------------------------------------------------------------------
 # Numpy sum required
@@ -844,6 +846,12 @@ def test_classes_type_print(language):
     rx = re.compile(r'\bA\b')
     assert rx.search(lang_out)
 
+def test_class_inline_array(language):
+    pyccel_test("scripts/classes/class_inline.py",
+                dependencies = ["scripts/classes/importable.py"],
+                language = language,
+                output_dtype = float)
+
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
@@ -865,6 +873,7 @@ def test_interfaces_in_classes( test_file , language):
                                         ] )
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.external
+@pytest.mark.fortran
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
     #pyccel_test(test_file)
@@ -990,6 +999,7 @@ def test_assert(language, test_file):
 
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
+    pyccel_commands += " --debug"
 
     compile_pyccel(cwd, test_file, pyccel_commands)
     lang_out = get_lang_exit_value(output_test_file, language)
@@ -1053,6 +1063,7 @@ def test_module_init_collisions( language ):
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
 
+@pytest.mark.fortran
 def test_function_aliasing():
     pyccel_test("scripts/runtest_function_alias.py",
             language = 'fortran')
@@ -1078,18 +1089,20 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_json():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json', '--compiler-family', 'intel']
+    cmd = [shutil.which("pyccel"), 'config', 'export', f'{output_dir}/test.json', '--compiler-family', 'intel']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
     assert dict_1['c']['exec'] == 'icx'
     cmd = [shutil.which("pyccel"),
+           'config',
+           'export',
+           f'{output_dir}/test2.json',
            '--compiler-config',
-           f'{output_dir}/test.json',
-           '--export-compiler-config',
-           f'{output_dir}/test2.json']
+           f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
@@ -1097,17 +1110,20 @@ def test_json():
     assert dict_1 == dict_2
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_ambiguous_json():
+    #TODO: Remove in v2.3 when --export-compiler-config is deprecated
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
     cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test.json'), 'r', encoding='utf-8') as f:
         dict_1 = json.load(f)
     cmd = [shutil.which("pyccel"),
+           'config',
+           'export',
+           f'{output_dir}/test2.json',
            '--compiler-config',
-           f'{output_dir}/test.json',
-           '--export-compiler-config',
-           f'{output_dir}/test2']
+           f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     with open(get_abs_path(f'{output_dir}/test2.json'), 'r', encoding='utf-8') as f:
         dict_2 = json.load(f)
@@ -1115,14 +1131,16 @@ def test_ambiguous_json():
     assert dict_1 == dict_2
 
 @pytest.mark.xdist_incompatible
+@pytest.mark.language_agnostic
 def test_json_relative_path():
     output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
-    cmd = [shutil.which("pyccel"), '--export-compiler-config', f'{output_dir}/test.json']
+    cmd = [shutil.which("pyccel"), 'config', 'export', f'{output_dir}/test.json']
     subprocess.run(cmd, check=True)
     shutil.move(get_abs_path(f'{output_dir}/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
+@pytest.mark.language_agnostic
 def test_reserved_file_name():
     with pytest.raises(ValueError) as exc_info:
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
@@ -1131,9 +1149,9 @@ def test_reserved_file_name():
 
 #------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatenation():
+def test_concatenation(language):
     pyccel_test("scripts/concatenation.py",
-                language = 'fortran',
+                language = language,
                 output_dtype=[int]*15+[str])
 
 #------------------------------------------------------------------------------
@@ -1142,6 +1160,7 @@ def test_concatenation():
         pytest.param("c", marks = pytest.mark.c)
     )
 )
+@pytest.mark.xdist_incompatible
 def test_class_imports(language):
     cwd = get_abs_path('project_class_imports')
 
@@ -1174,12 +1193,12 @@ def test_class_imports(language):
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 #------------------------------------------------------------------------------
-def test_time_execution_flag():
+def test_time_execution_flag(language):
     test_file  = get_abs_path("scripts/runtest_funcs.py")
 
     cwd = get_abs_path("scripts")
 
-    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time-execution"]
+    cmd = [shutil.which("pyccel"), "compile", test_file, f"--language={language}", "--time-execution"]
     with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
         result, _ = p.communicate()
@@ -1265,12 +1284,21 @@ def test_varkwargs():
 @pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671", language='fortran')
 def test_inline_using_import(language):
-    pyccel_test("scripts/inlining/runtest_inline_using_import.py",
+    test_file = "scripts/inlining/runtest_inline_using_import.py"
+    pyccel_test(test_file,
                 dependencies = ["scripts/inlining/my_func.py",
                                 "scripts/inlining/my_other_func.py",
                                 "scripts/inlining/inline_using_import.py"],
                 language = language,
                 output_dtype = float)
+
+    if language != 'python':
+        test_abspath = get_abs_path(test_file)
+
+        cwd = os.path.dirname(test_abspath)
+        pyth_out = get_python_output(test_abspath, cwd)
+        lang_out = get_lang_output(os.path.splitext(test_abspath)[0], language)
+        compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
@@ -1293,3 +1321,29 @@ def test_inline_using_named_import(language):
                                 "scripts/inlining/inline_using_named_import.py"],
                 language = language,
                 output_dtype = float)
+
+#------------------------------------------------------------------------------
+def test_classes_array_property(language):
+    pyccel_test("scripts/classes/runtest_classes_array_property.py",
+                dependencies = ["scripts/classes/classes_array_property.py"],
+                language = language,
+                output_dtype = float)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_classes_pointer_import(language):
+    cwd = get_abs_path("scripts/classes")
+    test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
+
+    pyth_out = get_python_output(test_file, cwd)
+
+    dependency = get_abs_path("scripts/classes/class_pointer_2.py")
+    compile_pyccel(cwd, dependency, f"--language={language}")
+
+    pyth_interface_out = get_python_output(test_file, cwd)
+    assert pyth_out == pyth_interface_out
+
+    compile_pyccel(cwd, test_file, f"--language={language}")
+
+    lang_out = get_lang_output(test_file, language)
+    compare_pyth_fort_output(pyth_out, lang_out, float, language)

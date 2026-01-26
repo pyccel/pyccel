@@ -1,4 +1,3 @@
-from typing import Final, TypeVar
 from typing import Final, TypeVar, overload
 from pyccel.decorators import low_level
 from numpy import float64
@@ -15,6 +14,7 @@ class A:
     def __init__(self : 'A', x : 'int') -> None:
         ...
     
+    @property
     @low_level('x')
     def x(self : 'A') -> 'int':
         ...

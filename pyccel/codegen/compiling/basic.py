@@ -91,11 +91,13 @@ class CompileObj:
                                             self.source.suffix + '.lock')))
 
         self._flags        = list(flags)
-        self._include     = {folder, *(Path(i) for i in include)}
+        self._include     = {*(Path(i) for i in include)}
+        if has_target_file:
+            self._include.add(folder)
         self._libs         = list(libs)
         self._libdir      = set(libdir)
         self._extra_compilation_tools = set(extra_compilation_tools)
-        self._dependencies = {a.module_target:a for a in dependencies}
+        self._dependencies = {getattr(a, 'module_target', a):a for a in dependencies}
         self._has_target_file = has_target_file
 
     def reset_folder(self, folder):

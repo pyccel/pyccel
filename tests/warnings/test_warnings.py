@@ -24,6 +24,7 @@ def get_files_from_folder(foldername):
     files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
     return files
 
+#@pytest.mark.language_agnostic
 #@pytest.mark.parametrize("f",get_files_from_folder('syntax'))
 #def test_syntax_warnings(f):
 #
@@ -37,6 +38,7 @@ def get_files_from_folder(foldername):
 #
 #    assert errors.num_messages()!=0
 
+@pytest.mark.language_agnostic
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f",get_files_from_folder('semantic'))
 def test_semantic_warnings(f):

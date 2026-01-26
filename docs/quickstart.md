@@ -144,7 +144,7 @@ In essence the `pyccel` command translates the given Python file to a Fortran or
 #### Example 1: "Hello World" program
 
 In this first example we create the simplest Python script `hello.py`, which prints `Hello, world!` followed by an empty line.
-We use the `pyccel` command to translate the Python code to a C program in file `hello.c`, which is placed in the new `__pyccel__` directory.
+We use the `pyccel compile` command to translate the Python code to a C program in file `hello.c`, which is placed in the new `__pyccel__` directory.
 By default Pyccel also compiles the C code into an executable named `hello`, which is placed in the same directory as the original file:
 
 ```bash
@@ -152,7 +152,7 @@ $ printf 'if __name__ == "__main__": \n print("Hello, world!\\n")' > hello.py
 $ python3 hello.py
 Hello, world!
 
-$ pyccel hello.py --language c
+$ pyccel compile hello.py --language c
 $ ./hello
 Hello, world!
 
@@ -202,10 +202,10 @@ def binomial_coefficient(n : int, k : int):
     return num // den
 ```
 
-We use the `pyccel` command to translate `mod.py` to the C files `mod.c` and `mod.h`, which are placed in the new `__pyccel__` directory:
+We use the `pyccel compile` command to translate `mod.py` to the C files `mod.c` and `mod.h`, which are placed in the new `__pyccel__` directory:
 
 ```bash
-pyccel mod.py --language c
+pyccel compile mod.py --language c
 ```
 
 By default Pyccel also compiles the C code into a Python C extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`.
@@ -326,7 +326,7 @@ def matmul(a: 'float[:,:](order=C)',
 We now translate this file to Fortran, and compile it to a Python C extension module, using the command
 
 ```bash
-pyccel mod.py --language fortran
+pyccel compile mod.py --language fortran
 ```
 
 The flag `--language fortran` may be omitted, as Pyccel uses Fortran as the default backend language.
@@ -547,7 +547,7 @@ In the future we plan to support GPU programming with [CUDA](https://en.wikipedi
 
 ## Cleaning up the environment
 
-Pyccel generates various files, in order to help clean up the environment after using it, we therefore also provide the command line tool: `pyccel-clean`.
+Pyccel generates various files, in order to help clean up the environment after using it, we therefore also provide the command line tool: `pyccel clean`.
 This tool removes all folders whose name begins with `__pyccel__` or `__epyccel__` and can also be used to remove shared libraries and programs.
 
 ## Getting Help

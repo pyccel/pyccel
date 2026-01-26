@@ -6,12 +6,14 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the typing module understood by pyccel
 """
+from immutabledict import immutabledict
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
 from .datatypes import TypeAlias, GenericType, FinalType
 
 __all__ = (
+    'TypingAnnotation',
     'TypingAny',
     'TypingFinal',
     'TypingOverload',
@@ -37,7 +39,7 @@ class TypingFinal(TypedAstNode):
     __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
     name = 'Final'
-    _static_type = FinalType()
+    _static_type = FinalType
 
     def __init__(self, arg):
         self._arg = arg
@@ -51,6 +53,52 @@ class TypingFinal(TypedAstNode):
         Get the argument describing the type annotation for an object.
         """
         return self._arg
+
+#==============================================================================
+
+class TypingAnnotation(TypedAstNode):
+    """
+    Class representing a call to the typing.Annotated construct.
+
+    Class representing a call to the typing.Annotated construct. A "call" to this
+    object looks like an IndexedElement. This is because types are involved. It
+    allows additional context information to be provided to describe variables.
+    E.g. the memory handling.
+
+    Parameters
+    ----------
+    arg : SyntacticTypeAnnotation
+        The annotation which is annotated.
+    **metadata
+        The metadata providing additional information about the variable being
+        declared.
+    """
+    __slots__ = ('_arg','_metadata')
+    _attribute_nodes = ('_arg',)
+    name = 'Annotated'
+
+    def __init__(self, arg, **metadata):
+        self._arg = arg
+        self._metadata = metadata
+        super().__init__()
+
+    @property
+    def arg(self):
+        """
+        Get the argument describing the type annotation for an object.
+
+        Get the argument describing the type annotation for an object.
+        """
+        return self._arg
+
+    @property
+    def metadata(self):
+        """
+        The metadata providing additional information about the variable being declared.
+
+        The metadata providing additional information about the variable being declared.
+        """
+        return immutabledict(self._metadata)
 
 #==============================================================================
 class TypingTypeAlias(TypedAstNode):
@@ -156,6 +204,7 @@ class TypingAny(TypedAstNode):
 
 typing_funcs = {
         'Any': PyccelFunctionDef('Any', TypingAny),
+        'Annotated': PyccelFunctionDef('Annotated', TypingAnnotation),
         'Final': PyccelFunctionDef('Final', TypingFinal),
         'TypeAlias': PyccelFunctionDef('TypeAlias', TypingTypeAlias),
         'TypeVar' : PyccelFunctionDef('TypeVar', TypingTypeVar),

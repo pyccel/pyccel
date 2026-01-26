@@ -486,7 +486,11 @@ class CToPythonWrapper(Wrapper):
             possible_types = list(type_to_example_arg.keys())
 
             n_possible_types = len(possible_types)
-            if n_possible_types != 1:
+            if orig_funcs[0].arguments[i].has_default:
+                # The default must have a type that can be deduced so this can be checked
+                # in the wrapper of the implementation
+                pass
+            elif n_possible_types != 1:
                 # Update argument_type_flags with the index of the type key
                 for func, a in zip(funcs, interface_args):
                     index = next(i for i, p_t in enumerate(possible_types) if p_t is a.class_type)*step
@@ -502,7 +506,7 @@ class CToPythonWrapper(Wrapper):
                             [PyArgumentError(PyTypeError, f"Unexpected type for argument {interface_args[0].name}. Received {{type(arg)}}",
                                 arg = py_arg),
                              Return(PyccelUnarySub(LiteralInteger(1)))])))
-            elif not orig_funcs[0].arguments[i].has_default:
+            else:
                 check_func_call, err_body = self._get_type_check_condition(py_arg, type_to_example_arg.popitem()[1], True, body,
                                 allow_empty_arrays = is_bind_c)
                 err_body = err_body + (Return(PyccelUnarySub(LiteralInteger(1))), )
@@ -1086,6 +1090,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [del_function(c_obj),
                     Deallocate(c_obj)]
+        body.append(AliasAssign(c_obj, Nil()))
         body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
@@ -1135,22 +1140,25 @@ class CToPythonWrapper(Wrapper):
         pyarray_collect_arg = PointerCast(collect_arg, Variable(PyccelPyArrayObject(), '_', memory_handling = 'alias'))
         data_var = Variable(VoidType(), self.scope.get_new_name(orig_var.name + '_data'),
                             memory_handling='alias')
-        shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_shape'),
+        base_shape_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_base_shape'),
+                            shape = (orig_var.rank,))
+        ubound_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_ubound'),
                             shape = (orig_var.rank,))
         stride_var = Variable(CStackArray.get_new(NumpyInt64Type()), self.scope.get_new_name(orig_var.name + '_strides'),
                             shape = (orig_var.rank,))
         self.scope.insert_variable(data_var)
-        self.scope.insert_variable(shape_var)
+        self.scope.insert_variable(base_shape_var)
+        self.scope.insert_variable(ubound_var)
         self.scope.insert_variable(stride_var)
 
         get_data = AliasAssign(data_var, PyArray_DATA(ObjectAddress(pyarray_collect_arg)))
         get_strides_and_shape = get_strides_and_shape_from_numpy_array(
-                                        ObjectAddress(collect_arg), shape_var, stride_var,
+                                        ObjectAddress(collect_arg), base_shape_var, ubound_var, stride_var,
                                         convert_to_literal(orig_var.order != 'F'))
 
         body = [get_data, get_strides_and_shape]
 
-        return {'body': body, 'data':data_var, 'shape':shape_var, 'strides':stride_var}
+        return {'body': body, 'data':data_var, 'shape':base_shape_var, 'ubounds': ubound_var, 'strides':stride_var}
 
     def _call_wrapped_function(self, func, args, results):
         """
@@ -1289,7 +1297,7 @@ class CToPythonWrapper(Wrapper):
 
         # Wrap functions
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        funcs_to_wrap = [f for f in funcs_to_wrap if not f.is_inline]
+        funcs_to_wrap = [f for f in funcs_to_wrap if f.is_semantic and not f.is_private]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, 'removed_functions', None)
@@ -1299,7 +1307,7 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
 
         # Wrap interfaces
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
 
         module_def_name = self.scope.get_new_name('module')
         init_func = self._build_module_init_function(expr, imports, module_def_name)
@@ -1833,8 +1841,7 @@ class CToPythonWrapper(Wrapper):
         elif isinstance(expr.dtype, CustomDataType):
             if isinstance(new_res_val, PointerCast):
                 new_res_val = new_res_val.obj
-            body = [Allocate(getter_result, shape=None, status='unallocated'),
-                    AliasAssign(new_res_val, attrib),
+            body = [AliasAssign(new_res_val, attrib),
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
@@ -1953,7 +1960,7 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         get_val_result_var = getattr(get_val_result, 'original_function_result_variable', get_val_result.var)
-        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True)
+        result_wrapping = self._extract_FunctionDefResult(get_val_result_var, True, expr.getter)
         res_wrapper = result_wrapping['body']
         c_results = result_wrapping['c_results']
         getter_result = result_wrapping['py_result']
@@ -1961,14 +1968,11 @@ class CToPythonWrapper(Wrapper):
 
         call = self._call_wrapped_function(expr.getter, (class_obj,), c_results)
 
-        if isinstance(getter_result.dtype, CustomDataType):
-            arg_code.append(Allocate(getter_result, shape=None, status='unallocated'))
-
         if isinstance(expr.getter.original_function, DottedVariable):
             wrapped_var = expr.getter.original_function
+            res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
         else:
             wrapped_var = expr.getter.original_function.results.var
-        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*setup,
                        *arg_code,
@@ -2063,7 +2067,7 @@ class CToPythonWrapper(Wrapper):
         orig_scope = expr.scope
 
         for f in expr.methods:
-            if f.is_inline:
+            if not f.is_semantic:
                 continue
             orig_f = getattr(f, 'original_function', f)
             name = orig_f.name
@@ -2389,22 +2393,27 @@ class CToPythonWrapper(Wrapper):
         body = parts['body']
         shape = parts['shape']
         strides = parts['strides']
+        ubounds = parts['ubounds']
         shape_elems = [IndexedElement(shape, i) for i in range(orig_var.rank)]
         stride_elems = [IndexedElement(strides, i) for i in range(orig_var.rank)]
+        ubound_elems = [IndexedElement(ubounds, i) for i in range(orig_var.rank)]
         args = [parts['data']] + shape_elems + stride_elems
         default_body = [AliasAssign(parts['data'], Nil())] + \
                 [Assign(s, 0) for s in shape_elems] + \
+                [Assign(s, 0) for s in ubound_elems] + \
                 [Assign(s, 1) for s in stride_elems]
 
         if is_bind_c_argument:
             rank = orig_var.rank
             arg_var = Variable(BindCArrayType.get_new(rank, True), self.scope.get_new_name(orig_var.name),
-                        shape = (LiteralInteger(rank*2+1),))
+                        shape = (LiteralInteger(rank*3+1),))
             self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(0)), ObjectAddress(parts['data']))
             for i,s in enumerate(shape):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+1)), s)
-            for i,s in enumerate(strides):
+            for i,s in enumerate(ubounds):
                 self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+rank+1)), s)
+            for i,s in enumerate(strides):
+                self.scope.insert_symbolic_alias(IndexedElement(arg_var, LiteralInteger(i+2*rank+1)), s)
 
             return {'body': body, 'args': [arg_var], 'default_init': default_body}
 
@@ -2426,10 +2435,8 @@ class CToPythonWrapper(Wrapper):
                                     allows_negative_indexes = False, class_type = class_type)
             self.scope.insert_variable(sliced_arg_var, orig_var.name)
 
-        original_size = tuple(PyccelMul(sh, st) for sh, st in zip(shape_elems, stride_elems))
-
-        body.append(Allocate(arg_var, shape=original_size, status='unallocated', like=args[0]))
-        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, None, s) for s in stride_elems])))
+        body.append(Allocate(arg_var, shape=tuple(shape_elems), status='unallocated', like=args[0]))
+        body.append(AliasAssign(sliced_arg_var, IndexedElement(arg_var, *[Slice(None, u, s) for s, u in zip(stride_elems, ubound_elems)])))
 
         collect_arg = sliced_arg_var
         if orig_var.is_optional:
@@ -2672,7 +2679,7 @@ class CToPythonWrapper(Wrapper):
         clean_up = []
         if not isinstance(orig_var.class_type, FinalType):
             if is_bind_c_argument:
-                errors.report("Lists should be passed as constant arguments when translating to languages other than C." +
+                errors.report("Lists should be passed as constant arguments when translating to languages other than C. " +
                               "Any changes to the list will not be reflected in the calling code.",
                               severity='warning', symbol=orig_var)
             else:

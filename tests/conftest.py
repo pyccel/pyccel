@@ -11,6 +11,17 @@ if github_debugging:
     import sys
     sys.stdout = sys.stderr
 
+language_markers = ('language_agnostic', 'fortran', 'c', 'python')
+
+@pytest.fixture(autouse=True)
+def check_language_markers(request):
+    """
+    Ensure all tests have a language marker.
+    """
+    markers = [m.name for m in request.node.iter_markers()]
+    assert len(markers) > 0
+    assert any(l in markers for l in language_markers)
+
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),

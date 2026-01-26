@@ -19,8 +19,8 @@ gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
               'module_output_flag': '-J',
               'debug_flags': ("-fcheck=bounds","-g","-O0"),
-              'release_flags': ("-O3","-funroll-loops",),
-              'general_flags' : ('-fPIC',),
+              'release_flags': ("-O3","-funroll-loops",'-DNDEBUG'),
+              'general_flags' : ('-fPIC', '-cpp'),
               'standard_flags' : ('-std=f2003',),
               'mpi': {
                   },
@@ -33,20 +33,13 @@ gfort_info = {'exec' : 'gfortran',
                   },
               }
 
-if sys.platform == "win32":
-    gfort_info['mpi_exec'] = 'gfortran'
-    gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
-    gfort_info['mpi']['libs']     = ('msmpi',)
-    gfort_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gfort_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
-
 #------------------------------------------------------------
 ifort_info = {'exec' : 'ifx',
               'mpi_exec' : 'mpiifx',
               'module_output_flag': '-module',
               'debug_flags': ("-check", "bounds","-g","-O0"),
-              'release_flags': ("-O3","-funroll-loops",),
-              'general_flags' : ('-fPIC',),
+              'release_flags': ("-O3","-funroll-loops",'-DNDEBUG',),
+              'general_flags' : ('-fPIC', '-fpp',),
               'standard_flags' : ('-std=f2003',),
               'openmp': {
                   'flags' : ('-qopenmp','-nostandard-realloc-lhs'),
@@ -62,8 +55,8 @@ pgfortran_info = {'exec' : 'pgfortran',
               'mpi_exec' : 'pgfortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
-              'release_flags': ("-O3","-Munroll",),
-              'general_flags' : ('-fPIC',),
+              'release_flags': ("-O3","-Munroll",'-DNDEBUG',),
+              'general_flags' : ('-fPIC', '-cpp',),
               'standard_flags' : ('-Mstandard',),
               'openmp': {
                   'flags' : ('-mp',),
@@ -78,8 +71,8 @@ nvfort_info = {'exec' : 'nvfort',
               'mpi_exec' : 'mpifort',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
-              'release_flags': ("-O3","-Munroll",),
-              'general_flags' : ('-fPIC',),
+              'release_flags': ("-O3","-Munroll",'-DNDEBUG',),
+              'general_flags' : ('-fPIC', '-cpp',),
               'standard_flags' : ('-Mstandard',),
               'openmp': {
                   'flags' : ('-mp',),
@@ -93,7 +86,7 @@ nvfort_info = {'exec' : 'nvfort',
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
             'debug_flags': ("-g","-O0"),
-            'release_flags': ("-O3","-funroll-loops",),
+            'release_flags': ("-O3","-funroll-loops",'-DNDEBUG',),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'mpi': {
@@ -111,7 +104,7 @@ gcc_info = {'exec' : 'gcc',
 clang_info = {'exec': 'clang',
             'mpi_exec': 'mpicc',
             'debug_flags': ("-g", "-O0",),
-            'release_flags': ("-O3", "-funroll-loops"),
+            'release_flags': ("-O3", "-funroll-loops",'-DNDEBUG'),
             'general_flags': ("-fPIC",),
             'standard_flags': ("-std=c99",),
             'mpi': {},
@@ -129,8 +122,8 @@ flang_info = {
             'mpi_exec': 'mpifort',
             'module_output_flag': '-J',
             'debug_flags': ("-g", "-O0",),
-            'release_flags': ("-O3",),
-            'general_flags': ("-fPIC",),
+            'release_flags': ("-O3",'-DNDEBUG',),
+            'general_flags': ("-fPIC", '-cpp',),
             'standard_flags': ("-std=f2003",),
             'mpi': {},
             'openmp': {
@@ -143,28 +136,23 @@ flang_info = {
 
 
 if sys.platform == "darwin":
-    p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
-    HOMEBREW_PREFIX = p.stdout.decode().strip()
-    OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
+    p = subprocess.run([shutil.which('gcc'), '--version'], check=False, capture_output=True,
+                       text=True)
+    if p.returncode == 0 and 'Apple clang' in p.stdout:
+        p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
+        HOMEBREW_PREFIX = p.stdout.decode().strip()
+        OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
 
-    gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
-    gcc_info['openmp']['libs']     = ('omp',)
-    gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
-    gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
-
-elif sys.platform == "win32":
-
-    gcc_info['mpi_exec'] = 'gcc'
-    gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
-    gcc_info['mpi']['libs']     = ('msmpi',)
-    gcc_info['mpi']['include'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
-    gcc_info['mpi']['libdir']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+        gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
+        gcc_info['openmp']['libs']     = ('omp',)
+        gcc_info['openmp']['libdir']  = (os.path.join(OMP_PATH, 'lib'),)
+        gcc_info['openmp']['include'] = (os.path.join(OMP_PATH, 'include'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpiicx',
             'debug_flags': ("-g","-O0"),
-            'release_flags': ("-O3","-funroll-loops",),
+            'release_flags': ("-O3","-funroll-loops",'-DNDEBUG',),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -179,7 +167,7 @@ icc_info = {'exec' : 'icx',
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
             'debug_flags': ("-g","-O0"),
-            'release_flags': ("-O3","-Munroll",),
+            'release_flags': ("-O3","-Munroll",'-DNDEBUG',),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {
@@ -194,7 +182,7 @@ pgcc_info = {'exec' : 'pgcc',
 nvc_info = {'exec' : 'nvc',
             'mpi_exec' : 'mpicc',
             'debug_flags': ("-g","-O0"),
-            'release_flags': ("-O3","-Munroll",),
+            'release_flags': ("-O3","-Munroll",'-DNDEBUG',),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
             'openmp': {

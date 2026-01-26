@@ -68,7 +68,7 @@ pip install "pyccel[test]"
 
 This installs a few additional Python packages which are necessary for running the unit tests and getting a coverage report.
 
-The recommended way of running the unit tests is simply using the command line tool `pyccel-test` which is installed with Pyccel.
+The recommended way of running the unit tests is simply using the command line tool `pyccel test` which is installed with Pyccel.
 This runs all unit tests using Pytest under the hood.
 
 Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://pyccel.github.io/pyccel/docs/testing.html).

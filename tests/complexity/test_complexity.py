@@ -13,6 +13,7 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 
 @pytest.mark.parametrize( "f", files )
+@pytest.mark.language_agnostic
 def test_complexity(f):
 
     mem_complexity = MemComplexity(f)
