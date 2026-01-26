@@ -2098,16 +2098,15 @@ class CCodePrinter(CodePrinter):
             func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
             if expr.dtype.precision == 4:
-                return f'py_sign_type_float_complex({arg})'
+                func = f'py_sign_type_float_complex({arg})'
             elif expr.dtype.precision == 8:
-                return f'py_sign_type_double_complex({arg})'
+                func = f'py_sign_type_double_complex({arg})'
             elif expr.dtype.precision == 16:
-                return f'py_sign_type_long_double_complex({arg})'
+                func = f'py_sign_type_long_double_complex({arg})'
             else:
                 raise ValueError(f"Unsupported complex precision: {expr.dtype.precision}")
 
-
-        return f'{func}({self._print(expr.args[0])})'
+        return func
 
     def _print_NumpyIsFinite(self, expr):
         """
