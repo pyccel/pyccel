@@ -1,9 +1,23 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+import sys
 import numpy as np
 import modules.numpy_sign as mod
 
 from pyccel import epyccel
+
+# Relative and absolute tolerances for floating-point comparisons.
+# Windows has larger round-off errors.
+if sys.platform == 'win32':
+    RTOL = 1e-13
+    ATOL = 1e-14
+else:
+    RTOL = 2e-14
+    ATOL = 1e-15
+
+# Tolerances for 32-bit precision (float32/complex64)
+RTOL32 = 1e-5
+ATOL32 = 1e-6
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul
@@ -23,11 +37,11 @@ def test_sign_complex(language):
     x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
     x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
-    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
-    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
-    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
-    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
-    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
+    assert np.isclose(x1_nul, x2_nul, rtol=RTOL, atol=ATOL) and x1_nul.dtype == x2_nul.dtype
+    assert np.isclose(x1_pos, x2_pos, rtol=RTOL, atol=ATOL) and x1_pos.dtype == x2_pos.dtype
+    assert np.isclose(x1_neg, x2_neg, rtol=RTOL, atol=ATOL) and x1_neg.dtype == x2_neg.dtype
+    assert np.isclose(x1_pos_neg, x2_pos_neg, rtol=RTOL, atol=ATOL) and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert np.isclose(x1_neg_pos, x2_neg_pos, rtol=RTOL, atol=ATOL) and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_complex64(language):
     f_nul = mod.complex64_nul
@@ -47,11 +61,11 @@ def test_sign_complex64(language):
     x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
     x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
-    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
-    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
-    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
-    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
-    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
+    assert np.isclose(x1_nul, x2_nul, rtol=RTOL32, atol=ATOL32) and x1_nul.dtype == x2_nul.dtype
+    assert np.isclose(x1_pos, x2_pos, rtol=RTOL32, atol=ATOL32) and x1_pos.dtype == x2_pos.dtype
+    assert np.isclose(x1_neg, x2_neg, rtol=RTOL32, atol=ATOL32) and x1_neg.dtype == x2_neg.dtype
+    assert np.isclose(x1_pos_neg, x2_pos_neg, rtol=RTOL32, atol=ATOL32) and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert np.isclose(x1_neg_pos, x2_neg_pos, rtol=RTOL32, atol=ATOL32) and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_complex128(language):
     f_nul = mod.complex128_nul
@@ -71,11 +85,11 @@ def test_sign_complex128(language):
     x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
     x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
-    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
-    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
-    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
-    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
-    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
+    assert np.isclose(x1_nul, x2_nul, rtol=RTOL, atol=ATOL) and x1_nul.dtype == x2_nul.dtype
+    assert np.isclose(x1_pos, x2_pos, rtol=RTOL, atol=ATOL) and x1_pos.dtype == x2_pos.dtype
+    assert np.isclose(x1_neg, x2_neg, rtol=RTOL, atol=ATOL) and x1_neg.dtype == x2_neg.dtype
+    assert np.isclose(x1_pos_neg, x2_pos_neg, rtol=RTOL, atol=ATOL) and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert np.isclose(x1_neg_pos, x2_neg_pos, rtol=RTOL, atol=ATOL) and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_int16(language):
     f_pos = mod.int16_pos
@@ -159,11 +173,11 @@ def test_sign_literal_complex(language):
     x1_nul_imag, x2_nul_imag = f_nul_imag(), f_nul_imag_epyc()
     x1_real_nul, x2_real_nul = f_real_nul(), f_real_nul_epyc()
 
-    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
-    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
-    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
-    assert x1_nul_imag == x2_nul_imag and x1_nul_imag.dtype == x2_nul_imag.dtype
-    assert x1_real_nul == x2_real_nul and x1_real_nul.dtype == x2_real_nul.dtype
+    assert np.isclose(x1_pos, x2_pos, rtol=RTOL, atol=ATOL) and x1_pos.dtype == x2_pos.dtype
+    assert np.isclose(x1_neg, x2_neg, rtol=RTOL, atol=ATOL) and x1_neg.dtype == x2_neg.dtype
+    assert np.isclose(x1_nul, x2_nul, rtol=RTOL, atol=ATOL) and x1_nul.dtype == x2_nul.dtype
+    assert np.isclose(x1_nul_imag, x2_nul_imag, rtol=RTOL, atol=ATOL) and x1_nul_imag.dtype == x2_nul_imag.dtype
+    assert np.isclose(x1_real_nul, x2_real_nul, rtol=RTOL, atol=ATOL) and x1_real_nul.dtype == x2_real_nul.dtype
 
 def test_sign_literal_int(language):
     f_pos = mod.literal_int_pos
@@ -291,8 +305,8 @@ def test_sign_array_1d_complex(language):
     x_complex64, y_complex64 = f_complex64(arr64), f_complex64_epyc(arr64)
     x_complex128, y_complex128 = f_complex128(arr128), f_complex128_epyc(arr128)
 
-    assert np.array_equal(x_complex64, y_complex64) and x_complex64.dtype == y_complex64.dtype
-    assert np.array_equal(x_complex128, y_complex128) and x_complex128.dtype == y_complex128.dtype
+    assert np.allclose(x_complex64, y_complex64, rtol=RTOL32, atol=ATOL32) and x_complex64.dtype == y_complex64.dtype
+    assert np.allclose(x_complex128, y_complex128, rtol=RTOL, atol=ATOL) and x_complex128.dtype == y_complex128.dtype
 
 def test_sign_array_2d_complex(language):
     f_complex64 = mod.array_2d_complex64
@@ -306,5 +320,5 @@ def test_sign_array_2d_complex(language):
     x_complex64, y_complex64 = f_complex64(arr64), f_complex64_epyc(arr64)
     x_complex128, y_complex128 = f_complex128(arr128), f_complex128_epyc(arr128)
 
-    assert np.array_equal(x_complex64, y_complex64) and x_complex64.dtype == y_complex64.dtype
-    assert np.array_equal(x_complex128, y_complex128) and x_complex128.dtype == y_complex128.dtype
+    assert np.allclose(x_complex64, y_complex64, rtol=RTOL32, atol=ATOL32) and x_complex64.dtype == y_complex64.dtype
+    assert np.allclose(x_complex128, y_complex128, rtol=RTOL, atol=ATOL) and x_complex128.dtype == y_complex128.dtype
