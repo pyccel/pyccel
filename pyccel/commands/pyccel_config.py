@@ -238,7 +238,7 @@ def pyccel_config_check(filename):
             acc = lang_config[acc_name]
             possible_keys = accelerator_keys + ('shared_suffix',) if acc_name == 'python' else accelerator_keys
             for k,v in acc.items():
-                if k not in accelerator_keys:
+                if k not in possible_keys:
                     print(f"Warning: Key {k} for accelerator {acc_name} in language {lang} is unrecognised", file=sys.stderr)
                 else:
                     if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
