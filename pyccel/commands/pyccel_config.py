@@ -241,7 +241,12 @@ def pyccel_config_check(filename):
                 if k not in possible_keys:
                     print(f"Warning: Key {k} for accelerator {acc_name} in language {lang} is unrecognised", file=sys.stderr)
                 else:
-                    if not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
+                    if k == 'shared_suffix':
+                        if not isinstance(v, str):
+                            print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
+                            print("Expected: str", file=sys.stderr)
+                            exitcode = 1
+                    elif not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
                         print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
                         exitcode = 1
                 exitcode = exitcode or check_config_paths(acc, f"accelerator {acc_name} in language {lang}")
