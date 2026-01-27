@@ -1160,7 +1160,7 @@ def test_json_register(language):
     with open(bad_format_json_path, 'w', encoding='utf-8') as f:
         json.dump(config, f)
 
-    # Check check command
+    # Check `pyccel config check` command
     cmd = [shutil.which("pyccel"), 'config', 'check', bad_format_json_path]
     p = subprocess.run(cmd, check=False)
     assert p.returncode == 1
