@@ -271,7 +271,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     compiler_family : str
         The id used to identify the compiler family.
     filename : Path
-        Name of the JSON file containing the configuration.
+        Name of the input JSON file containing the configuration.
     verbose : int, default=0
         Indicates the level of verbosity.
     conda_warnings : str, optional
