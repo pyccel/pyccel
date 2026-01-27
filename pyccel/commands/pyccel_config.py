@@ -33,7 +33,7 @@ def setup_pyccel_config_parser(parser):
     export_parser = subparsers.add_parser('export', add_help=False, help="Export a compiler configuration to a json file.")
     export_parser.add_argument('filename', metavar='FILE', type=path_with_suffix(('.json',), must_exist = False),
                         help='The file that the parser information should be exported to.')
-    export_parser.set_defaults(config_func=pyccel_config)
+    export_parser.set_defaults(config_func=pyccel_config_export)
     #----------------------------------------------------------------------------
 
     check_parser = subparsers.add_parser('check', add_help=False, help="Check that a compiler configuration is valid.")
@@ -76,7 +76,7 @@ def setup_pyccel_config_parser(parser):
 
     add_help_flag(parser.add_argument_group('Options'))
 
-def pyccel_config_dispatch(config_func, **kwargs):
+def pyccel_config(config_func, **kwargs):
     """
     Call the correct configuration sub-command.
 
@@ -92,7 +92,7 @@ def pyccel_config_dispatch(config_func, **kwargs):
     """
     config_func(**kwargs)
 
-def pyccel_config(filename, **kwargs):
+def pyccel_config_export(filename, **kwargs):
     """
     Call the `pyccel config export` pipeline.
 

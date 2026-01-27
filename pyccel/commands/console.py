@@ -11,7 +11,7 @@ from .pyccel_compile import setup_pyccel_compile_parser, pyccel_compile, PYCCEL_
 from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
-from .pyccel_config import setup_pyccel_config_parser, pyccel_config_dispatch, PYCCEL_CONFIG_DESCR
+from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
 from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
 
 __all__ = ('pyccel_command',)
@@ -45,7 +45,7 @@ def pyccel_command() -> None:
 
     sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR),
                     'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
-                    'config': (setup_pyccel_config_parser, pyccel_config_dispatch, PYCCEL_CONFIG_DESCR),
+                    'config': (setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR),
                     'make':  (setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR),
                     'test':  (setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR),
                     'wrap':  (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
