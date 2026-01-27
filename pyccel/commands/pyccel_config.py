@@ -45,7 +45,9 @@ def setup_pyccel_config_parser(parser):
     description = ("Register a commonly used compiler configuration. "
                    "This allows the configuration to be retrieved by name "
                    "and pre-compiles library dependencies for this compiler. "
-                   "Compiler registration is  specific to the current user.")
+                   "Compiler registration saves compilers in the location "
+                   "indicated by the environment variable $PYCCEL_CONFIG_HOME "
+                   "or in ~/.pyccel if this variable does not exist.")
     register_parser = subparsers.add_parser('register', add_help=False, help="Register a commonly used compiler configuration.",
                                            description=description)
     register_parser.add_argument('compiler_family', metavar='FAMILY', type=str,
@@ -62,7 +64,7 @@ def setup_pyccel_config_parser(parser):
     remove_parser = subparsers.add_parser('remove', add_help=False, help="Remove a register compiler configuration.")
     remove_parser.add_argument('compiler_family', metavar='FAMILY', type=str,
                            help='The name that identifies the compiler.')
-    remove_parser.set_defaults(config_func=pyccel_remove_config)
+    remove_parser.set_defaults(config_func=pyccel_config_remove)
     #----------------------------------------------------------------------------
 
     # ... Compiler options
@@ -92,9 +94,9 @@ def pyccel_config_dispatch(config_func, **kwargs):
 
 def pyccel_config(filename, **kwargs):
     """
-    Call the `pyccel config` pipeline.
+    Call the `pyccel config export` pipeline.
 
-    Import and call the `pyccel config` pipeline.
+    Import and call the `pyccel config export` pipeline.
 
     Parameters
     ----------
@@ -311,7 +313,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     # Remove the temporary build directory
     shutil.rmtree(config_dirpath / 'STC' / f'build-{compiler_family}')
 
-def pyccel_remove_config(compiler_family):
+def pyccel_config_remove(compiler_family):
     """
     Remove a registered configuration.
 
