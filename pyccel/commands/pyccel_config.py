@@ -61,7 +61,7 @@ def setup_pyccel_config_parser(parser):
     register_parser.set_defaults(config_func=pyccel_config_register)
     #----------------------------------------------------------------------------
 
-    remove_parser = subparsers.add_parser('remove', add_help=False, help="Remove a register compiler configuration.")
+    remove_parser = subparsers.add_parser('remove', add_help=False, help="Remove a registered compiler configuration and the corresponding pre-compiled dependencies.")
     remove_parser.add_argument('compiler_family', metavar='FAMILY', type=str,
                            help='The name that identifies the compiler.')
     remove_parser.set_defaults(config_func=pyccel_config_remove)
