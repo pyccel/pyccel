@@ -73,6 +73,13 @@ This runs all unit tests using Pytest under the hood.
 
 Alternatively, if more fine-grained control over which tests are run is desired, e.g. for debugging local modifications to Pyccel, Pytest can be called directly using the commands provided in the [documentation](https://pyccel.github.io/pyccel/docs/testing.html).
 
+## Environment variables affecting Pyccel's behaviour
+
+Pyccel's behaviour is affected by some environment variables:
+- `PYCCEL_DEFAULT_COMPILER` : Changes the default compiler from `GNU` to a new compiler family or JSON compiler configuration file.
+- `PYCCEL_CONFIG_HOME` : Changes the default location for new compiler families from `~/.pyccel`.
+- `PYCCEL_ERROR_MODE` : Can be set to 'developer' or 'user' to control the default verbosity of the errors.
+
 ## Contributing
 
 We welcome any and all contributions.
