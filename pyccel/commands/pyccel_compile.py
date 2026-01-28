@@ -13,7 +13,7 @@ from .argparse_helpers import add_compiler_selection, add_accelerator_selection
     # TODO: Uncomment for v2.3 to check for existence and file type
 #from .argparse_helpers import path_with_suffix, add_common_settings
 from .argparse_helpers import add_common_settings
-from .pyccel_config import pyccel_config
+from .pyccel_config import pyccel_config_export
 
 __all__ = ('pyccel_compile',
            'setup_pyccel_compile_parser',
@@ -144,7 +144,7 @@ def pyccel_compile(*, filename, language, output, export_compiler_config, **kwar
                           symbol=cext,
                           severity='error')
         else:
-            pyccel_config(filename)
+            pyccel_config_export(filename)
             execute_pyccel('',
                            compiler_family = kwargs['compiler_family'],
                            compiler_export_file = filename)

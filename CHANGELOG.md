@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #2271 : Add support for `axis`, `keepdims`, `ord` arguments of `numpy.linalg.norm`.
 -   #2272 : Add support for `numpy.cross` and `numpy.linalg.cross` for vectors of size 3.
 -   #2541 : Add support for `axis`, `keepdims`, `initial` arguments of `numpy.amin` and `numpy.amax`.
+-   #2370 : Add extra commands to `pyccel config` command line interface.
 
 ### Fixed
 

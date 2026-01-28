@@ -29,6 +29,11 @@ __all__ = (
         'ErrorModeSelector',
         )
 
+compiler_choices = list(available_compilers.keys())
+pyccel_home = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel'))
+if pyccel_home.exists():
+    compiler_choices += [d.stem for d in pyccel_home.iterdir() if d.is_dir]
+
 # -----------------------------------------------------------------------------------------
 def get_warning_and_line():
     """
@@ -174,7 +179,7 @@ def add_compiler_selection(parser):
     compiler_group = group.add_mutually_exclusive_group(required=False)
     compiler_group.add_argument('--compiler-family',
                                 dest='compiler_family',
-                                choices=available_compilers.keys(),
+                                choices=compiler_choices,
                                 type=str,
                                 default=default_compiler,
                                 help=f'Compiler family (default: {default_compiler}).')
