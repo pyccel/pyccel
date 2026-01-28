@@ -49,7 +49,7 @@ def setup_pyccel_compile_parser(parser):
                        type=str.title)
 
     # ... Compiler options
-    add_compiler_selection(parser)
+    add_compiler_selection(parser, allow_compiler_config = True)
 
     # ... compiler syntax, semantic and codegen
     group = parser.add_argument_group('Pyccel compiling stages')
