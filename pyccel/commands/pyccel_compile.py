@@ -49,7 +49,7 @@ def setup_pyccel_compile_parser(parser):
                        type=str.title)
 
     # ... Compiler options
-    add_compiler_selection(parser)
+    add_compiler_selection(parser, allow_compiler_config = True)
 
     # ... compiler syntax, semantic and codegen
     group = parser.add_argument_group('Pyccel compiling stages')
@@ -101,7 +101,7 @@ def setup_pyccel_compile_parser(parser):
     add_common_settings(group)
     group.add_argument('--export-compiler-config', action='store_true',
                         help='Export all compiler information to a JSON file with the given path (relative or absolute). '
-                       'This flag is deprecated and will be removed in v2.3. Please use `pyccel config` instead.')
+                       'This flag is deprecated and will be removed in v2.3. Please use `pyccel config export` instead.')
     # ...
 
 

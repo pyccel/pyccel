@@ -77,7 +77,16 @@ def setup_pyccel_config_parser(parser):
     #----------------------------------------------------------------------------
 
     # ... Compiler options
-    add_compiler_selection(export_parser)
+    compiler_group = add_compiler_selection(export_parser, allow_compiler_config = False)
+    # To remove for v2.4
+    json_file_checker = path_with_suffix(('.json',))
+    compiler_group.add_argument('--compiler-config',
+                                dest='compiler_family',
+                                type=lambda p: str(json_file_checker(p)),
+                                default=None,
+                                metavar='CONFIG.json',
+                                help='[DEPRECATED] Load all compiler information from a JSON file with the given path (relative or absolute).')
+    # END To remove for v2.4
     add_help_flag(export_parser.add_argument_group('Options'))
     add_help_flag(check_parser.add_argument_group('Options'))
     add_help_flag(register_parser.add_argument_group('Options'))
