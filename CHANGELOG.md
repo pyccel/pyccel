@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
--   #2555 : Deprecate `pyccel config export --compiler-family FILE1.json FILE2.json` which is equivalent to `cp FILE1.json FILE2.json`.
+-   #2555 : Deprecate `pyccel config export --compiler-config FILE1.json FILE2.json` which is equivalent to `cp FILE1.json FILE2.json`.
 
 ### Removed
 
