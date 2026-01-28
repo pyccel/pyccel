@@ -16,6 +16,15 @@ __all__ = ('pyccel_config',
            'setup_pyccel_config_parser',
            'PYCCEL_CONFIG_DESCR')
 
+try:
+    from termcolor import colored
+    ERROR = colored('Error', 'red', attrs=['blink', 'bold'])
+    WARNING = colored('Warning', 'green', attrs=['blink'])
+
+except ImportError:
+    ERROR = 'Error'
+    WARNING = 'Warning'
+
 PYCCEL_CONFIG_DESCR = 'Compilation configuration management.'
 
 def setup_pyccel_config_parser(parser):
@@ -130,35 +139,35 @@ def check_config_paths(config, descriptor):
     for inc in config.get('include', ()):
         inc_path = pathlib.Path(inc)
         if not inc_path.is_absolute():
-            print(f"Error: include path {inc} for {descriptor} should be absolute", file=sys.stderr)
+            print(f"|{ERROR}|: include path {inc} for {descriptor} should be absolute", file=sys.stderr)
             exitcode = 1
         elif not inc_path.exists():
-            print(f"Error: include path {inc} for {descriptor} was not found", file=sys.stderr)
+            print(f"|{ERROR}|: include path {inc} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
     for libdir in config.get('libdir', ()):
         libdir_path = pathlib.Path(libdir)
         if not libdir_path.is_absolute():
-            print(f"Error: library directory path {libdir} for {descriptor} should be absolute", file=sys.stderr)
+            print(f"|{ERROR}|: library directory path {libdir} for {descriptor} should be absolute", file=sys.stderr)
             exitcode = 1
         elif not libdir_path.exists():
-            print(f"Error: library directory path {libdir} for {descriptor} was not found", file=sys.stderr)
+            print(f"|{ERROR}|: library directory path {libdir} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
     for lib in config.get('libs', ()):
         lib_path = pathlib.Path(lib)
         if len(lib_path.parts) > 1:
             if not lib_path.is_absolute():
-                print(f"Error: library {lib} for {descriptor} should be a library name or an absolute path", file=sys.stderr)
+                print(f"|{ERROR}|: library {lib} for {descriptor} should be a library name or an absolute path", file=sys.stderr)
                 exitcode = 1
             elif not lib_path.exists():
-                print(f"Error: library {lib} for {descriptor} should be a library name or should be a path to an existing file", file=sys.stderr)
+                print(f"|{ERROR}|: library {lib} for {descriptor} should be a library name or should be a path to an existing file", file=sys.stderr)
                 exitcode = 1
     for dep in config.get('dependencies', ()):
         dep_path = pathlib.Path(dep)
         if not dep_path.is_absolute():
-            print(f"Error: library directory path {dep} for {descriptor} should be absolute", file=sys.stderr)
+            print(f"|{ERROR}|: library directory path {dep} for {descriptor} should be absolute", file=sys.stderr)
             exitcode = 1
         elif not dep_path.exists():
-            print(f"Error: library directory path {dep} for {descriptor} was not found", file=sys.stderr)
+            print(f"|{ERROR}|: library directory path {dep} for {descriptor} was not found", file=sys.stderr)
             exitcode = 1
 
     return exitcode
@@ -182,7 +191,7 @@ def pyccel_config_check(filename):
         try:
             config_contents = json.load(fp)
         except json.JSONDecodeError:
-            print("File is not in json format", file=sys.stderr)
+            print(f"|{ERROR}|: File is not in json format", file=sys.stderr)
             sys.exit(1)
 
     from pyccel.compilers.default_compilers import available_compilers
@@ -192,13 +201,13 @@ def pyccel_config_check(filename):
     languages = example_compiler.keys()
 
     if all(k not in languages for k in config_contents):
-        print("First level key should describe languages.", file=sys.stderr)
+        print(f"|{ERROR}|: First level key should describe languages.", file=sys.stderr)
         sys.exit(1)
 
     exitcode = 0
     for k in config_contents:
         if k not in languages:
-            print("Error: Unrecognised language :", k, file=sys.stderr)
+            print(f"|{ERROR}|: Unrecognised language :", k, file=sys.stderr)
             exitcode = 1
 
     if exitcode:
@@ -219,14 +228,14 @@ def pyccel_config_check(filename):
             elif k in possible_accelerators:
                 found_accelerators.add(k)
             else:
-                print(f"Warning: Key {k} in language {lang} is unrecognised", file=sys.stderr)
+                print(f"|{WARNING}|: Key {k} in language {lang} is unrecognised", file=sys.stderr)
 
         for k in possible_keys.difference(found_keys):
-            print(f"Warning: Key {k} not provided for language {lang}. It will default to an empty value", file=sys.stderr)
+            print(f"|{WARNING}|: Key {k} not provided for language {lang}. It will default to an empty value", file=sys.stderr)
 
         for k in found_keys:
             if not isinstance(lang_config[k], type(example_config[k])):
-                print(f"Error: Key {k} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
+                print(f"|{ERROR}|: Key {k} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
                 print("Received:", lang_config[k], file=sys.stderr)
                 if isinstance(example_config[k], str):
                     print("Expected: str", file=sys.stderr)
@@ -241,15 +250,15 @@ def pyccel_config_check(filename):
             possible_keys = accelerator_keys + ('shared_suffix',) if acc_name == 'python' else accelerator_keys
             for k,v in acc.items():
                 if k not in possible_keys:
-                    print(f"Warning: Key {k} for accelerator {acc_name} in language {lang} is unrecognised", file=sys.stderr)
+                    print(f"|{WARNING}|: Key {k} for accelerator {acc_name} in language {lang} is unrecognised", file=sys.stderr)
                 else:
                     if k == 'shared_suffix':
                         if not isinstance(v, str):
-                            print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
+                            print(f"|{ERROR}|: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
                             print("Expected: str", file=sys.stderr)
                             exitcode = 1
                     elif not isinstance(v, list) or not isinstance(next(iter(v), ''), str):
-                        print(f"Error: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
+                        print(f"|{ERROR}|: Key {k} for accelerator {acc_name} in language {lang} is associated with a value of the wrong type.", file=sys.stderr)
                         exitcode = 1
                 exitcode = exitcode or check_config_paths(acc, f"accelerator {acc_name} in language {lang}")
 
@@ -293,11 +302,15 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     config_contents['pyccel_version'] = pyccel_version
 
     # Save the compiler configuration
-    config_dirpath = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / compiler_family
+    pyccel_config_home = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel'))
+    config_dirpath = (pyccel_config_home / compiler_family).resolve()
+    if not config_dirpath.is_relative_to(pyccel_config_home):
+        print(f"|{ERROR}|: The identifier for this compiler family is invalid as it leads to files being created outside the PYCCEL_CONFIG_HOME directory.")
+        sys.exit(1)
     try:
         config_dirpath.mkdir(parents = True)
     except FileExistsError:
-        print("A compiler with the chosen compiler family name is already registered.", file=sys.stderr)
+        print(f"|{ERROR}|: A compiler with the chosen compiler family name is already registered.", file=sys.stderr)
         sys.exit(1)
 
     with open(config_dirpath / 'config.json', 'w', encoding='utf-8') as fp:
@@ -308,7 +321,7 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     compiler = Compiler(compiler_family)
 
     # Install STC using the new compiler
-    recognised_libs['stc'].install_to(config_dirpath, installed_libs, verbose, compiler, allow_pkg_config = False)
+    recognised_libs['stc'].install_to(config_dirpath, installed_libs, verbose, compiler, use_pkg_config = False)
 
     # Remove the temporary build directory
     shutil.rmtree(config_dirpath / 'STC' / f'build-{compiler_family}')
@@ -325,9 +338,13 @@ def pyccel_config_remove(compiler_family):
     compiler_family : str
         The id used to identify the compiler family.
     """
-    config_dirpath = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / compiler_family
+    pyccel_config_home = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel'))
+    config_dirpath = (pyccel_config_home / compiler_family).resolve()
+    if not config_dirpath.is_relative_to(pyccel_config_home):
+        print(f"|{ERROR}|: The identifier for this compiler family is invalid as it refers to files outside the PYCCEL_CONFIG_HOME directory.", file=sys.stderr)
+        sys.exit(1)
     if config_dirpath.exists():
         shutil.rmtree(str(config_dirpath))
     else:
-        print(f"Configuration not found : {compiler_family}", file=sys.stderr)
+        print(f"|{ERROR}|: Configuration not found : {compiler_family}", file=sys.stderr)
         sys.exit(1)
