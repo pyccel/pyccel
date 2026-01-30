@@ -1904,7 +1904,7 @@ class NumpyNorm(NumpyReduction):
         if self._axis is None:
             self._class_type = dtype
         else:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = x.order
             self._class_type = dtype if self._axis is None else NumpyNDArrayType.get_new(dtype, rank, order)
 
@@ -2473,7 +2473,7 @@ class NumpyAmin(NumpyReduction):
         self._class_type = a.dtype
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
@@ -2538,7 +2538,7 @@ class NumpyAmax(NumpyReduction):
         self._class_type = a.dtype
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
