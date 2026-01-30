@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2520 : Fix augmented assignment with NumPy reductions.
 -   #2535 : Fix `math.inf` printing in Python.
+-   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
 
 ### Changed
 
