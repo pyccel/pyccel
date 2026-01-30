@@ -132,7 +132,7 @@ def setup_pyccel_make_parser(parser):
                        type=str.lower)
 
     # ... Compiler options
-    add_compiler_selection(parser)
+    add_compiler_selection(parser, allow_compiler_config = True)
 
     # ... Additional compiler options
     group = parser.add_argument_group('Additional compiler options')
