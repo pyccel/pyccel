@@ -130,6 +130,7 @@ __all__ = (
     'NumpyShape',
     'NumpySize',
     'NumpySum',
+    'NumpyVecdot',
     'NumpyWhere',
 )
 
