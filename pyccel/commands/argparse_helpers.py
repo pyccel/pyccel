@@ -29,6 +29,11 @@ __all__ = (
         'ErrorModeSelector',
         )
 
+compiler_choices = list(available_compilers.keys())
+pyccel_home = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel'))
+if pyccel_home.exists():
+    compiler_choices += [d.stem for d in pyccel_home.iterdir() if d.is_dir]
+
 # -----------------------------------------------------------------------------------------
 def get_warning_and_line():
     """
@@ -155,7 +160,7 @@ def add_version_flag(parser):
     parser.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
 
 # -----------------------------------------------------------------------------------------
-def add_compiler_selection(parser):
+def add_compiler_selection(parser, allow_compiler_config):
     """
     Add group of compiler selection flags to argument parser.
 
@@ -166,24 +171,34 @@ def add_compiler_selection(parser):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
+    allow_compiler_config : bool
+        Indicates if a compiler config file is a valid input.
+
+    Returns
+    -------
+    argparse._MutuallyExclusiveGroup
+        The newly created argument group.
     """
     default_compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
-    json_file_checker = path_with_suffix(('.json',))
 
     group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
     compiler_group = group.add_mutually_exclusive_group(required=False)
     compiler_group.add_argument('--compiler-family',
                                 dest='compiler_family',
-                                choices=available_compilers.keys(),
+                                choices=compiler_choices,
                                 type=str,
                                 default=default_compiler,
                                 help=f'Compiler family (default: {default_compiler}).')
-    compiler_group.add_argument('--compiler-config',
-                                dest='compiler_family',
-                                type=lambda p: str(json_file_checker(p)),
-                                default=None,
-                                metavar='CONFIG.json',
-                                help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+    if allow_compiler_config:
+        json_file_checker = path_with_suffix(('.json',))
+        compiler_group.add_argument('--compiler-config',
+                                    dest='compiler_family',
+                                    type=lambda p: str(json_file_checker(p)),
+                                    default=None,
+                                    metavar='CONFIG.json',
+                                    help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+
+    return compiler_group
 
 # -----------------------------------------------------------------------------------------
 def add_accelerator_selection(parser):
