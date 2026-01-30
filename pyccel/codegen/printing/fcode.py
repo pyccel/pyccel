@@ -1749,6 +1749,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpyVecdot(self, expr):
+        return f'dot_product({self._print(expr.x1)}, {self._print(expr.x2)})'
+
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
