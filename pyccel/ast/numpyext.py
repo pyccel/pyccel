@@ -3370,7 +3370,9 @@ class NumpyVecdot(NumpyReduction):
         """
         indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
         assert len(indexes) <= self.arg.rank
-        return NumpyVecdot(self.x1[indexes], self.x2[indexes], axis = PythonTuple(*new_axis),
+        x1 = self.x1[indexes[self.rank-(self.x1.rank-1):]]
+        x2 = self.x2[indexes[self.rank-(self.x2.rank-1):]]
+        return NumpyVecdot(x1, x2, axis = PythonTuple(*new_axis),
                         keepdims = self._keepdims, order = self.order, dtype = self.dtype)
 
 
