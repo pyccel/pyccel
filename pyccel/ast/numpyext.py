@@ -3368,11 +3368,22 @@ class NumpyVecdot(NumpyReduction):
         This is used in the loop unrolling.
         E.g. for `vecdot(x1, x2, axis=0)`, this function returns `min(x1[:,*args], x2[:,*args], axis=0)`.
         """
+        literal_axis, = [int(a) for a in self._axis]
         indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
         assert len(indexes) <= self.arg.rank
-        x1 = self.x1[indexes[self.rank-(self.x1.rank-1):]]
-        x2 = self.x2[indexes[self.rank-(self.x2.rank-1):]]
-        return NumpyVecdot(x1, x2, axis = PythonTuple(*new_axis),
+        x1 = self.x1
+        x1_offset = self.rank-(x1.rank-1)
+        x1_axis = x1.rank + literal_axis if literal_axis < 0 else literal_axis
+        if x1_offset < x1_axis:
+            x1_offset -= 1
+        new_x1 = x1[indexes[x1_offset:]]
+        x2 = self.x2
+        x2_offset = self.rank-(x2.rank-1)
+        x2_axis = x2.rank + literal_axis if literal_axis < 0 else literal_axis
+        if x2_offset < x2_axis:
+            x2_offset -= 1
+        new_x2 = x2[indexes[x2_offset:]]
+        return NumpyVecdot(new_x1, new_x2, axis = PythonTuple(*new_axis),
                         keepdims = self._keepdims, order = self.order, dtype = self.dtype)
 
 
