@@ -18,7 +18,7 @@ from pyccel.ast.bind_c    import BindCPointer
 from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen, PythonConjugate
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
@@ -2415,7 +2415,10 @@ class CCodePrinter(CodePrinter):
         iter_var = Variable(PythonNativeInt(), iter_var_name)
 
         x1, x2 = arg_vars
-        node = self._print(PyccelAdd(lhs_var, PyccelMul(x1[iter_var], x2[iter_var])))
+        if x1.dtype.primitive_type is PrimitiveComplexType():
+            node = self._print(PyccelAdd(lhs_var, PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
+        else:
+            node = self._print(PyccelAdd(lhs_var, PyccelMul(x1[iter_var], x2[iter_var])))
         body = self._additional_code + f'{lhs} = {node};\n'
         self._additional_code = tmp_additional_code
 
