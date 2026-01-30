@@ -1011,7 +1011,7 @@ class NumpyReduction(PyccelFunction):
                 rank = len(shape)
                 literal_axis = [rank + a if a < 0 else a for a in literal_axis]
                 shape = tuple(s for i, s in enumerate(shape) if i not in literal_axis)
-                axis = [LiteralInteger(a) for a in literal_axis]
+                axis = PythonTuple(*[LiteralInteger(a) for a in literal_axis])
             self._shape = tuple(shape)
             if self._shape == ():
                 self._shape = None
@@ -1077,7 +1077,7 @@ class NumpySum(NumpyReduction):
             self._class_type = process_dtype(dtype)
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
