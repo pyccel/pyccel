@@ -58,6 +58,7 @@ from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
+from pyccel.ast.numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -132,6 +133,14 @@ numpy_ufunc_to_c_complex = {
     'NumpyArcsinh': 'casinh',
     'NumpyArccosh': 'cacosh',
     'NumpyArctanh': 'catanh',
+}
+
+# dictionary mapping NumPy complex type to C sign function.
+# Used in CCodePrinter._print_NumpySign(self, expr)
+numpy_complex_sign_to_c = {
+    NumpyComplex64Type() : 'py_sign_type_float_complex',
+    NumpyComplex128Type(): 'py_sign_type_double_complex',
+    NumpyComplex256Type(): 'py_sign_type_long_double_complex',
 }
 
 # dictionary mapping Math function to (argument_conditions, C_function).
@@ -2088,25 +2097,23 @@ class CCodePrinter(CodePrinter):
 
         """
         self.add_import(c_imports['pyc_math_c'])
-        primitive_type = expr.dtype.primitive_type
-        func = ''
+        dtype = expr.dtype
+        primitive_type = dtype.primitive_type
         arg = self._print(expr.args[0])
 
         if isinstance(primitive_type, PrimitiveIntegerType):
-            func = f'isign({arg})'
+            # isign handles all integer precisions via implicit casting to long long
+            func = 'isign'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            func = f'fsign({arg})'
+            # fsign handles all float precisions via implicit casting to double
+            func = 'fsign'
         elif isinstance(primitive_type, PrimitiveComplexType):
-            if expr.dtype.precision == 4:
-                func = f'py_sign_type_float_complex({arg})'
-            elif expr.dtype.precision == 8:
-                func = f'py_sign_type_double_complex({arg})'
-            elif expr.dtype.precision == 16:
-                func = f'py_sign_type_long_double_complex({arg})'
-            else:
-                errors.report(f"Unsupported complex precision: {expr.dtype.precision}", severity='fatal', symbol=expr)
+            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
+            func = numpy_complex_sign_to_c[numpy_type]
+        else:
+            errors.report(f"Unsupported type for numpy.sign: {primitive_type}", severity='fatal', symbol=expr)
 
-        return func
+        return f'{func}({arg})'
 
     def _print_NumpyIsFinite(self, expr):
         """
