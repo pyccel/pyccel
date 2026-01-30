@@ -3325,8 +3325,7 @@ class NumpyVecdot(NumpyReduction):
             self._class_type = class_type.element_type
             self._shape = None
         else:
-            self._shape = process_shape(x1.rank == 1 and x2.rank == 1, get_shape_of_multi_level_container(x1))
-            rank = len(self._shape)
+            rank = len(process_shape(False, get_shape_of_multi_level_container(x1))) - 1
             dtype = dtype or class_type.element_type
             if rank < 2:
                 order = None
@@ -3339,6 +3338,7 @@ class NumpyVecdot(NumpyReduction):
                 if order in ('K', 'A'):
                     order = 'F' if x1.order == 'F' and x2.order == 'F' else 'C'
             self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
+
         super().__init__(x1, x2, axis = axis, keepdims=keepdims, where=where)
 
     @property
