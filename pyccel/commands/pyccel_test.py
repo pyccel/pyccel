@@ -206,6 +206,10 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             print("Dry run, not executing the parallel tests.")
         else:
             p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
+            # Rerun in --oversubscribe is unsupported
+            if 'oversubscribe' in p.stderr:
+                cmd_mpi.remove('--oversubscribe')
+                p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
             print(p.stdout)
             if p.returncode != 0:
                 print(f"Error running parallel tests. Failed with error code {p.returncode}")
