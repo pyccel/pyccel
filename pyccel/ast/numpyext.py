@@ -3314,7 +3314,7 @@ class NumpyVecdot(NumpyReduction):
     dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The data type passed to the NumPy function.
     """
-    __slots__ = ('_class_type', '_shape')
+    __slots__ = ('_class_type',)
 
     def __init__(self, x1, x2, axis = PyccelUnarySub(LiteralInteger(1)), keepdims=LiteralFalse(),
                  where=None, order='K', dtype = None):
