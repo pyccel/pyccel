@@ -1010,6 +1010,7 @@ class NumpyReduction(PyccelFunction):
                 rank = len(shape)
                 literal_axis = [rank + a if a < 0 else a for a in literal_axis]
                 shape = tuple(s for i, s in enumerate(shape) if i not in literal_axis)
+                axis = [LiteralInteger(a) for a in literal_axis]
             self._shape = tuple(shape)
             if self._shape == ():
                 self._shape = None
@@ -3358,6 +3359,19 @@ class NumpyVecdot(NumpyReduction):
         The second vector.
         """
         return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the vecdot function.
+
+        Get an expression describing the indexed result of the vecdot function.
+        This is used in the loop unrolling.
+        E.g. for `vecdot(x1, x2, axis=0)`, this function returns `min(x1[:,*args], x2[:,*args], axis=0)`.
+        """
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        return NumpyVecdot(self.x1[indexes], self.x2[indexes], axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims, order = self.order, dtype = self.dtype)
 
 
 #==============================================================================
