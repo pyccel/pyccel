@@ -3314,6 +3314,7 @@ class NumpyVecdot(NumpyReduction):
     dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The data type passed to the NumPy function.
     """
+    name = 'vecdot'
     __slots__ = ('_class_type',)
 
     def __init__(self, x1, x2, axis = PyccelUnarySub(LiteralInteger(1)), keepdims=LiteralFalse(),
@@ -3327,6 +3328,16 @@ class NumpyVecdot(NumpyReduction):
             self._shape = process_shape(x1.rank == 1 and x2.rank == 1, get_shape_of_multi_level_container(x1))
             rank = len(self._shape)
             dtype = dtype or class_type.element_type
+            if rank < 2:
+                order = None
+            else:
+                # ... Determine ordering
+                order = str(order).strip("\'")
+
+                assert order in ('K', 'A', 'C', 'F')
+
+                if order in ('K', 'A'):
+                    order = 'F' if x1.order == 'F' and x2.order == 'F' else 'C'
             self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
         super().__init__(x1, x2, axis = axis, keepdims=keepdims, where=where)
 
