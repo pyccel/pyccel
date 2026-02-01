@@ -78,7 +78,8 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
+                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR,
+                                    ALLOCATABLE_IN_EXPRESSION)
 
 
 errors = Errors()
@@ -2390,7 +2391,15 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyVecdot(self, expr):
         assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
-        lhs_var = assign_node[0].lhs
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+        else:
+            if expr.rank == 0:
+                lhs_var = self.scope.get_temporary_variable(expr.class_type)
+            else:
+                errors.report(ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='error')
+                return ''
         in_arg_vars = (expr.x1, expr.x2)
         arg_vars = []
         prefix = ''
@@ -2422,10 +2431,15 @@ class CCodePrinter(CodePrinter):
         body = self._additional_code + f'{lhs} = {node};\n'
         self._additional_code = tmp_additional_code
 
-        return prefix + (f'{lhs} = {initial};\n'
+        code = prefix + (f'{lhs} = {initial};\n'
                 f'for (c_range({iter_var_name}, {self._print(expr.x1.shape[expr.axis[0]])})) {{\n'
                 f'{body}'
                  '}\n')
+        if lhs_var.is_temp:
+            self._additional_code += code
+            return lhs
+        else:
+            return code
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
