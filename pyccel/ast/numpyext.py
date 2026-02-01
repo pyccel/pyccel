@@ -3364,7 +3364,7 @@ class NumpyVecdot(NumpyReduction):
 
         Get an expression describing the indexed result of the vecdot function.
         This is used in the loop unrolling.
-        E.g. for `vecdot(x1, x2, axis=0)`, this function returns `min(x1[:,*args], x2[:,*args], axis=0)`.
+        E.g. for `vecdot(x1, x2, axis=0)`, this function returns `vecdot(x1[:,*args], x2[:,*args], axis=0)`.
         """
         literal_axis, = [int(a) for a in self._axis]
         indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
