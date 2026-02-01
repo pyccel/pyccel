@@ -3300,7 +3300,7 @@ class NumpyVecdot(NumpyReduction):
         The first vector.
     x2 : TypedAstNode
         The second vector.
-    axis : None | LiteralInteger | iterable[LiteralInteger], optional
+    axis : None | LiteralInteger | iterable[LiteralInteger], default=-1
         Axis or axes along which a sum is performed.
         If axis is None then a sum is performed over all elements of arg.
     keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
