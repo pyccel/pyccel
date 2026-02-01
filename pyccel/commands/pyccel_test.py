@@ -194,11 +194,18 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         import subprocess
 
         desc_mpi = "Run the parallel tests... [all languages]"
-        cmd_mpi = ['mpirun', '-n', '4', '--oversubscribe', 'pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
+        mpi_prefix = ['mpirun', '-n', '4']
+        cmd_pytest = ['pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
+
+        # Check if --oversubscribe is supported
+        p = subprocess.run(mpi_prefix + ['--oversubscribe', sys.executable, '--version'], check=False, capture_output=True, text=True)
+        if 'oversubscribe' not in p.stderr:
+            mpi_prefix.append('--oversubscribe')
         if verbose:
-            cmd_mpi += ['-' + 'v' * verbose]
+            cmd_pytest += ['-' + 'v' * verbose]
         if language != 'All':
-            cmd_mpi.append(f'-m={language.lower()}')
+            cmd_pytest.append(f'-m={language.lower()}')
+        cmd_mpi = mpi_prefix + cmd_pytest
         print()
         print(desc_mpi)
         print(f'> {" ".join(cmd_mpi)}')
@@ -206,10 +213,6 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             print("Dry run, not executing the parallel tests.")
         else:
             p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
-            # Rerun in --oversubscribe is unsupported
-            if 'oversubscribe' in p.stderr:
-                cmd_mpi.remove('--oversubscribe')
-                p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
             print(p.stdout)
             if p.returncode != 0:
                 print(f"Error running parallel tests. Failed with error code {p.returncode}")
