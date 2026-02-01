@@ -1006,7 +1006,7 @@ class NumpyReduction(PyccelFunction):
             rank = len(arg.shape)
             literal_axis = [rank + a if a < 0 else a for a in literal_axis]
             if isinstance(keepdims, LiteralTrue):
-                self._shape = tuple(s if i in literal_axis else LiteralInteger(1) for i, s in enumerate(arg.shape))
+                self._shape = tuple(LiteralInteger(1) if i in literal_axis else s for i, s in enumerate(arg.shape))
             else:
                 self._shape = tuple(s for i, s in enumerate(arg.shape) if i not in literal_axis)
                 axis = PythonTuple(*[LiteralInteger(a) for a in literal_axis])
