@@ -1002,17 +1002,14 @@ class NumpyReduction(PyccelFunction):
             if axis.rank != 1 or any(not is_literal_int(a) for a in axis):
                 errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
 
-            shape = list(arg.shape)
+            literal_axis = [int(a) for a in axis]
+            rank = len(arg.shape)
+            literal_axis = [rank + a if a < 0 else a for a in literal_axis]
             if isinstance(keepdims, LiteralTrue):
-                for a in axis:
-                    shape[a] = LiteralInteger(1)
+                self._shape = tuple(s if i in literal_axis else LiteralInteger(1) for i, s in enumerate(arg.shape))
             else:
-                literal_axis = [int(a) for a in axis]
-                rank = len(shape)
-                literal_axis = [rank + a if a < 0 else a for a in literal_axis]
-                shape = tuple(s for i, s in enumerate(shape) if i not in literal_axis)
+                self._shape = tuple(s for i, s in enumerate(arg.shape) if i not in literal_axis)
                 axis = PythonTuple(*[LiteralInteger(a) for a in literal_axis])
-            self._shape = tuple(shape)
             if self._shape == ():
                 self._shape = None
 
