@@ -2435,7 +2435,7 @@ class CCodePrinter(CodePrinter):
                 f'for (c_range({iter_var_name}, {self._print(expr.x1.shape[expr.axis[0]])})) {{\n'
                 f'{body}'
                  '}\n')
-        if lhs_var.is_temp:
+        if getattr(lhs_var, 'is_temp', False):
             self._additional_code += code
             return lhs
         else:
