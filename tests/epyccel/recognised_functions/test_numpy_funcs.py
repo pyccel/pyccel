@@ -6787,3 +6787,12 @@ def test_vecdot_3d_axis_order(language):
     assert res_cc.flags['C_CONTIGUOUS'] == res_ref.flags['C_CONTIGUOUS']
     assert res_cc.flags['F_CONTIGUOUS'] == res_ref.flags['F_CONTIGUOUS']
 
+def test_vecdot_mixed_dimensions_expression(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y) + 3.5
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 7)
+    y = rand(7)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
