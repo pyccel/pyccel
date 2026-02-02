@@ -124,22 +124,31 @@ extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
 extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
 extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);
 
-void pyc_matmul(array_double_2d out, array_double_2d A, array_double_2d x)
-{
-    int64_t n, m, p;
-    n = A.shape[0];
-    m = A.shape[1];
-    p = x.shape[1];
-    assert(m == x.shape[0]);
-    for (int i = INT64_C(0); i < n; ++i)
-    {
-        for (int k = INT64_C(0); k < m; ++k)
-        {
-            (*cspan_at(&out, i, k)) = INT64_C(0);
-            for (int j = 0; j < m; ++j) {
-                (*cspan_at(&out, i, k)) += (*cspan_at(&A, i, j)) * (*cspan_at(&x, j, k));
-            }
-        }
-    }
+#define PYC_MATMUL_TYPE(TYPE) \
+void pyc_matmul_##TYPE(TYPE out, TYPE a, TYPE b) \
+{ \
+    int64_t n, m, p; \
+    n = a.shape[0]; \
+    m = a.shape[1]; \
+    p = b.shape[1]; \
+    assert(m == b.shape[0]); \
+    for (int i = 0; i < n; ++i) \
+    { \
+        for (int k = 0; k < p; ++k) \
+        { \
+            (*cspan_at(&out, i, k)) = 0; \
+            for (int j = 0; j < m; ++j) { \
+                (*cspan_at(&out, i, k)) += (*cspan_at(&a, i, j)) * (*cspan_at(&b, j, k)); \
+            } \
+        } \
+    } \
 }
 
+PYC_MATMUL_TYPE(array_int8_t_2d)
+PYC_MATMUL_TYPE(array_int16_t_2d)
+PYC_MATMUL_TYPE(array_int32_t_2d)
+PYC_MATMUL_TYPE(array_int64_t_2d)
+PYC_MATMUL_TYPE(array_float_2d)
+PYC_MATMUL_TYPE(array_double_2d)
+PYC_MATMUL_TYPE(array_float_complex_2d)
+PYC_MATMUL_TYPE(array_double_complex_2d)

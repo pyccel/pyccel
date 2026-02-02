@@ -11,10 +11,40 @@
 #include <complex.h>
 
 #include <stc/cspan.h>
+#define STC_CSPAN_INDEX_TYPE int64_t
+#ifndef _ARRAY_INT8_T_2D
+#define _ARRAY_INT8_T_2D
+using_cspan(array_int8_t_2d, int8_t, 2);
+#endif // _ARRAY_INT8_T_2D
+#ifndef _ARRAY_INT16_T_2D
+#define _ARRAY_INT16_T_2D
+using_cspan(array_int16_t_2d, int16_t, 2);
+#endif // _ARRAY_INT16_T_2D
+#ifndef _ARRAY_INT32_T_2D
+#define _ARRAY_INT32_T_2D
+using_cspan(array_int32_t_2d, int32_t, 2);
+#endif // _ARRAY_INT32_T_2D
+#ifndef _ARRAY_INT64_T_2D
+#define _ARRAY_INT64_T_2D
+using_cspan(array_int64_t_2d, int64_t, 2);
+#endif // _ARRAY_INT64_T_2D
+#ifndef _ARRAY_FLOAT_2D
+#define _ARRAY_FLOAT_2D
+using_cspan(array_float_2d, float, 2);
+#endif // _ARRAY_FLOAT_2D
 #ifndef _ARRAY_DOUBLE_2D
 #define _ARRAY_DOUBLE_2D
 using_cspan(array_double_2d, double, 2);
 #endif // _ARRAY_DOUBLE_2D
+#ifndef _ARRAY_FLOAT_COMPLEX_2D
+#define _ARRAY_FLOAT_COMPLEX_2D
+using_cspan(array_float_complex_2d, float complex, 2);
+#endif // _ARRAY_FLOAT_COMPLEX_2D
+#ifndef _ARRAY_DOUBLE_COMPLEX_2D
+#define _ARRAY_DOUBLE_COMPLEX_2D
+using_cspan(array_double_complex_2d, double complex, 2);
+#endif // _ARRAY_DOUBLE_COMPLEX_2D
+
 
 /*
 ** (N % M) + M and fmod(N, M) + M are used to handle the negative
@@ -79,6 +109,13 @@ inline double complex complex_max(double complex a, double complex b) {
     return lt ? b : a;
 }
 
-void pyc_matmul(array_double_2d out, array_double_2d A, array_double_2d x);
+void pyc_matmul_array_int8_t_2d(array_int8_t_2d out, array_int8_t_2d A, array_int8_t_2d x);
+void pyc_matmul_array_int16_t_2d(array_int16_t_2d out, array_int16_t_2d A, array_int16_t_2d x);
+void pyc_matmul_array_int32_t_2d(array_int32_t_2d out, array_int32_t_2d A, array_int32_t_2d x);
+void pyc_matmul_array_int64_t_2d(array_int64_t_2d out, array_int64_t_2d A, array_int64_t_2d x);
+void pyc_matmul_array_float_2d(array_float_2d out, array_float_2d A, array_float_2d x);
+void pyc_matmul_array_double_2d(array_double_2d out, array_double_2d A, array_double_2d x);
+void pyc_matmul_array_float_complex_2d(array_float_complex_2d out, array_float_complex_2d A, array_float_complex_2d x);
+void pyc_matmul_array_double_complex_2d(array_double_complex_2d out, array_double_complex_2d A, array_double_complex_2d x);
 
 #endif
