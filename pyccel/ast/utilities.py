@@ -210,7 +210,9 @@ def compatible_operation(*args, language_has_vectors = True):
     bool
         A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
+    if any(isinstance(a, PyccelFunction) and not a.is_indexable for a in args):
+        return True
+    elif language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
@@ -423,8 +425,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
-                                    and not isinstance(f, (NumpyTranspose))))
+                                or (isinstance(f, PyccelFunction) and not f.is_indexable))
     for line in block:
 
         if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):

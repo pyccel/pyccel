@@ -1191,8 +1191,6 @@ class NumpyMatmul(PyccelFunction):
                 self._shape = list(b.shape)
                 self._shape[-1] = a.shape[-1]
 
-        print(rank)
-
         if str(order).strip('\'"') in ('K', 'A'):
             if a.order == b.order:
                 order = a.order
@@ -1209,8 +1207,12 @@ class NumpyMatmul(PyccelFunction):
     def b(self):
         return self._args[1]
 
+    def __getitem__(self, args):
+        # TODO: Insert at correct indices
+        return NumpyMatmul(self.a[args], self.b[args])
+
     @property
-    def is_elemental(self):
+    def is_indexable(self):
         return self.rank > 2
 
 #==============================================================================
@@ -2690,6 +2692,10 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     @property
     def is_elemental(self):
+        return False
+
+    @property
+    def is_indexable(self):
         return False
 
 class NumpyConjugate(PythonConjugate):

@@ -77,6 +77,10 @@ class PyccelFunction(TypedAstNode):
         """
         return ()
 
+    @property
+    def is_indexable(self):
+        return self.rank > 0
+
 class PyccelArraySize(PyccelFunction):
     """
     Gets the total number of elements in an array.
