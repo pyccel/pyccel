@@ -2425,10 +2425,10 @@ class CCodePrinter(CodePrinter):
 
         x1, x2 = arg_vars
         if x1.dtype.primitive_type is PrimitiveComplexType():
-            node = self._print(PyccelAdd(lhs_var, PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
         else:
-            node = self._print(PyccelAdd(lhs_var, PyccelMul(x1[iter_var], x2[iter_var])))
-        body = self._additional_code + f'{lhs} = {node};\n'
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(x1[iter_var], x2[iter_var])))
+        body = self._additional_code + node
         self._additional_code = tmp_additional_code
 
         code = prefix + (f'{lhs} = {initial};\n'
