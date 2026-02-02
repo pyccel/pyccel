@@ -1974,14 +1974,6 @@ def test_array_float_1d_1d_prod(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul(language):
     f1 = arrays.array_float_2d_1d_matmul
     f2 = epyccel( f1 , language = language)
@@ -1997,14 +1989,6 @@ def test_array_float_2d_1d_matmul(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul_creation(language):
     f1 = arrays.array_float_2d_1d_matmul_creation
     f2 = epyccel( f1 , language = language)
@@ -2018,21 +2002,13 @@ def test_array_float_2d_1d_matmul_creation(language):
     assert np.isclose(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul_order_F_F(language):
     f1 = arrays.array_float_2d_1d_matmul_order_F
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2], order='F')
+    A1 = np.arange(6, dtype=float).reshape([3, 2], order='F')
     A1[1,0] = 2
     A2 = np.copy(A1)
-    x1 = np.ones([2])
+    x1 = np.arange([2], dtype=float) + 10
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -2041,21 +2017,13 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_2d_matmul(language):
     f1 = arrays.array_float_2d_2d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
+    A1 = np.arange(6, dtype=float).reshape([3, 2])
     A1[1, 0] = 2
     A2 = np.copy(A1)
-    B1 = np.ones([2, 3])
+    B1 = np.arange(6, dtype=float).reshape([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2064,14 +2032,6 @@ def test_array_float_2d_2d_matmul(language):
     assert np.array_equal(C1, C2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_2d_matmul_F_F_F_F(language):
     f1 = arrays.array_float_2d_2d_matmul_F_F
     f2 = epyccel( f1 , language = language)
@@ -2088,9 +2048,7 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
 
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
             pytest.mark.fortran,
             pytest.mark.skip(reason="Should fail as long as mixed order not supported, see #244")
@@ -2113,14 +2071,6 @@ def test_array_float_2d_2d_matmul_mixorder(language):
     assert np.array_equal(C1, C2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_2d_matmul_operator(language):
     f1 = arrays.array_float_2d_2d_matmul_operator
     f2 = epyccel( f1 , language = language)
