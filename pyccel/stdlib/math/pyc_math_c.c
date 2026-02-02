@@ -3,6 +3,7 @@
 /* or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details. */
 /* -------------------------------------------------------------------------------------- */
 
+#include <assert.h>
 #include "pyc_math_c.h"
 
 /*---------------------------------------------------------------------------*/
@@ -122,3 +123,23 @@ extern inline int8_t py_floor_div_int8_t(int8_t x, int8_t y);
 extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
 extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
 extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);
+
+void pyc_matmul(array_double_2d out, array_double_2d A, array_double_2d x)
+{
+    int64_t n, m, p;
+    n = A.shape[0];
+    m = A.shape[1];
+    p = x.shape[1];
+    assert(m == x.shape[0]);
+    for (int i = INT64_C(0); i < n; ++i)
+    {
+        for (int k = INT64_C(0); k < m; ++k)
+        {
+            (*cspan_at(&out, i, k)) = INT64_C(0);
+            for (int j = 0; j < m; ++j) {
+                (*cspan_at(&out, i, k)) += (*cspan_at(&A, i, j)) * (*cspan_at(&x, j, k));
+            }
+        }
+    }
+}
+

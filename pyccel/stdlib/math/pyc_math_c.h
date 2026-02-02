@@ -10,6 +10,12 @@
 #include <stdbool.h>
 #include <complex.h>
 
+#include <stc/cspan.h>
+#ifndef _ARRAY_DOUBLE_2D
+#define _ARRAY_DOUBLE_2D
+using_cspan(array_double_2d, double, 2);
+#endif // _ARRAY_DOUBLE_2D
+
 /*
 ** (N % M) + M and fmod(N, M) + M are used to handle the negative
 ** operands of modulo operator.
@@ -72,5 +78,7 @@ inline double complex complex_max(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
     return lt ? b : a;
 }
+
+void pyc_matmul(array_double_2d out, array_double_2d A, array_double_2d x);
 
 #endif
