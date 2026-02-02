@@ -2450,7 +2450,7 @@ class CCodePrinter(CodePrinter):
                           symbol=expr, severity='error')
             return ''
         array_type = self.get_declare_type(expr)
-        return f'pyc_matmul_{array_type}({out_code}, {a_code}, {b_code});'
+        return f'pyc_matmul_{array_type}({out_code}, {a_code}, {b_code});\n'
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
