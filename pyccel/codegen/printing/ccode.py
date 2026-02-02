@@ -54,7 +54,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
-from pyccel.ast.numpyext import NumpyReduction
+from pyccel.ast.numpyext import NumpyReduction, NumpyMatmul
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
@@ -2388,6 +2388,19 @@ class CCodePrinter(CodePrinter):
                 f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
                 f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
 
+    def _print_NumpyMatmul(self, expr):
+        self.add_import(c_imports['pyc_math_c'])
+        a_code = self._print(expr.a)
+        b_code = self._print(expr.b)
+        assign = expr.get_user_nodes(Assign)
+        if assign:
+            out_code = self._print(assign[0].lhs)
+        else:
+            errors.report('The result of a matrix multiplication must be saved into a variable',
+                          symbol=expr, severity='error')
+            return ''
+        return f'pyc_matmul({out_code}, {a_code}, {b_code});'
+
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
 
@@ -2661,7 +2674,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, NumpyReduction) and rhs.arg.rank:
+        if isinstance(rhs, NumpyMatmul) or (isinstance(rhs, NumpyReduction) and rhs.arg.rank):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
