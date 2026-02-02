@@ -132,6 +132,8 @@ void pyc_matmul_##TYPE(TYPE out, TYPE a, TYPE b) \
     m = a.shape[1]; \
     p = b.shape[1]; \
     assert(m == b.shape[0]); \
+    assert(n == out.shape[0]); \
+    assert(p == out.shape[1]); \
     for (int i = 0; i < n; ++i) \
     { \
         for (int k = 0; k < p; ++k) \
@@ -152,3 +154,55 @@ PYC_MATMUL_TYPE(array_float_2d)
 PYC_MATMUL_TYPE(array_double_2d)
 PYC_MATMUL_TYPE(array_float_complex_2d)
 PYC_MATMUL_TYPE(array_double_complex_2d)
+
+#define PYC_MATVECMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
+void pyc_matvecmul_##TYPE(TYPE1D out, TYPE2D a, TYPE1D b) \
+{ \
+    int64_t n, m, p; \
+    n = a.shape[0]; \
+    m = a.shape[1]; \
+    assert(m == b.shape[0]); \
+    assert(n == out.shape[0]); \
+    for (int i = 0; i < n; ++i) \
+    { \
+        (*cspan_at(&out, i)) = 0; \
+        for (int j = 0; j < m; ++j) { \
+            (*cspan_at(&out, i)) += (*cspan_at(&a, i, j)) * (*cspan_at(&b, j)); \
+        } \
+    } \
+}
+
+PYC_MATVECMUL_TYPE(int8_t        , array_int8_t_2d        , array_int8_t_1d)
+PYC_MATVECMUL_TYPE(int16_t       , array_int16_t_2d       , array_int16_t_1d)
+PYC_MATVECMUL_TYPE(int32_t       , array_int32_t_2d       , array_int32_t_1d)
+PYC_MATVECMUL_TYPE(int64_t       , array_int64_t_2d       , array_int64_t_1d)
+PYC_MATVECMUL_TYPE(float         , array_float_2d         , array_float_1d)
+PYC_MATVECMUL_TYPE(double        , array_double_2d        , array_double_1d)
+PYC_MATVECMUL_TYPE(float_complex , array_float_complex_2d , array_float_complex_1d)
+PYC_MATVECMUL_TYPE(double_complex, array_double_complex_2d, array_double_complex_1d)
+
+#define PYC_VECMATMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
+void pyc_vecmatmul_##TYPE(TYPE1D out, TYPE1D a, TYPE2D b) \
+{ \
+    int64_t n, m, p; \
+    n = b.shape[0]; \
+    m = b.shape[1]; \
+    assert(n == a.shape[0]); \
+    assert(m == out.shape[0]); \
+    for (int i = 0; i < m; ++i) \
+    { \
+        (*cspan_at(&out, i)) = 0; \
+        for (int j = 0; j < n; ++j) { \
+            (*cspan_at(&out, i)) += (*cspan_at(&a, j)) * (*cspan_at(&b, i, j)); \
+        } \
+    } \
+}
+
+PYC_VECMATMUL_TYPE(int8_t        , array_int8_t_2d        , array_int8_t_1d)
+PYC_VECMATMUL_TYPE(int16_t       , array_int16_t_2d       , array_int16_t_1d)
+PYC_VECMATMUL_TYPE(int32_t       , array_int32_t_2d       , array_int32_t_1d)
+PYC_VECMATMUL_TYPE(int64_t       , array_int64_t_2d       , array_int64_t_1d)
+PYC_VECMATMUL_TYPE(float         , array_float_2d         , array_float_1d)
+PYC_VECMATMUL_TYPE(double        , array_double_2d        , array_double_1d)
+PYC_VECMATMUL_TYPE(float_complex , array_float_complex_2d , array_float_complex_1d)
+PYC_VECMATMUL_TYPE(double_complex, array_double_complex_2d, array_double_complex_1d)

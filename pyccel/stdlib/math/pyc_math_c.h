@@ -12,6 +12,38 @@
 
 #include <stc/cspan.h>
 #define STC_CSPAN_INDEX_TYPE int64_t
+#ifndef _ARRAY_INT8_T_1D
+#define _ARRAY_INT8_T_1D
+using_cspan(array_int8_t_1d, int8_t, 1);
+#endif // _ARRAY_INT8_T_1D
+#ifndef _ARRAY_INT16_T_1D
+#define _ARRAY_INT16_T_1D
+using_cspan(array_int16_t_1d, int16_t, 1);
+#endif // _ARRAY_INT16_T_1D
+#ifndef _ARRAY_INT32_T_1D
+#define _ARRAY_INT32_T_1D
+using_cspan(array_int32_t_1d, int32_t, 1);
+#endif // _ARRAY_INT32_T_1D
+#ifndef _ARRAY_INT64_T_1D
+#define _ARRAY_INT64_T_1D
+using_cspan(array_int64_t_1d, int64_t, 1);
+#endif // _ARRAY_INT64_T_1D
+#ifndef _ARRAY_FLOAT_1D
+#define _ARRAY_FLOAT_1D
+using_cspan(array_float_1d, float, 1);
+#endif // _ARRAY_FLOAT_1D
+#ifndef _ARRAY_DOUBLE_1D
+#define _ARRAY_DOUBLE_1D
+using_cspan(array_double_1d, double, 1);
+#endif // _ARRAY_DOUBLE_1D
+#ifndef _ARRAY_FLOAT_COMPLEX_1D
+#define _ARRAY_FLOAT_COMPLEX_1D
+using_cspan(array_float_complex_1d, float complex, 1);
+#endif // _ARRAY_FLOAT_COMPLEX_1D
+#ifndef _ARRAY_DOUBLE_COMPLEX_1D
+#define _ARRAY_DOUBLE_COMPLEX_1D
+using_cspan(array_double_complex_1d, double complex, 1);
+#endif // _ARRAY_DOUBLE_COMPLEX_1D
 #ifndef _ARRAY_INT8_T_2D
 #define _ARRAY_INT8_T_2D
 using_cspan(array_int8_t_2d, int8_t, 2);
@@ -117,5 +149,23 @@ void pyc_matmul_array_float_2d(array_float_2d out, array_float_2d A, array_float
 void pyc_matmul_array_double_2d(array_double_2d out, array_double_2d A, array_double_2d x);
 void pyc_matmul_array_float_complex_2d(array_float_complex_2d out, array_float_complex_2d A, array_float_complex_2d x);
 void pyc_matmul_array_double_complex_2d(array_double_complex_2d out, array_double_complex_2d A, array_double_complex_2d x);
+
+void pyc_matvecmul_int8_t(array_int8_t_1d out, array_int8_t_2d A, array_int8_t_1d x);
+void pyc_matvecmul_int16_t(array_int16_t_1d out, array_int16_t_2d A, array_int16_t_1d x);
+void pyc_matvecmul_int32_t(array_int32_t_1d out, array_int32_t_2d A, array_int32_t_1d x);
+void pyc_matvecmul_int64_t(array_int64_t_1d out, array_int64_t_2d A, array_int64_t_1d x);
+void pyc_matvecmul_float(array_float_1d out, array_float_2d A, array_float_1d x);
+void pyc_matvecmul_double(array_double_1d out, array_double_2d A, array_double_1d x);
+void pyc_matvecmul_float_complex(array_float_complex_1d out, array_float_complex_2d A, array_float_complex_1d x);
+void pyc_matvecmul_double_complex(array_double_complex_1d out, array_double_complex_2d A, array_double_complex_1d x);
+
+void pyc_vecmatmul_int8_t(array_int8_t_1d out, array_int8_t_1d A, array_int8_t_2d x);
+void pyc_vecmatmul_int16_t(array_int16_t_1d out, array_int16_t_1d A, array_int16_t_2d x);
+void pyc_vecmatmul_int32_t(array_int32_t_1d out, array_int32_t_1d A, array_int32_t_2d x);
+void pyc_vecmatmul_int64_t(array_int64_t_1d out, array_int64_t_1d A, array_int64_t_2d x);
+void pyc_vecmatmul_float(array_float_1d out, array_float_1d A, array_float_2d x);
+void pyc_vecmatmul_double(array_double_1d out, array_double_1d A, array_double_2d x);
+void pyc_vecmatmul_float_complex(array_float_complex_1d out, array_float_complex_1d A, array_float_complex_2d x);
+void pyc_vecmatmul_double_complex(array_double_complex_1d out, array_double_complex_1d A, array_double_complex_2d x);
 
 #endif

@@ -2449,8 +2449,15 @@ class CCodePrinter(CodePrinter):
             errors.report('The result of a matrix multiplication must be saved into a variable',
                           symbol=expr, severity='error')
             return ''
-        array_type = self.get_declare_type(expr)
-        return f'pyc_matmul_{array_type}({out_code}, {a_code}, {b_code});\n'
+        if expr.b.rank == 1:
+            dtype = self.get_c_type(expr.dtype)
+            return f'pyc_matvecmul_{dtype}({out_code}, {a_code}, {b_code});\n'
+        elif expr.a.rank == 1:
+            dtype = self.get_c_type(expr.dtype)
+            return f'pyc_vecmatmul_{dtype}({out_code}, {a_code}, {b_code});\n'
+        else:
+            array_type = self.get_c_type(expr.class_type)
+            return f'pyc_matmul_{array_type}({out_code}, {a_code}, {b_code});\n'
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
