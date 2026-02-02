@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 -   #2397 : Add support for multiple NumPy floating-point precisions.
 -   #2520 : Fix augmented assignment with NumPy reductions.
 -   #2535 : Fix `math.inf` printing in Python.
+-   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
 
 ### Changed
 
