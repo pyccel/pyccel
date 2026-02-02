@@ -2100,6 +2100,7 @@ class CCodePrinter(CodePrinter):
         dtype = expr.dtype
         primitive_type = dtype.primitive_type
         arg = self._print(expr.args[0])
+        func = None
 
         if isinstance(primitive_type, PrimitiveIntegerType):
             # isign handles all integer precisions via implicit casting to long long
