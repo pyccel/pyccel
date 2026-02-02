@@ -1513,7 +1513,7 @@ class FCodePrinter(CodePrinter):
         return f'matmul({b_code}, {a_code})'
 
     def _print_NumpyEmpty(self, expr):
-        errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
+        errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
         arg = expr.arg
@@ -1749,6 +1749,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpyVecdot(self, expr):
+        return f'dot_product({self._print(expr.x1)}, {self._print(expr.x2)})'
+
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
@@ -1833,7 +1836,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
 
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
@@ -1844,7 +1847,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         if expr.low is None:
             randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
@@ -3728,7 +3731,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
-            return errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            return errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)
