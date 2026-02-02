@@ -18,7 +18,7 @@ from pyccel.ast.bind_c    import BindCPointer
 from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen, PythonConjugate
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
@@ -78,7 +78,8 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
+                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR,
+                                    ALLOCATABLE_IN_EXPRESSION)
 
 
 errors = Errors()
@@ -2387,6 +2388,55 @@ class CCodePrinter(CodePrinter):
         return (f'{c_0} = {a_1} * {b_2} - {a_2} * {b_1};\n'
                 f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
                 f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
+
+    def _print_NumpyVecdot(self, expr):
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+        else:
+            # Rank should always be 0 thanks to loop unrolling
+            assert expr.rank == 0
+            lhs_var = self.scope.get_temporary_variable(expr.class_type)
+        in_arg_vars = (expr.x1, expr.x2)
+        arg_vars = []
+        prefix = ''
+        for a in in_arg_vars:
+            if not isinstance(a, Variable):
+                # This handles slice arguments
+                assert a.rank
+                tmp = self.scope.get_temporary_variable(a.class_type, shape = a.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, a))
+                arg_vars.append(tmp)
+            else:
+                arg_vars.append(a)
+
+        initial = self._print(convert_to_literal(0, expr.dtype))
+        tmp_additional_code = self._additional_code
+        self._additional_code = ''
+        lhs = self._print(lhs_var)
+
+        loop_scope = self.scope.create_new_loop_scope()
+        iter_var_name = loop_scope.get_new_name()
+        iter_var = Variable(PythonNativeInt(), iter_var_name)
+
+        x1, x2 = arg_vars
+        if x1.dtype.primitive_type is PrimitiveComplexType():
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
+        else:
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(x1[iter_var], x2[iter_var])))
+        body = self._additional_code + node
+        self._additional_code = tmp_additional_code
+
+        code = prefix + (f'{lhs} = {initial};\n'
+                f'for (c_range({iter_var_name}, {self._print(expr.x1.shape[expr.axis[0]])})) {{\n'
+                f'{body}'
+                 '}\n')
+        if getattr(lhs_var, 'is_temp', False):
+            self._additional_code += code
+            return lhs
+        else:
+            return code
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
