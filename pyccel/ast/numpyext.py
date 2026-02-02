@@ -130,6 +130,7 @@ __all__ = (
     'NumpyShape',
     'NumpySize',
     'NumpySum',
+    'NumpyVecdot',
     'NumpyWhere',
 )
 
@@ -990,16 +991,27 @@ class NumpyReduction(PyccelFunction):
             if axis.rank == 0 and isinstance(axis.class_type.primitive_type, PrimitiveIntegerType):
                 axis = PythonTuple(axis)
 
-            if axis.rank != 1 or any(not isinstance(a, LiteralInteger) for a in axis):
+            def is_literal_int(i):
+                """ Use a try/except to check if i can be described by a literal integer.
+                """
+                try:
+                    int(i)
+                    return True
+                except TypeError:
+                    return False
+            if axis.rank != 1 or any(not is_literal_int(a) for a in axis):
                 errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
 
-            shape = list(arg.shape)
+            literal_axis = [int(a) for a in axis]
+            rank = len(arg.shape)
+            literal_axis = [rank + a if a < 0 else a for a in literal_axis]
             if isinstance(keepdims, LiteralTrue):
-                for a in axis:
-                    shape[a] = LiteralInteger(1)
+                self._shape = tuple(LiteralInteger(1) if i in literal_axis else s for i, s in enumerate(arg.shape))
             else:
-                shape = tuple(s for i, s in enumerate(shape) if i not in axis)
-            self._shape = tuple(shape)
+                self._shape = tuple(s for i, s in enumerate(arg.shape) if i not in literal_axis)
+                axis = PythonTuple(*[LiteralInteger(a) for a in literal_axis])
+            if self._shape == ():
+                self._shape = None
 
         self._axis = axis
 
@@ -1062,7 +1074,7 @@ class NumpySum(NumpyReduction):
             self._class_type = process_dtype(dtype)
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
@@ -1914,7 +1926,7 @@ class NumpyNorm(NumpyReduction):
         if self._axis is None:
             self._class_type = dtype
         else:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = x.order
             self._class_type = dtype if self._axis is None else NumpyNDArrayType.get_new(dtype, rank, order)
 
@@ -2483,7 +2495,7 @@ class NumpyAmin(NumpyReduction):
         self._class_type = a.dtype
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
@@ -2548,7 +2560,7 @@ class NumpyAmax(NumpyReduction):
         self._class_type = a.dtype
 
         if axis is not None:
-            rank = len(self._shape)
+            rank = len(self._shape) if self._shape else 0
             order = a.order
             self._class_type = NumpyNDArrayType.get_new(self._class_type, rank, order)
 
@@ -3304,6 +3316,103 @@ class NumpyLinalgCross(NumpyCross):
     def __init__(self, x1, x2, axis = Nil(), *, c):
         super().__init__(x1, x2, axis = axis, c = c)
 
+#==============================================================================
+class NumpyVecdot(NumpyReduction):
+    """
+    Class representing a call to numpy.vecdot in the user code.
+
+    Class representing a call to numpy.vecdot in the user code.
+
+    Parameters
+    ----------
+    x1 : TypedAstNode
+        The first vector.
+    x2 : TypedAstNode
+        The second vector.
+    axis : None | LiteralInteger | iterable[LiteralInteger], default=-1
+        Axis or axes along which a sum is performed.
+        If axis is None then a sum is performed over all elements of arg.
+    keepdims : LiteralTrue | LiteralFalse, default=LiteralFalse
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
+    where : TypedAstNode, default=None
+        Boolean indicating elements to include in the sum.
+    order : str
+        The ordering of the array (C/Fortran).
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The data type passed to the NumPy function.
+    """
+    name = 'vecdot'
+    __slots__ = ('_class_type',)
+
+    def __init__(self, x1, x2, axis = PyccelUnarySub(LiteralInteger(1)), keepdims=LiteralFalse(),
+                 where=None, order='K', dtype = None):
+        class_type = x1.class_type + x2.class_type
+        if x1.rank == 1 and x2.rank == 1:
+            # Scalar
+            self._class_type = class_type.element_type
+            self._shape = None
+        else:
+            rank = len(process_shape(False, get_shape_of_multi_level_container(x1))) - 1
+            dtype = dtype or class_type.element_type
+            if rank < 2:
+                order = None
+            else:
+                # ... Determine ordering
+                order = str(order).strip("\'")
+
+                assert order in ('K', 'A', 'C', 'F')
+
+                if order in ('K', 'A'):
+                    order = 'F' if x1.order == 'F' and x2.order == 'F' else 'C'
+            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
+
+        super().__init__(x1, x2, axis = axis, keepdims=keepdims, where=where)
+
+    @property
+    def x1(self):
+        """
+        The first vector.
+
+        The first vector.
+        """
+        return self._args[0]
+
+    @property
+    def x2(self):
+        """
+        The second vector.
+
+        The second vector.
+        """
+        return self._args[1]
+
+    def __getitem__(self, args):
+        """
+        Get an expression describing the indexed result of the vecdot function.
+
+        Get an expression describing the indexed result of the vecdot function.
+        This is used in the loop unrolling.
+        E.g. for `vecdot(x1, x2, axis=0)`, this function returns `vecdot(x1[:,*args], x2[:,*args], axis=0)`.
+        """
+        literal_axis, = [int(a) for a in self._axis]
+        indexes, new_axis = process_index_for_reduction(args, self._axis, self._keepdims)
+        assert len(indexes) <= self.arg.rank
+        x1 = self.x1
+        x1_offset = self.rank-(x1.rank-1)
+        x1_axis = x1.rank + literal_axis if literal_axis < 0 else literal_axis
+        if x1_offset < x1_axis:
+            x1_offset -= 1
+        new_x1 = x1[indexes[x1_offset:]]
+        x2 = self.x2
+        x2_offset = self.rank-(x2.rank-1)
+        x2_axis = x2.rank + literal_axis if literal_axis < 0 else literal_axis
+        if x2_offset < x2_axis:
+            x2_offset -= 1
+        new_x2 = x2[indexes[x2_offset:]]
+        return NumpyVecdot(new_x1, new_x2, axis = PythonTuple(*new_axis),
+                        keepdims = self._keepdims, order = self.order, dtype = self.dtype)
+
 
 #==============================================================================
 DtypePrecisionToCastFunction.update({
@@ -3383,6 +3492,7 @@ numpy_funcs = {
     'divide'    : PyccelFunctionDef('divide'    , NumpyDivide),
     'true_divide' : PyccelFunctionDef('true_divide', NumpyDivide),
     'cross'     : PyccelFunctionDef('cross'     , NumpyCross),
+    'vecdot'    : PyccelFunctionDef('vecdot'    , NumpyVecdot),
     # ---
     'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
     'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),

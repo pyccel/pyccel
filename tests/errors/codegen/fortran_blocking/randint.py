@@ -1,4 +1,4 @@
-# An allocatable function cannot be used in an expression
+# Memory allocation should not be used in an expression
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
 
