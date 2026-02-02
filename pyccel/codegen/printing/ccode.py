@@ -2394,12 +2394,9 @@ class CCodePrinter(CodePrinter):
         if assign_node:
             lhs_var = assign_node[0].lhs
         else:
-            if expr.rank == 0:
-                lhs_var = self.scope.get_temporary_variable(expr.class_type)
-            else:
-                errors.report(ALLOCATABLE_IN_EXPRESSION,
-                          symbol=expr, severity='error')
-                return ''
+            # Rank should always be 0 thanks to loop unrolling
+            assert expr.rank == 0
+            lhs_var = self.scope.get_temporary_variable(expr.class_type)
         in_arg_vars = (expr.x1, expr.x2)
         arg_vars = []
         prefix = ''
