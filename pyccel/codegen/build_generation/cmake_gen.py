@@ -281,13 +281,17 @@ class CMakeHandler(BuildSystemHandler):
         if sys.platform == 'darwin' and 'openmp' in self._accelerators:
             compiler_info = self._compiler.compiler_info['c']
             openmp_flags = ' '.join(compiler_info['openmp']['flags'])
-            openmp_lib_name = next(iter(compiler_info['openmp']['libs']))
-            openmp_lib = Path(next(iter(compiler_info['openmp']['libdir']))).glob(f'lib{openmp_lib_name}*')
-            openmp_inc = next(iter(compiler_info['openmp']['include']))
             setup_cmd.append(f"-DOpenMP_C_FLAGS='{openmp_flags}'")
-            setup_cmd.append(f"-DOpenMP_C_INCLUDE_DIRS='{openmp_inc}'")
-            setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
-            setup_cmd.append(f"-DOpenMP_omp_LIBRARY='{next(openmp_lib)}'")
+            openmp_inc = next(iter(compiler_info['openmp'].get('include', ())), None)
+            if openmp_inc:
+                setup_cmd.append(f"-DOpenMP_C_INCLUDE_DIRS='{openmp_inc}'")
+            openmp_lib_name = next(iter(compiler_info['openmp'].get('libs', ())), None)
+            if openmp_lib_name:
+                setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
+                openmp_libdir = next(iter(compiler_info['openmp'].get('libdir', ())), None)
+                if openmp_libdir:
+                    openmp_lib = Path(openmp_libdir).glob(f'lib{openmp_lib_name}*')
+                    setup_cmd.append(f"-DOpenMP_omp_LIBRARY='{next(openmp_lib)}'")
 
         if self._verbose > 1:
             print(" ".join(setup_cmd))
