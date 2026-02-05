@@ -82,4 +82,28 @@ inline double complex complex_max(double complex a, double complex b) {
     return lt ? b : a;
 }
 
+// Macro to generate precision-specific sign functions for integer types
+#define PY_SIGN_TYPE_INT(TYPE, NAME) \
+    static inline TYPE py_sign_type_##NAME(TYPE x) { \
+        return (TYPE)((x > 0) - (x < 0)); \
+    }
+
+// Macro to generate precision-specific sign functions for floating-point types
+#define PY_SIGN_TYPE_FLOAT(TYPE, NAME) \
+    static inline TYPE py_sign_type_##NAME(TYPE x) { \
+        return (TYPE)((x > 0.0) - (x < 0.0)); \
+    }
+
+// Instantiate integer sign functions for all precisions
+PY_SIGN_TYPE_INT(int8_t, int8);
+PY_SIGN_TYPE_INT(int16_t, int16);
+PY_SIGN_TYPE_INT(int32_t, int32);
+PY_SIGN_TYPE_INT(int64_t, int64);
+
+// Instantiate floating-point sign functions for all precisions
+PY_SIGN_TYPE_FLOAT(float, float);
+PY_SIGN_TYPE_FLOAT(double, double);
+PY_SIGN_TYPE_FLOAT(long double, long_double);
+
+
 #endif

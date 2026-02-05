@@ -58,6 +58,7 @@ from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
+from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from pyccel.ast.numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
@@ -133,6 +134,23 @@ numpy_ufunc_to_c_complex = {
     'NumpyArcsinh': 'casinh',
     'NumpyArccosh': 'cacosh',
     'NumpyArctanh': 'catanh',
+}
+
+# dictionary mapping NumPy integer type to C sign function.
+# Used in CCodePrinter._print_NumpySign(self, expr)
+numpy_int_sign_to_c = {
+    NumpyInt8Type() : 'py_sign_type_int8',
+    NumpyInt16Type(): 'py_sign_type_int16',
+    NumpyInt32Type(): 'py_sign_type_int32',
+    NumpyInt64Type(): 'py_sign_type_int64',
+}
+
+# dictionary mapping NumPy float type to C sign function.
+# Used in CCodePrinter._print_NumpySign(self, expr)
+numpy_float_sign_to_c = {
+    NumpyFloat32Type() : 'py_sign_type_float',
+    NumpyFloat64Type() : 'py_sign_type_double',
+    NumpyFloat128Type(): 'py_sign_type_long_double',
 }
 
 # dictionary mapping NumPy complex type to C sign function.
@@ -2091,9 +2109,13 @@ class CCodePrinter(CodePrinter):
         -------
             import numpy
 
-            numpy.sign(x) => isign(x)   (x is integer)
-            numpy.sign(x) => fsign(x)   (x if float)
-            numpy.sign(x) => csign(x)   (x is complex)
+            numpy.sign(x) => py_sign_type_int8(x)   (x is int8)
+            numpy.sign(x) => py_sign_type_int16(x)  (x is int16)
+            numpy.sign(x) => py_sign_type_float(x)  (x is float32)
+            numpy.sign(x) => py_sign_type_double(x) (x is float64)
+            numpy.sign(x) => py_sign_type_float_complex(x)   (x is complex64)
+            numpy.sign(x) => py_sign_type_double_complex(x)  (x is complex128)
+
 
         """
         self.add_import(c_imports['pyc_math_c'])
@@ -2103,11 +2125,11 @@ class CCodePrinter(CodePrinter):
         func = None
 
         if isinstance(primitive_type, PrimitiveIntegerType):
-            # isign handles all integer precisions via implicit casting to long long
-            func = 'isign'
+            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
+            func = numpy_int_sign_to_c[numpy_type]
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            # fsign handles all float precisions via implicit casting to double
-            func = 'fsign'
+            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
+            func = numpy_float_sign_to_c[numpy_type]
         elif isinstance(primitive_type, PrimitiveComplexType):
             numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
             func = numpy_complex_sign_to_c[numpy_type]
