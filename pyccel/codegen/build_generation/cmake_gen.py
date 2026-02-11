@@ -278,6 +278,10 @@ class CMakeHandler(BuildSystemHandler):
             setup_cmd.append('-G')
             setup_cmd.append('MinGW Makefiles')
 
+        env = os.environ.copy()
+        env['CC'] = self._compiler.get_exec((), 'c')
+        env['FC'] = self._compiler.get_exec((), 'fortran')
+
         if sys.platform == 'darwin' and 'openmp' in self._accelerators:
             compiler_info = self._compiler.compiler_info['c']
             openmp_flags = ' '.join(compiler_info['openmp']['flags'])
@@ -289,15 +293,18 @@ class CMakeHandler(BuildSystemHandler):
             if openmp_lib_name:
                 setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
                 openmp_libdir = next(iter(compiler_info['openmp'].get('libdir', ())), None)
+                openmp_lib = None
                 if openmp_libdir:
                     openmp_lib = Path(openmp_libdir).glob(f'lib{openmp_lib_name}*')
+                else:
+                    p = subprocess.run(env['CC'], '-print-file-name=lib{openmp_lib_name}.a', check=False, text=True)
+                    if p.returncode == 0:
+                        openmp_lib = Path(p.stdout).resolve()
+                if openmp_lib:
                     setup_cmd.append(f"-DOpenMP_omp_LIBRARY='{next(openmp_lib)}'")
 
         if self._verbose > 1:
             print(" ".join(setup_cmd))
-        env = os.environ.copy()
-        env['CC'] = self._compiler.get_exec((), 'c')
-        env['FC'] = self._compiler.get_exec((), 'fortran')
         subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 
