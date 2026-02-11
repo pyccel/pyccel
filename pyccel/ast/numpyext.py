@@ -1221,6 +1221,7 @@ class NumpyMatmul(PyccelFunction):
                 rank = b.rank
                 self._shape = list(b.shape)
                 self._shape[-1] = a.shape[-1]
+            self._shape = tuple(b.shape)
 
         if str(order).strip('\'"') in ('K', 'A'):
             if a.order == b.order:
