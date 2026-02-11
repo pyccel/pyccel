@@ -1183,12 +1183,6 @@ class NumpyMatmul(PyccelFunction):
     __slots__ = ('_shape','_class_type')
     name = 'matmul'
 
-    def __new__(cls, a, b, *, order='K', dtype=None):
-        if pyccel_stage != 'syntactic':
-            if a.rank == 1 and b.rank == 1:
-                return NumpyVecdot(a, b, dtype=dtype)
-        return super().__new__(cls)
-
     def __init__(self, a, b, *, order='K', dtype=None):
         super().__init__(a, b)
         if pyccel_stage == 'syntactic':
@@ -1212,7 +1206,10 @@ class NumpyMatmul(PyccelFunction):
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
 
-        if a.rank == 1 or b.rank == 1:
+        if a.rank == 1 and b.rank == 1:
+            rank  = 0
+            self._shape = None
+        elif a.rank == 1 or b.rank == 1:
             rank  = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
