@@ -424,8 +424,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
         result = []
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
-    is_array_function_call = lambda f: f.rank and ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelFunction) and not f.is_indexable))
+
+    def is_array_function_call(f):
+        """
+        Check if an object is a non-indexable function call returning an array.
+        """
+        return f.rank and ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
+                or (isinstance(f, PyccelFunction) and not f.is_indexable))
+
     for line in block:
 
         if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
