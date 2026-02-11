@@ -291,17 +291,19 @@ class CMakeHandler(BuildSystemHandler):
                 setup_cmd.append(f"-DOpenMP_C_INCLUDE_DIRS='{openmp_inc}'")
             openmp_lib_name = next(iter(compiler_info['openmp'].get('libs', ())), None)
             if openmp_lib_name:
-                setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
                 openmp_libdir = next(iter(compiler_info['openmp'].get('libdir', ())), None)
                 openmp_lib = None
                 if openmp_libdir:
-                    openmp_lib = Path(openmp_libdir).glob(f'lib{openmp_lib_name}*')
+                    openmp_lib = next(Path(openmp_libdir).glob(f'lib{openmp_lib_name}*'))
                 else:
-                    p = subprocess.run(env['CC'], '-print-file-name=lib{openmp_lib_name}.a', check=False, text=True)
+                    p = subprocess.run([env['CC'], f'-print-file-name=lib{openmp_lib_name}.dylib'], check=False, text=True,
+                                       capture_output = True)
                     if p.returncode == 0:
-                        openmp_lib = Path(p.stdout).resolve()
-                if openmp_lib:
-                    setup_cmd.append(f"-DOpenMP_omp_LIBRARY='{next(openmp_lib)}'")
+                        print(p.stdout.strip())
+                        openmp_lib = Path(p.stdout.strip())
+                if openmp_lib and openmp_lib.is_absolute():
+                    setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
+                    setup_cmd.append(f"-DOpenMP_{openmp_lib_name}_LIBRARY='{openmp_lib.resolve()}'")
 
         if self._verbose > 1:
             print(" ".join(setup_cmd))
