@@ -805,6 +805,13 @@ class NumpyNewArray(PyccelFunction):
 
     @property
     def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
         return False
 
 #==============================================================================
@@ -1229,6 +1236,15 @@ class NumpyMatmul(PyccelFunction):
 
     @property
     def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        Matmul can be indexed if multiple ranks are available but the 2D matmul
+        itself cannot be indexed.
+        """
         return self.rank > 2
 
 #==============================================================================
@@ -2712,6 +2728,13 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     @property
     def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
         return False
 
 class NumpyConjugate(PythonConjugate):
