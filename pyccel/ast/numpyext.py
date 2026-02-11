@@ -950,6 +950,17 @@ class NumpyArange(NumpyNewArray):
         step = PyccelMul.make_simplified(index, self.step)
         return PyccelAdd.make_simplified(self.start, step)
 
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
+
 #==============================================================================
 class NumpyReduction(PyccelFunction):
     """
