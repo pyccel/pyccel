@@ -803,6 +803,10 @@ class NumpyNewArray(PyccelFunction):
         assert order in ('C', 'F')
         return order
 
+    @property
+    def is_indexable(self):
+        return False
+
 #==============================================================================
 class NumpyArray(NumpyNewArray):
     """
