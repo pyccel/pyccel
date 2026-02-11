@@ -3316,7 +3316,7 @@ class NumpyCross(PyccelFunction):
         calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
         but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
         """
-        return expr.rank > 0
+        return self.rank > 0
 
 #==============================================================================
 class NumpyLinalgCross(NumpyCross):
