@@ -803,17 +803,6 @@ class NumpyNewArray(PyccelFunction):
         assert order in ('C', 'F')
         return order
 
-    @property
-    def is_indexable(self):
-        """
-        Indicate whether the expression can be indexed.
-
-        Indicate whether the expression can be indexed to get an element without
-        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
-        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
-        """
-        return False
-
 #==============================================================================
 class NumpyArray(NumpyNewArray):
     """
@@ -1043,6 +1032,17 @@ class NumpyReduction(PyccelFunction):
         Axis or axes along which the reduction is performed.
         """
         return self._axis
+
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
 
 #==============================================================================
 class NumpySum(NumpyReduction):
@@ -2726,17 +2726,6 @@ class NumpyTranspose(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
-    @property
-    def is_indexable(self):
-        """
-        Indicate whether the expression can be indexed.
-
-        Indicate whether the expression can be indexed to get an element without
-        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
-        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
-        """
-        return False
-
 class NumpyConjugate(PythonConjugate):
     """
     Represents a call to  numpy.conj for code generation.
@@ -3318,6 +3307,17 @@ class NumpyCross(PyccelFunction):
                           LiteralInteger(self._axisc),
                           c = self.c[c_idx])
 
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return expr.rank > 0
+
 #==============================================================================
 class NumpyLinalgCross(NumpyCross):
     """
@@ -3439,6 +3439,17 @@ class NumpyVecdot(NumpyReduction):
         new_x2 = x2[indexes[x2_offset:]]
         return NumpyVecdot(new_x1, new_x2, axis = PythonTuple(*new_axis),
                         keepdims = self._keepdims, order = self.order, dtype = self.dtype)
+
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
 
 
 #==============================================================================
