@@ -2454,11 +2454,15 @@ class CCodePrinter(CodePrinter):
             errors.report('The result of a matrix multiplication must be saved into a variable',
                           symbol=expr, severity='error')
             return ''
+        dtype = expr.dtype
+        if dtype.primitive_type is PrimitiveBooleanType():
+            errors.report('Boolean matrix multiplication is not implemented',
+                          symbol=expr, severity='error')
         if expr.b.rank == 1:
-            dtype = self.get_c_type(expr.dtype)
+            dtype = self.get_c_type(dtype)
             return f'pyc_matvecmul_{dtype}({out_code}, {a_code}, {b_code});\n'
         elif expr.a.rank == 1:
-            dtype = self.get_c_type(expr.dtype)
+            dtype = self.get_c_type(dtype)
             return f'pyc_vecmatmul_{dtype}({out_code}, {a_code}, {b_code});\n'
         else:
             array_type = self.get_c_type(expr.class_type)

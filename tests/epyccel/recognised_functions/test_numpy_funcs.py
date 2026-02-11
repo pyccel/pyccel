@@ -5444,7 +5444,7 @@ def test_norm_axis_keepdims(language):
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
-    def get_matmul(arr : 'C[:]'):
+    def get_matmul(arr : 'T[:]'):
         from numpy import matmul
         a = matmul(arr, arr)
         return a
@@ -5493,7 +5493,7 @@ def test_numpy_matmul_array_like_1d(language):
 
 def test_numpy_matmul_array_like_2x2d(language):
 
-    def get_matmul(arr : 'C[:,:]'):
+    def get_matmul(arr : 'T[:,:]'):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
