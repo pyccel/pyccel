@@ -772,6 +772,55 @@ class CCodePrinter(CodePrinter):
                     symbol=expr, severity='error')
         return decl_line
 
+    def _inline_vecdot(self, expr, x1, x2, axis, *, with_conjugate):
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+        else:
+            # Rank should always be 0 thanks to loop unrolling
+            assert expr.rank == 0
+            lhs_var = self.scope.get_temporary_variable(expr.class_type)
+        in_arg_vars = (x1, x2)
+        arg_vars = []
+        prefix = ''
+        for a in in_arg_vars:
+            if not isinstance(a, Variable):
+                # This handles slice arguments
+                assert a.rank
+                tmp = self.scope.get_temporary_variable(a.class_type, shape = a.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, a))
+                arg_vars.append(tmp)
+            else:
+                arg_vars.append(a)
+
+        initial = self._print(convert_to_literal(0, expr.dtype))
+        tmp_additional_code = self._additional_code
+        self._additional_code = ''
+        lhs = self._print(lhs_var)
+
+        loop_scope = self.scope.create_new_loop_scope()
+        iter_var_name = loop_scope.get_new_name()
+        iter_var = Variable(PythonNativeInt(), iter_var_name)
+
+        x1, x2 = arg_vars
+        if with_conjugate and x1.dtype.primitive_type is PrimitiveComplexType():
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
+        else:
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(x1[iter_var], x2[iter_var])))
+        body = self._additional_code + node
+        self._additional_code = tmp_additional_code
+
+        code = prefix + (f'{lhs} = {initial};\n'
+                f'for (c_range({iter_var_name}, {self._print(x1.shape[axis])})) {{\n'
+                f'{body}'
+                 '}\n')
+        if getattr(lhs_var, 'is_temp', False):
+            self._additional_code += code
+            return lhs
+        else:
+            return code
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
@@ -2389,56 +2438,12 @@ class CCodePrinter(CodePrinter):
                 f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
                 f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
 
-    def _print_NumpyVecdot(self, expr):
-        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
-        if assign_node:
-            lhs_var = assign_node[0].lhs
-        else:
-            # Rank should always be 0 thanks to loop unrolling
-            assert expr.rank == 0
-            lhs_var = self.scope.get_temporary_variable(expr.class_type)
-        in_arg_vars = (expr.x1, expr.x2)
-        arg_vars = []
-        prefix = ''
-        for a in in_arg_vars:
-            if not isinstance(a, Variable):
-                # This handles slice arguments
-                assert a.rank
-                tmp = self.scope.get_temporary_variable(a.class_type, shape = a.shape,
-                        memory_handling='alias')
-                prefix += self._print(AliasAssign(tmp, a))
-                arg_vars.append(tmp)
-            else:
-                arg_vars.append(a)
-
-        initial = self._print(convert_to_literal(0, expr.dtype))
-        tmp_additional_code = self._additional_code
-        self._additional_code = ''
-        lhs = self._print(lhs_var)
-
-        loop_scope = self.scope.create_new_loop_scope()
-        iter_var_name = loop_scope.get_new_name()
-        iter_var = Variable(PythonNativeInt(), iter_var_name)
-
-        x1, x2 = arg_vars
-        if x1.dtype.primitive_type is PrimitiveComplexType():
-            node = self._print(AugAssign(lhs_var, '+', PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
-        else:
-            node = self._print(AugAssign(lhs_var, '+', PyccelMul(x1[iter_var], x2[iter_var])))
-        body = self._additional_code + node
-        self._additional_code = tmp_additional_code
-
-        code = prefix + (f'{lhs} = {initial};\n'
-                f'for (c_range({iter_var_name}, {self._print(expr.x1.shape[expr.axis[0]])})) {{\n'
-                f'{body}'
-                 '}\n')
-        if getattr(lhs_var, 'is_temp', False):
-            self._additional_code += code
-            return lhs
-        else:
-            return code
+    def _print_NumpyVecdot(self, expr, *, with_conjugate = True):
+        return self._inline_vecdot(expr, expr.x1, expr.x2, expr.axis[0], with_conjugate = True)
 
     def _print_NumpyMatmul(self, expr):
+        if expr.rank == 0:
+            return self._inline_vecdot(expr, expr.a, expr.b, 0, with_conjugate = False)
         self.add_import(c_imports['pyc_math_c'])
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
