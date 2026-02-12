@@ -1183,7 +1183,7 @@ class NumpyMatmul(PyccelFunction):
     __slots__ = ('_shape','_class_type')
     name = 'matmul'
 
-    def __init__(self, a, b, *, order='K', dtype=None):
+    def __init__(self, a, b, *, dtype=None, order='K'):
         super().__init__(a, b)
         if pyccel_stage == 'syntactic':
             return
