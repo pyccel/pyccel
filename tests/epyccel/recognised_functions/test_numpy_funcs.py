@@ -5537,6 +5537,23 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.allclose(epyccel_func(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
+def test_matmul_4d_multi_batch(language):
+    def matmul_call(a : 'float[:,:,:,:]', b : 'float[:,:,:,:]'):
+        from numpy import matmul
+        return matmul(a, b)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # Two batch dimensions
+    a = rand(2, 3, 4, 6)
+    b = rand(2, 3, 6, 5)
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
 def test_numpy_where_array_like_1d_with_condition(language):
 
     def get_chosen_elements(arr : 'F[:]'):
