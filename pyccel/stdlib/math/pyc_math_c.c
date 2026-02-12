@@ -193,7 +193,7 @@ void pyc_vecmatmul_##TYPE(TYPE1D out, TYPE1D a, TYPE2D b) \
     { \
         (*cspan_at(&out, i)) = 0; \
         for (int j = 0; j < n; ++j) { \
-            (*cspan_at(&out, i)) += (*cspan_at(&a, j)) * (*cspan_at(&b, i, j)); \
+            (*cspan_at(&out, i)) += (*cspan_at(&a, j)) * (*cspan_at(&b, j, i)); \
         } \
     } \
 }
