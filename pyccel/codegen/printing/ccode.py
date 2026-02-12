@@ -2458,6 +2458,9 @@ class CCodePrinter(CodePrinter):
         if dtype.primitive_type is PrimitiveBooleanType():
             errors.report('Boolean matrix multiplication is not implemented',
                           symbol=expr, severity='error')
+        elif len({expr.a.dtype, expr.b.dtype, expr.dtype}) != 1:
+            errors.report('Matrix multiplication is only implemented in C when all arguments and results have the same type',
+                          symbol=expr, severity='error')
         if expr.b.rank == 1:
             dtype = self.get_c_type(dtype)
             return f'pyc_matvecmul_{dtype}({out_code}, {a_code}, {b_code});\n'
