@@ -5555,15 +5555,15 @@ def test_matmul_4d_multi_batch(language):
     assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
 
 def test_matmul_3d_broadcast_batch(language):
-    def matmul_call(a : 'float[:,:]', b : 'float[:,:,:]'):
+    def matmul_call(a : 'float[:,:,:]', b : 'float[:,:]'):
         from numpy import matmul
         return matmul(a, b)
 
     f1 = epyccel(matmul_call, language=language)
 
     # a has batch dimension, b is shared
-    a = rand(4, 3)
-    b = rand(5, 3, 2)
+    a = rand(5, 4, 3)
+    b = rand(3, 2)
 
     res_ref = matmul_call(a, b)
     res_pycc  = f1(a, b)
