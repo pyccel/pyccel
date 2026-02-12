@@ -1220,8 +1220,8 @@ class NumpyMatmul(PyccelFunction):
             else:
                 rank = b.rank
                 self._shape = list(b.shape)
-                self._shape[-1] = a.shape[-1]
-            self._shape = tuple(b.shape)
+                self._shape[-2] = a.shape[-2]
+            self._shape = tuple(self._shape)
 
         if str(order).strip('\'"') in ('K', 'A'):
             if a.order == b.order:
