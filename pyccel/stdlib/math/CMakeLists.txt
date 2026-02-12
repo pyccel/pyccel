@@ -20,6 +20,7 @@ target_include_directories(pyc_math_c
 target_link_libraries(pyc_math_c
     PRIVATE
     m
+    stc
 )
 
 endif()
