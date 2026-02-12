@@ -1240,8 +1240,8 @@ class NumpyMatmul(PyccelFunction):
         return self._args[1]
 
     def __getitem__(self, args):
-        # TODO: Insert at correct indices
-        return NumpyMatmul(self.a[args], self.b[args])
+        return NumpyMatmul(self.a[args], self.b[args], dtype = self.dtype,
+                           order = self.order)
 
     @property
     def is_indexable(self):
