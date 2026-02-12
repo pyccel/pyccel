@@ -773,6 +773,31 @@ class CCodePrinter(CodePrinter):
         return decl_line
 
     def _inline_vecdot(self, expr, x1, x2, axis, *, with_conjugate):
+        """
+        Get the code describing a vector dot product.
+
+        Get the code describing a vector dot product with or without a possible
+        conjugate calculation for complexes. This is used for the implementation
+        of np.vecdot and np.matmul.
+
+        Parameters
+        ----------
+        expr : NumpyVecdot | NumpyMatmul
+            The node that is being printed.
+        x1 : TypedAstNode
+            The first vector.
+        x2 : TypedAstNode
+            The second vector.
+        axis : int
+            The axis along which the dot product is performed.
+        with_conjugate : bool
+            Indicates if the conjugate of the first argument should be used.
+
+        Returns
+        -------
+        str
+            The code that describes the vecdot operation.
+        """
         assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
         if assign_node:
             lhs_var = assign_node[0].lhs
