@@ -158,7 +158,7 @@ PYC_MATMUL_TYPE(array_double_complex_2d)
 #define PYC_MATVECMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
 void pyc_matvecmul_##TYPE(TYPE1D out, TYPE2D a, TYPE1D b) \
 { \
-    int64_t n, m, p; \
+    int64_t n, m; \
     n = a.shape[0]; \
     m = a.shape[1]; \
     assert(m == b.shape[0]); \
@@ -184,7 +184,7 @@ PYC_MATVECMUL_TYPE(double_complex, array_double_complex_2d, array_double_complex
 #define PYC_VECMATMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
 void pyc_vecmatmul_##TYPE(TYPE1D out, TYPE1D a, TYPE2D b) \
 { \
-    int64_t n, m, p; \
+    int64_t n, m; \
     n = b.shape[0]; \
     m = b.shape[1]; \
     assert(n == a.shape[0]); \
