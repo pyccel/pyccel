@@ -2017,7 +2017,7 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
 def test_array_float_1d_2d_matmul(language):
     f1 = arrays.array_float_1d_2d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape(3, 2)
+    A1 = np.arange(6, dtype=float).reshape(2, 3)
     A2 = np.copy(A1)
     x1 = np.arange(2, dtype=float) + 30
     x2 = np.copy(x1)
