@@ -1240,7 +1240,18 @@ class NumpyMatmul(PyccelFunction):
         return self._args[1]
 
     def __getitem__(self, args):
-        return NumpyMatmul(self.a[args], self.b[args], dtype = self.dtype,
+        a_rank = self.a.rank
+        b_rank = self.b.rank
+        if a_rank > b_rank:
+            a = self.a[args]
+            b = self.b
+        elif a_rank < b_rank:
+            a = self.a
+            b = self.b[args]
+        else:
+            a = self.a[args]
+            b = self.b[args]
+        return NumpyMatmul(a, b, dtype = self.dtype,
                            order = self.order)
 
     @property
