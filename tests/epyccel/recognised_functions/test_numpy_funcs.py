@@ -5554,6 +5554,24 @@ def test_matmul_4d_multi_batch(language):
     assert res_pycc.shape == res_ref.shape
     assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
 
+def test_matmul_3d_broadcast_batch(language):
+    def matmul_call(a : 'float[:,:]', b : 'float[:,:,:]'):
+        from numpy import matmul
+        return matmul(a, b, dtype=int)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # a has batch dimension, b is shared
+    a = rand(4, 3) * 100
+    b = rand(5, 3, 2) * 100
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
+
 def test_numpy_where_array_like_1d_with_condition(language):
 
     def get_chosen_elements(arr : 'F[:]'):

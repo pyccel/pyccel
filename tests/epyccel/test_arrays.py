@@ -2014,6 +2014,20 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
     assert np.array_equal(y1, y2)
 
 
+def test_array_float_1d_2d_matmul(language):
+    f1 = arrays.array_float_1d_2d_matmul
+    f2 = epyccel( f1 , language = language)
+    A1 = np.arange(6, dtype=float).reshape(3, 2)
+    A2 = np.copy(A1)
+    x1 = np.arange(2, dtype=float) + 30
+    x2 = np.copy(x1)
+    y1 = np.empty([3])
+    y2 = np.empty([3])
+    f1(x1, A1, y1)
+    f2(x2, A2, y2)
+    assert np.array_equal(y1, y2)
+
+
 def test_array_float_2d_2d_matmul(language):
     f1 = arrays.array_float_2d_2d_matmul
     f2 = epyccel( f1 , language = language)
