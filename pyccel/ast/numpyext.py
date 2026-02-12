@@ -1242,15 +1242,8 @@ class NumpyMatmul(PyccelFunction):
     def __getitem__(self, args):
         a_rank = self.a.rank
         b_rank = self.b.rank
-        if a_rank > b_rank:
-            a = self.a[args]
-            b = self.b
-        elif a_rank < b_rank:
-            a = self.a
-            b = self.b[args]
-        else:
-            a = self.a[args]
-            b = self.b[args]
+        a = self.a if a_rank < b_rank else self.a[args]
+        b = self.b if a_rank > b_rank else self.b[args]
         return NumpyMatmul(a, b, dtype = self.dtype,
                            order = self.order)
 
@@ -3337,17 +3330,6 @@ class NumpyCross(PyccelFunction):
                           LiteralInteger(self._axisb),
                           LiteralInteger(self._axisc),
                           c = self.c[c_idx])
-
-    @property
-    def is_indexable(self):
-        """
-        Indicate whether the expression can be indexed.
-
-        Indicate whether the expression can be indexed to get an element without
-        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
-        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
-        """
-        return self.rank > 0
 
 #==============================================================================
 class NumpyLinalgCross(NumpyCross):
