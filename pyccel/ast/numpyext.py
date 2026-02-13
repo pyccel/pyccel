@@ -1229,10 +1229,7 @@ class NumpyMatmul(PyccelFunction):
             order = str(order).strip("\'")
             assert order in ('K', 'A', 'C', 'F')
             if order in ('K', 'A'):
-                if a.order == b.order:
-                    order = a.order
-                else:
-                    order = None if rank < 2 else 'C'
+                order = a.order if a.order == b.order else 'C'
 
         self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
