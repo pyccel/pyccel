@@ -2463,7 +2463,7 @@ class CCodePrinter(CodePrinter):
                 f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
                 f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
 
-    def _print_NumpyVecdot(self, expr, *, with_conjugate = True):
+    def _print_NumpyVecdot(self, expr):
         return self._inline_vecdot(expr, expr.x1, expr.x2, expr.axis[0], with_conjugate = True)
 
     def _print_NumpyMatmul(self, expr):
