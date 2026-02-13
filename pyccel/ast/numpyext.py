@@ -1223,11 +1223,16 @@ class NumpyMatmul(PyccelFunction):
                 self._shape[-2] = a.shape[-2]
             self._shape = tuple(self._shape)
 
-        if str(order).strip('\'"') in ('K', 'A'):
-            if a.order == b.order:
-                order = a.order
-            else:
-                order = None if rank < 2 else 'C'
+        if rank < 2:
+            order = None
+        else:
+            order = str(order).strip("\'")
+            assert order in ('K', 'A', 'C', 'F')
+            if order in ('K', 'A'):
+                if a.order == b.order:
+                    order = a.order
+                else:
+                    order = None if rank < 2 else 'C'
 
         self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
