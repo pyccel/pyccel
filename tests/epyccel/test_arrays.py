@@ -1977,9 +1977,9 @@ def test_array_float_1d_1d_prod(language):
 def test_array_float_2d_1d_matmul(language):
     f1 = arrays.array_float_2d_1d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape(3, 2) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape(3, 2)
     A2 = np.copy(A1)
-    x1 = np.arange(2, dtype=float) + 30
+    x1 = np.arange(30, 32, dtype=float)
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -1991,9 +1991,9 @@ def test_array_float_2d_1d_matmul(language):
 def test_array_float_2d_1d_matmul_creation(language):
     f1 = arrays.array_float_2d_1d_matmul_creation
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2]) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    x1 = np.arange(2, dtype=float) - 10
+    x1 = np.arange(-10, -8, dtype=float)
     x2 = np.copy(x1)
     y1 = f1(A1, x1)
     y2 = f2(A2, x2)
@@ -2003,9 +2003,9 @@ def test_array_float_2d_1d_matmul_creation(language):
 def test_array_float_2d_1d_matmul_order_F_F(language):
     f1 = arrays.array_float_2d_1d_matmul_order_F
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2], order='F') + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2], order='F')
     A2 = np.copy(A1)
-    x1 = np.arange(2, dtype=float) + 10
+    x1 = np.arange(10, 12, dtype=float)
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -2017,9 +2017,9 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
 def test_array_float_1d_2d_matmul(language):
     f1 = arrays.array_float_1d_2d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape(2, 3) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape(2, 3)
     A2 = np.copy(A1)
-    x1 = np.arange(2, dtype=float) + 30
+    x1 = np.arange(30, 32, dtype=float)
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -2031,9 +2031,9 @@ def test_array_float_1d_2d_matmul(language):
 def test_array_float_2d_2d_matmul(language):
     f1 = arrays.array_float_2d_2d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2]) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.arange(6, dtype=float).reshape([2, 3]) - 50
+    B1 = np.arange(-50, -44, dtype=float).reshape([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2045,9 +2045,9 @@ def test_array_float_2d_2d_matmul(language):
 def test_array_float_2d_2d_matmul_F_F_F_F(language):
     f1 = arrays.array_float_2d_2d_matmul_F_F
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2], order='F') + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2], order='F')
     A2 = np.copy(A1)
-    B1 = np.arange(6, dtype=float).reshape([2, 3], order='F') + 22
+    B1 = np.arange(22, 28, dtype=float).reshape([2, 3], order='F')
     B2 = np.copy(B1)
     C1 = np.empty([3,3], order='F')
     C2 = np.empty([3,3], order='F')
@@ -2068,9 +2068,9 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
 def test_array_float_2d_2d_matmul_mixorder(language):
     f1 = arrays.array_float_2d_2d_matmul_mixorder
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2]) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.arange(6, dtype=float).reshape([2, 3], order = 'F') + 42
+    B1 = np.arange(42, 48, dtype=float).reshape([2, 3], order = 'F')
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2082,9 +2082,9 @@ def test_array_float_2d_2d_matmul_mixorder(language):
 def test_array_float_2d_2d_matmul_operator(language):
     f1 = arrays.array_float_2d_2d_matmul_operator
     f2 = epyccel( f1 , language = language)
-    A1 = np.arange(6, dtype=float).reshape([3, 2]) + 1
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.arange(6, dtype=float).reshape([2, 3]) - 15
+    B1 = np.arange(-15, -9, dtype=float).reshape([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
