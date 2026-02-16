@@ -950,6 +950,17 @@ class NumpyArange(NumpyNewArray):
         step = PyccelMul.make_simplified(index, self.step)
         return PyccelAdd.make_simplified(self.start, step)
 
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
+
 #==============================================================================
 class NumpyReduction(PyccelFunction):
     """
@@ -1032,6 +1043,17 @@ class NumpyReduction(PyccelFunction):
         Axis or axes along which the reduction is performed.
         """
         return self._axis
+
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
 
 #==============================================================================
 class NumpySum(NumpyReduction):
@@ -1153,11 +1175,15 @@ class NumpyMatmul(PyccelFunction):
         The first argument of the matrix multiplication.
     b : TypedAstNode
         The second argument of the matrix multiplication.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, optional
+        The data type of the result.
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
     """
     __slots__ = ('_shape','_class_type')
     name = 'matmul'
 
-    def __init__(self, a ,b):
+    def __init__(self, a, b, *, dtype=None, order='K'):
         super().__init__(a, b)
         if pyccel_stage == 'syntactic':
             return
@@ -1168,8 +1194,11 @@ class NumpyMatmul(PyccelFunction):
             raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
-        type_info = NumpyResultType(*args)
-        dtype = process_dtype(type_info.dtype)
+        if dtype is None:
+            type_info = NumpyResultType(*args)
+            dtype = process_dtype(type_info.dtype)
+        else:
+            dtype = process_dtype(dtype)
 
         if not (a.shape is None or b.shape is None):
 
@@ -1184,13 +1213,23 @@ class NumpyMatmul(PyccelFunction):
             rank  = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
-            rank = 2
+            if a.rank > b.rank:
+                rank = a.rank
+                self._shape = list(a.shape)
+                self._shape[-1] = b.shape[-1]
+            else:
+                rank = b.rank
+                self._shape = list(b.shape)
+                self._shape[-2] = a.shape[-2]
+            self._shape = tuple(self._shape)
 
-
-        if a.order == b.order:
-            order = a.order
+        if rank < 2:
+            order = None
         else:
-            order = None if rank < 2 else 'C'
+            order = str(order).strip("\'")
+            assert order in ('K', 'A', 'C', 'F')
+            if order in ('K', 'A'):
+                order = a.order if a.order == b.order else 'C'
 
         self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
 
@@ -1201,6 +1240,27 @@ class NumpyMatmul(PyccelFunction):
     @property
     def b(self):
         return self._args[1]
+
+    def __getitem__(self, args):
+        a_rank = self.a.rank
+        b_rank = self.b.rank
+        a = self.a if a_rank < b_rank else self.a[args]
+        b = self.b if a_rank > b_rank else self.b[args]
+        return NumpyMatmul(a, b, dtype = self.dtype,
+                           order = self.order)
+
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        Matmul can be indexed if multiple ranks are available but the 2D matmul
+        itself cannot be indexed.
+        """
+        return self.rank > 2
 
 #==============================================================================
 class NumpyShape(PyccelFunction):
@@ -2681,6 +2741,17 @@ class NumpyTranspose(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
+
 class NumpyConjugate(PythonConjugate):
     """
     Represents a call to  numpy.conj for code generation.
@@ -3383,6 +3454,17 @@ class NumpyVecdot(NumpyReduction):
         new_x2 = x2[indexes[x2_offset:]]
         return NumpyVecdot(new_x1, new_x2, axis = PythonTuple(*new_axis),
                         keepdims = self._keepdims, order = self.order, dtype = self.dtype)
+
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.rank > 0
 
 
 #==============================================================================

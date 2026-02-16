@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 -   #2541 : Add support for `axis`, `keepdims`, `initial` arguments of `numpy.amin` and `numpy.amax`.
 -   #2370 : Add extra commands to `pyccel config` command line interface.
 -   #2533 : Add support for NumPy's `vecdot` function.
+-   #2562 : Add C support for NumPy's `matmul` function.
+-   #767 : Extend support for NumPy's `matmul` function to handle arrays of rank >2.
 
 ### Fixed
 

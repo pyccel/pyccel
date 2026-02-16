@@ -10,7 +10,7 @@ m_dep = cc.find_library('m', required : true)
 pyc_math_c = static_library('pyc_math_c',
   'pyc_math_c.c',
   include_directories: ['.'],
-  dependencies: m_dep,
+  dependencies: [m_dep, stc_dep],
   install: true)
 
 pyc_math_c_dep = declare_dependency(
