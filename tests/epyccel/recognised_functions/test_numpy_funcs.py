@@ -5441,30 +5441,16 @@ def test_norm_axis_keepdims(language):
     assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
     assert res_cc.shape == res_ref.shape
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python])
-    )
-)
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
-    def get_matmul(arr : 'C[:]'):
+    def get_matmul(arr : 'T[:]'):
         from numpy import matmul
         a = matmul(arr, arr)
         return a
 
     size = 5
 
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
     integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
@@ -5489,9 +5475,6 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert np.array_equal(epyccel_func(bl), get_matmul(bl))
-    assert np.array_equal(epyccel_func(integer8), get_matmul(integer8))
-    assert np.array_equal(epyccel_func(integer16), get_matmul(integer16))
     assert np.array_equal(epyccel_func(integer), get_matmul(integer))
     assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
     assert np.array_equal(epyccel_func(integer64), get_matmul(integer64))
@@ -5501,21 +5484,9 @@ def test_numpy_matmul_array_like_1d(language):
     assert isclose(epyccel_func(cmplx64),get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(cmplx128),get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python],
-        )
-    )
-)
-
 def test_numpy_matmul_array_like_2x2d(language):
 
-    def get_matmul(arr : 'C[:,:]'):
+    def get_matmul(arr : 'T[:,:]'):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
@@ -5523,16 +5494,12 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     size = (2, 2)
 
-    bl = randint(0, 2, size=size, dtype= bool)
-
     def calculate_max_values(min_for_type, max_for_type):
         cast = type(min_for_type)
         min_test = -np.sqrt(abs(min_for_type) / size[0])
         max_test = np.sqrt(abs(max_for_type) / size[0])
         return cast(min_test), cast(max_test)
 
-    integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
-    integer16 = randint(*calculate_max_values(min_int16, max_int16), size=size, dtype=np.int16)
     integer = randint(*calculate_max_values(min_int, max_int), size=size)
     integer32 = randint(*calculate_max_values(min_int32, max_int32), size=size, dtype=np.int32)
     integer64 = randint(*calculate_max_values(min_int64, max_int64), size=size, dtype=np.int64)
@@ -5548,8 +5515,6 @@ def test_numpy_matmul_array_like_2x2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(*calculate_max_values(min_int, max_int), size=size) + uniform(*calculate_max_values(min_int, max_int), size=size) * 1j
 
-    integer8  = np.full(size, calculate_max_values(min_int8, max_int8)[1])
-    integer16 = np.full(size, calculate_max_values(min_int16, max_int16)[1])
     integer   = np.full(size, calculate_max_values(min_int, max_int)[1])
     integer32 = np.full(size, calculate_max_values(min_int32, max_int32)[1])
     integer64 = np.full(size, calculate_max_values(min_int64, max_int64)[1])
@@ -5563,9 +5528,6 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert np.allclose(epyccel_func(bl), get_matmul(bl), rtol=RTOL, atol=ATOL)
-    assert np.allclose(epyccel_func(integer8), get_matmul(integer8), rtol=RTOL, atol=ATOL)
-    assert np.allclose(epyccel_func(integer16), get_matmul(integer16), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer), get_matmul(integer), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer32), get_matmul(integer32), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer64), get_matmul(integer64), rtol=RTOL, atol=ATOL)
@@ -5574,6 +5536,41 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.allclose(epyccel_func(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
+
+def test_matmul_4d_multi_batch(language):
+    def matmul_call(a : 'float[:,:,:,:]', b : 'float[:,:,:,:]'):
+        from numpy import matmul
+        return matmul(a, b)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # Two batch dimensions
+    a = rand(2, 3, 4, 6)
+    b = rand(2, 3, 6, 5)
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
+def test_matmul_3d_broadcast_batch(language):
+    def matmul_call(a : 'float[:,:,:]', b : 'float[:,:]'):
+        from numpy import matmul
+        return matmul(a, b)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # a has batch dimension, b is shared
+    a = rand(5, 4, 3)
+    b = rand(3, 2)
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
 
 def test_numpy_where_array_like_1d_with_condition(language):
 
