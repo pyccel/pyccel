@@ -1961,11 +1961,12 @@ class CCodePrinter(CodePrinter):
         arg = expr.arg
         if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             idx = self._print(expr.index)
+            cast_code = f'({self.get_c_type(PythonNativeInt())})'
             if self.is_c_pointer(arg):
                 arg_code = self._print(ObjectAddress(arg))
-                return f'{arg_code}->shape[{idx}]'
+                return f'{cast_code}{arg_code}->shape[{idx}]'
             arg_code = self._print(arg)
-            return f'{arg_code}.shape[{idx}]'
+            return f'{cast_code}{arg_code}.shape[{idx}]'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
