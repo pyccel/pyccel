@@ -1,14 +1,57 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import multiprocessing
 import os
+import subprocess # nosec B404
 import sys
+import re
+from packaging.version import Version
+
 import pytest
 import numpy as np
-import modules.openmp as openmp
-
 from numpy import random
 from numpy import matmul
+
 from pyccel import epyccel
+from pyccel.codegen.compiling.compilers import Compiler
+
+import modules.openmp as openmp
+
+#==============================================================================
+
+def get_compiler_info(language):
+    """
+    Extract the name of the compiler and its version, based on the language.
+
+    Parameters
+    ----------
+    language : str
+        The backend language for Pyccel. Accepted values are 'C', 'Fortran',
+        and 'Python' (not case-sensitive).
+
+    Returns
+    -------
+    executable : str
+        The name of the compiler (e.g. 'gcc' or 'gfortran'). If `language` is
+        Python, the executable is 'python' by default.
+
+    version : packaging.version.Version
+        The compiler version obtained by running `<executable> --version`.
+    """
+    language = language.lower()
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    debug = os.environ.get('PYCCEL_DEBUG_MODE', False)
+
+    if language in ['c', 'fortran']:
+        compiler = Compiler(compiler_family, debug)
+        executable = compiler.compiler_info[language]['exec']
+    else:
+        executable = 'python'
+
+    version_output = subprocess.check_output([executable, '--version']).decode('utf-8') # nosec B603, B607
+    version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
+    version = Version(version_string)
+
+    return executable, version
 
 #==============================================================================
 
@@ -477,7 +520,13 @@ def test_omp_sections(language):
     f2 = openmp.omp_sections
     assert f1() == f2()
 
+
+def should_skip(language):
+    executable, version = get_compiler_info(language)
+    return executable == 'gcc' and version.major >= 15
+
 @pytest.mark.skipif(sys.platform == 'win32', reason="Type mismatch warning is an error on Windows")
+@pytest.mark.skipif_by_language(should_skip('c'), language='c', reason="Type mismatch is an error with GCC >= 15")
 @pytest.mark.external
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, flags = '-Wall', openmp=True, language=language)
