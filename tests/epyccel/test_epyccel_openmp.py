@@ -14,7 +14,7 @@ from numpy import matmul
 from pyccel import epyccel
 from pyccel.codegen.compiling.compilers import Compiler
 
-import modules.openmp as openmp
+import .modules.openmp as openmp
 
 #==============================================================================
 
