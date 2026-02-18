@@ -11,10 +11,10 @@ import numpy as np
 from numpy import random
 from numpy import matmul
 
+import modules.openmp as openmp
+
 from pyccel import epyccel
 from pyccel.codegen.compiling.compilers import Compiler
-
-import .modules.openmp as openmp
 
 #==============================================================================
 
