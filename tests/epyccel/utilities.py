@@ -1,7 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
-from pyccel import epyccel
+import os
+import re
+import subprocess # nosec B404
+from packaging.version import Version
 
+import numpy as np
+
+from pyccel import epyccel
+from pyccel.codegen.compiling.compilers import Compiler
+
+__all__ = (
+    'epyccel_test',
+    'get_compiler_info',
+)
 
 #==============================================================================
 class epyccel_test:
@@ -20,3 +31,39 @@ class epyccel_test:
         out1 = self._f(*args)
         out2 = self._f2(*args)
         assert np.equal(out1, out2 ).all()
+
+#==============================================================================
+def get_compiler_info(language):
+    """
+    Extract the name of the compiler and its version, based on the language.
+
+    Parameters
+    ----------
+    language : str
+        The backend language for Pyccel. Accepted values are 'C', 'Fortran',
+        and 'Python' (not case-sensitive).
+
+    Returns
+    -------
+    executable : str
+        The name of the compiler (e.g. 'gcc' or 'gfortran'). If `language` is
+        Python, the executable is 'python' by default.
+
+    version : packaging.version.Version
+        The compiler version obtained by running `<executable> --version`.
+    """
+    language = language.lower()
+    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    debug = os.environ.get('PYCCEL_DEBUG_MODE', False)
+
+    if language in ['c', 'fortran']:
+        compiler = Compiler(compiler_family, debug)
+        executable = compiler.compiler_info[language]['exec']
+    else:
+        executable = 'python'
+
+    version_output = subprocess.check_output([executable, '--version']).decode('utf-8') # nosec B603, B607
+    version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
+    version = Version(version_string)
+
+    return executable, version
