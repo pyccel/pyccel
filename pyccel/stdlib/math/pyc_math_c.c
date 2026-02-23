@@ -42,26 +42,6 @@ int64_t pyc_lcm(int64_t a, int64_t b)
 }
 /*---------------------------------------------------------------------------*/
 
-/* numpy.sign for float, double and integers */
-long long int isign(long long int x)
-{
-    return (x > 0) - (x < 0);
-}
-
-/* numpy.sign for float, double and integers */
-double fsign(double x)
-{
-    return (double)((x > 0) - (x < 0));
-}
-
-/* numpy.sign for complex */
-double complex csign(double complex x)
-{
-    double absolute = cabs(x);
-    return ((absolute == 0) ? 0.0 : (x / absolute));
-}
-
-/*---------------------------------------------------------------------------*/
 
 double fpyc_bankers_round(double arg, int64_t ndigits)
 {

@@ -112,9 +112,6 @@ inline double        pyc_fmodulo(double a, double b)
             return modulo + b;
 }
 
-long long int isign(long long int x);
-double fsign(double x);
-
 double fpyc_bankers_round(double arg, int64_t ndigits);
 int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
 
