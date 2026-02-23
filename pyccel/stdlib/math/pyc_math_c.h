@@ -95,10 +95,10 @@ inline double complex complex_max(double complex a, double complex b) {
     }
 
 // Instantiate integer sign functions for all precisions
-PY_SIGN_TYPE_INT(int8_t, int8);
-PY_SIGN_TYPE_INT(int16_t, int16);
-PY_SIGN_TYPE_INT(int32_t, int32);
-PY_SIGN_TYPE_INT(int64_t, int64);
+PY_SIGN_TYPE_INT(int8_t, int8_t);
+PY_SIGN_TYPE_INT(int16_t, int16_t);
+PY_SIGN_TYPE_INT(int32_t, int32_t);
+PY_SIGN_TYPE_INT(int64_t, int64_t);
 
 // Instantiate floating-point sign functions for all precisions
 PY_SIGN_TYPE_FLOAT(float, float);

@@ -58,8 +58,6 @@ from pyccel.ast.numpyext import NumpyReduction
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
-from pyccel.ast.numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -137,30 +135,7 @@ numpy_ufunc_to_c_complex = {
     'NumpyArctanh': 'catanh',
 }
 
-# dictionary mapping NumPy integer type to C sign function.
-# Used in CCodePrinter._print_NumpySign(self, expr)
-numpy_int_sign_to_c = {
-    NumpyInt8Type() : 'py_sign_type_int8',
-    NumpyInt16Type(): 'py_sign_type_int16',
-    NumpyInt32Type(): 'py_sign_type_int32',
-    NumpyInt64Type(): 'py_sign_type_int64',
-}
 
-# dictionary mapping NumPy float type to C sign function.
-# Used in CCodePrinter._print_NumpySign(self, expr)
-numpy_float_sign_to_c = {
-    NumpyFloat32Type() : 'py_sign_type_float',
-    NumpyFloat64Type() : 'py_sign_type_double',
-    NumpyFloat128Type(): 'py_sign_type_long_double',
-}
-
-# dictionary mapping NumPy complex type to C sign function.
-# Used in CCodePrinter._print_NumpySign(self, expr)
-numpy_complex_sign_to_c = {
-    NumpyComplex64Type() : 'py_sign_type_float_complex',
-    NumpyComplex128Type(): 'py_sign_type_double_complex',
-    NumpyComplex256Type(): 'py_sign_type_long_double_complex',
-}
 
 # dictionary mapping Math function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_MathFunctionBase(self, expr)
@@ -2094,50 +2069,35 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpySign(self, expr):
-        """ Print the corresponding C function for a call to Numpy.sign
+        """ Print the corresponding C function for a call to Numpy.sign.
+
+        The C function name is derived from the C type using the pattern:
+        ``py_sign_type_{c_type}`` where spaces in the type name are replaced
+        with underscores.
 
         Parameters
         ----------
             expr : Pyccel ast node
-                Python expression with Numpy.sign call
+                Python expression with Numpy.sign call.
 
         Returns
         -------
             string
-                Equivalent internal function in C
+                Equivalent internal function call in C.
 
         Example
         -------
-            import numpy
-
-            numpy.sign(x) => py_sign_type_int8(x)   (x is int8)
-            numpy.sign(x) => py_sign_type_int16(x)  (x is int16)
-            numpy.sign(x) => py_sign_type_float(x)  (x is float32)
-            numpy.sign(x) => py_sign_type_double(x) (x is float64)
-            numpy.sign(x) => py_sign_type_float_complex(x)   (x is complex64)
-            numpy.sign(x) => py_sign_type_double_complex(x)  (x is complex128)
-
+            numpy.sign(x) => py_sign_type_int8_t(x)       (x is int8)
+            numpy.sign(x) => py_sign_type_float(x)        (x is float32)
+            numpy.sign(x) => py_sign_type_double(x)       (x is float64)
+            numpy.sign(x) => py_sign_type_float_complex(x) (x is complex64)
 
         """
         self.add_import(c_imports['pyc_math_c'])
-        dtype = expr.dtype
-        primitive_type = dtype.primitive_type
         arg = self._print(expr.args[0])
-        func = None
-
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
-            func = numpy_int_sign_to_c[numpy_type]
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
-            func = numpy_float_sign_to_c[numpy_type]
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            numpy_type = numpy_precision_map[(primitive_type, dtype.precision)]
-            func = numpy_complex_sign_to_c[numpy_type]
-        else:
-            errors.report(f"Unsupported type for numpy.sign: {primitive_type}", severity='fatal', symbol=expr)
-
-        return f'{func}({arg})'
+        type_str = self.get_c_type(expr.dtype).replace(' ', '_')
+        func_name = f'py_sign_type_{type_str}'
+        return f'{func_name}({arg})'
 
     def _print_NumpyIsFinite(self, expr):
         """
