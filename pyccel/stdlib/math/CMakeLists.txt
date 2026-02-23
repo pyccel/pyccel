@@ -10,16 +10,17 @@ if("Fortran" IN_LIST languages)
     )
 else()
 
-add_library(pyc_math_c OBJECT pyc_math_c.c)
-
-target_include_directories(pyc_math_c
-    PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-target_link_libraries(pyc_math_c
-    PRIVATE
-    m
-)
+    add_library(pyc_math_c OBJECT pyc_math_c.c)
+    
+    target_include_directories(pyc_math_c
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    
+    target_link_libraries(pyc_math_c
+        PRIVATE
+        m
+        stc
+    )
 
 endif()

@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 -   #2541 : Add support for `axis`, `keepdims`, `initial` arguments of `numpy.amin` and `numpy.amax`.
 -   #2370 : Add extra commands to `pyccel config` command line interface.
 -   #2533 : Add support for NumPy's `vecdot` function.
+-   #2562 : Add C support for NumPy's `matmul` function.
+-   #767 : Extend support for NumPy's `matmul` function to handle arrays of rank >2.
 
 ### Fixed
 
@@ -20,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #2520 : Fix augmented assignment with NumPy reductions.
 -   #2535 : Fix `math.inf` printing in Python.
 -   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
+-   #2565 : Fix type of the shape of an array in C.
 
 ### Changed
 
