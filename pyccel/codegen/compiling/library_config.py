@@ -372,7 +372,7 @@ class STCInstaller(ExternalLibInstaller):
         self._compile_obj = CompileObj("stc", folder = self._src_dir.name, has_target_file = False,
                                        include = ("include",), libdir = ("lib/*",))
 
-    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler):
+    def install_to(self, pyccel_dirpath, installed_libs, verbose, compiler, *, use_pkg_config = True):
         """
         Install the files to the Pyccel dirpath.
 
@@ -392,6 +392,9 @@ class STCInstaller(ExternalLibInstaller):
             The level of verbosity.
         compiler : pyccel.codegen.compilers.compiling.Compiler
             A Compiler object to compile STC if it is not already installed.
+        use_pkg_config : bool, default=True
+            Indicates if pkg-config should be used to locate STC before checking for a Pyccel
+            installation.
 
         Returns
         -------
@@ -401,13 +404,14 @@ class STCInstaller(ExternalLibInstaller):
         """
         compiler_family = compiler.compiler_family
 
-        # Use pkg-config to try to locate an existing (system or user) installation
-        # with version >= 5.0 < 6
-        existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+        if use_pkg_config:
+            # Use pkg-config to try to locate an existing (system or user) installation
+            # with version >= 5.0 < 6
+            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
 
-        if existing_installation:
-            installed_libs['stc'] = existing_installation
-            return existing_installation
+            if existing_installation:
+                installed_libs['stc'] = existing_installation
+                return existing_installation
 
         sep = ';' if sys.platform == "win32" else ':'
         PKG_CONFIG_PATH = os.environ.get('PKG_CONFIG_PATH', '').split(sep)
@@ -427,6 +431,20 @@ class STCInstaller(ExternalLibInstaller):
                 # with version >= 5.0 < 6
                 # This must be done in the with statement to ensure pkgconfig_dir exists
                 existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
+
+            installed_libs['stc'] = existing_installation
+            return existing_installation
+
+        custom_compiler_path = Path(os.environ.get('PYCCEL_CONFIG_HOME', Path.home() / '.pyccel')) / compiler_family / 'STC'
+        if custom_compiler_path.exists():
+            pkgconfig_dir = next(custom_compiler_path.glob('**/*.pc')).parent
+            os.environ['PKG_CONFIG_PATH'] = sep.join(p for p in (*PKG_CONFIG_PATH, str(pkgconfig_dir))
+                                                     if p and Path(p).exists())
+
+            # Use pkg-config to try to locate an existing (system or user) installation
+            # with version >= 5.0 < 6
+            # This must be done in the with statement to ensure pkgconfig_dir exists
+            existing_installation = self._check_for_package('stc', ['--max-version=6', '--atleast-version=5'])
 
             installed_libs['stc'] = existing_installation
             return existing_installation
@@ -548,7 +566,8 @@ recognised_libs = {
     "gFTL" : GFTLInstaller(),
     # Internal libs
     "pyc_math_f90"   : StdlibInstaller("pyc_math_f90.f90", "math", libs = ('m',)),
-    "pyc_math_c"     : StdlibInstaller("pyc_math_c.c", "math"),
+    "pyc_math_c"     : StdlibInstaller("pyc_math_c.c", "math",
+                                       dependencies = ('stc',)),
     "pyc_tools_f90"  : StdlibInstaller("pyc_tools_f90.f90", "tools"),
     "cwrapper"       : CWrapperInstaller("cwrapper.c", "cwrapper", extra_compilation_tools=('python',)),
     "STC_Extensions" : StdlibInstaller("STC_Extensions", "STC_Extensions",
