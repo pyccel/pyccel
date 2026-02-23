@@ -2451,7 +2451,19 @@ def test_rand_expr(language):
     assert all(isinstance(yi, float) for yi in y)
     assert len(set(y)) > 1
 
-@pytest.mark.xfail(reason="a is not allocated")
+msg = "a is not allocated"
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_expr_array(language):
     def create_array_vals_2d():
         a = rand(2,2)*0.5 + 3

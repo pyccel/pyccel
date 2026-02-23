@@ -306,13 +306,6 @@ def test_omp_matmul(language):
 
     assert np.array_equal(y1, y2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy matmul not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 @pytest.mark.external
 def test_omp_matmul_single(language):
     f1 = epyccel(openmp.omp_matmul_single, flags = '-Wall', openmp=True, language=language)
