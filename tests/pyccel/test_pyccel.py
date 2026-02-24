@@ -1404,3 +1404,9 @@ def test_classes_pointer_import(language):
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
+
+#------------------------------------------------------------------------------
+def test_functional_statements(language):
+    pyccel_test("scripts/functional_statements.py",
+            output_dtype = [int] * 9,
+            language = language)
