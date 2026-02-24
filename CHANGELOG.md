@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #2535 : Fix `math.inf` printing in Python.
 -   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
 -   #2565 : Fix type of the shape of an array in C.
--   #2563 : Fix crash on macOS when using OpenMP and CMake.
+-   #2563 : Fix crashes on macOS with GCC compiler.
 
 ### Changed
 
