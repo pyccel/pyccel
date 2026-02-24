@@ -147,28 +147,22 @@ inline double complex complex_max(double complex a, double complex b) {
     return lt ? b : a;
 }
 
-// Macro to generate precision-specific sign functions for integer types
-#define PY_SIGN_TYPE_INT(TYPE, NAME) \
+// Macro to generate precision-specific sign functions for integer and floating-point types
+#define PY_SIGN_TYPE(TYPE, NAME) \
     static inline TYPE py_sign_type_##NAME(TYPE x) { \
         return (TYPE)((x > 0) - (x < 0)); \
     }
 
-// Macro to generate precision-specific sign functions for floating-point types
-#define PY_SIGN_TYPE_FLOAT(TYPE, NAME) \
-    static inline TYPE py_sign_type_##NAME(TYPE x) { \
-        return (TYPE)((x > 0.0) - (x < 0.0)); \
-    }
-
 // Instantiate integer sign functions for all precisions
-PY_SIGN_TYPE_INT(int8_t, int8_t);
-PY_SIGN_TYPE_INT(int16_t, int16_t);
-PY_SIGN_TYPE_INT(int32_t, int32_t);
-PY_SIGN_TYPE_INT(int64_t, int64_t);
+PY_SIGN_TYPE(int8_t, int8_t);
+PY_SIGN_TYPE(int16_t, int16_t);
+PY_SIGN_TYPE(int32_t, int32_t);
+PY_SIGN_TYPE(int64_t, int64_t);
 
 // Instantiate floating-point sign functions for all precisions
-PY_SIGN_TYPE_FLOAT(float, float);
-PY_SIGN_TYPE_FLOAT(double, double);
-PY_SIGN_TYPE_FLOAT(long double, long_double);
+PY_SIGN_TYPE(float, float);
+PY_SIGN_TYPE(double, double);
+PY_SIGN_TYPE(long double, long_double);
 
 void pyc_matmul_array_int8_t_2d(array_int8_t_2d out, array_int8_t_2d A, array_int8_t_2d x);
 void pyc_matmul_array_int16_t_2d(array_int16_t_2d out, array_int16_t_2d A, array_int16_t_2d x);
