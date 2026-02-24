@@ -68,11 +68,6 @@ def compare_python_pyccel( p_output, f_output ):
         else:
             assert np.isclose(pth,pycc)
 
-#marks = [f[1] if f[0] not in failing_tests else
-#        pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) \
-#                for f in tuple_funcs]
-#@pytest.mark.parametrize('test_func', marks)
-
 arguments = []
 for lang in language_marks:
     for fname, fcall in tuple_funcs:
