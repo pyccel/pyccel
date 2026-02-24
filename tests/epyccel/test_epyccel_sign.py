@@ -1,23 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-import sys
 import numpy as np
 import modules.numpy_sign as mod
 
 from pyccel import epyccel
-
-# Relative and absolute tolerances for floating-point comparisons.
-# Windows has larger round-off errors.
-if sys.platform == 'win32':
-    RTOL = 1e-13
-    ATOL = 1e-14
-else:
-    RTOL = 2e-14
-    ATOL = 1e-15
-
-# Tolerances for 32-bit precision (float32/complex64)
-RTOL32 = 1e-5
-ATOL32 = 1e-6
+from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul
