@@ -4,7 +4,7 @@ import numpy as np
 import modules.numpy_sign as mod
 
 from pyccel import epyccel
-from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
+from recognised_functions.test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul
