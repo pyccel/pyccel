@@ -20,11 +20,6 @@ def is_func_with_0_args(f):
 tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
                                             if is_func_with_0_args(f)]
 
-#failing_tests = {
-#        'homogeneous_tuple_string':"Can't save a list of strings (#459)",
-#        'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
-#        'tuple_homogeneous_string':"Can't save a list of strings (#459)",
-#        }
 
 language_marks = {
     'fortran' : pytest.mark.fortran,
