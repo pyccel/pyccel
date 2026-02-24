@@ -17,8 +17,7 @@ RTOL = 2e-14
 # Determine whether some unit tests should be skipped with Python >= 3.14 to
 # avoid annoying deprecation warnings dealing with the complex() constructor:
 # https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
-python_version = Version(sys.version.split()[0])
-deprecation = (python_version >= Version('3.14'))
+deprecation = (sys.version_info >= (3, 14))
 deprecation_reason = 'Since Python 3.14 complex() requires real arguments'
 
 #==============================================================================
