@@ -298,8 +298,6 @@ class CMakeHandler(BuildSystemHandler):
                 else:
                     p = subprocess.run([env['CC'], f'-print-file-name=lib{openmp_lib_name}.dylib'], check=False, text=True,
                                        capture_output = True)
-                    if p.returncode == 0:
-                        print(p.stdout.strip())
                         openmp_lib = Path(p.stdout.strip())
                 if openmp_lib and openmp_lib.is_absolute():
                     setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
