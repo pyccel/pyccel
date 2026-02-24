@@ -1,7 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 import re
-import subprocess # nosec B404
+import shutil
+import subprocess
+import sys
 from packaging.version import Version
 
 import numpy as np
@@ -58,11 +60,11 @@ def get_compiler_info(language):
 
     if language in ['c', 'fortran']:
         compiler = Compiler(compiler_family, debug)
-        executable = compiler.compiler_info[language]['exec']
+        executable = shutil.which(compiler.compiler_info[language]['exec'])
     else:
-        executable = 'python'
+        executable = sys.executable
 
-    version_output = subprocess.check_output([executable, '--version']).decode('utf-8') # nosec B603, B607
+    version_output = subprocess.check_output([executable, '--version']).decode('utf-8')
     version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
     version = Version(version_string)
 
