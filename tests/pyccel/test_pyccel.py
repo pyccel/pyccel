@@ -1410,3 +1410,9 @@ def test_functional_statements(language):
     pyccel_test("scripts/functional_statements.py",
             output_dtype = [int] * 9,
             language = language)
+
+#------------------------------------------------------------------------------
+def test_complex_numbers(language):
+    pyccel_test("scripts/complex_numbers.py",
+            output_dtype = [complex] * 6,
+            language = language)
