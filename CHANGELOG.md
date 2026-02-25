@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+### Fixed
+
+-   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
+
+### Changed
+
+### Deprecated
+
+### Removed
+
 ## \[2.1.0\] - 2025-12-09
 
 ### Added
