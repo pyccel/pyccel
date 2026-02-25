@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core >= 0.9", "meson"]
+requires = ["scikit-build-core >= 0.12", "meson"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -54,6 +54,10 @@ Tracker = "https://github.com/pyccel/pyccel/issues"
 Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
 
 [tool.scikit-build]
+
+# The minimum scikit-build version that we need to be compatible with
+minimum-version = "0.12.0"
+
 # The build type to use when building the project.
 cmake.build-type = "Release"
 
@@ -68,6 +72,8 @@ logging.level = "INFO"
 
 # Hook sdist build to insert gFTL compilation and avoid m4 requirement
 sdist.cmake = true
+
+sdist.inclusion-mode = "manual"
 
 sdist.include = [
   "AUTHORS",
@@ -96,8 +102,6 @@ sdist.include = [
   "pyccel/extensions/STC/meson_options.txt",
   "pyccel/extensions/gftl_install"
 ]
-
-sdist.exclude = ['*']
 
 [tool.scikit-build.metadata.version]
 # Set version info
