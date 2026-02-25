@@ -18,10 +18,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2397 : Add support for multiple NumPy floating-point precisions for `np.sign`.
 -   #2520 : Fix augmented assignment with NumPy reductions.
 -   #2535 : Fix `math.inf` printing in Python.
 -   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
 -   #2565 : Fix type of the shape of an array in C.
+-   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 -   #2563 : Fix crashes on macOS with GCC compiler.
 
 ### Changed
