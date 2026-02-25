@@ -26,8 +26,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   #2567 : Pin `scikit-build-core` version to v0.12.0.
-
 ### Deprecated
 
 -   #2555 : Deprecate `pyccel config export --compiler-config FILE1.json FILE2.json` which is equivalent to `cp FILE1.json FILE2.json`.
