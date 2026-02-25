@@ -76,19 +76,8 @@ jobs:
         id: lint
         run: |
           python --version
-          cd ci_tools
-          echo "Print Pyccel"
-          pip show -f pyccel
-          python -c "import pyccel; print(pyccel); print(dir(pyccel))"
-          python -c "import pyccel; print(pyccel.__file__)"
-          echo "Print Codegen"
-          python -c "from pyccel import codegen; print(dir(codegen))"
-          echo "Print Pipeline"
-          python -c "from pyccel.codegen import pipeline; print(dir(pipeline))"
-          echo "Print AST"
-          python -c "from pyccel import ast"
-          python check_pyccel_conventions.py 2>&1 | tee $GITHUB_STEP_SUMMARY
-          python check_pylint_commands.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python ci_tools/check_pyccel_conventions.py 2>&1 | tee $GITHUB_STEP_SUMMARY
+          python ci_tools/check_pylint_commands.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
           cat $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
