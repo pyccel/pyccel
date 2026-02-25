@@ -73,6 +73,8 @@ logging.level = "INFO"
 # Hook sdist build to insert gFTL compilation and avoid m4 requirement
 sdist.cmake = true
 
+sdist.inclusion-mode = "manual"
+
 sdist.include = [
   "AUTHORS",
   "CHANGELOG.md",
@@ -100,8 +102,6 @@ sdist.include = [
   "pyccel/extensions/STC/meson_options.txt",
   "pyccel/extensions/gftl_install"
 ]
-
-sdist.inclusion-mode = "manual"
 
 [tool.scikit-build.metadata.version]
 # Set version info
