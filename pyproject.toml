@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core >= 0.9", "meson"]
+requires = ["scikit-build-core >= 0.12", "meson"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -97,7 +97,7 @@ sdist.include = [
   "pyccel/extensions/gftl_install"
 ]
 
-sdist.exclude = ['*']
+sdist.inclusion-mode = "manual"
 
 [tool.scikit-build.metadata.version]
 # Set version info
