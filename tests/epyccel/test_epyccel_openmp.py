@@ -9,8 +9,8 @@ from numpy import random
 from numpy import matmul
 
 import modules.openmp as openmp
-from utilities import get_compiler_info
 from pyccel import epyccel
+from pyccel.utilities.introspect import get_compiler_info
 
 #==============================================================================
 
