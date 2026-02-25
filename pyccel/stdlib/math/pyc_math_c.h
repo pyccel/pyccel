@@ -112,10 +112,6 @@ inline double        pyc_fmodulo(double a, double b)
             return modulo + b;
 }
 
-long long int isign(long long int x);
-double fsign(double x);
-double complex csign(double complex x);
-
 double fpyc_bankers_round(double arg, int64_t ndigits);
 int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
 
@@ -131,6 +127,16 @@ PY_FLOOR_DIV_TYPE(int16_t)
 PY_FLOOR_DIV_TYPE(int32_t)
 PY_FLOOR_DIV_TYPE(int64_t)
 
+#define PY_CSIGN_TYPE(TYPE, CABS_FUNC, NAME)                         \
+    static inline TYPE py_sign_type_##NAME(TYPE x) { \
+    __typeof__(CABS_FUNC(x)) absolute = CABS_FUNC(x); \
+    return (TYPE)((absolute == 0.0) ? (TYPE)(0.0 + 0.0 * I) : (x / (TYPE) absolute)); \
+}
+
+PY_CSIGN_TYPE(float complex, cabsf, float_complex);
+PY_CSIGN_TYPE(double complex, cabs, double_complex);
+PY_CSIGN_TYPE(long double complex, cabsl, long_double_complex);
+
 inline double complex complex_min(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
     return lt ? a : b;
@@ -140,6 +146,23 @@ inline double complex complex_max(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
     return lt ? b : a;
 }
+
+// Macro to generate precision-specific sign functions for integer and floating-point types
+#define PY_SIGN_TYPE(TYPE, NAME) \
+    static inline TYPE py_sign_type_##NAME(TYPE x) { \
+        return (TYPE)((x > 0) - (x < 0)); \
+    }
+
+// Instantiate integer sign functions for all precisions
+PY_SIGN_TYPE(int8_t, int8_t);
+PY_SIGN_TYPE(int16_t, int16_t);
+PY_SIGN_TYPE(int32_t, int32_t);
+PY_SIGN_TYPE(int64_t, int64_t);
+
+// Instantiate floating-point sign functions for all precisions
+PY_SIGN_TYPE(float, float);
+PY_SIGN_TYPE(double, double);
+PY_SIGN_TYPE(long double, long_double);
 
 void pyc_matmul_array_int8_t_2d(array_int8_t_2d out, array_int8_t_2d A, array_int8_t_2d x);
 void pyc_matmul_array_int16_t_2d(array_int16_t_2d out, array_int16_t_2d A, array_int16_t_2d x);

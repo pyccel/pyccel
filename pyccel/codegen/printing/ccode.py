@@ -135,6 +135,8 @@ numpy_ufunc_to_c_complex = {
     'NumpyArctanh': 'catanh',
 }
 
+
+
 # dictionary mapping Math function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_MathFunctionBase(self, expr)
 # Math function ref https://docs.python.org/3/library/math.html
@@ -2142,38 +2144,35 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpySign(self, expr):
-        """ Print the corresponding C function for a call to Numpy.sign
+        """ Print the corresponding C function for a call to Numpy.sign.
+
+        The C function name is derived from the C type using the pattern:
+        ``py_sign_type_{c_type}`` where spaces in the type name are replaced
+        with underscores.
 
         Parameters
         ----------
             expr : Pyccel ast node
-                Python expression with Numpy.sign call
+                Python expression with Numpy.sign call.
 
         Returns
         -------
             string
-                Equivalent internal function in C
+                Equivalent internal function call in C.
 
         Example
         -------
-            import numpy
-
-            numpy.sign(x) => isign(x)   (x is integer)
-            numpy.sign(x) => fsign(x)   (x if float)
-            numpy.sign(x) => csign(x)   (x is complex)
+            numpy.sign(x) => py_sign_type_int8_t(x)       (x is int8)
+            numpy.sign(x) => py_sign_type_float(x)        (x is float32)
+            numpy.sign(x) => py_sign_type_double(x)       (x is float64)
+            numpy.sign(x) => py_sign_type_float_complex(x) (x is complex64)
 
         """
         self.add_import(c_imports['pyc_math_c'])
-        primitive_type = expr.dtype.primitive_type
-        func = ''
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            func = 'isign'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            func = 'fsign'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
-
-        return f'{func}({self._print(expr.args[0])})'
+        arg = self._print(expr.args[0])
+        type_str = self.get_c_type(expr.dtype).replace(' ', '_')
+        func_name = f'py_sign_type_{type_str}'
+        return f'{func_name}({arg})'
 
     def _print_NumpyIsFinite(self, expr):
         """

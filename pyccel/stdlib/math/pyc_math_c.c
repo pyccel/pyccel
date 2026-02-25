@@ -42,26 +42,6 @@ int64_t pyc_lcm(int64_t a, int64_t b)
 }
 /*---------------------------------------------------------------------------*/
 
-/* numpy.sign for float, double and integers */
-long long int isign(long long int x)
-{
-    return (x > 0) - (x < 0);
-}
-
-/* numpy.sign for float, double and integers */
-double fsign(double x)
-{
-    return (double)((x > 0) - (x < 0));
-}
-
-/* numpy.sign for complex */
-double complex csign(double complex x)
-{
-    double absolute = cabs(x);
-    return ((absolute == 0) ? 0.0 : (x / absolute));
-}
-
-/*---------------------------------------------------------------------------*/
 
 double fpyc_bankers_round(double arg, int64_t ndigits)
 {
@@ -123,6 +103,16 @@ extern inline int8_t py_floor_div_int8_t(int8_t x, int8_t y);
 extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
 extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
 extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);
+extern inline float complex py_csign_float_complex(float complex x);
+extern inline double complex py_csign_double_complex(double complex x);
+extern inline long double complex py_csign_long_double_complex(long double complex x);
+extern inline int8_t py_sign_type_int8_t(int8_t x);
+extern inline int16_t py_sign_type_int16_t(int16_t x);
+extern inline int32_t py_sign_type_int32_t(int32_t x);
+extern inline int64_t py_sign_type_int64_t(int64_t x);
+extern inline float py_sign_type_float(float x);
+extern inline double py_sign_type_double(double x);
+extern inline long double py_sign_type_long_double(long double x);
 
 #define PYC_MATMUL_TYPE(TYPE) \
 void pyc_matmul_##TYPE(TYPE out, TYPE a, TYPE b) \
