@@ -2451,7 +2451,7 @@ def test_rand_expr(language):
     assert all(isinstance(yi, float) for yi in y)
     assert len(set(y)) > 1
 
-msg = "a is not allocated"
+msg = "a is not allocated. See #2566"
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=msg),
