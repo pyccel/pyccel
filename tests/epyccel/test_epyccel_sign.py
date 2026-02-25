@@ -3,8 +3,8 @@
 import numpy as np
 import modules.numpy_sign as mod
 
+from recognised_functions.test_numpy_funcs import RTOL, ATOL, RTOL32, ATOL32
 from pyccel import epyccel
-from recognised_functions.test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul
