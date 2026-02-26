@@ -25,8 +25,6 @@ All notable changes to this project will be documented in this file.
 -   #2565 : Fix type of the shape of an array in C.
 -   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 
-### Changed
-
 ### Deprecated
 
 -   #2555 : Deprecate `pyccel config export --compiler-config FILE1.json FILE2.json` which is equivalent to `cp FILE1.json FILE2.json`.
