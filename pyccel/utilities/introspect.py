@@ -12,14 +12,14 @@ import sys
 
 from packaging.version import Version
 
-from pyccel.codegen.compiling.compilers import Compiler
+from pyccel.codegen.compiling.compilers import Compiler, get_condaless_search_path
 
 __all__ = (
     'get_compiler_info',
 )
 
 #==============================================================================
-def get_compiler_info(language):
+def get_compiler_info(language, conda_warnings  = 'basic'):
     """
     Extract the path to the compiler and its version, based on the language.
 
@@ -30,6 +30,9 @@ def get_compiler_info(language):
     language : str
         The backend language for Pyccel. Accepted values are 'C', 'Fortran',
         and 'Python' (not case-sensitive).
+
+    conda_warnings : {'off', 'basic', 'verbose'}
+        Specify the level of Conda warnings to display (default: 'basic').
 
     Returns
     -------
@@ -47,6 +50,7 @@ def get_compiler_info(language):
     if language == 'python':
         executable = sys.executable
     else:
+        Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
         compiler = Compiler(compiler_family, debug)
         try:
             executable = compiler.get_exec((), language)
