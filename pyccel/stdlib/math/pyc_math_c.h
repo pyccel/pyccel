@@ -135,7 +135,20 @@ PY_FLOOR_DIV_TYPE(int64_t)
 
 PY_CSIGN_TYPE(float complex, cabsf, float_complex);
 PY_CSIGN_TYPE(double complex, cabs, double_complex);
+
+#ifdef __INTEL_LLVM_COMPILER
+// Ignore warning when compiling with intel One API:
+// excess precision is requested but the target does not support excess precision which may result in observable differences in complex division behavior
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Whigher-precision-for-complex-division"
+#endif
+
 PY_CSIGN_TYPE(long double complex, cabsl, long_double_complex);
+
+#ifdef __INTEL_LLVM_COMPILER
+// Put back warning
+#pragma clang diagnostic pop
+#endif
 
 inline double complex complex_min(double complex a, double complex b) {
     bool lt = creal(a) == creal(b) ? cimag(a) < cimag(b) : creal(a) < creal(b);
