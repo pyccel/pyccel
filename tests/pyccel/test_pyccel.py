@@ -856,15 +856,6 @@ def test_class_inline_array(language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
                                         ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Issue #1595"),
-            pytest.mark.fortran])
-    )
-)
-
 def test_interfaces_in_classes( test_file , language):
     pyccel_test(test_file, language=language)
 
@@ -1413,3 +1404,15 @@ def test_classes_pointer_import(language):
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
+
+#------------------------------------------------------------------------------
+def test_functional_statements(language):
+    pyccel_test("scripts/functional_statements.py",
+            output_dtype = [int] * 9,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_complex_numbers(language):
+    pyccel_test("scripts/complex_numbers.py",
+            output_dtype = [complex] * 6,
+            language = language)

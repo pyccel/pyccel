@@ -2451,7 +2451,19 @@ def test_rand_expr(language):
     assert all(isinstance(yi, float) for yi in y)
     assert len(set(y)) > 1
 
-@pytest.mark.xfail(reason="a is not allocated")
+msg = "a is not allocated. See #2566"
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_expr_array(language):
     def create_array_vals_2d():
         a = rand(2,2)*0.5 + 3
@@ -6606,7 +6618,8 @@ def test_true_divide(language):
     assert np.allclose(basic_array_division(f_arr_1d,i), epyccel_basic_array_division(f_arr_1d,i), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
-    assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
+    with pytest.warns(RuntimeWarning, match="divide by zero encountered in divide"):
+        assert basic_division(f,0) == epyccel_basic_division(f,0)
 
 def test_cross_1d(language):
     def cross_call(x : 'float[:]', y : 'float[:]'):
