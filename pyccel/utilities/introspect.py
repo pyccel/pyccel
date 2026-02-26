@@ -22,7 +22,9 @@ __all__ = (
 #==============================================================================
 def get_compiler_info(language):
     """
-    Extract the name of the compiler and its version, based on the language.
+    Extract the path to the compiler and its version, based on the language.
+
+    Extract the path to the compiler and its version, based on the language.
 
     Parameters
     ----------
@@ -33,8 +35,8 @@ def get_compiler_info(language):
     Returns
     -------
     executable : str
-        The name of the compiler (e.g. 'gcc' or 'gfortran'). If `language` is
-        Python, the executable is 'python' by default.
+        The path to the compiler (e.g. 'gcc' or 'gfortran'). If `language` is
+        Python, the executable is the current Python executable.
 
     version : packaging.version.Version
         The compiler version obtained by running `<executable> --version`.
