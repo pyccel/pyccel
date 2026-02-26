@@ -1974,21 +1974,12 @@ def test_array_float_1d_1d_prod(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul(language):
     f1 = arrays.array_float_2d_1d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
-    A1[1,0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape(3, 2)
     A2 = np.copy(A1)
-    x1 = np.ones([2])
+    x1 = np.arange(30, 32, dtype=float)
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -1997,42 +1988,24 @@ def test_array_float_2d_1d_matmul(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul_creation(language):
     f1 = arrays.array_float_2d_1d_matmul_creation
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
-    A1[1,0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    x1 = np.ones([2])
+    x1 = np.arange(-10, -8, dtype=float)
     x2 = np.copy(x1)
     y1 = f1(A1, x1)
     y2 = f2(A2, x2)
     assert np.isclose(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_1d_matmul_order_F_F(language):
     f1 = arrays.array_float_2d_1d_matmul_order_F
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2], order='F')
-    A1[1,0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2], order='F')
     A2 = np.copy(A1)
-    x1 = np.ones([2])
+    x1 = np.arange(10, 12, dtype=float)
     x2 = np.copy(x1)
     y1 = np.empty([3])
     y2 = np.empty([3])
@@ -2041,21 +2014,26 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
     assert np.array_equal(y1, y2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
+def test_array_float_1d_2d_matmul(language):
+    f1 = arrays.array_float_1d_2d_matmul
+    f2 = epyccel( f1 , language = language)
+    A1 = np.arange(1, 7, dtype=float).reshape(2, 3)
+    A2 = np.copy(A1)
+    x1 = np.arange(30, 32, dtype=float)
+    x2 = np.copy(x1)
+    y1 = np.empty([3])
+    y2 = np.empty([3])
+    f1(x1, A1, y1)
+    f2(x2, A2, y2)
+    assert np.array_equal(y1, y2)
+
+
 def test_array_float_2d_2d_matmul(language):
     f1 = arrays.array_float_2d_2d_matmul
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
-    A1[1, 0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.ones([2, 3])
+    B1 = np.arange(-50, -44, dtype=float).reshape([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2064,21 +2042,12 @@ def test_array_float_2d_2d_matmul(language):
     assert np.array_equal(C1, C2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_2d_matmul_F_F_F_F(language):
     f1 = arrays.array_float_2d_2d_matmul_F_F
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2], order='F')
-    A1[1, 0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2], order='F')
     A2 = np.copy(A1)
-    B1 = np.ones([2, 3], order='F')
+    B1 = np.arange(22, 28, dtype=float).reshape([2, 3], order='F')
     B2 = np.copy(B1)
     C1 = np.empty([3,3], order='F')
     C2 = np.empty([3,3], order='F')
@@ -2088,9 +2057,7 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
 
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
             pytest.mark.fortran,
             pytest.mark.skip(reason="Should fail as long as mixed order not supported, see #244")
@@ -2101,10 +2068,9 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
 def test_array_float_2d_2d_matmul_mixorder(language):
     f1 = arrays.array_float_2d_2d_matmul_mixorder
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
-    A1[1, 0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.ones([2, 3], order = 'F')
+    B1 = np.arange(42, 48, dtype=float).reshape([2, 3], order = 'F')
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2113,21 +2079,12 @@ def test_array_float_2d_2d_matmul_mixorder(language):
     assert np.array_equal(C1, C2)
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="matmul not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_float_2d_2d_matmul_operator(language):
     f1 = arrays.array_float_2d_2d_matmul_operator
     f2 = epyccel( f1 , language = language)
-    A1 = np.ones([3, 2])
-    A1[1, 0] = 2
+    A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
-    B1 = np.ones([2, 3])
+    B1 = np.arange(-15, -9, dtype=float).reshape([2, 3])
     B2 = np.copy(B1)
     C1 = np.empty([3,3])
     C2 = np.empty([3,3])
@@ -2219,15 +2176,6 @@ def test_multiple_negative_index_3(language):
     assert f1(-1, -1, -3) == f2(-1, -1, -3)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_argument_negative_index_1(language):
     a = arrays.a_1d
 
@@ -2236,15 +2184,6 @@ def test_argument_negative_index_1(language):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
@@ -2253,15 +2192,6 @@ def test_argument_negative_index_2(language):
     assert f1(a, a) == f2(a, a)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_c_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), dtype=int)
 
@@ -2270,15 +2200,6 @@ def test_c_order_argument_negative_index(language):
     assert f1(a, a) == f2(a, a)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Negative strides in slices are not handled in wrapping"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_f_order_argument_negative_index(language):
     a = np.array(np.random.randint(20, size=(3,4)), order='F', dtype=int)
 

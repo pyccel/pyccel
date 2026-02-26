@@ -132,10 +132,10 @@ jobs:
           make -C docs html
         shell: bash
       - name: Setup Pages
-        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request' && github.repository == 'pyccel/pyccel'
         uses: actions/configure-pages@v3
       - name: Upload artifact
-        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request' && github.repository == 'pyccel/pyccel'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'compare/docs/build/html'

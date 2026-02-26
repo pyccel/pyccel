@@ -3,6 +3,7 @@
 /* or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details. */
 /* -------------------------------------------------------------------------------------- */
 
+#include <assert.h>
 #include "pyc_math_c.h"
 
 /*---------------------------------------------------------------------------*/
@@ -41,26 +42,6 @@ int64_t pyc_lcm(int64_t a, int64_t b)
 }
 /*---------------------------------------------------------------------------*/
 
-/* numpy.sign for float, double and integers */
-long long int isign(long long int x)
-{
-    return (x > 0) - (x < 0);
-}
-
-/* numpy.sign for float, double and integers */
-double fsign(double x)
-{
-    return (double)((x > 0) - (x < 0));
-}
-
-/* numpy.sign for complex */
-double complex csign(double complex x)
-{
-    double absolute = cabs(x);
-    return ((absolute == 0) ? 0.0 : (x / absolute));
-}
-
-/*---------------------------------------------------------------------------*/
 
 double fpyc_bankers_round(double arg, int64_t ndigits)
 {
@@ -122,3 +103,96 @@ extern inline int8_t py_floor_div_int8_t(int8_t x, int8_t y);
 extern inline int16_t py_floor_div_int16_t(int16_t x, int16_t y);
 extern inline int32_t py_floor_div_int32_t(int32_t x, int32_t y);
 extern inline int64_t py_floor_div_int64_t(int64_t x, int64_t y);
+extern inline float complex py_sign_type_float_complex(float complex x);
+extern inline double complex py_sign_type_double_complex(double complex x);
+extern inline long double complex py_sign_type_long_double_complex(long double complex x);
+extern inline int8_t py_sign_type_int8_t(int8_t x);
+extern inline int16_t py_sign_type_int16_t(int16_t x);
+extern inline int32_t py_sign_type_int32_t(int32_t x);
+extern inline int64_t py_sign_type_int64_t(int64_t x);
+extern inline float py_sign_type_float(float x);
+extern inline double py_sign_type_double(double x);
+extern inline long double py_sign_type_long_double(long double x);
+
+#define PYC_MATMUL_TYPE(TYPE) \
+void pyc_matmul_##TYPE(TYPE out, TYPE a, TYPE b) \
+{ \
+    int64_t n, m, p; \
+    n = a.shape[0]; \
+    m = a.shape[1]; \
+    p = b.shape[1]; \
+    assert(m == b.shape[0]); \
+    assert(n == out.shape[0]); \
+    assert(p == out.shape[1]); \
+    for (int i = 0; i < n; ++i) \
+    { \
+        for (int k = 0; k < p; ++k) \
+        { \
+            (*cspan_at(&out, i, k)) = 0; \
+            for (int j = 0; j < m; ++j) { \
+                (*cspan_at(&out, i, k)) += (*cspan_at(&a, i, j)) * (*cspan_at(&b, j, k)); \
+            } \
+        } \
+    } \
+}
+
+PYC_MATMUL_TYPE(array_int8_t_2d)
+PYC_MATMUL_TYPE(array_int16_t_2d)
+PYC_MATMUL_TYPE(array_int32_t_2d)
+PYC_MATMUL_TYPE(array_int64_t_2d)
+PYC_MATMUL_TYPE(array_float_2d)
+PYC_MATMUL_TYPE(array_double_2d)
+PYC_MATMUL_TYPE(array_float_complex_2d)
+PYC_MATMUL_TYPE(array_double_complex_2d)
+
+#define PYC_MATVECMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
+void pyc_matvecmul_##TYPE(TYPE1D out, TYPE2D a, TYPE1D b) \
+{ \
+    int64_t n, m; \
+    n = a.shape[0]; \
+    m = a.shape[1]; \
+    assert(m == b.shape[0]); \
+    assert(n == out.shape[0]); \
+    for (int i = 0; i < n; ++i) \
+    { \
+        (*cspan_at(&out, i)) = 0; \
+        for (int j = 0; j < m; ++j) { \
+            (*cspan_at(&out, i)) += (*cspan_at(&a, i, j)) * (*cspan_at(&b, j)); \
+        } \
+    } \
+}
+
+PYC_MATVECMUL_TYPE(int8_t        , array_int8_t_2d        , array_int8_t_1d)
+PYC_MATVECMUL_TYPE(int16_t       , array_int16_t_2d       , array_int16_t_1d)
+PYC_MATVECMUL_TYPE(int32_t       , array_int32_t_2d       , array_int32_t_1d)
+PYC_MATVECMUL_TYPE(int64_t       , array_int64_t_2d       , array_int64_t_1d)
+PYC_MATVECMUL_TYPE(float         , array_float_2d         , array_float_1d)
+PYC_MATVECMUL_TYPE(double        , array_double_2d        , array_double_1d)
+PYC_MATVECMUL_TYPE(float_complex , array_float_complex_2d , array_float_complex_1d)
+PYC_MATVECMUL_TYPE(double_complex, array_double_complex_2d, array_double_complex_1d)
+
+#define PYC_VECMATMUL_TYPE(TYPE, TYPE2D, TYPE1D) \
+void pyc_vecmatmul_##TYPE(TYPE1D out, TYPE1D a, TYPE2D b) \
+{ \
+    int64_t n, m; \
+    n = b.shape[0]; \
+    m = b.shape[1]; \
+    assert(n == a.shape[0]); \
+    assert(m == out.shape[0]); \
+    for (int i = 0; i < m; ++i) \
+    { \
+        (*cspan_at(&out, i)) = 0; \
+        for (int j = 0; j < n; ++j) { \
+            (*cspan_at(&out, i)) += (*cspan_at(&a, j)) * (*cspan_at(&b, j, i)); \
+        } \
+    } \
+}
+
+PYC_VECMATMUL_TYPE(int8_t        , array_int8_t_2d        , array_int8_t_1d)
+PYC_VECMATMUL_TYPE(int16_t       , array_int16_t_2d       , array_int16_t_1d)
+PYC_VECMATMUL_TYPE(int32_t       , array_int32_t_2d       , array_int32_t_1d)
+PYC_VECMATMUL_TYPE(int64_t       , array_int64_t_2d       , array_int64_t_1d)
+PYC_VECMATMUL_TYPE(float         , array_float_2d         , array_float_1d)
+PYC_VECMATMUL_TYPE(double        , array_double_2d        , array_double_1d)
+PYC_VECMATMUL_TYPE(float_complex , array_float_complex_2d , array_float_complex_1d)
+PYC_VECMATMUL_TYPE(double_complex, array_double_complex_2d, array_double_complex_1d)

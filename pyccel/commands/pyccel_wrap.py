@@ -48,7 +48,7 @@ def setup_pyccel_wrap_parser(parser, add_version=False):
                        type=str.title)
 
     # ... Compiler options
-    add_compiler_selection(parser)
+    add_compiler_selection(parser, allow_compiler_config = True)
 
     # ... Additional compiler options
     group = parser.add_argument_group('Additional compiler options')

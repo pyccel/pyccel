@@ -27,6 +27,7 @@ from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
 from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
+from .numpyext      import NumpyCross
 from .numpyext      import get_shape_of_multi_level_container
 from .numpytypes    import NumpyNDArrayType
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
@@ -209,7 +210,9 @@ def compatible_operation(*args, language_has_vectors = True):
     bool
         A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
+    if any(a.rank and isinstance(a, PyccelFunction) and not a.is_indexable for a in args):
+        return True
+    elif language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
@@ -360,7 +363,12 @@ def insert_index(expr, pos, index_var):
                           insert_index(expr.args[1], pos, index_var))
 
     elif hasattr(expr, '__getitem__'):
-        return expr[index_var]
+        rank = expr.rank
+        if rank > -pos:
+            indices = [Slice(None,None)]*(rank+pos) + [index_var]
+            return expr[indices]
+        else:
+            return expr[index_var]
 
     else:
         raise NotImplementedError(f"Expansion not implemented for type : {type(expr)}")
@@ -416,9 +424,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
         result = []
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
-    is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
-                                    and not isinstance(f, (NumpyTranspose))))
+
+    def is_array_function_call(f):
+        """
+        Check if an object is a non-indexable function call returning an array.
+        """
+        return f.rank and ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
+                or (isinstance(f, PyccelFunction) and not f.is_indexable))
+
     for line in block:
 
         if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
@@ -429,7 +442,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
         elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
-                not is_function_call(line.rhs)): # not a basic function call
+                not is_array_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
             # This is needed to know what has already been modified in the loop
@@ -473,8 +486,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             variables = list(set(variables))
 
             # Check if the expression is already satisfactory
-            if compatible_operation(*variables, *transposed_vars, *is_checks,
-                                    language_has_vectors = language_has_vectors):
+            if compatible_operation(*variables, *transposed_vars, *is_checks, *indexed_funcs,
+                                    language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                 result.append(line)
                 current_level = 0
                 continue
@@ -483,7 +496,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelFunction) \
-                                                            and not f.is_elemental and not hasattr(f, '__getitem__')) \
+                                                            and not f.is_elemental and not (hasattr(f, '__getitem__') and f.rank)) \
                                                             and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
@@ -537,7 +550,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 index = indices[rank+index_depth]
                 new_vars = [insert_index(v, index_depth, index) for v in new_vars]
                 handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
-                if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
+                if compatible_operation(*new_vars, *handled_funcs,
+                                        language_has_vectors = language_has_vectors and len(indexed_funcs) == 0):
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
@@ -647,6 +661,18 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                               PyccelAdd.make_simplified(LiteralInteger(idx), LiteralInteger(1))))],
                                 rhs.val) for idx in range(rhs.length)]
                 collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
+
+        elif isinstance(line, NumpyCross) and line.n_indices:
+            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.n_indices)]
+            indices.extend(new_indices)
+            block = line.insert_indices(*new_indices)
+            a_shape = [s for i,s in enumerate(line.a.shape) if i != line.axis_a]
+            b_shape = [s for i,s in enumerate(line.b.shape) if i != line.axis_b]
+            shape = [a_s if a_s != LiteralInteger(1) else b_s for a_s, b_s in zip(a_shape, b_shape)]
+            modified_vars = {line.a, line.b}
+            for sh in shape[::-1]:
+                block = LoopCollection([block], sh, modified_vars)
+            result.append(block)
 
         else:
             # Save line in top level (no for loop)
