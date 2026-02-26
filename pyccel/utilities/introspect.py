@@ -46,8 +46,10 @@ def get_compiler_info(language):
     if language in ['c', 'fortran']:
         compiler = Compiler(compiler_family, debug)
         executable = shutil.which(compiler.compiler_info[language]['exec'])
-    else:
+    elif language == 'python':
         executable = sys.executable
+    else:
+        raise ValueError(f"language '{language}' not supported")
 
     version_output = subprocess.check_output([executable, '--version']).decode('utf-8')
     version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
