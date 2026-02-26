@@ -45,13 +45,14 @@ def get_compiler_info(language):
     compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
     debug = os.environ.get('PYCCEL_DEBUG_MODE', False)
 
-    if language in ['c', 'fortran']:
-        compiler = Compiler(compiler_family, debug)
-        executable = shutil.which(compiler.compiler_info[language]['exec'])
-    elif language == 'python':
+    if language == 'python':
         executable = sys.executable
     else:
-        raise ValueError(f"language '{language}' not supported")
+        compiler = Compiler(compiler_family, debug)
+        try:
+            executable = compiler.get_exec((), language)
+        except KeyError:
+            raise ValueError(f"language '{language}' not supported for compiler {compiler_family}")
 
     version_output = subprocess.check_output([executable, '--version']).decode('utf-8')
     version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
