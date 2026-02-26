@@ -1,3 +1,5 @@
+# pylint: disable=missing-module-docstring
+
 if __name__ == "__main__":
     from numpy import array, full, ones, zeros
 
