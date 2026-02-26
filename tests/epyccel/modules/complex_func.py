@@ -8,6 +8,8 @@ def create_complex_literal__int_float():
     a = complex(-1,2.7)
     return a
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_literal__int_complex():
     a = complex(1,-2j)
     b = complex(1,1+3j)
@@ -21,6 +23,8 @@ def create_complex_literal__float_float():
     a = complex(1.6,-2.9)
     return a
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_literal__float_complex():
     a = complex(1.6,2.8-7j)
     return a
@@ -29,10 +33,14 @@ def create_complex_literal__complex_int():
     a = complex(2.8-7j,1)
     return a
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_literal__complex_float():
     a = complex(-2.8+7j,1.8)
     return a
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_literal__complex_complex():
     a = complex(2.8+7j,-1.5-22j)
     return a
@@ -44,12 +52,18 @@ def cast_complex_literal():
 def create_complex_var__int_int(a : 'int', b : 'int'):
     return complex(a,b)
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_var__int_complex(a : 'int', b : 'complex'):
     return complex(a,b)
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_var__complex_float(a : 'complex', b : 'float'):
     return complex(a,b)
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex_var__complex_complex(a : 'complex', b : 'complex'):
     return complex(a,b)
 
@@ -65,6 +79,8 @@ def create_complex__float_float(a : 'float'):
 def create_complex_0__float_float(a : 'float'):
     return complex(a,0.0), complex(0.0, a)
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def create_complex__complex_complex(a : 'complex'):
     return complex(a,1-2j), complex(1+2j,a)
 
@@ -74,6 +90,8 @@ def cast_complex_1(a : 'complex64'):
 def cast_complex_2(a : 'complex128'):
     return complex(a)
 
+# Deprecated since Python 3.14:
+# https://docs.python.org/3/deprecations/index.html#pending-removal-in-future-versions
 def cast_float_complex(a : float, b : complex):
     return complex(a + b * 1j)
 

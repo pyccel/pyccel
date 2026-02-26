@@ -2,13 +2,15 @@
 import multiprocessing
 import os
 import sys
+
 import pytest
 import numpy as np
-import modules.openmp as openmp
-
 from numpy import random
 from numpy import matmul
+
+from modules import openmp
 from pyccel import epyccel
+from pyccel.utilities.introspect import get_compiler_info
 
 #==============================================================================
 
@@ -304,13 +306,6 @@ def test_omp_matmul(language):
 
     assert np.array_equal(y1, y2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy matmul not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 @pytest.mark.external
 def test_omp_matmul_single(language):
     f1 = epyccel(openmp.omp_matmul_single, flags = '-Wall', openmp=True, language=language)
@@ -477,7 +472,13 @@ def test_omp_sections(language):
     f2 = openmp.omp_sections
     assert f1() == f2()
 
+
+def should_skip(language):
+    executable, version = get_compiler_info(language)
+    return executable == 'gcc' and version.major >= 15
+
 @pytest.mark.skipif(sys.platform == 'win32', reason="Type mismatch warning is an error on Windows")
+@pytest.mark.skipif_by_language(should_skip('c'), language='c', reason="Type mismatch is an error with GCC >= 15")
 @pytest.mark.external
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, flags = '-Wall', openmp=True, language=language)
