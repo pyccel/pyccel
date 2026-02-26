@@ -69,9 +69,9 @@ def compare_python_pyccel( p_output, f_output ):
             assert np.isclose(pth,pycc)
 
 arguments = []
-for lang in language_marks:
+for lang, mark in language_marks.items():
     for fname, fcall in tuple_funcs:
-        marks = [language_marks[lang]]
+        marks = [mark]
         if fname in failing_tests:
             failing_test = failing_tests[fname]
             if lang in failing_test['languages']:
