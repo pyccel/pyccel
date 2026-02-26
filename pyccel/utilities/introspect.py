@@ -7,7 +7,6 @@ Module for introspecting information on Pyccel, in the codebase and the tests.
 """
 import os
 import re
-import shutil
 import subprocess
 import sys
 
