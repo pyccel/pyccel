@@ -51,7 +51,7 @@ def get_compiler_info(language):
         try:
             executable = compiler.get_exec((), language)
         except KeyError:
-            raise ValueError(f"language '{language}' not supported for compiler {compiler_family}")
+            raise ValueError(f"language '{language}' not supported for compiler {compiler_family}") #pylint: disable=raise-missing-from
 
     version_output = subprocess.check_output([executable, '--version']).decode('utf-8')
     version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
