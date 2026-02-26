@@ -53,7 +53,7 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAmin, NumpyAmax, NumpyAbs
+from pyccel.ast.numpyext import NumpyAbs
 from pyccel.ast.numpyext import NumpyReduction, NumpyMatmul
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
