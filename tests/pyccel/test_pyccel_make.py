@@ -99,6 +99,13 @@ def test_project_containers(language, build_system):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
+def test_project_stdlib(language, build_system):
+    pyccel_make_test('runtest.py', current_folder / 'project__stdlib',
+                     language, build_system, ['-f', 'sign_mod.py'],
+                     output_dtype = int)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize('extra_flag', ['--mpi', '--openmp', '--time-execution', '--verbose', '--developer-mode', '-vv'])
 def test_flags(language, build_system, extra_flag):
     if extra_flag == '--mpi' and sys.platform == "win32":
