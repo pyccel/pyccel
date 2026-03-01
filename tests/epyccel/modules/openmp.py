@@ -369,9 +369,9 @@ def omp_tasks(x : 'int'):
     return m
 
 def omp_simd(n : 'int'):
-    from numpy import zeros
+    from numpy import zeros, int32
     func_result = 0
-    arr = zeros(n, dtype=int)
+    arr = zeros(n, dtype=int32)
     #$ omp parallel num_threads(4)
     #$ omp simd
     for i in range(0, n):
@@ -416,9 +416,9 @@ def omp_barrier():
 
 def combined_for_simd():
     import numpy as np
-    x = np.array([1,2,1,2,1,2,1,2])
-    y = np.array([2,1,2,1,2,1,2,1])
-    z = np.zeros(8, dtype = int)
+    x = np.array([1,2,1,2,1,2,1,2], dtype=np.int32)
+    y = np.array([2,1,2,1,2,1,2,1], dtype=np.int32)
+    z = np.zeros(8, dtype = np.int32)
     func_result = 0
     #$ omp parallel for simd
     for i in range(0, 8):
