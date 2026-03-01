@@ -20,6 +20,7 @@ else()
     target_link_libraries(pyc_math_c
         PRIVATE
         m
+        PUBLIC
         stc
     )
 

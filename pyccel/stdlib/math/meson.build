@@ -15,4 +15,5 @@ pyc_math_c = static_library('pyc_math_c',
 
 pyc_math_c_dep = declare_dependency(
   include_directories: ['.'],
+  dependencies: [stc_dep],
   link_with: pyc_math_c)
