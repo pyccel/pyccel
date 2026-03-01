@@ -15,7 +15,7 @@ from pyccel.utilities.introspect import get_compiler_info
 #==============================================================================
 def get_wall_flag():
     executable, version = get_compiler_info(language)
-    return '' if 'flang' in executable else return '-Wall'
+    return '' if 'flang' in executable else '-Wall'
 
 @pytest.mark.external
 def test_directive_in_else(language):
