@@ -5,7 +5,9 @@
 
 module pyc_math_f90
 
-  use, intrinsic :: ISO_C_Binding, only : i32 => C_INT32_T, &
+  use, intrinsic :: ISO_C_Binding, only : i8 => C_INT8_T, &
+         i16 => C_INT16_T, &
+         i32 => C_INT32_T, &
          i64 => C_INT64_T, &
          f32 => C_FLOAT, & 
          f64 => C_DOUBLE, &
@@ -402,28 +404,28 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
 
 end function pyc_bankers_round_int
 
-elemental pure integer(kind=1) function pyc_floor_div_i8(x, y) result(res)
+elemental pure integer(kind=i8) function pyc_floor_div_i8(x, y) result(res)
   implicit none
-  integer(kind=1), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i8), intent(in) :: x, y
+  res = x / y - merge(1_i8, 0_i8, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i8
 
-elemental pure integer(kind=2) function pyc_floor_div_i16(x, y) result(res)
+elemental pure integer(kind=i16) function pyc_floor_div_i16(x, y) result(res)
   implicit none
-  integer(kind=2), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i16), intent(in) :: x, y
+  res = x / y - merge(1_i16, 0_i16, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i16
 
-elemental pure integer(kind=4) function pyc_floor_div_i32(x, y) result(res)
+elemental pure integer(kind=i32) function pyc_floor_div_i32(x, y) result(res)
   implicit none
-  integer(kind=4), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i32), intent(in) :: x, y
+  res = x / y - merge(1_i32, 0_i32, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i32
 
-elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
+elemental pure integer(kind=i64) function pyc_floor_div_i64(x, y) result(res)
   implicit none
-  integer(kind=8), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i64), intent(in) :: x, y
+  res = x / y - merge(1_i64, 0_i64, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i64
 
 elemental pure function pyc_expm1_f64(x) result(Out_0001)
