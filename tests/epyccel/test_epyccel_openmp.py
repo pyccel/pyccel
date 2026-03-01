@@ -475,10 +475,10 @@ def test_omp_sections(language):
 
 def should_skip(language):
     executable, version = get_compiler_info(language)
-    return executable == 'gcc' and version.major >= 15
+    return ('gcc' in executable and version.major >= 15) or 'clang' in executable
 
 @pytest.mark.skipif(sys.platform == 'win32', reason="Type mismatch warning is an error on Windows")
-@pytest.mark.skipif_by_language(should_skip('c'), language='c', reason="Type mismatch is an error with GCC >= 15")
+@pytest.mark.skipif_by_language(should_skip('c'), language='c', reason="Type mismatch is an error with GCC >= 15 and clang")
 @pytest.mark.external
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, flags = '-Wall', openmp=True, language=language)
