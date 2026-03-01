@@ -1,6 +1,6 @@
 
 if add_languages('fortran', required : false, native: false)
-  pyc_math_f90 = static_library('pyc_math_f90', 'pyc_math_f90.f90', install: true)
+  pyc_math_f90 = static_library('pyc_math_f90', 'pyc_math_f90.F90', install: true)
   pyc_math_f90_dep = declare_dependency(link_with: pyc_math_f90)
 endif
 
