@@ -370,7 +370,7 @@ def omp_tasks(x : 'int'):
 
 def omp_simd(n : 'int'):
     from numpy import zeros, int32
-    func_result = 0
+    func_result = int32(0)
     arr = zeros(n, dtype=int32)
     #$ omp parallel num_threads(4)
     #$ omp simd
