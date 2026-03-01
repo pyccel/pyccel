@@ -101,7 +101,7 @@ def test_project_containers(language, build_system):
 @pytest.mark.xdist_incompatible
 def test_project_stdlib(language, build_system):
     pyccel_make_test('runtest.py', current_folder / 'project_stdlib',
-                     language, build_system, ['-f', 'sign_mod.py'],
+                     language, build_system, ['-f', 'sign_mod.py', 'runtest.py'],
                      output_dtype = int)
 
 #------------------------------------------------------------------------------
