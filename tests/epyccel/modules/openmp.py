@@ -419,7 +419,7 @@ def combined_for_simd():
     x = np.array([1,2,1,2,1,2,1,2], dtype=np.int32)
     y = np.array([2,1,2,1,2,1,2,1], dtype=np.int32)
     z = np.zeros(8, dtype = np.int32)
-    func_result = 0
+    func_result = np.int32(0)
     #$ omp parallel for simd
     for i in range(0, 8):
         z[i] = x[i] + y[i]
