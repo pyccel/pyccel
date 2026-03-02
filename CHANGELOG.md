@@ -14,6 +14,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+## \[2.2.0\] - 2026-02-26
+
+### Added
+
 -   #2396 : Add support for NumPy `out` arguments.
 -   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
 -   #2271 : Add support for `axis`, `keepdims`, `ord` arguments of `numpy.linalg.norm`.
@@ -33,8 +45,6 @@ All notable changes to this project will be documented in this file.
 -   #2565 : Fix type of the shape of an array in C.
 -   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 -   #2563 : Fix crashes on macOS with GCC compiler.
-
-### Changed
 
 ### Deprecated
 
