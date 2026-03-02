@@ -1,0 +1,35 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+  linux:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/linux.yml
+    secrets: inherit
+
+  macosx:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/macosx.yml
+    secrets: inherit
+
+  windows:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/windows.yml
+    secrets: inherit
+
+  llvm:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/llvm.yml
+    secrets: inherit
+
+  intel:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/intel.yml
+    secrets: inherit
