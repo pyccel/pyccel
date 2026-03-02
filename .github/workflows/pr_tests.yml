@@ -26,54 +26,44 @@ jobs:
 
   markdown_lint:
     uses: ./.github/workflows/markdown_lint.yml
-    secrets: inherit
 
   pyccel_lint:
     uses: ./.github/workflows/pyccel_lint.yml
-    secrets: inherit
 
   pylint:
     uses: ./.github/workflows/pylint.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
-    secrets: inherit
 
   docs:
     uses: ./.github/workflows/docs.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
-    secrets: inherit
 
   spelling:
     uses: ./.github/workflows/spelling.yml
-    secrets: inherit
 
   linux:
     if: github.event.pull_request.draft == false
     needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/linux.yml
-    secrets: inherit
 
   macosx:
     if: github.event.pull_request.draft == false
     needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/macosx.yml
-    secrets: inherit
 
   windows:
     if: github.event.pull_request.draft == false
     needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/windows.yml
-    secrets: inherit
 
   llvm:
     if: github.event.pull_request.draft == false
     needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/llvm.yml
-    secrets: inherit
 
   intel:
     if: github.event.pull_request.draft == false
     needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/intel.yml
-    secrets: inherit

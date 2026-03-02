@@ -35,7 +35,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   anaconda_windows:
     if: inputs.test_suite == 'anaconda_windows'
@@ -43,7 +42,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   intel:
     if: inputs.test_suite == 'intel'
@@ -51,7 +49,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   linux:
     if: inputs.test_suite == 'linux'
@@ -59,7 +56,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   linux_pyccel_test:
     if: inputs.test_suite == 'linux_pyccel_test'
@@ -67,7 +63,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   llvm:
     if: inputs.test_suite == 'llvm'
@@ -75,7 +70,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   macosx:
     if: inputs.test_suite == 'macosx'
@@ -83,7 +77,6 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
 
   windows:
     if: inputs.test_suite == 'windows'
@@ -91,4 +84,3 @@ jobs:
     with:
       python_version: ${{ inputs.python_version }}
       force: true
-    secrets: inherit
