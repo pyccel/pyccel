@@ -35,10 +35,11 @@ def test_directive_in_else(language):
 )
 @pytest.mark.external
 def test_module_1(language):
-    f1 = epyccel(openmp.f1, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
-    get_num_threads = epyccel(openmp.get_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
-    get_max_threads = epyccel(openmp.get_max_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.f1, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
+    get_num_threads = epyccel(openmp.get_num_threads, flags=flags, openmp=True, language=language)
+    get_max_threads = epyccel(openmp.get_max_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     assert get_max_threads() == 4
     assert get_num_threads() == 4
