@@ -14,7 +14,7 @@ from pyccel.utilities.introspect import get_compiler_info
 
 #==============================================================================
 def get_wall_flag(language):
-    executable, version = get_compiler_info(language)
+    executable, _ = get_compiler_info(language)
     return '' if 'flang' in executable else '-Wall'
 
 @pytest.mark.external
@@ -379,7 +379,7 @@ def test_omp_arraysum(language):
 
 @pytest.mark.external
 def test_omp_arraysum_combined(language):
-    flags = flags
+    flags = get_wall_flag(language)
     f1 = epyccel(openmp.omp_arraysum_combined, flags=flags, openmp=True, language=language)
     set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
