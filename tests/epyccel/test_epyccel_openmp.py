@@ -426,6 +426,8 @@ def test_omp_tasks(language):
         assert openmp.omp_tasks(x) == f1(x)
 
 @pytest.mark.external
+@pytest.mark.skipif_by_language('flang' in get_compiler_info('fortran')[0], language='fortran',
+                                reason="flang limitation: verification of lowering to FIR failed")
 def test_omp_simd(language):
     f1 = epyccel(openmp.omp_simd, flags = get_wall_flag(language), openmp=True, language=language)
     assert openmp.omp_simd(1337) == f1(1337)
@@ -463,6 +465,8 @@ def test_omp_barrier(language):
     assert f1() == f2()
 
 @pytest.mark.external
+@pytest.mark.skipif_by_language('flang' in get_compiler_info('fortran')[0], language='fortran',
+                                reason="flang limitation: verification of lowering to FIR failed")
 def test_combined_for_simd(language):
     # Intel compiler has a bug in debug mode
     f1 = epyccel(openmp.combined_for_simd, flags = get_wall_flag(language), openmp=True, language=language, debug=False)
