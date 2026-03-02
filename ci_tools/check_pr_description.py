@@ -34,7 +34,7 @@ if '- [ ]' in body:
           "Please complete the PR checklist before marking the PR as ready.")
     sys.exit(1)
 
-if body.count('- [ ]') != sum(1 if line.startswith('- [ ]') else 0 for line in original_body):
+if body.count('- [x]') != sum(1 if line.startswith('- [ ]') else 0 for line in original_body):
     print("ERROR: Missing checklist items. "
           "Please mark irrelevant items as complete instead of deleting them to help reviewers.")
     sys.exit(1)
