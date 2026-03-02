@@ -25,45 +25,45 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
 
   markdown_lint:
+    needs: [check_description]
     uses: ./.github/workflows/markdown_lint.yml
 
   pyccel_lint:
+    needs: [check_description]
     uses: ./.github/workflows/pyccel_lint.yml
 
   pylint:
+    needs: [check_description]
     uses: ./.github/workflows/pylint.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
 
   docs:
+    needs: [check_description]
     uses: ./.github/workflows/docs.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
 
   spelling:
+    needs: [check_description]
     uses: ./.github/workflows/spelling.yml
 
   linux:
-    if: github.event.pull_request.draft == false
-    needs: [check_description, pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/linux.yml
 
   macosx:
-    if: github.event.pull_request.draft == false
-    needs: [check_description, pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/macosx.yml
 
   windows:
-    if: github.event.pull_request.draft == false
-    needs: [check_description, pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/windows.yml
 
   llvm:
-    if: github.event.pull_request.draft == false
-    needs: [check_description, pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/llvm.yml
 
   intel:
-    if: github.event.pull_request.draft == false
-    needs: [check_description, pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/intel.yml
