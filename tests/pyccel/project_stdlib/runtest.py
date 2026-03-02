@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 from sign_mod import sign
 
 if __name__ == "__main__":
