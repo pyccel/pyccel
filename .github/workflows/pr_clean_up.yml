@@ -33,40 +33,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v4
         if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
-      - name: Update label and post comment
+      - name: Update label
+        id: update_label
+        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
+        uses: ./.github/actions/update_review_label
+        with:
+          pr_number: ${{ steps.find_pr.outputs.pr_number }}
+      - name: Post comment
         if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
         run: |
           PR_NUMBER=${{ steps.find_pr.outputs.pr_number }}
-          PR_INFO=$(gh pr view $PR_NUMBER --json author,reviews)
-          AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
-          REVIEW_DATA=$(echo "$PR_INFO" | jq '
-            def effective_reviews:
-              .reviews | sort_by(.submittedAt) | group_by(.author.login) | map(last) | .[] | select(.author.login != "pyccel-bot");
-            {
-              requesters: ([effective_reviews | select(.state == "CHANGES_REQUESTED") | "@" + .author.login] | join(", ")),
-              senior_approved: ([effective_reviews | select(.state == "APPROVED" and (.author.login == "yguclu" or .author.login == "EmilyBourne"))] | length > 0),
-              junior_approved: ([effective_reviews | select(.state == "APPROVED" and .author.login != "yguclu" and .author.login != "EmilyBourne")] | length > 0)
-            }')
-          REQUESTERS=$(echo "$REVIEW_DATA" | jq -r '.requesters')
-          SENIOR_APPROVED=$(echo "$REVIEW_DATA" | jq -r '.senior_approved')
-          JUNIOR_APPROVED=$(echo "$REVIEW_DATA" | jq -r '.junior_approved')
-
-          if [ "$SENIOR_APPROVED" = "true" ]; then
-            LABEL="Ready_to_merge"
-          elif [ "$JUNIOR_APPROVED" = "true" ]; then
-            LABEL="Ready_for_review"
-          else
-            LABEL="needs_initial_review"
-          fi
-
-          gh pr edit $PR_NUMBER --add-label "$LABEL"
-
-          if [ -n "$REQUESTERS" ]; then
-            MESSAGE=$(sed "s/{reviewers}/$REQUESTERS/g; s/{author}/$AUTHOR/g" \
+          if [ -n "${{ steps.update_label.outputs.requesters }}" ]; then
+            MESSAGE=$(sed "s/{reviewers}/${{ steps.update_label.outputs.requesters }}/g; s/{author}/${{ steps.update_label.outputs.author }}/g" \
               ci_tools/bot_messages/rerequest_review.txt)
             gh pr comment $PR_NUMBER --body "$MESSAGE"
-          elif [ "$LABEL" = "needs_initial_review" ]; then
-            MESSAGE=$(sed "s/{author}/$AUTHOR/g" ci_tools/bot_messages/new_pr.txt)
+          elif [ "${{ steps.update_label.outputs.label }}" = "needs_initial_review" ]; then
+            MESSAGE=$(sed "s/{author}/${{ steps.update_label.outputs.author }}/g" ci_tools/bot_messages/new_pr.txt)
             gh pr comment $PR_NUMBER --body "$MESSAGE"
           fi
         shell: bash
