@@ -1,0 +1,68 @@
+name: PR Tests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  markdown_lint:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/markdown_lint.yml
+    secrets: inherit
+
+  pyccel_lint:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/pyccel_lint.yml
+    secrets: inherit
+
+  pylint:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/pylint.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+    secrets: inherit
+
+  docs:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+    secrets: inherit
+
+  spelling:
+    if: github.event.pull_request.draft == false
+    uses: ./.github/workflows/spelling.yml
+    secrets: inherit
+
+  linux:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/linux.yml
+    secrets: inherit
+
+  macosx:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/macosx.yml
+    secrets: inherit
+
+  windows:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/windows.yml
+    secrets: inherit
+
+  llvm:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/llvm.yml
+    secrets: inherit
+
+  intel:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/intel.yml
+    secrets: inherit
