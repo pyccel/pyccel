@@ -89,6 +89,7 @@ sdist.include = [
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
   "pyccel/stdlib/**/*.f90",
+  "pyccel/stdlib/**/*.F90",
   "pyccel/stdlib/**/*.inc",
   "pyccel/stdlib/**/CMakeLists.txt",
   "pyccel/stdlib/**/meson.build",

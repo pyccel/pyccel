@@ -2,7 +2,7 @@
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
 if("Fortran" IN_LIST languages)
-    add_library(pyc_math_f90 OBJECT pyc_math_f90.f90)
+    add_library(pyc_math_f90 OBJECT pyc_math_f90.F90)
 
     target_include_directories(pyc_math_f90
         PUBLIC
@@ -20,6 +20,7 @@ else()
     target_link_libraries(pyc_math_c
         PRIVATE
         m
+        PUBLIC
         stc
     )
 
