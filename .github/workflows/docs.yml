@@ -50,6 +50,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
+          python -m pip install jwt # Needed to check ci_tools folder
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
