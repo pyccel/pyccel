@@ -1,76 +1,16 @@
 """ File containing the class Bot and all functions useful for bot reactions.
 """
-from datetime import datetime
 import json
 import os
-import platform
 import shutil
 import subprocess
-import time
 from .github_api_interactions import GitHubAPIInteractions
-
-default_python_versions = {
-        'anaconda_linux': '3.11',
-        'anaconda_windows': '3.13',
-        'coverage': '3.10',
-        'docs': '3.11',
-        'intel': '3.11',
-        'llvm': '3.11',
-        'linux': '3.10',
-        'linux_pyccel_test': '3.11',
-        'macosx': '3.14',
-        'wheel': '3.10',
-        'sdist': '3.10',
-        'check_install': '3.10',
-        'editable_check_install': '3.10',
-        'pyccel_lint': '3.12',
-        'markdown_lint': '3.12',
-        'pylint': '3.10',
-        'spelling': '3.13',
-        'windows': '3.12'
-        }
-
-test_names = {
-        'anaconda_linux': "Unit tests on Linux with anaconda",
-        'anaconda_windows': "Unit tests on Windows with anaconda",
-        'coverage': "Coverage verification",
-        'docs': "Check documentation",
-        'intel': "Unit tests on Linux with Intel compiler",
-        'llvm': "Unit tests on Linux with LLVM compiler",
-        'linux': "Unit tests on Linux",
-        'linux_pyccel_test': "Unit tests on Linux via the `pyccel test` command",
-        'macosx': "Unit tests on MacOSX",
-        'wheel': "Test file generation during wheel installation",
-        'sdist': "Test file generation during sdist installation",
-        'check_install': "Test file generation during source installation",
-        'editable_check_install': "Test file generation during editable source installation",
-        'pyccel_lint': "Pyccel best practices",
-        'markdown_lint': 'Markdown best practices',
-        'pylint': "Python linting",
-        'spelling': "Spelling verification",
-        'windows': "Unit tests on Windows"
-        }
-
-test_dependencies = {'coverage':['linux']}
 
 # Tests which require the base branch to be passed as an argument to the workflow dispatch
 # These tests only check the state of new code
-tests_with_base = ('coverage', 'docs', 'pylint')
-
-pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'llvm', 'markdown_lint', 'pyccel_lint', 'spelling', 'intel')
-
-pr_test_keys_to_trigger = ('linux', 'windows', 'macosx', 'coverage', 'intel', 'llvm')
-
-review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
-
-senior_reviewer = ['yguclu', 'EmilyBourne']
-
-trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom', 'jalalium']
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
-github_cli = shutil.which('gh')
 git = shutil.which('git')
 
 def message_from_file(filename):
@@ -142,68 +82,6 @@ class Bot:
         if check_run_id:
             self._check_run_id = check_run_id
 
-    def create_in_progress_check_run(self, test):
-        """
-        Create a check run for key `test` to describe the run in progress.
-
-        Create a new check run which describes the test `test`. Mark the
-        run as in progress. This means that the test is run by this
-        workflow. The python version used in the key is therefore deduced
-        from the current environment.
-
-        Parameters
-        ----------
-        test : str
-            The key for the test. Must be a key in `default_python_versions`
-            and `test_names`. It should also be the name of a yml file in
-            the folder .github/workflows.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all properties of the new check run.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the check run was not successfully posted.
-        """
-        pv = '.'.join(platform.python_version_tuple()[:2])
-        key = f"({test}, {pv})"
-        name = f"{test_names[test]} {key}"
-        posted = self._GAI.create_run(self._ref, name)
-        return posted
-
-    def post_in_progress(self, rerequest = False):
-        """
-        Update a check run to indicate that the run is in progress.
-
-        Update an existing check run using the id specified at the construction
-        to indicate that the run is in progress.
-
-        Parameters
-        ----------
-        rerequest : bool
-            True if the post is due to a test being rerun, False otherwise.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all properties of the check run.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the check run was not successfully updated.
-        """
-        if rerequest and self._check_run_id:
-            return self._GAI.rerequest_run(self._check_run_id).json()
-        inputs = {
-                "status":"in_progress",
-                "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-                }
-        return self._GAI.update_run(self._check_run_id, inputs).json()
-
     def post_completed(self, conclusion):
         """
         Update a check run to indicate that the run is completed.
@@ -248,150 +126,6 @@ class Bot:
             self._GAI.update_run(self._check_run_id, params)
             raise a
 
-    def show_commands(self):
-        """
-        Print a comment describing the available commands.
-
-        Print a comment on the current pull request describing the available bot
-        commands.
-        """
-        self._GAI.create_comment(self._pr_id, message_from_file('bot_commands.txt'))
-
-    def run_tests(self, tests, python_version = None, force_run = False):
-        """
-        Run the specified tests on the requested python version.
-
-        Run the specified tests on the requested python version. If no version
-        is explicitly requested then use the default version as defined in the
-        dictionary default_python_versions.
-
-        Parameters
-        ----------
-        tests : list of str
-            A list of keys for the tests. The keys must be in `default_python_versions`
-            and `test_names`. They should also be the names of yml files in
-            the folder .github/workflows.
-
-        python_version : str, optional
-            The requested python version.
-
-        force_run : bool, default=False
-            Force the tests to run even if they are not necessary.
-
-        Returns
-        -------
-        list of str
-            A list containing the state of each test.
-
-        See Also
-        --------
-        Bot.run_test
-            Called by this function. It runs individual tests but requires more information.
-        """
-        if any(t not in default_python_versions for t in tests):
-            self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
-            return []
-        else:
-            check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
-            already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
-                                                                            c['conclusion'] != 'cancelled' and \
-                                                                            n != ('coverage', default_python_versions['coverage'])]
-            already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {n:c for n,c in check_runs.items() if c['status'] == 'queued'}
-            success_names = [n if not isinstance(n, tuple) else n[0] for n,c in check_runs.items()
-                                if c['status'] == 'completed' and c['conclusion'] == 'success']
-            print(already_triggered)
-            states = []
-
-            for t in tests:
-                pv = python_version or default_python_versions[t]
-                key = (t, pv)
-                if key in check_runs:
-                    current_conclusion = check_runs[key]['conclusion']
-                    if current_conclusion:
-                        workflow_id = int(check_runs[key]['details_url'].split('/')[-1])
-                        force_run = not self._GAI.has_valid_artifacts(workflow_id)
-                    if key in already_triggered_names and not force_run:
-                        states.append(check_runs[key]['conclusion'])
-                        continue
-                name = f"{test_names[t]} ({t}, {pv})"
-                states.append('queued')
-                if key not in already_programmed:
-                    posted = self._GAI.prepare_run(self._ref, name)
-                else:
-                    posted = already_programmed[key]
-
-                deps = test_dependencies.get(t, ())
-                print(already_triggered_names, deps)
-                if all(d in success_names for d in deps):
-                    workflow_ids = None
-                    ready = True
-                    if t == 'coverage':
-                        print([r['details_url'] for k,r in check_runs.items() \
-                                if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for k,r in check_runs.items() \
-                                        if r['conclusion'] == "success" and isinstance(k, tuple) and k[0] in deps]
-                        ready = all(self._GAI.has_valid_artifacts(w) for w in workflow_ids)
-                    if ready:
-                        print("Running test")
-                        self.run_test(t, pv, posted["id"], workflow_ids)
-            return states
-
-    def run_test(self, test, python_version, check_run_id, workflow_ids = None):
-        """
-        Run the specified test on the specified python version.
-
-        Run the specified test on the specified python version by dispatching the necessary
-        workflow. The check run id must also be provided to the job so the status can be
-        correctly updated from queued. If the job requires any artifacts then workflow_ids
-        of the workflows which provided the artifacts must also be provided.
-
-        Parameters
-        ----------
-        test : str
-            The key for the test. Must be a key in `default_python_versions`
-            and `test_names`. It should also be the name of a yml file in
-            the folder .github/workflows.
-
-        python_version : str
-            The requested python version.
-
-        check_run_id : int
-            The id of the queued check run.
-
-        workflow_ids : list of int, optional
-            The ids of any workflows which may provide the necessary artifacts.
-        """
-        source_repo = self._source_repo or self._repo
-        inputs = {'python_version' : python_version,
-                  'ref' : self._ref,
-                  'check_run_id' : str(check_run_id),
-                  'pr_repo' : source_repo
-                 }
-        if test in tests_with_base:
-            inputs['base'] = self._base
-        if test == 'coverage':
-            assert workflow_ids is not None
-            possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
-            print("possible_artifacts : ", possible_artifacts)
-            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
-            ntests = 0
-            while len(acceptable_urls) == 0 and ntests < 10:
-                # Occasionally artifacts are not available immediately after linux concludes
-                time.sleep(10)
-                possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
-                print("possible_artifacts : ", possible_artifacts)
-                acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
-                ntests += 1
-            print("acceptable_urls: ", acceptable_urls)
-            inputs['artifact_urls'] = ' '.join(acceptable_urls)
-            inputs['pr_id'] = str(self._pr_id)
-        elif test == "editable_check_install":
-            test = "check_install"
-            inputs["editable_string"] = "-e"
-        print("Post workflow")
-        self._GAI.run_workflow(f'{test}.yml', self._pr_details["head"]["ref"], inputs)
-
     def post_coverage_review(self, comments, approve):
         """
         Create a review describing the coverage results.
@@ -414,56 +148,6 @@ class Bot:
             message = message_from_file('coverage_review_message.txt')
             status = 'REQUEST_CHANGES'
         self._GAI.create_review(self._pr_id, self._ref, message, status, comments)
-
-    def get_check_runs(self, commit = None):
-        """
-        Get a list of all check runs which have run on this commit.
-
-        Get a dictionary containing all information about check runs which have run
-        on the commit specified at the constructor.
-
-        Parameters
-        ----------
-        commit : str, optional
-            The commit for which we wish to get check run information.
-            The default value is the most recent commit associated with this
-            pull request.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the check runs.
-        """
-        if commit is None:
-            commit = self._ref
-        result = self._GAI.get_check_runs(commit)
-        print("get_check_runs")
-        print(result)
-        return result['check_runs']
-
-    def get_pr_id(self):
-        """
-        Get the id of the current pull request.
-
-        Get the id of the current pull request. Where this was provided
-        in the constructor it is returned, otherwise pull requests are
-        examined until one is found whose head SHA matches the commit
-        examined here.
-
-        Returns
-        -------
-        int
-            The id of the current pull request.
-        """
-        if self._pr_id:
-            return self._pr_id
-        else:
-            possible_prs = self._GAI.get_prs()
-            self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
-            self._pr_details = self._GAI.get_pr_details(self._pr_id)
-            self._base = self._pr_details["base"]["sha"]
-            self._source_repo = self._pr_details["base"]["repo"]["full_name"]
-            return self._pr_id
 
     def get_diff(self, base_commit = None):
         """
@@ -527,45 +211,6 @@ class Bot:
                                  reply_to = comment_id)
         print(reply.text)
 
-    def is_pr_draft(self):
-        """
-        Indicate whether the pull request is a draft.
-
-        Indicate whether the pull request is a draft.
-
-        Returns
-        -------
-        bool
-            True if draft, False otherwise.
-        """
-        return self._pr_details['draft']
-
-    def is_pr_fork(self):
-        """
-        Indicate whether the pull request is created from a fork.
-
-        Indicate whether the pull request is created from a fork.
-
-        Returns
-        -------
-        bool
-            True if fork, False otherwise.
-        """
-        return self._pr_details['head']['repo']['full_name'] != 'pyccel/pyccel'
-
-    def leave_comment(self, comment):
-        """
-        Leave a comment on the pull request.
-
-        Leave the specified comment on the pull request.
-
-        Parameters
-        ----------
-        comment : str
-            The comment to be left on the pull request.
-        """
-        self._GAI.create_comment(self._pr_id, comment)
-
     @property
     def GAI(self):
         """
@@ -584,28 +229,3 @@ class Bot:
         Get the full name of the repository being handled.
         """
         return self._repo
-
-    def get_name_key(self, name):
-        """
-        Get the name used as a key from the full run name.
-
-        Get the name used as a key to dictionaries including test_names and
-        default_python_versions from the full name reported in the check
-        run.
-
-        Parameters
-        ----------
-        name : str
-            The name saved in the check run.
-
-        Returns
-        -------
-        str
-            The name which can be used as a key.
-        """
-        if '(' in name:
-            return tuple(name.split('(')[1].split(')')[0].split(', '))
-        elif 'Codacy' in name:
-            return 'Codacy'
-        else:
-            return name
