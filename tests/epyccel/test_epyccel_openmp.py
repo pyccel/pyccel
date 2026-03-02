@@ -64,9 +64,10 @@ def test_module_1(language):
 )
 @pytest.mark.external
 def test_modules_10(language):
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags = flags, openmp=True, language=language)
     set_num_threads(1)
-    f1 = epyccel(openmp.test_omp_get_ancestor_thread_num, flags = get_wall_flag(language), openmp=True, language=language)
+    f1 = epyccel(openmp.test_omp_get_ancestor_thread_num, flags = flags, openmp=True, language=language)
 
     assert f1() == 0
     set_num_threads(4)
@@ -94,10 +95,11 @@ def test_module_2(language):
 )
 @pytest.mark.external
 def test_module_3(language):
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags = flags, openmp=True, language=language)
     set_num_threads(4)
-    f1 = epyccel(openmp.test_omp_in_parallel1, flags = get_wall_flag(language), openmp=True, language=language)
-    f2 = epyccel(openmp.test_omp_in_parallel2, flags = get_wall_flag(language), openmp=True, language=language)
+    f1 = epyccel(openmp.test_omp_in_parallel1, flags = flags, openmp=True, language=language)
+    f2 = epyccel(openmp.test_omp_in_parallel2, flags = flags, openmp=True, language=language)
 
     assert f1() == 0
     assert f2() == 1
@@ -205,10 +207,11 @@ def test_modules_8(language):
     )
 )
 @pytest.mark.external
-def test_modules_11(language):
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+def test_modules_12(language):
+    flags = get_wall_flag(language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags = flags, openmp=True, language=language)
     set_num_threads(4)
-    f1 = epyccel(openmp.test_omp_get_team_size, flags = get_wall_flag(language), openmp=True, language=language)
+    f1 = epyccel(openmp.test_omp_get_team_size, flags = flags, openmp=True, language=language)
 
     assert f1() == 4
     set_num_threads(8)
