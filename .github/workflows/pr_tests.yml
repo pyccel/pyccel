@@ -13,6 +13,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check_description:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PR description
+        run: python ci_tools/check_pr_description.py
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
   markdown_lint:
     uses: ./.github/workflows/markdown_lint.yml
     secrets: inherit
@@ -39,30 +50,30 @@ jobs:
 
   linux:
     if: github.event.pull_request.draft == false
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/linux.yml
     secrets: inherit
 
   macosx:
     if: github.event.pull_request.draft == false
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/macosx.yml
     secrets: inherit
 
   windows:
     if: github.event.pull_request.draft == false
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/windows.yml
     secrets: inherit
 
   llvm:
     if: github.event.pull_request.draft == false
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/llvm.yml
     secrets: inherit
 
   intel:
     if: github.event.pull_request.draft == false
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [check_description, pyccel_lint, pylint, docs, spelling]
     uses: ./.github/workflows/intel.yml
     secrets: inherit
