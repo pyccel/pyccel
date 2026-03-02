@@ -9,7 +9,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  mark-draft:
+  update_status:
+    name: Update PR status
     runs-on: ubuntu-latest
 
     steps:
@@ -33,8 +34,32 @@ jobs:
       - name: Add label
         if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
         run: |
+          gh pr 
           author=${gh pr view ${{ steps.find_pr.outputs.pr_number }} --json author --jq '.author.login'}
           gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "Hey @pyccel/pyccel-dev ! @${author} has just created this great new pull request! Check it out and let me know what you think!"
+          PR_NUMBER=${{ steps.find_pr.outputs.pr_number }}
+          PR_INFO=$(gh pr view $PR_NUMBER --json author,reviews)
+          AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+          REQUESTERS=$(echo "$PR_INFO" | jq -r '
+            [.reviews
+              | sort_by(.submittedAt)
+              | group_by(.author.login)
+              | map(last)
+              | .[]
+              | select(.author.login != "pyccel-bot" and .state == "CHANGES_REQUESTED")
+              | "@" + .author.login]
+            | join(", ")')
+          HAS_NON_BOT_REVIEWS=$(echo "$PR_INFO" | jq -r '
+            [.reviews[] | select(.author.login != "pyccel-bot")] | length > 0')
+          if [ -n "$REQUESTERS" ]; then
+            MESSAGE=$(sed "s/{reviewers}/$REQUESTERS/g; s/{author}/$AUTHOR/g" \
+              ci_tools/bot_messages/rerequest_review.txt)
+            gh pr comment $PR_NUMBER --body "$MESSAGE"
+          elif [ "$HAS_NON_BOT_REVIEWS" = "false" ]; then
+            MESSAGE=$(sed "s/{author}/$AUTHOR/g" ci_tools/bot_messages/new_pr.txt)
+            gh pr comment $PR_NUMBER --body "$MESSAGE"
+            gh pr edit $PR_NUMBER --add-label needs_initial_review
+          fi
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
