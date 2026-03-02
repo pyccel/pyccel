@@ -1,18 +1,15 @@
 name: Linux unit tests run through the 'pyccel test' command
 
 on:
-  workflow_dispatch:
-    inputs:
-      python_version:
-        required: true
-        type: string
-        default: '3.11'
   workflow_call:
     inputs:
       python_version:
         required: false
         type: string
-        default: '3.11'
+      force:
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [devel, main]
 
@@ -31,7 +28,8 @@ jobs:
     - id: dispatch-or-call-matrix
       if: github.event_name != 'push'
       run: |
-        echo "matrix=['${{ inputs.python_version }}']" >> $GITHUB_ENV
+        VERSION="${{ inputs.python_version }}"
+        echo "matrix=['${VERSION:-3.11}']" >> $GITHUB_ENV
       shell: bash
     - id: set-matrix
       run: |
@@ -49,13 +47,14 @@ jobs:
 
     steps:
       - id: duplicate_check
+        if: inputs.force == false
         uses: fkirc/skip-duplicate-actions@v5
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
           paths: '["pyccel/stdlib/**", "pyccel/**/*.py", "tests/**/*.py", "pyccel/extensions/**", ".github/workflows/linux_pyccel_cmd.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
-          do_not_skip: '["workflow_dispatch", "push"]'
+          do_not_skip: '["push"]'
 
       - uses: actions/checkout@v4
         with:
