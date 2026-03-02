@@ -7,7 +7,6 @@ Checks:
 """
 import os
 import pathlib
-import re
 import sys
 
 root = pathlib.Path(__file__).parent.parent
@@ -26,8 +25,8 @@ if first_line.strip() == original_body[0]:
     sys.exit(1)
 
 if len(first_line.split()) <= 2:
-    print(f"ERROR: The PR description is too short. "
-          f"Please provide a meaningful description of more than 2 words.")
+    print("ERROR: The PR description is too short. "
+          "Please provide a meaningful description of more than 2 words.")
     sys.exit(1)
 
 if '- [ ]' in body:
