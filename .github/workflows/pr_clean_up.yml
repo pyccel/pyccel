@@ -1,0 +1,41 @@
+name: Update PR following unit tests
+
+on:
+  workflow_run:
+    workflows: ["PR Tests"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  mark-draft:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find PR number
+        id: find_pr
+        run: |
+          PR_NUMBER=$(gh pr list --state open --json number,headRefOid \
+            --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Convert PR to draft
+        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'failure'
+        run: |
+          gh pr ready ${{ steps.find_pr.outputs.pr_number }} --undo
+          gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "Unfortunately your PR is not passing the tests so it is not quite ready for review yet."
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Add label
+        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
+        run: |
+          author=${gh pr view ${{ steps.find_pr.outputs.pr_number }} --json author --jq '.author.login'}
+          gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "Hey @pyccel/pyccel-dev ! @${author} has just created this great new pull request! Check it out and let me know what you think!"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+
