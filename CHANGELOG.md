@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.2.1\] - 2026-03-02
+
+### Fixed
+
+-   #2571 : Fix scope of `stdlib/math` dependencies in build files.
+-   #2571 : Fix conversion warnings in `stdlib/math/pyc_math_f90.f90`.
+-   #2571 : Rename `stdlib/math/pyc_math_f90.f90` to `stdlib/math/pyc_math_f90.F90` so preprocessor is run during compilation.
+
 ## \[2.2.0\] - 2026-02-26
 
 ### Added
