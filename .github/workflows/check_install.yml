@@ -6,9 +6,11 @@ on:
       python_version:
         required: true
         type: string
+        default: '3.10'
       editable_string:
         required: false
         type: string
+        default: '-e'
   workflow_call:
     inputs:
       python_version:
@@ -38,8 +40,8 @@ jobs:
     - id: dispatch-or-call-matrix
       if: github.event_name != 'push'
       run: |
-        echo "version=${{ inputs.python_version || '3.10' }}" >> $GITHUB_ENV
-        echo "editable=['${{ inputs.editable_string || '-e' }}']" >> $GITHUB_ENV
+        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
+        echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
       shell: bash
     - id: set-matrix
       run: |

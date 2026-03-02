@@ -6,6 +6,7 @@ on:
       python_version:
         required: true
         type: string
+        default: '3.12'
   workflow_call:
     inputs:
       python_version:
@@ -14,12 +15,12 @@ on:
         default: '3.12'
 
 env:
-  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
 
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
-    name: Best practices (pyccel_lint, ${{ inputs.python_version || '3.12' }})
+    name: Best practices (pyccel_lint, ${{ inputs.python_version }})
 
     steps:
       - id: duplicate_check

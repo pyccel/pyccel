@@ -6,6 +6,7 @@ on:
       python_version:
         required: true
         type: string
+        default: '3.10'
       base:
         required: true
         type: string
@@ -20,13 +21,13 @@ on:
         type: string
 
 env:
-  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
   BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
   Linter:
     runs-on: ubuntu-latest
-    name: Python best practices (pylint, ${{ inputs.python_version || '3.10' }})
+    name: Python best practices (pylint, ${{ inputs.python_version }})
 
     steps:
       - id: duplicate_check

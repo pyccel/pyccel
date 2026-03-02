@@ -6,6 +6,7 @@ on:
       python_version:
         required: true
         type: string
+        default: '3.11'
   workflow_call:
     inputs:
       python_version:
@@ -32,7 +33,7 @@ jobs:
     - id: dispatch-or-call-matrix
       if: github.event_name != 'push'
       run: |
-        echo "version=${{ inputs.python_version || '3.11' }}" >> $GITHUB_ENV
+        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
       shell: bash
     - id: set-python_version
       run: |
