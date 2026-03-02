@@ -237,8 +237,9 @@ def test_modules_13(language):
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 @pytest.mark.external
 def test_modules_14_0(language):
-    f1 = epyccel(openmp.test_omp_set_get_default_device, flags = get_wall_flag(language), openmp=True, language=language)
-    f2 = epyccel(openmp.test_omp_get_num_devices, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.test_omp_set_get_default_device, flags=flags, openmp=True, language=language)
+    f2 = epyccel(openmp.test_omp_get_num_devices, flags=flags, openmp=True, language=language)
 
     assert f1(1) == 1
     assert f1(2) == 2
@@ -247,8 +248,9 @@ def test_modules_14_0(language):
 @pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 @pytest.mark.external
 def test_modules_14_1(language):
-    f3 = epyccel(openmp.test_omp_is_initial_device, flags = get_wall_flag(language), openmp=True, language=language)
-    f4 = epyccel(openmp.test_omp_get_initial_device, flags = get_wall_flag(language), openmp=True, language=language) #Needs a non-host device to test the function properly
+    flags = get_wall_flag(language)
+    f3 = epyccel(openmp.test_omp_is_initial_device, flags=flags, openmp=True, language=language)
+    f4 = epyccel(openmp.test_omp_get_initial_device, flags=flags, openmp=True, language=language) #Needs a non-host device to test the function properly
 
     assert f3() == 1
     assert f4() == 0
@@ -295,8 +297,9 @@ def test_modules_16(language):
 
 @pytest.mark.external
 def test_omp_matmul(language):
-    f1 = epyccel(openmp.omp_matmul, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_matmul, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
@@ -312,8 +315,9 @@ def test_omp_matmul(language):
 
 @pytest.mark.external
 def test_omp_matmul_single(language):
-    f1 = epyccel(openmp.omp_matmul_single, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_matmul_single, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
@@ -329,8 +333,9 @@ def test_omp_matmul_single(language):
 
 @pytest.mark.external
 def test_omp_matmul_2d_2d(language):
-    f1 = epyccel(openmp.omp_matmul, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_matmul, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
@@ -347,8 +352,9 @@ def test_omp_matmul_2d_2d(language):
 
 @pytest.mark.external
 def test_omp_nowait(language):
-    f1 = epyccel(openmp.omp_nowait, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_nowait, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     x = np.array(random.randint(20, size=(1000)), dtype=int)
     y = np.zeros((1000,), dtype=int)
@@ -360,8 +366,9 @@ def test_omp_nowait(language):
 
 @pytest.mark.external
 def test_omp_arraysum(language):
-    f1 = epyccel(openmp.omp_arraysum, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_arraysum, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     x = np.array(random.randint(20, size=(5)), dtype=int)
 
@@ -369,8 +376,9 @@ def test_omp_arraysum(language):
 
 @pytest.mark.external
 def test_omp_arraysum_combined(language):
-    f1 = epyccel(openmp.omp_arraysum_combined, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = flags
+    f1 = epyccel(openmp.omp_arraysum_combined, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     x = np.array(random.randint(20, size=(5)), dtype=int)
 
@@ -386,8 +394,9 @@ def test_omp_range_sum_critical(language):
 
 @pytest.mark.external
 def test_omp_arraysum_single(language):
-    f1 = epyccel(openmp.omp_arraysum_single, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_arraysum_single, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(2)
     x = np.array(random.randint(20, size=(10)), dtype=int)
 
@@ -435,8 +444,9 @@ def test_omp_simd(language):
 
 @pytest.mark.external
 def test_omp_long_line(language):
-    f1 = epyccel(openmp.omp_long_line, flags = get_wall_flag(language), openmp=True, language=language)
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_long_line, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
     set_num_threads(4)
     x1 = np.array(random.randint(20, size=(5)), dtype=int)
     x2 = np.array(random.randint(20, size=(5)), dtype=int)
@@ -510,9 +520,10 @@ def test_omp_get_set_schedule(language):
 )
 @pytest.mark.external
 def test_nowait_schedule(language):
-    set_num_threads = epyccel(openmp.set_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
-    get_num_threads = epyccel(openmp.get_num_threads, flags = get_wall_flag(language), openmp=True, language=language)
-    f1 = epyccel(openmp.test_nowait_schedule, flags = get_wall_flag(language), openmp=True, language=language)
+    flags = get_wall_flag(language)
+    set_num_threads = epyccel(openmp.set_num_threads, flags=flags, openmp=True, language=language)
+    get_num_threads = epyccel(openmp.get_num_threads, flags=flags, openmp=True, language=language)
+    f1 = epyccel(openmp.test_nowait_schedule, flags=flags, openmp=True, language=language)
 
     set_num_threads(4)
     nthreads = get_num_threads()
