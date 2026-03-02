@@ -1,0 +1,30 @@
+name: PR Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: 'Python version to use (leave empty to use the default for the selected suite)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  markdown_lint:
+    uses: ./.github/workflows/markdown_lint.yml
+
+  pyccel_lint:
+    uses: ./.github/workflows/pyccel_lint.yml
+
+  pylint:
+    uses: ./.github/workflows/pylint.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  docs:
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  spelling:
+    uses: ./.github/workflows/spelling.yml
