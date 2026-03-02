@@ -11,9 +11,10 @@ on:
         type: string
         default: '3.10'
       run_id:
-        description: "The id of the run where the artifacts can be found"
+        description: "The id of the run where the artifacts can be found, by default the last run automatically triggered on the PR"
         required: false
         type: string
+        default: ''
       pr_repo:
         description: "The repository where the tests ran, by default the current repo."
         required: false
@@ -41,7 +42,17 @@ jobs:
             HEAD_SHA="${{ github.sha }}"
             echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
             echo "pr_repo=${{ inputs.pr_repo || github.repository }}" >> $GITHUB_OUTPUT
-            echo "run_id=${{ inputs.run_id || github.run_id }}" >> $GITHUB_OUTPUT
+            if [ -n "${{ inputs.run_id }}" ]
+            then
+              echo "run_id=${{ inputs.run_id }}" >> $GITHUB_OUTPUT
+            else
+              PR_NUMBER=$(gh pr list --state open --json number,headRefOid \
+                          --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
+              link=$(gh pr checks $PR_NUMBER --required --json=workflow,state,link \
+                     --jq='.[] | select(.workflow == "PR Tests" and .workflow == "SUCCESS") | .link')
+              run_id=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
+              echo "run_id=${run_id}" >> $GITHUB_OUTPUT
+            fi
           else
             HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
             echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
