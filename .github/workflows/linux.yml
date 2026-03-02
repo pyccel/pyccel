@@ -6,20 +6,12 @@ on:
       python_version:
         required: true
         type: string
-      force:
-        required: false
-        type: boolean
-        default: false
   workflow_call:
     inputs:
       python_version:
         required: false
         type: string
         default: '3.12'
-      force:
-        required: false
-        type: boolean
-        default: false
   push:
     branches: [devel, main]
 
@@ -56,14 +48,13 @@ jobs:
 
     steps:
       - id: duplicate_check
-        if: github.event_name == 'workflow_call'
         uses: fkirc/skip-duplicate-actions@v5
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
           paths: '["pyccel/stdlib/**", "pyccel/**/*.py", "tests/**/*.py", "pyccel/extensions/**", ".github/workflows/linux.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
-          do_not_skip: '[]'
+          do_not_skip: '["workflow_dispatch", "push"]'
 
       - uses: actions/checkout@v4
         with:
@@ -73,42 +64,42 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
       - name: Install dependencies
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
       - name: Install Pyccel with tests
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install .[test]
         shell: bash
       - name: Coverage install
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/coverage_install
       - name: Fortran/C tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
       - name: Test with valgrind for memory leaks
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         id: valgrind
         uses: ./.github/actions/valgrind_run
       - name: Collect coverage information
-        if: steps.duplicate_check.outputs.should_skip != 'true' || inputs.force
+        if: steps.duplicate_check.outputs.should_skip != 'true'
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
       - name: Collect pre-existing coverage information
-        if: steps.duplicate_check.outputs.should_skip == 'true' && ! inputs.force
+        if: steps.duplicate_check.outputs.should_skip == 'true'
         uses: actions/download-artifact@v4
         with:
           name: coverage-artifact-${{ matrix.python_version }}
