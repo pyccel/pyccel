@@ -19,7 +19,7 @@ lines = body.splitlines()
 
 first_line = next((l for l in lines if l.strip()), '')
 
-if first_line.strip() == original_body[0]:
+if first_line.strip() == original_body[0].strip():
     print("ERROR: The PR description still contains the boilerplate placeholder. "
           "Please replace it with a description of your changes.")
     sys.exit(1)
