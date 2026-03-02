@@ -1,15 +1,6 @@
 name: Python Linting
 
 on:
-  workflow_dispatch:
-    inputs:
-      python_version:
-        required: true
-        type: string
-        default: '3.10'
-      base:
-        required: true
-        type: string
   workflow_call:
     inputs:
       python_version:

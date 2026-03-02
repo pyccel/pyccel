@@ -1,12 +1,6 @@
 name: Markdown lint
 
 on:
-  workflow_dispatch:
-    inputs:
-      python_version:
-        required: true
-        type: string
-        default: '3.12'
   workflow_call:
     inputs:
       python_version:
