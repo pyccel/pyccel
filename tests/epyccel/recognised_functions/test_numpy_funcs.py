@@ -2142,7 +2142,7 @@ def test_ones_combined_args(language):
 def test_ones_in_expression(language):
     def ones_plus_scalar():
         from numpy import ones
-        a = ones(3) + 2
+        a = ones(3, dtype=int) + 2
         return a.sum()
     def ones_times_scalar():
         from numpy import ones
@@ -2150,7 +2150,7 @@ def test_ones_in_expression(language):
         return a.sum()
 
     f1 = epyccel(ones_plus_scalar, language=language)
-    assert isclose(f1(), ones_plus_scalar(), rtol=RTOL, atol=ATOL)
+    assert f1() == ones_plus_scalar()
 
     f2 = epyccel(ones_times_scalar, language=language)
     assert isclose(f2(), ones_times_scalar(), rtol=RTOL, atol=ATOL)
@@ -2312,7 +2312,7 @@ def test_zeros_combined_args(language):
 def test_zeros_in_expression(language):
     def zeros_plus_scalar():
         from numpy import zeros
-        a = zeros(3) + 2
+        a = zeros(3, dtype=int) + 2
         return a.sum()
     def zeros_times_scalar():
         from numpy import zeros
@@ -2320,7 +2320,7 @@ def test_zeros_in_expression(language):
         return a.sum()
     def zeros_2d_plus_scalar():
         from numpy import zeros
-        a = zeros((2, 3)) + 1
+        a = zeros((2, 3), dtype=int) + 1
         return a.sum()
     def zeros_plus_ones():
         from numpy import zeros, ones
@@ -2328,13 +2328,13 @@ def test_zeros_in_expression(language):
         return a.sum()
 
     f1 = epyccel(zeros_plus_scalar, language=language)
-    assert isclose(f1(), zeros_plus_scalar(), rtol=RTOL, atol=ATOL)
+    assert f1() == zeros_plus_scalar()
 
     f2 = epyccel(zeros_times_scalar, language=language)
     assert isclose(f2(), zeros_times_scalar(), rtol=RTOL, atol=ATOL)
 
     f3 = epyccel(zeros_2d_plus_scalar, language=language)
-    assert isclose(f3(), zeros_2d_plus_scalar(), rtol=RTOL, atol=ATOL)
+    assert f3() == zeros_2d_plus_scalar()
 
     f4 = epyccel(zeros_plus_ones, language=language)
     assert isclose(f4(), zeros_plus_ones(), rtol=RTOL, atol=ATOL)

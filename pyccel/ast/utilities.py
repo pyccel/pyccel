@@ -527,7 +527,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 result.extend(assigns)
                 current_level = 0
                 # Add array temporary variables to the variables list so they get indexed
-                variables = variables + [v for v in func_vars1 if v.rank > 0]
+                variables += [v for v in func_vars1 if v.rank > 0]
 
             rank = line.lhs.rank
             shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \
