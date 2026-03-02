@@ -67,11 +67,11 @@ Pyccel uses 3 types of test:
 
 The static analysis tests run on non-draft pull requests. If you wish to run them earlier you can run them locally using the tools or you can run them using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_static_analysis.yml). The tests are:
 
-- pylint : [Pylint](https://www.pylint.org/) is used for linting
+- Pylint : [Pylint](https://www.pylint.org/) is used for linting
 - docs : [docstr-coverage](https://pypi.org/project/docstr-coverage/) is used to check that code is correctly documented. [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) is used to check the format of the code documentation. Sphinx is used to build the online documentation.
 - spelling : Aspell and [pyspelling](https://pypi.org/project/pyspelling/) are used to check spelling in the documentation. [Typos](https://github.com/crate-ci/typos) is used to check spelling in the code.
 - markdownlint : [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used to check the markdown format.
-- pyccel lint : The custom scripts `ci_tools/check_pyccel_conventions.py` and `ci_tools/check_pylint_commands.py` are used to check that Pyccel conventions are respected.
+- Pyccel lint : The custom scripts `ci_tools/check_pyccel_conventions.py` and `ci_tools/check_pylint_commands.py` are used to check that Pyccel conventions are respected.
 
 ### Unit testing
 
