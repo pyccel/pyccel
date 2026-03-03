@@ -187,7 +187,7 @@ class MesonHandler(BuildSystemHandler):
         math_dep = "cc = meson.get_compiler('c')\nm_dep = cc.find_library('m', required : false)\n"
         py_deps = ''.join(("# Python dependencies\n", py_import, math_dep))
 
-        pyccel_main_language = f"pyccel_main_language = {self.language}\n"
+        pyccel_main_language = f"pyccel_main_language = {self._language}\n"
 
         sections = [project_decl, py_deps, pyccel_main_language]
 
