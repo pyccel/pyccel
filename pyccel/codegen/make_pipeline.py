@@ -266,8 +266,8 @@ def execute_pyccel_make(files, *,
 
     build_sys = build_system_handler[build_system](pyccel_dirpath, base_dirpath, folder,
                                                    verbose = verbose, debug_mode = debug,
-                                                   compiler = compiler, accelerators = accelerators)
-
+                                                   compiler = compiler, accelerators = accelerators,
+                                                   language = language)
     build_sys.generate(build_project)
 
     timers['Build system printing'] = time.time() - start_build_system_printing
