@@ -1,4 +1,4 @@
-name: PR Tests
+name: Run static analysis tests
 
 on:
   workflow_dispatch:
