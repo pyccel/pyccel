@@ -45,17 +45,18 @@ runs:
           python -m pytest -rX ${FLAGS} -m "not parallel and xdist_incompatible and language_agnostic ${{ inputs.pytest_mark }}" 2>&1 | tee -a lang_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-    - name: Test translation with uninstalled STC/gFTL
+    - name: Test translation with uninstalled STC
       run: |
-        python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
-        python -m pytest -rX ${FLAGS} -m fortran test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
+        python -m pytest -rX ${FLAGS} -m c epyccel/test_epyccel_lists.py::test_pop_last_element 2>&1 | tee install_outfile.out
+        python -m pytest -rX ${FLAGS} -m fortran epyccel/test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
+        python -m pytest -rX ${FLAGS} pyccel/test_pyccel.py::test_json_register 2>&1 | tee -a install_outfile.out
         # Test STC update
         if [ -n "${SITE_DIR}" ]; then
           touch ${SITE_DIR}/pyccel/extensions/STC
-          python -m pytest -rX ${FLAGS} -m c test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
+          python -m pytest -rX ${FLAGS} -m c epyccel/test_epyccel_lists.py::test_pop_last_element 2>&1 | tee -a install_outfile.out
          fi
       shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests/epyccel
+      working-directory: ./tests
       id: pytest_dependencies
     - name: Test folder update
       run: |

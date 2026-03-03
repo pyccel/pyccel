@@ -5,7 +5,9 @@
 
 module pyc_math_f90
 
-  use, intrinsic :: ISO_C_Binding, only : i32 => C_INT32_T, &
+  use, intrinsic :: ISO_C_Binding, only : i8 => C_INT8_T, &
+         i16 => C_INT16_T, &
+         i32 => C_INT32_T, &
          i64 => C_INT64_T, &
          f32 => C_FLOAT, & 
          f64 => C_DOUBLE, &
@@ -23,7 +25,8 @@ public :: pyc_gcd, &
           csign, &
           pyc_bankers_round, &
           pyc_floor_div, &
-          expm1
+          expm1, &
+          cross_product
 
 private
 
@@ -82,6 +85,13 @@ interface expm1
     module procedure pyc_expm1_f64
     module procedure pyc_expm1_c64
 end interface expm1
+
+interface cross_product
+    module procedure cross_product_i32
+    module procedure cross_product_i64
+    module procedure cross_product_f32
+    module procedure cross_product_f64
+end interface cross_product
 
 contains
 
@@ -394,28 +404,28 @@ pure function pyc_bankers_round_int(arg, ndigits) result(rnd)
 
 end function pyc_bankers_round_int
 
-elemental pure integer(kind=1) function pyc_floor_div_i8(x, y) result(res)
+elemental pure integer(kind=i8) function pyc_floor_div_i8(x, y) result(res)
   implicit none
-  integer(kind=1), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i8), intent(in) :: x, y
+  res = x / y - merge(1_i8, 0_i8, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i8
 
-elemental pure integer(kind=2) function pyc_floor_div_i16(x, y) result(res)
+elemental pure integer(kind=i16) function pyc_floor_div_i16(x, y) result(res)
   implicit none
-  integer(kind=2), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i16), intent(in) :: x, y
+  res = x / y - merge(1_i16, 0_i16, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i16
 
-elemental pure integer(kind=4) function pyc_floor_div_i32(x, y) result(res)
+elemental pure integer(kind=i32) function pyc_floor_div_i32(x, y) result(res)
   implicit none
-  integer(kind=4), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i32), intent(in) :: x, y
+  res = x / y - merge(1_i32, 0_i32, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i32
 
-elemental pure integer(kind=8) function pyc_floor_div_i64(x, y) result(res)
+elemental pure integer(kind=i64) function pyc_floor_div_i64(x, y) result(res)
   implicit none
-  integer(kind=8), intent(in) :: x, y
-  res = x / y - merge(1, 0, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
+  integer(kind=i64), intent(in) :: x, y
+  res = x / y - merge(1_i64, 0_i64, mod(x, y) /= 0 .and. ((x < 0) .neqv. (y < 0)))
 end function pyc_floor_div_i64
 
 elemental pure function pyc_expm1_f64(x) result(Out_0001)
@@ -440,5 +450,109 @@ elemental pure function pyc_expm1_c64(x) result(Out_0001)
                (exp(real(x)) * sin(aimag(x))) * cmplx(0,1, kind = c64)
 
 end function pyc_expm1_c64
+
+subroutine cross_product_f32(a,b,c)
+    real(f32), intent(in) :: a(:)
+    real(f32), intent(in) :: b(:)
+    real(f32), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_f32
+
+subroutine cross_product_f64(a,b,c)
+    real(f64), intent(in) :: a(:)
+    real(f64), intent(in) :: b(:)
+    real(f64), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_f64
+
+subroutine cross_product_i32(a,b,c)
+    integer(i32), intent(in) :: a(:)
+    integer(i32), intent(in) :: b(:)
+    integer(i32), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_i32
+
+subroutine cross_product_i64(a,b,c)
+    integer(i64), intent(in) :: a(:)
+    integer(i64), intent(in) :: b(:)
+    integer(i64), intent(out) :: c(:)
+
+#ifndef NDEBUG
+    if (size(a) /= 3) then
+        print *, "a should have size 3"
+        stop 1
+    endif
+    if (size(b) /= 3) then
+        print *, "b should have size 3"
+        stop 1
+    endif
+    if (size(c) /= 3) then
+        print *, "c should have size 3"
+        stop 1
+    endif
+#endif
+
+    c(1) = a(2) * b(3) - a(3) * b(2)
+    c(2) = a(3) * b(1) - a(1) * b(3)
+    c(3) = a(1) * b(2) - a(2) * b(1)
+
+end subroutine cross_product_i64
 
 end module pyc_math_f90

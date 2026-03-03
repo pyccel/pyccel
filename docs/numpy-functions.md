@@ -8,17 +8,22 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
     ```python
     x: array_like
-       Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
-       If both axis and ord are None, the 2-norm of x.ravel will be returned.
+        Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
+        If both axis and ord are None, the 2-norm of x.ravel will be returned.
 
-    axis: {None, int, 2-tuple of ints}, optional.
-         If axis is an integer, it specifies the axis of x along which to compute the vector norms.
-         If axis is a 2-tuple, it specifies the axes that hold 2-D matrices, and the matrix norms of
-         these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
-         matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
+    ord: {int, float, inf, -inf}, optional
+        Order of the norm. The default is None.
+
+    axis: {None, int}, optional.
+        If axis is an integer, it specifies the axis of x along which to compute the vector norms.
+        If axis is None then either a vector norm (when x is 1-D) or a matrix norm (when x is 2-D) is returned. The default is None.
+
+    keepdims: bool, optional
+        If this is set to True, the axes which are normed over are left in the result as dimensions with size one.
+        With this option the result will broadcast correctly against the original x.
     ```
 
--   Supported languages: Fortran (2-norm)
+-   Supported languages: C, Fortran
 
 -   Python code:
 
@@ -448,9 +453,10 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
     -   `where`, `count_nonzero` (Fortran only)
     -   `nonzero` (Fortran only, 1D only)
     -   `copy` (`subok` parameter is not supported)
+    -   `cross`, `numpy.linalg.cross` (dimension 3 only)
 
 -   others:
 
-    -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`, `result_type`
+    -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`, `result_type`, `vecdot`
 
 If discrepancies beyond round-off error are found between [NumPy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.

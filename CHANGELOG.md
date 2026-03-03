@@ -7,14 +7,46 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   Added preliminary support for C++ translations.
--   #2396 : Add support for NumPy `out` arguments.
--   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
 
 ### Fixed
+
+-   #2571 : Fix scope of `stdlib/math` dependencies in build files.
+-   #2571 : Fix conversion warnings in `stdlib/math/pyc_math_f90.f90`.
+-   #2571 : Rename `stdlib/math/pyc_math_f90.f90` to `stdlib/math/pyc_math_f90.F90` so preprocessor is run during compilation.
 
 ### Changed
 
 ### Deprecated
+
+### Removed
+
+## \[2.2.0\] - 2026-02-26
+
+### Added
+
+-   #2396 : Add support for NumPy `out` arguments.
+-   #2269 : Add support for `dtype`, `axis`, `keepdims`, `initial` arguments of `numpy.sum`.
+-   #2271 : Add support for `axis`, `keepdims`, `ord` arguments of `numpy.linalg.norm`.
+-   #2272 : Add support for `numpy.cross` and `numpy.linalg.cross` for vectors of size 3.
+-   #2541 : Add support for `axis`, `keepdims`, `initial` arguments of `numpy.amin` and `numpy.amax`.
+-   #2370 : Add extra commands to `pyccel config` command line interface.
+-   #2533 : Add support for NumPy's `vecdot` function.
+-   #2562 : Add C support for NumPy's `matmul` function.
+-   #767 : Extend support for NumPy's `matmul` function to handle arrays of rank >2.
+
+### Fixed
+
+-   #2397 : Add support for multiple NumPy floating-point precisions for `np.sign`.
+-   #2520 : Fix augmented assignment with NumPy reductions.
+-   #2535 : Fix `math.inf` printing in Python.
+-   #2560 : Fix use of MPI flag `--oversubscribe` with implementations that don't support this flag.
+-   #2565 : Fix type of the shape of an array in C.
+-   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
+-   #2563 : Fix crashes on macOS with GCC compiler.
+
+### Deprecated
+
+-   #2555 : Deprecate `pyccel config export --compiler-config FILE1.json FILE2.json` which is equivalent to `cp FILE1.json FILE2.json`.
 
 ### Removed
 

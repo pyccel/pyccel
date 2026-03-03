@@ -18,7 +18,7 @@ from pyccel.ast.bind_c    import BindCPointer
 from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins  import PythonPrint, PythonType, VariableIterator
 
-from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen
+from pyccel.ast.builtins  import PythonList, PythonTuple, PythonSet, PythonDict, PythonLen, PythonConjugate
 
 from pyccel.ast.builtin_methods.dict_methods  import DictItems, DictKeys, DictValues, DictPopitem
 
@@ -53,14 +53,16 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpySum, DtypePrecisionToCastFunction
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAmin, NumpyAmax
+from pyccel.ast.numpyext import NumpyAbs
+from pyccel.ast.numpyext import NumpyReduction, NumpyMatmul
 from pyccel.ast.numpyext import get_shape_of_multi_level_container
 
 from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
 from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelDiv, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation
@@ -76,7 +78,8 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR)
+                                    PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_INTERNAL_ERROR,
+                                    ALLOCATABLE_IN_EXPRESSION)
 
 
 errors = Errors()
@@ -131,6 +134,8 @@ numpy_ufunc_to_c_complex = {
     'NumpyArccosh': 'cacosh',
     'NumpyArctanh': 'catanh',
 }
+
+
 
 # dictionary mapping Math function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_MathFunctionBase(self, expr)
@@ -676,7 +681,8 @@ class CCodePrinter(CodePrinter):
         str
             Code which describes the NumPy functional calculation.
         """
-        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        assign_node = expr.get_direct_user_nodes(
+                lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
         if assign_node:
             lhs_var = assign_node[0].lhs
             arg_var = expr.arg
@@ -767,6 +773,80 @@ class CCodePrinter(CodePrinter):
             errors.report(f"The declaration of type {element_type} is not yet implemented for containers.",
                     symbol=expr, severity='error')
         return decl_line
+
+    def _inline_vecdot(self, expr, x1, x2, axis, *, with_conjugate):
+        """
+        Get the code describing a vector dot product.
+
+        Get the code describing a vector dot product with or without a possible
+        conjugate calculation for complexes. This is used for the implementation
+        of np.vecdot and np.matmul.
+
+        Parameters
+        ----------
+        expr : NumpyVecdot | NumpyMatmul
+            The node that is being printed.
+        x1 : TypedAstNode
+            The first vector.
+        x2 : TypedAstNode
+            The second vector.
+        axis : int
+            The axis along which the dot product is performed.
+        with_conjugate : bool
+            Indicates if the conjugate of the first argument should be used.
+
+        Returns
+        -------
+        str
+            The code that describes the vecdot operation.
+        """
+        assign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, Assign))
+        if assign_node:
+            lhs_var = assign_node[0].lhs
+        else:
+            # Rank should always be 0 thanks to loop unrolling
+            assert expr.rank == 0
+            lhs_var = self.scope.get_temporary_variable(expr.class_type)
+        in_arg_vars = (x1, x2)
+        arg_vars = []
+        prefix = ''
+        for a in in_arg_vars:
+            if not isinstance(a, Variable):
+                # This handles slice arguments
+                assert a.rank
+                tmp = self.scope.get_temporary_variable(a.class_type, shape = a.shape,
+                        memory_handling='alias')
+                prefix += self._print(AliasAssign(tmp, a))
+                arg_vars.append(tmp)
+            else:
+                arg_vars.append(a)
+
+        initial = self._print(convert_to_literal(0, expr.dtype))
+        tmp_additional_code = self._additional_code
+        self._additional_code = ''
+        lhs = self._print(lhs_var)
+
+        loop_scope = self.scope.create_new_loop_scope()
+        iter_var_name = loop_scope.get_new_name()
+        iter_var = Variable(PythonNativeInt(), iter_var_name)
+
+        x1, x2 = arg_vars
+        if with_conjugate and x1.dtype.primitive_type is PrimitiveComplexType():
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(PythonConjugate(x1[iter_var]), x2[iter_var])))
+        else:
+            node = self._print(AugAssign(lhs_var, '+', PyccelMul(x1[iter_var], x2[iter_var])))
+        body = self._additional_code + node
+        self._additional_code = tmp_additional_code
+
+        code = prefix + (f'{lhs} = {initial};\n'
+                f'for (c_range({iter_var_name}, {self._print(x1.shape[axis])})) {{\n'
+                f'{body}'
+                 '}\n')
+        if getattr(lhs_var, 'is_temp', False):
+            self._additional_code += code
+            return lhs
+        else:
+            return code
 
     # ============ Elements ============ #
 
@@ -1883,11 +1963,12 @@ class CCodePrinter(CodePrinter):
         arg = expr.arg
         if isinstance(arg.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             idx = self._print(expr.index)
+            cast_code = f'({self.get_c_type(PythonNativeInt())})'
             if self.is_c_pointer(arg):
                 arg_code = self._print(ObjectAddress(arg))
-                return f'{arg_code}->shape[{idx}]'
+                return f'{cast_code}{arg_code}->shape[{idx}]'
             arg_code = self._print(arg)
-            return f'{arg_code}.shape[{idx}]'
+            return f'{cast_code}{arg_code}.shape[{idx}]'
         elif isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType, DictType)):
             c_type = self.get_c_type(arg.class_type)
             arg_code = self._print(ObjectAddress(arg))
@@ -2063,38 +2144,35 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpySign(self, expr):
-        """ Print the corresponding C function for a call to Numpy.sign
+        """ Print the corresponding C function for a call to Numpy.sign.
+
+        The C function name is derived from the C type using the pattern:
+        ``py_sign_type_{c_type}`` where spaces in the type name are replaced
+        with underscores.
 
         Parameters
         ----------
             expr : Pyccel ast node
-                Python expression with Numpy.sign call
+                Python expression with Numpy.sign call.
 
         Returns
         -------
             string
-                Equivalent internal function in C
+                Equivalent internal function call in C.
 
         Example
         -------
-            import numpy
-
-            numpy.sign(x) => isign(x)   (x is integer)
-            numpy.sign(x) => fsign(x)   (x if float)
-            numpy.sign(x) => csign(x)   (x is complex)
+            numpy.sign(x) => py_sign_type_int8_t(x)       (x is int8)
+            numpy.sign(x) => py_sign_type_float(x)        (x is float32)
+            numpy.sign(x) => py_sign_type_double(x)       (x is float64)
+            numpy.sign(x) => py_sign_type_float_complex(x) (x is complex64)
 
         """
         self.add_import(c_imports['pyc_math_c'])
-        primitive_type = expr.dtype.primitive_type
-        func = ''
-        if isinstance(primitive_type, PrimitiveIntegerType):
-            func = 'isign'
-        elif isinstance(primitive_type, PrimitiveFloatingPointType):
-            func = 'fsign'
-        elif isinstance(primitive_type, PrimitiveComplexType):
-            func = 'csign'
-
-        return f'{func}({self._print(expr.args[0])})'
+        arg = self._print(expr.args[0])
+        type_str = self.get_c_type(expr.dtype).replace(' ', '_')
+        func_name = f'py_sign_type_{type_str}'
+        return f'{func_name}({arg})'
 
     def _print_NumpyIsFinite(self, expr):
         """
@@ -2259,13 +2337,15 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMax)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMax, initial)
 
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
         '''
-        return self._handle_numpy_functional(expr, PythonMin)
+        initial = None if expr.initial is None else self._print(expr.initial)
+        return self._handle_numpy_functional(expr, PythonMin, initial)
 
     def _print_NumpySum(self, expr):
         initial = convert_to_literal(0, expr.dtype) if expr.initial is None \
@@ -2296,6 +2376,125 @@ class CCodePrinter(CodePrinter):
             init_value = f'floor({init_value})'
 
         return ';\n'.join((init_value, endpoint_code))
+
+    def _print_NumpyNorm(self, expr):
+        arg = expr.arg
+        if arg.rank == 0:
+            if not isinstance(arg.dtype.primitive_type, PrimitiveBooleanType):
+                arg = NumpyAbs(arg)
+            return self._print(arg)
+        order = expr.order or LiteralInteger(2)
+        initial = convert_to_literal(0, expr.dtype)
+        final_power_required = False
+        if order == np.inf:
+            initial = PyccelUnarySub(math_constants['inf'])
+            element_expression = NumpyAbs
+            reduction_expression = PythonMax
+        elif order == -np.inf:
+            initial = math_constants['inf']
+            element_expression = NumpyAbs
+            reduction_expression = PythonMin
+        elif order == 0:
+            zero = convert_to_literal(0, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelNe(elem, zero)
+            reduction_expression = PyccelAdd
+        elif order == 1:
+            element_expression = NumpyAbs
+            reduction_expression = PyccelAdd
+        elif order == -1:
+            one = convert_to_literal(1, arg.dtype)
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelDiv(one, NumpyAbs(elem))
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        elif isinstance(order.dtype.primitive_type, (PrimitiveIntegerType, PrimitiveFloatingPointType)):
+            def element_expression(elem):
+                """ The expression being reduced. """
+                return PyccelPow(NumpyAbs(elem), order)
+            reduction_expression = PyccelAdd
+            final_power_required = True
+        else:
+            raise NotImplementedError("Order")
+
+        augassign_node = expr.get_direct_user_nodes(lambda p: isinstance(p, AugAssign))
+
+        code = self._handle_numpy_functional(expr, lambda tot, elem: reduction_expression(tot, element_expression(elem)), initial)
+
+        if final_power_required:
+            assign_node = expr.get_direct_user_nodes(
+                    lambda p: isinstance(p, Assign) and not isinstance(p, AugAssign))
+            assert assign_node
+            lhs_var = assign_node[0].lhs
+            lhs = self._print(lhs_var)
+
+            pow_factor = PyccelDiv(LiteralInteger(1), order)
+            self.add_import(c_imports['math'])
+            pow_code = f'{lhs} = pow({lhs}, {self._print(pow_factor)});\n'
+
+            if augassign_node:
+                self._additional_code += pow_code
+                return code
+            return code + pow_code
+        else:
+            return code
+
+    def _print_NumpyCross(self, expr):
+        a = expr.a
+        b = expr.b
+        c = expr.c
+        zero = LiteralInteger(0)
+        one = LiteralInteger(1)
+        two = LiteralInteger(2)
+
+        a_0 = self._print(a[zero])
+        a_1 = self._print(a[one])
+        a_2 = self._print(a[two])
+        b_0 = self._print(b[zero])
+        b_1 = self._print(b[one])
+        b_2 = self._print(b[two])
+        c_0 = self._print(c[zero])
+        c_1 = self._print(c[one])
+        c_2 = self._print(c[two])
+
+        return (f'{c_0} = {a_1} * {b_2} - {a_2} * {b_1};\n'
+                f'{c_1} = {a_2} * {b_0} - {a_0} * {b_2};\n'
+                f'{c_2} = {a_0} * {b_1} - {a_1} * {b_0};\n')
+
+    def _print_NumpyVecdot(self, expr):
+        return self._inline_vecdot(expr, expr.x1, expr.x2, expr.axis[0], with_conjugate = True)
+
+    def _print_NumpyMatmul(self, expr):
+        if expr.rank == 0:
+            return self._inline_vecdot(expr, expr.a, expr.b, 0, with_conjugate = False)
+        self.add_import(c_imports['pyc_math_c'])
+        a_code = self._print(expr.a)
+        b_code = self._print(expr.b)
+        assign = expr.get_user_nodes(Assign)
+        if assign:
+            out_code = self._print(assign[0].lhs)
+        else:
+            errors.report('The result of a matrix multiplication must be saved into a variable',
+                          symbol=expr, severity='error')
+            return ''
+        dtype = expr.dtype
+        if dtype.primitive_type is PrimitiveBooleanType():
+            errors.report('Boolean matrix multiplication is not implemented',
+                          symbol=expr, severity='error')
+        elif len({expr.a.dtype, expr.b.dtype, expr.dtype}) != 1:
+            errors.report('Matrix multiplication is only implemented in C when all arguments and results have the same type',
+                          symbol=expr, severity='error')
+        if expr.b.rank == 1:
+            dtype = self.get_c_type(dtype)
+            return f'pyc_matvecmul_{dtype}({out_code}, {a_code}, {b_code});\n'
+        elif expr.a.rank == 1:
+            dtype = self.get_c_type(dtype)
+            return f'pyc_vecmatmul_{dtype}({out_code}, {a_code}, {b_code});\n'
+        else:
+            array_type = self.get_c_type(expr.class_type)
+            return f'pyc_matmul_{array_type}({out_code}, {a_code}, {b_code});\n'
 
     def _print_Interface(self, expr):
         return ''.join(self._print(f) for f in expr.functions)
@@ -2333,7 +2532,7 @@ class CCodePrinter(CodePrinter):
 
         if len(results) == 1 and not returning_tuple:
             res = results[0]
-            if isinstance(res, Variable) and not res.is_temp:
+            if isinstance(res, Variable) and (not res.is_temp or res.rank):
                 decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
@@ -2570,7 +2769,7 @@ class CCodePrinter(CodePrinter):
         # Inhomogeneous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return self.copy_NumpyArray_Data(lhs, rhs)
-        if isinstance(rhs, (NumpySum, NumpyAmax, NumpyAmin)):
+        if isinstance(rhs, NumpyMatmul) or (isinstance(rhs, NumpyReduction) and rhs.arg.rank):
             return self._print(rhs)
         if isinstance(rhs, (NumpyFull)):
             return self.arrayFill(expr)
