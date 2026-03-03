@@ -30,7 +30,7 @@ class BuildSystemHandler:
     accelerators : iterable[str]
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     """
-    def __init__(self, pyccel_dir, root_dir, output_dir, *, verbose, debug_mode, compiler, accelerators):
+    def __init__(self, pyccel_dir, root_dir, output_dir, *, verbose, debug_mode, compiler, accelerators,  main_language):
         self._pyccel_dir = pyccel_dir
         self._root_dir = root_dir
         self._output_dir = output_dir
@@ -38,5 +38,6 @@ class BuildSystemHandler:
         self._debug_mode = debug_mode
         self._compiler = compiler
         self._accelerators = accelerators
+        self._language = main_language
         self._languages = ()
         pyccel_stage.set_stage('buildgen')
