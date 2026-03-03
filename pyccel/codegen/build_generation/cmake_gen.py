@@ -206,7 +206,7 @@ class CMakeHandler(BuildSystemHandler):
         if self._math_lib_available_on_platform:
             math_import = 'find_library(MATH_LIBRARY m)\n'
 
-        pyccel_main_language = f"set(PYCCEL_MAIN_LANGUAGE, '{self. _language}'\n"
+        pyccel_main_language = f'set(PYCCEL_MAIN_LANGUAGE, "{self. _language}")\n'
 
         sections = [cmake_min, project_decl, pic_on, py_import, math_import, pyccel_main_language]
 
