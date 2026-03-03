@@ -34,53 +34,53 @@ jobs:
     uses: ./.github/workflows/anaconda_linux.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   anaconda_windows:
     if: inputs.test_suite == 'anaconda_windows'
     uses: ./.github/workflows/anaconda_windows.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   intel:
     if: inputs.test_suite == 'intel'
     uses: ./.github/workflows/intel.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   linux:
     if: inputs.test_suite == 'linux'
     uses: ./.github/workflows/linux.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   linux_pyccel_test:
     if: inputs.test_suite == 'linux_pyccel_test'
     uses: ./.github/workflows/linux_pyccel_test.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   llvm:
     if: inputs.test_suite == 'llvm'
     uses: ./.github/workflows/llvm.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   macosx:
     if: inputs.test_suite == 'macosx'
     uses: ./.github/workflows/macosx.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
 
   windows:
     if: inputs.test_suite == 'windows'
     uses: ./.github/workflows/windows.yml
     with:
       python_version: ${{ inputs.python_version }}
-      force: true
+      force: ${{ inputs.force }}
