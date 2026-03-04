@@ -1,9 +1,9 @@
 # pylint: disable=missing-module-docstring
-from sign_mod import sign
+from factorial_mod import inv_factorial
 
 if __name__ == "__main__":
-    print(sign(-1))
-    print(sign(0))
-    print(sign(1))
-    print(sign(-3.5))
-    print(sign(2.7))
+    print(inv_factorial(7))
+    print(inv_factorial(0))
+    print(inv_factorial(1))
+    print(inv_factorial(3.5))
+    print(inv_factorial(2.7))
