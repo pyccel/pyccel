@@ -51,7 +51,7 @@ Senior developers will look for anything missed in the initial review. They will
 
 Once the senior developer is happy with the branch they should accept the pull request and change the label from `Ready_for_review` to `Ready_to_merge`
 
-### Ready to merge
+### Ready to Merge
 
 Once the code has been accepted by both a junior and a senior developer it should be ready to merge. This flag therefore indicates that one of our developers with merge permissions can review the code. They will look for anything missed by the previous two reviews.
 
@@ -75,11 +75,11 @@ The static analysis tests run on non-draft pull requests. If you wish to run the
 - markdownlint : [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used to check the markdown format.
 - Pyccel lint : The custom scripts `ci_tools/check_pyccel_conventions.py` and `ci_tools/check_pylint_commands.py` are used to check that Pyccel conventions are respected.
 
-### Unit testing
+### Unit Testing
 
 The unit tests are run using [pytest](https://docs.pytest.org/en/stable/). They run with a variety of compilers on various operating systems. The tests are triggered when pull requests come out of draft but they can be triggered individually using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_unit_tests.yml).
 
-### Coverage tests
+### Coverage Tests
 
 The coverage test runs when pull requests come out of draft. It uses the results from the unit tests to detect which lines of code are new but haven't been tested. Comments are left on untested lines. To correct the errors, tests must be added or comments must be left explaining why coverage is deemed unnecessary.
 
