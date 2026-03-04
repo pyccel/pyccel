@@ -57,7 +57,7 @@ Anyone can make silly mistakes so Pyccel aims to have all pull requests be revie
 
 ## Testing
 
-Pyccel uses 3 types of test:
+Pyccel uses 3 types of tests:
 
 - static analysis
 - unit testing
