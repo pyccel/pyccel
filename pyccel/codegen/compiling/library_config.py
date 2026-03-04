@@ -565,7 +565,7 @@ recognised_libs = {
     "stc"  : STCInstaller(),
     "gFTL" : GFTLInstaller(),
     # Internal libs
-    "pyc_math_f90"   : StdlibInstaller("pyc_math_f90.f90", "math", libs = ('m',)),
+    "pyc_math_f90"   : StdlibInstaller("pyc_math_f90.F90", "math", libs = ('m',)),
     "pyc_math_c"     : StdlibInstaller("pyc_math_c.c", "math",
                                        dependencies = ('stc',)),
     "pyc_tools_f90"  : StdlibInstaller("pyc_tools_f90.f90", "tools"),

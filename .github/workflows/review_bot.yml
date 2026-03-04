@@ -2,29 +2,35 @@ name: Bot
 
 on:
   pull_request_review:
-    types: [ submitted ]
+    types: [submitted]
+
+permissions:
+  pull-requests: write
 
 jobs:
   Bot:
     name: Update Review Stage
-    if: ((! github.event.pull_request.draft) && (github.event.review.user.type != 'Bot' ))
+    if: (! github.event.pull_request.draft) && github.event.review.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Install python dependencies
+      - name: Set PR to draft on changes requested
+        if: github.event.review.state == 'changes_requested'
         run: |
-          python -m pip install requests
-      - name: "Generate token"
-        id: token
-        uses: ./.github/actions/generate_bot_token
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
-      - id: run_bot
-        run: |
-          python ci_tools/bot_review_react.py
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          AUTHOR=${{ github.event.pull_request.user.login }}
+          REVIEWER=${{ github.event.review.user.login }}
+          gh pr ready $PR_NUMBER --undo
+          gh pr edit --remove-label needs_initial_review
+          gh pr edit --remove-label Ready_for_review
+          gh pr edit --remove-label Ready_to_merge
+          MESSAGE=$(sed "s/{author}/$AUTHOR/g; s/{reviewer}/$REVIEWER/g" ci_tools/bot_messages/set_draft_changes.txt)
+          gh pr comment $PR_NUMBER --body "$MESSAGE"
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Update label on approval
+        if: github.event.review.state == 'approved'
+        uses: ./.github/actions/update_review_label
+        with:
+          pr_number: ${{ github.event.pull_request.number }}

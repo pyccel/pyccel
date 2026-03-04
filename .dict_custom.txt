@@ -145,3 +145,6 @@ unannotated
 subcommand
 subcommands
 precisions
+preprocessor
+retrigger
+markdownlint

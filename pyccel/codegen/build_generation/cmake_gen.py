@@ -192,7 +192,7 @@ class CMakeHandler(BuildSystemHandler):
         cmake_min = 'cmake_minimum_required(VERSION 3.20)'
 
         languages = ' '.join(['LANGUAGES', *[l.capitalize() for l in expr.languages]])
-        project_decl = f"project('{expr.project_name}' {languages})\n"
+        project_decl = f"project({expr.project_name} {languages})\n"
 
         pic_on = 'set(CMAKE_POSITION_INDEPENDENT_CODE ON)\n'
 
@@ -206,7 +206,9 @@ class CMakeHandler(BuildSystemHandler):
         if self._math_lib_available_on_platform:
             math_import = 'find_library(MATH_LIBRARY m)\n'
 
-        sections = [cmake_min, project_decl, pic_on, py_import, math_import]
+        pyccel_main_language = f'set(PYCCEL_MAIN_LANGUAGE "{self._main_language}")\n'
+
+        sections = [cmake_min, project_decl, pic_on, py_import, math_import, pyccel_main_language]
 
         if 'openmp' in self._accelerators:
             sections.append('find_package(OpenMP REQUIRED)\n')
