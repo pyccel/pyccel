@@ -8,7 +8,11 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2577 : Fix missing dependency when linking `stdlib/math` to Fortran code when using `pyccel make`.
+
 ### Changed
+
+-   #2577 : Remove compilation of unnecessary files in `stdlib/math` when using `pyccel make`.
 
 ### Deprecated
 
