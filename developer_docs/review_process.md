@@ -67,7 +67,7 @@ Pyccel uses 3 types of tests:
 
 ### Static Analysis
 
-The static analysis tests run on non-draft pull requests. If you wish to run them earlier you can run them locally using the tools or you can run them using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_static_analysis.yml). The tests are:
+The static analysis tests run on non-draft pull requests. If you wish to run them earlier you can run them locally by downloading the tools linked below, or you can run them using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_static_analysis.yml). The tests are:
 
 - Pylint : [Pylint](https://www.pylint.org/) is used for linting
 - docs : [docstr-coverage](https://pypi.org/project/docstr-coverage/) is used to check that code is correctly documented. [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) is used to check the format of the code documentation. Sphinx is used to build the online documentation.
