@@ -22,7 +22,7 @@ on:
         type: string
         default: ''
       force:
-        description: 'Run without checking for duplicate runs'
+        description: 'Run without checking for a previous identical run'
         required: false
         type: boolean
         default: true
