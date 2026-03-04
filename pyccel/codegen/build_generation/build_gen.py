@@ -29,6 +29,9 @@ class BuildSystemHandler:
         The compiler that should be used to compile the code.
     accelerators : iterable[str]
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
+    main_language : str
+        The main language of the code. This is the target language but
+        may not be the only language required for compilation.
     """
     def __init__(self, pyccel_dir, root_dir, output_dir, *, verbose, debug_mode, compiler, accelerators,  main_language):
         self._pyccel_dir = pyccel_dir

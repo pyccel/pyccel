@@ -22,21 +22,14 @@ class MesonHandler(BuildSystemHandler):
 
     Parameters
     ----------
-    pyccel_dir : Path
-        The directory where generated files should be outputted.
-    root_dir : Path
-        The directory from which the `pyccel make` command was called.
-    output_dir : Path
-        The directory where the final files should be outputted.
-    verbose : int
-        The level of verbosity.
-    debug_mode : bool
-        Indicates if we should compile in debug mode.
-    compiler : pyccel.codegen.compilers.compiling.Compiler
-        The compiler that should be used to compile the code.
-    accelerators : iterable[str]
-        Tool used to accelerate the code (e.g., OpenMP, OpenACC).
+    *args
+        See BuildSystemHandler.
+    **kwargs
+        See BuildSystemHandler.
     """
+    # Empty init included to avoid needing duplicate documentation of constructor arguments
+    def __init__(self, *args, **kwargs): #pylint: disable=useless-parent-delegation
+        super().__init__(*args, **kwargs)
 
     def _generate_CompileTarget(self, expr):
         """
