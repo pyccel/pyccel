@@ -37,8 +37,7 @@ jobs:
         echo "version=3.10" >> $GITHUB_ENV
         echo "editable=['-e', ' ']" >> $GITHUB_ENV
       shell: bash
-    - id: dispatch-or-call-matrix
-      if: github.event_name != 'push'
+    - if: github.event_name != 'push'
       run: |
         echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
         echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV

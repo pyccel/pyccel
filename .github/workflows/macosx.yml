@@ -24,8 +24,7 @@ jobs:
       run: |
         echo "version=3.14" >> $GITHUB_ENV
       shell: bash
-    - id: dispatch-or-call-matrix
-      if: github.event_name != 'push'
+    - if: github.event_name != 'push'
       run: |
         VERSION="${{ inputs.python_version }}"
         echo "version=${VERSION:-3.14}" >> $GITHUB_ENV
