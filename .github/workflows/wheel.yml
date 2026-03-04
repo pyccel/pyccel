@@ -49,7 +49,7 @@ jobs:
           skip_after_successful_duplicate: 'true'
           paths: '["pyccel/**", "pyproject.toml", "install_scripts/**", ".github/workflows/wheel.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
-          do_not_skip: '["workflow_dispatch", "push"]'
+          do_not_skip: '["push"]'
 
       - uses: actions/checkout@v4
         with:
