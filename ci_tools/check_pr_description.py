@@ -24,7 +24,7 @@ if first_line.strip() == original_body[0].strip():
           "Please replace it with a description of your changes.")
     sys.exit(1)
 
-split_index = next(i for i,l in enumerate(lines) if l.strip() == '---', len(lines))
+split_index = next((i for i,l in enumerate(lines) if l.strip() == '---'), len(lines))
 pr_description = '\n'.join(l for l in lines[:split_index]).strip()
 
 if len(pr_description.split()) <= 2:
