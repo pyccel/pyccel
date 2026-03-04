@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import sys
 import json
-from git_evaluation_tools import get_diff_as_json
 
 accepted_pylint_commands = {re.compile('pyccel/ast/.*types.py'):['no-member', 'protected-access'],
                             re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],

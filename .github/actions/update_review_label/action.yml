@@ -1,0 +1,55 @@
+name: 'Update review stage label'
+description: 'Compute and apply the review stage label based on current PR reviews'
+
+inputs:
+  pr_number:
+    description: "The pull request number"
+    required: true
+
+outputs:
+  label:
+    description: "The review stage label applied (needs_initial_review, Ready_for_review, or Ready_to_merge)"
+    value: ${{ steps.compute.outputs.label }}
+  requesters:
+    description: "Comma-separated list of reviewers (@login) who requested changes"
+    value: ${{ steps.compute.outputs.requesters }}
+  author:
+    description: "The PR author login"
+    value: ${{ steps.compute.outputs.author }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Compute and apply label
+      id: compute
+      run: |
+        PR_INFO=$(gh pr view ${{ inputs.pr_number }} --json author,reviews)
+        AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+        REVIEW_DATA=$(echo "$PR_INFO" | jq '
+          def effective_reviews:
+            .reviews | sort_by(.submittedAt) | group_by(.author.login) | map(last) | .[] | select(.author.login != "pyccel-bot");
+          {
+            requesters: ([effective_reviews | select(.state == "CHANGES_REQUESTED") | "@" + .author.login] | join(", ")),
+            senior_approved: ([effective_reviews | select(.state == "APPROVED" and (.author.login == "yguclu" or .author.login == "EmilyBourne"))] | length > 0),
+            junior_approved: ([effective_reviews | select(.state == "APPROVED" and .author.login != "yguclu" and .author.login != "EmilyBourne")] | length > 0)
+          }')
+        REQUESTERS=$(echo "$REVIEW_DATA" | jq -r '.requesters')
+        SENIOR_APPROVED=$(echo "$REVIEW_DATA" | jq -r '.senior_approved')
+        JUNIOR_APPROVED=$(echo "$REVIEW_DATA" | jq -r '.junior_approved')
+
+        if [ "$SENIOR_APPROVED" = "true" ]; then
+          LABEL="Ready_to_merge"
+        elif [ "$JUNIOR_APPROVED" = "true" ]; then
+          LABEL="Ready_for_review"
+        else
+          LABEL="needs_initial_review"
+        fi
+
+        gh pr edit ${{ inputs.pr_number }} --add-label "$LABEL"
+
+        echo "label=$LABEL" >> $GITHUB_OUTPUT
+        echo "requesters=$REQUESTERS" >> $GITHUB_OUTPUT
+        echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
