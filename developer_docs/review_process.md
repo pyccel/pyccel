@@ -6,10 +6,12 @@ When you believe your branch is ready to merge you should create a pull request.
 
 Once the pull request is opened 10 tests should be triggered they are:
 
--   **Linux** : Runs the suite of tests on a linux machine
--   **MacOS** : Runs the suite of tests on a macOS machine
--   **Windows** : Runs the suite of tests on a windows machine
--   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
+-   **Linux** : Runs the suite of tests on a linux machine.
+-   **MacOS** : Runs the suite of tests on a macOS machine.
+-   **Windows** : Runs the suite of tests on a windows machine.
+-   **Intel** : Runs the suite of tests on a linux machine with an Intel OneAPI compiler.
+-   **LLVM** : Runs the suite of tests on a linux machine with an LLVM compiler.
+-   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform.
 -   **Python Linting** : Runs Pylint on all Python files and reports any errors introduced by the pull request.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
 -   **Markdown Linting** : Runs a Markdown linter to ensure that Markdown files follow standard practice and will be displayed correctly via different tools.
