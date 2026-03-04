@@ -152,15 +152,18 @@ class Bot:
     def get_diff(self, base_commit = None):
         """
         Get the diff between the base and the current commit.
+
         Get the git description of the difference between the current
         commit and the specified base commit. This output
         shows how github organises the files tab and allows line
         numbers do be calculated from git blob positions.
+
         Parameters
         ----------
         base_commit : str, optional
             The commit against which the current commit should be compared.
             The default value is the base commit of the pull request.
+
         Returns
         -------
         dict
