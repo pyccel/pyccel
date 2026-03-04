@@ -1,4 +1,4 @@
-ame: Documentation
+name: Documentation
 
 on:
   workflow_call:
