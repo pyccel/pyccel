@@ -1,40 +1,20 @@
 name: Pyccel Linting
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       python_version:
-        required: true
-        type: string
-      ref:
         required: false
         type: string
-      check_run_id:
-        required: false
-        type: string
-      pr_repo:
-        required: false
-        type: string
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
+        default: '3.12'
 
 env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
-  PEM: ${{ secrets.BOT_PEM }}
-  GITHUB_RUN_ID: ${{ github.run_id }}
-  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.12' }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
 
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
-    name: Best practices (pyccel_lint, ${{ inputs.python_version || '3.12' }})
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    name: Best practices (pyccel_lint, ${{ inputs.python_version }})
 
     steps:
       - id: duplicate_check
@@ -48,19 +28,11 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.COMMIT }}
-          repository: ${{ env.PR_REPO }}
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: "Setup"
-        if: github.event_name != 'pull_request'
-        id: token
-        run: |
-          pip install jwt requests
-          python ci_tools/setup_check_run.py pyccel_lint
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
@@ -79,11 +51,3 @@ jobs:
           python ci_tools/check_pylint_commands.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
           cat $GITHUB_STEP_SUMMARY
         shell: bash
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
-        run:
-          python ci_tools/complete_check_run.py ${{ steps.lint.outcome }}
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
-        run:
-          python ci_tools/complete_check_run.py 'success'

@@ -1,0 +1,69 @@
+name: PR Tests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  check_description:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PR description
+        run: python ci_tools/check_pr_description.py
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+
+  markdown_lint:
+    needs: [check_description]
+    uses: ./.github/workflows/markdown_lint.yml
+
+  pyccel_lint:
+    needs: [check_description]
+    uses: ./.github/workflows/pyccel_lint.yml
+
+  pylint:
+    needs: [check_description]
+    uses: ./.github/workflows/pylint.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  docs:
+    needs: [check_description]
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  spelling:
+    needs: [check_description]
+    uses: ./.github/workflows/spelling.yml
+
+  linux:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/linux.yml
+
+  macosx:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/macosx.yml
+
+  windows:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/windows.yml
+
+  llvm:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/llvm.yml
+
+  intel:
+    needs: [pyccel_lint, pylint, docs, spelling]
+    uses: ./.github/workflows/intel.yml
