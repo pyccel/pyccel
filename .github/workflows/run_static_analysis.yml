@@ -10,6 +10,11 @@ on:
         default: ''
 
 jobs:
+  docs:
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
   markdown_lint:
     uses: ./.github/workflows/markdown_lint.yml
 
@@ -18,11 +23,6 @@ jobs:
 
   pylint:
     uses: ./.github/workflows/pylint.yml
-    with:
-      base: ${{ github.event.pull_request.base.sha }}
-
-  docs:
-    uses: ./.github/workflows/docs.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
 
