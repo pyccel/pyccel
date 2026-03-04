@@ -75,7 +75,7 @@ The static analysis tests run on non-draft pull requests. If you wish to run the
 
 ### Unit testing
 
-The unit tests are run using [pytest](https://docs.pytest.org/en/stable/). They run with a variety of compilers on a various operating systems. The tests are triggered when pull requests come out of draft but they can be triggered individually using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_unit_tests.yml).
+The unit tests are run using [pytest](https://docs.pytest.org/en/stable/). They run with a variety of compilers on various operating systems. The tests are triggered when pull requests come out of draft but they can be triggered individually using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_unit_tests.yml).
 
 ### Coverage tests
 
