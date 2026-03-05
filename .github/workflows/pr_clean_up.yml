@@ -2,7 +2,7 @@ name: Update PR following unit tests
 
 on:
   workflow_run:
-    workflows: ["PR Tests"]
+    workflows: ["PR Tests", "Unit test coverage"]
     types: [completed]
 
 permissions:
@@ -11,6 +11,7 @@ permissions:
 jobs:
   update_status:
     name: Update PR status
+    if: (github.event.workflow_run.name == 'PR Tests' && github.event.workflow_run.conclusion != 'success') || github.event.workflow_run.name == 'Unit test coverage'
     runs-on: ubuntu-latest
 
     steps:
