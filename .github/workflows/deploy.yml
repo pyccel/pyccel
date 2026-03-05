@@ -13,7 +13,7 @@ jobs:
     if: github.event.workflow_run.head_branch == 'main'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -34,7 +34,7 @@ jobs:
     needs: [waitForWorklows]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
           ref: main

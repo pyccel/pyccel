@@ -32,12 +32,12 @@ jobs:
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ env.BASE }}
           path: base
           submodules: true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           path: compare
           fetch-depth: 0

@@ -29,7 +29,7 @@ jobs:
           paths: '["**/*.py", ".github/workflows/pylint.yml", ".github/actions/**"]'
           do_not_skip: '["push"]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
