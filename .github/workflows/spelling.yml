@@ -17,7 +17,7 @@ jobs:
     name: Documentation spellcheck (spelling, ${{ inputs.python_version }})
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}

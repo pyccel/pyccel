@@ -35,7 +35,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         path: origin
       - name: Get PR info
         id: pr_info
@@ -68,7 +68,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr_info.outputs.head_sha }}
           repository: ${{ steps.pr_info.outputs.pr_repo }}

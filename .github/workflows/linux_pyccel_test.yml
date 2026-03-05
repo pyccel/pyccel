@@ -55,7 +55,7 @@ jobs:
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '["push"]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Set up Python ${{ matrix.python_version }}
