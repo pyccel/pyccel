@@ -92,6 +92,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install defusedxml
           python -m pip install coverage
+          python -m pip install jwt requests
         shell: bash
       - name: Download coverage artifacts
         uses: actions/download-artifact@v4
