@@ -9,7 +9,7 @@ jobs:
     name: Thanks for the Pull Request!
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: |
           previous_prs=$(gh pr list --author=${{ github.event.pull_request.user.login }} --json number --state=all --jq '. | length')
           if [ ${previous_prs} -eq 0 ]

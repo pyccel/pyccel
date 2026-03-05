@@ -25,7 +25,7 @@ jobs:
           python-version: '3.12'
       - name: Checkout repository
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
       - name: Install dependencies
