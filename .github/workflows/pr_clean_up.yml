@@ -28,7 +28,8 @@ jobs:
       - name: Check status
         id: status_check
         run: |
-          status=$(gh pr checks ${PR_NUMBER} --required --json state --watch --jq '.[]["state"]' | sort -u)
+          gh pr checks ${PR_NUMBER} --required --watch
+          status=$(gh pr checks ${PR_NUMBER} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
             echo "conclusion=SUCCESS"
