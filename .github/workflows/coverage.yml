@@ -36,14 +36,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.pr_info.outputs.head_sha }}
-          repository: ${{ steps.pr_info.outputs.pr_repo }}
-          submodules: true
-          fetch-depth: 0
+        path: origin
       - name: Get PR info
         id: pr_info
         run: |
+          cd pr_info # Run in pr_info so gh connects to target repo
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
             echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
@@ -71,12 +68,20 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr_info.outputs.head_sha }}
+          repository: ${{ steps.pr_info.outputs.pr_repo }}
+          submodules: true
+          fetch-depth: 0
+          path: pr_contents
       - name: Fetch base from upstream
         if: steps.pr_info.outputs.pr_repo != github.repository
         run: |
           git remote add upstream https://github.com/${{ github.repository }}.git
           git fetch upstream
         shell: bash
+        working-directory: pr_contents
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
@@ -92,7 +97,7 @@ jobs:
         with:
           run-id: ${{ steps.pr_info.outputs.run_id }}
           pattern: coverage-artifact*
-          path: coverage_files
+          path: pr_contents/coverage_files
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Collect coverage information
         run: |
@@ -100,18 +105,21 @@ jobs:
           coverage combine $(find coverage_files -name '.coverage')
           coverage xml
         shell: bash
+        working-directory: pr_contents
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+          coverage-reports: pr_contents/cobertura.xml
       - name: Collect diff information
         run: |
           git diff ${{ steps.pr_info.outputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
+        working-directory: pr_contents
       - name: Check coverage
         id: coverage
         run: |
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_STEP_SUMMARY
         shell: bash
+        working-directory: pr_contents
