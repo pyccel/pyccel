@@ -40,7 +40,7 @@ jobs:
       - name: Get PR info
         id: pr_info
         run: |
-          cd pr_info # Run in pr_info so gh connects to target repo
+          cd origin # Run in origin so gh connects to target repo
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
             echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
