@@ -26,7 +26,7 @@ jobs:
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}

@@ -13,7 +13,7 @@ jobs:
     if: (! github.event.pull_request.draft) && github.event.review.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set PR to draft on changes requested
         if: github.event.review.state == 'changes_requested'
         run: |
