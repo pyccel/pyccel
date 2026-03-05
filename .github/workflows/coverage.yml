@@ -42,6 +42,9 @@ jobs:
         id: pr_info
         run: |
           cd origin # Run in origin so gh connects to target repo
+          PR_ID=$(gh pr list --state open --json number,headRefOid \
+                          --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
+          echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
             echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
@@ -50,9 +53,7 @@ jobs:
             then
               echo "run_id=${{ inputs.run_id }}" >> $GITHUB_OUTPUT
             else
-              PR_NUMBER=$(gh pr list --state open --json number,headRefOid \
-                          --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
-              link=$(gh pr checks $PR_NUMBER --required --json=workflow,state,link \
+              link=$(gh pr checks $PR_ID --required --json=workflow,state,link \
                      --jq='.[] | select(.workflow == "PR Tests" and .workflow == "SUCCESS") | .link')
               run_id=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
               echo "run_id=${run_id}" >> $GITHUB_OUTPUT
