@@ -25,8 +25,19 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Check status
+        id: status_check
+        run:
+          status=$(gh pr checks ${PR_NUMBER} --required --json state --jq '.[]["state"]' | sort -u)
+          if [[ $status == "SUCCESS" ]]
+          then
+            echo "conclusion=SUCCESS"
+          elif [[ $status == *"FAILURE"* ]]
+          then
+            echo "conclusion=FAILURE"
+          fi
       - name: Convert PR to draft
-        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'failure'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'FAILURE'
         run: |
           gh pr ready ${{ steps.find_pr.outputs.pr_number }} --undo
           gh pr edit --remove-label needs_initial_review
@@ -38,12 +49,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Update label
         id: update_label
-        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'SUCCESS'
         uses: ./.github/actions/update_review_label
         with:
           pr_number: ${{ steps.find_pr.outputs.pr_number }}
       - name: Post comment
-        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'SUCCESS'
         run: |
           PR_NUMBER=${{ steps.find_pr.outputs.pr_number }}
           if [ -n "${{ steps.update_label.outputs.requesters }}" ]; then
