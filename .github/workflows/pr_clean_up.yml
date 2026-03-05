@@ -36,6 +36,9 @@ jobs:
           then
             echo "conclusion=FAILURE"
           fi
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Convert PR to draft
         if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'FAILURE'
         run: |
