@@ -36,7 +36,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-        path: origin
+        with:
+          path: origin
       - name: Get PR info
         id: pr_info
         run: |
