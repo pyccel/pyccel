@@ -36,8 +36,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-      - uses: actions/checkout@v4
-        if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
       - name: Update label
         id: update_label
         if: steps.find_pr.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
