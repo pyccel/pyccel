@@ -2,7 +2,7 @@ name: Update PR following unit tests
 
 on:
   workflow_run:
-    workflows: ["PR Tests", "Unit test coverage"]
+    workflows: ["PR Tests"]
     types: [completed]
 
 permissions:
@@ -12,7 +12,6 @@ permissions:
 jobs:
   update_status:
     name: Update PR status
-    if: (github.event.workflow_run.name == 'PR Tests' && github.event.workflow_run.conclusion != 'success') || github.event.workflow_run.name == 'Unit test coverage'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,8 +27,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Check status
         id: status_check
-        run:
-          status=$(gh pr checks ${PR_NUMBER} --required --json state --jq '.[]["state"]' | sort -u)
+        run: |
+          status=$(gh pr checks ${PR_NUMBER} --required --json state --watch --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
             echo "conclusion=SUCCESS"
