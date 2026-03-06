@@ -77,7 +77,7 @@ class Bot:
         else:
             self._ref = self._pr_details["head"]["sha"]
 
-    def post_completed(self, conclusion):
+    def post_completed(self, name, conclusion):
         """
         Update a check run to indicate that the run is completed.
 
@@ -112,13 +112,13 @@ class Bot:
             result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
-            self._GAI.post_coverage_run(self._ref, "coverage", params)
+            self._GAI.post_coverage_run(self._ref, name, params)
         except AssertionError as a:
             params = {
                     "status": "completed",
                     "conclusion": "failure",
                     }
-            self._GAI.post_coverage_run(self._ref, "coverage", params)
+            self._GAI.post_coverage_run(self._ref, name, params)
             raise a
 
     def post_coverage_review(self, comments, approve):

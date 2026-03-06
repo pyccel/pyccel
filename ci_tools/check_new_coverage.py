@@ -46,6 +46,6 @@ if __name__ == '__main__':
     for r in fixed_comments.values():
         bot.accept_coverage_fix(r)
 
-    bot.post_completed('success' if success else 'failure')
+    bot.post_completed('PR Tests / coverage', 'success' if success else 'failure')
 
     cov.show_results(new_untested)
