@@ -79,13 +79,15 @@ class Bot:
 
     def post_completed(self, name, conclusion):
         """
-        Update a check run to indicate that the run is completed.
+        Create a check run to post the conclusion of a test.
 
-        Update an existing check run using the id specified at the construction
-        to indicate that the run completed with the specified conclusion.
+        Create a check run to post the conclusion of a test with the specified conclusion.
 
         Parameters
         ----------
+        name : str
+            The name of the check run that will be created.
+
         conclusion : str
             The conclusion of the test. Must be one of:
             [action_required, cancelled, failure, neutral, success, skipped, stale, timed_out].
