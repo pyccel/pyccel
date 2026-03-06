@@ -49,14 +49,12 @@ class Bot:
     pr_id : int, optional
         The number of the PR of interest.
 
-    check_run_id : int, optional
-        The id of the current check run (used to update any details).
 
     commit : str
         The SHA of the current commit.
     """
 
-    def __init__(self, pr_id = None, check_run_id = None, commit = None):
+    def __init__(self, pr_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._source_repo = None
         if pr_id is None:
@@ -78,9 +76,6 @@ class Bot:
                 self._ref = branch_info['commit']['sha']
         else:
             self._ref = self._pr_details["head"]["sha"]
-
-        if check_run_id:
-            self._check_run_id = check_run_id
 
     def post_completed(self, conclusion):
         """
@@ -117,13 +112,13 @@ class Bot:
             result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
-            self._GAI.post_coverage_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._ref, "coverage", params)
         except AssertionError as a:
             params = {
                     "status": "completed",
                     "conclusion": "failure",
                     }
-            self._GAI.post_coverage_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._ref, "coverage", params)
             raise a
 
     def post_coverage_review(self, comments, approve):
