@@ -21,6 +21,7 @@ jobs:
         run: |
           PR_NUMBER=$(gh pr list --state open --json number,headRefOid \
             --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
+          echo "pr_number=$PR_NUMBER"
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
         shell: bash
         env:
@@ -28,8 +29,8 @@ jobs:
       - name: Check status
         id: status_check
         run: |
-          gh pr checks ${PR_NUMBER} --required --watch
-          status=$(gh pr checks ${PR_NUMBER} --required --json state --jq '.[]["state"]' | sort -u)
+          gh pr checks ${{{ steps.find_pr.outputs.pr_number }}} --required --watch
+          status=$(gh pr checks ${{{ steps.find_pr.outputs.pr_number }}} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
             echo "conclusion=SUCCESS"
@@ -60,14 +61,13 @@ jobs:
       - name: Post comment
         if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'SUCCESS'
         run: |
-          PR_NUMBER=${{ steps.find_pr.outputs.pr_number }}
           if [ -n "${{ steps.update_label.outputs.requesters }}" ]; then
             MESSAGE=$(sed "s/{reviewers}/${{ steps.update_label.outputs.requesters }}/g; s/{author}/${{ steps.update_label.outputs.author }}/g" \
               ci_tools/bot_messages/rerequest_review.txt)
-            gh pr comment $PR_NUMBER --body "$MESSAGE"
+            gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "$MESSAGE"
           elif [ "${{ steps.update_label.outputs.label }}" = "needs_initial_review" ]; then
             MESSAGE=$(sed "s/{author}/${{ steps.update_label.outputs.author }}/g" ci_tools/bot_messages/new_pr.txt)
-            gh pr comment $PR_NUMBER --body "$MESSAGE"
+            gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "$MESSAGE"
           fi
         shell: bash
         env:
