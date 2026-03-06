@@ -49,7 +49,6 @@ class Bot:
     pr_id : int, optional
         The number of the PR of interest.
 
-
     commit : str
         The SHA of the current commit.
     """
