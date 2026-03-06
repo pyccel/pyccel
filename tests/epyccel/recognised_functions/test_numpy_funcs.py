@@ -2139,6 +2139,22 @@ def test_ones_combined_args(language):
     assert isclose(f3_val(), create_ones_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_ones_3_val())
 
+def test_ones_in_expression(language):
+    def ones_plus_scalar():
+        from numpy import ones
+        a = ones(3, dtype=int) + 2
+        return a.sum()
+    def ones_times_scalar():
+        from numpy import ones
+        a = ones(4) * 3.0
+        return a.sum()
+
+    f1 = epyccel(ones_plus_scalar, language=language)
+    assert f1() == ones_plus_scalar()
+
+    f2 = epyccel(ones_times_scalar, language=language)
+    assert isclose(f2(), ones_times_scalar(), rtol=RTOL, atol=ATOL)
+
 def test_zeros_basic(language):
     def create_zeros_shape_1d(n : 'int'):
         from numpy import zeros, shape
@@ -2292,6 +2308,36 @@ def test_zeros_combined_args(language):
     assert f3_shape() == create_zeros_3_shape()
     assert isclose(f3_val(), create_zeros_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_3_val())
+
+def test_zeros_in_expression(language):
+    def zeros_plus_scalar():
+        from numpy import zeros
+        a = zeros(3, dtype=int) + 2
+        return a.sum()
+    def zeros_times_scalar():
+        from numpy import zeros
+        a = zeros(4) * 3.0
+        return a.sum()
+    def zeros_2d_plus_scalar():
+        from numpy import zeros
+        a = zeros((2, 3), dtype=int) + 1
+        return a.sum()
+    def zeros_plus_ones():
+        from numpy import zeros, ones
+        a = zeros(3) + ones(3)
+        return a.sum()
+
+    f1 = epyccel(zeros_plus_scalar, language=language)
+    assert f1() == zeros_plus_scalar()
+
+    f2 = epyccel(zeros_times_scalar, language=language)
+    assert isclose(f2(), zeros_times_scalar(), rtol=RTOL, atol=ATOL)
+
+    f3 = epyccel(zeros_2d_plus_scalar, language=language)
+    assert f3() == zeros_2d_plus_scalar()
+
+    f4 = epyccel(zeros_plus_ones, language=language)
+    assert isclose(f4(), zeros_plus_ones(), rtol=RTOL, atol=ATOL)
 
 def test_array(language):
     def create_array_list_val():
