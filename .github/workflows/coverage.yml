@@ -38,6 +38,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           path: origin
+          fetch-depth: 0
       - name: Get PR info
         id: pr_info
         run: |
@@ -52,12 +53,17 @@ jobs:
             PR_REPO="${{ github.event.workflow_run.head_repository.full_name }}"
           fi
 
+          echo $HEAD_SHA
+
           # Find PR_ID
           PR_ID=$(gh pr list --state open --json number,headRefOid \
                   --jq ".[] | select(.headRefOid == \"${HEAD_SHA}\") | .number")
+          echo $PR_ID
           # Get the BASE_SHA from the PR
-          BASE_SHA=$(gh pr list --state open --json headRefOid,baseRefOid \
-            --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .baseRefOid")
+          BASE_NAME=$(gh pr view $PR_ID --json baseRefName --jq '.["baseRefName"]')
+          echo $BASE_NAME
+          BASE_SHA=$(git log -1 origin/${BASE_NAME} --pretty="%H")
+          echo $BASE_SHA
 
           # Get the run_id
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
@@ -70,7 +76,9 @@ jobs:
               # If workflow dispatch does not provide run id. Get the id of the last PR Tests run on the PR
               link=$(gh pr checks $PR_ID --required --json=workflow,state,link \
                      --jq='.[] | select(.workflow == "PR Tests" and .workflow == "SUCCESS") | .link')
+              echo $link
               RUN_ID=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
+              echo $RUN_ID
             fi
           fi
 
