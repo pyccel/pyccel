@@ -42,14 +42,25 @@ jobs:
         id: pr_info
         run: |
           cd origin # Run in origin so gh connects to target repo
-          PR_ID=$(gh pr list --state open --json number,headRefOid \
-                          --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
-          echo "PR_ID=${PR_ID}"
-          echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
-            echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
             echo "pr_repo=${{ inputs.pr_repo || github.repository }}" >> $GITHUB_OUTPUT
+          else
+            HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+            echo "pr_repo=${{ github.event.workflow_run.head_repository.full_name }}" >> $GITHUB_OUTPUT
+          fi
+          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          PR_ID=$(gh pr list --state open --json number,headRefOid \
+                  --jq '.[] | select(.headRefOid == "${HEAD_SHA}") | .number')
+          echo "PR_ID=${PR_ID}"
+          echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
+          BASE_SHA=$(gh pr list --state open --json headRefOid,baseRefOid \
+            --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .baseRefOid")
+          echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
+
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+          else
             if [ -n "${{ inputs.run_id }}" ]
             then
               echo "run_id=${{ inputs.run_id }}" >> $GITHUB_OUTPUT
@@ -59,15 +70,7 @@ jobs:
               run_id=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
               echo "run_id=${run_id}" >> $GITHUB_OUTPUT
             fi
-          else
-            HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
-            echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
-            echo "pr_repo=${{ github.event.workflow_run.head_repository.full_name }}" >> $GITHUB_OUTPUT
-            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
           fi
-          BASE_SHA=$(gh pr list --state open --json headRefOid,baseRefOid \
-            --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .baseRefOid")
-          echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
