@@ -51,7 +51,7 @@ jobs:
           fi
           echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
           PR_ID=$(gh pr list --state open --json number,headRefOid \
-                  --jq '.[] | select(.headRefOid == "${HEAD_SHA}") | .number')
+                  --jq ".[] | select(.headRefOid == \"${HEAD_SHA}\") | .number")
           echo "PR_ID=${PR_ID}"
           echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
           BASE_SHA=$(gh pr list --state open --json headRefOid,baseRefOid \
