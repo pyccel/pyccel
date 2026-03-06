@@ -49,14 +49,11 @@ class Bot:
     pr_id : int, optional
         The number of the PR of interest.
 
-    check_run_id : int, optional
-        The id of the current check run (used to update any details).
-
     commit : str
         The SHA of the current commit.
     """
 
-    def __init__(self, pr_id = None, check_run_id = None, commit = None):
+    def __init__(self, pr_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._source_repo = None
         if pr_id is None:
@@ -79,18 +76,17 @@ class Bot:
         else:
             self._ref = self._pr_details["head"]["sha"]
 
-        if check_run_id:
-            self._check_run_id = check_run_id
-
-    def post_completed(self, conclusion):
+    def post_completed(self, name, conclusion):
         """
-        Update a check run to indicate that the run is completed.
+        Create a check run to post the conclusion of a test.
 
-        Update an existing check run using the id specified at the construction
-        to indicate that the run completed with the specified conclusion.
+        Create a check run to post the conclusion of a test with the specified conclusion.
 
         Parameters
         ----------
+        name : str
+            The name of the check run that will be created.
+
         conclusion : str
             The conclusion of the test. Must be one of:
             [action_required, cancelled, failure, neutral, success, skipped, stale, timed_out].
@@ -117,13 +113,13 @@ class Bot:
             result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
-            self._GAI.update_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._ref, name, params)
         except AssertionError as a:
             params = {
                     "status": "completed",
                     "conclusion": "failure",
                     }
-            self._GAI.update_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._ref, name, params)
             raise a
 
     def post_coverage_review(self, comments, approve):
@@ -148,6 +144,38 @@ class Bot:
             message = message_from_file('coverage_review_message.txt')
             status = 'REQUEST_CHANGES'
         self._GAI.create_review(self._pr_id, self._ref, message, status, comments)
+
+    def get_bot_review_comments(self):
+        """
+        Get all review comments related to a review left by the bot.
+
+        Get all review comment threads on code snippets for reviews left by the bot.
+        Any outdated comments are discarded and the author is congratulated for fixing
+        their coverage error.
+
+        Returns
+        -------
+        list of list of dict
+            A list of comments on a code snippet. Each element of the list is a list of
+            comments left on one particular snippet.
+        """
+        comments = self._GAI.get_review_comments(self._pr_id)
+        grouped_comments = {}
+
+        for c in comments:
+            c_id = c.get('in_reply_to_id', c['id'])
+            grouped_comments.setdefault(c_id, []).append(c)
+
+        bot_grouped_comments =[c for c in grouped_comments.values() if c[0]['user'].get('type', 'user') == 'Bot']
+
+        relevant_comments = [c for c in bot_grouped_comments if c[0]['position'] is not None]
+        discarded_comments = [c for c in bot_grouped_comments if c[0]['position'] is None]
+
+        for comment_thread in discarded_comments:
+            c = comment_thread[0]
+            self.accept_coverage_fix(comment_thread)
+
+        return relevant_comments
 
     def get_diff(self, base_commit = None):
         """
