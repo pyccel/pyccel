@@ -29,8 +29,8 @@ jobs:
       - name: Check status
         id: status_check
         run: |
-          gh pr checks ${{{ steps.find_pr.outputs.pr_number }}} --required --watch
-          status=$(gh pr checks ${{{ steps.find_pr.outputs.pr_number }}} --required --json state --jq '.[]["state"]' | sort -u)
+          gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch
+          status=$(gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
             echo "conclusion=SUCCESS"
