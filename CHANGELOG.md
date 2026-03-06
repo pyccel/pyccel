@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   Added preliminary support for C++ translations.
+
 ### Fixed
 
 -   #2577 : Fix missing dependency when linking `stdlib/math` to Fortran code when using `pyccel make`.

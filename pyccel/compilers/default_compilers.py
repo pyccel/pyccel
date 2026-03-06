@@ -11,6 +11,7 @@ import subprocess
 import shutil
 
 from numpy import get_include as get_numpy_include
+import pybind11
 
 from pyccel import __version__ as pyccel_version
 
@@ -101,6 +102,24 @@ gcc_info = {'exec' : 'gcc',
             }
 
 #------------------------------------------------------------
+gpp_info = {'exec' : 'g++',
+            'mpi_exec' : 'mpic++',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-funroll-loops",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
+            'mpi': {
+                },
+            'openmp': {
+                'flags' : ('-fopenmp',),
+                'libs'  : ('gomp',),
+                },
+            'openacc': {
+                'flags' : ("-ta=multicore", "-Minfo=accel"),
+                },
+            }
+
+#------------------------------------------------------------
 clang_info = {'exec': 'clang',
             'mpi_exec': 'mpicc',
             'debug_flags': ['-g', '-O0'],
@@ -113,6 +132,22 @@ clang_info = {'exec': 'clang',
             },
             'openacc': {
                 'flags': ['-fopenacc'],
+            },
+            }
+
+#------------------------------------------------------------
+clangpp_info = {'exec': 'clang++',
+            'mpi_exec': 'mpic++',
+            'debug_flags': ("-g", "-O0",),
+            'release_flags': ("-O3", "-funroll-loops"),
+            'general_flags': ("-fPIC",),
+            'standard_flags': ("--std=c++20",),
+            'mpi': {},
+            'openmp': {
+                'flags': ("-fopenmp",),
+            },
+            'openacc': {
+                'flags': ("-fopenacc",),
             },
             }
 
@@ -164,6 +199,21 @@ icc_info = {'exec' : 'icx',
             }
 
 #------------------------------------------------------------
+icpp_info = {'exec' : 'icpx',
+            'mpi_exec' : 'mpiicpx',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-funroll-loops",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
+            'openmp': {
+                'flags' : ('-qopenmp',),
+                },
+            'openacc': {
+                'flags' : ("-ta=multicore", "-Minfo=accel"),
+                },
+            }
+
+#------------------------------------------------------------
 pgcc_info = {'exec' : 'pgcc',
             'mpi_exec' : 'pgcc',
             'debug_flags': ['-g','-O0'],
@@ -190,6 +240,21 @@ nvc_info = {'exec' : 'nvc',
                 },
             'openacc': {
                 'flags' : ['-acc'],
+                },
+            }
+
+#------------------------------------------------------------
+nvcpp_info = {'exec' : 'nvc++',
+            'mpi_exec' : 'mpic++',
+            'debug_flags': ("-g","-O0"),
+            'release_flags': ("-O3","-Munroll",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('--std=c++20',),
+            'openmp': {
+                'flags' : ('-mp',),
+                },
+            'openacc': {
+                'flags' : ("-acc"),
                 },
             }
 
@@ -289,23 +354,29 @@ else:
 
 #------------------------------------------------------------
 gcc_info.update(python_info)
+gpp_info.update(python_info)
 gfort_info.update(python_info)
 icc_info.update(python_info)
+icpp_info.update(python_info)
 ifort_info.update(python_info)
 pgcc_info.update(python_info)
 pgfortran_info.update(python_info)
 nvc_info.update(python_info)
+nvcpp_info.update(python_info)
 nvfort_info.update(python_info)
 clang_info.update(python_info)
+clangpp_info.update(python_info)
 flang_info.update(python_info)
 
 available_compilers = {
                         'GNU': {
                             'c' : gcc_info,
+                            'c++' : gpp_info,
                             'fortran' : gfort_info
                             },
                         'intel': {
                             'c' : icc_info,
+                            'c++' : icpp_info,
                             'fortran' : ifort_info
                             },
                         'PGI': {
@@ -314,12 +385,19 @@ available_compilers = {
                             },
                         'nvidia': {
                            'c' : nvc_info,
+                            'c++': nvcpp_info,
                             'fortran' : nvfort_info
                             },
                         'LLVM': {
                             'c': clang_info,
+                            'c++': clangpp_info,
                             'fortran': flang_info
                             },
                         }
+
+for config in available_compilers.values():
+    cpp_config = config.get('c++', None)
+    if cpp_config:
+        cpp_config.setdefault('python', {}).setdefault('include', []).append(pybind11.get_include())
 
 vendors = ('GNU','intel','PGI','nvidia','LLVM')

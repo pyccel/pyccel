@@ -44,7 +44,7 @@ def setup_pyccel_compile_parser(parser):
     # ... backend compiler options
     group = parser.add_argument_group('Backend selection')
 
-    group.add_argument('--language', choices=('Fortran', 'C', 'Python'), default='Fortran',
+    group.add_argument('--language', choices=('Fortran', 'C', 'C++', 'Python'), default='Fortran',
                        help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
                        type=str.title)
 
