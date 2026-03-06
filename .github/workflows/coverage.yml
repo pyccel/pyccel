@@ -74,8 +74,9 @@ jobs:
               RUN_ID="${{ inputs.run_id }}"
             else
               # If workflow dispatch does not provide run id. Get the id of the last PR Tests run on the PR
-              link=$(gh pr checks $PR_ID --required --json=workflow,state,link \
-                     --jq='.[] | select(.workflow == "PR Tests" and .workflow == "SUCCESS") | .link')
+              links=$(gh pr checks $PR_ID --required --json=workflow,state,link \
+                     --jq='.[] | select(.workflow == "PR Tests" and .state == "SUCCESS") | .link')
+              link=$(echo $links | cut -f 1 -d " ")
               echo $link
               RUN_ID=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
               echo $RUN_ID
