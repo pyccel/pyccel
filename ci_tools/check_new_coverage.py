@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['HEAD_SHA'])
+    bot = Bot(pr_id = os.environ["PR_ID"], commit = os.environ['HEAD_SHA'])
 
     current_diff = bot.get_diff()
 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     success = cov.evaluate_success(old_comments, new_comments, commented_lines)
 
-    cov.print_markdown_summary(old_comments + new_comments, os.environ['COMMIT'], args.output, bot.repo)
+    cov.print_markdown_summary(old_comments + new_comments, os.environ['HEAD_SHA'], args.output, bot.repo)
 
     bot.post_coverage_review(new_comments, success)
 

@@ -117,13 +117,13 @@ class Bot:
             result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
-            self._GAI.update_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._check_run_id, params)
         except AssertionError as a:
             params = {
                     "status": "completed",
                     "conclusion": "failure",
                     }
-            self._GAI.update_run(self._check_run_id, params)
+            self._GAI.post_coverage_run(self._check_run_id, params)
             raise a
 
     def post_coverage_review(self, comments, approve):
