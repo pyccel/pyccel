@@ -133,3 +133,4 @@ jobs:
         working-directory: pr_contents
         env:
           HEAD_SHA: ${{ steps.pr_info.outputs.head_sha }}
+          PEM: ${{ secrets.BOT_PEM }}
