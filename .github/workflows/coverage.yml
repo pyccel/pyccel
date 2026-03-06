@@ -44,6 +44,7 @@ jobs:
           cd origin # Run in origin so gh connects to target repo
           PR_ID=$(gh pr list --state open --json number,headRefOid \
                           --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
+          echo "PR_ID=${PR_ID}"
           echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
@@ -123,6 +124,7 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
+          echo $PR_ID
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_STEP_SUMMARY
         shell: bash
         working-directory: pr_contents

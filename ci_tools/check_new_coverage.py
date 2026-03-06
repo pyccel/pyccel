@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    print(os.environ["PR_ID"])
     bot = Bot(pr_id = os.environ["PR_ID"], commit = os.environ['HEAD_SHA'])
 
     current_diff = bot.get_diff()
