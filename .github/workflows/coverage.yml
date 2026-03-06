@@ -38,35 +38,57 @@ jobs:
       - uses: actions/checkout@v6
         with:
           path: origin
+          fetch-depth: 0
       - name: Get PR info
         id: pr_info
         run: |
           cd origin # Run in origin so gh connects to target repo
-          PR_ID=$(gh pr list --state open --json number,headRefOid \
-                          --jq '.[] | select(.headRefOid == "${{ github.event.workflow_run.head_sha }}") | .number')
-          echo "PR_ID=${PR_ID}" >> $GITHUB_ENV
+
+          # Define HEAD_SHA and PR_REPO environment variables
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             HEAD_SHA="${{ github.sha }}"
-            echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
-            echo "pr_repo=${{ inputs.pr_repo || github.repository }}" >> $GITHUB_OUTPUT
-            if [ -n "${{ inputs.run_id }}" ]
-            then
-              echo "run_id=${{ inputs.run_id }}" >> $GITHUB_OUTPUT
-            else
-              link=$(gh pr checks $PR_ID --required --json=workflow,state,link \
-                     --jq='.[] | select(.workflow == "PR Tests" and .workflow == "SUCCESS") | .link')
-              run_id=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
-              echo "run_id=${run_id}" >> $GITHUB_OUTPUT
-            fi
+            PR_REPO="${{ inputs.pr_repo || github.repository }}"
           else
             HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
-            echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
-            echo "pr_repo=${{ github.event.workflow_run.head_repository.full_name }}" >> $GITHUB_OUTPUT
-            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+            PR_REPO="${{ github.event.workflow_run.head_repository.full_name }}"
           fi
-          BASE_SHA=$(gh pr list --state open --json headRefOid,baseRefOid \
-            --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .baseRefOid")
+
+          echo $HEAD_SHA
+
+          # Find PR_ID
+          PR_ID=$(gh pr list --state open --json number,headRefOid \
+                  --jq ".[] | select(.headRefOid == \"${HEAD_SHA}\") | .number")
+          echo $PR_ID
+          # Get the BASE_SHA from the PR
+          BASE_NAME=$(gh pr view $PR_ID --json baseRefName --jq '.["baseRefName"]')
+          echo $BASE_NAME
+          BASE_SHA=$(git log -1 origin/${BASE_NAME} --pretty="%H")
+          echo $BASE_SHA
+
+          # Get the run_id
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RUN_ID="${{ github.event.workflow_run.id }}"
+          else
+            if [ -n "${{ inputs.run_id }}" ]
+            then
+              RUN_ID="${{ inputs.run_id }}"
+            else
+              # If workflow dispatch does not provide run id. Get the id of the last PR Tests run on the PR
+              links=$(gh pr checks $PR_ID --required --json=workflow,state,link \
+                     --jq='.[] | select(.workflow == "PR Tests" and .state == "SUCCESS") | .link')
+              link=$(echo $links | cut -f 1 -d " ")
+              echo $link
+              RUN_ID=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
+              echo $RUN_ID
+            fi
+          fi
+
+          # Save outputs
+          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          echo "pr_repo=${PR_REPO}" >> $GITHUB_OUTPUT
           echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "pr_id=${PR_ID}" >> $GITHUB_OUTPUT
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -126,3 +148,7 @@ jobs:
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_STEP_SUMMARY
         shell: bash
         working-directory: pr_contents
+        env:
+          HEAD_SHA: ${{ steps.pr_info.outputs.head_sha }}
+          PEM: ${{ secrets.BOT_PEM }}
+          PR_ID: ${{ steps.pr_info.outputs.pr_id }}

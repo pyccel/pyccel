@@ -134,18 +134,21 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/branches/{branch_name}"
         return self._post_request("GET", url).json()
 
-    def update_run(self, run_id, json):
+    def post_coverage_run(self, commit, name, json):
         """
-        Update an existing check run.
+        Create a new check run.
 
-        Update information on the check run with id "run_id" using the information
-        in the json dictionary as described here:
-        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#update-a-check-run
+        Create a new check run with the specified name which tests the mentioned commit.
+        The check run is marked as in progress. The details url is pointed at the
+        run summary page for this run.
 
         Parameters
         ----------
-        run_id : int
-            The id of the check run.
+        commit : str
+            The commit to be tested.
+
+        name : str
+            The name of the check run.
 
         json : dictionary
             The information that should be updated in the check run.
@@ -158,13 +161,19 @@ class GitHubAPIInteractions:
         Raises
         ------
         AssertionError
-            An assertion error is raised if the check run was not successfully updated.
+            An assertion error is raised if the check run was not successfully posted.
         """
         assert self._authenticated
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
-        run = self._post_request("PATCH", url, json)
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
+        workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+        print("create_run:", url)
+        json.update({"name": name,
+                "head_sha": commit,
+                "status": "in_progress",
+                "details_url": workflow_url})
+        run = self._post_request("POST", url, json)
         print(run.text)
-        assert run.status_code == 200
+        assert run.status_code == 201
         return run
 
     def get_pr_details(self, pr_id):
@@ -185,6 +194,37 @@ class GitHubAPIInteractions:
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
         return self._post_request("GET", url).json()
+
+    def get_review_comments(self, pr_id):
+        """
+        Get all review comments left on a given pull request.
+
+        Get a dictionary containing a list of all the review comments left
+        on a given pull request. This includes comments left as a reply to a
+        review comment on a code snippet. This list is obtained using
+        the API as described here:
+        https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request or comment.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the comments.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
         """
