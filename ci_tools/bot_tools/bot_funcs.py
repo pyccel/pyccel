@@ -149,6 +149,38 @@ class Bot:
             status = 'REQUEST_CHANGES'
         self._GAI.create_review(self._pr_id, self._ref, message, status, comments)
 
+    def get_bot_review_comments(self):
+        """
+        Get all review comments related to a review left by the bot.
+
+        Get all review comment threads on code snippets for reviews left by the bot.
+        Any outdated comments are discarded and the author is congratulated for fixing
+        their coverage error.
+
+        Returns
+        -------
+        list of list of dict
+            A list of comments on a code snippet. Each element of the list is a list of
+            comments left on one particular snippet.
+        """
+        comments = self._GAI.get_review_comments(self._pr_id)
+        grouped_comments = {}
+
+        for c in comments:
+            c_id = c.get('in_reply_to_id', c['id'])
+            grouped_comments.setdefault(c_id, []).append(c)
+
+        bot_grouped_comments =[c for c in grouped_comments.values() if c[0]['user'].get('type', 'user') == 'Bot']
+
+        relevant_comments = [c for c in bot_grouped_comments if c[0]['position'] is not None]
+        discarded_comments = [c for c in bot_grouped_comments if c[0]['position'] is None]
+
+        for comment_thread in discarded_comments:
+            c = comment_thread[0]
+            self.accept_coverage_fix(comment_thread)
+
+        return relevant_comments
+
     def get_diff(self, base_commit = None):
         """
         Get the diff between the base and the current commit.
