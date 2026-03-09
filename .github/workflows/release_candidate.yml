@@ -59,7 +59,7 @@ jobs:
           # Check for changes in CI
           ci_changed=0
           ci_changes="$(! (echo $changes | grep "^.github/"))" || exit_code=$?
-          if [[ $pyccel_changed || $tests_changed || $ci_changed ]]
+          if [[ $pyccel_changed > 0 ]] || [[ $tests_changed > 0 ]] || [[ $ci_changed > 0 ]]
           then
             echo "Files have been changed that haven't been tested in the devel branch"
             echo $pyccel_changes
