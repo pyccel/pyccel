@@ -28,6 +28,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Check status
         id: status_check
+        if: steps.find_pr.outputs.pr_number != ''
         run: |
           gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch
           status=$(gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --json state --jq '.[]["state"]' | sort -u)
@@ -42,7 +43,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Convert PR to draft
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'FAILURE'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'FAILURE'
         run: |
           gh pr ready ${{ steps.find_pr.outputs.pr_number }} --undo
           gh pr edit --remove-label needs_initial_review
@@ -54,12 +55,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Update label
         id: update_label
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'SUCCESS'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'SUCCESS'
         uses: ./.github/actions/update_review_label
         with:
           pr_number: ${{ steps.find_pr.outputs.pr_number }}
       - name: Post comment
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.conclusion == 'SUCCESS'
+        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'SUCCESS'
         run: |
           if [ -n "${{ steps.update_label.outputs.requesters }}" ]; then
             MESSAGE=$(sed "s/{reviewers}/${{ steps.update_label.outputs.requesters }}/g; s/{author}/${{ steps.update_label.outputs.author }}/g" \
