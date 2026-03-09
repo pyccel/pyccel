@@ -192,7 +192,7 @@ class CMakeHandler(BuildSystemHandler):
         cmake_min = 'cmake_minimum_required(VERSION 3.20)'
 
         languages = ' '.join(['LANGUAGES', *[l.capitalize() for l in expr.languages]])
-        project_decl = f"project('{expr.project_name}' {languages})\n"
+        project_decl = f"project({expr.project_name} {languages})\n"
 
         pic_on = 'set(CMAKE_POSITION_INDEPENDENT_CODE ON)\n'
 
@@ -206,7 +206,9 @@ class CMakeHandler(BuildSystemHandler):
         if self._math_lib_available_on_platform:
             math_import = 'find_library(MATH_LIBRARY m)\n'
 
-        sections = [cmake_min, project_decl, pic_on, py_import, math_import]
+        pyccel_main_language = f'set(PYCCEL_MAIN_LANGUAGE "{self._main_language}")\n'
+
+        sections = [cmake_min, project_decl, pic_on, py_import, math_import, pyccel_main_language]
 
         if 'openmp' in self._accelerators:
             sections.append('find_package(OpenMP REQUIRED)\n')
@@ -278,22 +280,33 @@ class CMakeHandler(BuildSystemHandler):
             setup_cmd.append('-G')
             setup_cmd.append('MinGW Makefiles')
 
-        if sys.platform == 'darwin' and 'openmp' in self._accelerators:
-            compiler_info = self._compiler.compiler_info['c']
-            openmp_flags = ' '.join(compiler_info['openmp']['flags'])
-            openmp_lib_name = next(iter(compiler_info['openmp']['libs']))
-            openmp_lib = Path(next(iter(compiler_info['openmp']['libdir']))).glob(f'lib{openmp_lib_name}*')
-            openmp_inc = next(iter(compiler_info['openmp']['include']))
-            setup_cmd.append(f"-DOpenMP_C_FLAGS='{openmp_flags}'")
-            setup_cmd.append(f"-DOpenMP_C_INCLUDE_DIRS='{openmp_inc}'")
-            setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
-            setup_cmd.append(f"-DOpenMP_omp_LIBRARY='{next(openmp_lib)}'")
-
-        if self._verbose > 1:
-            print(" ".join(setup_cmd))
         env = os.environ.copy()
         env['CC'] = self._compiler.get_exec((), 'c')
         env['FC'] = self._compiler.get_exec((), 'fortran')
+
+        if sys.platform == 'darwin' and 'openmp' in self._accelerators:
+            compiler_info = self._compiler.compiler_info['c']
+            openmp_flags = ' '.join(compiler_info['openmp']['flags'])
+            setup_cmd.append(f"-DOpenMP_C_FLAGS='{openmp_flags}'")
+            openmp_inc = next(iter(compiler_info['openmp'].get('include', ())), None)
+            if openmp_inc:
+                setup_cmd.append(f"-DOpenMP_C_INCLUDE_DIRS='{openmp_inc}'")
+            openmp_lib_name = next(iter(compiler_info['openmp'].get('libs', ())), None)
+            if openmp_lib_name:
+                openmp_libdir = next(iter(compiler_info['openmp'].get('libdir', ())), None)
+                openmp_lib = None
+                if openmp_libdir:
+                    openmp_lib = next(Path(openmp_libdir).glob(f'lib{openmp_lib_name}*'))
+                else:
+                    p = subprocess.run([env['CC'], f'-print-file-name=lib{openmp_lib_name}.dylib'], check=False, text=True,
+                                       capture_output = True)
+                    openmp_lib = Path(p.stdout.strip())
+                if openmp_lib and openmp_lib.is_absolute():
+                    setup_cmd.append(f"-DOpenMP_C_LIB_NAMES='{openmp_lib_name}'")
+                    setup_cmd.append(f"-DOpenMP_{openmp_lib_name}_LIBRARY='{openmp_lib.resolve()}'")
+
+        if self._verbose > 1:
+            print(" ".join(setup_cmd))
         subprocess.run(setup_cmd, check=True, env=env,
                        capture_output=capture_output)
 

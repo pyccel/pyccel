@@ -1,7 +1,0 @@
-Here is your checklist. Please tick items off when you have completed them or determined that they are not necessary for this pull request:
-- [ ] Write a clear PR description
-- [ ] Add tests to check your code works as expected
-- [ ] Update documentation if necessary
-- [ ] Update Changelog
-- [ ] Ensure any relevant issues are linked
-- [ ] Ensure new tests are passing

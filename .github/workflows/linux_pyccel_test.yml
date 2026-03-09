@@ -1,29 +1,17 @@
 name: Linux unit tests run through the 'pyccel test' command
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       python_version:
-        required: true
-        type: string
-      ref:
         required: false
         type: string
-      check_run_id:
+      force:
         required: false
-        type: string
-      pr_repo:
-        required: false
-        type: string
+        type: boolean
+        default: false
   push:
     branches: [devel, main]
-
-env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
-  PEM: ${{ secrets.BOT_PEM }}
-  GITHUB_RUN_ID: ${{ github.run_id }}
-  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
   matrix_prep:
@@ -37,10 +25,10 @@ jobs:
       run: |
         echo "matrix=['3.10', '3.11', '3.12', '3.13', '3.14']" >> $GITHUB_ENV
       shell: bash
-    - id: dispatch-matrix
-      if: github.event_name == 'workflow_dispatch'
+    - if: github.event_name != 'push'
       run: |
-        echo "matrix=['${{ inputs.python_version }}']" >> $GITHUB_ENV
+        VERSION="${{ inputs.python_version }}"
+        echo "matrix=['${VERSION:-3.11}']" >> $GITHUB_ENV
       shell: bash
     - id: set-matrix
       run: |
@@ -58,29 +46,22 @@ jobs:
 
     steps:
       - id: duplicate_check
+        if: inputs.force == false
         uses: fkirc/skip-duplicate-actions@v5
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: 'true'
-          paths: '["pyccel/**/*.py", "tests/**/*.py", "pyccel/extensions/**", ".github/workflows/linux_pyccel_cmd.yml", ".github/actions/**"]'
+          paths: '["pyccel/stdlib/**", "pyccel/**/*.py", "tests/**/*.py", "pyccel/extensions/**", ".github/workflows/linux_pyccel_cmd.yml", ".github/actions/**"]'
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '["push"]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ env.COMMIT }}
-          repository: ${{ env.PR_REPO }}
           submodules: true
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
-      - name: "Setup"
-        if: github.event_name != 'push'
-        id: token
-        run: |
-          pip install jwt requests
-          python ci_tools/setup_check_run.py linux_pyccel_cmd
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/linux_install
@@ -97,11 +78,3 @@ jobs:
         run: |
           pyccel test
         shell: bash
-      - name: "Post completed"
-        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip != 'true'
-        run:
-          python ci_tools/complete_check_run.py ${{ steps.pyccel-test.outcome }}
-      - name: "Post completed"
-        if: always() && github.event_name != 'push' && steps.duplicate_check.outputs.should_skip == 'true'
-        run:
-          python ci_tools/complete_check_run.py 'success'

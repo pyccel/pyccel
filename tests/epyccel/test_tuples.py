@@ -20,12 +20,27 @@ def is_func_with_0_args(f):
 tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
                                             if is_func_with_0_args(f)]
 
-failing_tests = {
-        'homogeneous_tuple_string':"Can't save a list of strings (#459)",
-        'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
-        'tuple_homogeneous_string':"Can't save a list of strings (#459)",
-        }
 
+language_marks = {
+    'fortran' : pytest.mark.fortran,
+    'c' : pytest.mark.c,
+    'python' : pytest.mark.python,
+    }
+
+failing_tests = {
+    'homogeneous_tuple_string' :
+        {'languages' : ('fortran', 'c'),
+         'reason' : "Can't save a list of strings (#459)",
+        },
+    'tuple_homogeneous_string' :
+        {'languages' : ('fortran', 'c'),
+         'reason' : "Can't save a list of strings (#459)",
+        },
+    'tuple_visitation_inhomogeneous' :
+        {'languages' : ('fortran', 'c', 'python'),
+         'reason' : "Can't iterate over an inhomogeneous tuple",
+        },
+    }
 
 def compare_python_pyccel( p_output, f_output ):
     if p_output is None:
@@ -53,10 +68,16 @@ def compare_python_pyccel( p_output, f_output ):
         else:
             assert np.isclose(pth,pycc)
 
-marks = [f[1] if f[0] not in failing_tests else
-        pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) \
-                for f in tuple_funcs]
-@pytest.mark.parametrize('test_func', marks)
+arguments = []
+for lang, mark in language_marks.items():
+    for fname, fcall in tuple_funcs:
+        marks = [mark]
+        if fname in failing_tests:
+            failing_test = failing_tests[fname]
+            if lang in failing_test['languages']:
+                marks.append(pytest.mark.xfail(reason=failing_test['reason']))
+        arguments.append(pytest.param(fcall, lang, marks=marks))
+@pytest.mark.parametrize('test_func,language', arguments)
 def test_tuples(test_func, language):
     f1 = test_func
     f2 = epyccel( f1, language=language )

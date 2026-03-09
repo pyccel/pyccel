@@ -6,10 +6,12 @@ When you believe your branch is ready to merge you should create a pull request.
 
 Once the pull request is opened 10 tests should be triggered they are:
 
--   **Linux** : Runs the suite of tests on a linux machine
--   **MacOS** : Runs the suite of tests on a macOS machine
--   **Windows** : Runs the suite of tests on a windows machine
--   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
+-   **Linux** : Runs the suite of tests on a linux machine.
+-   **MacOS** : Runs the suite of tests on a macOS machine.
+-   **Windows** : Runs the suite of tests on a windows machine.
+-   **Intel** : Runs the suite of tests on a linux machine with an Intel OneAPI compiler.
+-   **LLVM** : Runs the suite of tests on a linux machine with an LLVM compiler.
+-   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform.
 -   **Python Linting** : Runs Pylint on all Python files and reports any errors introduced by the pull request.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
 -   **Markdown Linting** : Runs a Markdown linter to ensure that Markdown files follow standard practice and will be displayed correctly via different tools.
@@ -49,8 +51,36 @@ Senior developers will look for anything missed in the initial review. They will
 
 Once the senior developer is happy with the branch they should accept the pull request and change the label from `Ready_for_review` to `Ready_to_merge`
 
-### Ready to merge
+### Ready to Merge
 
 Once the code has been accepted by both a junior and a senior developer it should be ready to merge. This flag therefore indicates that one of our developers with merge permissions can review the code. They will look for anything missed by the previous two reviews.
 
 Anyone can make silly mistakes so Pyccel aims to have all pull requests be reviewed by at least 2 developers before being merged to `devel`.
+
+## Testing
+
+Pyccel uses 3 types of tests:
+
+- static analysis
+- unit testing
+- coverage tests
+
+### Static Analysis
+
+The static analysis tests run on non-draft pull requests. If you wish to run them earlier you can run them locally by downloading the tools linked below, or you can run them using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_static_analysis.yml). The tests are:
+
+- Pylint : [Pylint](https://www.pylint.org/) is used for linting
+- docs : [docstr-coverage](https://pypi.org/project/docstr-coverage/) is used to check that code is correctly documented. [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) is used to check the format of the code documentation. Sphinx is used to build the online documentation.
+- spelling : Aspell and [pyspelling](https://pypi.org/project/pyspelling/) are used to check spelling in the documentation. [Typos](https://github.com/crate-ci/typos) is used to check spelling in the code.
+- markdownlint : [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used to check the markdown format.
+- Pyccel lint : The custom scripts `ci_tools/check_pyccel_conventions.py` and `ci_tools/check_pylint_commands.py` are used to check that Pyccel conventions are respected.
+
+### Unit Testing
+
+The unit tests are run using [pytest](https://docs.pytest.org/en/stable/). They run with a variety of compilers on various operating systems. The tests are triggered when pull requests come out of draft but they can be triggered individually using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_unit_tests.yml).
+
+### Coverage Tests
+
+The coverage test runs when pull requests come out of draft. It uses the results from the unit tests to detect which lines of code are new but haven't been tested. Comments are left on untested lines. To correct the errors, tests must be added or comments must be left explaining why coverage is deemed unnecessary.
+
+It is often necessary to retrigger coverage tests manually, e.g. after having marked some of the missing coverage as unnecessary. In order to do this you can use the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/coverage.yml).

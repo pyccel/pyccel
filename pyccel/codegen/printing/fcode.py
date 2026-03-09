@@ -1493,7 +1493,7 @@ class FCodePrinter(CodePrinter):
         return f'matmul({b_code}, {a_code})'
 
     def _print_NumpyEmpty(self, expr):
-        errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
+        errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
         arg = expr.arg
@@ -1729,6 +1729,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpyVecdot(self, expr):
+        return f'dot_product({self._print(expr.x1)}, {self._print(expr.x2)})'
+
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
@@ -1813,7 +1816,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
 
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
@@ -1824,7 +1827,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         if expr.low is None:
             randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
@@ -1849,12 +1852,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amax({array_arg})'
+            code = f'amax({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'maxval({arg_code}) /= {zero}'
+            code = f'maxval({arg_code}) /= {zero}'
         else:
-            return f'maxval({arg_code})'
+            code = f'maxval({arg_code})'
+        if expr.initial is not None:
+            code = f'maxval([{self._print(expr.initial)}, {code}])'
+        return code
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
@@ -1865,12 +1871,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self.add_import(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f'amin({array_arg})'
+            code = f'amin({array_arg})'
         elif is_bool: # Convert INTEGER to LOGICAL
             zero = self._print(LiteralInteger(0))
-            return f'minval({arg_code}) /= {zero}'
+            code = f'minval({arg_code}) /= {zero}'
         else:
-            return f'minval({arg_code})'
+            code = f'minval({arg_code})'
+        if expr.initial is not None:
+            code = f'minval([{self._print(expr.initial)}, {code}])'
+        return code
 
     def _print_PythonMinMax(self, expr):
         arg, = expr.args
@@ -3726,7 +3735,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
-            return errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            return errors.report(ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)

@@ -857,15 +857,6 @@ def test_class_inline_array(language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
                                         ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Issue #1595"),
-            pytest.mark.fortran])
-    )
-)
-
 def test_interfaces_in_classes( test_file , language):
     pyccel_test(test_file, language=language)
 
@@ -1141,6 +1132,72 @@ def test_json_relative_path():
     compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler-config test.json')
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
+    )
+)
+@pytest.mark.xdist_incompatible
+def test_json_register(language):
+    output_dir = get_abs_path(insert_pyccel_folder('scripts/'))
+    example_json_path = f'{output_dir}/test.json'
+    cmd = [shutil.which("pyccel"), 'config', 'export', example_json_path]
+    subprocess.run(cmd, check=True)
+    with open(example_json_path, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
+    config[language]['debug_flags'] = '-g -O0'
+
+    bad_format_json_path = f'{output_dir}/bad_format.json'
+    with open(bad_format_json_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f)
+
+    # Check `pyccel config check` command
+    cmd = [shutil.which("pyccel"), 'config', 'check', bad_format_json_path]
+    p = subprocess.run(cmd, check=False)
+    assert p.returncode == 1
+
+    config[language]['debug_flags'] = ['-g', '-O0']
+    config[language]['general_flags'] = ['--version']
+
+    current_config_folder = os.environ.get('PYCCEL_CONFIG_HOME', None)
+    os.environ['PYCCEL_CONFIG_HOME'] = get_abs_path(insert_pyccel_folder('.'))
+
+    # Check registration
+    timing_json_path = f'{output_dir}/timing.json'
+    print(timing_json_path)
+    with open(timing_json_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f)
+    cmd = [shutil.which("pyccel"), 'config', 'register', 'compiler_timing', timing_json_path]
+    subprocess.run(cmd, check=True)
+
+    # Check that existing compiler-family can't be overwritten
+    cmd = [shutil.which("pyccel"), 'config', 'register', 'compiler_timing', example_json_path]
+    p = subprocess.run(cmd, check=False)
+    assert p.returncode == 1
+
+    cmd = [shutil.which("pyccel"), 'compile', '--compiler-family=compiler_timing',
+           f'--language={language}', '-v', get_abs_path('scripts/array_binary_operation.py')]
+    p = subprocess.run(cmd, check=True, text=True, capture_output=True)
+    received_output = p.stdout
+
+    # Check version output for selected compiler
+    cmd = [shutil.which(config[language]['exec']), '--version']
+    p = subprocess.run(cmd, check=True, text=True, capture_output=True)
+    expected_output = p.stdout
+
+    # Check version output is present to ensure new config is being used
+    assert expected_output in received_output
+
+    cmd = [shutil.which("pyccel"), 'config', 'remove', 'compiler_timing']
+    subprocess.run(cmd, check=True)
+
+    if current_config_folder:
+        os.environ['PYCCEL_CONFIG_HOME'] = current_config_folder
+    else:
+        os.environ.pop('PYCCEL_CONFIG_HOME')
+
+#------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
 def test_reserved_file_name():
     with pytest.raises(ValueError) as exc_info:
@@ -1348,3 +1405,15 @@ def test_classes_pointer_import(language):
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
+
+#------------------------------------------------------------------------------
+def test_functional_statements(language):
+    pyccel_test("scripts/functional_statements.py",
+            output_dtype = [int] * 9,
+            language = language)
+
+#------------------------------------------------------------------------------
+def test_complex_numbers(language):
+    pyccel_test("scripts/complex_numbers.py",
+            output_dtype = [complex] * 6,
+            language = language)

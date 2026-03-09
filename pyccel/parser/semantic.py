@@ -2690,7 +2690,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        env_var : object
+        env_var : Any
             The environment variable.
         name : str, optional
             The name that was used to identify the variable.
@@ -4042,14 +4042,9 @@ class SemanticParser(BasicParser):
                 return If(true_section, false_section)
 
         # Visit object
-        if isinstance(rhs, FunctionCall):
-            name = rhs.funcdef
-            rhs = self._visit(rhs)
-            if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
-                errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
-
-        else:
-            rhs = self._visit(rhs)
+        rhs = self._visit(rhs)
+        if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
+            errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
 
         if isinstance(rhs, NumpyResultType):
             errors.report("Cannot assign a datatype to a variable.",

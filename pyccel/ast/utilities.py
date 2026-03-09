@@ -210,7 +210,9 @@ def compatible_operation(*args, language_has_vectors = True):
     bool
         A boolean indicating if the operation is compatible.
     """
-    if language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
+    if any(a.rank and isinstance(a, PyccelFunction) and not a.is_indexable for a in args):
+        return True
+    elif language_has_vectors and any(isinstance(a.class_type, NumpyNDArrayType) for a in args):
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
@@ -422,9 +424,14 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
         result = []
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
-    is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
-                                    and not isinstance(f, (NumpyTranspose))))
+
+    def is_array_function_call(f):
+        """
+        Check if an object is a non-indexable function call returning an array.
+        """
+        return f.rank and ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
+                or (isinstance(f, PyccelFunction) and not f.is_indexable))
+
     for line in block:
 
         if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
@@ -435,7 +442,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
         elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
-                not is_function_call(line.rhs)): # not a basic function call
+                not is_array_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
             # This is needed to know what has already been modified in the loop
@@ -501,8 +508,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # This ensures that the function is only called once and stops problems
             # for expressions such as:
             # c += b*np.sum(c)
-            func_vars1 = [new_index(f.dtype, 'tmp') for f in internal_funcs]
-            _          = [v.copy_attributes(f) for v,f in zip(func_vars1, internal_funcs)]
+            func_vars1 = [new_index(f.class_type, 'tmp', shape=f.shape) for f in internal_funcs]
             assigns    = [Assign(v, f) for v,f in zip(func_vars1, internal_funcs)]
 
 
@@ -516,16 +522,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
             if assigns:
-                # For now we do not handle memory allocation in loop unravelling
-                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_results):
-                    errors.report("Loop unravelling cannot handle extraction of function calls "\
-                            "which return arrays as this requires allocation. Please place the function "\
-                            "call on its own line",
-                            symbol=line, severity='fatal')
                 line.substitute(internal_funcs, func_vars1, excluded_nodes=(FunctionCall))
                 line.substitute(funcs, func_vars2)
                 result.extend(assigns)
                 current_level = 0
+                # Add array temporary variables to the variables list so they get indexed
+                variables += [v for v in func_vars1 if v.rank > 0]
 
             rank = line.lhs.rank
             shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \

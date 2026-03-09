@@ -8,7 +8,7 @@ import sys
 import pytest
 
 from test_pyccel import compare_pyth_fort_output
-from pyccel.compilers.default_compilers import available_compilers
+from pyccel.utilities.introspect import get_compiler_info
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -43,10 +43,9 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
     language : str
         The language we are compiling from.
     """
-    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
-    compiler_info = available_compilers[compiler_family][language]
+    executable, _ = get_compiler_info(language)
     lib_suffix = '.dll' if sys.platform == 'win32' else '.so'
-    subprocess.run([compiler_info['exec'], '-shared', '-fPIC', '-o',
+    subprocess.run([executable, '-shared', '-fPIC', '-o',
                     output_folder / f'lib{stem}{lib_suffix}',
                     input_folder / f'{stem}{low_level_suffix[language]}'],
                    check = True, cwd=cwd)

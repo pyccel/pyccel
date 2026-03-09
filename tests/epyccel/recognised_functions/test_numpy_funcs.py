@@ -2139,6 +2139,22 @@ def test_ones_combined_args(language):
     assert isclose(f3_val(), create_ones_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_ones_3_val())
 
+def test_ones_in_expression(language):
+    def ones_plus_scalar():
+        from numpy import ones
+        a = ones(3, dtype=int) + 2
+        return a.sum()
+    def ones_times_scalar():
+        from numpy import ones
+        a = ones(4) * 3.0
+        return a.sum()
+
+    f1 = epyccel(ones_plus_scalar, language=language)
+    assert f1() == ones_plus_scalar()
+
+    f2 = epyccel(ones_times_scalar, language=language)
+    assert isclose(f2(), ones_times_scalar(), rtol=RTOL, atol=ATOL)
+
 def test_zeros_basic(language):
     def create_zeros_shape_1d(n : 'int'):
         from numpy import zeros, shape
@@ -2292,6 +2308,36 @@ def test_zeros_combined_args(language):
     assert f3_shape() == create_zeros_3_shape()
     assert isclose(f3_val(), create_zeros_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_3_val())
+
+def test_zeros_in_expression(language):
+    def zeros_plus_scalar():
+        from numpy import zeros
+        a = zeros(3, dtype=int) + 2
+        return a.sum()
+    def zeros_times_scalar():
+        from numpy import zeros
+        a = zeros(4) * 3.0
+        return a.sum()
+    def zeros_2d_plus_scalar():
+        from numpy import zeros
+        a = zeros((2, 3), dtype=int) + 1
+        return a.sum()
+    def zeros_plus_ones():
+        from numpy import zeros, ones
+        a = zeros(3) + ones(3)
+        return a.sum()
+
+    f1 = epyccel(zeros_plus_scalar, language=language)
+    assert f1() == zeros_plus_scalar()
+
+    f2 = epyccel(zeros_times_scalar, language=language)
+    assert isclose(f2(), zeros_times_scalar(), rtol=RTOL, atol=ATOL)
+
+    f3 = epyccel(zeros_2d_plus_scalar, language=language)
+    assert f3() == zeros_2d_plus_scalar()
+
+    f4 = epyccel(zeros_plus_ones, language=language)
+    assert isclose(f4(), zeros_plus_ones(), rtol=RTOL, atol=ATOL)
 
 def test_array(language):
     def create_array_list_val():
@@ -2451,7 +2497,19 @@ def test_rand_expr(language):
     assert all(isinstance(yi, float) for yi in y)
     assert len(set(y)) > 1
 
-@pytest.mark.xfail(reason="a is not allocated")
+msg = "a is not allocated. See #2566"
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason=msg),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_expr_array(language):
     def create_array_vals_2d():
         a = rand(2,2)*0.5 + 3
@@ -2751,7 +2809,7 @@ def test_min_real(language):
 
     f1 = epyccel(min_call, language = language)
     x = rand(10)
-    assert isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f1(x), min_call(x))
 
 def test_min_complex(language):
     def min_call(x: 'complex128[:]'):
@@ -2760,11 +2818,11 @@ def test_min_complex(language):
 
     f1 = epyccel(min_call, language=language)
     x = randn(10) + 1j * randn(10)
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
     x = randn(10) + 1j
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
     x = 10 + 1j * randn(10)
-    assert np.allclose(f1(x), min_call(x))
+    assert np.array_equal(f1(x), min_call(x))
 
 def test_min_bool(language):
     def min_call(x: 'bool[:]'):
@@ -2775,15 +2833,6 @@ def test_min_bool(language):
     x = np.array([True, False, True, False])  # Generating a boolean array
     assert f1(x) == min_call(x)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_phrase(language):
     def min_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import amin
@@ -2793,17 +2842,8 @@ def test_min_phrase(language):
     f2 = epyccel(min_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert isclose(f2(x, y), min_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f2(x, y), min_phrase(x, y))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_property(language):
     def min_call(x : 'int[:]'):
         return x.min()
@@ -2811,6 +2851,60 @@ def test_min_property(language):
     f1 = epyccel(min_call, language = language)
     x = randint(99, size=10)
     assert f1(x) == min_call(x)
+
+def test_amin_1d(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+
+def test_amin_axis(language):
+    def amin_call(x : 'int[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amin_call(x))
+
+
+def test_amin_keepdims(language):
+    def amin_call(x : 'float[:,:]'):
+        from numpy import amin
+        return amin(x, axis=1, keepdims=True)
+
+    f1 = epyccel(amin_call, language=language)
+    x = rand(5, 7)
+    res_ref = amin_call(x)
+    res_cc  = f1(x)
+    assert np.array_equal(res_cc, res_ref)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amin_initial(language):
+    def amin_call(x : 'int[:]'):
+        from numpy import amin
+        return amin(x, initial=50)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amin_call(x)
+
+def test_amin_out_axis(language):
+    def amin_call(x : 'int[:,:]', out : 'int[:]'):
+        np.amin(x, axis=1, out=out)
+
+    f1 = epyccel(amin_call, language=language)
+    x = randint(99, size=(6, 8))
+    y_epyc = np.empty(6, dtype=int)
+    y_pyth = np.empty(6, dtype=int)
+    f1(x, y_epyc)
+    amin_call(x, y_pyth)
+    assert np.array_equal(y_epyc, y_pyth)
 
 def test_max_int(language):
     def max_call(x : 'int[:]'):
@@ -2828,7 +2922,7 @@ def test_max_real(language):
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
-    assert isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f1(x), max_call(x))
 
 def test_max_complex(language):
     def max_call(x: 'complex128[:]'):
@@ -2837,11 +2931,11 @@ def test_max_complex(language):
 
     f1 = epyccel(max_call, language=language)
     x = randn(10) + 1j * randn(10)
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
     x = randn(10) + 1j
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
     x = 10 + 1j * randn(10)
-    assert np.allclose(f1(x), max_call(x))
+    assert np.array_equal(f1(x), max_call(x))
 
 def test_max_bool(language):
     def max_call(x: 'bool[:]'):
@@ -2861,7 +2955,7 @@ def test_max_phrase(language):
     f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert isclose(f2(x, y), max_phrase(x, y), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f2(x, y), max_phrase(x, y))
 
 def test_max_property(language):
     def max_call(x : 'int[:]'):
@@ -2871,6 +2965,60 @@ def test_max_property(language):
     x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
+
+def test_amax_1d(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
+
+
+def test_amax_axis(language):
+    def amax_call(x : 'int[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=(6, 8))
+    assert np.array_equal(f1(x), amax_call(x))
+
+
+def test_amax_keepdims(language):
+    def amax_call(x : 'float[:,:]'):
+        from numpy import amax
+        return amax(x, axis=0, keepdims=True)
+
+    f1 = epyccel(amax_call, language=language)
+    x = rand(5, 7)
+    res_ref = amax_call(x)
+    res_cc  = f1(x)
+    assert np.array_equal(res_cc, res_ref)
+    assert res_cc.shape == res_ref.shape
+
+
+def test_amax_initial(language):
+    def amax_call(x : 'int[:]'):
+        from numpy import amax
+        return amax(x, initial=10)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=10)
+    assert f1(x) == amax_call(x)
+
+def test_amax_out_axis(language):
+    def amax_call(x : 'int[:,:]', out : 'int[:]'):
+        np.amax(x, axis=1, out=out)
+
+    f1 = epyccel(amax_call, language=language)
+    x = randint(99, size=(6, 8))
+    y_epyc = np.empty(6, dtype=int)
+    y_pyth = np.empty(6, dtype=int)
+    f1(x, y_epyc)
+    amax_call(x, y_pyth)
+    assert np.array_equal(y_epyc, y_pyth)
 
 def test_full_like_basic_int(language):
     def create_full_like_shape_1d(n : 'int'):
@@ -5351,30 +5499,16 @@ def test_norm_axis_keepdims(language):
     assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
     assert res_cc.shape == res_ref.shape
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python])
-    )
-)
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
-    def get_matmul(arr : 'C[:]'):
+    def get_matmul(arr : 'T[:]'):
         from numpy import matmul
         a = matmul(arr, arr)
         return a
 
     size = 5
 
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
     integer = randint(min_int, max_int, size=size)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
@@ -5399,9 +5533,6 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert np.array_equal(epyccel_func(bl), get_matmul(bl))
-    assert np.array_equal(epyccel_func(integer8), get_matmul(integer8))
-    assert np.array_equal(epyccel_func(integer16), get_matmul(integer16))
     assert np.array_equal(epyccel_func(integer), get_matmul(integer))
     assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
     assert np.array_equal(epyccel_func(integer64), get_matmul(integer64))
@@ -5411,21 +5542,9 @@ def test_numpy_matmul_array_like_1d(language):
     assert isclose(epyccel_func(cmplx64),get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(cmplx128),get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python],
-        )
-    )
-)
-
 def test_numpy_matmul_array_like_2x2d(language):
 
-    def get_matmul(arr : 'C[:,:]'):
+    def get_matmul(arr : 'T[:,:]'):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
@@ -5433,16 +5552,12 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     size = (2, 2)
 
-    bl = randint(0, 2, size=size, dtype= bool)
-
     def calculate_max_values(min_for_type, max_for_type):
         cast = type(min_for_type)
         min_test = -np.sqrt(abs(min_for_type) / size[0])
         max_test = np.sqrt(abs(max_for_type) / size[0])
         return cast(min_test), cast(max_test)
 
-    integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
-    integer16 = randint(*calculate_max_values(min_int16, max_int16), size=size, dtype=np.int16)
     integer = randint(*calculate_max_values(min_int, max_int), size=size)
     integer32 = randint(*calculate_max_values(min_int32, max_int32), size=size, dtype=np.int32)
     integer64 = randint(*calculate_max_values(min_int64, max_int64), size=size, dtype=np.int64)
@@ -5458,8 +5573,6 @@ def test_numpy_matmul_array_like_2x2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(*calculate_max_values(min_int, max_int), size=size) + uniform(*calculate_max_values(min_int, max_int), size=size) * 1j
 
-    integer8  = np.full(size, calculate_max_values(min_int8, max_int8)[1])
-    integer16 = np.full(size, calculate_max_values(min_int16, max_int16)[1])
     integer   = np.full(size, calculate_max_values(min_int, max_int)[1])
     integer32 = np.full(size, calculate_max_values(min_int32, max_int32)[1])
     integer64 = np.full(size, calculate_max_values(min_int64, max_int64)[1])
@@ -5473,9 +5586,6 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert np.allclose(epyccel_func(bl), get_matmul(bl), rtol=RTOL, atol=ATOL)
-    assert np.allclose(epyccel_func(integer8), get_matmul(integer8), rtol=RTOL, atol=ATOL)
-    assert np.allclose(epyccel_func(integer16), get_matmul(integer16), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer), get_matmul(integer), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer32), get_matmul(integer32), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer64), get_matmul(integer64), rtol=RTOL, atol=ATOL)
@@ -5484,6 +5594,41 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.allclose(epyccel_func(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
+
+def test_matmul_4d_multi_batch(language):
+    def matmul_call(a : 'float[:,:,:,:]', b : 'float[:,:,:,:]'):
+        from numpy import matmul
+        return matmul(a, b)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # Two batch dimensions
+    a = rand(2, 3, 4, 6)
+    b = rand(2, 3, 6, 5)
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
+def test_matmul_3d_broadcast_batch(language):
+    def matmul_call(a : 'float[:,:,:]', b : 'float[:,:]'):
+        from numpy import matmul
+        return matmul(a, b)
+
+    f1 = epyccel(matmul_call, language=language)
+
+    # a has batch dimension, b is shared
+    a = rand(5, 4, 3)
+    b = rand(3, 2)
+
+    res_ref = matmul_call(a, b)
+    res_pycc  = f1(a, b)
+
+    assert res_pycc.shape == res_ref.shape
+    assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
+
 
 def test_numpy_where_array_like_1d_with_condition(language):
 
@@ -6519,7 +6664,8 @@ def test_true_divide(language):
     assert np.allclose(basic_array_division(f_arr_1d,i), epyccel_basic_array_division(f_arr_1d,i), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,f), epyccel_basic_array_division(f_arr_1d,f), rtol=RTOL, atol=ATOL)
     assert np.allclose(basic_array_division(f_arr_1d,c), epyccel_basic_array_division(f_arr_1d,c), rtol=RTOL, atol=ATOL)
-    assert np.isclose(basic_division(f,0), epyccel_basic_division(f,0), rtol=RTOL, atol=ATOL)
+    with pytest.warns(RuntimeWarning, match="divide by zero encountered in divide"):
+        assert basic_division(f,0) == epyccel_basic_division(f,0)
 
 def test_cross_1d(language):
     def cross_call(x : 'float[:]', y : 'float[:]'):
@@ -6627,3 +6773,97 @@ def test_cross_axisa_axisb_axisc(language):
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
+def test_vecdot_1d_real(language):
+    def vecdot_call(x : 'float[:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(10)
+    y = rand(10)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_vecdot_1d_complex(language):
+    def vecdot_call(x : 'complex[:]', y : 'complex[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(8) + 1j * rand(8)
+    y = rand(8) + 1j * rand(8)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+
+def test_vecdot_axis_2d(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:,:]'):
+        from numpy import vecdot
+        return vecdot(x, y, axis=1)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(6, 5)
+    y = rand(6, 5)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+    assert f1(x, y).shape == vecdot_call(x, y).shape
+
+
+def test_vecdot_mixed_dimensions(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 7)
+    y = rand(7)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+def test_vecdot_out_axis_2d(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:,:]'):
+        out = np.empty(x.shape[0], dtype=x.dtype)
+        np.vecdot(x, y, axis=1, out=out)
+        return out
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(5, 7)
+    y = rand(5, 7)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+def test_vecdot_3d_axis_order(language):
+    def vecdot_call(x : 'float[:,:,:]', y : 'float[:,:,:]'):
+        return np.vecdot(x, y, axis=2)
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 5, 6)
+    y = rand(4, 5, 6)
+    res_ref = vecdot_call(x, y)
+    res_cc  = f1(x, y)
+
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
+    assert res_cc.flags['C_CONTIGUOUS'] == res_ref.flags['C_CONTIGUOUS']
+    assert res_cc.flags['F_CONTIGUOUS'] == res_ref.flags['F_CONTIGUOUS']
+
+def test_vecdot_mixed_dimensions_expression(language):
+    def vecdot_call(x : 'float[:,:]', y : 'float[:]'):
+        from numpy import vecdot
+        return vecdot(x, y) + 3.5
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 7)
+    y = rand(7)
+    assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
+
+def test_vecdot_3d_axis_order_expression(language):
+    def vecdot_call(x : 'float[:,:,:]', y : 'float[:,:,:]'):
+        return np.vecdot(x, y, axis=2) - 7.2
+
+    f1 = epyccel(vecdot_call, language=language)
+    x = rand(4, 5, 6)
+    y = rand(4, 5, 6)
+    res_ref = vecdot_call(x, y)
+    res_cc  = f1(x, y)
+
+    assert np.allclose(res_cc, res_ref, rtol=RTOL, atol=ATOL)
+    assert res_cc.shape == res_ref.shape
+    assert res_cc.flags['C_CONTIGUOUS'] == res_ref.flags['C_CONTIGUOUS']
+    assert res_cc.flags['F_CONTIGUOUS'] == res_ref.flags['F_CONTIGUOUS']

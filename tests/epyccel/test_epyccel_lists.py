@@ -944,3 +944,33 @@ def test_list_duplicate(language):
 
     assert list_duplicate(5) == epyccel_func(5)
     assert list_duplicate(15) == epyccel_func(15)
+
+def test_list_assign_slices(language):
+    T = TypeVar('T', int, float, complex)
+
+    def list_assign_slices(a : Final[list[T]]):
+        N : Final[int] = len(a)
+        O : Final[T] = a[0] - a[0]
+        b : list[T] = [O] * N
+        c : list[T] = [O] * (N - 1)
+        d : list[T] = [O] * ((N + 1) // 2)
+        e : list[T] = [O] * ((N - 1) // 2)
+        b[:] = a[-1::-1]
+        c[:] = a[1:]
+        d[:] = a[::2]
+        e[:] = a[-2::-2]
+        return b, c, d, e
+
+    epyccel_func = epyccel(list_assign_slices, language = language)
+
+    arg_int1 = [1, 2, 3, 4, 5]
+    arg_int2 = [29, 23, 19, 17, 13, 11, 7]
+    arg_float1 = [1., 2., 3., 4., 5.]
+    arg_float2 = [29., 23., 19., 17., 13., 11., 7.]
+    arg_complex1 = [19 + 1j, 17 + 2j, 13 + 3j, 11 + 4j, 7 + 5j]
+
+    assert list_assign_slices(arg_int1) == epyccel_func(arg_int1)
+    assert list_assign_slices(arg_int2) == epyccel_func(arg_int2)
+    assert list_assign_slices(arg_float1) == epyccel_func(arg_float1)
+    assert list_assign_slices(arg_float2) == epyccel_func(arg_float2)
+    assert list_assign_slices(arg_complex1) == epyccel_func(arg_complex1)

@@ -1,37 +1,18 @@
 name: Documentation
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       python_version:
-        required: true
-        type: string
-      ref:
         required: false
         type: string
+        default: '3.11'
       base:
-        required: true
-        type: string
-      check_run_id:
         required: false
         type: string
-      pr_repo:
-        required: false
-        type: string
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
 
 env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
-  PEM: ${{ secrets.BOT_PEM }}
-  GITHUB_RUN_ID: ${{ github.run_id }}
-  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.11' }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
   BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
@@ -39,8 +20,7 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: Documentation (docs, ${{ inputs.python_version || '3.11' }})
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    name: Documentation (docs, ${{ inputs.python_version }})
 
     steps:
       - id: duplicate_check
@@ -52,16 +32,14 @@ jobs:
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ env.BASE }}
           path: base
           submodules: true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           path: compare
-          ref: ${{ env.COMMIT }}
-          repository: ${{ env.PR_REPO }}
           fetch-depth: 0
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}
@@ -72,20 +50,10 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m pip install --upgrade pip
+          python -m pip install jwt # Needed to check ci_tools folder
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml # All imported modules must be available for numpydoc
-      - name: Install python dependencies # Needed for skipped and not skipped
-        run: |
-          python -m pip install jwt requests # Required to parse ci_tools folder
-        shell: bash
-      - name: "Setup check run"
-        if: github.event_name != 'pull_request'
-        id: token
-        run: |
-          cd compare
-          python ../base/ci_tools/setup_check_run.py docs
-          cd ..
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./compare/.github/actions/linux_install
@@ -132,15 +100,15 @@ jobs:
           make -C docs html
         shell: bash
       - name: Setup Pages
-        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'workflow_call' && github.repository == 'pyccel/pyccel'
         uses: actions/configure-pages@v3
       - name: Upload artifact
-        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'workflow_call' && github.repository == 'pyccel/pyccel'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'compare/docs/build/html'
       - name: Check tutorial code
-        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'workflow_call'
         id: tutorial_check
         run: |
           FILES_TO_TEST=$(find tutorials/ -name '*.py')
@@ -150,13 +118,3 @@ jobs:
           done
         shell: bash
         working-directory: ./compare/docs
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
-        run:
-          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }} ${{ steps.sphinx_format.outcome }} ${{ steps.tutorial_check.outcome }}
-        shell: bash -l {0}
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
-        run:
-          python base/ci_tools/complete_check_run.py 'success'
-        shell: bash -l {0}
