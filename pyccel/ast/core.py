@@ -2145,6 +2145,9 @@ class FunctionDef(ScopedAstNode):
     is_imported : bool, default : False
         True for a function that is imported.
 
+    is_virtual : bool, default : False
+        True for a class function which is not marked as final.
+
     functions : list, tuple
         A list of functions defined within this function.
 
@@ -2224,6 +2227,7 @@ class FunctionDef(ScopedAstNode):
         is_header=False,
         is_external=False,
         is_imported=False,
+        is_virtual=False,
         functions=(),
         interfaces=(),
         result_pointer_map={},
@@ -2317,6 +2321,7 @@ class FunctionDef(ScopedAstNode):
         self._is_header       = is_header
         self._is_external     = is_external
         self._is_imported     = is_imported
+        self._is_virtual      = is_virtual
         self._functions       = functions
         self._interfaces      = interfaces
         self._result_pointer_map = result_pointer_map
@@ -2486,6 +2491,10 @@ class FunctionDef(ScopedAstNode):
         Indicates if the function was imported from another file.
         """
         return self._is_imported
+
+    @property
+    def is_virtual(self):
+        return self._is_virtual
 
     @property
     def is_inline(self):
