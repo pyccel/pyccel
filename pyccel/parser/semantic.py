@@ -1198,7 +1198,7 @@ class SemanticParser(BasicParser):
             deallocater = cls_scope.find('is_freed', 'variables').clone('is_freed', new_class = DottedVariable, lhs = deallocater_lhs)
 
         del_method = expr.get_method(syntactic_name = '__del__')
-        if del_method is None:
+        if del_method is None or expr not in del_method.get_all_user_nodes():
             del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
@@ -1227,13 +1227,13 @@ class SemanticParser(BasicParser):
             self._pointer_targets.pop()
 
         if expr.superclasses:
-            del_body = [del_method.body] + \
+            argument = del_method.arguments[0]
+            del_body = list(del_method.body.body) + \
                     [FunctionCall(s.get_method(syntactic_name = '__del__'), (argument.var,)) for s in expr.superclasses]
         else:
-            del_body = [del_method.body]
-        condition = If(IfSection(PyccelNot(deallocater),
-                        del_body+[Assign(deallocater, LiteralTrue())]))
-        del_method.body = [condition]
+            del_body = [If(IfSection(PyccelNot(deallocater),
+                            list(del_method.body.body)+[Assign(deallocater, LiteralTrue())]))]
+        del_method.body = del_body
         self._current_function_name.pop()
 
     def _handle_function_args(self, arguments):
