@@ -2617,20 +2617,17 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        if superclasses or subclasses:
-            methods = ''
-            for method in expr.methods:
-                overrides = [s.get_method(semantic_name = method.name) for s in chain(superclasses, subclasses)]
-                overrides = [m for m in overrides if m]
-                arg_types = {tuple(a.var.class_type for a in f.arguments[1:]) for f in chain((method,), overrides)}
-                if len(arg_types) == 1:
-                    methods += f'procedure :: {method.name} => {method.cls_name}\n'
-                else:
-                    methods += f'procedure :: {method.cls_name}\n'
-                    methods += f'generic :: {method.name} => {method.cls_name}\n'
-        else:
-            methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods \
-                    if method.is_semantic)
+        methods = ''
+        for method in expr.methods:
+            overrides = [s.get_method(semantic_name = method.name) for s in chain(superclasses, subclasses)]
+            overrides = [m for m in overrides if m]
+            arg_types = {tuple(a.var.class_type for a in f.arguments[1:]) for f in chain((method,), overrides)}
+            if len(arg_types) == 1 and not method.is_virtual:
+                methods += f'procedure :: {method.name} => {method.cls_name}\n'
+            else:
+                methods += f'procedure :: {method.cls_name}\n'
+                methods += f'generic :: {method.name} => {method.cls_name}\n'
+
         for i in expr.interfaces:
             names = ','.join(f.cls_name for f in i.functions if f.is_semantic)
             if names:
