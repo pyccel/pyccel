@@ -46,27 +46,28 @@ jobs:
         with:
           fetch-depth: 0
       - run: |
-        changes=$(git diff origin/devel..HEAD --name-only)
-        # Check for changes in pyccel folder
-        pyccel_changed=0
-        pyccel_changes="$(! (echo $changes | grep "^pyccel/"))" || exit_code=$?
-        # Changes other than pyccel/version
-        pyccel_changed=0
-        pyccel_changes="$(! (echo $pyccel_changes | grep "^pyccel/version.py" -v))" || exit_code=$?
-        # Check for changes in tests folder
-        tests_changed=0
-        tests_changes="$(! (echo $changes | grep "^tests/"))" || exit_code=$?
-        # Check for changes in CI
-        ci_changed=0
-        ci_changes="$(! (echo $changes | grep "^.github/"))" || exit_code=$?
-        if [[ $pyccel_changed || $tests_changed || $ci_changed ]]
-        then
-          echo "Files have been changed that haven't been tested in the devel branch"
-          echo $pyccel_changes
-          echo $tests_changes
-          echo $ci_changes
-          exit 1
-        fi
+          changes=$(git diff origin/devel..HEAD --name-only)
+          # Check for changes in pyccel folder
+          pyccel_changed=0
+          pyccel_changes="$(! (echo $changes | grep "^pyccel/"))" || exit_code=$?
+          # Changes other than pyccel/version
+          pyccel_changed=0
+          pyccel_changes="$(! (echo $pyccel_changes | grep "^pyccel/version.py" -v))" || exit_code=$?
+          # Check for changes in tests folder
+          tests_changed=0
+          tests_changes="$(! (echo $changes | grep "^tests/"))" || exit_code=$?
+          # Check for changes in CI
+          ci_changed=0
+          ci_changes="$(! (echo $changes | grep "^.github/"))" || exit_code=$?
+          if [[ $pyccel_changed || $tests_changed || $ci_changed ]]
+          then
+            echo "Files have been changed that haven't been tested in the devel branch"
+            echo $pyccel_changes
+            echo $tests_changes
+            echo $ci_changes
+            exit 1
+          fi
+        shell: bash
 
   markdown_lint:
     uses: ./.github/workflows/markdown_lint.yml
