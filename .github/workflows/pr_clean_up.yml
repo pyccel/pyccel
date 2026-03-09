@@ -35,9 +35,11 @@ jobs:
           if [[ $status == "SUCCESS" ]]
           then
             echo "conclusion=SUCCESS"
+            echo "conclusion=SUCCESS" >> $GITHUB_OUTPUT
           elif [[ $status == *"FAILURE"* ]]
           then
             echo "conclusion=FAILURE"
+            echo "conclusion=FAILURE" >> $GITHUB_OUTPUT
           fi
         shell: bash
         env:
