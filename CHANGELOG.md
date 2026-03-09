@@ -2,9 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[UNRELEASED\]
-
-### Added
+## \[2.2.2\] - 2026-03-09
 
 ### Fixed
 
@@ -13,10 +11,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   #2577 : Remove compilation of unnecessary files in `stdlib/math` when using `pyccel make`.
-
-### Deprecated
-
-### Removed
 
 ## \[2.2.1\] - 2026-03-02
 
