@@ -1,44 +1,24 @@
 name: Python Linting
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       python_version:
-        required: true
-        type: string
-      ref:
         required: false
         type: string
+        default: '3.10'
       base:
-        required: true
-        type: string
-      check_run_id:
         required: false
         type: string
-      pr_repo:
-        required: false
-        type: string
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
 
 env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
-  PEM: ${{ secrets.BOT_PEM }}
-  GITHUB_RUN_ID: ${{ github.run_id }}
-  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_REPO: ${{ inputs.pr_repo || github.repository }}
-  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
   BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
 
 jobs:
   Linter:
     runs-on: ubuntu-latest
-    name: Python best practices (pylint, ${{ inputs.python_version || '3.10' }})
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    name: Python best practices (pylint, ${{ inputs.python_version }})
 
     steps:
       - id: duplicate_check
@@ -49,22 +29,14 @@ jobs:
           paths: '["**/*.py", ".github/workflows/pylint.yml", ".github/actions/**"]'
           do_not_skip: '["push"]'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ env.COMMIT }}
-          repository: ${{ env.PR_REPO }}
           fetch-depth: 0
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: "Setup"
-        if: github.event_name != 'pull_request'
-        id: token
-        run: |
-          pip install jwt requests
-          python ci_tools/setup_check_run.py pylint
       - name: Install python dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
@@ -90,11 +62,3 @@ jobs:
           git diff ${{ env.BASE }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip != 'true'
-        run:
-          python ci_tools/complete_check_run.py ${{ steps.pylint.outcome }}
-      - name: "Post completed"
-        if: always() && github.event_name != 'pull_request' && steps.duplicate_check.outputs.should_skip == 'true'
-        run:
-          python ci_tools/complete_check_run.py 'success'

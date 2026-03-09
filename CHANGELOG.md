@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.2.2\] - 2026-03-09
+
+### Fixed
+
+-   #2577 : Fix missing dependency when linking `stdlib/math` to Fortran code when using `pyccel make`.
+
+### Changed
+
+-   #2577 : Remove compilation of unnecessary files in `stdlib/math` when using `pyccel make`.
+
 ## \[2.2.1\] - 2026-03-02
 
 ### Fixed
@@ -33,6 +43,7 @@ All notable changes to this project will be documented in this file.
 -   #2565 : Fix type of the shape of an array in C.
 -   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 -   #2563 : Fix crashes on macOS with GCC compiler.
+-   #2566 : Allow array-creating functions to be used in expressions with C.
 
 ### Deprecated
 
