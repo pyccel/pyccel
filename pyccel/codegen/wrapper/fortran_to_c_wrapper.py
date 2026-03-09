@@ -702,7 +702,7 @@ class FortranToCWrapper(Wrapper):
                 self._wrap(f)
         interfaces = [self._wrap(i) for i in expr.interfaces]
 
-        del_method = expr.methods_as_dict.get('__del__', None)
+        del_method = expr.get_method(syntactic_name = '__del__')
         if del_method is None:
             del_name = expr.scope.get_new_name('__del__')
             scope = expr.scope.new_child_scope('__del__', scope_type='function')
@@ -732,7 +732,8 @@ class FortranToCWrapper(Wrapper):
                         for v in expr.attributes if not v.is_private and not isinstance(v.class_type, TupleType)]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties_getters + properties,
-                             docstring = expr.docstring, class_type = expr.class_type)
+                             docstring = expr.docstring, class_type = expr.class_type,
+                             superclasses = expr.superclasses)
 
     def _extract_FunctionDefResult(self, orig_var, orig_func_scope):
         """

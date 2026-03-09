@@ -1040,7 +1040,18 @@ class SyntaxParser(BasicParser):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             decorators.setdefault(tmp_var, []).append(d)
 
-        scope = self.create_new_class_scope(name)
+        parent_scope = self.scope
+
+        parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
+        if len(parent) > 1:
+            errors.report("Multiple inheritance is not supported",
+                          severity='error', symbol=stmt)
+
+        if parent:
+            superclass = self.scope.find(parent[0], 'classes', raise_if_missing = True)
+            scope = self.create_new_class_scope(name, base_scope = superclass.scope)
+        else:
+            scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
         docstring = None
@@ -1060,9 +1071,10 @@ class SyntaxParser(BasicParser):
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
-        parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
 
-        init_method = next((m for m in methods if m.name == '__init__'), None)
+        default_init_method = superclass.get_method(syntactic_name = '__init__') if parent else None
+
+        init_method = next((m for m in methods if m.name == '__init__'), default_init_method)
         if init_method is None and not self.is_stub_file:
             init_name = PyccelSymbol('__init__')
             semantic_init_name = self.scope.insert_symbol(init_name, 'function')
@@ -1079,11 +1091,13 @@ class SyntaxParser(BasicParser):
             self.exit_function_scope()
             methods.append(FunctionDef(init_name, (self_arg,), CodeBlock(()), FunctionDefResult(Nil()), scope=init_scope))
 
-        self.exit_class_scope()
+        self.scope = parent_scope
 
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
                         docstring = docstring, decorators=decorators)
+
+        self.scope.insert_class(expr)
 
         return expr
 

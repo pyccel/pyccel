@@ -1090,13 +1090,13 @@ class SemanticParser(BasicParser):
         magic_method_name = magic_method_map.get(type(expr), None)
         magic_method = None
         if magic_method_name:
-            magic_method = class_base.get_method(magic_method_name)
+            magic_method = class_base.get_method(syntactic_name = magic_method_name)
             if magic_method is None:
                 arg2 = visited_args[1]
                 class_type = arg2.class_type
                 class_base = self.get_cls_base(class_type)
                 magic_method_name = '__r'+magic_method_name[2:]
-                magic_method = class_base.get_method(magic_method_name)
+                magic_method = class_base.get_method(syntactic_name = magic_method_name)
                 if magic_method:
                     visited_args = [visited_args[1], visited_args[0]]
         if magic_method:
@@ -1178,7 +1178,7 @@ class SemanticParser(BasicParser):
         class_type = expr.class_type
         cls_scope = expr.scope
 
-        init_func = cls_scope.functions['__init__']
+        init_func = expr.get_method(syntactic_name = '__init__', raise_error_from = expr)
 
         if isinstance(init_func, Interface):
             errors.report("Pyccel does not support interface constructor", symbol=init_func,
@@ -1186,14 +1186,19 @@ class SemanticParser(BasicParser):
 
         # create a new attribute to check allocation
         deallocater_lhs = Variable(class_type, 'self', cls_base = expr, is_argument=True)
-        deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
-                                     class_type = PythonNativeBool(), is_private=True)
-        expr.add_new_attribute(deallocater)
-        deallocater_assign = Assign(deallocater, LiteralFalse())
-        init_func.body.insert2body(deallocater_assign, back=False)
+        if expr.superclasses == ():
+            deallocater = DottedVariable(lhs = deallocater_lhs, name = cls_scope.get_new_name('is_freed'),
+                                         class_type = PythonNativeBool(), is_private=True)
+            expr.add_new_attribute(deallocater)
+            cls_scope.insert_variable(deallocater)
 
-        del_method = expr.methods_as_dict.get('__del__', None)
-        if del_method is None:
+            deallocater_assign = Assign(deallocater, LiteralFalse())
+            init_func.body.insert2body(deallocater_assign, back=False)
+        else:
+            deallocater = cls_scope.find('is_freed', 'variables').clone('is_freed', new_class = DottedVariable, lhs = deallocater_lhs)
+
+        del_method = expr.get_method(syntactic_name = '__del__')
+        if del_method is None or expr not in del_method.get_all_user_nodes():
             del_name = cls_scope.insert_symbol('__del__', object_type = 'function')
             scope = self.create_new_function_scope('__del__', del_name)
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
@@ -1220,9 +1225,15 @@ class SemanticParser(BasicParser):
             self._allocs[-1].update(attribute)
             del_method.body.insert2body(*self._garbage_collector(del_method.body))
             self._pointer_targets.pop()
-        condition = If(IfSection(PyccelNot(deallocater),
-                        [del_method.body]+[Assign(deallocater, LiteralTrue())]))
-        del_method.body = [condition]
+
+        if expr.superclasses:
+            argument = del_method.arguments[0]
+            del_body = list(del_method.body.body) + \
+                    [FunctionCall(s.get_method(syntactic_name = '__del__'), (argument.var,)) for s in expr.superclasses]
+        else:
+            del_body = [If(IfSection(PyccelNot(deallocater),
+                            list(del_method.body.body)+[Assign(deallocater, LiteralTrue())]))]
+        del_method.body = del_body
         self._current_function_name.pop()
 
     def _handle_function_args(self, arguments):
@@ -1284,10 +1295,12 @@ class SemanticParser(BasicParser):
         """
         if elemental:
             def incompatible(i_arg, f_arg):
-                return i_arg.class_type.datatype != f_arg.class_type.datatype
+                return i_arg.class_type.datatype != f_arg.class_type.datatype and \
+                        not isinstance(i_arg.class_type.datatype, type(f_arg.class_type.datatype))
         else:
             def incompatible(i_arg, f_arg):
-                return i_arg.class_type != f_arg.class_type
+                return i_arg.class_type != f_arg.class_type and \
+                        not isinstance(i_arg.class_type, type(f_arg.class_type))
 
         err_msgs = []
         # Compare each set of arguments
@@ -2807,6 +2820,8 @@ class SemanticParser(BasicParser):
             self.scope.insert_symbol('__init__', object_type = 'function')
             self.scope.insert_symbol('__del__', object_type = 'function')
 
+        self.scope.clear_classes()
+
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]
 
@@ -3150,7 +3165,7 @@ class SemanticParser(BasicParser):
                 if isinstance(dtype, CustomDataType) and not bound_argument:
                     cls = self.scope.find(str(dtype), 'classes')
                     if cls:
-                        init_method = cls.get_method('__init__', expr)
+                        init_method = cls.get_method(syntactic_name = '__init__', raise_error_from = expr)
                         if not init_method.is_semantic and not self.is_stub_file:
                             self._visit(init_method)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
@@ -3329,7 +3344,7 @@ class SemanticParser(BasicParser):
             return self._extract_indexed_from_var(var, args, expr)
         else:
             cls_base = self.get_cls_base(class_type)
-            method = cls_base.get_method('__getitem__')
+            method = cls_base.get_method(syntactic_name = '__getitem__')
             if method:
                 class_args = self._handle_function_args([FunctionCallArgument(a) for a in expr.indices])
                 args = [FunctionCallArgument(var), *class_args]
@@ -3594,24 +3609,32 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr, severity='fatal')
-        if isinstance(first, ClassDef):
-            errors.report("Static class methods are not yet supported", symbol=expr,
-                    severity='fatal')
 
-        d_var = self._infer_type(first)
-        class_type = d_var['class_type']
-        cls_base = self.get_cls_base(class_type)
+        is_method = True
+        if isinstance(first, ClassDef):
+            cls_base = first
+            is_method = False
+        else:
+            d_var = self._infer_type(first)
+            class_type = d_var['class_type']
+            cls_base = self.get_cls_base(class_type)
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            method = cls_base.get_method(rhs_name, expr)
+            method = cls_base.get_method(syntactic_name = rhs_name, raise_error_from = expr)
 
-            args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
+            args = self._handle_function_args(rhs.args)
+            if isinstance(lhs, FunctionCall) and lhs.funcdef == 'super':
+                args.insert(0, FunctionCallArgument(self._visit(self._current_function[-1].arguments[0].var)))
+
+            if is_method:
+                args.insert(0, FunctionCallArgument(visited_lhs))
+
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
 
-            return self._handle_function(expr, method, args, is_method = True)
+            return self._handle_function(expr, method, args, is_method = is_method)
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
@@ -3622,7 +3645,7 @@ class SemanticParser(BasicParser):
 
             # class property?
             else:
-                method = cls_base.get_method(rhs_name, expr)
+                method = cls_base.get_method(syntactic_name = rhs_name, raise_error_from = expr)
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     numpy_class = method.cls_name
@@ -3721,7 +3744,7 @@ class SemanticParser(BasicParser):
                 return LiteralFalse()
 
         container_base = self.get_cls_base(container_type)
-        contains_method = container_base.get_method('__contains__',
+        contains_method = container_base.get_method(syntactic_name = '__contains__',
                         raise_error_from = expr if isinstance(container_type, CustomDataType) else None)
         if contains_method:
             return self._handle_function(expr, contains_method, [FunctionCallArgument(container), FunctionCallArgument(element)])
@@ -3780,8 +3803,7 @@ class SemanticParser(BasicParser):
             # we must not invoke the scope like this
 
             cls = self.scope.find(name, 'classes')
-            d_methods = cls.methods_as_dict
-            init_method = d_methods.pop('__init__', None)
+            init_method = cls.get_method(syntactic_name = '__init__')
 
             dtype = cls.class_type
             cls_def = cls
@@ -4361,12 +4383,12 @@ class SemanticParser(BasicParser):
             increment_magic_method_name = '__i' + magic_method_name[2:]
             class_type = lhs.class_type
             class_base = self.get_cls_base(class_type)
-            increment_magic_method = class_base.get_method(increment_magic_method_name)
+            increment_magic_method = class_base.get_method(syntactic_name = increment_magic_method_name)
             args = [FunctionCallArgument(lhs), FunctionCallArgument(rhs)]
             if increment_magic_method:
                 lhs = self._optional_params.get(lhs, lhs)
                 return self._handle_function(expr, increment_magic_method, args)
-            magic_method = class_base.get_method(magic_method_name, expr)
+            magic_method = class_base.get_method(syntactic_name = magic_method_name, raise_error_from = expr)
             operator_node = self._handle_function(expr, magic_method, args)
             lhs = self._assign_lhs_variable(expr.lhs, self._infer_type(operator_node), test_node,
                     new_expressions, is_augassign = True)
@@ -5531,15 +5553,23 @@ class SemanticParser(BasicParser):
         else:
             name = self.scope.get_expected_name(expr.name)
 
+        parent = self._find_superclasses(expr)
+
+        parent_scope = self.scope
         #  create a new Datatype for the current class
-        dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
+        if parent:
+            base_classes = tuple(type(p.class_type) for p in parent)
+            dtype = DataTypeFactory(name, self.scope.get_python_name(name),
+                                    BaseClass = base_classes)()
+            base_scope = parent[0].scope
+        else:
+            dtype = DataTypeFactory(name, self.scope.get_python_name(name))()
+            base_scope = None
         typenames_to_dtypes[name] = dtype
         self.scope.insert_cls_construct(dtype)
 
-        parent = self._find_superclasses(expr)
-
         cls_scope = self.create_new_class_scope(expr.name, used_symbols=expr.scope.local_used_symbols,
-                    original_symbols = expr.scope.python_names.copy())
+                    original_symbols = expr.scope.python_names.copy(), base_scope = base_scope)
 
         attribute_annotations = [self._visit(a) for a in expr.attributes]
         attributes = []
@@ -5552,7 +5582,7 @@ class SemanticParser(BasicParser):
                 cls_scope.insert_variable(v)
                 attributes.append(v)
 
-        self.exit_class_scope()
+        self.scope = parent_scope
 
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
@@ -6503,7 +6533,7 @@ class SemanticParser(BasicParser):
             return LiteralInteger(len(arg.python_value))
         elif isinstance(arg.class_type, CustomDataType):
             class_base = self.get_cls_base(class_type)
-            magic_method = class_base.get_method('__len__')
+            magic_method = class_base.get_method(syntactic_name = '__len__')
             if magic_method:
                 return self._handle_function(expr, magic_method, function_call_args)
             else:
@@ -6862,3 +6892,29 @@ class SemanticParser(BasicParser):
         return self._handle_function(expr, func, function_call_args,
                                      is_method = isinstance(expr, DottedName),
                                      use_build_functions = False)
+
+    def _build_PythonSuper(self, expr, function_call_args, func):
+        """
+        Method to select the class returned by a call to `super()`.
+
+        Method to select the class returned by a call to `super()`.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The syntactic node that represents the call to `super()`.
+
+        function_call_args : iterable[]
+            The semantic arguments passed to the function. This should
+            be an empty iterable.
+
+        func : PyccelFunction
+            The function being called (PythonSuper).
+
+        Returns
+        -------
+        ClassDef
+            The description of the class invoked by `super()`.
+        """
+        self_var = self._visit(self._current_function[-1].arguments[0].var)
+        return self_var.cls_base.superclasses[0]

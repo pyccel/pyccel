@@ -346,7 +346,7 @@ class BasicParser:
         """
         self._scope = self._scope.parent_scope
 
-    def create_new_class_scope(self, name, **kwargs):
+    def create_new_class_scope(self, name, base_scope = None, **kwargs):
         """
         Create a new scope for a Python class.
 
@@ -364,6 +364,9 @@ class BasicParser:
         name : str
             Function's name, used as a key to retrieve the new scope.
 
+        base_scope : Scope, optional
+            The scope of the superclass.
+
         **kwargs : dict
             A dictionary containing any additional arguments of the new scope.
 
@@ -372,15 +375,12 @@ class BasicParser:
         Scope
             The scope for the class.
         """
-        child = self.scope.new_child_scope(name, 'class', **kwargs)
+        if base_scope is None:
+            base_scope = self.scope
+        child = base_scope.new_child_scope(name, 'class', **kwargs)
         self._scope = child
 
         return child
-
-    def exit_class_scope(self):
-        """ Exit the class scope and return to the encasing scope
-        """
-        self._scope = self._scope.parent_scope
 
 
 #==============================================================================

@@ -1234,7 +1234,7 @@ class DictType(ContainerType):
 
 #==============================================================================
 
-def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomDataType):
+def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=(CustomDataType,)):
     """
     Create a new data class.
 
@@ -1272,7 +1272,8 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
                 raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
             setattr(self, key, value)
 
-        BaseClass.__init__(self) # pylint: disable=unnecessary-dunder-call
+        for b in BaseClass:
+            b.__init__(self) # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)
@@ -1294,7 +1295,7 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
         """
         return ll_name
 
-    newclass = type(f'Pyccel{python_name}', (BaseClass,),
+    newclass = type(f'Pyccel{python_name}', BaseClass,
                     {"__init__": class_init_func,
                      "name": property(class_name_func),
                      "_name": python_name,
