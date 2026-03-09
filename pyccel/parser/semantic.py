@@ -1204,7 +1204,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(class_type, scope.get_new_name('self'), cls_base = expr), bound_argument = True)
             scope.insert_variable(argument.var)
             self.exit_function_scope()
-            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope)
+            del_method = FunctionDef(del_name, [argument], [Pass()], scope=scope, is_virtual = False)
             self.insert_function(del_method, cls_scope)
             expr.add_new_method(del_method)
         else:
@@ -2955,7 +2955,7 @@ class SemanticParser(BasicParser):
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
 
             init_func = FunctionDef(init_func_name, [], [init_func_body],
-                    global_vars = variables, scope=init_scope)
+                    global_vars = variables, scope=init_scope, is_virtual = False)
             self.insert_function(init_func)
             self.scope.insert_variable(init_var)
 
@@ -2996,7 +2996,7 @@ class SemanticParser(BasicParser):
                 # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(syntactic_free_func_name, free_func_name)
                 free_func = FunctionDef(free_func_name, [], [free_func_body],
-                                    global_vars = variables, scope = scope)
+                                    global_vars = variables, scope = scope, is_virtual = False)
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
@@ -5222,6 +5222,8 @@ class SemanticParser(BasicParser):
                     'imports':imports,
                     'decorators':decorators,
                     'is_recursive':is_recursive,
+                    'is_virtual': 'final' in decorators or \
+                                    (bound_class and 'final' in bound_class.decorators),
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
                     'result_pointer_map': result_pointer_map,
@@ -5587,7 +5589,7 @@ class SemanticParser(BasicParser):
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         cls = ClassDef(name, attributes, [], superclasses=parent, scope=cls_scope,
-                docstring = docstring, class_type = dtype)
+                docstring = docstring, class_type = dtype, decorators=decorators)
         self.scope.insert_class(cls)
 
         methods = expr.methods
