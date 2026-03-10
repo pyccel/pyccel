@@ -2377,6 +2377,14 @@ def test_array(language):
     tmp_arr = np.ones((3,4), dtype=int)
     assert np.allclose(array_tuple_ref(tmp_arr), create_array_tuple_ref(tmp_arr))
 
+def test_array_in_expression(language):
+    def create_array_list_val():
+        from numpy import array
+        a = array([[1,2,3],[4,5,6]]) * 2
+        return a
+    f1_val   = epyccel(create_array_list_val, language = language)
+    assert np.array_equal(f1_val(), create_array_list_val())
+
 def test_array_new_dtype(language):
     def create_float_array_tuple_ref(a : 'int[:,:]'):
         from numpy import array

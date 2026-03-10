@@ -8,15 +8,23 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+## \[2.2.2\] - 2026-03-09
+
+### Fixed
+
 -   #2577 : Fix missing dependency when linking `stdlib/math` to Fortran code when using `pyccel make`.
 
 ### Changed
 
 -   #2577 : Remove compilation of unnecessary files in `stdlib/math` when using `pyccel make`.
-
-### Deprecated
-
-### Removed
 
 ## \[2.2.1\] - 2026-03-02
 
