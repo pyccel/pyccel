@@ -403,7 +403,7 @@ class CCodePrinter(CodePrinter):
             a = a.funcdef.results.var
         # STC _at and _at_mut functions return pointers
         if isinstance(a, IndexedElement) and not isinstance(a.base.class_type, CStackArray) and \
-                len(a.indices) == a.base.class_type.container_rank:
+                a.rank == 0:
             return True
         if not isinstance(a, Variable):
             return False
@@ -1800,16 +1800,24 @@ class CCodePrinter(CodePrinter):
                 base = base.base
 
         if expr.rank > 0 and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            c_type = self.get_c_type(expr.class_type)
-            indices = []
-            for i,idx in enumerate(inds):
-                if isinstance(idx, Slice):
-                    idx = self._new_slice_with_processed_arguments(idx, PyccelArrayShapeElement(base, i),
-                        allow_negative_indexes)
-                indices.append('{'+self._print(idx)+'}')
-            indices_code = ', '.join(indices)
-            base_code = self._print(ObjectAddress(base))
-            return f'cspan_slice({base_code}, {c_type}, {indices_code})'
+            if expr.get_direct_user_nodes(lambda u: isinstance(u, AliasAssign)):
+                c_type = self.get_c_type(expr.class_type)
+                indices = []
+                for i,idx in enumerate(inds):
+                    if isinstance(idx, Slice):
+                        idx = self._new_slice_with_processed_arguments(idx, PyccelArrayShapeElement(base, i),
+                            allow_negative_indexes)
+                    indices.append('{'+self._print(idx)+'}')
+                indices_code = ', '.join(indices)
+                base_code = self._print(ObjectAddress(base))
+                return f'cspan_slice({base_code}, {c_type}, {indices_code})'
+            else:
+                new_type = base.class_type.switch_rank(expr.rank, expr.order)
+                tmp_var = self.scope.get_temporary_variable(new_type, shape=expr.shape)
+                assign = AliasAssign(tmp_var, expr)
+                code = self._print(assign)
+                self._additional_code += code
+                return self._print(tmp_var)
 
         for i, ind in enumerate(inds):
             if is_literal_integer(ind) and int(ind) < 0:
