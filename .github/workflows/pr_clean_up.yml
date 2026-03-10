@@ -35,12 +35,13 @@ jobs:
           status=$(gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
-            echo "conclusion=SUCCESS"
+            conclusion="SUCCESS"
           elif [[ $status == *"FAILURE"* ]]
           then
-            echo "conclusion=FAILURE"
+            conclusion="FAILURE"
           fi
-          echo "conclusion=FAILURE" >> $GITHUB_OUTPUT
+          echo "conclusion=$conclusion"
+          echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
