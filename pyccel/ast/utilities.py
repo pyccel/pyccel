@@ -26,7 +26,7 @@ from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .low_level_tools import UnpackManagedMemory, ManagedMemory
 from .mathext       import math_mod
-from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace, NumpyNewArray
+from .numpyext      import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
 from .numpyext      import NumpyCross
 from .numpyext      import get_shape_of_multi_level_container
 from .numpytypes    import NumpyNDArrayType
@@ -423,9 +423,10 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
+    # NumpyNewArray is also a memory creator but NumPy functions may be indexable
+    # so this is handled by is_array_function_call
     memory_creator_types = (Allocate, PythonList, PythonTuple, Concatenate,
-                            Duplicate, PythonSet, UnpackManagedMemory,
-                            NumpyNewArray)
+                            Duplicate, PythonSet, UnpackManagedMemory)
 
     def is_array_function_call(f):
         """
