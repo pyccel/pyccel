@@ -23,9 +23,9 @@ jobs:
           AUTHOR=${{ github.event.pull_request.user.login }}
           REVIEWER=${{ github.event.review.user.login }}
           gh pr ready $PR_NUMBER --undo
-          gh pr edit --remove-label needs_initial_review
-          gh pr edit --remove-label Ready_for_review
-          gh pr edit --remove-label Ready_to_merge
+          gh pr edit $PR_NUMBER --remove-label needs_initial_review
+          gh pr edit $PR_NUMBER --remove-label Ready_for_review
+          gh pr edit $PR_NUMBER --remove-label Ready_to_merge
           MESSAGE=$(sed "s/{author}/$AUTHOR/g; s/{reviewer}/$REVIEWER/g" ci_tools/bot_messages/set_draft_changes.txt)
           gh pr comment $PR_NUMBER --body "$MESSAGE"
         shell: bash
