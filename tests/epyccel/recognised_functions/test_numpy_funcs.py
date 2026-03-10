@@ -1566,10 +1566,14 @@ def test_size_property(language):
     def test_size_3d(f: 'int[:,:,:]'):
         return f.size
 
+    def test_slice_size_2d(f: 'int[:,:,:]'):
+        return f[0,:,:].size
+
     from numpy import empty
     f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_3d, language = language)
+    f4 = epyccel(test_slice_size_2d, language = language)
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1579,6 +1583,7 @@ def test_size_property(language):
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
     assert f3(x3) == test_size_3d(x3)
+    assert f4(x3) == test_slice_size_2d(x3)
 
 
 def test_full_basic_real(language):
