@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+### Fixed
+
+-   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+
+### Changed
+
+### Deprecated
+
+### Removed
+
 ## \[2.2.2\] - 2026-03-09
 
 ### Fixed
