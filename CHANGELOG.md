@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+-   #2589 : Fix missing `const` annotation on string arguments.
 
 ### Changed
 
