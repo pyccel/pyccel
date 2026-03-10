@@ -1800,7 +1800,7 @@ class CCodePrinter(CodePrinter):
                 base = base.base
 
         if expr.rank > 0 and isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            if expr.get_direct_user_nodes(lambda u: isinstance(u, AliasAssign)):
+            if expr.get_direct_user_nodes(lambda u: isinstance(u, (AliasAssign, Assign))):
                 c_type = self.get_c_type(expr.class_type)
                 indices = []
                 for i,idx in enumerate(inds):
