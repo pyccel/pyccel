@@ -10,7 +10,7 @@ skip_centre = True
 
 method = 3
 
-compl = 3+5j
+compl = 3 + 5j
 
 tiny = np.int32(4)
 

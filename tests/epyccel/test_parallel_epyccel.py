@@ -8,7 +8,8 @@ from pyccel import epyccel
 RTOL = 2e-14
 ATOL = 1e-15
 
-#==============================================================================
+
+# ==============================================================================
 @pytest.mark.mpi
 def test_module_1(language):
     import modules.Module_1 as mod
@@ -17,7 +18,7 @@ def test_module_1(language):
 
     # ...
     x_expected = np.zeros(5)
-    x          = np.zeros(5)
+    x = np.zeros(5)
 
     mod.f(x_expected)
     mod.g(x_expected)
@@ -25,10 +26,11 @@ def test_module_1(language):
     modnew.f(x)
     modnew.g(x)
 
-    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
+    assert np.allclose(x, x_expected, rtol=RTOL, atol=ATOL)
     # ...
 
-#==============================================================================
+
+# ==============================================================================
 @pytest.mark.mpi
 def test_module_2(language):
     import modules.Module_2 as mod
@@ -36,18 +38,20 @@ def test_module_2(language):
     modnew = epyccel(mod, comm=MPI.COMM_WORLD, language=language)
 
     # ...
-    m1 = 2 ; m2 = 3
+    m1 = 2
+    m2 = 3
 
-    x = np.zeros((m1,m2))
+    x = np.zeros((m1, m2))
     modnew.f6(m1, m2, x)
 
-    x_expected = np.zeros((m1,m2))
+    x_expected = np.zeros((m1, m2))
     mod.f6(m1, m2, x_expected)
 
-    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
+    assert np.allclose(x, x_expected, rtol=RTOL, atol=ATOL)
     # ...
 
-#==============================================================================
+
+# ==============================================================================
 @pytest.mark.mpi
 def test_function(language):
     from modules.Module_1 import f, g, h

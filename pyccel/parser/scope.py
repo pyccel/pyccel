@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing the Scope class
-"""
+# ------------------------------------------------------------------------------------------#
+"""Module containing the Scope class"""
+
 from immutabledict import immutabledict
 
-from pyccel.ast.bind_c    import BindCVariable
-from pyccel.ast.core      import ClassDef, FunctionDef
+from pyccel.ast.bind_c import BindCVariable
+from pyccel.ast.core import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
 from pyccel.ast.internals import PyccelSymbol, PyccelFunction
 from pyccel.ast.typingext import TypingTypeVar
-from pyccel.ast.variable  import Variable, DottedName, AnnotatedPyccelSymbol
-from pyccel.ast.variable  import IndexedElement, DottedVariable
+from pyccel.ast.variable import Variable, DottedName, AnnotatedPyccelSymbol
+from pyccel.ast.variable import IndexedElement, DottedVariable
 
 from pyccel.errors.errors import Errors
 
@@ -22,6 +22,7 @@ from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
 from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
+
 
 class Scope:
     """
@@ -62,38 +63,65 @@ class Scope:
     scope_type : str
         The type of the scope being created [module, function, class, loop, program].
     """
+
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
-    __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
-            '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol', '_dotted_symbols', '_symbol_prefix',
-            '_scope_type')
+    __slots__ = (
+        "_name",
+        "_imports",
+        "_locals",
+        "_parent_scope",
+        "_sons_scopes",
+        "_is_loop",
+        "_loops",
+        "_temporary_variables",
+        "_used_symbols",
+        "_dummy_counter",
+        "_original_symbol",
+        "_dotted_symbols",
+        "_symbol_prefix",
+        "_scope_type",
+    )
 
-    categories = ('functions','variables','classes',
-            'imports', 'symbolic_aliases',
-            'decorators', 'cls_constructs')
+    categories = (
+        "functions",
+        "variables",
+        "classes",
+        "imports",
+        "symbolic_aliases",
+        "decorators",
+        "cls_constructs",
+    )
 
-    def __init__(self, *, name=None, decorators = (), is_loop = False,
-                    parent_scope = None, used_symbols = None,
-                    original_symbols = None, symbolic_aliases = None,
-                    scope_type):
+    def __init__(
+        self,
+        *,
+        name=None,
+        decorators=(),
+        is_loop=False,
+        parent_scope=None,
+        used_symbols=None,
+        original_symbols=None,
+        symbolic_aliases=None,
+        scope_type,
+    ):
 
         assert (name is None) != (not is_loop)
-        assert scope_type in ('module', 'function', 'class', 'loop', 'program')
+        assert scope_type in ("module", "function", "class", "loop", "program")
 
         self._name = name
         self._scope_type = scope_type
-        self._imports = {k:{} for k in self.categories}
+        self._imports = {k: {} for k in self.categories}
 
-        self._locals  = {k:{} for k in self.categories}
+        self._locals = {k: {} for k in self.categories}
 
         prefix_set = ()
         if parent_scope and parent_scope.symbol_prefix:
-            prefix_set += (parent_scope.symbol_prefix.removesuffix('__'),)
+            prefix_set += (parent_scope.symbol_prefix.removesuffix("__"),)
         if name:
             prefix_set += (name,)
 
-        self._symbol_prefix = '__'.join((*prefix_set, ''))
+        self._symbol_prefix = "__".join((*prefix_set, ""))
 
         self._temporary_variables = []
 
@@ -105,14 +133,14 @@ class Scope:
 
         self._dummy_counter = 0
 
-        self._locals['decorators'].update(decorators)
+        self._locals["decorators"].update(decorators)
         if symbolic_aliases:
-            self._locals['symbolic_aliases'].update(symbolic_aliases)
+            self._locals["symbolic_aliases"].update(symbolic_aliases)
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
-        self._parent_scope       = parent_scope
-        self._sons_scopes        = {}
+        self._parent_scope = parent_scope
+        self._sons_scopes = {}
 
         self._is_loop = is_loop
         # scoping for loops
@@ -142,11 +170,11 @@ class Scope:
         Scope
             New child scope, which has the current object as parent.
         """
-        ps = kwargs.pop('parent_scope', self)
+        ps = kwargs.pop("parent_scope", self)
         if ps is not self:
             raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
-        child = Scope(name=name, **kwargs, parent_scope = self, scope_type = scope_type)
+        child = Scope(name=name, **kwargs, parent_scope=self, scope_type=scope_type)
 
         self.add_son(name, child)
 
@@ -172,8 +200,7 @@ class Scope:
 
     @property
     def imports(self):
-        """ A dictionary of objects imported in this scope
-        """
+        """A dictionary of objects imported in this scope"""
         return self._imports
 
     @property
@@ -187,7 +214,7 @@ class Scope:
         Variable objects but rather the value that the variable takes in this
         context.
         """
-        return immutabledict(self._locals['variables'])
+        return immutabledict(self._locals["variables"])
 
     @property
     def classes(self):
@@ -197,7 +224,7 @@ class Scope:
         A dictionary whose keys are the original Python names of the classes
         in the scope and whose variables are ClassDef objects.
         """
-        return immutabledict(self._locals['classes'])
+        return immutabledict(self._locals["classes"])
 
     @property
     def functions(self):
@@ -207,7 +234,7 @@ class Scope:
         A dictionary whose keys are the original Python names of the functions
         in the scope and whose variables are ClassDef objects.
         """
-        return immutabledict(self._locals['functions'])
+        return immutabledict(self._locals["functions"])
 
     @property
     def decorators(self):
@@ -218,7 +245,7 @@ class Scope:
         in this scope. The keys are the name of the decorator function. The values
         depend on the decorator.
         """
-        return immutabledict(self._locals['decorators'])
+        return immutabledict(self._locals["decorators"])
 
     @property
     def cls_constructs(self):
@@ -229,11 +256,11 @@ class Scope:
         found in this scope and whose values are the types inheriting from
         PyccelType which identify these classes.
         """
-        return immutabledict(self._locals['cls_constructs'])
+        return immutabledict(self._locals["cls_constructs"])
 
     @property
     def sons_scopes(self):
-        """ A dictionary of all the scopes contained within the
+        """A dictionary of all the scopes contained within the
         current scope
         """
         return self._sons_scopes
@@ -246,9 +273,9 @@ class Scope:
         A symbolic alias is a symbol declared in the scope which is mapped
         to a constant object. E.g. a symbol which represents a type.
         """
-        return immutabledict(self._locals['symbolic_aliases'])
+        return immutabledict(self._locals["symbolic_aliases"])
 
-    def find(self, name, category = None, local_only = False, raise_if_missing = False):
+    def find(self, name, category=None, local_only=False, raise_if_missing=False):
         """
         Find and return the specified object in the scope.
 
@@ -323,14 +350,12 @@ class Scope:
 
     @property
     def is_loop(self):
-        """ Indicates whether this scope describes a loop
-        """
+        """Indicates whether this scope describes a loop"""
         return self._is_loop
 
     @property
     def loops(self):
-        """ Returns the scopes associated with any loops within this scope
-        """
+        """Returns the scopes associated with any loops within this scope"""
         return self._loops
 
     def create_new_loop_scope(self):
@@ -345,12 +370,16 @@ class Scope:
         Scope
             The newly created loop scope.
         """
-        new_scope = Scope(decorators=self.decorators, is_loop = True,
-                        parent_scope = self, scope_type = 'loop')
+        new_scope = Scope(
+            decorators=self.decorators,
+            is_loop=True,
+            parent_scope=self,
+            scope_type="loop",
+        )
         self.add_loop(new_scope)
         return new_scope
 
-    def insert_variable(self, var, name = None, tuple_recursive = True):
+    def insert_variable(self, var, name=None, tuple_recursive=True):
         """
         Add a variable to the current scope.
 
@@ -368,10 +397,12 @@ class Scope:
             are created with pre-existent elements. In this case trying to insert
             these elements would create an error.
         """
-        if var.name == '_':
-            raise ValueError("A temporary variable should have a name generated by Scope.get_new_name")
+        if var.name == "_":
+            raise ValueError(
+                "A temporary variable should have a name generated by Scope.get_new_name"
+            )
         if not isinstance(var, Variable):
-            raise TypeError('variable must be of type Variable')
+            raise TypeError("variable must be of type Variable")
 
         if name is None:
             name = self.get_python_name(var.name)
@@ -379,27 +410,30 @@ class Scope:
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_variable(var, name)
         else:
-            if name in self._locals['variables']:
+            if name in self._locals["variables"]:
                 if name in self.symbolic_aliases.values():
                     # If the syntactic name is in the symbolic aliases then the link was created
                     # at the syntactic stage. In this case the element will be created before the
                     # tuple
                     return
                 else:
-                    raise RuntimeError(f'New variable {name} already exists in scope')
+                    raise RuntimeError(f"New variable {name} already exists in scope")
 
             if isinstance(var.class_type, InhomogeneousTupleType) and tuple_recursive:
                 for v in var:
                     self.insert_variable(self.collect_tuple_element(v))
 
-            if name == '_':
+            if name == "_":
                 self._temporary_variables.append(var)
             else:
-                self._locals['variables'][name] = var
+                self._locals["variables"][name] = var
                 # Name should be in local scope but may be in parent scope if in module init function
-                assert name in self.local_used_symbols or name in self.parent_scope.local_used_symbols
+                assert (
+                    name in self.local_used_symbols
+                    or name in self.parent_scope.local_used_symbols
+                )
 
-    def remove_variable(self, var, name = None, remove_symbol = True):
+    def remove_variable(self, var, name=None, remove_symbol=True):
         """
         Remove a variable from anywhere in scope.
 
@@ -420,8 +454,8 @@ class Scope:
         if name is None:
             name = self.get_python_name(var.name)
 
-        if name in self._locals['variables']:
-            self._locals['variables'].pop(name)
+        if name in self._locals["variables"]:
+            self._locals["variables"].pop(name)
             if remove_symbol:
                 self._used_symbols.pop(name)
         elif self.parent_scope:
@@ -446,10 +480,10 @@ class Scope:
         name : str
             The name of the variable.
         """
-        self._locals['variables'][name] = var_value
+        self._locals["variables"][name] = var_value
         self._used_symbols[name] = name
 
-    def insert_class(self, cls, name = None):
+    def insert_class(self, cls, name=None):
         """
         Add a class to the current scope.
 
@@ -466,18 +500,20 @@ class Scope:
             This defaults to the name of the class in Python.
         """
         if not isinstance(cls, ClassDef):
-            raise TypeError('class must be of type ClassDef')
+            raise TypeError("class must be of type ClassDef")
 
         assert not self.is_loop
 
         if name is None:
             name = cls.name
-            if cls.pyccel_staging != 'syntactic':
+            if cls.pyccel_staging != "syntactic":
                 name = self.get_python_name(name)
-        if name in self._locals['classes']:
-            raise RuntimeError(f"A class with name '{name}' already exists in the scope")
+        if name in self._locals["classes"]:
+            raise RuntimeError(
+                f"A class with name '{name}' already exists in the scope"
+            )
         assert name in self._used_symbols
-        self._locals['classes'][name] = cls
+        self._locals["classes"][name] = cls
 
     def insert_cls_construct(self, class_type):
         """
@@ -492,7 +528,7 @@ class Scope:
             The construct to be inserted.
         """
         name = class_type.name
-        self._locals['cls_constructs'][name] = class_type
+        self._locals["cls_constructs"][name] = class_type
 
     def insert_function(self, func, name):
         """
@@ -510,8 +546,8 @@ class Scope:
             used as the key for the function in the scope.
         """
         assert name in self._used_symbols
-        assert name not in self._locals['functions']
-        self._locals['functions'][name] = func
+        assert name not in self._locals["functions"]
+        self._locals["functions"][name] = func
 
     def remove_function(self, name):
         """
@@ -525,9 +561,9 @@ class Scope:
         name : str
             The original name of the function in the Python code.
         """
-        self._locals['functions'].pop(name)
+        self._locals["functions"].pop(name)
 
-    def insert_symbol(self, symbol, object_type = 'variable'):
+    def insert_symbol(self, symbol, object_type="variable"):
         """
         Add a new symbol to the scope.
 
@@ -562,11 +598,16 @@ class Scope:
             if not self.allow_loop_scoping and self.is_loop:
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
-                collisionless_name = self.name_clash_checker.get_collisionless_name(symbol,
-                        self.all_used_symbols, prefix = self._symbol_prefix,
-                        context = object_type, parent_context = self._scope_type)
-                collisionless_symbol = PyccelSymbol(collisionless_name,
-                        is_temp = getattr(symbol, 'is_temp', False))
+                collisionless_name = self.name_clash_checker.get_collisionless_name(
+                    symbol,
+                    self.all_used_symbols,
+                    prefix=self._symbol_prefix,
+                    context=object_type,
+                    parent_context=self._scope_type,
+                )
+                collisionless_symbol = PyccelSymbol(
+                    collisionless_name, is_temp=getattr(symbol, "is_temp", False)
+                )
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
                 return collisionless_symbol
@@ -597,8 +638,11 @@ class Scope:
         assert python_symbol not in self._used_symbols
 
         if self.name_clash_checker.has_clash(low_level_symbol, self.all_used_symbols):
-            errors.report("Low-level name conflicts with name already in use.",
-                          severity='error', symbol=python_symbol)
+            errors.report(
+                "Low-level name conflicts with name already in use.",
+                severity="error",
+                symbol=python_symbol,
+            )
 
         self._used_symbols[python_symbol] = low_level_symbol
         self._original_symbol[low_level_symbol] = python_symbol
@@ -619,7 +663,6 @@ class Scope:
             collisionless_symbol = self._used_symbols.pop(symbol)
             self._original_symbol.pop(collisionless_symbol)
 
-
     def insert_symbolic_alias(self, symbol, alias):
         """
         Add a new symbolic alias to the scope.
@@ -637,16 +680,18 @@ class Scope:
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbolic_alias(symbol, alias)
         else:
-            symbolic_aliases = self._locals['symbolic_aliases']
+            symbolic_aliases = self._locals["symbolic_aliases"]
             if symbol in symbolic_aliases:
-                errors.report(f"{symbol} cannot represent multiple static concepts",
-                        symbol=symbol, severity='error')
+                errors.report(
+                    f"{symbol} cannot represent multiple static concepts",
+                    symbol=symbol,
+                    severity="error",
+                )
 
             symbolic_aliases[symbol] = alias
 
     def insert_symbols(self, symbols):
-        """ Add multiple new symbols to the scope
-        """
+        """Add multiple new symbols to the scope"""
         for s in symbols:
             self.insert_symbol(s)
 
@@ -749,8 +794,12 @@ class Scope:
             The newly created name.
         """
 
-        new_name, counter = create_incremented_string(self.local_used_symbols.values(),
-                                    prefix = prefix, counter = counter, name_clash_checker = self.name_clash_checker)
+        new_name, counter = create_incremented_string(
+            self.local_used_symbols.values(),
+            prefix=prefix,
+            counter=counter,
+            name_clash_checker=self.name_clash_checker,
+        )
 
         chosen_new_symbol = PyccelSymbol(new_name, is_temp=True)
 
@@ -758,7 +807,7 @@ class Scope:
 
         return new_symbol, counter
 
-    def get_new_name(self, current_name = None, *, is_temp = None, object_type = 'variable'):
+    def get_new_name(self, current_name=None, *, is_temp=None, object_type="variable"):
         """
         Get a new name which does not clash with any names in the current context.
 
@@ -788,34 +837,45 @@ class Scope:
         PyccelSymbol
             The new name which will be printed in the code.
         """
-        if current_name is not None and \
-                not self.name_clash_checker.has_clash(current_name, self.all_python_symbols):
-            new_name = PyccelSymbol(current_name, is_temp = is_temp)
-            return self.insert_symbol(new_name, object_type = object_type)
+        if current_name is not None and not self.name_clash_checker.has_clash(
+            current_name, self.all_python_symbols
+        ):
+            new_name = PyccelSymbol(current_name, is_temp=is_temp)
+            return self.insert_symbol(new_name, object_type=object_type)
 
         elif current_name is None:
             assert is_temp is None
             is_temp = True
             # Avoid confusing names by also searching in parent scopes
-            new_name, self._dummy_counter = create_incremented_string(self.all_used_symbols,
-                                                prefix = current_name,
-                                                counter = self._dummy_counter,
-                                                name_clash_checker = self.name_clash_checker)
+            new_name, self._dummy_counter = create_incremented_string(
+                self.all_used_symbols,
+                prefix=current_name,
+                counter=self._dummy_counter,
+                name_clash_checker=self.name_clash_checker,
+            )
         else:
             if is_temp is None:
                 is_temp = True
             # When a name is suggested, try to stick to it
-            new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
+            new_name, _ = create_incremented_string(
+                self.all_used_symbols, prefix=current_name
+            )
 
-        collisionless_name = self.name_clash_checker.get_collisionless_name(new_name,
-                self.all_used_symbols, prefix = self._symbol_prefix,
-                context = object_type, parent_context = self._scope_type)
-        collisionless_symbol = PyccelSymbol(collisionless_name, is_temp = True)
+        collisionless_name = self.name_clash_checker.get_collisionless_name(
+            new_name,
+            self.all_used_symbols,
+            prefix=self._symbol_prefix,
+            context=object_type,
+            parent_context=self._scope_type,
+        )
+        collisionless_symbol = PyccelSymbol(collisionless_name, is_temp=True)
         self._used_symbols[collisionless_symbol] = collisionless_symbol
         self._original_symbol[collisionless_symbol] = collisionless_symbol
         return self.insert_symbol(collisionless_symbol, object_type)
 
-    def get_temporary_variable(self, dtype_or_var, name = None, *, clone_scope = None, **kwargs):
+    def get_temporary_variable(
+        self, dtype_or_var, name=None, *, clone_scope=None, **kwargs
+    ):
         """
         Get a temporary variable.
 
@@ -842,16 +902,18 @@ class Scope:
         assert isinstance(name, (str, type(None)))
         name = self.get_new_name(name)
         if isinstance(dtype_or_var, Variable):
-            var = dtype_or_var.clone(name, **kwargs, is_temp = True)
+            var = dtype_or_var.clone(name, **kwargs, is_temp=True)
         else:
-            var = Variable(dtype_or_var, name, **kwargs, is_temp = True)
+            var = Variable(dtype_or_var, name, **kwargs, is_temp=True)
         if isinstance(var.class_type, InhomogeneousTupleType):
             assert isinstance(dtype_or_var, Variable)
             assert clone_scope is not None
             for orig_vi, vi_idx in zip(dtype_or_var, var):
-                vi = self.get_temporary_variable(clone_scope.collect_tuple_element(orig_vi), clone_scope = clone_scope)
+                vi = self.get_temporary_variable(
+                    clone_scope.collect_tuple_element(orig_vi), clone_scope=clone_scope
+                )
                 self.insert_symbolic_alias(vi_idx, vi)
-        self.insert_variable(var, tuple_recursive = False)
+        self.insert_variable(var, tuple_recursive=False)
         return var
 
     def get_expected_name(self, start_name):
@@ -871,7 +933,7 @@ class Scope:
         PyccelSymbol
             The name which will be used in the generated code.
         """
-        if start_name == '_':
+        if start_name == "_":
             return self.get_new_name()
         elif start_name in self._used_symbols.keys():
             return self._used_symbols[start_name]
@@ -880,7 +942,7 @@ class Scope:
         else:
             raise RuntimeError(f"{start_name} does not exist in scope")
 
-    def get_import_alias(self, obj, category = None):
+    def get_import_alias(self, obj, category=None):
         """
         Get the name used to access an imported object in the current scope.
 
@@ -906,7 +968,7 @@ class Scope:
         """
         for l in ([category] if category else self._locals.keys()):
             import_obj = self.imports[l]
-            name = next((n for n,o in import_obj.items() if o is obj), None)
+            name = next((n for n, o in import_obj.items() if o is obj), None)
             if name:
                 return name
 
@@ -916,7 +978,7 @@ class Scope:
             raise RuntimeError(f"Can't find expected imported object {obj} in scope")
 
     def create_product_loop_scope(self, inner_scope, n_loops):
-        """ Create a n_loops loop scopes such that the innermost loop
+        """Create a n_loops loop scopes such that the innermost loop
         has the scope inner_scope
 
         Parameters
@@ -927,17 +989,18 @@ class Scope:
         """
         assert inner_scope == self._loops[-1]
         scopes = [self.create_new_loop_scope()]
-        for _ in range(n_loops-2):
+        for _ in range(n_loops - 2):
             scopes.append(scopes[-1].create_new_loop_scope())
-        inner_scope.update_parent_scope(scopes[-1], is_loop = True)
+        inner_scope.update_parent_scope(scopes[-1], is_loop=True)
         scopes.append(inner_scope)
         return scopes
 
     def collect_all_imports(self):
-        """ Collect the names of all modules necessary to understand this scope
-        """
-        imports = list(self._imports['imports'].keys())
-        imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
+        """Collect the names of all modules necessary to understand this scope"""
+        imports = list(self._imports["imports"].keys())
+        imports.extend(
+            [i for s in self._sons_scopes.values() for i in s.collect_all_imports()]
+        )
         return imports
 
     def collect_all_type_vars(self):
@@ -952,7 +1015,11 @@ class Scope:
         list[TypeVar]
             A list of TypeVars in the scope.
         """
-        type_vars = {n:t for n,t in self.symbolic_aliases.items() if isinstance(t, TypingTypeVar)}
+        type_vars = {
+            n: t
+            for n, t in self.symbolic_aliases.items()
+            if isinstance(t, TypingTypeVar)
+        }
         if self.parent_scope:
             parent_type_vars = self.parent_scope.collect_all_type_vars()
             parent_type_vars.update(type_vars)
@@ -960,9 +1027,8 @@ class Scope:
         else:
             return type_vars
 
-    def update_parent_scope(self, new_parent, is_loop, name = None):
-        """ Change the parent scope
-        """
+    def update_parent_scope(self, new_parent, is_loop, name=None):
+        """Change the parent scope"""
         if is_loop:
             if self.parent_scope:
                 self.parent_scope.remove_loop(self)
@@ -976,31 +1042,26 @@ class Scope:
 
     @property
     def parent_scope(self):
-        """ Return the enclosing scope
-        """
+        """Return the enclosing scope"""
         return self._parent_scope
 
     def remove_loop(self, loop):
-        """ Remove a loop from the scope
-        """
+        """Remove a loop from the scope"""
         self._loops.remove(loop)
 
     def remove_son(self, son):
-        """ Remove a sub-scope from the scope
-        """
-        name = [k for k,v in self._sons_scopes.items() if v is son]
+        """Remove a sub-scope from the scope"""
+        name = [k for k, v in self._sons_scopes.items() if v is son]
         assert len(name) == 1
         self._sons_scopes.pop(name[0])
 
     def add_loop(self, loop):
-        """ Make parent aware of new child loop
-        """
+        """Make parent aware of new child loop"""
         assert loop.parent_scope is self
         self._loops.append(loop)
 
     def add_son(self, name, son):
-        """ Make parent aware of new child
-        """
+        """Make parent aware of new child"""
         assert son.parent_scope is self
         self._sons_scopes[name] = son
 
@@ -1030,8 +1091,7 @@ class Scope:
 
     @property
     def python_names(self):
-        """ Get map of new names to original python names
-        """
+        """Get map of new names to original python names"""
         return self._original_symbol
 
     def rename_function(self, o, name):
@@ -1083,13 +1143,18 @@ class Scope:
         PyccelError
             An error is raised if the tuple element has not yet been added to the scope.
         """
-        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base, DottedVariable):
+        if isinstance(tuple_elem, IndexedElement) and isinstance(
+            tuple_elem.base, DottedVariable
+        ):
             cls_scope = tuple_elem.base.lhs.cls_base.scope
             if cls_scope is not self:
                 return cls_scope.collect_tuple_element(tuple_elem)
 
-        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType) \
-                and not isinstance(tuple_elem.base, PyccelFunction):
+        if (
+            isinstance(tuple_elem, IndexedElement)
+            and isinstance(tuple_elem.base.class_type, InhomogeneousTupleType)
+            and not isinstance(tuple_elem.base, PyccelFunction)
+        ):
             if isinstance(tuple_elem.base, DottedVariable):
                 class_var = tuple_elem.base.lhs
                 base = tuple_elem.base.clone(tuple_elem.base.name, Variable)
@@ -1098,13 +1163,11 @@ class Scope:
                 class_var = None
                 tuple_elem_search = tuple_elem
 
-            result = self.find(tuple_elem_search, 'symbolic_aliases')
+            result = self.find(tuple_elem_search, "symbolic_aliases")
 
             if result is None:
-                msg = f'Internal error. Tuple element {tuple_elem} could not be found.'
-                return errors.report(msg,
-                        symbol = tuple_elem,
-                        severity='fatal')
+                msg = f"Internal error. Tuple element {tuple_elem} could not be found."
+                return errors.report(msg, symbol=tuple_elem, severity="fatal")
             elif class_var:
                 return result.clone(result.name, DottedVariable, lhs=class_var)
             else:
@@ -1138,8 +1201,13 @@ class Scope:
 
         # A tuple_var may not be a Variable if we are collecting arguments.
         # In this case it may be something else, e.g. a FunctionAddress.
-        if isinstance(tuple_var, Variable) and isinstance(tuple_var.class_type, InhomogeneousTupleType):
-            return [vi for v in tuple_var for vi in self.collect_all_tuple_elements(self.collect_tuple_element(v))]
+        if isinstance(tuple_var, Variable) and isinstance(
+            tuple_var.class_type, InhomogeneousTupleType
+        ):
+            return [
+                vi
+                for v in tuple_var
+                for vi in self.collect_all_tuple_elements(self.collect_tuple_element(v))
+            ]
         else:
             return [tuple_var]
-

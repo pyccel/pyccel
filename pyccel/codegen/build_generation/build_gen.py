@@ -1,9 +1,11 @@
 """
 Module describing things that are in common between different build system handlers.
 """
+
 from pyccel.utilities.stage import PyccelStage
 
 pyccel_stage = PyccelStage()
+
 
 class BuildSystemHandler:
     """
@@ -33,7 +35,19 @@ class BuildSystemHandler:
         The main language of the code. This is the target language but
         may not be the only language required for compilation.
     """
-    def __init__(self, pyccel_dir, root_dir, output_dir, *, verbose, debug_mode, compiler, accelerators,  main_language):
+
+    def __init__(
+        self,
+        pyccel_dir,
+        root_dir,
+        output_dir,
+        *,
+        verbose,
+        debug_mode,
+        compiler,
+        accelerators,
+        main_language,
+    ):
         self._pyccel_dir = pyccel_dir
         self._root_dir = root_dir
         self._output_dir = output_dir
@@ -43,4 +57,4 @@ class BuildSystemHandler:
         self._accelerators = accelerators
         self._main_language = main_language
         self._languages = ()
-        pyccel_stage.set_stage('buildgen')
+        pyccel_stage.set_stage("buildgen")

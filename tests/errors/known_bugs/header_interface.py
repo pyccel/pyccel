@@ -3,7 +3,7 @@
 from pyccel.stdlib.internal.blas import daxpy
 from pyccel.stdlib.internal.blas import saxpy
 
-#$header interface axpy=daxpy|saxpy
+# $header interface axpy=daxpy|saxpy
 
 # > Usage:
 #
@@ -13,6 +13,7 @@ from pyccel.stdlib.internal.blas import saxpy
 
 # TODO add saxpy test
 from numpy import zeros
+
 
 def test_daxpy():
     n = 5
@@ -33,5 +34,6 @@ def test_daxpy():
     sy[3] = 6.0
 
     axpy(n, sa, sx, incx, sy, incy)
+
 
 test_daxpy()

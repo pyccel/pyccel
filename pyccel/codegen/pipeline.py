@@ -1,8 +1,8 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Contains the execute_pyccel function which carries out the main steps required to execute pyccel
 """
@@ -13,53 +13,64 @@ import shutil
 import time
 from pathlib import Path
 
-from pyccel.errors.errors          import Errors, PyccelError
-from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
-from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
-from pyccel.parser.parser          import Parser
-from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import manage_dependencies, get_module_and_compile_dependencies
+from pyccel.errors.errors import Errors, PyccelError
+from pyccel.errors.errors import (
+    PyccelSyntaxError,
+    PyccelSemanticError,
+    PyccelCodegenError,
+)
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.parser import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.codegen.utilities import (
+    manage_dependencies,
+    get_module_and_compile_dependencies,
+)
 from pyccel.codegen.python_wrapper import create_shared_library
-from pyccel.naming                 import name_clash_checkers
-from pyccel.utilities.stage        import PyccelStage
-from pyccel.ast.utilities          import python_builtin_libs
-from pyccel.parser.scope           import Scope
+from pyccel.naming import name_clash_checkers
+from pyccel.utilities.stage import PyccelStage
+from pyccel.ast.utilities import python_builtin_libs
+from pyccel.parser.scope import Scope
 
-from .compiling.basic     import CompileObj
+from .compiling.basic import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
-__all__ = ['execute_pyccel']
+__all__ = ["execute_pyccel"]
 
-#==============================================================================
+# ==============================================================================
 # NOTE:
 # [..]_dirname is the name of a directory
 # [..]_dirpath is the full (absolute) path of a directory
 
+
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
-def execute_pyccel(fname, *,
-                   syntax_only     = False,
-                   semantic_only   = False,
-                   convert_only    = False,
-                   verbose         = 0,
-                   time_execution  = False,
-                   folder          = None,
-                   language        = None,
-                   compiler_family = None,
-                   flags           = None,
-                   wrapper_flags   = None,
-                   include         = (),
-                   libdir          = (),
-                   modules         = (),
-                   libs            = (),
-                   debug           = None,
-                   accelerators    = (),
-                   output_name     = None,
-                   compiler_export_file = None,
-                   conda_warnings  = 'basic',
-                   context_dict    = None):
+def execute_pyccel(
+    fname,
+    *,
+    syntax_only=False,
+    semantic_only=False,
+    convert_only=False,
+    verbose=0,
+    time_execution=False,
+    folder=None,
+    language=None,
+    compiler_family=None,
+    flags=None,
+    wrapper_flags=None,
+    include=(),
+    libdir=(),
+    modules=(),
+    libs=(),
+    debug=None,
+    accelerators=(),
+    output_name=None,
+    compiler_export_file=None,
+    conda_warnings="basic",
+    context_dict=None,
+):
     """
     Run Pyccel on the provided code.
 
@@ -120,13 +131,15 @@ def execute_pyccel(fname, *,
     """
     start = time.time()
     timers = {}
-    if fname.endswith('.pyi'):
+    if fname.endswith(".pyi"):
         semantic_only = True
         if verbose:
             print("Stub file recognised, stopping after semantic stage")
 
     if Path(fname).stem in python_builtin_libs:
-        raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
+        raise ValueError(
+            f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402"
+        )
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
@@ -136,10 +149,9 @@ def execute_pyccel(fname, *,
 
     # Copy list arguments to local lists to avoid unexpected behavior
     include = [os.path.abspath(i) for i in include]
-    libdir  = [os.path.abspath(l) for l in libdir]
-    modules  = [*modules]
-    libs     = [*libs]
-
+    libdir = [os.path.abspath(l) for l in libdir]
+    modules = [*modules]
+    libs = [*libs]
 
     # Store current directory and add it to sys.path
     # variable to imitate Python's import behavior
@@ -163,10 +175,10 @@ def execute_pyccel(fname, *,
 
     # Define default debug mode
     if debug is None:
-        debug = bool(os.environ.get('PYCCEL_DEBUG_MODE', False))
+        debug = bool(os.environ.get("PYCCEL_DEBUG_MODE", False))
 
     # Define directory name and path for pyccel & cpython build
-    pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+    pyccel_dirname = "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
     # Create new directories if not existing
@@ -174,17 +186,17 @@ def execute_pyccel(fname, *,
     if not (syntax_only or semantic_only):
         os.makedirs(pyccel_dirpath, exist_ok=True)
 
-    if conda_warnings not in ('off', 'basic', 'verbose'):
+    if conda_warnings not in ("off", "basic", "verbose"):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
     if language is None:
-        language = 'fortran'
+        language = "fortran"
     else:
         language = language.lower()
 
     # Choose Fortran compiler
     if compiler_family is None:
-        compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+        compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
 
     flags = [] if flags is None else flags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
@@ -202,12 +214,12 @@ def execute_pyccel(fname, *,
     Scope.name_clash_checker = name_clash_checkers[language]
 
     start_syntax = time.time()
-    timers["Initialisation"] = start_syntax-start
+    timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder = folder, context_dict = context_dict)
+    parser = Parser(pymod_filepath, output_folder=folder, context_dict=context_dict)
     parser.parse(verbose=verbose)
     if errors.has_errors():
-        raise PyccelSyntaxError('Syntax step failed')
+        raise PyccelSyntaxError("Syntax step failed")
 
     timers["Syntactic Stage"] = time.time() - start_syntax
 
@@ -217,10 +229,10 @@ def execute_pyccel(fname, *,
 
     start_semantic = time.time()
     # Annotate abstract syntax Tree
-    parser.annotate(verbose = verbose)
+    parser.annotate(verbose=verbose)
 
     if errors.has_errors():
-        raise PyccelSemanticError('Semantic step failed')
+        raise PyccelSemanticError("Semantic step failed")
 
     timers["Semantic Stage"] = time.time() - start_semantic
 
@@ -239,12 +251,12 @@ def execute_pyccel(fname, *,
     fname, prog_name = codegen.export(fname)
 
     if errors.has_errors():
-        raise PyccelCodegenError('Code generation failed')
+        raise PyccelCodegenError("Code generation failed")
 
     timers["Codegen Stage"] = time.time() - start_codegen
 
-    if language == 'python':
-        output_file = (output_name + '.py') if output_name else os.path.basename(fname)
+    if language == "python":
+        output_file = (output_name + ".py") if output_name else os.path.basename(fname)
         new_location = os.path.join(folder, output_file)
         if verbose:
             print("cp {} {}".format(fname, new_location))
@@ -259,25 +271,34 @@ def execute_pyccel(fname, *,
     compile_libs, deps = get_module_and_compile_dependencies(parser)
     compile_libs.extend(libs)
 
-    mod_obj = CompileObj(file_name = fname,
-            folder       = pyccel_dirpath,
-            flags        = flags,
-            include      = include,
-            libs         = compile_libs,
-            libdir       = libdir,
-            dependencies = modules + list(deps.values()),
-            extra_compilation_tools = accelerators)
+    mod_obj = CompileObj(
+        file_name=fname,
+        folder=pyccel_dirpath,
+        flags=flags,
+        include=include,
+        libs=compile_libs,
+        libdir=libdir,
+        dependencies=modules + list(deps.values()),
+        extra_compilation_tools=accelerators,
+    )
     parser.compile_obj = mod_obj
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
     # if recursive:
     #     for dep in parser.sons:
     #         # Call same function on 'dep'
     #         pass
-    #------------------------------------------------------
-    manage_dependencies(codegen.get_printer_imports(), compiler, pyccel_dirpath, mod_obj,
-            language, verbose, convert_only)
+    # ------------------------------------------------------
+    manage_dependencies(
+        codegen.get_printer_imports(),
+        compiler,
+        pyccel_dirpath,
+        mod_obj,
+        language,
+        verbose,
+        convert_only,
+    )
 
     if convert_only:
         if time_execution:
@@ -285,50 +306,60 @@ def execute_pyccel(fname, *,
         return
 
     start_compile_target_language = time.time()
-    pyccel_stage.set_stage('compilation')
+    pyccel_stage.set_stage("compilation")
     # Compile code to modules
-    compiler.compile_module(compile_obj=mod_obj,
-            output_folder=pyccel_dirpath,
-            language=language,
-            verbose=verbose)
-
+    compiler.compile_module(
+        compile_obj=mod_obj,
+        output_folder=pyccel_dirpath,
+        language=language,
+        verbose=verbose,
+    )
 
     if codegen.is_program:
-        prog_obj = CompileObj(file_name = prog_name,
-                folder       = pyccel_dirpath,
-                dependencies = (mod_obj,),
-                prog_target  = module_name)
-        generated_program_filepath = compiler.compile_program(compile_obj=prog_obj,
-                output_folder=folder,
-                language=language,
-                verbose=verbose)
+        prog_obj = CompileObj(
+            file_name=prog_name,
+            folder=pyccel_dirpath,
+            dependencies=(mod_obj,),
+            prog_target=module_name,
+        )
+        generated_program_filepath = compiler.compile_program(
+            compile_obj=prog_obj,
+            output_folder=folder,
+            language=language,
+            verbose=verbose,
+        )
 
     timers["Compilation without wrapper"] = time.time() - start_compile_target_language
 
     # Create shared library
-    generated_filepath, shared_lib_timers = create_shared_library(codegen,
-                                           mod_obj,
-                                           language = language,
-                                           wrapper_flags = wrapper_flags,
-                                           pyccel_dirpath = pyccel_dirpath,
-                                           output_dirpath = folder,
-                                           compiler = compiler,
-                                           sharedlib_modname = output_name,
-                                           verbose = verbose)
+    generated_filepath, shared_lib_timers = create_shared_library(
+        codegen,
+        mod_obj,
+        language=language,
+        wrapper_flags=wrapper_flags,
+        pyccel_dirpath=pyccel_dirpath,
+        output_dirpath=folder,
+        compiler=compiler,
+        sharedlib_modname=output_name,
+        verbose=verbose,
+    )
 
     timers.update(shared_lib_timers)
 
     if errors.has_errors():
-        raise PyccelCodegenError('Code generation failed')
+        raise PyccelCodegenError("Code generation failed")
 
     if verbose:
-        print( '> Shared library has been created: {}'.format(generated_filepath))
+        print("> Shared library has been created: {}".format(generated_filepath))
 
         if codegen.is_program:
-            print( '> Executable has been created: {}'.format(generated_program_filepath))
+            print(
+                "> Executable has been created: {}".format(generated_program_filepath)
+            )
 
     if time_execution:
         print_timers(start, timers)
+
 
 def print_timers(start, timers):
     """
@@ -343,7 +374,7 @@ def print_timers(start, timers):
     timers : dict
         A dictionary containing the times measured.
     """
-    timers['Total'] = time.time()-start
+    timers["Total"] = time.time() - start
     print("-------------------- Timers -------------------------")
-    for n,t in timers.items():
-        print(f'{n:<30}: ',t)
+    for n, t in timers.items():
+        print(f"{n:<30}: ", t)

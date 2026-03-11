@@ -1,15 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module handling classes for compiler information relevant to a given object
 """
+
 from pathlib import Path
 import sys
 from filelock import FileLock
+
 
 class CompileObj:
     """
@@ -54,21 +56,38 @@ class CompileObj:
         program. If no name is provided then the module name deduced from the file
         name is used.
     """
-    compilation_in_progress = FileLock('.lock_acquisition.lock')
-    __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
-                 '_lock_target','_lock_source','_flags','_include','_libs',
-                 '_libdir','_extra_compilation_tools','_dependencies','_has_target_file')
-    def __init__(self,
-                 file_name,
-                 folder,
-                 flags        = (),
-                 include     = (),
-                 libs         = (),
-                 libdir      = (),
-                 dependencies = (),
-                 extra_compilation_tools = (),
-                 has_target_file = True,
-                 prog_target  = None):
+
+    compilation_in_progress = FileLock(".lock_acquisition.lock")
+    __slots__ = (
+        "_file",
+        "_folder",
+        "_module_name",
+        "_module_target",
+        "_prog_target",
+        "_lock_target",
+        "_lock_source",
+        "_flags",
+        "_include",
+        "_libs",
+        "_libdir",
+        "_extra_compilation_tools",
+        "_dependencies",
+        "_has_target_file",
+    )
+
+    def __init__(
+        self,
+        file_name,
+        folder,
+        flags=(),
+        include=(),
+        libs=(),
+        libdir=(),
+        dependencies=(),
+        extra_compilation_tools=(),
+        has_target_file=True,
+        prog_target=None,
+    ):
 
         folder = Path(folder)
         self._folder = folder
@@ -76,28 +95,30 @@ class CompileObj:
 
         self._module_name = Path(file_name).stem
         rel_mod_name = folder / self._module_name
-        self._module_target = rel_mod_name.with_suffix('.o')
+        self._module_target = rel_mod_name.with_suffix(".o")
 
         if prog_target:
             self._prog_target = prog_target
         else:
             self._prog_target = self._module_name
         if sys.platform == "win32":
-            self._prog_target = self._prog_target + '.exe'
+            self._prog_target = self._prog_target + ".exe"
 
-        self._lock_target  = FileLock(str(self.module_target.with_suffix(
-                                            self.module_target.suffix + '.lock')))
-        self._lock_source  = FileLock(str(self.source.with_suffix(
-                                            self.source.suffix + '.lock')))
+        self._lock_target = FileLock(
+            str(self.module_target.with_suffix(self.module_target.suffix + ".lock"))
+        )
+        self._lock_source = FileLock(
+            str(self.source.with_suffix(self.source.suffix + ".lock"))
+        )
 
-        self._flags        = list(flags)
-        self._include     = {*(Path(i) for i in include)}
+        self._flags = list(flags)
+        self._include = {*(Path(i) for i in include)}
         if has_target_file:
             self._include.add(folder)
-        self._libs         = list(libs)
-        self._libdir      = set(libdir)
+        self._libs = list(libs)
+        self._libdir = set(libdir)
         self._extra_compilation_tools = set(extra_compilation_tools)
-        self._dependencies = {getattr(a, 'module_target', a):a for a in dependencies}
+        self._dependencies = {getattr(a, "module_target", a): a for a in dependencies}
         self._has_target_file = has_target_file
 
     def reset_folder(self, folder):
@@ -121,55 +142,51 @@ class CompileObj:
         self._include.add(folder)
 
         self._file = folder / self._file.name
-        self._lock_source  = FileLock(self.source.with_suffix(
-                                        self.source.suffix+'.lock'))
+        self._lock_source = FileLock(
+            self.source.with_suffix(self.source.suffix + ".lock")
+        )
         self._folder = folder
         self._include.add(self._folder)
 
         rel_mod_name = folder / self._module_name
-        self._module_target = rel_mod_name.with_suffix('.o')
+        self._module_target = rel_mod_name.with_suffix(".o")
 
         self._prog_target = rel_mod_name
         if sys.platform == "win32":
-            self._prog_target.with_suffix('.exe')
+            self._prog_target.with_suffix(".exe")
 
-        self._lock_target = FileLock(self.module_target.with_suffix(
-                                        self.module_target.suffix+'.lock'))
+        self._lock_target = FileLock(
+            self.module_target.with_suffix(self.module_target.suffix + ".lock")
+        )
 
     @property
     def source(self):
-        """ Returns the file to be compiled
-        """
+        """Returns the file to be compiled"""
         return self._file
 
     @property
     def source_folder(self):
-        """ Returns the location of the file to be compiled
-        """
+        """Returns the location of the file to be compiled"""
         return self._folder
 
     @property
     def python_module(self):
-        """ Returns the python name of the file to be compiled
-        """
+        """Returns the python name of the file to be compiled"""
         return self._module_name
 
     @property
     def module_target(self):
-        """ Returns the .o file to be generated by the compilation step
-        """
+        """Returns the .o file to be generated by the compilation step"""
         return self._module_target
 
     @property
     def program_target(self):
-        """ Returns the program to be generated by the compilation step
-        """
+        """Returns the program to be generated by the compilation step"""
         return self._prog_target
 
     @property
     def flags(self):
-        """ Returns the additional flags required to compile the file
-        """
+        """Returns the additional flags required to compile the file"""
         return self._flags
 
     @property
@@ -180,7 +197,9 @@ class CompileObj:
         Return a set containing all the directories which must be passed to the
         compiler via the include flag `-I`.
         """
-        return self._include.union([di for d in self._dependencies.values() for di in d.include])
+        return self._include.union(
+            [di for d in self._dependencies.values() for di in d.include]
+        )
 
     @property
     def libs(self):
@@ -190,7 +209,7 @@ class CompileObj:
         Return a list containing all the libraries which must be passed to the
         compiler via the library flag `-l`.
         """
-        return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
+        return self._libs + [dl for d in self._dependencies.values() for dl in d.libs]
 
     @property
     def libdir(self):
@@ -201,12 +220,13 @@ class CompileObj:
         compiler via the library directory flag `-L` so that the necessary
         libraries can be correctly located.
         """
-        return self._libdir.union([dld for d in self._dependencies.values() for dld in d.libdir])
+        return self._libdir.union(
+            [dld for d in self._dependencies.values() for dld in d.libdir]
+        )
 
     @property
     def extra_modules(self):
-        """ Returns the additional objects required to compile the file
-        """
+        """Returns the additional objects required to compile the file"""
         deps = set()
         for d in self._dependencies.values():
             if d.has_target_file:
@@ -216,13 +236,11 @@ class CompileObj:
 
     @property
     def dependencies(self):
-        """ Returns the objects which the file to be compiled uses
-        """
+        """Returns the objects which the file to be compiled uses"""
         return self._dependencies.values()
 
     def get_dependency(self, target):
-        """ Returns the objects which the file to be compiled uses
-        """
+        """Returns the objects which the file to be compiled uses"""
         return self._dependencies.get(target, None)
 
     def add_dependencies(self, *args):
@@ -235,7 +253,7 @@ class CompileObj:
         """
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
-        self._dependencies.update({a.module_target:a for a in args})
+        self._dependencies.update({a.module_target: a for a in args})
 
     def __enter__(self):
         self.compilation_in_progress.acquire()
@@ -303,8 +321,13 @@ class CompileObj:
         form of flags, include directories, libraries, orr library directories.
         Examples of 'extra_compilation_tools' are: openmp, openacc, python.
         """
-        return self._extra_compilation_tools.union([da for d in self._dependencies.values() \
-                                                       for da in d.extra_compilation_tools])
+        return self._extra_compilation_tools.union(
+            [
+                da
+                for d in self._dependencies.values()
+                for da in d.extra_compilation_tools
+            ]
+        )
 
     def __eq__(self, other):
         return self.module_target == other.module_target

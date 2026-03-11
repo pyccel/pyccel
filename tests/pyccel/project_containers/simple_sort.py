@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+
 def simple_sorted(values: set[int]) -> list[int]:
     sorted_list: list[int] = []
     for val in values:
@@ -12,4 +13,3 @@ def simple_sorted(values: set[int]) -> list[int]:
         if not inserted:
             sorted_list.append(val)
     return sorted_list
-

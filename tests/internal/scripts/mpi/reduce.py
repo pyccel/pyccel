@@ -13,7 +13,7 @@ from pyccel.stdlib.internal.mpi import MPI_SUM
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -36,9 +36,9 @@ if __name__ == '__main__':
     sum_value = 0
     count = np.int32(1)
 
-    mpi_reduce (value, sum_value, count, MPI_INTEGER8, MPI_SUM, root, comm, ierr)
+    mpi_reduce(value, sum_value, count, MPI_INTEGER8, MPI_SUM, root, comm, ierr)
 
     if rank == 0:
-        print('I, process ', root,', have the global sum value ', sum_value)
+        print("I, process ", root, ", have the global sum value ", sum_value)
 
     mpi_finalize(ierr)

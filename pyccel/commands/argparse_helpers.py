@@ -1,38 +1,42 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 File containing functions that help build argparse.ArgumentParser objects.
 
 File containing functions that help build argparse.ArgumentParser objects. Several of these
 functions are common to multiple sub-commands so the logic can be shared.
 """
+
 import argparse
 import os
 import pathlib
 import sys
 
 from pyccel import __version__ as pyccel_version, __path__ as pyccel_path
-from pyccel.errors.errors     import ErrorsMode
+from pyccel.errors.errors import ErrorsMode
 from pyccel.compilers.default_compilers import available_compilers
 
 __all__ = (
-        'add_accelerator_selection',
-        'add_common_settings',
-        'add_compiler_selection',
-        'add_help_flag',
-        'add_version_flag',
-        'deprecation_warning',
-        'get_warning_and_line',
-        'path_with_suffix',
-        'ErrorModeSelector',
-        )
+    "add_accelerator_selection",
+    "add_common_settings",
+    "add_compiler_selection",
+    "add_help_flag",
+    "add_version_flag",
+    "deprecation_warning",
+    "get_warning_and_line",
+    "path_with_suffix",
+    "ErrorModeSelector",
+)
 
 compiler_choices = list(available_compilers.keys())
-pyccel_home = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel'))
+pyccel_home = pathlib.Path(
+    os.environ.get("PYCCEL_CONFIG_HOME", pathlib.Path.home() / ".pyccel")
+)
 if pyccel_home.exists():
     compiler_choices += [d.stem for d in pyccel_home.iterdir() if d.is_dir]
+
 
 # -----------------------------------------------------------------------------------------
 def get_warning_and_line():
@@ -49,12 +53,14 @@ def get_warning_and_line():
     """
     try:
         from termcolor import colored
-        WARNING = colored('WARNING', 'red', attrs=['bold', 'blink'])
-        LINE    = colored('-------', 'red', attrs=['bold', 'blink'])
+
+        WARNING = colored("WARNING", "red", attrs=["bold", "blink"])
+        LINE = colored("-------", "red", attrs=["bold", "blink"])
     except ImportError:
-        WARNING = 'WARNING'
-        LINE    = '-------'
+        WARNING = "WARNING"
+        LINE = "-------"
     return WARNING, LINE
+
 
 # -----------------------------------------------------------------------------------------
 def deprecation_warning(tool):
@@ -77,8 +83,9 @@ def deprecation_warning(tool):
     message = f"{WARNING}: The pyccel-{tool} command is deprecated and will be removed in v 2.3. Please use `pyccel {tool}` instead."
     return "\n".join([LINE, message, LINE])
 
+
 # -----------------------------------------------------------------------------------------
-def path_with_suffix(suffixes, must_exist = True):
+def path_with_suffix(suffixes, must_exist=True):
     """
     Get the function which returns a Path to a file with one of the suffixes.
 
@@ -98,6 +105,7 @@ def path_with_suffix(suffixes, must_exist = True):
     function
         A function which checks if the argument is of the expected type.
     """
+
     def convert_to_path_with_suffix(path_str):
         """
         Covert string to Path with the chosen suffix.
@@ -121,9 +129,13 @@ def path_with_suffix(suffixes, must_exist = True):
         if must_exist and not path.is_file():
             raise argparse.ArgumentTypeError(f"File not found: {path}")
         if path.suffix not in suffixes:
-            raise argparse.ArgumentTypeError(f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}")
+            raise argparse.ArgumentTypeError(
+                f"Wrong file extension for file: {path}. Expecting one of: {', '.join(suffixes)}"
+            )
         return path.absolute()
+
     return convert_to_path_with_suffix
+
 
 # -----------------------------------------------------------------------------------------
 def add_help_flag(parser):
@@ -137,8 +149,9 @@ def add_help_flag(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    message = 'Show this help message and exit.'
-    parser.add_argument('-h', '--help', action='help', help=message)
+    message = "Show this help message and exit."
+    parser.add_argument("-h", "--help", action="help", help=message)
+
 
 # -----------------------------------------------------------------------------------------
 def add_version_flag(parser):
@@ -154,10 +167,17 @@ def add_version_flag(parser):
     """
     version = pyccel_version
     libpath = pyccel_path[0]
-    python  = f'python {sys.version_info.major}.{sys.version_info.minor}'
-    message = f'pyccel {version} from {libpath} ({python})'
+    python = f"python {sys.version_info.major}.{sys.version_info.minor}"
+    message = f"pyccel {version} from {libpath} ({python})"
 
-    parser.add_argument('-V', '--version', action='version', help='Show version and exit.', version=message)
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        help="Show version and exit.",
+        version=message,
+    )
+
 
 # -----------------------------------------------------------------------------------------
 def add_compiler_selection(parser, allow_compiler_config):
@@ -179,26 +199,33 @@ def add_compiler_selection(parser, allow_compiler_config):
     argparse._MutuallyExclusiveGroup
         The newly created argument group.
     """
-    default_compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
+    default_compiler = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
 
-    group = parser.add_argument_group('Compiler configuration (mutually exclusive options)')
+    group = parser.add_argument_group(
+        "Compiler configuration (mutually exclusive options)"
+    )
     compiler_group = group.add_mutually_exclusive_group(required=False)
-    compiler_group.add_argument('--compiler-family',
-                                dest='compiler_family',
-                                choices=compiler_choices,
-                                type=str,
-                                default=default_compiler,
-                                help=f'Compiler family (default: {default_compiler}).')
+    compiler_group.add_argument(
+        "--compiler-family",
+        dest="compiler_family",
+        choices=compiler_choices,
+        type=str,
+        default=default_compiler,
+        help=f"Compiler family (default: {default_compiler}).",
+    )
     if allow_compiler_config:
-        json_file_checker = path_with_suffix(('.json',))
-        compiler_group.add_argument('--compiler-config',
-                                    dest='compiler_family',
-                                    type=lambda p: str(json_file_checker(p)),
-                                    default=None,
-                                    metavar='CONFIG.json',
-                                    help='Load all compiler information from a JSON file with the given path (relative or absolute).')
+        json_file_checker = path_with_suffix((".json",))
+        compiler_group.add_argument(
+            "--compiler-config",
+            dest="compiler_family",
+            type=lambda p: str(json_file_checker(p)),
+            default=None,
+            metavar="CONFIG.json",
+            help="Load all compiler information from a JSON file with the given path (relative or absolute).",
+        )
 
     return compiler_group
+
 
 # -----------------------------------------------------------------------------------------
 def add_accelerator_selection(parser):
@@ -213,13 +240,27 @@ def add_accelerator_selection(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--mpi', dest='accelerators', action='append_const', const='mpi',
-                       default=[], help='Use MPI.')
-    group.add_argument('--openmp', dest='accelerators', action='append_const', const='openmp',
-                       help='Use OpenMP.')
+    group = parser.add_argument_group("Accelerators options")
+    group.add_argument(
+        "--mpi",
+        dest="accelerators",
+        action="append_const",
+        const="mpi",
+        default=[],
+        help="Use MPI.",
+    )
+    group.add_argument(
+        "--openmp",
+        dest="accelerators",
+        action="append_const",
+        const="openmp",
+        help="Use OpenMP.",
+    )
+
+
 #    group.add_argument('--openacc', dest='accelerators', action='append_const', const='openacc',
 #                       help='Use OpenACC.') # [YG 17.06.2025] OpenACC is not supported yet
+
 
 # -----------------------------------------------------------------------------------------
 def add_common_settings(parser):
@@ -240,17 +281,36 @@ def add_common_settings(parser):
     """
     # Set default error mode
     err_mode = ErrorsMode()
-    err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
+    err_mode.set_mode(os.environ.get("PYCCEL_ERROR_MODE", "user"))
 
     add_help_flag(parser)
-    parser.add_argument('-v', '--verbose', action='count', default = 0,
-                        help='Increase output verbosity (use -v, -vv, -vvv for more detailed output).')
-    parser.add_argument('--developer-mode', action=ErrorModeSelector, nargs=0, const='developer',
-                        help='Show internal messages.', dest=argparse.SUPPRESS)
-    parser.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), default='basic',
-                        help='Specify the level of Conda warnings to display (default: basic).')
-    parser.add_argument('--time-execution', action='store_true',
-                        help='Print the time spent in each section of the execution.')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase output verbosity (use -v, -vv, -vvv for more detailed output).",
+    )
+    parser.add_argument(
+        "--developer-mode",
+        action=ErrorModeSelector,
+        nargs=0,
+        const="developer",
+        help="Show internal messages.",
+        dest=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--conda-warnings",
+        choices=("off", "basic", "verbose"),
+        default="basic",
+        help="Specify the level of Conda warnings to display (default: basic).",
+    )
+    parser.add_argument(
+        "--time-execution",
+        action="store_true",
+        help="Print the time spent in each section of the execution.",
+    )
+
 
 # -----------------------------------------------------------------------------------------
 class ErrorModeSelector(argparse.Action):
@@ -265,6 +325,7 @@ class ErrorModeSelector(argparse.Action):
     **kwargs : dict
         See argparse.Action.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

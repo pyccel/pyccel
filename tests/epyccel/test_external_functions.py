@@ -6,10 +6,11 @@ import scipy.linalg.blas as sp_blas
 import modules.external_functions as mod
 from pyccel import epyccel
 
+
 # ==============================================================================
 @pytest.mark.fortran
 def test_dnrm2_1():
-    blas_dnrm2 = epyccel( mod.blas_dnrm2, language = 'fortran' )
+    blas_dnrm2 = epyccel(mod.blas_dnrm2, language="fortran")
 
     np.random.seed(2021)
 
@@ -18,14 +19,15 @@ def test_dnrm2_1():
 
     # ...
     err_expected = sp_blas.dnrm2(x)
-    err_pyccel   = blas_dnrm2(x)
-    assert np.abs(err_pyccel - err_expected) < 1.e-14
+    err_pyccel = blas_dnrm2(x)
+    assert np.abs(err_pyccel - err_expected) < 1.0e-14
     # ...
+
 
 # ==============================================================================
 @pytest.mark.fortran
 def test_dasum_1():
-    blas_dasum = epyccel( mod.blas_dasum, language = 'fortran' )
+    blas_dasum = epyccel(mod.blas_dasum, language="fortran")
 
     np.random.seed(2021)
 
@@ -34,14 +36,15 @@ def test_dasum_1():
 
     # ...
     expected = sp_blas.dasum(x)
-    result   = blas_dasum (x)
-    assert np.allclose(result, expected, 1.e-14)
+    result = blas_dasum(x)
+    assert np.allclose(result, expected, 1.0e-14)
     # ...
+
 
 # ==============================================================================
 @pytest.mark.fortran
 def test_ddot_1():
-    blas_ddot = epyccel( mod.blas_ddot, language = 'fortran' )
+    blas_ddot = epyccel(mod.blas_ddot, language="fortran")
 
     np.random.seed(2021)
 
@@ -51,14 +54,15 @@ def test_ddot_1():
 
     # ...
     expected = sp_blas.ddot(x, y)
-    result   = blas_ddot (x, y)
-    assert np.allclose(result, expected, 1.e-14)
+    result = blas_ddot(x, y)
+    assert np.allclose(result, expected, 1.0e-14)
     # ...
+
 
 # ==============================================================================
 @pytest.mark.fortran
 def test_ddot_2():
-    blas_ddot = epyccel( mod.blas_ddot_in_func, language = 'fortran' )
+    blas_ddot = epyccel(mod.blas_ddot_in_func, language="fortran")
 
     np.random.seed(2021)
 
@@ -68,14 +72,15 @@ def test_ddot_2():
 
     # ...
     expected = sp_blas.ddot(x, y)
-    result   = blas_ddot (x, y)
-    assert np.allclose(result, expected, 1.e-14)
+    result = blas_ddot(x, y)
+    assert np.allclose(result, expected, 1.0e-14)
     # ...
+
 
 # ==============================================================================
 @pytest.mark.fortran
 def test_idamax_1():
-    blas_idamax = epyccel( mod.blas_idamax, language = 'fortran' )
+    blas_idamax = epyccel(mod.blas_idamax, language="fortran")
 
     np.random.seed(2021)
 
@@ -84,6 +89,6 @@ def test_idamax_1():
 
     # ...
     expected = sp_blas.idamax(x)
-    result   = blas_idamax (x)
+    result = blas_idamax(x)
     assert result == expected
     # ...

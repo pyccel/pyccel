@@ -6,4 +6,4 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size_ = comm.Get_size()
 
-print('I process ', rank, ', among ', size_, ' processes')
+print("I process ", rank, ", among ", size_, " processes")

@@ -6,7 +6,7 @@ on:
       python_version:
         required: false
         type: string
-        default: '3.10'
+        default: '3.13' # High version needed to avoid unrecognised formatting for tests of future syntax
       base:
         required: false
         type: string

@@ -3,4 +3,4 @@
 
 se = {1, 2, 3}
 
-se.remove(range(3,4))
+se.remove(range(3, 4))

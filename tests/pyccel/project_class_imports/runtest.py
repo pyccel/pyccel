@@ -3,7 +3,7 @@ from project.basics.Point_mod import Point
 from project.basics.Line_mod import Line
 from project.shapes.Square_mod import Square
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     p1 = Point(0.0, 0.0)
     p2 = Point(1.0, 0.0)
     p3 = Point(0.0, 1.0)

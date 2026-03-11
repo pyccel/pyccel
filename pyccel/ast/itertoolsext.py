@@ -1,17 +1,19 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 This module represent a call to the itertools functions for code generation.
 """
-from .core      import PyccelFunctionDef, Module
+
+from .core import PyccelFunctionDef, Module
 from .internals import Iterable
 
 __all__ = (
-    'Product',
-    'itertools_mod',
+    "Product",
+    "itertools_mod",
 )
+
 
 class Product(Iterable):
     """
@@ -24,12 +26,13 @@ class Product(Iterable):
     *args : PyccelAstType
         The arguments passed to the product function.
     """
-    __slots__ = ('_elements',)
-    _attribute_nodes = ('_elements',)
+
+    __slots__ = ("_elements",)
+    _attribute_nodes = ("_elements",)
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
-            raise TypeError('args must be an iterable')
+            raise TypeError("args must be an iterable")
         elif len(args) < 2:
             return args[0]
         else:
@@ -58,6 +61,6 @@ class Product(Iterable):
         """
         return [elem[idx] for idx, elem in zip(self._indices, self.elements)]
 
-#==============================================================================
-itertools_mod = Module('itertools',(),
-        funcs = [PyccelFunctionDef('product',Product)])
+
+# ==============================================================================
+itertools_mod = Module("itertools", (), funcs=[PyccelFunctionDef("product", Product)])
