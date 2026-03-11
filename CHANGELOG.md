@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #TODO : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+
 ### Deprecated
 
 ### Removed
