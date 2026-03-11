@@ -10,8 +10,6 @@ on:
       base:
         required: false
         type: string
-  pull_request:
-    branches: devel
 
 env:
   PYTHON_VERSION: ${{ inputs.python_version }}
@@ -52,10 +50,6 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          echo "${{ github.event.pull_request.base.sha }}"
-          echo "${{ github.event_name }}"
-          echo "${{ github.event.pull_request.base.sha }}"
-          git diff ${{ github.event.pull_request.base.sha }}
           reviewdog -reporter=github-pr-check -runners=pylint -filter-mode=diff_context -diff="git diff ${{ github.event.pull_request.base.sha }} "
         shell: bash
         env:
