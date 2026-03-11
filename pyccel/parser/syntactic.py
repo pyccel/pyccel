@@ -244,7 +244,7 @@ class SyntaxParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             The treated object as a Pyccel ast node.
         """
-        if line.startswith('#$'):
+        if line.startswith('#$') or line.startswith('# $'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
                 expr = omp_parse(stmts=line)
