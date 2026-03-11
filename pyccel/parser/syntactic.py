@@ -244,9 +244,10 @@ class SyntaxParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             The treated object as a Pyccel ast node.
         """
-        if line.startswith('#$'):
-            env = line[2:].lstrip()
-            if env.startswith('omp'):
+        txt = line[1:].lstrip()
+        if txt.startswith('$'):
+            env = txt[1:].lstrip()
+            if env.startswith("omp"):
                 expr = omp_parse(stmts=line)
                 try:
                     expr = omp_parse(stmts=line)
@@ -282,7 +283,6 @@ class SyntaxParser(BasicParser):
                               severity='fatal')
 
         else:
-            txt = line[1:].lstrip()
             expr = Comment(txt)
 
         expr.set_current_ast(stmt)

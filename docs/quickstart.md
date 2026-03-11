@@ -297,7 +297,7 @@ Let's now see a more complicated example, where the Python module `mod.py` conta
 -   The three function's arguments are 2D NumPy arrays of double-precision floating point numbers
 -   Matrices `a` and `c` use C ordering (row-major), matrix `b` uses Fortran ordering (column-major)
 -   Since matrix `c` is modified by the function, it has `intent(inout)` in Fortran
--   Comments starting with `#$ omp` are translated to OpenMP pragmas
+-   Comments starting with `#$ omp` or `# $ omp` are translated to OpenMP pragmas
 
 ```python
 def matmul(a: 'float[:,:](order=C)',

@@ -10,6 +10,8 @@ Please note that files using the OpenMP Runtime library routines will only work 
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
 
+OpenMP pragmas are recognised by comments beginning with `#$omp` (additional spaces are permitted as Python formatting tools tend to enforce their presence).
+
 ### Example
 
 The following example shows how `omp_set_num_threads` is used to set the number of threads to _4 threads_ and how `omp_get_num_threads` is used to get the number of threads in the current team within a parallel region; `omp_get_num_threads` will return _4 threads_.

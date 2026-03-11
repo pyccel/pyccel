@@ -2,7 +2,7 @@ Header:
   statements*=HeaderStmt
 ;
 
-HeaderStmt: '#$' 'header' stmt=Statement;
+HeaderStmt: '#' '$' 'header' stmt=Statement;
 
 Statement:
     MetavarHeaderStmt
