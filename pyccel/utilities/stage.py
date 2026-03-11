@@ -1,12 +1,13 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" File containing information about which treatment stage Pyccel is executing
-"""
+# ------------------------------------------------------------------------------------------#
+"""File containing information about which treatment stage Pyccel is executing"""
+
 from .metaclasses import Singleton
 
-class PyccelStage(metaclass = Singleton):
+
+class PyccelStage(metaclass=Singleton):
     """
     Class wrapping a string indicating which treatment stage Pyccel is executing.
 
@@ -22,6 +23,7 @@ class PyccelStage(metaclass = Singleton):
 
     When Pyccel is not executing the stage is None.
     """
+
     def __init__(self):
         self._stage = None
 
@@ -36,15 +38,21 @@ class PyccelStage(metaclass = Singleton):
         stage : str
             One of the valid stages.
         """
-        assert stage in ('syntactic', 'semantic', 'codegen', 'cwrapper', 'compilation', 'buildgen')
+        assert stage in (
+            "syntactic",
+            "semantic",
+            "codegen",
+            "cwrapper",
+            "compilation",
+            "buildgen",
+        )
         self._stage = stage
 
     def __eq__(self, other):
         return self._stage == other
 
     def pyccel_finished(self):
-        """ Indicate that Pyccel has finished running and reset stage to None
-        """
+        """Indicate that Pyccel has finished running and reset stage to None"""
         self._stage = None
 
     @property

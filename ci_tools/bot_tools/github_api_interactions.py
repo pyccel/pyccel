@@ -1,9 +1,10 @@
-""" File containing all functions useful for handling interactions with the GitHub API.
-"""
+"""File containing all functions useful for handling interactions with the GitHub API."""
+
 import os
 import time
 import jwt
 import requests
+
 
 def get_authorization():
     """
@@ -25,15 +26,22 @@ def get_authorization():
     # Issued at time
     # JWT expiration time (10 minutes maximum)
     # GitHub App's identifier
-    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 364561}
+    payload = {"iat": int(time.time()), "exp": int(time.time()) + 60, "iss": 364561}
 
-    jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+    jw_token = jwt.JWT().encode(payload, signing_key, alg="RS256")
 
-    headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {jw_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
 
     # Create JWT
-    reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers,
-                          timeout = 10)
+    reply = requests.post(
+        "https://api.github.com/app/installations/39885334/access_tokens",
+        headers=headers,
+        timeout=10,
+    )
 
     print(reply.text)
 
@@ -41,23 +49,24 @@ def get_authorization():
 
     print(json_reply)
 
-    token  = json_reply["token"]
+    token = json_reply["token"]
     expiry = json_reply["expires_at"]
 
-    with open(os.environ["GITHUB_ENV"], "r", encoding='utf-8') as f:
+    with open(os.environ["GITHUB_ENV"], "r", encoding="utf-8") as f:
         output = f.read()
 
     if "installation_token" in output:
-        lines = output.split('\n')
+        lines = output.split("\n")
         print("Parsed : ", lines)
-        output = '\n'.join(l for l in lines if "installation_token" not in l)
+        output = "\n".join(l for l in lines if "installation_token" not in l)
 
-    with open(os.environ["GITHUB_ENV"], "w", encoding='utf-8') as f:
+    with open(os.environ["GITHUB_ENV"], "w", encoding="utf-8") as f:
         f.write(output)
         print(f"installation_token={token}", file=f)
         print(f"installation_token_exp={expiry}", file=f)
 
     return token, expiry
+
 
 class GitHubAPIInteractions:
     """
@@ -72,13 +81,16 @@ class GitHubAPIInteractions:
         A string which identifies the repository where the requests
         should be made (e.g. 'pyccel/pyccel').
     """
+
     def __init__(self, repo):
         repo = repo or os.environ["GITHUB_REPOSITORY"]
-        self._org, self._repo = repo.split('/')
+        self._org, self._repo = repo.split("/")
         if "installation_token" in os.environ:
             self._authenticated = True
             self._install_token = os.environ["installation_token"]
-            self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
+            self._install_token_exp = time.strptime(
+                os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ"
+            )
         elif "PEM" in os.environ:
             self._authenticated = True
             self._install_token, expiry = get_authorization()
@@ -111,8 +123,9 @@ class GitHubAPIInteractions:
         requests.Response
             The response collected from the request.
         """
-        reply = requests.request(method, url, json=json, headers=self.get_headers(),
-                                 timeout=10, **kwargs)
+        reply = requests.request(
+            method, url, json=json, headers=self.get_headers(), timeout=10, **kwargs
+        )
         return reply
 
     def get_branch_details(self, branch_name):
@@ -167,10 +180,14 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
-        json.update({"name": name,
+        json.update(
+            {
+                "name": name,
                 "head_sha": commit,
                 "status": "in_progress",
-                "details_url": workflow_url})
+                "details_url": workflow_url,
+            }
+        )
         run = self._post_request("POST", url, json)
         print(run.text)
         assert run.status_code == 201
@@ -220,13 +237,15 @@ class GitHubAPIInteractions:
         page = 1
         new_results = [None]
         while len(new_results) != 0:
-            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            request = self._post_request(
+                "GET", url, params={"per_page": "100", "page": str(page)}
+            )
             new_results = request.json()
             results.extend(new_results)
             page += 1
         return results
 
-    def create_comment(self, pr_id, comment, reply_to = None):
+    def create_comment(self, pr_id, comment, reply_to=None):
         """
         Create a comment on a pull request or issue.
 
@@ -257,15 +276,15 @@ class GitHubAPIInteractions:
         assert self._authenticated
         if reply_to:
             suffix = f"/{reply_to}/replies"
-            issue_type = 'pulls'
+            issue_type = "pulls"
         else:
-            issue_type = 'issues'
-            suffix = ''
+            issue_type = "issues"
+            suffix = ""
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/{issue_type}/{pr_id}/comments{suffix}"
         print(url)
-        return self._post_request("POST", url, json={"body":comment})
+        return self._post_request("POST", url, json={"body": comment})
 
-    def create_review(self, pr_id, commit, comment, status, comments = ()):
+    def create_review(self, pr_id, commit, comment, status, comments=()):
         """
         Create a review on the specified pull request.
 
@@ -302,14 +321,19 @@ class GitHubAPIInteractions:
         """
         assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
+        review = {
+            "commit_id": commit,
+            "body": comment,
+            "event": status,
+            "comments": comments,
+        }
         print(review)
         reply = self._post_request("POST", url, json=review)
         print(reply.text)
         assert reply.status_code == 200
         return reply
 
-    def wait_for_runs(self, commit_sha, run_names, max_time=15*60, wait_time=15):
+    def wait_for_runs(self, commit_sha, run_names, max_time=15 * 60, wait_time=15):
         """
         Wait for the specified workflow runs associated with the commit.
 
@@ -344,29 +368,37 @@ class GitHubAPIInteractions:
         # Run for 15 mins maximum
         timeout = time.time() + max_time
 
-        request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
-        workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
-        completed = all(j['status'] == 'completed' for j in workflow_runs)
+        request_result = self._post_request(
+            "GET", url, params={"head_sha": commit_sha}
+        ).json()
+        workflow_runs = [
+            j for j in request_result["workflow_runs"] if j["name"] in run_names
+        ]
+        completed = all(j["status"] == "completed" for j in workflow_runs)
 
         print(commit_sha)
         print(workflow_runs)
-        print([j['name'] for j in workflow_runs])
-        print([j['status'] for j in workflow_runs])
-        print([j['conclusion'] for j in workflow_runs])
+        print([j["name"] for j in workflow_runs])
+        print([j["status"] for j in workflow_runs])
+        print([j["conclusion"] for j in workflow_runs])
 
         while not completed and time.time() < timeout:
             time.sleep(15)
-            request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
-            workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
-            completed = all(j['status'] == 'completed' for j in workflow_runs)
+            request_result = self._post_request(
+                "GET", url, params={"head_sha": commit_sha}
+            ).json()
+            workflow_runs = [
+                j for j in request_result["workflow_runs"] if j["name"] in run_names
+            ]
+            completed = all(j["status"] == "completed" for j in workflow_runs)
             print(workflow_runs)
-            print([j['name'] for j in workflow_runs])
-            print([j['status'] for j in workflow_runs])
-            print([j['conclusion'] for j in workflow_runs])
+            print([j["name"] for j in workflow_runs])
+            print([j["status"] for j in workflow_runs])
+            print([j["conclusion"] for j in workflow_runs])
 
         assert completed
 
-        success = all(j['conclusion'] == 'success' for j in workflow_runs)
+        success = all(j["conclusion"] == "success" for j in workflow_runs)
 
         return success
 
@@ -388,9 +420,13 @@ class GitHubAPIInteractions:
                 self._install_token, expiry = get_authorization()
                 self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
-            return {"Accept": "application/vnd.github+json",
-                     "Authorization": f"Bearer {self._install_token}",
-                     "X-GitHub-Api-Version": "2022-11-28"}
+            return {
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {self._install_token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }
         else:
-            return {"Accept": "application/vnd.github+json",
-                     "X-GitHub-Api-Version": "2022-11-28"}
+            return {
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }

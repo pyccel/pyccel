@@ -1,14 +1,16 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in Fortran.
 """
+
 import warnings
 
 from .languagenameclashchecker import LanguageNameClashChecker
+
 
 class FortranNameClashChecker(LanguageNameClashChecker):
     """
@@ -19,34 +21,145 @@ class FortranNameClashChecker(LanguageNameClashChecker):
     capitalisation (as Fortran is not case-sensitive), or due to the use of reserved
     keywords.
     """
+
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
     # Intrinsic functions as mentioned on https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap02/funct.html
-    keywords = set(['assign', 'backspace', 'block', 'blockdata',
-            'call', 'close', 'common', 'continue', 'data',
-            'dimension', 'do', 'else', 'elseif', 'end', 'endfile',
-            'endif', 'endfunction', 'endmodule', 'endprogram',
-            'endsubroutine', 'entry', 'equivalence', 'external',
-            'format', 'function', 'goto', 'if', 'implicit',
-            'intrinsic', 'open', 'parameter', 'pause', 'print',
-            'program', 'read', 'return', 'rewind', 'rewrite',
-            'save', 'stop', 'subroutine', 'then', 'write',
-            'allocatable', 'allocate', 'case', 'contains', 'cycle',
-            'deallocate', 'elsewhere', 'exit', 'include', 'interface',
-            'intent', 'module', 'namelist', 'nullify', 'only',
-            'operator', 'optional', 'pointer', 'private', 'procedure',
-            'public', 'recursive', 'result', 'select', 'sequence',
-            'target', 'use', 'while', 'where', 'elemental', 'forall',
-            'pure', 'abstract', 'associate', 'asynchronous', 'bind',
-            'class', 'deferred', 'enum', 'enumerator', 'extends',
-            'final', 'flush', 'generic', 'import', 'non_overridable',
-            'nopass', 'pass', 'protected', 'value', 'volatile',
-            'wait', 'codimension', 'concurrent', 'contiguous',
-            'critical', 'error', 'submodule', 'sync', 'lock',
-            'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
-            'floor', 'fraction', 'real', 'max', 'mod', 'count',
-            'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer',
-            'c_ptr', 'c_malloc', 'storage_size', 'c_size_t'])
+    keywords = set(
+        [
+            "assign",
+            "backspace",
+            "block",
+            "blockdata",
+            "call",
+            "close",
+            "common",
+            "continue",
+            "data",
+            "dimension",
+            "do",
+            "else",
+            "elseif",
+            "end",
+            "endfile",
+            "endif",
+            "endfunction",
+            "endmodule",
+            "endprogram",
+            "endsubroutine",
+            "entry",
+            "equivalence",
+            "external",
+            "format",
+            "function",
+            "goto",
+            "if",
+            "implicit",
+            "intrinsic",
+            "open",
+            "parameter",
+            "pause",
+            "print",
+            "program",
+            "read",
+            "return",
+            "rewind",
+            "rewrite",
+            "save",
+            "stop",
+            "subroutine",
+            "then",
+            "write",
+            "allocatable",
+            "allocate",
+            "case",
+            "contains",
+            "cycle",
+            "deallocate",
+            "elsewhere",
+            "exit",
+            "include",
+            "interface",
+            "intent",
+            "module",
+            "namelist",
+            "nullify",
+            "only",
+            "operator",
+            "optional",
+            "pointer",
+            "private",
+            "procedure",
+            "public",
+            "recursive",
+            "result",
+            "select",
+            "sequence",
+            "target",
+            "use",
+            "while",
+            "where",
+            "elemental",
+            "forall",
+            "pure",
+            "abstract",
+            "associate",
+            "asynchronous",
+            "bind",
+            "class",
+            "deferred",
+            "enum",
+            "enumerator",
+            "extends",
+            "final",
+            "flush",
+            "generic",
+            "import",
+            "non_overridable",
+            "nopass",
+            "pass",
+            "protected",
+            "value",
+            "volatile",
+            "wait",
+            "codimension",
+            "concurrent",
+            "contiguous",
+            "critical",
+            "error",
+            "submodule",
+            "sync",
+            "lock",
+            "unlock",
+            "test",
+            "abs",
+            "sqrt",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "exp",
+            "log",
+            "int",
+            "nint",
+            "floor",
+            "fraction",
+            "real",
+            "max",
+            "mod",
+            "count",
+            "pack",
+            "numpy_sign",
+            "c_associated",
+            "c_loc",
+            "c_f_pointer",
+            "c_ptr",
+            "c_malloc",
+            "storage_size",
+            "c_size_t",
+        ]
+    )
 
     def has_clash(self, name, symbols):
         """
@@ -69,8 +182,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             True if the name clashes with an existing name. False otherwise.
         """
         name = name.lower()
-        return name in self.keywords or \
-               any(name == s.lower() for s in symbols)
+        return name in self.keywords or any(name == s.lower() for s in symbols)
 
     def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
@@ -98,25 +210,29 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
-        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
-        if context == 'wrapper':
+        assert context in ("module", "function", "class", "variable", "wrapper")
+        assert parent_context in ("module", "function", "class", "loop", "program")
+        if context == "wrapper":
             return self._get_collisionless_name(name, symbols)
-        if name == '__init__':
-            if parent_context == 'module':
-                name = f'{prefix}init'
+        if name == "__init__":
+            if parent_context == "module":
+                name = f"{prefix}init"
             else:
-                name = 'init'
-        if name == '__del__':
-            if parent_context == 'module':
-                name = f'{prefix}free'
+                name = "init"
+        if name == "__del__":
+            if parent_context == "module":
+                name = f"{prefix}free"
             else:
-                name = 'free'
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            name = 'operator' + name[1:-2]
-        if name[0] == '_':
-            name = 'private'+name
+                name = "free"
+        if len(name) > 4 and all(name[i] == "_" for i in (0, 1, -1, -2)):
+            name = "operator" + name[1:-2]
+        if name[0] == "_":
+            name = "private" + name
         name = self._get_collisionless_name(name, symbols)
         if len(name) > 96:
-            warnings.warn("Name {} is too long for Fortran. This may cause compiler errors".format(name))
+            warnings.warn(
+                "Name {} is too long for Fortran. This may cause compiler errors".format(
+                    name
+                )
+            )
         return name

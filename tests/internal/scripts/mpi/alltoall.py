@@ -12,7 +12,7 @@ from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -29,21 +29,21 @@ if __name__ == '__main__':
 
     block_length = np.int32(nb_values // sizes)
     # ...
-    values = np.zeros(nb_values, 'int')
+    values = np.zeros(nb_values, "int")
     for i in range(0, nb_values):
-        values[i] = 1000 + rank*nb_values + i
+        values[i] = 1000 + rank * nb_values + i
 
-    print('I, process ', rank, 'sent my values array : ', values)
+    print("I, process ", rank, "sent my values array : ", values)
     # ...
 
     # ...
-    data = np.zeros(nb_values, 'int')
+    data = np.zeros(nb_values, "int")
 
-    mpi_alltoall (values, block_length, MPI_INTEGER8,
-                  data,   block_length, MPI_INTEGER8,
-                  comm, ierr)
+    mpi_alltoall(
+        values, block_length, MPI_INTEGER8, data, block_length, MPI_INTEGER8, comm, ierr
+    )
     # ...
 
-    print('I, process ', rank, ', received ', data)
+    print("I, process ", rank, ", received ", data)
 
     mpi_finalize(ierr)

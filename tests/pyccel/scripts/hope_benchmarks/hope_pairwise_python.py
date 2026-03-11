@@ -1,18 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-def pairwise_python (X : 'double[:,:]', D : 'double[:,:]') :
+
+def pairwise_python(X: "double[:,:]", D: "double[:,:]"):
     from numpy import sqrt, shape
 
-    M, N = shape( X )
-    for i in range (M) :
-        for j in range (M) :
+    M, N = shape(X)
+    for i in range(M):
+        for j in range(M):
             r = 0.0
-            for k in range (N) :
-                tmp = X[ i , k ] - X[ j , k ]
+            for k in range(N):
+                tmp = X[i, k] - X[j, k]
                 r += tmp * tmp
-            D[ i , j ] = sqrt(r)
+            D[i, j] = sqrt(r)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from numpy import zeros
 
     s = 100
@@ -24,11 +26,11 @@ if __name__ == '__main__':
     for i in range(s):
         for j in range(s):
             rand = (a * rand + b) % m
-            X[i,j] = rand
+            X[i, j] = rand
 
-    D = zeros([s,s])
+    D = zeros([s, s])
     pairwise_python(X, D)
 
     for i in range(s):
         for j in range(s):
-            print(D[i,j])
+            print(D[i, j])

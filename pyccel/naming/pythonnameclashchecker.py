@@ -1,12 +1,14 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in Python
 """
+
 from .languagenameclashchecker import LanguageNameClashChecker
+
 
 class PythonNameClashChecker(LanguageNameClashChecker):
     """
@@ -16,6 +18,7 @@ class PythonNameClashChecker(LanguageNameClashChecker):
     verify that they do not cause name clashes. Name clashes may arise when
     generating names for new variables.
     """
+
     keywords = set()
 
     def has_clash(self, name, symbols):
@@ -66,7 +69,6 @@ class PythonNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable')
-        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
+        assert context in ("module", "function", "class", "variable")
+        assert parent_context in ("module", "function", "class", "loop", "program")
         return self._get_collisionless_name(name, symbols)
-

@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module handling everything related to the compilers used to compile the various generated files
 """
+
 import json
 import os
 import pathlib
@@ -19,17 +20,19 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-if platform.system() == 'Darwin':
+if platform.system() == "Darwin":
     # Collect version using mac tools to avoid unexpected results on Big Sur
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    with subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE) as p:
+    with subprocess.Popen(
+        [shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE
+    ) as p:
         result, err = p.communicate()
-    mac_version_tuple = result.decode("utf-8").strip().split('.')
-    mac_target = '.'.join(mac_version_tuple[:2])
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+    mac_version_tuple = result.decode("utf-8").strip().split(".")
+    mac_target = ".".join(mac_version_tuple[:2])
+    os.environ["MACOSX_DEPLOYMENT_TARGET"] = mac_target
 
 
-def get_condaless_search_path(conda_warnings = 'basic'):
+def get_condaless_search_path(conda_warnings="basic"):
     """
     Get a list of paths excluding the conda paths.
 
@@ -46,23 +49,34 @@ def get_condaless_search_path(conda_warnings = 'basic'):
     str
         A list of paths excluding the conda paths.
     """
-    path_sep = ';' if platform.system() == 'Windows' else ':'
-    current_path = os.environ['PATH']
+    path_sep = ";" if platform.system() == "Windows" else ":"
+    current_path = os.environ["PATH"]
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
-    conda_folder_names = ('conda', 'anaconda', 'miniconda',
-                          'Conda', 'Anaconda', 'Miniconda')
-    conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
+    conda_folder_names = (
+        "conda",
+        "anaconda",
+        "miniconda",
+        "Conda",
+        "Anaconda",
+        "Miniconda",
+    )
+    conda_folders = [
+        p for p, f in folders.items() if any(con in f for con in conda_folder_names)
+    ]
     if conda_folders:
-        if conda_warnings in ('basic', 'verbose'):
+        if conda_warnings in ("basic", "verbose"):
             message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md#utilising-pyccel-within-anaconda-environment for details"
-            if conda_warnings == 'verbose':
+            if conda_warnings == "verbose":
                 message_warning = message_warning + "\nConda ignored PATH:\n"
                 message_warning = message_warning + ":".join(conda_folders)
             warnings.warn(UserWarning(message_warning))
-    acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
+    acceptable_search_paths = path_sep.join(
+        p for p in folders.keys() if p not in conda_folders and os.path.exists(p)
+    )
     return acceptable_search_paths
 
-#------------------------------------------------------------
+
+# ------------------------------------------------------------
 class Compiler:
     """
     Class which handles all compiler options.
@@ -79,10 +93,12 @@ class Compiler:
     debug : bool
                Indicates whether we are compiling in debug mode.
     """
-    __slots__ = ('_debug','_compiler_info','_language_info', '_compiler_family')
+
+    __slots__ = ("_debug", "_compiler_info", "_language_info", "_compiler_family")
     acceptable_bin_paths = None
-    def __init__(self, vendor : str, debug=False):
-        if vendor.endswith('.json') and os.path.exists(vendor):
+
+    def __init__(self, vendor: str, debug=False):
+        if vendor.endswith(".json") and os.path.exists(vendor):
             self._compiler_family = pathlib.Path(vendor).stem
             with open(vendor, encoding="utf-8") as vendor_file:
                 self._compiler_info = json.load(vendor_file)
@@ -94,17 +110,28 @@ class Compiler:
                 except KeyError as e:
                     raise NotImplementedError("Compiler not available") from e
             else:
-                installed_compiler = pathlib.Path(os.environ.get('PYCCEL_CONFIG_HOME', pathlib.Path.home() / '.pyccel')) / vendor
+                installed_compiler = (
+                    pathlib.Path(
+                        os.environ.get(
+                            "PYCCEL_CONFIG_HOME", pathlib.Path.home() / ".pyccel"
+                        )
+                    )
+                    / vendor
+                )
                 if installed_compiler.exists():
-                    with open(installed_compiler / 'config.json', encoding="utf-8") as vendor_file:
+                    with open(
+                        installed_compiler / "config.json", encoding="utf-8"
+                    ) as vendor_file:
                         self._compiler_info = json.load(vendor_file)
                 else:
-                    raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
+                    raise NotImplementedError(
+                        f"Unrecognised compiler vendor : {vendor}"
+                    )
 
         self._debug = debug
         self._language_info = None
 
-    def get_exec(self, extra_compilation_tools, language = None):
+    def get_exec(self, extra_compilation_tools, language=None):
         """
         Obtain the path of the executable based on the specified compilation tools.
 
@@ -130,27 +157,32 @@ class Compiler:
         PyccelError
             If the compiler executable cannot be found.
         """
-        language_info = self._language_info if language is None else self._compiler_info[language]
+        language_info = (
+            self._language_info if language is None else self._compiler_info[language]
+        )
         # Get executable
-        exec_cmd = language_info['mpi_exec'] if 'mpi' in extra_compilation_tools else language_info['exec']
+        exec_cmd = (
+            language_info["mpi_exec"]
+            if "mpi" in extra_compilation_tools
+            else language_info["exec"]
+        )
 
         # Clean conda paths out of the PATH variable
-        current_path = os.environ['PATH']
-        os.environ['PATH'] = self.acceptable_bin_paths
+        current_path = os.environ["PATH"]
+        os.environ["PATH"] = self.acceptable_bin_paths
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
 
         # Reset PATH variable
-        os.environ['PATH'] = current_path
+        os.environ["PATH"] = current_path
 
         if exec_loc is None:
-            errors.report(f"Could not find compiler ({exec_cmd})",
-                    severity='fatal')
+            errors.report(f"Could not find compiler ({exec_cmd})", severity="fatal")
 
         return exec_loc
 
-    def _get_flags(self, flags = (), extra_compilation_tools = ()):
+    def _get_flags(self, flags=(), extra_compilation_tools=()):
         """
         Collect necessary compile flags.
 
@@ -173,22 +205,22 @@ class Compiler:
         flags = list(flags)
 
         if self._debug:
-            flags.extend(self._language_info.get('debug_flags',()))
+            flags.extend(self._language_info.get("debug_flags", ()))
         else:
-            flags.extend(self._language_info.get('release_flags',()))
+            flags.extend(self._language_info.get("release_flags", ()))
 
-        flags.extend(self._language_info.get('general_flags',()))
+        flags.extend(self._language_info.get("general_flags", ()))
         # M_PI is not in the standard
-        #if 'python' not in extra_compilation_tools:
+        # if 'python' not in extra_compilation_tools:
         #    # Python sets its own standard
         #    flags.extend(self._language_info.get('standard_flags',()))
 
         for a in extra_compilation_tools:
-            flags.extend(self._language_info.get(a,{}).get('flags',()))
+            flags.extend(self._language_info.get(a, {}).get("flags", ()))
 
         return flags
 
-    def _get_property(self, key, properties = (), extra_compilation_tools = ()):
+    def _get_property(self, key, properties=(), extra_compilation_tools=()):
         """
         Collect necessary compile property.
 
@@ -226,14 +258,16 @@ class Compiler:
         # The keys of the dictionary contain the values for the property of interest.
         properties = dict.fromkeys(properties)
 
-        properties.update(dict.fromkeys(self._language_info.get(key,())))
+        properties.update(dict.fromkeys(self._language_info.get(key, ())))
 
         for a in extra_compilation_tools:
-            properties.update(dict.fromkeys(self._language_info.get(a,{}).get(key,())))
+            properties.update(
+                dict.fromkeys(self._language_info.get(a, {}).get(key, ()))
+            )
 
         return properties.keys()
 
-    def _get_include(self, include = (), extra_compilation_tools = ()):
+    def _get_include(self, include=(), extra_compilation_tools=()):
         """
         Collect necessary compile include directories.
 
@@ -252,9 +286,9 @@ class Compiler:
         list[str]
             A list of the include folders.
         """
-        return self._get_property('include', include, extra_compilation_tools)
+        return self._get_property("include", include, extra_compilation_tools)
 
-    def _get_libs(self, libs = (), extra_compilation_tools = ()):
+    def _get_libs(self, libs=(), extra_compilation_tools=()):
         """
         Collect necessary compile libraries.
 
@@ -273,9 +307,9 @@ class Compiler:
         list[str]
             A list of the libraries.
         """
-        return self._get_property('libs', libs, extra_compilation_tools)
+        return self._get_property("libs", libs, extra_compilation_tools)
 
-    def _get_libdir(self, libdir = (), extra_compilation_tools = ()):
+    def _get_libdir(self, libdir=(), extra_compilation_tools=()):
         """
         Collect necessary compile library directories.
 
@@ -294,9 +328,9 @@ class Compiler:
         list[str]
             A list of the folders containing libraries.
         """
-        return self._get_property('libdir', libdir, extra_compilation_tools)
+        return self._get_property("libdir", libdir, extra_compilation_tools)
 
-    def _get_dependencies(self, dependencies = (), extra_compilation_tools = ()):
+    def _get_dependencies(self, dependencies=(), extra_compilation_tools=()):
         """
         Collect necessary dependencies.
 
@@ -315,7 +349,7 @@ class Compiler:
         list[str]
             A list of the necessary dependencies.
         """
-        return self._get_property('dependencies', dependencies, extra_compilation_tools)
+        return self._get_property("dependencies", dependencies, extra_compilation_tools)
 
     @staticmethod
     def _insert_prefix_to_list(lst, prefix):
@@ -342,7 +376,7 @@ class Compiler:
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]
 
-    def _get_compile_components(self, compile_obj, extra_compilation_tools = ()):
+    def _get_compile_components(self, compile_obj, extra_compilation_tools=()):
         """
         Provide all components required for compiling.
 
@@ -372,16 +406,18 @@ class Compiler:
 
         # get include
         include = self._get_include(compile_obj.include, extra_compilation_tools)
-        inc_flags = self._insert_prefix_to_list(include, '-I')
+        inc_flags = self._insert_prefix_to_list(include, "-I")
 
         # Get dependencies (.o/.a)
-        m_code = self._get_dependencies(compile_obj.extra_modules, extra_compilation_tools)
+        m_code = self._get_dependencies(
+            compile_obj.extra_modules, extra_compilation_tools
+        )
 
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, extra_compilation_tools)
-        libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
+        libs_flags = [s if s.startswith("-l") else f"-l{s}" for s in libs]
         libdir = self._get_libdir(compile_obj.libdir, extra_compilation_tools)
-        libdir_flags = self._insert_prefix_to_list(libdir, '-L')
+        libdir_flags = self._insert_prefix_to_list(libdir, "-L")
 
         exec_cmd = self.get_exec(extra_compilation_tools)
 
@@ -419,23 +455,29 @@ class Compiler:
 
         # Get flags
         flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
-        flags.append('-c')
+        flags.append("-c")
 
         # Get include
-        include  = self._get_include(compile_obj.include, extra_compilation_tools)
-        inc_flags = self._insert_prefix_to_list(include, '-I')
+        include = self._get_include(compile_obj.include, extra_compilation_tools)
+        inc_flags = self._insert_prefix_to_list(include, "-I")
 
         # Get executable
         exec_cmd = self.get_exec(extra_compilation_tools)
 
-        if language == 'fortran':
-            j_code = (self._language_info['module_output_flag'], output_folder)
+        if language == "fortran":
+            j_code = (self._language_info["module_output_flag"], output_folder)
         else:
             j_code = ()
 
-        cmd = [exec_cmd, *flags, *inc_flags,
-                compile_obj.source, '-o', compile_obj.module_target,
-                *j_code]
+        cmd = [
+            exec_cmd,
+            *flags,
+            *inc_flags,
+            compile_obj.source,
+            "-o",
+            compile_obj.module_target,
+            *j_code,
+        ]
 
         with compile_obj:
             self.run_command(cmd, verbose)
@@ -475,18 +517,28 @@ class Compiler:
         flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
 
         # Get compile options
-        exec_cmd, include, libs_flags, libdir_flags, m_code = \
-                self._get_compile_components(compile_obj, extra_compilation_tools)
-        linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
+        exec_cmd, include, libs_flags, libdir_flags, m_code = (
+            self._get_compile_components(compile_obj, extra_compilation_tools)
+        )
+        linker_libdir_flags = ["-Wl,-rpath" if l == "-L" else l for l in libdir_flags]
 
         out_target = os.path.join(output_folder, compile_obj.program_target)
 
         if verbose:
             print(">> Compiling executable :: ", out_target)
 
-        cmd = [exec_cmd, *flags, *include, *libdir_flags,
-                 *linker_libdir_flags, *m_code, compile_obj.source,
-                '-o', out_target, *libs_flags]
+        cmd = [
+            exec_cmd,
+            *flags,
+            *include,
+            *libdir_flags,
+            *linker_libdir_flags,
+            *m_code,
+            compile_obj.source,
+            "-o",
+            out_target,
+            *libs_flags,
+        ]
 
         with compile_obj:
             self.run_command(cmd, verbose)
@@ -495,7 +547,9 @@ class Compiler:
 
         return out_target
 
-    def compile_shared_library(self, compile_obj, output_folder, language, verbose, sharedlib_modname=None):
+    def compile_shared_library(
+        self, compile_obj, output_folder, language, verbose, sharedlib_modname=None
+    ):
         """
         Compile a module to a shared library.
 
@@ -530,31 +584,40 @@ class Compiler:
         # Ensure python options are collected
         extra_compilation_tools = set(compile_obj.extra_compilation_tools)
 
-        extra_compilation_tools.remove('python')
+        extra_compilation_tools.remove("python")
 
         # get flags
         flags = self._get_flags(compile_obj.flags, extra_compilation_tools)
 
-        extra_compilation_tools.add('python')
+        extra_compilation_tools.add("python")
 
         # Collect compile information
-        exec_cmd, _, libs_flags, libdir_flags, m_code = \
-                self._get_compile_components(compile_obj, extra_compilation_tools)
-        linker_libdir_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdir_flags]
+        exec_cmd, _, libs_flags, libdir_flags, m_code = self._get_compile_components(
+            compile_obj, extra_compilation_tools
+        )
+        linker_libdir_flags = ["-Wl,-rpath" if l == "-L" else l for l in libdir_flags]
 
-        flags.insert(0,"-shared")
+        flags.insert(0, "-shared")
 
         # Get name of file
-        ext_suffix = self._language_info['python']['shared_suffix']
+        ext_suffix = self._language_info["python"]["shared_suffix"]
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
-        file_out = os.path.join(output_folder, sharedlib_modname+ext_suffix)
+        file_out = os.path.join(output_folder, sharedlib_modname + ext_suffix)
 
         if verbose:
             print(">> Compiling shared library :: ", file_out)
 
-        cmd = [exec_cmd, *flags, *libdir_flags, *linker_libdir_flags,
-                compile_obj.module_target, *m_code,
-                '-o', file_out, *libs_flags]
+        cmd = [
+            exec_cmd,
+            *flags,
+            *libdir_flags,
+            *linker_libdir_flags,
+            compile_obj.module_target,
+            *m_code,
+            "-o",
+            file_out,
+            *libs_flags,
+        ]
 
         with compile_obj:
             self.run_command(cmd, verbose)
@@ -590,10 +653,11 @@ class Compiler:
         """
         cmd = [os.path.expandvars(c) for c in cmd]
         if verbose > 1:
-            print(' '.join(cmd))
+            print(" ".join(cmd))
 
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                universal_newlines=True) as p:
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+        ) as p:
             out, err = p.communicate()
 
         if verbose and out:
@@ -626,9 +690,8 @@ class Compiler:
         compiler_export_file = pathlib.Path(compiler_export_filename)
         folder = compiler_export_file.parent
         os.makedirs(folder, exist_ok=True)
-        with open(compiler_export_file,'w', encoding="utf-8") as out_file:
-            print(json.dumps(self._compiler_info, indent=4),
-                    file=out_file)
+        with open(compiler_export_file, "w", encoding="utf-8") as out_file:
+            print(json.dumps(self._compiler_info, indent=4), file=out_file)
 
     @property
     def compiler_family(self):

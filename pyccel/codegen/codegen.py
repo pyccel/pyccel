@@ -1,27 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 import os
 
-from pyccel.codegen.printing.fcode  import FCodePrinter
-from pyccel.codegen.printing.ccode  import CCodePrinter
+from pyccel.codegen.printing.fcode import FCodePrinter
+from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
-from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
+from pyccel.ast.core import FunctionDef, Interface, ModuleHeader
 from pyccel.utilities.stage import PyccelStage
 
-_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
-printer_registry    = {
-                        'fortran':FCodePrinter,
-                        'c':CCodePrinter,
-                        'python':PythonCodePrinter
-                      }
+_extension_registry = {"fortran": "f90", "c": "c", "python": "py"}
+_header_extension_registry = {"fortran": None, "c": "h", "python": None}
+printer_registry = {
+    "fortran": FCodePrinter,
+    "c": CCodePrinter,
+    "python": PythonCodePrinter,
+}
 
 pyccel_stage = PyccelStage()
+
 
 class Codegen:
     """
@@ -43,22 +44,23 @@ class Codegen:
     verbose : int
         The level of verbosity.
     """
+
     def __init__(self, parser, name, language, verbose):
-        pyccel_stage.set_stage('codegen')
-        self._parser   = parser
-        self._ast      = parser.ast
-        self._name     = name
+        pyccel_stage.set_stage("codegen")
+        self._parser = parser
+        self._ast = parser.ast
+        self._name = name
         self._language = language
-        self._verbose  = verbose
+        self._verbose = verbose
         self._is_program = self.ast.program is not None
 
         # instantiate code_printer
         try:
             CodePrinterSubclass = printer_registry[language]
         except KeyError as err:
-            raise ValueError(f'{language} language is not available') from err
+            raise ValueError(f"{language} language is not available") from err
 
-        self._printer = CodePrinterSubclass(self.parser.filename, verbose = self._verbose)
+        self._printer = CodePrinterSubclass(self.parser.filename, verbose=self._verbose)
 
     @property
     def parser(self):
@@ -113,11 +115,10 @@ class Codegen:
             A dictionary mapping the include strings to the import module.
         """
         additional_imports = self._printer.get_additional_imports().copy()
-        if self._parser.metavars['printer_imports']:
-            for i in self._parser.metavars['printer_imports'].split(','):
+        if self._parser.metavars["printer_imports"]:
+            for i in self._parser.metavars["printer_imports"].split(","):
                 additional_imports.setdefault(i.strip(), None)
         return additional_imports
-
 
     def export(self, filename):
         """
@@ -148,46 +149,48 @@ class Codegen:
         ext = _extension_registry[self._language]
         header_ext = _header_extension_registry[self._language]
 
-        header_filename = f'{filename}.{header_ext}'
-        pyi_filename = f'{filename}.pyi'
-        filename = f'{filename}.{ext}'
+        header_filename = f"{filename}.{header_ext}"
+        pyi_filename = f"{filename}.pyi"
+        filename = f"{filename}.{ext}"
 
         if self._verbose:
-            print ('>>> Printing :: ', filename)
+            print(">>> Printing :: ", filename)
         # print module
         code = self._printer.doprint(self.ast)
-        with open(filename, 'w', encoding="utf-8") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(code)
 
         module_header = ModuleHeader(self.ast)
         # print module header
         if header_ext is not None:
             if self._verbose:
-                print ('>>> Printing :: ', header_filename)
+                print(">>> Printing :: ", header_filename)
             code = self._printer.doprint(module_header)
-            with open(header_filename, 'w', encoding="utf-8") as f:
+            with open(header_filename, "w", encoding="utf-8") as f:
                 f.write(code)
 
         if self._verbose:
-            print ('>>> Printing :: ', pyi_filename)
-        code = printer_registry['python'](self.parser.filename, verbose = self._verbose).doprint(module_header)
-        if self._language != 'python':
-            printer_imports = ', '.join(self.get_printer_imports().keys())
+            print(">>> Printing :: ", pyi_filename)
+        code = printer_registry["python"](
+            self.parser.filename, verbose=self._verbose
+        ).doprint(module_header)
+        if self._language != "python":
+            printer_imports = ", ".join(self.get_printer_imports().keys())
             if printer_imports:
                 code = f'#$ header metavar printer_imports="{printer_imports}"\n' + code
-        with open(pyi_filename, 'w', encoding="utf-8") as f:
+        with open(pyi_filename, "w", encoding="utf-8") as f:
             f.write(code)
 
         # print program
         prog_filename = None
-        if self.is_program and self._language != 'python':
+        if self.is_program and self._language != "python":
             folder = os.path.dirname(filename)
-            fname  = os.path.basename(filename)
-            prog_filename = os.path.join(folder,"prog_"+fname)
+            fname = os.path.basename(filename)
+            prog_filename = os.path.join(folder, "prog_" + fname)
             if self._verbose:
-                print ('>>> Printing :: ', prog_filename)
+                print(">>> Printing :: ", prog_filename)
             code = self._printer.doprint(self.ast.program)
-            with open(prog_filename, 'w') as f:
+            with open(prog_filename, "w") as f:
                 f.write(code)
 
         return filename, prog_filename

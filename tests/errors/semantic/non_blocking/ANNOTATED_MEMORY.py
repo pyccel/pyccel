@@ -2,5 +2,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from typing import Annotated
 
-a : "Annotated[int[:], 'stack', 'alias']"
-
+a: "Annotated[int[:], 'stack', 'alias']"

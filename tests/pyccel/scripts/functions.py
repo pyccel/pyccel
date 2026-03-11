@@ -1,25 +1,31 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-def incr_(x : np.int32):
+
+def incr_(x: np.int32):
     x = x + np.int32(2)
     return x
 
-def helloworld():
-    print('hello world')
 
-def incr(x : int):
+def helloworld():
+    print("hello world")
+
+
+def incr(x: int):
     x = x + 1
     return x
 
-def decr(x : int) -> int:
+
+def decr(x: int) -> int:
     y = x - 1
     return y
 
-def incr_array(x : 'int[:]'):
+
+def incr_array(x: "int[:]"):
     x[:] = x + 1
 
-y_ = np.array([1,2,3])
+
+y_ = np.array([1, 2, 3])
 
 # def decr_array(x : int) -> int:
 #     y_[1] = 6
@@ -27,25 +33,32 @@ y_ = np.array([1,2,3])
 #     t = y_+x
 #     return t
 
-def decr_array(x : 'int[:]'):
+
+def decr_array(x: "int[:]"):
     x[:] = x - 1
 
-def f1(x : int, n : int = 2, m : int = 3) -> int:
-    y = x - n*m
+
+def f1(x: int, n: int = 2, m: int = 3) -> int:
+    y = x - n * m
     return y
 
-def f2(x : int, m : int = None):
+
+def f2(x: int, m: int = None):
     if m is None:
         y = x + 1
     else:
         y = x - 1
     return y
 
-def my_print(a : 'int[:]'):
+
+def my_print(a: "int[:]"):
     print(a)
 
-def f(a : int = 3, b : int = 3):
+
+def f(a: int = 3, b: int = 3):
     pass
+
+
 b = 1
 y = decr(2)
 z = f1(1)
@@ -55,26 +68,31 @@ z2 = f2(1, m=0)
 
 helloworld()
 
+
 def pass_fun():
     pass
 
+
 def tuple_ret():
-    return 1,2
+    return 1, 2
+
 
 def tuple_use():
     return tuple_ret()
 
-def multi_level_tuple_return():
-    return 2,(4,5),5
 
-if __name__ == '__main__':
+def multi_level_tuple_return():
+    return 2, (4, 5), 5
+
+
+if __name__ == "__main__":
     print(y_)
     print(y)
     print(z)
     print(z1)
     print(z2)
-    my_print(np.array([1,2,3]))
-    f(1,b=b)
+    my_print(np.array([1, 2, 3]))
+    f(1, b=b)
     print(tuple_use())
     print(multi_level_tuple_return())
     print(multi_level_tuple_return()[2])

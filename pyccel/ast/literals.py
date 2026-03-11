@@ -1,34 +1,39 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" This module contains all literal types
-"""
+# ------------------------------------------------------------------------------------------#
+"""This module contains all literal types"""
+
 import numpy as np
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic     import TypedAstNode, PyccelAstNode
+from .basic import TypedAstNode, PyccelAstNode
 from .datatypes import VoidType, PythonNativeInt, PythonNativeBool
 from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
-from .datatypes import PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveBooleanType
+from .datatypes import (
+    PrimitiveIntegerType,
+    PrimitiveFloatingPointType,
+    PrimitiveBooleanType,
+)
 from .datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 __all__ = (
-    'Literal',
-    'LiteralComplex',
-    'LiteralEllipsis',
-    'LiteralFalse',
-    'LiteralFloat',
-    'LiteralImaginaryUnit',
-    'LiteralInteger',
-    'LiteralString',
-    'LiteralTrue',
-    'Nil',
-    'NilArgument',
-    'convert_to_literal',
+    "Literal",
+    "LiteralComplex",
+    "LiteralEllipsis",
+    "LiteralFalse",
+    "LiteralFloat",
+    "LiteralImaginaryUnit",
+    "LiteralInteger",
+    "LiteralString",
+    "LiteralTrue",
+    "Nil",
+    "NilArgument",
+    "convert_to_literal",
 )
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class Literal(TypedAstNode):
     """
     Class representing a literal value.
@@ -39,9 +44,10 @@ class Literal(TypedAstNode):
 
     This class is abstract and should be implemented for each dtype
     """
+
     __slots__ = ()
-    _attribute_nodes  = ()
-    _shape     = None
+    _attribute_nodes = ()
+    _shape = None
 
     @property
     def python_value(self):
@@ -59,14 +65,18 @@ class Literal(TypedAstNode):
 
     def __eq__(self, other):
         if isinstance(other, TypedAstNode):
-            return isinstance(other, type(self)) and self.python_value == other.python_value
+            return (
+                isinstance(other, type(self))
+                and self.python_value == other.python_value
+            )
         else:
             return self.python_value == other
 
     def __hash__(self):
         return hash(self.python_value)
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralTrue(Literal):
     """
     Class representing the Python value True.
@@ -78,9 +88,10 @@ class LiteralTrue(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_class_type',)
 
-    def __init__(self, dtype = PythonNativeBool()):
+    __slots__ = ("_class_type",)
+
+    def __init__(self, dtype=PythonNativeBool()):
         self._class_type = dtype
         super().__init__()
 
@@ -93,7 +104,8 @@ class LiteralTrue(Literal):
         """
         return True
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralFalse(Literal):
     """
     Class representing the Python value False.
@@ -105,9 +117,10 @@ class LiteralFalse(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_class_type',)
 
-    def __init__(self, dtype = PythonNativeBool()):
+    __slots__ = ("_class_type",)
+
+    def __init__(self, dtype=PythonNativeBool()):
         self._class_type = dtype
         super().__init__()
 
@@ -120,7 +133,8 @@ class LiteralFalse(Literal):
         """
         return False
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralInteger(Literal):
     """
     Class representing an integer literal in Python.
@@ -135,9 +149,10 @@ class LiteralInteger(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_class_type')
 
-    def __init__(self, value, dtype = PythonNativeInt()):
+    __slots__ = ("_value", "_class_type")
+
+    def __init__(self, value, dtype=PythonNativeInt()):
         assert value >= 0
         if not isinstance(value, (int, np.integer)):
             raise TypeError("A LiteralInteger can only be created with an integer")
@@ -157,7 +172,8 @@ class LiteralInteger(Literal):
     def __index__(self):
         return self.python_value
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralFloat(Literal):
     """
     Class representing a float literal in Python.
@@ -172,11 +188,14 @@ class LiteralFloat(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_class_type')
 
-    def __init__(self, value, dtype = PythonNativeFloat()):
+    __slots__ = ("_value", "_class_type")
+
+    def __init__(self, value, dtype=PythonNativeFloat()):
         if not isinstance(value, (int, float, LiteralFloat, np.integer, np.floating)):
-            raise TypeError("A LiteralFloat can only be created with an integer or a float")
+            raise TypeError(
+                "A LiteralFloat can only be created with an integer or a float"
+            )
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
         else:
@@ -194,7 +213,7 @@ class LiteralFloat(Literal):
         return self._value
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class LiteralComplex(Literal):
     """
     Class representing a complex literal in Python.
@@ -212,9 +231,10 @@ class LiteralComplex(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_real_part','_imag_part', '_class_type')
 
-    def __new__(cls, real, imag, dtype = PythonNativeComplex()):
+    __slots__ = ("_real_part", "_imag_part", "_class_type")
+
+    def __new__(cls, real, imag, dtype=PythonNativeComplex()):
         if cls is LiteralImaginaryUnit:
             return super().__new__(cls)
         real_part = cls._collect_python_val(real)
@@ -224,11 +244,13 @@ class LiteralComplex(Literal):
         else:
             return super().__new__(cls)
 
-    def __init__(self, real, imag, dtype = PythonNativeComplex()):
-        self._real_part = LiteralFloat(self._collect_python_val(real),
-                                       dtype = dtype.element_type)
-        self._imag_part = LiteralFloat(self._collect_python_val(imag),
-                                       dtype = dtype.element_type)
+    def __init__(self, real, imag, dtype=PythonNativeComplex()):
+        self._real_part = LiteralFloat(
+            self._collect_python_val(real), dtype=dtype.element_type
+        )
+        self._imag_part = LiteralFloat(
+            self._collect_python_val(imag), dtype=dtype.element_type
+        )
         self._class_type = dtype
         super().__init__()
 
@@ -256,7 +278,9 @@ class LiteralComplex(Literal):
         elif isinstance(arg, (int, float, np.integer, np.floating)):
             return float(arg)
         else:
-            raise TypeError(f"LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat not a {type(arg)}")
+            raise TypeError(
+                f"LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat not a {type(arg)}"
+            )
 
     @property
     def real(self):
@@ -283,9 +307,10 @@ class LiteralComplex(Literal):
 
         Get the Python literal represented by this instance.
         """
-        return self.real.python_value + self.imag.python_value*1j
+        return self.real.python_value + self.imag.python_value * 1j
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """
     Class representing the Python value j.
@@ -303,11 +328,13 @@ class LiteralImaginaryUnit(LiteralComplex):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ()
-    def __new__(cls, real = 0, imag = 1, dtype = PythonNativeComplex()):
-        return super().__new__(cls, 0, 1, dtype = dtype)
 
-    def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex()):
+    __slots__ = ()
+
+    def __new__(cls, real=0, imag=1, dtype=PythonNativeComplex()):
+        return super().__new__(cls, 0, 1, dtype=dtype)
+
+    def __init__(self, real=0, imag=1, dtype=PythonNativeComplex()):
         super().__init__(0, 1, dtype)
 
     @property
@@ -319,7 +346,8 @@ class LiteralImaginaryUnit(LiteralComplex):
         """
         return 1j
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class LiteralString(Literal):
     """
     Class representing a string literal in Python.
@@ -331,14 +359,15 @@ class LiteralString(Literal):
     arg : str
         The Python literal.
     """
-    __slots__ = ('_string',)
+
+    __slots__ = ("_string",)
     _class_type = StringType()
     _shape = (None,)
 
     def __init__(self, arg):
         super().__init__()
         if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
+            raise TypeError("arg must be of type str")
         self._string = arg
 
     def __repr__(self):
@@ -361,7 +390,9 @@ class LiteralString(Literal):
         """
         return self._string
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+
 
 class Nil(Literal, metaclass=Singleton):
     """
@@ -369,12 +400,13 @@ class Nil(Literal, metaclass=Singleton):
 
     Class representing the Python value None in the code.
     """
+
     __slots__ = ()
     _attribute_nodes = ()
     _class_type = VoidType()
 
     def __str__(self):
-        return 'None'
+        return "None"
 
     def __bool__(self):
         return False
@@ -383,9 +415,11 @@ class Nil(Literal, metaclass=Singleton):
         return isinstance(other, Nil)
 
     def __hash__(self):
-        return hash('Nil')+hash(None)
+        return hash("Nil") + hash(None)
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+
 
 class NilArgument(PyccelAstNode):
     """
@@ -395,16 +429,19 @@ class NilArgument(PyccelAstNode):
     to an inline function. This class is necessary as to avoid
     accidental substitution due to Singletons.
     """
+
     __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
-        return 'Argument(None)'
+        return "Argument(None)"
 
     def __bool__(self):
         return False
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+
 
 class LiteralEllipsis(Literal, metaclass=Singleton):
     """
@@ -412,10 +449,11 @@ class LiteralEllipsis(Literal, metaclass=Singleton):
 
     Class representing the Python value Ellipsis in the code.
     """
+
     __slots__ = ()
 
     def __str__(self):
-        return '...'
+        return "..."
 
     @property
     def python_value(self):
@@ -426,9 +464,11 @@ class LiteralEllipsis(Literal, metaclass=Singleton):
         """
         return ...
 
-#------------------------------------------------------------------------------
 
-def convert_to_literal(value, dtype = None):
+# ------------------------------------------------------------------------------
+
+
+def convert_to_literal(value, dtype=None):
     """
     Convert a Python value to a pyccel Literal.
 
@@ -448,7 +488,7 @@ def convert_to_literal(value, dtype = None):
         The Python value 'value' expressed as a literal
         with the specified dtype.
     """
-    from .operators import PyccelUnarySub # Imported here to avoid circular import
+    from .operators import PyccelUnarySub  # Imported here to avoid circular import
 
     # Calculate the default datatype
     if dtype is None:
@@ -463,7 +503,7 @@ def convert_to_literal(value, dtype = None):
         elif isinstance(value, str):
             dtype = StringType()
         else:
-            raise TypeError(f'Unknown type of object {value}')
+            raise TypeError(f"Unknown type of object {value}")
 
     # Resolve any datatypes which don't inherit from FixedSizeType
     if isinstance(dtype, StringType):
@@ -487,6 +527,6 @@ def convert_to_literal(value, dtype = None):
         else:
             literal_val = LiteralFalse(dtype)
     else:
-        raise TypeError(f'Unknown type {dtype}')
+        raise TypeError(f"Unknown type {dtype}")
 
     return literal_val

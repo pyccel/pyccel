@@ -15,4 +15,4 @@ val = -1
 tag = 1234
 
 val = comm.sendrecv(msg, 1, tag, partner, tag)
-print('I, process ', rank, ', I received', val, ' from process ', partner)
+print("I, process ", rank, ", I received", val, " from process ", partner)

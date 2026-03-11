@@ -1,7 +1,7 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module handling all Python builtin operators
 These operators all have a precedence as detailed here:
@@ -11,59 +11,60 @@ They also have specific rules to determine the dtype, rank, shape, class_type
 
 from pyccel.utilities.stage import PyccelStage
 
-from ..errors.errors        import Errors, PyccelSemanticError
+from ..errors.errors import Errors, PyccelSemanticError
 
-from .basic                 import TypedAstNode
+from .basic import TypedAstNode
 
-from .datatypes             import PythonNativeBool, PythonNativeFloat
-from .datatypes             import StringType, FixedSizeNumericType
-from .datatypes             import PrimitiveBooleanType, PrimitiveIntegerType
+from .datatypes import PythonNativeBool, PythonNativeFloat
+from .datatypes import StringType, FixedSizeNumericType
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType
 
-from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
-from .literals              import Nil, NilArgument, LiteralTrue, LiteralFalse
-from .literals              import convert_to_literal
+from .literals import Literal, LiteralInteger, LiteralFloat, LiteralComplex
+from .literals import Nil, NilArgument, LiteralTrue, LiteralFalse
+from .literals import convert_to_literal
 
-from .numpytypes            import NumpyNDArrayType
+from .numpytypes import NumpyNDArrayType
 
 errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
     # --- Base classes ---
-    'PyccelArithmeticOperator',
-    'PyccelBinaryOperator',
-    'PyccelBooleanOperator',
-    'PyccelComparisonOperator',
-    'PyccelOperator',
-    'PyccelUnaryOperator',
+    "PyccelArithmeticOperator",
+    "PyccelBinaryOperator",
+    "PyccelBooleanOperator",
+    "PyccelComparisonOperator",
+    "PyccelOperator",
+    "PyccelUnaryOperator",
     # --- Operator classes ---
-    'IfTernaryOperator',
-    'PyccelAdd',
-    'PyccelAnd',
-    'PyccelAssociativeParenthesis',
-    'PyccelDiv',
-    'PyccelEq',
-    'PyccelFloorDiv',
-    'PyccelGe',
-    'PyccelGt',
-    'PyccelIn',
-    'PyccelIs',
-    'PyccelIsNot',
-    'PyccelLe',
-    'PyccelLt',
-    'PyccelMinus',
-    'PyccelMod',
-    'PyccelMul',
-    'PyccelNe',
-    'PyccelNot',
-    'PyccelOr',
-    'PyccelPow',
-    'PyccelUnary',
-    'PyccelUnarySub',
-    'Relational',
+    "IfTernaryOperator",
+    "PyccelAdd",
+    "PyccelAnd",
+    "PyccelAssociativeParenthesis",
+    "PyccelDiv",
+    "PyccelEq",
+    "PyccelFloorDiv",
+    "PyccelGe",
+    "PyccelGt",
+    "PyccelIn",
+    "PyccelIs",
+    "PyccelIsNot",
+    "PyccelLe",
+    "PyccelLt",
+    "PyccelMinus",
+    "PyccelMod",
+    "PyccelMul",
+    "PyccelNe",
+    "PyccelNot",
+    "PyccelOr",
+    "PyccelPow",
+    "PyccelUnary",
+    "PyccelUnarySub",
+    "Relational",
 )
 
-#==============================================================================
+
+# ==============================================================================
 def broadcast(shape_1, shape_2):
     """
     Broadcast two shapes using NumPy broadcasting rules.
@@ -84,31 +85,32 @@ def broadcast(shape_1, shape_2):
         The shape of the result of the operator.
     """
 
-    from pyccel.ast.sympy_helper import pyccel_to_sympy #pylint:disable=cyclic-import
+    from pyccel.ast.sympy_helper import pyccel_to_sympy  # pylint:disable=cyclic-import
+
     if shape_1 is None and shape_2 is None:
         return None
     elif shape_1 is None:
-        new_shape_1 = (LiteralInteger(1),)*len(shape_2)
+        new_shape_1 = (LiteralInteger(1),) * len(shape_2)
         new_shape_2 = shape_2
     elif shape_2 is None:
         new_shape_1 = shape_1
-        new_shape_2 = (LiteralInteger(1),)*len(shape_1)
+        new_shape_2 = (LiteralInteger(1),) * len(shape_1)
     else:
         a = len(shape_1)
         b = len(shape_2)
 
-        if a>b:
-            new_shape_2 = (LiteralInteger(1),)*(a-b) + tuple(shape_2)
+        if a > b:
+            new_shape_2 = (LiteralInteger(1),) * (a - b) + tuple(shape_2)
             new_shape_1 = shape_1
-        elif b>a:
-            new_shape_1 = (LiteralInteger(1),)*(b-a) + tuple(shape_1)
+        elif b > a:
+            new_shape_1 = (LiteralInteger(1),) * (b - a) + tuple(shape_1)
             new_shape_2 = shape_2
         else:
             new_shape_2 = shape_2
             new_shape_1 = shape_1
 
     new_shape = []
-    for e1,e2 in zip(new_shape_1, new_shape_2):
+    for e1, e2 in zip(new_shape_1, new_shape_2):
         used_names = set()
         symbol_map = {}
         sy_e1 = pyccel_to_sympy(e1, symbol_map, used_names)
@@ -123,24 +125,29 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e1)
         elif sy_e2.is_constant() and not sy_e1.is_constant():
             new_shape.append(e2)
-        elif not sy_e2.is_constant() and not sy_e1.is_constant()\
-                and not (sy_e1 - sy_e2).is_constant():
+        elif (
+            not sy_e2.is_constant()
+            and not sy_e1.is_constant()
+            and not (sy_e1 - sy_e2).is_constant()
+        ):
             new_shape.append(e1)
         else:
-            shape1_code = '-'
-            shape2_code = '-'
+            shape1_code = "-"
+            shape2_code = "-"
             if shape_1:
-                shape1_code = ' '.join(f'{s},' for s in shape_1)
+                shape1_code = " ".join(f"{s}," for s in shape_1)
                 shape1_code = f"({shape1_code})"
             if shape_2:
-                shape2_code = ' '.join(f"{s}," for s in shape_2)
+                shape2_code = " ".join(f"{s}," for s in shape_2)
                 shape2_code = f"({shape2_code})"
-            msg = 'operands could not be broadcast together with shapes {} {}'
+            msg = "operands could not be broadcast together with shapes {} {}"
             msg = msg.format(shape1_code, shape2_code)
             raise PyccelSemanticError(msg)
     return tuple(new_shape)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelOperator(TypedAstNode):
     """
@@ -155,8 +162,9 @@ class PyccelOperator(TypedAstNode):
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
-    __slots__ = ('_args', )
-    _attribute_nodes = ('_args',)
+
+    __slots__ = ("_args",)
+    _attribute_nodes = ("_args",)
 
     @classmethod
     def make_simplified(cls, *args):
@@ -176,7 +184,7 @@ class PyccelOperator(TypedAstNode):
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
-        if pyccel_stage == 'syntactic':
+        if pyccel_stage == "syntactic":
             super().__init__()
             return
         self._set_shape()
@@ -191,7 +199,9 @@ class PyccelOperator(TypedAstNode):
         uses the static method `_calculate_type` to set these values. If the
         values are class parameters in a sub-class, this method must be over-ridden.
         """
-        self._class_type = self._calculate_type(*self._args)  # pylint: disable=no-member
+        self._class_type = self._calculate_type(
+            *self._args
+        )  # pylint: disable=no-member
 
     def _set_shape(self):
         """
@@ -219,7 +229,7 @@ class PyccelOperator(TypedAstNode):
         int
             The precedence of the operator.
         """
-        return self._precedence #pylint: disable=no-member
+        return self._precedence  # pylint: disable=no-member
 
     def _handle_precedence(self, args):
         """
@@ -245,14 +255,14 @@ class PyccelOperator(TypedAstNode):
         tuple
             The arguments with the parentheses inserted.
         """
-        precedence = [getattr(a, 'precedence', 17) for a in args]
+        precedence = [getattr(a, "precedence", 17) for a in args]
 
         if min(precedence) <= self.precedence:
 
             new_args = []
 
-            for i, (a,p) in enumerate(zip(args, precedence)):
-                if (p < self.precedence or (p == self.precedence and i != 0)):
+            for i, (a, p) in enumerate(zip(args, precedence)):
+                if p < self.precedence or (p == self.precedence and i != 0):
                     new_args.append(PyccelAssociativeParenthesis(a))
                 else:
                     new_args.append(a)
@@ -265,11 +275,12 @@ class PyccelOperator(TypedAstNode):
 
     @property
     def args(self):
-        """ Arguments of the operator
-        """
+        """Arguments of the operator"""
         return self._args
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelUnaryOperator(PyccelOperator):
     """
@@ -283,7 +294,8 @@ class PyccelUnaryOperator(PyccelOperator):
     arg : TypedAstNode
         The argument passed to the operator.
     """
-    __slots__ = ('_shape','_class_type')
+
+    __slots__ = ("_shape", "_class_type")
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -328,7 +340,9 @@ class PyccelUnaryOperator(PyccelOperator):
         """
         return arg.shape
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelUnary(PyccelUnaryOperator):
     """
@@ -347,17 +361,24 @@ class PyccelUnary(PyccelUnaryOperator):
     arg : TypedAstNode
         The argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 14
+
     def _handle_precedence(self, args):
         args = PyccelUnaryOperator._handle_precedence(self, args)
-        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
+        args = tuple(
+            PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a
+            for a in args
+        )
         return args
 
     def __repr__(self):
-        return f'+{repr(self.args[0])}'
+        return f"+{repr(self.args[0])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelUnarySub(PyccelUnary):
     """
@@ -376,10 +397,11 @@ class PyccelUnarySub(PyccelUnary):
     arg : TypedAstNode
         The argument passed to the operator.
     """
+
     __slots__ = ()
 
     def __repr__(self):
-        return f'-{repr(self.args[0])}'
+        return f"-{repr(self.args[0])}"
 
     def __index__(self):
         return -int(self.args[0])
@@ -393,7 +415,9 @@ class PyccelUnarySub(PyccelUnary):
     def __hash__(self):
         return hash((PyccelUnarySub, self.args[0]))
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelNot(PyccelUnaryOperator):
     """
@@ -412,10 +436,10 @@ class PyccelNot(PyccelUnaryOperator):
     arg : TypedAstNode
         The argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 6
     _class_type = PythonNativeBool()
-
 
     @classmethod
     def make_simplified(cls, arg):
@@ -467,9 +491,11 @@ class PyccelNot(PyccelUnaryOperator):
         return None
 
     def __repr__(self):
-        return f'not {repr(self.args[0])}'
+        return f"not {repr(self.args[0])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     """
@@ -483,15 +509,19 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     arg : TypedAstNode
         The argument in the PyccelAssociativeParenthesis.
     """
-    __slots__ = () # ok
+
+    __slots__ = ()  # ok
     _precedence = 18
+
     def _handle_precedence(self, args):
         return args
 
     def __repr__(self):
-        return f'({repr(self.args[0])})'
+        return f"({repr(self.args[0])})"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelBinaryOperator(PyccelOperator):
     """
@@ -507,7 +537,8 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    __slots__ = ('_shape','_class_type')
+
+    __slots__ = ("_shape", "_class_type")
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -545,7 +576,9 @@ class PyccelBinaryOperator(PyccelOperator):
         try:
             return arg1.class_type + arg2.class_type
         except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
+            raise TypeError(
+                f"Cannot determine the type of ({arg1}, {arg2})"
+            )  # pylint: disable=raise-missing-from
 
     @staticmethod
     def _calculate_shape(arg1, arg2):
@@ -581,7 +614,9 @@ class PyccelBinaryOperator(PyccelOperator):
             shape = None
         return shape
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelArithmeticOperator(PyccelBinaryOperator):
     """
@@ -599,13 +634,20 @@ class PyccelArithmeticOperator(PyccelBinaryOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
+
     def _handle_precedence(self, args):
         args = PyccelBinaryOperator._handle_precedence(self, args)
-        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
+        args = tuple(
+            PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a
+            for a in args
+        )
         return args
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelPow(PyccelArithmeticOperator):
     """
@@ -626,21 +668,22 @@ class PyccelPow(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
-    _precedence  = 15
+    _precedence = 15
 
     def __repr__(self):
-        return f'{self.args[0]} ** {self.args[1]}'
+        return f"{self.args[0]} ** {self.args[1]}"
 
     def _handle_precedence(self, args):
-        precedence = [getattr(a, 'precedence', 17) for a in args]
+        precedence = [getattr(a, "precedence", 17) for a in args]
 
         if min(precedence) <= self._precedence:
 
             new_args = []
 
-            for i, (a,p) in enumerate(zip(args, precedence)):
-                if (p < self._precedence or (p == self._precedence and i != 1)):
+            for i, (a, p) in enumerate(zip(args, precedence)):
+                if p < self._precedence or (p == self._precedence and i != 1):
                     new_args.append(PyccelAssociativeParenthesis(a))
                 else:
                     new_args.append(a)
@@ -648,7 +691,9 @@ class PyccelPow(PyccelArithmeticOperator):
 
         return args
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelAdd(PyccelArithmeticOperator):
     """
@@ -669,6 +714,7 @@ class PyccelAdd(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 12
 
@@ -693,29 +739,41 @@ class PyccelAdd(PyccelArithmeticOperator):
         class_type = cls._calculate_type(arg1, arg2)
 
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-            return convert_to_literal(arg1.python_value + arg2.python_value,
-                                      class_type)
+            return convert_to_literal(arg1.python_value + arg2.python_value, class_type)
         if class_type == arg2.class_type and arg1 == 0:
             return arg2
         if class_type == arg1.class_type and arg2 == 0:
             return arg1
 
-        if isinstance(arg1, PyccelMinus) and arg1.args[1] == arg2 \
-                and arg1.args[0].class_type == class_type:
+        if (
+            isinstance(arg1, PyccelMinus)
+            and arg1.args[1] == arg2
+            and arg1.args[0].class_type == class_type
+        ):
             return arg1.args[0]
-        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
-            return PyccelAdd(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
+        if (
+            isinstance(arg1, PyccelAdd)
+            and isinstance(arg1.args[1], Literal)
+            and isinstance(arg2, Literal)
+        ):
+            return PyccelAdd(
+                arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2)
+            )
 
         return cls(arg1, arg2)
 
     def __new__(cls, arg1, arg2):
-        if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
-            isinstance(arg2, LiteralComplex) and \
-            arg2.real == LiteralFloat(0):
+        if (
+            isinstance(arg1, (LiteralInteger, LiteralFloat))
+            and isinstance(arg2, LiteralComplex)
+            and arg2.real == LiteralFloat(0)
+        ):
             return LiteralComplex(arg1, arg2.imag)
-        elif isinstance(arg2, (LiteralInteger, LiteralFloat)) and \
-            isinstance(arg1, LiteralComplex) and \
-            arg1.real == LiteralFloat(0):
+        elif (
+            isinstance(arg2, (LiteralInteger, LiteralFloat))
+            and isinstance(arg1, LiteralComplex)
+            and arg1.real == LiteralFloat(0)
+        ):
             return LiteralComplex(arg2, arg1.imag)
         else:
             return super().__new__(cls)
@@ -750,9 +808,11 @@ class PyccelAdd(PyccelArithmeticOperator):
             return super()._calculate_type(arg1, arg2)
 
     def __repr__(self):
-        return f'{self.args[0]} + {self.args[1]}'
+        return f"{self.args[0]} + {self.args[1]}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelMul(PyccelArithmeticOperator):
     """
@@ -773,6 +833,7 @@ class PyccelMul(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 13
 
@@ -797,23 +858,26 @@ class PyccelMul(PyccelArithmeticOperator):
             return arg2
         if arg2 == 1 and arg2.class_type == class_type:
             return arg1
-        if (arg1 == 0 or arg2 == 0):
+        if arg1 == 0 or arg2 == 0:
             return convert_to_literal(0, class_type)
-        if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1) \
-                and arg2.class_type == class_type:
+        if (
+            isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1
+        ) and arg2.class_type == class_type:
             return PyccelUnarySub(arg2)
-        if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1) \
-                and arg1.class_type == class_type:
+        if (
+            isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1
+        ) and arg1.class_type == class_type:
             return PyccelUnarySub(arg1)
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-            return convert_to_literal(arg1.python_value * arg2.python_value,
-                                      class_type)
+            return convert_to_literal(arg1.python_value * arg2.python_value, class_type)
         return cls(arg1, arg2)
 
     def __repr__(self):
-        return f'{repr(self.args[0])} * {repr(self.args[1])}'
+        return f"{repr(self.args[0])} * {repr(self.args[1])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelMinus(PyccelArithmeticOperator):
     """
@@ -834,6 +898,7 @@ class PyccelMinus(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 12
 
@@ -856,8 +921,7 @@ class PyccelMinus(PyccelArithmeticOperator):
             return PyccelAdd.make_simplified(arg1, arg2.args[0])
         elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
             dtype = cls._calculate_type(arg1, arg2)
-            return convert_to_literal(arg1.python_value - arg2.python_value,
-                                      dtype)
+            return convert_to_literal(arg1.python_value - arg2.python_value, dtype)
 
         class_type = cls._calculate_type(arg1, arg2)
 
@@ -865,32 +929,53 @@ class PyccelMinus(PyccelArithmeticOperator):
             return PyccelUnarySub(arg2)
         if class_type == arg1.class_type and arg2 == 0:
             return arg1
-        if isinstance(arg1, PyccelAdd) and arg1.args[1] == arg2 \
-                and arg1.args[0].class_type == class_type:
+        if (
+            isinstance(arg1, PyccelAdd)
+            and arg1.args[1] == arg2
+            and arg1.args[0].class_type == class_type
+        ):
             return arg1.args[0]
-        if isinstance(arg1, PyccelAdd) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
-            return PyccelAdd(arg1.args[0], PyccelMinus.make_simplified(arg1.args[1], arg2))
-        if isinstance(arg1, PyccelMinus) and isinstance(arg1.args[1], Literal) and isinstance(arg2, Literal):
-            return PyccelMinus(arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2))
+        if (
+            isinstance(arg1, PyccelAdd)
+            and isinstance(arg1.args[1], Literal)
+            and isinstance(arg2, Literal)
+        ):
+            return PyccelAdd(
+                arg1.args[0], PyccelMinus.make_simplified(arg1.args[1], arg2)
+            )
+        if (
+            isinstance(arg1, PyccelMinus)
+            and isinstance(arg1.args[1], Literal)
+            and isinstance(arg2, Literal)
+        ):
+            return PyccelMinus(
+                arg1.args[0], PyccelAdd.make_simplified(arg1.args[1], arg2)
+            )
 
         return cls(arg1, arg2)
 
-    def __new__(cls, arg1 = None, arg2 = None):
-        if isinstance(arg1, LiteralFloat) and \
-            isinstance(arg2, LiteralComplex) and \
-            arg2.real == LiteralFloat(0):
+    def __new__(cls, arg1=None, arg2=None):
+        if (
+            isinstance(arg1, LiteralFloat)
+            and isinstance(arg2, LiteralComplex)
+            and arg2.real == LiteralFloat(0)
+        ):
             return LiteralComplex(arg1, -arg2.imag.python_value)
-        elif isinstance(arg2, LiteralFloat) and \
-            isinstance(arg1, LiteralComplex) and \
-            arg1.real == LiteralFloat(0):
+        elif (
+            isinstance(arg2, LiteralFloat)
+            and isinstance(arg1, LiteralComplex)
+            and arg1.real == LiteralFloat(0)
+        ):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
             return super().__new__(cls)
 
     def __repr__(self):
-        return f'{repr(self.args[0])} - {repr(self.args[1])}'
+        return f"{repr(self.args[0])} - {repr(self.args[1])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelDiv(PyccelArithmeticOperator):
     """
@@ -911,6 +996,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 13
 
@@ -933,8 +1019,7 @@ class PyccelDiv(PyccelArithmeticOperator):
         if arg2 == 1 and arg1.class_type == class_type:
             return arg1
         if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-            return convert_to_literal(arg1.python_value / arg2.python_value,
-                                      class_type)
+            return convert_to_literal(arg1.python_value / arg2.python_value, class_type)
 
         return cls(arg1, arg2)
 
@@ -964,15 +1049,20 @@ class PyccelDiv(PyccelArithmeticOperator):
         """
         class_type = super()._calculate_type(arg1, arg2)
 
-        if class_type.primitive_type in (PrimitiveIntegerType(), PrimitiveBooleanType()):
+        if class_type.primitive_type in (
+            PrimitiveIntegerType(),
+            PrimitiveBooleanType(),
+        ):
             class_type = class_type.switch_basic_type(PythonNativeFloat())
 
         return class_type
 
     def __repr__(self):
-        return f'{repr(self.args[0])} / {repr(self.args[1])}'
+        return f"{repr(self.args[0])} / {repr(self.args[1])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelMod(PyccelArithmeticOperator):
     """
@@ -993,13 +1083,16 @@ class PyccelMod(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
-        return f'{repr(self.args[0])} % {repr(self.args[1])}'
+        return f"{repr(self.args[0])} % {repr(self.args[1])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelFloorDiv(PyccelArithmeticOperator):
     """
@@ -1020,13 +1113,16 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
-        return f'{repr(self.args[0])} // {repr(self.args[1])}'
+        return f"{repr(self.args[0])} // {repr(self.args[1])}"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelComparisonOperator(PyccelBinaryOperator):
     """
@@ -1042,6 +1138,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 7
 
@@ -1069,22 +1166,29 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
             The Python type of the object.
         """
         dtype = PythonNativeBool()
-        possible_class_types = set(a.class_type for a in (arg1, arg2) \
-                        if isinstance(a.class_type, NumpyNDArrayType))
+        possible_class_types = set(
+            a.class_type
+            for a in (arg1, arg2)
+            if isinstance(a.class_type, NumpyNDArrayType)
+        )
         if len(possible_class_types) == 0:
             class_type = dtype
         elif len(possible_class_types) == 1:
             class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
-            description = f"({arg1!r} {cls.op} {arg2!r})" # pylint: disable=no-member
-            raise NotImplementedError("Can't deduce type for comparison operator"
-                                      f" with multiple containers {description}")
+            description = f"({arg1!r} {cls.op} {arg2!r})"  # pylint: disable=no-member
+            raise NotImplementedError(
+                "Can't deduce type for comparison operator"
+                f" with multiple containers {description}"
+            )
         return class_type
 
     def __repr__(self):
-        return f'{repr(self.args[0])} {self.op} {repr(self.args[1])}' # pylint: disable=no-member
+        return f"{repr(self.args[0])} {self.op} {repr(self.args[1])}"  # pylint: disable=no-member
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelEq(PyccelComparisonOperator):
     """
@@ -1105,14 +1209,16 @@ class PyccelEq(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = "=="
 
-    def __new__(cls, arg1 = None, arg2 = None):
+    def __new__(cls, arg1=None, arg2=None):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIs(arg1, arg2)
         else:
             return super().__new__(cls)
+
 
 class PyccelNe(PyccelComparisonOperator):
     """
@@ -1133,14 +1239,16 @@ class PyccelNe(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = "!="
 
-    def __new__(cls, arg1 = None, arg2 = None):
+    def __new__(cls, arg1=None, arg2=None):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
             return PyccelIsNot(arg1, arg2)
         else:
             return super().__new__(cls)
+
 
 class PyccelLt(PyccelComparisonOperator):
     """
@@ -1161,8 +1269,10 @@ class PyccelLt(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = "<"
+
 
 class PyccelLe(PyccelComparisonOperator):
     """
@@ -1183,8 +1293,10 @@ class PyccelLe(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = "<="
+
 
 class PyccelGt(PyccelComparisonOperator):
     """
@@ -1205,6 +1317,7 @@ class PyccelGt(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = ">"
 
@@ -1224,13 +1337,26 @@ class PyccelGt(PyccelComparisonOperator):
             The second argument passed to the operator.
         """
 
-        if all(isinstance(a, Literal) or isinstance(a, PyccelUnarySub) and isinstance(a.args[0], Literal)
-                for a in (arg1, arg2)):
-            arg1_val = arg1.python_value if isinstance(arg1, Literal) else -arg1.args[0].python_value
-            arg2_val = arg2.python_value if isinstance(arg2, Literal) else -arg2.args[0].python_value
+        if all(
+            isinstance(a, Literal)
+            or isinstance(a, PyccelUnarySub)
+            and isinstance(a.args[0], Literal)
+            for a in (arg1, arg2)
+        ):
+            arg1_val = (
+                arg1.python_value
+                if isinstance(arg1, Literal)
+                else -arg1.args[0].python_value
+            )
+            arg2_val = (
+                arg2.python_value
+                if isinstance(arg2, Literal)
+                else -arg2.args[0].python_value
+            )
             return convert_to_literal(arg1_val > arg2_val)
         else:
             return cls(arg1, arg2)
+
 
 class PyccelGe(PyccelComparisonOperator):
     """
@@ -1251,10 +1377,13 @@ class PyccelGe(PyccelComparisonOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
+
     __slots__ = ()
     op = ">="
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelBooleanOperator(PyccelOperator):
     """
@@ -1268,6 +1397,7 @@ class PyccelBooleanOperator(PyccelOperator):
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
+
     _shape = None
     _class_type = PythonNativeBool()
 
@@ -1289,7 +1419,9 @@ class PyccelBooleanOperator(PyccelOperator):
         to be done here as the shape is a class variable.
         """
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelAnd(PyccelBooleanOperator):
     """
@@ -1308,6 +1440,7 @@ class PyccelAnd(PyccelBooleanOperator):
     *args : TypedAstNode
         The arguments passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 5
 
@@ -1332,19 +1465,25 @@ class PyccelAnd(PyccelBooleanOperator):
         return cls(*args)
 
     def __init__(self, *args):
-        args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelAnd) else [a]))
+        args = tuple(
+            ai for a in args for ai in (a.args if isinstance(a, PyccelAnd) else [a])
+        )
         super().__init__(*args)
-
 
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)
-        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOr) else a for a in args)
+        args = tuple(
+            PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOr) else a
+            for a in args
+        )
         return args
 
     def __repr__(self):
-        return ' and '.join(repr(a) for a in self.args)
+        return " and ".join(repr(a) for a in self.args)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelOr(PyccelBooleanOperator):
     """
@@ -1363,6 +1502,7 @@ class PyccelOr(PyccelBooleanOperator):
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 4
 
@@ -1387,18 +1527,25 @@ class PyccelOr(PyccelBooleanOperator):
         return cls(*args)
 
     def __init__(self, *args):
-        args = tuple(ai for a in args for ai in (a.args if isinstance(a, PyccelOr) else [a]))
+        args = tuple(
+            ai for a in args for ai in (a.args if isinstance(a, PyccelOr) else [a])
+        )
         super().__init__(*args)
 
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)
-        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelAnd) else a for a in args)
+        args = tuple(
+            PyccelAssociativeParenthesis(a) if isinstance(a, PyccelAnd) else a
+            for a in args
+        )
         return args
 
     def __repr__(self):
-        return ' or '.join(repr(a) for a in self.args)
+        return " or ".join(repr(a) for a in self.args)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelIs(PyccelBooleanOperator):
     """
@@ -1420,24 +1567,25 @@ class PyccelIs(PyccelBooleanOperator):
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
     """
+
     __slots__ = ()
     _precedence = 7
 
     @property
     def lhs(self):
-        """ First operator argument"""
+        """First operator argument"""
         return self._args[0]
 
     @property
     def rhs(self):
-        """ First operator argument"""
+        """First operator argument"""
         return self._args[1]
 
     def __repr__(self):
-        return f'{repr(self.args[0])} is {repr(self.args[1])}'
+        return f"{repr(self.args[0])} is {repr(self.args[1])}"
 
     def eval(self):
-        """ Determines the value of the expression `x is None` when `x` is known.
+        """Determines the value of the expression `x is None` when `x` is known.
 
         If a boolean value cannot be computed, return the string "unknown".
         """
@@ -1445,14 +1593,16 @@ class PyccelIs(PyccelBooleanOperator):
         if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
             return True
         # evaluate `x is not None` when x is known and different to None
-        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
+        elif self.rhs is Nil() and not getattr(self.lhs, "self.lhs.is_optional", False):
             return False
         # The result of the expression is unknown if the rhs is not None
         # or the lhs is an  optional variable
         else:
             return "unknown"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelIsNot(PyccelIs):
     """
@@ -1474,13 +1624,14 @@ class PyccelIsNot(PyccelIs):
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
     """
+
     __slots__ = ()
 
     def __repr__(self):
-        return f'{repr(self.args[0])} is not {repr(self.args[1])}'
+        return f"{repr(self.args[0])} is not {repr(self.args[1])}"
 
     def eval(self):
-        """ Determines the value of the expression `x is not None` when `x` is known.
+        """Determines the value of the expression `x is not None` when `x` is known.
 
         If a boolean value cannot be computed, return the string "unknown".
         """
@@ -1488,14 +1639,16 @@ class PyccelIsNot(PyccelIs):
         if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
             return False
         # evaluate `x is not None` when x is known and different to None
-        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
+        elif self.rhs is Nil() and not getattr(self.lhs, "self.lhs.is_optional", False):
             return True
         # The result of the expression is unknown if the rhs is not None
         # or the lhs is an  optional variable
         else:
             return "unknown"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class PyccelIn(PyccelBooleanOperator):
     """
@@ -1511,6 +1664,7 @@ class PyccelIn(PyccelBooleanOperator):
     container : TypedAstNode
         The first argument passed to the operator.
     """
+
     __slots__ = ()
     _precedence = 7
 
@@ -1535,7 +1689,9 @@ class PyccelIn(PyccelBooleanOperator):
         """
         return self._args[1]
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class IfTernaryOperator(PyccelOperator):
     """
@@ -1563,23 +1719,35 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ('_shape','_class_type')
+
+    __slots__ = ("_shape", "_class_type")
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
 
-        if pyccel_stage == 'syntactic':
+        if pyccel_stage == "syntactic":
             return
-        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
-            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true, Nil) or isinstance(value_false, Nil):
+            errors.report(
+                "None is not implemented for Ternary Operator", severity="fatal"
+            )
         if value_true.dtype != value_false.dtype:
-            if not (isinstance(value_true.dtype, FixedSizeNumericType) and isinstance(value_false.dtype, FixedSizeNumericType)):
-                errors.report('The types are incompatible in IfTernaryOperator', severity='fatal')
-        if value_false.rank != value_true.rank :
-            errors.report('Ternary Operator results should have the same rank', severity='fatal')
-        if value_false.shape != value_true.shape :
-            errors.report('Ternary Operator results should have the same shape', severity='fatal')
+            if not (
+                isinstance(value_true.dtype, FixedSizeNumericType)
+                and isinstance(value_false.dtype, FixedSizeNumericType)
+            ):
+                errors.report(
+                    "The types are incompatible in IfTernaryOperator", severity="fatal"
+                )
+        if value_false.rank != value_true.rank:
+            errors.report(
+                "Ternary Operator results should have the same rank", severity="fatal"
+            )
+        if value_false.shape != value_true.shape:
+            errors.report(
+                "Ternary Operator results should have the same shape", severity="fatal"
+            )
 
     @staticmethod
     def _calculate_type(cond, value_true, value_false):
@@ -1612,10 +1780,14 @@ class IfTernaryOperator(PyccelOperator):
         try:
             class_type = value_true.class_type + value_false.class_type
         except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of ({value_true}, {value_false})') #pylint: disable=raise-missing-from
+            raise TypeError(
+                f"Cannot determine the type of ({value_true}, {value_false})"
+            )  # pylint: disable=raise-missing-from
 
-        if value_false.class_type.order != value_true.class_type.order :
-            errors.report('Ternary Operator results should have the same order', severity='fatal')
+        if value_false.class_type.order != value_true.class_type.order:
+            errors.report(
+                "Ternary Operator results should have the same order", severity="fatal"
+            )
 
         return class_type
 
@@ -1667,8 +1839,20 @@ class IfTernaryOperator(PyccelOperator):
         return self._args[2]
 
     def __str__(self):
-        return f'(({self.value_true}) if ({self.cond}) else ({self.value_false})'
+        return f"(({self.value_true}) if ({self.cond}) else ({self.value_false})"
 
 
-#==============================================================================
-Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
+# ==============================================================================
+Relational = (
+    PyccelEq,
+    PyccelNe,
+    PyccelLt,
+    PyccelLe,
+    PyccelGt,
+    PyccelGe,
+    PyccelAnd,
+    PyccelOr,
+    PyccelNot,
+    PyccelIs,
+    PyccelIsNot,
+)

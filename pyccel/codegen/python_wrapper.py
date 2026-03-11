@@ -1,32 +1,35 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 import os
 import time
 
-from pyccel.codegen.compiling.basic              import CompileObj
-from pyccel.codegen.wrappergen  import Wrappergen
-from pyccel.codegen.utilities                    import manage_dependencies
-from pyccel.errors.errors                        import Errors
+from pyccel.codegen.compiling.basic import CompileObj
+from pyccel.codegen.wrappergen import Wrappergen
+from pyccel.codegen.utilities import manage_dependencies
+from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-__all__ = ['create_shared_library']
+__all__ = ["create_shared_library"]
 
-#==============================================================================
-def create_shared_library(codegen,
-                          main_obj,
-                          *,
-                          language,
-                          wrapper_flags,
-                          pyccel_dirpath,
-                          output_dirpath,
-                          compiler,
-                          sharedlib_modname=None,
-                          verbose):
+
+# ==============================================================================
+def create_shared_library(
+    codegen,
+    main_obj,
+    *,
+    language,
+    wrapper_flags,
+    pyccel_dirpath,
+    output_dirpath,
+    compiler,
+    sharedlib_modname=None,
+    verbose,
+):
     """
     Create a shared library which can be called from Pyccel.
 
@@ -89,69 +92,84 @@ def create_shared_library(codegen,
 
     gen = Wrappergen(codegen, module_name, language, verbose)
 
-    #-------------------------------------------
+    # -------------------------------------------
     #               Wrap code
-    #-------------------------------------------
+    # -------------------------------------------
 
     start_wrapper_creation = time.time()
     gen.wrap(os.path.dirname(pyccel_dirpath))
-    timings['Wrapper creation'] = time.time() - start_wrapper_creation
+    timings["Wrapper creation"] = time.time() - start_wrapper_creation
 
     if errors.has_errors():
-        return '', {}
+        return "", {}
 
-    #-------------------------------------------
+    # -------------------------------------------
     #           Print wrapper code
-    #-------------------------------------------
+    # -------------------------------------------
 
     start_wrapper_printing = time.time()
     wrapper_files = gen.print(pyccel_dirpath)
-    timings['Wrapper printing'] = time.time() - start_wrapper_printing
+    timings["Wrapper printing"] = time.time() - start_wrapper_printing
 
     if errors.has_errors():
         return
 
     printed_languages = gen.printed_languages
 
-    #-------------------------------------------
+    # -------------------------------------------
     #         Prepare the compile objects
-    #-------------------------------------------
+    # -------------------------------------------
 
-    wrapper_compile_objs = [CompileObj(filepath,
-                                       pyccel_dirpath,
-                                       flags        = main_obj.flags,
-                                       dependencies = (main_obj,))
-                            for filepath in wrapper_files[:-1]] + \
-                           [CompileObj(wrapper_files[-1],
-                                       pyccel_dirpath,
-                                       flags        = wrapper_flags,
-                                       dependencies = (main_obj,),
-                                       extra_compilation_tools = ('python',))]
+    wrapper_compile_objs = [
+        CompileObj(
+            filepath, pyccel_dirpath, flags=main_obj.flags, dependencies=(main_obj,)
+        )
+        for filepath in wrapper_files[:-1]
+    ] + [
+        CompileObj(
+            wrapper_files[-1],
+            pyccel_dirpath,
+            flags=wrapper_flags,
+            dependencies=(main_obj,),
+            extra_compilation_tools=("python",),
+        )
+    ]
 
-    for i, (obj, lang, imports) in enumerate(zip(wrapper_compile_objs, printed_languages, gen.get_additional_imports())):
+    for i, (obj, lang, imports) in enumerate(
+        zip(wrapper_compile_objs, printed_languages, gen.get_additional_imports())
+    ):
         obj.add_dependencies(*wrapper_compile_objs[:i])
-        manage_dependencies(imports, pyccel_dirpath = pyccel_dirpath,
-                            compiler = compiler, mod_obj = obj, language = lang,
-                            verbose = verbose)
+        manage_dependencies(
+            imports,
+            pyccel_dirpath=pyccel_dirpath,
+            compiler=compiler,
+            mod_obj=obj,
+            language=lang,
+            verbose=verbose,
+        )
 
-    #-------------------------------------------
+    # -------------------------------------------
     #               Compile code
-    #-------------------------------------------
+    # -------------------------------------------
 
     start_compile_wrapper = time.time()
     for obj, wrapper_language in zip(wrapper_compile_objs, printed_languages):
-        compiler.compile_module(compile_obj=obj,
-                output_folder=pyccel_dirpath,
-                language=wrapper_language,
-                verbose=verbose)
+        compiler.compile_module(
+            compile_obj=obj,
+            output_folder=pyccel_dirpath,
+            language=wrapper_language,
+            verbose=verbose,
+        )
 
-    sharedlib_filepath = compiler.compile_shared_library(wrapper_compile_objs[-1],
-                                                    output_folder = output_dirpath,
-                                                    sharedlib_modname = sharedlib_modname,
-                                                    language = language,
-                                                    verbose = verbose)
+    sharedlib_filepath = compiler.compile_shared_library(
+        wrapper_compile_objs[-1],
+        output_folder=output_dirpath,
+        sharedlib_modname=sharedlib_modname,
+        language=language,
+        verbose=verbose,
+    )
 
-    timings['Wrapper compilation'] = time.time() - start_compile_wrapper
+    timings["Wrapper compilation"] = time.time() - start_compile_wrapper
 
     # Return absolute path of shared library
     return sharedlib_filepath, timings

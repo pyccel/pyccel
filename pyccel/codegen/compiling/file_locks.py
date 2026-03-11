@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module handling classes which handle file locking to avoid deadlocks.
 """
+
 from filelock import FileLock
+
 
 class FileLockSet:
     """
@@ -21,7 +23,8 @@ class FileLockSet:
     locks : iterable[FileLock], optional
         The locks that should be stored in the FileLockSet.
     """
-    def __init__(self, locks = ()):
+
+    def __init__(self, locks=()):
         assert all(isinstance(l, FileLock) for l in locks)
         self._locks = list(locks)
 

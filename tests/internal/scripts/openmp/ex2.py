@@ -5,15 +5,15 @@
 
 from numpy import zeros
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     n = 100
 
     a = zeros(n)
     b = zeros(n)
 
-    #$ omp parallel
-    #$ omp for
+    # $ omp parallel
+    # $ omp for
     for i in range(1, n):
-        b[i] = (a[i] + a[i-1]) / 2.0
-    #$ omp end for
-    #$ omp end parallel
+        b[i] = (a[i] + a[i - 1]) / 2.0
+    # $ omp end for
+    # $ omp end parallel

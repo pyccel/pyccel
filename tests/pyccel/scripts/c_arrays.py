@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # ---------------------------- Array creation ---------------------------------
     ac0 = np.array([0])
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
             print(af3[i][j])
         print()
 
-    af4 = np.full((3, 10), 1+2j, dtype=complex)
+    af4 = np.full((3, 10), 1 + 2j, dtype=complex)
     for i in range(3):
         for j in range(10):
             print(af4[i][j])
@@ -59,13 +59,13 @@ if __name__ == '__main__':
         print(ao3[i])
     print()
 
-    ao4 = np.ones((2,3))
+    ao4 = np.ones((2, 3))
     for i in range(2):
         for j in range(3):
             print(ao4[i][j])
         print()
 
-    ae1 = np.empty((2,3))
+    ae1 = np.empty((2, 3))
 
     afl = np.full_like(ae1, 5.21, float)
     for i in range(2):
@@ -86,8 +86,7 @@ if __name__ == '__main__':
 
     # ------------------------------ Array init ----------------------------------
 
-    a = np.array([1,2,3])
+    a = np.array([1, 2, 3])
     b = np.array(a)
     print(b[0], b[1], b[2])
     print()
-

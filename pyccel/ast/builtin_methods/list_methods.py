@@ -1,10 +1,10 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
-The List container has a number of built-in methods that are 
+The List container has a number of built-in methods that are
 always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
@@ -13,19 +13,21 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelFunction
 
-__all__ = ('ListAppend',
-           'ListClear',
-           'ListCopy',
-           'ListExtend',
-           'ListInsert',
-           'ListMethod',
-           'ListPop',
-           'ListRemove',
-           'ListReverse',
-           'ListSort'
-           )
+__all__ = (
+    "ListAppend",
+    "ListClear",
+    "ListCopy",
+    "ListExtend",
+    "ListInsert",
+    "ListMethod",
+    "ListPop",
+    "ListRemove",
+    "ListReverse",
+    "ListSort",
+)
 
-#==============================================================================
+
+# ==============================================================================
 class ListMethod(PyccelFunction):
     """
     Abstract class for list method calls.
@@ -37,13 +39,15 @@ class ListMethod(PyccelFunction):
     ----------
     list_obj : TypedAstNode
         The object which the method is called from.
-    
+
     *args : TypedAstNode
         The arguments passed to list methods.
     """
+
     __slots__ = ("_list_obj",)
     _attribute_nodes = PyccelFunction._attribute_nodes + ("_list_obj",)
     name = None
+
     def __init__(self, list_obj, *args):
         self._list_obj = list_obj
         super().__init__(*args)
@@ -67,7 +71,8 @@ class ListMethod(PyccelFunction):
         """
         return (self._list_obj,)
 
-#==============================================================================
+
+# ==============================================================================
 class ListAppend(ListMethod):
     """
     Represents a call to the .append() method.
@@ -85,28 +90,32 @@ class ListAppend(ListMethod):
     ----------
     list_obj : TypedAstNode
         The list object which the method is called from.
-    
+
     new_elem : TypedAstNode
         The argument passed to append() method.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'append'
+    name = "append"
 
     def __init__(self, list_obj, new_elem) -> None:
         expected_type = list_obj.class_type.element_type
         if new_elem.class_type != expected_type:
-            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
+            raise TypeError(
+                f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}"
+            )
         super().__init__(list_obj, new_elem)
 
-#==============================================================================
-class ListPop(ListMethod) :
+
+# ==============================================================================
+class ListPop(ListMethod):
     """
     Represents a call to the .pop() method.
-    
+
     Represents a call to the .pop() method which
-    removes the item at the specified index. 
+    removes the item at the specified index.
     The method also returns the removed item.
 
     >>> [1, 2].pop()
@@ -120,13 +129,14 @@ class ListPop(ListMethod) :
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'pop'
+
+    __slots__ = ("_class_type", "_shape")
+    name = "pop"
 
     def __init__(self, list_obj, index_element=None) -> None:
         self._class_type = list_obj.class_type.element_type
         rank = self._class_type.rank
-        self._shape = None if rank == 0 else (None,)*rank
+        self._shape = None if rank == 0 else (None,) * rank
         super().__init__(list_obj, index_element)
 
     @property
@@ -138,12 +148,13 @@ class ListPop(ListMethod) :
         """
         return self._args[0]
 
-#==============================================================================
-class ListClear(ListMethod) :
+
+# ==============================================================================
+class ListClear(ListMethod):
     """
     Represents a call to the .clear() method.
-    
-    Represents a call to the .clear() method which deletes all elements from a list, 
+
+    Represents a call to the .clear() method which deletes all elements from a list,
     effectively turning it into an empty list.
     Note that the .clear() method doesn't return any value.
 
@@ -157,15 +168,17 @@ class ListClear(ListMethod) :
     list_obj : TypedAstNode
         The list object which the method is called from.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'clear'
+    name = "clear"
 
     def __init__(self, list_obj) -> None:
         super().__init__(list_obj)
 
-#==============================================================================
+
+# ==============================================================================
 class ListInsert(ListMethod):
     """
     Represents a call to the .insert() method.
@@ -187,18 +200,21 @@ class ListInsert(ListMethod):
 
     index : TypedAstNode
         The index value for the element to be added.
-    
+
     new_elem : TypedAstNode
         The argument passed to insert() method.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'insert'
+    name = "insert"
 
     def __init__(self, list_obj, index, new_elem) -> None:
         if new_elem.class_type != list_obj.class_type.element_type:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise TypeError(
+                "Expecting an argument of the same type as the elements of the list"
+            )
         super().__init__(list_obj, index, new_elem)
 
     @property
@@ -219,7 +235,8 @@ class ListInsert(ListMethod):
         """
         return self._args[1]
 
-#==============================================================================
+
+# ==============================================================================
 class ListExtend(ListMethod):
     """
     Represents a call to the .extend() method.
@@ -232,7 +249,7 @@ class ListExtend(ListMethod):
     a body that calls `append()`, or direct `append()` nodes depending on
     the type of the iterable passed to `extend()`.
     This class should never be instantiated; it's only purpose is to help
-    construct the annotation_method `_build_ListExtend`. 
+    construct the annotation_method `_build_ListExtend`.
     The extend method is called as follows:
 
     >>> a = [1, 2, 3]
@@ -248,17 +265,19 @@ class ListExtend(ListMethod):
     iterable : TypedAstNode
         The argument passed to extend() method.
     """
+
     __slots__ = ()
-    name = 'extend'
+    name = "extend"
 
     def __init__(self, list_obj, iterable) -> None:
         super().__init__(list_obj, iterable)
 
-#==============================================================================
-class ListRemove(ListMethod) :
+
+# ==============================================================================
+class ListRemove(ListMethod):
     """
     Represents a call to the .remove() method.
-    
+
     Represents a call to the .remove() method which removes the first
     occurrence of a given element from the list.
     Note that the .remove() method doesn't return any value.
@@ -276,21 +295,25 @@ class ListRemove(ListMethod) :
     removed_obj : TypedAstNode
         The object to be removed from the list.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'remove'
+    name = "remove"
 
     def __init__(self, list_obj, removed_obj) -> None:
         if removed_obj.class_type != list_obj.class_type.element_type:
-            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
+            raise TypeError(
+                f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}"
+            )
         super().__init__(list_obj, removed_obj)
 
-#==============================================================================
-class ListCopy(ListMethod) :
+
+# ==============================================================================
+class ListCopy(ListMethod):
     """
     Represents a call to the .copy() method.
-    
+
     Represents a call to the .copy() method which is used to create a shallow
     copy of a list, meaning that any modification in the new list will be
     reflected in the original list.
@@ -312,8 +335,9 @@ class ListCopy(ListMethod) :
     list_obj : TypedAstNode
         The list object which the method is called from.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'copy'
+
+    __slots__ = ("_class_type", "_shape")
+    name = "copy"
 
     def __init__(self, list_obj) -> None:
         self._shape = list_obj.shape
@@ -330,17 +354,18 @@ class ListCopy(ListMethod) :
         """
         return ()
 
-#==============================================================================
-class ListSort(ListMethod) :
+
+# ==============================================================================
+class ListSort(ListMethod):
     """
     Represents a call to the .sort() method.
 
     Represents a call to the `.sort()` method, which sorts the elements of the
     list in ascending order and modifies the original list in place. This means
     that the elements of the original list are rearranged to be in sorted order.
-    Optional parameters are not supported, therefore they should not be provided. 
+    Optional parameters are not supported, therefore they should not be provided.
     Note that the .sort() method doesn't return any value.
-    
+
     >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
     >>> a.sort()
     >>> print(a)
@@ -352,24 +377,26 @@ class ListSort(ListMethod) :
         The list object which the method is called from.
 
     reverse : TypedAstNode, optional
-        Argument mimicking sort's reverse parameter. This argument is 
+        Argument mimicking sort's reverse parameter. This argument is
         unsupported so it should not be provided.
 
     key : FunctionDef, optional
-        A function to specify the sorting criteria(s). This argument is 
+        A function to specify the sorting criteria(s). This argument is
         unsupported so it should not be provided.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'sort'
+    name = "sort"
 
     def __init__(self, list_obj, reverse=None, key=None) -> None:
         if reverse is not None or key is not None:
             raise TypeError("Optional Parameters are not supported for sort() method.")
         super().__init__(list_obj, reverse, key)
 
-#==============================================================================
+
+# ==============================================================================
 class ListReverse(ListMethod):
     """
     Represents a call to the .reverse() method.
@@ -389,10 +416,11 @@ class ListReverse(ListMethod):
     list_obj : TypedAstNode
         The list object which the method is called from.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'reverse'
+    name = "reverse"
 
     def __init__(self, list_obj) -> None:
         super().__init__(list_obj)

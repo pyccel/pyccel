@@ -12,7 +12,7 @@ from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -37,12 +37,24 @@ if __name__ == '__main__':
     sendcount = np.int32(1)
     recvcount = np.int32(1)
     tag = np.int32(1234)
-    status = np.zeros(mpi_status_size, 'int32')
+    status = np.zeros(mpi_status_size, "int32")
 
-    mpi_sendrecv (msg, sendcount, MPI_INTEGER8, partner, tag,
-                  val, recvcount, MPI_INTEGER8, partner, tag,
-                  comm, status, ierr)
+    mpi_sendrecv(
+        msg,
+        sendcount,
+        MPI_INTEGER8,
+        partner,
+        tag,
+        val,
+        recvcount,
+        MPI_INTEGER8,
+        partner,
+        tag,
+        comm,
+        status,
+        ierr,
+    )
 
-    print('I, process ', rank, ', I received', val, ' from process ', partner)
+    print("I, process ", rank, ", I received", val, " from process ", partner)
 
     mpi_finalize(ierr)

@@ -1,7 +1,8 @@
-""" Functions for comparing coverage output and git diff output
-"""
+"""Functions for comparing coverage output and git diff output"""
+
 import sys
 import defusedxml.ElementTree as ET
+
 
 def get_untested_lines(coverage_filename):
     """
@@ -34,15 +35,18 @@ def get_untested_lines(coverage_filename):
     content_lines = {}
     no_coverage = {}
 
-    for f in root.findall('.//class'):
-        filename = f.attrib['filename']
-        lines = f.findall('lines')[0].findall('line')
-        all_lines = [int(l.attrib['number']) for l in lines]
-        untested_lines = [int(l.attrib['number']) for l in lines if l.attrib['hits'] == "0"]
+    for f in root.findall(".//class"):
+        filename = f.attrib["filename"]
+        lines = f.findall("lines")[0].findall("line")
+        all_lines = [int(l.attrib["number"]) for l in lines]
+        untested_lines = [
+            int(l.attrib["number"]) for l in lines if l.attrib["hits"] == "0"
+        ]
         no_coverage[filename] = untested_lines
         content_lines[filename] = all_lines
 
     return no_coverage, content_lines
+
 
 def compare_coverage_to_diff(coverage, diff):
     """
@@ -74,15 +78,16 @@ def compare_coverage_to_diff(coverage, diff):
             where coverage is lacking in that file.
     """
     untested = {}
-    for f,line_info in diff.items():
+    for f, line_info in diff.items():
         if f not in coverage:
             # Ignore non-python files or files in other directories
             continue
-        new_lines = line_info['addition']
+        new_lines = line_info["addition"]
         untested_lines = coverage[f]
         if any(n in untested_lines for n in new_lines):
             untested[f] = [n for n in new_lines if n in untested_lines]
     return untested
+
 
 def allow_untested_debug_code(untested):
     """
@@ -107,28 +112,29 @@ def allow_untested_debug_code(untested):
             without the lines which express raise statements.
     """
     reduced_untested = {}
-    for f,line_nums in untested.items():
+    for f, line_nums in untested.items():
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         for l in line_nums:
-            line = f_lines[l-1]
-            n = len(line)-len(line.lstrip())
-            i = l-1
-            func_found = ''
+            line = f_lines[l - 1]
+            n = len(line) - len(line.lstrip())
+            i = l - 1
+            func_found = ""
             while i >= 0 and not func_found:
                 line = f_lines[i]
                 strip_line = line.lstrip()
-                n_indent = len(line)-len(strip_line)
-                if n_indent < n and strip_line.startswith('def '):
-                    func_found = strip_line.split()[1].split('(')[0]
+                n_indent = len(line) - len(strip_line)
+                if n_indent < n and strip_line.startswith("def "):
+                    func_found = strip_line.split()[1].split("(")[0]
                 else:
-                    if n_indent < n and strip_line!='':
+                    if n_indent < n and strip_line != "":
                         n = n_indent
-                    i-=1
-            if func_found not in ('__repr__', '__str__'):
+                    i -= 1
+            if func_found not in ("__repr__", "__str__"):
                 reduced_untested.setdefault(f, []).append(l)
 
     return reduced_untested
+
 
 def allow_untested_error_calls(untested):
     """
@@ -152,18 +158,25 @@ def allow_untested_error_calls(untested):
             without the lines which express raise statements.
     """
     reduced_untested = {}
-    for f,line_nums in untested.items():
+    for f, line_nums in untested.items():
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
-        untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
-        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or \
-                                                     l.startswith('errors.report(') or \
-                                                     l.startswith('return errors.report(') or \
-                                                     l.startswith('except'))]
+        untested_lines = [(i, f_lines[i - 1].strip()) for i in line_nums]
+        lines = [
+            i
+            for i, l in untested_lines
+            if not (
+                l.startswith("raise ")
+                or l.startswith("errors.report(")
+                or l.startswith("return errors.report(")
+                or l.startswith("except")
+            )
+        ]
         if len(lines):
             reduced_untested[f] = lines
 
     return reduced_untested
+
 
 def print_markdown_summary(untested, commit, output, repo):
     """
@@ -189,15 +202,16 @@ def print_markdown_summary(untested, commit, output, repo):
         md_string = "## Warning! The new code is not run\n"
         current_file = None
         for c in untested:
-            f = c['path']
-            if f!= current_file:
+            f = c["path"]
+            if f != current_file:
                 md_string += f"### {f}\n"
                 current_file = f
-            start_line = c.get('start_line', c['line'])
+            start_line = c.get("start_line", c["line"])
             md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{start_line}-L{c['line']}\n"
 
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
+
 
 def get_json_summary(untested, content_lines, existing_comments, diff):
     """
@@ -252,30 +266,33 @@ def get_json_summary(untested, content_lines, existing_comments, diff):
             start_line = lines[i]
             j = line_indices.index(start_line)
             while j < n_code_lines and i < n_untested and lines[i] == line_indices[j]:
-                i+=1
-                j+=1
-            if j < n_code_lines-1:
-                end_line = line_indices[j]-1
+                i += 1
+                j += 1
+            if j < n_code_lines - 1:
+                end_line = line_indices[j] - 1
             else:
                 end_line = line_indices[-1]
             last_valid_line = start_line
-            last_valid_line_idx = next(k for k,l in enumerate(diff[f]['addition']) if l == last_valid_line)
-            for k in diff[f]['addition'][last_valid_line_idx:]:
-                if k-last_valid_line < 6:
+            last_valid_line_idx = next(
+                k for k, l in enumerate(diff[f]["addition"]) if l == last_valid_line
+            )
+            for k in diff[f]["addition"][last_valid_line_idx:]:
+                if k - last_valid_line < 6:
                     last_valid_line = k
                 else:
                     break
             end_line = min(end_line, last_valid_line)
-            output = {'path':f, 'line':end_line, 'body':message}
+            output = {"path": f, "line": end_line, "body": message}
             if start_line != end_line:
-                output['start_line'] = start_line
-            if (f,end_line) in existing_comments:
+                output["start_line"] = start_line
+            if (f, end_line) in existing_comments:
                 old_comments.append(output)
-                fixed_comments.pop((f,end_line))
+                fixed_comments.pop((f, end_line))
             else:
                 new_comments.append(output)
 
     return old_comments, new_comments, fixed_comments
+
 
 def show_results(untested):
     """
@@ -297,6 +314,7 @@ def show_results(untested):
 
     if len(untested) != 0:
         sys.exit(1)
+
 
 def check_if_coverage_ignored(comment_json, existing_comments):
     """
@@ -322,10 +340,11 @@ def check_if_coverage_ignored(comment_json, existing_comments):
     bool
         True if the coverage issue should be ignored, false otherwise.
     """
-    key = (comment_json['path'], comment_json['line'])
+    key = (comment_json["path"], comment_json["line"])
     comment = existing_comments[key]
     print(comment)
-    return any('/bot accept' in c['body'] for c in comment)
+    return any("/bot accept" in c["body"] for c in comment)
+
 
 def evaluate_success(old_comments, new_comments, existing_comments):
     """
