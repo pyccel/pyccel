@@ -457,6 +457,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
         lhs = line.lhs
         rhs = line.rhs
+        hello_unused_variable = 'oooooo'
         if isinstance(lhs.class_type, StringType):
             # Save line in top level (no for loop)
             result.append(line)
