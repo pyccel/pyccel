@@ -10,6 +10,8 @@ on:
       base:
         required: false
         type: string
+  push:
+    branches: ebourne_pylint
 
 env:
   PYTHON_VERSION: ${{ inputs.python_version }}
