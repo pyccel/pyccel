@@ -109,7 +109,11 @@ def get_source_code_and_context(func_or_class):
         indent = len(method_prototype) - len(method_prototype.lstrip())
 
         # Handle multi-line prototypes
-        end_of_prototype_idx = next(i for i, l in enumerate(commentless_lines[prototype_idx:]) if l.strip().endswith(':'))
+        end_of_prototype_idx = next(
+            i
+            for i, l in enumerate(commentless_lines[prototype_idx:], prototype_idx)
+            if l.strip().endswith(":")
+        )
         if end_of_prototype_idx > prototype_idx:
             lines = lines[:prototype_idx+1] + lines[end_of_prototype_idx+1:]
 

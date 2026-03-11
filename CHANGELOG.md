@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
 -   #2587 : Fix compilation error when using an array slice in an expression.
 -   #2590 : Fix missing `const` annotation on string arguments in C.
+-   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
 
 ## \[2.2.2\] - 2026-03-09
 
