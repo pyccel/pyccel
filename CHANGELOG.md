@@ -2,21 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[UNRELEASED\]
-
-### Added
+## \[2.2.3\] - 2026-03-11
 
 ### Fixed
 
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
 -   #2587 : Fix compilation error when using an array slice in an expression.
 -   #2590 : Fix missing `const` annotation on string arguments in C.
-
-### Changed
-
-### Deprecated
-
-### Removed
 
 ## \[2.2.2\] - 2026-03-09
 
