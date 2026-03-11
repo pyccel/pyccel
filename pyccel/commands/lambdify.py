@@ -2,20 +2,28 @@
 File describing commands associated with the lambdify function which converts a
 SymPy expression into a Pyccel-accelerated function.
 """
+
 import sympy as sp
 from packaging import version
 
-from pyccel.commands.epyccel  import epyccel
+from pyccel.commands.epyccel import epyccel
 from pyccel.utilities.strings import random_string
-from pyccel.errors.errors     import PyccelError
+from pyccel.errors.errors import PyccelError
 
-if version.parse(sp.__version__) >= version.parse('1.8'):
+if version.parse(sp.__version__) >= version.parse("1.8"):
     from sympy.printing.numpy import NumPyPrinter
 else:
     from sympy.printing.pycode import NumPyPrinter
 
-def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str = None,
-             use_out = False, **kwargs):
+
+def lambdify(
+    expr: sp.Expr,
+    args: "dict[sp.Symbol, str]",
+    *,
+    result_type: str = None,
+    use_out=False,
+    **kwargs,
+):
     """
     Convert a SymPy expression into a Pyccel-accelerated function.
 
@@ -60,24 +68,35 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
     epyccel
         The function that accelerates the generated code.
     """
-    if not (isinstance(args, dict) and all(isinstance(k, sp.Symbol) and isinstance(v, str) for k,v in args.items())):
-        raise TypeError("Argument 'args': Expected a dictionary mapping SymPy symbols to string type annotations.")
+    if not (
+        isinstance(args, dict)
+        and all(
+            isinstance(k, sp.Symbol) and isinstance(v, str) for k, v in args.items()
+        )
+    ):
+        raise TypeError(
+            "Argument 'args': Expected a dictionary mapping SymPy symbols to string type annotations."
+        )
     if result_type is not None and not isinstance(result_type, str):
         raise TypeError("Argument 'result_type': Expected a string type annotation.")
 
     expr = NumPyPrinter().doprint(expr)
-    args_code = ', '.join(f'{a} : "{annot}"' for a, annot in args.items())
-    func_name = 'func_'+random_string(8)
+    args_code = ", ".join(f'{a} : "{annot}"' for a, annot in args.items())
+    func_name = "func_" + random_string(8)
 
-    docstring = " \n".join(('    """',
+    docstring = " \n".join(
+        (
+            '    """',
             "    Expression evaluation created with `pyccel.lambdify`.",
             "",
             "    Function evaluating the expression:",
-           f"    {expr}",
+            f"    {expr}",
             "",
             "    Parameters",
-            "    ----------\n"))
-    docstring += '\n'.join(f"    {a} : {type_annot}" for a, type_annot in args.items())
+            "    ----------\n",
+        )
+    )
+    docstring += "\n".join(f"    {a} : {type_annot}" for a, type_annot in args.items())
 
     if use_out:
         if not result_type:
@@ -87,25 +106,23 @@ def lambdify(expr : sp.Expr, args : 'dict[sp.Symbol, str]', *, result_type : str
             docstring += f"\n    out : {result_type}"
     elif result_type:
         signature = f'def {func_name}({args_code}) -> "{result_type}":'
-        docstring += "\n".join(("\n",
-                    "     Returns",
-                    "     -------",
-                   f"     {result_type}"))
+        docstring += "\n".join(
+            ("\n", "     Returns", "     -------", f"     {result_type}")
+        )
     else:
-        signature = f'def {func_name}({args_code}):'
+        signature = f"def {func_name}({args_code}):"
     if use_out:
-        code = f'    out[:] = {expr}'
+        code = f"    out[:] = {expr}"
     else:
-        code = f'    return {expr}'
-    numpy_import = 'import numpy\n'
+        code = f"    return {expr}"
+    numpy_import = "import numpy\n"
 
     docstring += '\n    """'
 
-    func = '\n'.join((numpy_import, signature, docstring, code))
+    func = "\n".join((numpy_import, signature, docstring, code))
     try:
         package = epyccel(func, **kwargs)
     except PyccelError as e:
         raise type(e)(str(e)) from None
 
     return getattr(package, func_name)
-

@@ -7,6 +7,6 @@ x = array([1, 2, 3])
 y = empty((10, 10))
 
 a = ones(3)
-b = ones((4,3))
-c = a+b
-d = b+a
+b = ones((4, 3))
+c = a + b
+d = b + a

@@ -1,8 +1,8 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.
 We represent some types with the OmpAnnotatedComment type.
@@ -13,27 +13,27 @@ https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md
 from .basic import PyccelAstNode
 
 __all__ = (
-        'OMP_Cancel_Construct',
-        'OMP_Critical_Construct',
-        'OMP_Distribute_Construct',
-        'OMP_For_Loop',
-        'OMP_Masked_Construct',
-        'OMP_Master_Construct',
-        'OMP_Parallel_Construct',
-        'OMP_Section_Construct',
-        'OMP_Sections_Construct',
-        'OMP_Simd_Construct',
-        'OMP_Single_Construct',
-        'OMP_Target_Construct',
-        'OMP_TaskLoop_Construct',
-        'OMP_Task_Construct',
-        'OMP_Teams_Construct',
-        'OmpAnnotatedComment',
-        'Omp_End_Clause',
+    "OMP_Cancel_Construct",
+    "OMP_Critical_Construct",
+    "OMP_Distribute_Construct",
+    "OMP_For_Loop",
+    "OMP_Masked_Construct",
+    "OMP_Master_Construct",
+    "OMP_Parallel_Construct",
+    "OMP_Section_Construct",
+    "OMP_Sections_Construct",
+    "OMP_Simd_Construct",
+    "OMP_Single_Construct",
+    "OMP_Target_Construct",
+    "OMP_TaskLoop_Construct",
+    "OMP_Task_Construct",
+    "OMP_Teams_Construct",
+    "OmpAnnotatedComment",
+    "Omp_End_Clause",
 )
 
-class OmpAnnotatedComment(PyccelAstNode):
 
+class OmpAnnotatedComment(PyccelAstNode):
     """Represents an OpenMP Annotated Comment in the code.
 
     Parameters
@@ -51,7 +51,8 @@ class OmpAnnotatedComment(PyccelAstNode):
     >>> OmpAnnotatedComment('parallel')
     OmpAnnotatedComment(parallel)
     """
-    __slots__ = ('_txt', '_combined', '_has_nowait')
+
+    __slots__ = ("_txt", "_combined", "_has_nowait")
     _attribute_nodes = ()
     _is_multiline = False
 
@@ -79,7 +80,7 @@ class OmpAnnotatedComment(PyccelAstNode):
     @property
     def name(self):
         """Name of the construct."""
-        return ''
+        return ""
 
     @property
     def txt(self):
@@ -93,148 +94,196 @@ class OmpAnnotatedComment(PyccelAstNode):
 
     def __str__(self):
         instructions = [self.name, self.combined, self.txt]
-        return '#$ omp '+' '.join(i for i in instructions if i)
+        return "#$ omp " + " ".join(i for i in instructions if i)
+
 
 class OMP_For_Loop(OmpAnnotatedComment):
-    """ Represents an OpenMP Loop construct. """
+    """Represents an OpenMP Loop construct."""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'for'
+        return "for"
+
 
 class OMP_Simd_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Simd construct"""
+    """Represents an OpenMP Simd construct"""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'simd'
+        return "simd"
+
 
 class OMP_TaskLoop_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Taskloop construct"""
+    """Represents an OpenMP Taskloop construct"""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'taskloop'
+        return "taskloop"
+
 
 class OMP_Distribute_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Distribute construct"""
+    """Represents an OpenMP Distribute construct"""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'distribute'
+        return "distribute"
+
 
 class OMP_Parallel_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Parallel construct. """
+    """Represents an OpenMP Parallel construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     @property
     def name(self):
         """Name of the construct."""
-        return 'parallel'
+        return "parallel"
+
 
 class OMP_Task_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Task construct. """
+    """Represents an OpenMP Task construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
 
 class OMP_Single_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Single construct. """
+    """Represents an OpenMP Single construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'single'
+        return "single"
+
 
 class OMP_Critical_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Critical construct. """
+    """Represents an OpenMP Critical construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
 
 class OMP_Master_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Master construct. """
+    """Represents OpenMP Master construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
 
 class OMP_Masked_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Masked construct. """
+    """Represents OpenMP Masked construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     @property
     def name(self):
         """Name of the construct."""
-        return 'masked'
+        return "masked"
+
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Cancel construct. """
+    """Represents OpenMP Cancel construct."""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
 
 class OMP_Target_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Target construct. """
+    """Represents OpenMP Target construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     @property
     def name(self):
         """Name of the construct."""
-        return 'target'
+        return "target"
+
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Teams construct. """
+    """Represents OpenMP Teams construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     @property
     def name(self):
         """Name of the construct."""
-        return 'teams'
+        return "teams"
+
 
 class OMP_Sections_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Sections construct. """
+    """Represents OpenMP Sections construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
     @property
     def name(self):
         """Name of the construct."""
-        return 'sections'
+        return "sections"
+
 
 class OMP_Section_Construct(OmpAnnotatedComment):
-    """ Represent OpenMP Section construct. """
+    """Represent OpenMP Section construct."""
+
     __slots__ = ()
     _is_multiline = True
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
+
 class Omp_End_Clause(OmpAnnotatedComment):
-    """ Represents the End of an OpenMP block. """
+    """Represents the End of an OpenMP block."""
+
     __slots__ = ()
+
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)

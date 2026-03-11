@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def max_(x : float, y : float):
-    if x>y:
+def max_(x: float, y: float):
+    if x > y:
         z = x
         return z
     else:
@@ -8,7 +8,6 @@ def max_(x : float, y : float):
         return z
 
 
-
-x = 5.
-y= 6.
+x = 5.0
+y = 6.0
 print(max_(x, y))

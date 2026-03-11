@@ -1,15 +1,17 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 Module representing concepts that are only applicable to Fortran code (e.g. kind specification).
 """
-from .basic     import PyccelAstNode
+
+from .basic import PyccelAstNode
 from .datatypes import FixedSizeNumericType
 
-__all__ = ('KindSpecification',)
+__all__ = ("KindSpecification",)
+
 
 class KindSpecification(PyccelAstNode):
     """
@@ -22,7 +24,8 @@ class KindSpecification(PyccelAstNode):
     type_specifier : PyccelType
         The type of the element whose kind parameter should be specified.
     """
-    __slots__ = ('_type_specifier',)
+
+    __slots__ = ("_type_specifier",)
     _attribute_nodes = ()
 
     def __init__(self, type_specifier):

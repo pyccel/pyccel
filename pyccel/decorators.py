@@ -1,22 +1,23 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 This module contains all the provided decorator methods.
 """
+
 import warnings
 
 __all__ = (
-    'allow_negative_index',
-    'elemental',
-    'inline',
-    'low_level',
-    'private',
-    'pure',
-    'stack_array',
-    'types',
+    "allow_negative_index",
+    "elemental",
+    "inline",
+    "low_level",
+    "private",
+    "pure",
+    "stack_array",
+    "types",
 )
 
 
@@ -41,6 +42,7 @@ def pure(f):
     """
     return f
 
+
 def private(f):
     """
     Indicate that a function shouldn't be exposed in the Python interface.
@@ -60,6 +62,7 @@ def private(f):
         The unchanged function.
     """
     return f
+
 
 def elemental(f):
     """
@@ -82,6 +85,7 @@ def elemental(f):
     """
     return f
 
+
 def inline(f):
     """
     Indicate that the function should be inlined in the low-level code.
@@ -102,6 +106,7 @@ def inline(f):
     """
     return f
 
+
 def stack_array(*args):
     """
     Indicate that arrays should be stored on the stack.
@@ -119,9 +124,12 @@ def stack_array(*args):
     Function
         The identity decorator which will be applied to the function.
     """
+
     def identity(f):
         return f
+
     return identity
+
 
 def allow_negative_index(*args):
     """
@@ -142,11 +150,14 @@ def allow_negative_index(*args):
     Function
         The identity decorator which will be applied to the function.
     """
+
     def identity(f):
         return f
+
     return identity
 
-def low_level(low_level_name : str):
+
+def low_level(low_level_name: str):
     """
     Indicate the low-level name of the function being wrapped.
 
@@ -167,10 +178,12 @@ def low_level(low_level_name : str):
     Function
         The identity decorator which will be applied to the function.
     """
+
     def identity(f):
         """
         The decorator that will actually be applied in the Python code.
         This method does nothing.
         """
         return f
+
     return identity

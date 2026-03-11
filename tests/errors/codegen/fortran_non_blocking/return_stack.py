@@ -3,8 +3,8 @@
 import numpy as np
 from pyccel.decorators import stack_array
 
-@stack_array('a')
-def build_stack_arr(n : int):
+
+@stack_array("a")
+def build_stack_arr(n: int):
     a = np.ones(n)
     return a
-

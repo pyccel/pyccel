@@ -1,7 +1,7 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 This module contains classes from which all pyccel nodes inherit. They are:
@@ -10,15 +10,18 @@ This module contains classes from which all pyccel nodes inherit. They are:
 - TypedAstNode, which inherits from PyccelAstNode and provides a base class for
   AST nodes requiring type descriptors.
 """
+
 import ast
 from types import GeneratorType
 
-from pyccel.utilities.stage   import PyccelStage
+from pyccel.utilities.stage import PyccelStage
 
-__all__ = ('Immutable', 'PyccelAstNode', 'ScopedAstNode', 'TypedAstNode')
+__all__ = ("Immutable", "PyccelAstNode", "ScopedAstNode", "TypedAstNode")
 
-dict_keys   = type({}.keys())
+dict_keys = type({}.keys())
 dict_values = type({}.values())
+
+
 def iterable(x):
     """
     Determine if type is iterable for a PyccelAstNode.
@@ -39,15 +42,19 @@ def iterable(x):
     """
     return isinstance(x, (list, tuple, dict_keys, dict_values, set, GeneratorType))
 
+
 pyccel_stage = PyccelStage()
 
-#==============================================================================
+
+# ==============================================================================
 class Immutable:
-    """ Superclass for classes which cannot inherit
-    from PyccelAstNode """
+    """Superclass for classes which cannot inherit
+    from PyccelAstNode"""
+
     __slots__ = ()
 
-#==============================================================================
+
+# ==============================================================================
 class PyccelAstNode:
     """
     PyccelAstNode class from which all objects in the Pyccel AST inherit.
@@ -57,7 +64,8 @@ class PyccelAstNode:
     the AST tree as well as an indication of the stage in which the object is
     valid (syntactic/semantic/etc).
     """
-    __slots__ = ('_user_nodes', '_ast', '_recursion_in_progress' ,'_pyccel_staging')
+
+    __slots__ = ("_user_nodes", "_ast", "_recursion_in_progress", "_pyccel_staging")
     _ignored_types = (Immutable, type)
     _attribute_nodes = None
 
@@ -66,7 +74,7 @@ class PyccelAstNode:
         self._user_nodes = []
         self._ast = []
         self._recursion_in_progress = False
-        for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
+        for c_name in self._my_attribute_nodes:  # pylint: disable=not-an-iterable
             c = getattr(self, c_name)
 
             from pyccel.ast.literals import convert_to_literal
@@ -81,16 +89,26 @@ class PyccelAstNode:
 
             elif iterable(c):
                 size = len(c)
-                c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or PyccelAstNode._ignore(ci)) \
-                        else convert_to_literal(ci) for ci in c if not iterable(ci))
+                c = tuple(
+                    (
+                        ci
+                        if (
+                            not isinstance(ci, (int, float, complex, str, bool))
+                            or PyccelAstNode._ignore(ci)
+                        )
+                        else convert_to_literal(ci)
+                    )
+                    for ci in c
+                    if not iterable(ci)
+                )
                 if len(c) != size:
                     raise TypeError("PyccelAstNode child cannot be a tuple of tuples")
                 setattr(self, c_name, c)
 
             elif not isinstance(c, PyccelAstNode):
-                raise TypeError(f"PyccelAstNode child must be a Basic or a tuple not {type(c)}")
-
+                raise TypeError(
+                    f"PyccelAstNode child must be a Basic or a tuple not {type(c)}"
+                )
 
             if isinstance(c, tuple):
                 for ci in c:
@@ -101,8 +119,7 @@ class PyccelAstNode:
 
     @classmethod
     def _ignore(cls, c):
-        """ Indicates if a node should be ignored when recursing
-        """
+        """Indicates if a node should be ignored when recursing"""
         return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
@@ -115,20 +132,23 @@ class PyccelAstNode:
         This prevents the tree from becoming filled with temporary objects and prevents
         obsolete objects being retrieved when searching for attribute nodes.
         """
-        for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
+        for c_name in self._my_attribute_nodes:  # pylint: disable=not-an-iterable
             c = getattr(self, c_name)
 
             if self._ignore(c):
                 continue
             elif isinstance(c, tuple):
-                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci) \
-                        and ci.pyccel_staging == self.pyccel_staging]
+                _ = [
+                    ci.remove_user_node(self)
+                    for ci in c
+                    if not self._ignore(ci) and ci.pyccel_staging == self.pyccel_staging
+                ]
             elif c.pyccel_staging == self.pyccel_staging:
                 # Pyccel stage can change for basic objects with no attributes (e.g. Literal, Pass, etc)
                 c.remove_user_node(self)
 
-    def get_user_nodes(self, search_type, excluded_nodes = ()):
-        """ Returns all objects of the requested type
+    def get_user_nodes(self, search_type, excluded_nodes=()):
+        """Returns all objects of the requested type
         which use the current object
 
         Parameters
@@ -148,16 +168,23 @@ class PyccelAstNode:
         else:
             self._recursion_in_progress = True
 
-            results  = [p for p in self._user_nodes if     isinstance(p, search_type) and \
-                                                       not isinstance(p, excluded_nodes)]
+            results = [
+                p
+                for p in self._user_nodes
+                if isinstance(p, search_type) and not isinstance(p, excluded_nodes)
+            ]
 
-            results += [r for p in self._user_nodes if not self._ignore(p) and \
-                                                       not isinstance(p, (search_type, excluded_nodes)) \
-                          for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
+            results += [
+                r
+                for p in self._user_nodes
+                if not self._ignore(p)
+                and not isinstance(p, (search_type, excluded_nodes))
+                for r in p.get_user_nodes(search_type, excluded_nodes=excluded_nodes)
+            ]
             self._recursion_in_progress = False
             return results
 
-    def get_attribute_nodes(self, search_type, excluded_nodes = ()):
+    def get_attribute_nodes(self, search_type, excluded_nodes=()):
         """
         Get all objects of the requested type in the current object.
 
@@ -181,7 +208,7 @@ class PyccelAstNode:
         self._recursion_in_progress = True
 
         results = []
-        for n in self._my_attribute_nodes: #pylint: disable=not-an-iterable
+        for n in self._my_attribute_nodes:  # pylint: disable=not-an-iterable
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -197,18 +224,22 @@ class PyccelAstNode:
                     elif isinstance(vi, search_type):
                         results.append(vi)
                     elif not self._ignore(vi):
-                        results.extend(vi.get_attribute_nodes(
-                            search_type, excluded_nodes=excluded_nodes))
+                        results.extend(
+                            vi.get_attribute_nodes(
+                                search_type, excluded_nodes=excluded_nodes
+                            )
+                        )
 
             elif not self._ignore(v):
-                results.extend(v.get_attribute_nodes(
-                    search_type, excluded_nodes = excluded_nodes))
+                results.extend(
+                    v.get_attribute_nodes(search_type, excluded_nodes=excluded_nodes)
+                )
 
         self._recursion_in_progress = False
         return results
 
     def is_attribute_of(self, node):
-        """ Identifies whether this object is an attribute of node.
+        """Identifies whether this object is an attribute of node.
         The function searches recursively down the attribute tree.
 
         Parameters
@@ -222,8 +253,8 @@ class PyccelAstNode:
         """
         return node.is_user_of(self)
 
-    def is_user_of(self, node, excluded_nodes = ()):
-        """ Identifies whether this object is a user of node.
+    def is_user_of(self, node, excluded_nodes=()):
+        """Identifies whether this object is a user of node.
         The function searches recursively up the user tree
 
         Parameters
@@ -259,8 +290,14 @@ class PyccelAstNode:
         node.toggle_recursion()
         return False
 
-    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True,
-            is_equivalent = None):
+    def substitute(
+        self,
+        original,
+        replacement,
+        excluded_nodes=(),
+        invalidate=True,
+        is_equivalent=None,
+    ):
         """
         Substitute object 'original' for object 'replacement' in the code.
 
@@ -302,10 +339,14 @@ class PyccelAstNode:
             replacement = (replacement,)
 
         if is_equivalent is None:
-            if self.pyccel_staging == 'syntactic':
-                is_equivalent = lambda x, y: x == y #pylint:disable=unnecessary-lambda-assignment
+            if self.pyccel_staging == "syntactic":
+                is_equivalent = (
+                    lambda x, y: x == y
+                )  # pylint:disable=unnecessary-lambda-assignment
             else:
-                is_equivalent = lambda x, y: x is y #pylint:disable=unnecessary-lambda-assignment
+                is_equivalent = (
+                    lambda x, y: x is y
+                )  # pylint:disable=unnecessary-lambda-assignment
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
@@ -321,7 +362,7 @@ class PyccelAstNode:
                 found_node.remove_user_node(self, invalidate)
             return rep
 
-        for n in self._my_attribute_nodes: #pylint: disable=not-an-iterable
+        for n in self._my_attribute_nodes:  # pylint: disable=not-an-iterable
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -338,19 +379,27 @@ class PyccelAstNode:
                         if any(is_equivalent(vi, oi) for oi in original):
                             new_vi = prepare_sub(vi)
                         elif not self._ignore(vi):
-                            vi.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
+                            vi.substitute(
+                                original,
+                                replacement,
+                                excluded_nodes,
+                                invalidate,
+                                is_equivalent,
+                            )
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self._ignore(v):
-                v.substitute(original, replacement, excluded_nodes, invalidate, is_equivalent)
+                v.substitute(
+                    original, replacement, excluded_nodes, invalidate, is_equivalent
+                )
         self._recursion_in_progress = False
 
     @property
     def is_atomic(self):
-        """ Indicates whether the object has any attribute nodes.
+        """Indicates whether the object has any attribute nodes.
         Returns true if it is an atom (no attribute nodes) and
         false otherwise
         """
@@ -398,31 +447,31 @@ class PyccelAstNode:
             raise TypeError(f"ast_node must be an AST object, not {type(ast_node)}")
 
         if self.python_ast:
-            if hasattr(ast_node, 'lineno'):
-                if self.python_ast.lineno != ast_node.lineno or self.python_ast.col_offset != ast_node.col_offset:
+            if hasattr(ast_node, "lineno"):
+                if (
+                    self.python_ast.lineno != ast_node.lineno
+                    or self.python_ast.col_offset != ast_node.col_offset
+                ):
                     self._ast.append(ast_node)
         else:
-            if not hasattr(ast_node, 'lineno'):
+            if not hasattr(ast_node, "lineno"):
                 # Handle module object
-                ast_node.lineno     = 1
+                ast_node.lineno = 1
                 ast_node.col_offset = 1
 
             self._ast.append(ast_node)
 
-
     def toggle_recursion(self):
-        """ Change the recursion state
-        """
+        """Change the recursion state"""
         self._recursion_in_progress = not self._recursion_in_progress
 
     @property
     def recursion_in_progress(self):
-        """ Recursion state used to avoid infinite loops
-        """
+        """Recursion state used to avoid infinite loops"""
         return self._recursion_in_progress
 
     def get_all_user_nodes(self):
-        """ Returns all the objects user nodes.
+        """Returns all the objects user nodes.
         This function should only be called in PyccelAstNode
         """
         return self._user_nodes
@@ -452,14 +501,12 @@ class PyccelAstNode:
         return [p for p in self._user_nodes if condition(p)]
 
     def set_current_user_node(self, user_nodes):
-        """ Inform the class about the most recent user of the node
-        """
+        """Inform the class about the most recent user of the node"""
         self._user_nodes.append(user_nodes)
 
     @property
     def current_user_node(self):
-        """ Get the user node for an object with only one user node
-        """
+        """Get the user node for an object with only one user node"""
         assert len(self._user_nodes) == 1
         return self._user_nodes[0]
 
@@ -472,9 +519,11 @@ class PyccelAstNode:
         if the same node is used for the syntactic and semantic
         stages.
         """
-        self._user_nodes = [u for u in self._user_nodes if u.pyccel_staging != 'syntactic']
+        self._user_nodes = [
+            u for u in self._user_nodes if u.pyccel_staging != "syntactic"
+        ]
 
-    def remove_user_node(self, user_node, invalidate = True):
+    def remove_user_node(self, user_node, invalidate=True):
         """
         Remove the specified user node from the AST tree.
 
@@ -498,18 +547,17 @@ class PyccelAstNode:
 
     @property
     def is_unused(self):
-        """ Indicates whether the class has any users
-        """
-        return len(self._user_nodes)==0
+        """Indicates whether the class has any users"""
+        return len(self._user_nodes) == 0
 
     @property
     def _my_attribute_nodes(self):
-        """ Getter for _attribute_nodes to avoid codacy warnings
+        """Getter for _attribute_nodes to avoid codacy warnings
         about no-member. This attribute must be instantiated in
         the subclasses and this ensures that an error is raised
         if it isn't
         """
-        return self._attribute_nodes # pylint: disable=no-member
+        return self._attribute_nodes  # pylint: disable=no-member
 
     @property
     def pyccel_staging(self):
@@ -529,6 +577,7 @@ class PyccelAstNode:
         """
         self._pyccel_staging = pyccel_stage.current_stage
 
+
 class TypedAstNode(PyccelAstNode):
     """
     Class from which all typed objects inherit.
@@ -539,7 +588,8 @@ class TypedAstNode(PyccelAstNode):
     Each typed object is described by an underlying datatype, a rank,
     a shape, and a data layout ordering.
     """
-    __slots__  = ()
+
+    __slots__ = ()
 
     @property
     def shape(self):
@@ -549,7 +599,7 @@ class TypedAstNode(PyccelAstNode):
         A tuple containing the length of each dimension of the object if the object
         is an array (with rank>0). Otherwise None.
         """
-        return self._shape # pylint: disable=no-member
+        return self._shape  # pylint: disable=no-member
 
     @property
     def rank(self):
@@ -593,7 +643,7 @@ class TypedAstNode(PyccelAstNode):
         the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
         this is the type of the container.
         """
-        return self._class_type # pylint: disable=no-member
+        return self._class_type  # pylint: disable=no-member
 
     @classmethod
     def static_type(cls):
@@ -607,7 +657,7 @@ class TypedAstNode(PyccelAstNode):
         This function is static and will return an AttributeError if the
         class does not have a predetermined order.
         """
-        return cls._static_type # pylint: disable=no-member
+        return cls._static_type  # pylint: disable=no-member
 
     def copy_attributes(self, x):
         """
@@ -622,23 +672,23 @@ class TypedAstNode(PyccelAstNode):
         x : TypedAstNode
             The node from which the attributes should be copied.
         """
-        self._shape      = x.shape
+        self._shape = x.shape
         self._class_type = x.class_type
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class ScopedAstNode(PyccelAstNode):
-    """ Class from which all objects with a scope inherit
-    """
-    __slots__ = ('_scope',)
+    """Class from which all objects with a scope inherit"""
 
-    def __init__(self, scope = None):
+    __slots__ = ("_scope",)
+
+    def __init__(self, scope=None):
         self._scope = scope
         super().__init__()
 
     @property
     def scope(self):
-        """ Local scope of the current object
+        """Local scope of the current object
         This contains all available objects in this part of the code
         """
         return self._scope

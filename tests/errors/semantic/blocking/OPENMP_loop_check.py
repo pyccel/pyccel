@@ -2,9 +2,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 
-#$ omp parallel
+# $ omp parallel
 
-#$ omp for
+# $ omp for
 x = 50
 
-#$ omp end parallel
+# $ omp end parallel

@@ -3,7 +3,7 @@ import numpy as np
 from pyccel import epyccel
 
 
-#==============================================================================
+# ==============================================================================
 class epyccel_test:
     """
     Class which stores a pyccelized function
@@ -12,11 +12,12 @@ class epyccel_test:
     while still providing a clean interface for the tests
     through the compare_epyccel function
     """
-    def __init__(self, f, lang='fortran'):
-        self._f  = f
+
+    def __init__(self, f, lang="fortran"):
+        self._f = f
         self._f2 = epyccel(f, language=lang)
 
     def compare_epyccel(self, *args):
         out1 = self._f(*args)
         out2 = self._f2(*args)
-        assert np.equal(out1, out2 ).all()
+        assert np.equal(out1, out2).all()

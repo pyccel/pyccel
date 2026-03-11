@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -13,18 +13,18 @@ from .datatypes import FixedSizeNumericType
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'FunctionalFor',
-    'FunctionalMax',
-    'FunctionalMin',
-    'FunctionalSum',
-    'GeneratorComprehension',
-    'MaxLimit',
-    'MinLimit',
+    "FunctionalFor",
+    "FunctionalMax",
+    "FunctionalMin",
+    "FunctionalSum",
+    "GeneratorComprehension",
+    "MaxLimit",
+    "MinLimit",
 )
 
-#==============================================================================
-class FunctionalFor(TypedAstNode):
 
+# ==============================================================================
+class FunctionalFor(TypedAstNode):
     """
     Represents a generator expression.
 
@@ -65,9 +65,20 @@ class FunctionalFor(TypedAstNode):
         Each element of this list is either an `If` instance that describes the filtering
         condition for that loop, or `None` if no condition is applied in that loop.
     """
-    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index', '_operations',
-            '_shape','_class_type', '_target_type', '_conditions')
-    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
+
+    __slots__ = (
+        "_loops",
+        "_expr",
+        "_lhs",
+        "_indices",
+        "_index",
+        "_operations",
+        "_shape",
+        "_class_type",
+        "_target_type",
+        "_conditions",
+    )
+    _attribute_nodes = ("_loops", "_expr", "_lhs", "_indices", "_index")
 
     def __init__(
         self,
@@ -79,21 +90,21 @@ class FunctionalFor(TypedAstNode):
         *,
         target_type=None,
         operations=None,
-        conditions
-        ):
+        conditions,
+    ):
 
-        self._loops   = loops
-        self._expr    = expr
-        self._lhs     = lhs
+        self._loops = loops
+        self._expr = expr
+        self._lhs = lhs
         self._indices = indices
-        self._index   = index
+        self._index = index
         self._operations = operations
         self._target_type = target_type
         self._conditions = conditions
         super().__init__()
 
-        if pyccel_stage != 'syntactic':
-            self._shape      = lhs.shape
+        if pyccel_stage != "syntactic":
+            self._shape = lhs.shape
             self._class_type = lhs.class_type
 
     @property
@@ -121,16 +132,16 @@ class FunctionalFor(TypedAstNode):
         """
         A dictionary mapping each type of comprehension to the operation used for populating it.
 
-        For example, for list comprehensions we might use 
+        For example, for list comprehensions we might use
         ``{'list': 'append'}``, and for NumPy arrays, (which require a fixed size
-        at compile time), we might use  ``{'numpy_array': [Assign_node]}``. 
-        This mapping allows the code generator to select the appropriate operation 
+        at compile time), we might use  ``{'numpy_array': [Assign_node]}``.
+        This mapping allows the code generator to select the appropriate operation
         when building the final data structure from the comprehension.
 
         Returns
         -------
         dict
-            A dictionary that maps comprehension types (e.g. 'list', 'numpy_array') to 
+            A dictionary that maps comprehension types (e.g. 'list', 'numpy_array') to
             the corresponding operation (append call, assign, etc.).
         """
         return self._operations
@@ -150,49 +161,61 @@ class FunctionalFor(TypedAstNode):
         """
         A list of filter conditions for each loop in the comprehension.
 
-        If not `None`, each element of this list is either an `If` instance 
-        that describes the filtering condition for that loop, or `None` if 
+        If not `None`, each element of this list is either an `If` instance
+        that describes the filtering condition for that loop, or `None` if
         no condition is applied. These conditions collectively determine
         whether each item produced by the loops is included in the final result.
 
         Returns
         -------
         list[If|None], or None
-            The list of filter conditions for each for-loop in 
+            The list of filter conditions for each for-loop in
             the comprehension, or `None` if not specified.
         """
         return self._conditions
 
-#==============================================================================
+
+# ==============================================================================
 class GeneratorComprehension(FunctionalFor):
-    """ Super class for all functions which reduce generator expressions to scalars
-    """
+    """Super class for all functions which reduce generator expressions to scalars"""
+
     __slots__ = ()
 
-#==============================================================================
+
+# ==============================================================================
 class FunctionalSum(GeneratorComprehension):
-    """ Represents a call to sum for a list argument
+    """Represents a call to sum for a list argument
     >>> sum([i in range(5)])
     """
-    __slots__ = ()
-    name = 'sum'
 
-#==============================================================================
+    __slots__ = ()
+    name = "sum"
+
+
+# ==============================================================================
 class FunctionalMax(GeneratorComprehension):
-    """ Represents a call to max for a list argument
+    """Represents a call to max for a list argument
     >>> max([i in range(5)])
     """
+
     __slots__ = ()
-    name = 'max'
-#==============================================================================
+    name = "max"
+
+
+# ==============================================================================
+
 
 class FunctionalMin(GeneratorComprehension):
-    """ Represents a call to min for a list argument
+    """Represents a call to min for a list argument
     >>> min([i in range(5)])
     """
+
     __slots__ = ()
-    name = 'min'
-#==============================================================================
+    name = "min"
+
+
+# ==============================================================================
+
 
 class MaxLimit(TypedAstNode):
     """
@@ -207,14 +230,18 @@ class MaxLimit(TypedAstNode):
         The type whose maximum limit is represented by an instance
         of this class.
     """
-    __slots__ = ('_class_type',)
+
+    __slots__ = ("_class_type",)
     _attribute_nodes = ()
 
     def __init__(self, class_type):
         assert class_type.rank == 0
         self._class_type = class_type
         super().__init__()
-#==============================================================================
+
+
+# ==============================================================================
+
 
 class MinLimit(TypedAstNode):
     """
@@ -229,7 +256,8 @@ class MinLimit(TypedAstNode):
         The type whose minimum limit is represented by an instance
         of this class.
     """
-    __slots__ = ('_class_type',)
+
+    __slots__ = ("_class_type",)
     _attribute_nodes = ()
 
     def __init__(self, class_type):

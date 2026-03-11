@@ -1,10 +1,11 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 __all__ = ["BasicStmt"]
+
 
 class BasicStmt:
     """
@@ -37,7 +38,7 @@ class BasicStmt:
     """
 
     def __init__(self, **kwargs):
-        self.statements  = []
+        self.statements = []
         self.unallocated = {}
 
     @property

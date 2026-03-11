@@ -1,10 +1,11 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module for introspecting information on Pyccel, in the codebase and the tests.
 """
+
 import os
 import re
 import subprocess
@@ -14,12 +15,11 @@ from packaging.version import Version
 
 from pyccel.codegen.compiling.compilers import Compiler, get_condaless_search_path
 
-__all__ = (
-    'get_compiler_info',
-)
+__all__ = ("get_compiler_info",)
 
-#==============================================================================
-def get_compiler_info(language, conda_warnings  = 'basic'):
+
+# ==============================================================================
+def get_compiler_info(language, conda_warnings="basic"):
     """
     Extract the path to the compiler and its version, based on the language.
 
@@ -44,10 +44,10 @@ def get_compiler_info(language, conda_warnings  = 'basic'):
         The compiler version obtained by running `<executable> --version`.
     """
     language = language.lower()
-    compiler_family = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
-    debug = os.environ.get('PYCCEL_DEBUG_MODE', False)
+    compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
+    debug = os.environ.get("PYCCEL_DEBUG_MODE", False)
 
-    if language == 'python':
+    if language == "python":
         executable = sys.executable
     else:
         Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
@@ -55,9 +55,11 @@ def get_compiler_info(language, conda_warnings  = 'basic'):
         try:
             executable = compiler.get_exec((), language)
         except KeyError:
-            raise ValueError(f"language '{language}' not supported for compiler {compiler_family}") #pylint: disable=raise-missing-from
+            raise ValueError(
+                f"language '{language}' not supported for compiler {compiler_family}"
+            )  # pylint: disable=raise-missing-from
 
-    version_output = subprocess.check_output([executable, '--version']).decode('utf-8')
+    version_output = subprocess.check_output([executable, "--version"]).decode("utf-8")
     version_string = re.search(r"(\d+\.\d+\.\d+)", version_output).group()
     version = Version(version_string)
 
