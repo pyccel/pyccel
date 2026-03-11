@@ -1704,7 +1704,7 @@ class CCodePrinter(CodePrinter):
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
-        const = 'const ' if isinstance(var.class_type, FinalType) else ''
+        const = 'const ' if isinstance(var.class_type, FinalType) and self.is_c_pointer(var) else ''
 
         return f'{preface}{static}{external}{const}{declaration_type} {var.name}{init};\n'
 
