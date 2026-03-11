@@ -52,7 +52,7 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          pylint . --persistent n --exit-zero | reviewdog -reporter=github-pr-check
+          pylint pyccel tests ci_tools tests --persistent n --exit-zero | reviewdog -reporter=github-pr-check
         shell: bash
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
