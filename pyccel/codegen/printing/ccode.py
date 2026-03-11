@@ -1704,8 +1704,9 @@ class CCodePrinter(CodePrinter):
 
         external = 'extern ' if expr.external else ''
         static = 'static ' if expr.static else ''
+        const = 'const ' if isinstance(var.class_type, FinalType) and self.is_c_pointer(var) else ''
 
-        return f'{preface}{static}{external}{declaration_type} {var.name}{init};\n'
+        return f'{preface}{static}{external}{const}{declaration_type} {var.name}{init};\n'
 
     def function_signature(self, expr, print_arg_names = True):
         """
@@ -1766,7 +1767,8 @@ class CCodePrinter(CodePrinter):
             def get_arg_declaration(var):
                 """ Get the code which declares the argument variable.
                 """
-                code = self.get_declare_type(var)
+                const = 'const ' if isinstance(var.class_type, FinalType) else ''
+                code = const + self.get_declare_type(var)
                 if print_arg_names:
                     code += ' ' + var.name
                 return code

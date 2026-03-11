@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
 -   #2587 : Fix compilation error when using an array slice in an expression.
+-   #2590 : Fix missing `const` annotation on string arguments in C.
 
 ### Changed
 

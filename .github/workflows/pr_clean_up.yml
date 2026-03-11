@@ -31,7 +31,7 @@ jobs:
         id: status_check
         if: steps.find_pr.outputs.pr_number != ''
         run: |
-          gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch
+          gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch || true
           status=$(gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
