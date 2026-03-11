@@ -423,7 +423,10 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     if result is None:
         result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate, PythonSet, UnpackManagedMemory)
+    # NumpyNewArray is also a memory creator but NumPy functions may be indexable
+    # so this is handled by is_array_function_call
+    memory_creator_types = (Allocate, PythonList, PythonTuple, Concatenate,
+                            Duplicate, PythonSet, UnpackManagedMemory)
 
     def is_array_function_call(f):
         """
@@ -433,25 +436,44 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 or (isinstance(f, PyccelFunction) and not f.is_indexable))
 
     for line in block:
+        if isinstance(line, NumpyCross) and line.n_indices:
+            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.n_indices)]
+            indices.extend(new_indices)
+            block = line.insert_indices(*new_indices)
+            a_shape = [s for i,s in enumerate(line.a.shape) if i != line.axis_a]
+            b_shape = [s for i,s in enumerate(line.b.shape) if i != line.axis_b]
+            shape = [a_s if a_s != LiteralInteger(1) else b_s for a_s, b_s in zip(a_shape, b_shape)]
+            modified_vars = {line.a, line.b}
+            for sh in shape[::-1]:
+                block = LoopCollection([block], sh, modified_vars)
+            result.append(block)
+            continue
 
-        if isinstance(line, Assign) and isinstance(line.lhs.class_type, StringType):
+        elif not isinstance(line, Assign):
+            # Save line in top level (no for loop)
+            result.append(line)
+            current_level = 0
+            continue
+
+        lhs = line.lhs
+        rhs = line.rhs
+        if isinstance(lhs.class_type, StringType):
             # Save line in top level (no for loop)
             result.append(line)
             current_level = 0
 
         elif (isinstance(line, Assign) and not isinstance(line, AliasAssign) and
-                not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
-                not is_array_function_call(line.rhs)): # not a basic function call
+                not isinstance(rhs, (memory_creator_types, Nil)) and # not creating array
+                not is_array_function_call(rhs)): # not a basic function call
 
             # Collect lhs variable
             # This is needed to know what has already been modified in the loop
-            if isinstance(line.lhs, Variable):
-                lhs_vars = [line.lhs]
-            elif isinstance(line.lhs, IndexedElement):
-                lhs_vars = [line.lhs.base]
+            if isinstance(lhs, Variable):
+                lhs_vars = [lhs]
+            elif isinstance(lhs, IndexedElement):
+                lhs_vars = [lhs.base]
             else:
-                lhs_vars = set(line.lhs.get_attribute_nodes((Variable, IndexedElement)))
+                lhs_vars = set(lhs.get_attribute_nodes((Variable, IndexedElement)))
                 lhs_vars = [v.base if isinstance(v, IndexedElement) else v for v in lhs_vars]
 
             # Get all objects which affect where indices are inserted
@@ -529,9 +551,9 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 # Add array temporary variables to the variables list so they get indexed
                 variables += [v for v in func_vars1 if v.rank > 0]
 
-            rank = line.lhs.rank
-            shape = get_shape_of_multi_level_container(line.lhs) if isinstance(line.lhs.class_type, HomogeneousTupleType) \
-                    else line.lhs.shape
+            rank = lhs.rank
+            shape = get_shape_of_multi_level_container(lhs) if isinstance(lhs.class_type, HomogeneousTupleType) \
+                    else lhs.shape
             new_vars = variables
             handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
@@ -550,8 +572,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
-            if isinstance(line.rhs, NumpyLinspace):
-                line.rhs.ind = indices[0]
+            if isinstance(rhs, NumpyLinspace):
+                rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars,
@@ -584,10 +606,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             save_spot.append(line)
             current_level = new_level
 
-        elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, (PythonTuple, NumpyArray, PythonList)):
-            lhs = line.lhs
-            rhs = line.rhs
+        elif isinstance(line, Assign) and isinstance(lhs, IndexedElement) \
+                and isinstance(rhs, (PythonTuple, NumpyArray, PythonList)):
             if lhs.rank > rhs.rank:
                 loop_len = []
                 n_new_loops = lhs.rank-rhs.rank
@@ -621,17 +641,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 result.append(line)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
-            lhs = line.lhs
-            rhs = line.rhs
             arg1, arg2 = rhs.args
             assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
             assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd.make_simplified(arg1.shape[0], arg2.shape[0]))], arg2)
             collect_loops([assign1, assign2], indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Duplicate):
-            lhs = line.lhs
-            rhs = line.rhs
-
             if not isinstance(rhs.length, LiteralInteger) or int(rhs.length) > 10:
                 if len(indices) == 0:
                     indices.append(new_index(PythonNativeInt(), 'i'))
@@ -656,18 +671,6 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                                               PyccelAdd.make_simplified(LiteralInteger(idx), LiteralInteger(1))))],
                                 rhs.val) for idx in range(rhs.length)]
                 collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
-
-        elif isinstance(line, NumpyCross) and line.n_indices:
-            new_indices = [new_index(PythonNativeInt(), 'i') for _ in range(line.n_indices)]
-            indices.extend(new_indices)
-            block = line.insert_indices(*new_indices)
-            a_shape = [s for i,s in enumerate(line.a.shape) if i != line.axis_a]
-            b_shape = [s for i,s in enumerate(line.b.shape) if i != line.axis_b]
-            shape = [a_s if a_s != LiteralInteger(1) else b_s for a_s, b_s in zip(a_shape, b_shape)]
-            modified_vars = {line.a, line.b}
-            for sh in shape[::-1]:
-                block = LoopCollection([block], sh, modified_vars)
-            result.append(block)
 
         else:
             # Save line in top level (no for loop)

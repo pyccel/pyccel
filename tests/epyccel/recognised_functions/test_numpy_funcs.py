@@ -1566,10 +1566,14 @@ def test_size_property(language):
     def test_size_3d(f: 'int[:,:,:]'):
         return f.size
 
+    def test_slice_size_2d(f: 'int[:,:,:]'):
+        return f[0,:,:].size
+
     from numpy import empty
     f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_3d, language = language)
+    f4 = epyccel(test_slice_size_2d, language = language)
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1579,6 +1583,7 @@ def test_size_property(language):
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
     assert f3(x3) == test_size_3d(x3)
+    assert f4(x3) == test_slice_size_2d(x3)
 
 
 def test_full_basic_real(language):
@@ -2376,6 +2381,14 @@ def test_array(language):
     array_tuple_ref = epyccel(create_array_tuple_ref, language = language)
     tmp_arr = np.ones((3,4), dtype=int)
     assert np.allclose(array_tuple_ref(tmp_arr), create_array_tuple_ref(tmp_arr))
+
+def test_array_in_expression(language):
+    def create_array_list_val():
+        from numpy import array
+        a = array([[1,2,3],[4,5,6]]) * 2
+        return a
+    f1_val   = epyccel(create_array_list_val, language = language)
+    assert np.array_equal(f1_val(), create_array_list_val())
 
 def test_array_new_dtype(language):
     def create_float_array_tuple_ref(a : 'int[:,:]'):
