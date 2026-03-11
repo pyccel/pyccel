@@ -4,5 +4,5 @@ runner:
     cmd: pylint .
     level: error
     errorformat:
-      - '%f:%l: %m'
+      - '%f:%l:%c: %m'
 
