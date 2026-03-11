@@ -49,3 +49,4 @@ The review process is described in the [developer docs](../developer_docs/review
 Before contributing we strongly recommend you check out the [developer docs](https://github.com/pyccel/pyccel/tree/devel/developer_docs).
 We try to flag `good-first-issue`s.
 These are either issues which can be fixed by following the example provided by a similar solution which is already implemented, or issues which only concern one of the Pyccel [stages](../developer_docs/overview.md).
+Pull requests should follow the coding conventions that are used by Pyccel. These conventions are enforced by the PR CI. See the [review process docs](../developer_docs/review_process.md) for more details.
