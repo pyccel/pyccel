@@ -6,7 +6,7 @@ Openmp:
 ;
 
 OpenmpStmt:
-  '#$' 'omp' stmt=OmpConstructOrDirective
+  '#' '$' 'omp' stmt=OmpConstructOrDirective
 ;
 
 ////////////////////////////////////////////////////
