@@ -11,7 +11,7 @@ on:
         required: false
         type: string
   pull_request:
-    branches: ebourne_pylint
+    branches: devel
 
 env:
   PYTHON_VERSION: ${{ inputs.python_version }}
