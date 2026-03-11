@@ -10,7 +10,7 @@ Please note that files using the OpenMP Runtime library routines will only work 
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
 
-OpenMP pragmas are recognised by comments beginning with `#$omp` (additional spaces are permitted as Python formatters tend to enforce their presence).
+OpenMP pragmas are recognised by comments beginning with `#$omp` (additional spaces are permitted as Python formatting tools tend to enforce their presence).
 
 ### Example
 
