@@ -12,7 +12,7 @@ Once the pull request is opened 10 tests should be triggered they are:
 -   **Intel** : Runs the suite of tests on a linux machine with an Intel OneAPI compiler.
 -   **LLVM** : Runs the suite of tests on a linux machine with an LLVM compiler.
 -   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform.
--   **Python Linting** : Runs Pylint on all Python files and reports any errors introduced by the pull request.
+-   **Python Linting** : Runs Black and Pylint on all Python files and reports any errors introduced by the pull request.
 -   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
 -   **Markdown Linting** : Runs a Markdown linter to ensure that Markdown files follow standard practice and will be displayed correctly via different tools.
 -   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt) and/or [.typos.toml](../.typos.toml))
@@ -69,7 +69,7 @@ Pyccel uses 3 types of tests:
 
 The static analysis tests run on non-draft pull requests. If you wish to run them earlier you can run them locally by downloading the tools linked below, or you can run them using the [workflow dispatch](https://github.com/pyccel/pyccel/actions/workflows/run_static_analysis.yml). The tests are:
 
-- Pylint : [Pylint](https://www.pylint.org/) is used for linting
+- Python linting : [Black](https://black.readthedocs.io/en/stable/) is used for formatting. [Pylint](https://www.pylint.org/) is used for linting
 - docs : [docstr-coverage](https://pypi.org/project/docstr-coverage/) is used to check that code is correctly documented. [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) is used to check the format of the code documentation. Sphinx is used to build the online documentation.
 - spelling : Aspell and [pyspelling](https://pypi.org/project/pyspelling/) are used to check spelling in the documentation. [Typos](https://github.com/crate-ci/typos) is used to check spelling in the code.
 - markdownlint : [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used to check the markdown format.
