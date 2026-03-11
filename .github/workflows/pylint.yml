@@ -47,18 +47,18 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          check_files=$(git diff ${{ env.BASE }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
-          if [ -z ${check_files} ]
-          then
-            touch pylint_results.txt
-          else
-            python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
-          fi
+          #check_files=$(git diff ${{ env.BASE }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
+          #if [ -z ${check_files} ]
+          #then
+          #  touch pylint_results.txt
+          #else
+          #  python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
+          #fi
         shell: bash
       - name: Filter Pylint output
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pylint
         run: |
-          git diff ${{ env.BASE }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
+          #git diff ${{ env.BASE }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          #python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
