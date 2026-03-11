@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/pyccel_lint.yml
 
   pylint:
-    #needs: [check_description]
+    needs: [check_description]
     uses: ./.github/workflows/pylint.yml
     with:
       base: ${{ github.event.pull_request.base.sha }}
