@@ -1,0 +1,8 @@
+# reviewdog.yml
+runner:
+  pylint:
+    cmd: pylint . --rcfile=.pylintrc
+    level: error
+    errorformat:
+      - '%f:%l:%c: %m'
+
