@@ -56,6 +56,8 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
+          echo ${BASE}
+          git diff ${BASE}
           reviewdog -reporter=github-annotations -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}" -fail-level=any
         shell: bash
         env:
