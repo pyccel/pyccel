@@ -18,6 +18,7 @@ from .core import (
     FunctionCall,
     Allocate,
     Duplicate,
+    Deallocate,
     Assign,
     For,
     CodeBlock,
@@ -485,8 +486,6 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
         PythonSet,
         UnpackManagedMemory,
     )
-
-    unused_var = "hello world"
 
     def is_array_function_call(f):
         """
