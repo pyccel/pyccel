@@ -28,6 +28,7 @@ jobs:
         id: pr_info
         run: |
           if [ -n "${{ inputs.base }}" ]
+          then
             echo "base=${{ inputs.base }}" >> $GITHUB_OUTPUTS
           else
             # Define HEAD_SHA and PR_REPO environment variables
@@ -55,6 +56,7 @@ jobs:
     uses: ./.github/workflows/pyccel_lint.yml
 
   pylint:
+    needs: [base_check]
     uses: ./.github/workflows/pylint.yml
     with:
       base: ${{needs.base_check.outputs.base}}
