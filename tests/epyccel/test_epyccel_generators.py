@@ -316,14 +316,6 @@ def test_sum_with_two_variables(language):
     assert f() == f_epyc()
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=pytest.mark.c),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
 def test_min_max_values(language):
     T = TypeVar("T", "int16[:]", "int32[:]", "int64[:]", "float32[:]", "float64[:]")
 
