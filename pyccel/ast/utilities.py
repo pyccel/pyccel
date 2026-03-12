@@ -486,6 +486,8 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
         UnpackManagedMemory,
     )
 
+    unused_var = "hello world"
+
     def is_array_function_call(f):
         """
         Check if an object is a non-indexable function call returning an array.
