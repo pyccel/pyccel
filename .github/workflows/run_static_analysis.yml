@@ -42,6 +42,9 @@ jobs:
             BASE_SHA=$(git log -1 origin/${BASE_NAME} --pretty="%H")
             echo "base=${BASE_SHA}" >> $GITHUB_OUTPUTS
           fi
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   docs:
     needs: [base_check]
