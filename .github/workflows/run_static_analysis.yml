@@ -57,7 +57,7 @@ jobs:
   pylint:
     uses: ./.github/workflows/pylint.yml
     with:
-      base: {{needs.base_check.outputs.base}}
+      base: ${{needs.base_check.outputs.base}}
 
   spelling:
     uses: ./.github/workflows/spelling.yml
