@@ -320,13 +320,7 @@ def test_sum_with_two_variables(language):
     "language",
     (
         pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(reason="Var arg causes type promotion. See #2251."),
-                pytest.mark.c,
-            ],
-        ),
+        pytest.param("c", marks=pytest.mark.c),
         pytest.param("python", marks=pytest.mark.python),
     ),
 )

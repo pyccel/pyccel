@@ -1,30 +1,22 @@
-#include <stdarg.h>
+#include <stddef.h>
 
-static inline i_key c_JOIN(i_key,_min)(size_t count, ...) {
-    va_list args;
-    va_start(args, count);
-    i_key min_value = va_arg(args, i_key);
-    for (size_t i = 1; i < count; ++i) {
-        i_key value = va_arg(args, i_key);
-        if (value < min_value) {
-            min_value = value;
+static inline i_key c_JOIN(i_key,_min)(const i_key a[], size_t n) {
+    i_key min_value = a[0];
+    for (size_t i = 1; i < n; ++i) {
+        if (a[i] < min_value) {
+            min_value = a[i];
         }
     }
-    va_end(args);
     return min_value;
 }
 
-static inline i_key c_JOIN(i_key, _max)(size_t count, ...) {
-    va_list args;
-    va_start(args, count);
-    i_key max_value = va_arg(args, i_key);
-    for (size_t i = 1; i < count; ++i) {
-        i_key value = va_arg(args, i_key);
-        if (value > max_value) {
-            max_value = value;
+static inline i_key c_JOIN(i_key, _max)(const i_key a[], size_t n) {
+    i_key max_value = a[0];
+    for (size_t i = 1; i < n; ++i) {
+        if (a[i] > max_value) {
+            max_value = a[i];
         }
     }
-    va_end(args);
     return max_value;
 }
 
