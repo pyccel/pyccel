@@ -408,6 +408,9 @@ class FCodePrinter(CodePrinter):
         """
         Get the Fortran code for all registered helper subroutines.
 
+        Collect all helper subroutines that were registered during code
+        generation and return their concatenated Fortran code.
+
         Returns
         -------
         str
