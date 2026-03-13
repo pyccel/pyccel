@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 -   #2587 : Fix compilation error when using an array slice in an expression.
 -   #2590 : Fix missing `const` annotation on string arguments in C.
 -   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
+-   #2309 : Fix `np.random.randint` with `size` argument for Fortran.
 
 ### Changed
 

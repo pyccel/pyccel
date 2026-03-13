@@ -91,7 +91,7 @@ from pyccel.ast.mathext import math_constants
 from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
-from pyccel.ast.numpyext import NumpyRand, NumpyAbs
+from pyccel.ast.numpyext import NumpyRand, NumpyRandint, NumpyAbs
 from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
@@ -254,6 +254,10 @@ iso_c_binding_shortcut_mapping = {
     "C_BOOL": "b1",
 }
 
+iso_c_binding_shortcut_reverse = {
+    v: k for k, v in iso_c_binding_shortcut_mapping.items()
+}
+
 inc_keyword = (
     r"do\b",
     r"if \(.*?\) then$",
@@ -318,6 +322,7 @@ class FCodePrinter(CodePrinter):
         self._current_class = None
 
         self._additional_code = ""
+        self._helper_subroutines = {}
 
         self.prefix_module = prefix_module
 
@@ -350,6 +355,68 @@ class FCodePrinter(CodePrinter):
             macro += "\n"
             macros.append(macro)
         return "".join(macros)
+
+    def _get_randint_fill_helper(self, int_kind, float_kind):
+        """
+        Get the name of a randint_fill helper, registering it if needed.
+
+        Get the name of a randint_fill helper subroutine for the given
+        integer kind. The helper is registered in _helper_subroutines so
+        it will be included in the contains section.
+
+        Parameters
+        ----------
+        int_kind : str
+            The Fortran kind for the integer output.
+
+        float_kind : str
+            The Fortran kind for the temporary float array.
+
+        Returns
+        -------
+        str
+            The name of the helper subroutine.
+        """
+        name = "pyccel_randint_fill_{0}".format(int_kind)
+        if name not in self._helper_subroutines:
+            imports = [
+                (
+                    "{0} => {1}".format(k, iso_c_binding_shortcut_reverse[k])
+                    if k in iso_c_binding_shortcut_reverse
+                    else k
+                )
+                for k in (int_kind, float_kind)
+            ]
+            import_clause = ", ".join(imports)
+
+            self._helper_subroutines[name] = (
+                "subroutine {name}(n, arr, low, high)\n"
+                "use, intrinsic :: ISO_C_Binding, only : {imports}\n"
+                "implicit none\n"
+                "integer, intent(in) :: n\n"
+                "integer({ik}), intent(out) :: arr(n)\n"
+                "integer({ik}), intent(in) :: low\n"
+                "integer({ik}), intent(in) :: high\n"
+                "real({fk}) :: tmp(n)\n"
+                "call random_number(tmp)\n"
+                "arr = floor((high - low) * tmp + low, kind={ik})\n"
+                "end subroutine {name}\n"
+            ).format(name=name, ik=int_kind, fk=float_kind, imports=import_clause)
+        return name
+
+    def _get_helper_subroutines_code(self):
+        """
+        Get the Fortran code for all registered helper subroutines.
+
+        Returns
+        -------
+        str
+            The concatenated code of all helper subroutines, or an empty
+            string if none are registered.
+        """
+        if not self._helper_subroutines:
+            return ""
+        return "\n".join(self._helper_subroutines.values())
 
     def set_current_class(self, name):
 
@@ -902,15 +969,18 @@ class FCodePrinter(CodePrinter):
                 "".join([sep, self._print(i), sep]) for i in expr.variable_wrappers
             ]
         body = "\n".join(func_strings)
+
+        # Append any helper subroutines generated during printing
+        helpers_code = self._get_helper_subroutines_code()
+        if helpers_code:
+            body = body + "\n" + helpers_code if body else helpers_code
+
         # ...
 
         # Don't print contains or private for gFTL extensions
-        private = (
-            "private\n" if (funcs_to_print or expr.classes or expr.interfaces) else ""
-        )
-        contains = (
-            "contains\n" if (funcs_to_print or expr.classes or expr.interfaces) else ""
-        )
+        has_body = funcs_to_print or expr.classes or expr.interfaces or helpers_code
+        private = "private\n" if has_body else ""
+        contains = "contains\n" if has_body else ""
         imports += "".join(self._print(i) for i in self._additional_imports.values())
         imports = self.print_constant_imports() + imports
         implicit_none = "" if expr.is_external else "implicit none\n"
@@ -967,12 +1037,20 @@ class FCodePrinter(CodePrinter):
             decs += "\ninteger :: ierr = -1" + "\ninteger, allocatable :: status (:)"
         imports += "".join(self._print(i) for i in self._additional_imports.values())
         imports += "\n" + self.print_constant_imports()
+
+        # Append helper subroutines in a contains section if needed
+        helpers_code = self._get_helper_subroutines_code()
+        contains_section = ""
+        if helpers_code:
+            contains_section = "contains\n" + helpers_code
+
         parts = [
             "program {}\n".format(name),
             imports,
             "implicit none\n",
             decs,
             body,
+            contains_section,
             "end program {}\n".format(name),
         ]
 
@@ -2139,11 +2217,16 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
-            errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
-
-        var = self.scope.get_temporary_variable(
-            expr.dtype, memory_handling="stack", shape=expr.shape
-        )
+            tmp_type = NumpyNDArrayType.get_new(
+                NumpyFloat64Type(), expr.rank, expr.order
+            )
+            var = self.scope.get_temporary_variable(
+                tmp_type, memory_handling="stack", shape=expr.shape
+            )
+        else:
+            var = self.scope.get_temporary_variable(
+                expr.dtype, memory_handling="stack", shape=expr.shape
+            )
 
         self._additional_code += self._print(Assign(var, expr)) + "\n"
         return self._print(var)
@@ -2151,13 +2234,14 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
             errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
+        rand = expr.rand_expr
         if expr.low is None:
-            randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
+            randfloat = self._print(PyccelMul.make_simplified(expr.high, rand))
         else:
             randfloat = self._print(
                 PyccelAdd.make_simplified(
                     PyccelMul.make_simplified(
-                        PyccelMinus.make_simplified(expr.high, expr.low), NumpyRand()
+                        PyccelMinus.make_simplified(expr.high, expr.low), rand
                     ),
                     expr.low,
                 )
@@ -2488,6 +2572,19 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyRand):
             return f"call random_number({lhs_code})\n"
+
+        if isinstance(rhs, NumpyRandint) and rhs.rank != 0:
+            int_kind = self.print_kind(rhs)
+            float_kind = self.print_kind(NumpyFloat64Type())
+            helper_name = self._get_randint_fill_helper(int_kind, float_kind)
+            if rhs.low is None:
+                low_code = "0_{0}".format(int_kind)
+            else:
+                low_code = self._print(rhs.low)
+            high_code = self._print(rhs.high)
+            return "call {0}(size({1}), {1}, {2}, {3})\n".format(
+                helper_name, lhs_code, low_code, high_code
+            )
 
         if isinstance(rhs, NumpyEmpty):
             return ""
