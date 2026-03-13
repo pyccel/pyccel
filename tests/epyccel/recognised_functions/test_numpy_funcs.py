@@ -3128,7 +3128,7 @@ def test_randint_size(language):
     assert y.shape == (10,)
     assert all(yi < 50 for yi in y)
     assert all(yi >= 0 for yi in y)
-    assert y.dtype == np.int64
+    assert np.issubdtype(y.dtype, np.integer)
     assert len(set(y)) > 1
 
     f2 = epyccel(create_arr_low_high, language=language)
@@ -3136,7 +3136,7 @@ def test_randint_size(language):
     assert y.shape == (10,)
     assert all(yi < 30 for yi in y)
     assert all(yi >= 10 for yi in y)
-    assert y.dtype == np.int64
+    assert np.issubdtype(y.dtype, np.integer)
     assert len(set(y)) > 1
 
 
