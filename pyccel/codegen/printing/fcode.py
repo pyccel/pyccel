@@ -377,11 +377,11 @@ class FCodePrinter(CodePrinter):
         str
             The name of the helper subroutine.
         """
-        name = "pyccel_randint_fill_{0}".format(int_kind)
+        name = f"pyccel_randint_fill_{int_kind}"
         if name not in self._helper_subroutines:
             imports = [
                 (
-                    "{0} => {1}".format(k, iso_c_binding_shortcut_reverse[k])
+                    f"{k} => {iso_c_binding_shortcut_reverse[k]}"
                     if k in iso_c_binding_shortcut_reverse
                     else k
                 )
@@ -1048,13 +1048,13 @@ class FCodePrinter(CodePrinter):
             contains_section = "contains\n" + helpers_code
 
         parts = [
-            "program {}\n".format(name),
+            f"program {name}\n",
             imports,
             "implicit none\n",
             decs,
             body,
             contains_section,
-            "end program {}\n".format(name),
+            f"end program {name}\n",
         ]
 
         self.exit_scope()
@@ -2581,13 +2581,11 @@ class FCodePrinter(CodePrinter):
             float_kind = self.print_kind(NumpyFloat64Type())
             helper_name = self._get_randint_fill_helper(int_kind, float_kind)
             if rhs.low is None:
-                low_code = "0_{0}".format(int_kind)
+                low_code = f"0_{int_kind}"
             else:
                 low_code = self._print(rhs.low)
             high_code = self._print(rhs.high)
-            return "call {0}(size({1}), {1}, {2}, {3})\n".format(
-                helper_name, lhs_code, low_code, high_code
-            )
+            return f"call {helper_name}(size({lhs_code}), {lhs_code}, {low_code}, {high_code})\n"
 
         if isinstance(rhs, NumpyEmpty):
             return ""

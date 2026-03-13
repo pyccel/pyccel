@@ -904,7 +904,7 @@ def test_numpy_kernels_compile(language):
     ),
 )
 def test_randint_size_program(language):
-    pyccel_opt = "--language={}".format(language)
+    pyccel_opt = f"--language={language}"
     cwd = get_abs_path(".")
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "randint_size.py", pyccel_opt)
 
