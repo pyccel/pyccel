@@ -3105,6 +3105,41 @@ def test_randint_expr(language):
     assert len(set(y)) > 1
 
 
+@pytest.mark.parametrize(
+    "language",
+    (
+        pytest.param("fortran", marks=pytest.mark.fortran),
+        pytest.param(
+            "c",
+            marks=[pytest.mark.skip(reason="randint not implemented"), pytest.mark.c],
+        ),
+        pytest.param("python", marks=pytest.mark.python),
+    ),
+)
+def test_randint_size(language):
+    def create_arr_high(high: "int"):
+        return np.random.randint(high, size=10)
+
+    def create_arr_low_high(low: "int", high: "int"):
+        return np.random.randint(low, high, size=10)
+
+    f1 = epyccel(create_arr_high, language=language)
+    y = f1(50)
+    assert y.shape == (10,)
+    assert all(yi < 50 for yi in y)
+    assert all(yi >= 0 for yi in y)
+    assert np.issubdtype(y.dtype, np.integer)
+    assert len(set(y)) > 1
+
+    f2 = epyccel(create_arr_low_high, language=language)
+    y = f2(10, 30)
+    assert y.shape == (10,)
+    assert all(yi < 30 for yi in y)
+    assert all(yi >= 10 for yi in y)
+    assert np.issubdtype(y.dtype, np.integer)
+    assert len(set(y)) > 1
+
+
 def test_sum_bool(language):
     def sum_call(x: "bool[:]"):
         from numpy import sum as np_sum
