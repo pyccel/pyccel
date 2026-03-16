@@ -13,7 +13,6 @@ import shutil
 
 from numpy import get_include as get_numpy_include
 
-
 gfort_info = {
     "exec": "gfortran",
     "mpi_exec": "mpif90",

@@ -13,16 +13,6 @@ Module mapping the mpi4py library functions to the equivalent MPI commands.
 # $ header metavar import_all=True
 
 
-
-
-
-
-
-
-
-
-
-
 from pyccel.stdlib.internal.mpi import MPI_SUM
 from pyccel.stdlib.internal.mpi import MPI_PROD
 from pyccel.stdlib.internal.mpi import MPI_MAX
@@ -41,7 +31,6 @@ from pyccel.stdlib.internal.mpi import MPI_REAL8
 from pyccel.stdlib.internal.mpi import MPI_COMPLEX8
 from pyccel.stdlib.internal.mpi import MPI_COMPLEX16
 from pyccel.stdlib.internal.mpi import MPI_CHARACTER
-
 
 # ===================================================================================
 

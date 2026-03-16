@@ -5,7 +5,6 @@
 # ------------------------------------------------------------------------------------------#
 
 
-
 from pyccel.ast.core import Module, ModuleHeader, Program
 
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
