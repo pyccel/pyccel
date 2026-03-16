@@ -7,7 +7,6 @@
 This module contains all the provided decorator methods.
 """
 
-import warnings
 
 __all__ = (
     "allow_negative_index",

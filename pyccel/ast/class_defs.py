@@ -53,7 +53,6 @@ from .datatypes import (
     PythonNativeComplex,
     StringType,
     TupleType,
-    CustomDataType,
     HomogeneousListType,
     HomogeneousSetType,
     DictType,

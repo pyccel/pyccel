@@ -10,7 +10,7 @@ from pyccel.codegen.printing.fcode import FCodePrinter
 from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
-from pyccel.ast.core import FunctionDef, Interface, ModuleHeader
+from pyccel.ast.core import ModuleHeader
 from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {"fortran": "f90", "c": "c", "python": "py"}

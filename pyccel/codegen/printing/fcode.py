@@ -15,7 +15,6 @@ from itertools import chain
 
 import numpy as np
 
-from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCModule, BindCClassDef
 from pyccel.ast.bind_c import BindCVariable
@@ -36,12 +35,12 @@ from pyccel.ast.builtin_methods.list_methods import ListPop
 from pyccel.ast.builtin_methods.set_methods import SetUnion
 
 from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import SeparatorComment, Comment
+from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Module, For, If, IfSection
-from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
+from pyccel.ast.core import Import, CodeBlock, AsName
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
@@ -75,7 +74,7 @@ from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
 
 from pyccel.ast.fortran_concepts import KindSpecification
 
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PyccelArrayShapeElement
 
 from pyccel.ast.itertoolsext import Product
 

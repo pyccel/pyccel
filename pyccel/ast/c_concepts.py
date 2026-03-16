@@ -12,7 +12,6 @@ from functools import cache
 from .basic import TypedAstNode, PyccelAstNode
 from .datatypes import (
     HomogeneousContainerType,
-    FixedSizeType,
     FixedSizeNumericType,
     PrimitiveIntegerType,
 )

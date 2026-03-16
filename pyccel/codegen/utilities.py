@@ -17,7 +17,6 @@ from pyccel.errors.errors import Errors
 from .codegen import printer_registry
 from .compiling.basic import CompileObj
 from .compiling.library_config import recognised_libs
-from .compiling.file_locks import FileLockSet
 
 # get path to pyccel/
 pyccel_root = Path(__file__).parent.parent

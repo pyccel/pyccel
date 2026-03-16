@@ -6,10 +6,8 @@
 
 """This file contains different utilities for the Parser."""
 
-import os
 
 from pyccel.ast.variable import DottedName
-from pyccel.ast.internals import PyccelSymbol
 
 __all__ = ("get_default_path", "pyccel_external_lib")
 

@@ -9,11 +9,9 @@ that could be shown by pyccel.
 """
 
 import ast
-import sys
 import traceback as tb
 
 from collections import OrderedDict
-from os.path import basename
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton

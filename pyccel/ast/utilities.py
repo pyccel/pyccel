@@ -10,7 +10,7 @@ from itertools import chain
 from collections import namedtuple
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.errors.errors import Errors, PyccelError
+from pyccel.errors.errors import Errors
 
 from .core import (
     AsName,
@@ -28,7 +28,6 @@ from .core import (
 )
 
 from .builtins import (
-    builtin_functions_dict,
     PythonRange,
     PythonList,
     PythonTuple,

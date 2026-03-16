@@ -11,7 +11,6 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from pyccel.errors.errors import PyccelError
 
 from pyccel.utilities.stage import PyccelStage
 

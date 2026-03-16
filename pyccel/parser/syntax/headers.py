@@ -5,19 +5,16 @@
 # ------------------------------------------------------------------------------------------#
 """ """
 
-import warnings
 from os.path import join, dirname
 
 from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers import MetaVariable
-from pyccel.ast.core import FunctionDefArgument, EmptyNode
-from pyccel.ast.variable import DottedName
-from pyccel.ast.literals import LiteralString, LiteralInteger, LiteralFloat
+from pyccel.ast.literals import LiteralString
 from pyccel.ast.literals import LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
-from pyccel.ast.variable import AnnotatedPyccelSymbol, IndexedElement
+from pyccel.ast.variable import IndexedElement
 from pyccel.ast.type_annotations import (
     SyntacticTypeAnnotation,
     FunctionTypeAnnotation,

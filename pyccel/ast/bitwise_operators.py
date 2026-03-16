@@ -9,7 +9,6 @@ https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
 
-import numpy
 
 from .builtins import DtypePrecisionToCastFunction
 from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType

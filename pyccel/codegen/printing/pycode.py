@@ -4,7 +4,6 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 # ------------------------------------------------------------------------------------------#
 import ast
-import warnings
 import math
 
 from pyccel.decorators import __all__ as pyccel_decorators

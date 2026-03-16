@@ -3,7 +3,6 @@
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
 # ------------------------------------------------------------------------------------------#
 import argparse
-import pathlib
 import sys
 
 from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR

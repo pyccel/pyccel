@@ -12,15 +12,12 @@ import importlib
 import os
 import pathlib
 import re
-import warnings
 
 # ==============================================================================
-from pyccel.version import __version__
 
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import Import, AsName
+from pyccel.ast.core import AsName
 
-from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope import Scope
 

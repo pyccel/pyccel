@@ -74,7 +74,6 @@ from pyccel.ast.numpytypes import numpy_precision_map
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import (
-    pyarray_to_ndarray,
     PyArray_SetBaseObject,
     import_array,
 )
@@ -92,7 +91,7 @@ from pyccel.ast.operators import (
     PyccelEq,
     PyccelIs,
 )
-from pyccel.ast.operators import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
+from pyccel.ast.operators import PyccelLt, IfTernaryOperator, PyccelAnd
 from pyccel.ast.operators import PyccelNe
 from pyccel.ast.variable import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope import Scope

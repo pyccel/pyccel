@@ -6,12 +6,10 @@
 import ast
 import functools
 from itertools import chain, product
-import re
 import sys
 
 import numpy as np
 
-from pyccel.ast.basic import ScopedAstNode
 
 from pyccel.ast.bind_c import BindCPointer
 
@@ -85,7 +83,6 @@ from pyccel.ast.mathext import math_constants
 from pyccel.ast.numpyext import (
     NumpyFull,
     NumpyArray,
-    NumpySum,
     DtypePrecisionToCastFunction,
 )
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
@@ -122,7 +119,6 @@ from pyccel.errors.messages import (
     INCOMPATIBLE_TYPEVAR_TO_FUNC,
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_INTERNAL_ERROR,
-    ALLOCATABLE_IN_EXPRESSION,
 )
 
 errors = Errors()
