@@ -1,10 +1,15 @@
-# coding: utf-8
 # ------------------------------------------------------------------------- #
 # This file is part of Pyccel which is released under MIT License. See the  #
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
-""" """
+"""
+Module providing the `Header` class and related classes which are used to
+represent header pragmas in the grammar. This class is deprecated and will be
+removed in a future release (see issue #1487). Moreover, another class with
+the same name is defined in `pyccel.ast.headers`, which inherits from the
+class `PyccelAstNode` defined in `pyccel.ast.basic`.
+"""
 
 from os.path import join, dirname
 
