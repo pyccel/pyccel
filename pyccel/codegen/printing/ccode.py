@@ -1,9 +1,13 @@
-# coding: utf-8
 # ------------------------------------------------------------------------- #
 # This file is part of Pyccel which is released under MIT License. See the  #
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
+"""
+Module containing the `CCodePrinter` class which converts Pyccel's AST to
+strings of C code.
+"""
+
 import ast
 import functools
 from itertools import chain, product
@@ -11,12 +15,10 @@ import sys
 
 import numpy as np
 
-
 from pyccel.ast.bind_c import BindCPointer
 
 from pyccel.ast.builtins import PythonRange, PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins import PythonPrint, PythonType, VariableIterator
-
 from pyccel.ast.builtins import (
     PythonList,
     PythonTuple,
