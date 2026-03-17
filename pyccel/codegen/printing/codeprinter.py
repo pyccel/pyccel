@@ -1,10 +1,15 @@
-# coding: utf-8
 # ------------------------------------------------------------------------- #
 # This file is part of Pyccel which is released under MIT License. See the  #
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
-
+"""
+Module containing the base class `CodePrinter` from which all code printers
+inherit. The sub-classes should define a language and `_print_X` functions.
+The `CodePrinter` class also contains some general functionality which may be
+used by all code printers, such as the management of imports and the current
+scope.
+"""
 
 from pyccel.ast.core import Module, ModuleHeader, Program
 
