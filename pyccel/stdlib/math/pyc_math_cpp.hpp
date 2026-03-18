@@ -54,7 +54,7 @@ Floating pyc_modulo(Floating a, Floating b)
 template <class T>
 T sign(T x)
 {
-    return (x > 0) - (x < 0);
+    return static_cast<T>((x > 0) - (x < 0));
 }
 
 template <class T>
