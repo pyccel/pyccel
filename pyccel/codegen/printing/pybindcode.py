@@ -41,7 +41,6 @@ class PyBindCodePrinter(CppCodePrinter):
         self._to_free_PyObject_list = []
         self._function_wrapper_names = {}
         self._module_name = None
-        self._current_module = None
 
     # -----------------------------------------------------------------------
     #                              Pybind11 methods
@@ -50,7 +49,6 @@ class PyBindCodePrinter(CppCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
-        self._current_module = expr
 
         self._module_name = expr.name
         sep = self._print(SeparatorComment(40))
@@ -66,7 +64,6 @@ class PyBindCodePrinter(CppCodePrinter):
         imports = "#include <pybind11/pybind11.h>\n" + imports
 
         self.exit_scope()
-        self._current_module = None
 
         return "\n".join((f"#define {pymod_name.upper()}\n", imports, sep, init_func))
 
