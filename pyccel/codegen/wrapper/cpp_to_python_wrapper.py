@@ -104,12 +104,12 @@ class CppToPythonWrapper(Wrapper):
         """
         Build a `PyModule` from a `Module`.
 
-        Create a `PyModule` which wraps a C-compatible `Module`.
+        Create a `PyModule` which wraps a C++-compatible `Module`.
 
         Parameters
         ----------
         expr : Module
-            The module which can be called from C.
+            The module which can be called from C++.
 
         Returns
         -------
