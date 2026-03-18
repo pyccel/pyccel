@@ -18,7 +18,6 @@ from .core import (
     FunctionCall,
     Allocate,
     Duplicate,
-    Deallocate,
     Assign,
     For,
     CodeBlock,
