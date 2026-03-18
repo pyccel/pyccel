@@ -1,12 +1,14 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in C++
 """
+
 from .languagenameclashchecker import LanguageNameClashChecker
+
 
 class CppNameClashChecker(LanguageNameClashChecker):
     """
@@ -16,13 +18,46 @@ class CppNameClashChecker(LanguageNameClashChecker):
     verify that they do not cause name clashes. Name clashes may be due to
     new variables, or due to the use of reserved keywords.
     """
+
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['auto', 'break', 'case', 'char', 'const',
-        'continue', 'default', 'double', 'else', 'enum',
-        'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
-        'long', 'register', 'restrict', 'return', 'short', 'signed',
-        'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
-        'unsigned', 'void', 'volatile', 'while', 'namespace'])
+    keywords = set(
+        [
+            "auto",
+            "break",
+            "case",
+            "char",
+            "const",
+            "continue",
+            "default",
+            "double",
+            "else",
+            "enum",
+            "extern",
+            "float",
+            "for",
+            "goto",
+            "if",
+            "inline",
+            "int",
+            "long",
+            "register",
+            "restrict",
+            "return",
+            "short",
+            "signed",
+            "sizeof",
+            "static",
+            "struct",
+            "switch",
+            "typedef",
+            "union",
+            "unsigned",
+            "void",
+            "volatile",
+            "while",
+            "namespace",
+        ]
+    )
 
     def has_clash(self, name, symbols):
         """
@@ -71,18 +106,20 @@ class CppNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
-        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)) and parent_context == 'class':
+        assert context in ("module", "function", "class", "variable", "wrapper")
+        assert parent_context in ("module", "function", "class", "loop", "program")
+        if (
+            len(name) > 4
+            and all(name[i] == "_" for i in (0, 1, -1, -2))
+            and parent_context == "class"
+        ):
             return name
-        if name == '__init__':
-            name = 'init'
-        if name == '__del__':
-            name = 'free'
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            name = 'operator' + name[1:-2]
-        if name[0] == '_':
-            name = 'private'+name
+        if name == "__init__":
+            name = "init"
+        if name == "__del__":
+            name = "free"
+        if len(name) > 4 and all(name[i] == "_" for i in (0, 1, -1, -2)):
+            name = "operator" + name[1:-2]
+        if name[0] == "_":
+            name = "private" + name
         return self._get_collisionless_name(name, symbols)
-
-

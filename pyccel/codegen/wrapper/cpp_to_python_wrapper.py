@@ -1,21 +1,23 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
-from pyccel.ast.core          import Import
-from pyccel.ast.cwrapper      import PyccelPyObject
-from pyccel.ast.cwrapper      import PyModule, PyModInitFunc
-from pyccel.ast.literals      import Nil
-from pyccel.ast.variable      import Variable
-from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors
-from .wrapper                 import Wrapper
+
+from pyccel.ast.core import Import
+from pyccel.ast.cwrapper import PyccelPyObject
+from pyccel.ast.cwrapper import PyModule, PyModInitFunc
+from pyccel.ast.literals import Nil
+from pyccel.ast.variable import Variable
+from pyccel.parser.scope import Scope
+from pyccel.errors.errors import Errors
+from .wrapper import Wrapper
 
 errors = Errors()
+
 
 class CppToPythonWrapper(Wrapper):
     """
@@ -31,8 +33,9 @@ class CppToPythonWrapper(Wrapper):
     verbose : int
         The level of verbosity.
     """
-    target_language = 'Python'
-    start_language = 'C++'
+
+    target_language = "Python"
+    start_language = "C++"
 
     def __init__(self, sharedlib_dirpath, verbose):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
@@ -66,11 +69,10 @@ class CppToPythonWrapper(Wrapper):
         """
         mod_name = expr.scope.get_python_name(expr.name)
         # Initialise the scope
-        func_scope = self.scope.new_child_scope(f'PyInit_{mod_name}', 'function')
+        func_scope = self.scope.new_child_scope(f"PyInit_{mod_name}", "function")
         self.scope = func_scope
 
-        module_var = Variable(PyccelPyObject(),
-                       self.scope.get_new_name("mod"))
+        module_var = Variable(PyccelPyObject(), self.scope.get_new_name("mod"))
         self.scope.insert_variable(module_var)
 
         body = []
@@ -78,7 +80,9 @@ class CppToPythonWrapper(Wrapper):
 
         # Call the initialisation function
         if expr.init_func:
-            init_func_clone = expr.init_func.clone(expr.init_func.name, is_imported=True)
+            init_func_clone = expr.init_func.clone(
+                expr.init_func.name, is_imported=True
+            )
             init_func_clone.set_current_user_node(expr)
             body.append(init_func_clone())
 
@@ -92,9 +96,9 @@ class CppToPythonWrapper(Wrapper):
 
         return PyModInitFunc(mod_name, body, [module_var], func_scope)
 
-    #--------------------------------------------------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------------------------------------------------
     # Wrap functions
-    #--------------------------------------------------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
         """
@@ -116,8 +120,12 @@ class CppToPythonWrapper(Wrapper):
         scope = expr.scope
         name = expr.name
 
-        mod_scope = Scope(name = name, used_symbols = scope.local_used_symbols.copy(),
-                          original_symbols = scope.python_names.copy(), scope_type = 'module')
+        mod_scope = Scope(
+            name=name,
+            used_symbols=scope.local_used_symbols.copy(),
+            original_symbols=scope.python_names.copy(),
+            scope_type="module",
+        )
         self.scope = mod_scope
 
         # TODO: Wrap classes
@@ -128,13 +136,21 @@ class CppToPythonWrapper(Wrapper):
 
         init_func = self._build_module_init_function(expr, expr.imports)
 
-        #API_var, import_func = self._build_module_import_function(expr)
+        # API_var, import_func = self._build_module_import_function(expr)
 
         self.exit_scope()
 
         imports = [Import(mod_scope.get_python_name(expr.name), expr)]
         original_mod_name = expr.scope.get_python_name(name)
-        return PyModule(original_mod_name, [], (), imports = imports,
-                        interfaces = (), classes = (), scope = mod_scope,
-                        init_func = init_func, import_func = None,
-                        module_def_name = None)
+        return PyModule(
+            original_mod_name,
+            [],
+            (),
+            imports=imports,
+            interfaces=(),
+            classes=(),
+            scope=mod_scope,
+            init_func=init_func,
+            import_func=None,
+            module_def_name=None,
+        )
