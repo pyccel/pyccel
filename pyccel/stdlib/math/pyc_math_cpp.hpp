@@ -32,6 +32,7 @@ inline double pyc_degrees(double radians)
 template <typename Integer, std::enable_if_t<std::is_integral<Integer>::value, bool> = true>
 Integer pyc_modulo(Integer a, Integer b)
 {
+    assert(b != 0);
     Integer modulo = a % b;
     if (!((a < 0) ^ (b < 0)) || modulo == 0)
         return modulo;
