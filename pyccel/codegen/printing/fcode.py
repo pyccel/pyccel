@@ -315,7 +315,6 @@ class FCodePrinter(CodePrinter):
 
         super().__init__(verbose)
         self._constantImports = []
-        self._current_class = None
 
         self._additional_code = ""
 
@@ -351,21 +350,23 @@ class FCodePrinter(CodePrinter):
             macros.append(macro)
         return "".join(macros)
 
-    def set_current_class(self, name):
-
-        self._current_class = name
-
-    def get_function(self, name):
-        container = self.scope
-        while container:
-            if name in container.functions:
-                return container.functions[name]
-            container = container.parent_scope
-        if isinstance(name, DottedName):
-            return self.get_function(name.name[-1])
-        errors.report(UNDEFINED_FUNCTION, symbol=name, severity="fatal")
-
     def _format_code(self, lines):
+        """
+        Format code in order to match readable Fortran practices.
+
+        Format code in order to match readable Fortran practices.
+        In particular this function indents the code.
+
+        Parameters
+        ----------
+        lines : list[str]
+            The lines of code.
+
+        Returns
+        -------
+        list[str]
+            The formatted lines of code.
+        """
         return self._wrap_fortran(self.indent_code(lines))
 
     def print_kind(self, expr):
@@ -3007,8 +3008,6 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         name = self._print(expr.name)
-        self.set_current_class(name)
-
         superclasses = expr.superclasses
         subclasses = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
 
@@ -3059,8 +3058,6 @@ class FCodePrinter(CodePrinter):
         methods = "".join(
             "\n".join(["", sep, self._print(i), sep, ""]) for i in cls_methods
         )
-
-        self.set_current_class(None)
 
         return decs, methods
 

@@ -1352,7 +1352,11 @@ class SemanticParser(BasicParser):
                 class_type = arg2.class_type
                 class_base = self.get_cls_base(class_type)
                 magic_method_name = "__r" + magic_method_name[2:]
+<<<<<<< HEAD
                 magic_method = class_base.get_method(syntactic_name=magic_method_name)
+=======
+                magic_method = class_base.get_method(magic_method_name)
+>>>>>>> origin/devel
                 if magic_method:
                     visited_args = [visited_args[1], visited_args[0]]
         if magic_method:
@@ -1453,7 +1457,11 @@ class SemanticParser(BasicParser):
         class_type = expr.class_type
         cls_scope = expr.scope
 
+<<<<<<< HEAD
         init_func = expr.get_method(syntactic_name="__init__", raise_error_from=expr)
+=======
+        init_func = cls_scope.functions["__init__"]
+>>>>>>> origin/devel
 
         if isinstance(init_func, Interface):
             errors.report(
@@ -1464,6 +1472,7 @@ class SemanticParser(BasicParser):
 
         # create a new attribute to check allocation
         deallocater_lhs = Variable(class_type, "self", cls_base=expr, is_argument=True)
+<<<<<<< HEAD
         if expr.superclasses == ():
             deallocater = DottedVariable(
                 lhs=deallocater_lhs,
@@ -1483,6 +1492,20 @@ class SemanticParser(BasicParser):
 
         del_method = expr.get_method(syntactic_name="__del__")
         if del_method is None or expr not in del_method.get_all_user_nodes():
+=======
+        deallocater = DottedVariable(
+            lhs=deallocater_lhs,
+            name=cls_scope.get_new_name("is_freed"),
+            class_type=PythonNativeBool(),
+            is_private=True,
+        )
+        expr.add_new_attribute(deallocater)
+        deallocater_assign = Assign(deallocater, LiteralFalse())
+        init_func.body.insert2body(deallocater_assign, back=False)
+
+        del_method = expr.methods_as_dict.get("__del__", None)
+        if del_method is None:
+>>>>>>> origin/devel
             del_name = cls_scope.insert_symbol("__del__", object_type="function")
             scope = self.create_new_function_scope("__del__", del_name)
             argument = FunctionDefArgument(
@@ -1514,6 +1537,7 @@ class SemanticParser(BasicParser):
             self._allocs[-1].update(attribute)
             del_method.body.insert2body(*self._garbage_collector(del_method.body))
             self._pointer_targets.pop()
+<<<<<<< HEAD
 
         if expr.superclasses:
             argument = del_method.arguments[0]
@@ -1532,6 +1556,15 @@ class SemanticParser(BasicParser):
                 )
             ]
         del_method.body = del_body
+=======
+        condition = If(
+            IfSection(
+                PyccelNot(deallocater),
+                [del_method.body] + [Assign(deallocater, LiteralTrue())],
+            )
+        )
+        del_method.body = [condition]
+>>>>>>> origin/devel
         self._current_function_name.pop()
 
     def _handle_function_args(self, arguments):
@@ -1608,12 +1641,16 @@ class SemanticParser(BasicParser):
         if elemental:
 
             def incompatible(i_arg, f_arg):
+<<<<<<< HEAD
                 return (
                     i_arg.class_type.datatype != f_arg.class_type.datatype
                     and not isinstance(
                         i_arg.class_type.datatype, type(f_arg.class_type.datatype)
                     )
                 )
+=======
+                return i_arg.class_type.datatype != f_arg.class_type.datatype
+>>>>>>> origin/devel
 
         else:
 
@@ -3649,8 +3686,11 @@ class SemanticParser(BasicParser):
         if not self.is_stub_file:
             self.scope.insert_symbol("__init__", object_type="function")
             self.scope.insert_symbol("__del__", object_type="function")
+<<<<<<< HEAD
 
         self.scope.clear_classes()
+=======
+>>>>>>> origin/devel
 
         imports = [self._visit(i) for i in expr.imports]
         init_func_body = [i for i in imports if not isinstance(i, EmptyNode)]

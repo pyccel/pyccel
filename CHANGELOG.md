@@ -8,11 +8,22 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+-   #2587 : Fix compilation error when using an array slice in an expression.
+-   #2590 : Fix missing `const` annotation on string arguments in C.
+-   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
+
 ### Changed
+
+-   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   \[DEVELOPER\] Require black formatting.
 
 ### Deprecated
 
 ### Removed
+
+-   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
+-   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
 
 ## \[2.2.2\] - 2026-03-09
 
@@ -56,6 +67,7 @@ All notable changes to this project will be documented in this file.
 -   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 -   #2563 : Fix crashes on macOS with GCC compiler.
 -   #2566 : Allow array-creating functions to be used in expressions with C.
+-   #2251 : Fix `FunctionalMin`/`FunctionalMax` with non-default integer and float types in C.
 
 ### Deprecated
 

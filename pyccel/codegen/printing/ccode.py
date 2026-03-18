@@ -450,7 +450,7 @@ class CCodePrinter(CodePrinter):
         if (
             isinstance(a, IndexedElement)
             and not isinstance(a.base.class_type, CStackArray)
-            and len(a.indices) == a.base.class_type.container_rank
+            and a.rank == 0
         ):
             return True
         if not isinstance(a, Variable):
@@ -1007,7 +1007,7 @@ class CCodePrinter(CodePrinter):
                 Import("stc/common", AsName(VariableTypeAnnotation(arg.dtype), key))
             )
             args_code = ", ".join(self._print(a) for a in arg.args)
-            return f"{key}_{expr.name}({len(arg.args)}, {args_code})"
+            return f"{key}_{expr.name}(({key}[]){{{args_code}}}, {len(arg.args)})"
         elif isinstance(arg, Variable):
             if (
                 isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
@@ -2062,8 +2062,15 @@ class CCodePrinter(CodePrinter):
 
         external = "extern " if expr.external else ""
         static = "static " if expr.static else ""
+        const = (
+            "const "
+            if isinstance(var.class_type, FinalType) and self.is_c_pointer(var)
+            else ""
+        )
 
-        return f"{preface}{static}{external}{declaration_type} {var.name}{init};\n"
+        return (
+            f"{preface}{static}{external}{const}{declaration_type} {var.name}{init};\n"
+        )
 
     def function_signature(self, expr, print_arg_names=True):
         """
@@ -2133,7 +2140,8 @@ class CCodePrinter(CodePrinter):
 
             def get_arg_declaration(var):
                 """Get the code which declares the argument variable."""
-                code = self.get_declare_type(var)
+                const = "const " if isinstance(var.class_type, FinalType) else ""
+                code = const + self.get_declare_type(var)
                 if print_arg_names:
                     code += " " + var.name
                 return code
@@ -2177,17 +2185,29 @@ class CCodePrinter(CodePrinter):
         if expr.rank > 0 and isinstance(
             base.class_type, (NumpyNDArrayType, HomogeneousTupleType)
         ):
-            c_type = self.get_c_type(expr.class_type)
-            indices = []
-            for i, idx in enumerate(inds):
-                if isinstance(idx, Slice):
-                    idx = self._new_slice_with_processed_arguments(
-                        idx, PyccelArrayShapeElement(base, i), allow_negative_indexes
-                    )
-                indices.append("{" + self._print(idx) + "}")
-            indices_code = ", ".join(indices)
-            base_code = self._print(ObjectAddress(base))
-            return f"cspan_slice({base_code}, {c_type}, {indices_code})"
+            if expr.get_direct_user_nodes(
+                lambda u: isinstance(u, (AliasAssign, Assign))
+            ):
+                c_type = self.get_c_type(expr.class_type)
+                indices = []
+                for i, idx in enumerate(inds):
+                    if isinstance(idx, Slice):
+                        idx = self._new_slice_with_processed_arguments(
+                            idx,
+                            PyccelArrayShapeElement(base, i),
+                            allow_negative_indexes,
+                        )
+                    indices.append("{" + self._print(idx) + "}")
+                indices_code = ", ".join(indices)
+                base_code = self._print(ObjectAddress(base))
+                return f"cspan_slice({base_code}, {c_type}, {indices_code})"
+            else:
+                new_type = base.class_type.switch_rank(expr.rank, expr.order)
+                tmp_var = self.scope.get_temporary_variable(new_type, shape=expr.shape)
+                assign = AliasAssign(tmp_var, expr)
+                code = self._print(assign)
+                self._additional_code += code
+                return self._print(tmp_var)
 
         for i, ind in enumerate(inds):
             if is_literal_integer(ind) and int(ind) < 0:

@@ -113,7 +113,7 @@ def get_source_code_and_context(func_or_class):
         # Handle multi-line prototypes
         end_of_prototype_idx = next(
             i
-            for i, l in enumerate(commentless_lines[prototype_idx:])
+            for i, l in enumerate(commentless_lines[prototype_idx:], prototype_idx)
             if l.strip().endswith(":")
         )
         if end_of_prototype_idx > prototype_idx:
