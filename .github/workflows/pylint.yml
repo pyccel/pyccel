@@ -54,13 +54,16 @@ jobs:
         with:
           reviewdog_version: latest # Optional. [latest,nightly,v.X.Y.Z]
       - name: Run Pylint
-        if: steps.duplicate_check.outputs.should_skip != 'true'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name != 'pull_request'
         run: |
-          echo ${BASE}
-          git diff ${BASE}...HEAD
-          # Run without failure on local reporter to allow use of -diff argument
-          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD"
-          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD" | reviewdog -reporter=github-annotations -fail-level=any
+          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD" -fail-level=any
+        shell: bash
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Pylint
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        run: |
+          reviewdog -runners=pylint -reporter=github-annotations -filter-mode=diff_context -fail-level=any
         shell: bash
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
