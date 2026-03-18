@@ -3,6 +3,13 @@
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
+"""
+Module containing the `pyccel_command` function which is the entry point for
+the `pyccel` console command. This function sets up an argument parser for the
+Pyccel command line interface and executes the appropriate function based on
+the sub-command provided by the user.
+"""
+
 import argparse
 import sys
 
