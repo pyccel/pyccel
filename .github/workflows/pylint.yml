@@ -56,6 +56,7 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name != 'pull_request'
         run: |
+          # The default reporter is the only reporter which allows a custom diff
           reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD" -fail-level=any
         shell: bash
         env:
@@ -63,6 +64,8 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
         run: |
+          # GitHub-annotations always uses the diff from the context so it should
+          # only be used for pull requests
           reviewdog -runners=pylint -reporter=github-annotations -filter-mode=diff_context -fail-level=any
         shell: bash
         env:
