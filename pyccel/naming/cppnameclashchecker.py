@@ -82,11 +82,11 @@ class CppNameClashChecker(LanguageNameClashChecker):
 
     def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
-        Get a valid name which doesn't collision with symbols or C keywords.
+        Get a valid name which doesn't collision with symbols or C++ keywords.
 
         Find a new name based on the suggested name which will not cause
-        conflicts with C keywords, does not appear in the provided symbols,
-        and is a valid name in C code.
+        conflicts with C++ keywords, does not appear in the provided symbols,
+        and is a valid name in C++ code.
 
         Parameters
         ----------
