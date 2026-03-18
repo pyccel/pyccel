@@ -33,7 +33,7 @@ class PyBindCodePrinter(CppCodePrinter):
     filename : str
             The name of the file being pyccelised.
     **settings : dict
-            Any additional arguments which are necessary for CCodePrinter.
+            Any additional arguments which are necessary for CppCodePrinter.
     """
 
     def __init__(self, filename, **settings):
