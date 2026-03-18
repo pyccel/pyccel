@@ -6,9 +6,7 @@
  * details. */
 /* --------------------------------------------------------------------------------------
  */
-
-#ifndef PYC_MATH_C_H
-#define PYC_MATH_C_H
+#pragma once
 #include <cassert>
 #include <cmath>
 #include <complex>
@@ -61,4 +59,3 @@ template <class T> T py_floor_div(T x, T y) {
   return x / y - ((x % y != 0) && ((x < 0) ^ (y < 0)));
 }
 
-#endif
