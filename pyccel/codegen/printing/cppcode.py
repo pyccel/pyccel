@@ -398,6 +398,8 @@ class CppCodePrinter(CodePrinter):
             if not i.ignore
         ]
         imports = "".join(self._print(i) for i in imports)
+        if "complex" in self._additional_imports:
+            imports += "using namespace std::complex_literals;\n"
         self.exit_scope()
         return "".join(
             (
