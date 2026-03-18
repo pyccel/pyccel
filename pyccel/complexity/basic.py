@@ -1,9 +1,15 @@
-# coding: utf-8
 # ------------------------------------------------------------------------- #
 # This file is part of Pyccel which is released under MIT License. See the  #
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
+"""
+Module containing the `Complexity` class which provides an interface for
+calculating the computational complexity of a given piece of code. This
+base class may be extended to compute, e.g., the operation/time complexity,
+or the memory/space complexity.
+"""
+
 import os
 from pyccel.parser.parser import Parser
 
