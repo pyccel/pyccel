@@ -4,12 +4,12 @@
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
 """
-Module containing utility functions which are used in the syntactic and
-semantic stages of Pyccel. These include functions for handling imports,
-checking whether an operation is compatible with the target language, and
-collecting code into loops. These functions are used in multiple places in the
-code and are not specific to any one stage, so they are collected together in
-this module to avoid circular imports.
+Module containing utility functions which are used in the syntactic, semantic,
+and code-generation stages of Pyccel. These include functions for handling
+imports, checking whether an operation is compatible with the target language,
+and collecting code into loops. Most of these functions are used in multiple
+places in the code and are not specific to any one stage, so they are collected
+together in this module to avoid circular imports.
 """
 
 import sys
