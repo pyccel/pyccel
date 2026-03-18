@@ -58,7 +58,7 @@ jobs:
         run: |
           echo ${BASE}
           git diff ${BASE}
-          reviewdog -reporter=github-annotations -runners=pylint -filter-mode=added -diff="git diff ${BASE}" -fail-level=any
+          reviewdog -reporter=github-annotations -runners=pylint -filter-mode=diff_context -diff="$(git diff ${BASE})" -fail-level=any
         shell: bash
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
