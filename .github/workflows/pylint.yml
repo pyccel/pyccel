@@ -57,7 +57,7 @@ jobs:
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           echo ${BASE}
-          git diff ${BASE}
+          git diff ${BASE}...HEAD
           git diff ${BASE}...HEAD | reviewdog -reporter=github-annotations -runners=pylint -filter-mode=diff_context -fail-level=any
         shell: bash
         env:
