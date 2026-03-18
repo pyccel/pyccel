@@ -315,7 +315,6 @@ class FCodePrinter(CodePrinter):
 
         super().__init__(verbose)
         self._constantImports = []
-        self._current_class = None
 
         self._additional_code = ""
 
@@ -350,10 +349,6 @@ class FCodePrinter(CodePrinter):
             macro += "\n"
             macros.append(macro)
         return "".join(macros)
-
-    def set_current_class(self, name):
-
-        self._current_class = name
 
     def get_method(self, cls_name, method_name):
         container = self.scope
@@ -3029,7 +3024,6 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         name = self._print(expr.name)
-        self.set_current_class(name)
         base = None  # TODO: add base in ClassDef
 
         decs = "".join(self._print(Declare(i)) for i in expr.attributes)
@@ -3066,8 +3060,6 @@ class FCodePrinter(CodePrinter):
         methods = "".join(
             "\n".join(["", sep, self._print(i), sep, ""]) for i in cls_methods
         )
-
-        self.set_current_class(None)
 
         return decs, methods
 
