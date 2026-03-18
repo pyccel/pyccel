@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 Module containing aspects of a parser which are in common over all stages.
@@ -14,7 +14,7 @@ import pathlib
 import re
 import warnings
 
-#==============================================================================
+# ==============================================================================
 from pyccel.version import __version__
 
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
@@ -22,22 +22,23 @@ from pyccel.ast.core import Import, AsName
 
 from pyccel.ast.variable import DottedName
 
-from pyccel.parser.scope     import Scope
+from pyccel.parser.scope import Scope
 
-from pyccel.errors.errors   import ErrorsMode
+from pyccel.errors.errors import ErrorsMode
 
-#==============================================================================
+# ==============================================================================
 
 error_mode = ErrorsMode()
 
-#==============================================================================
+# ==============================================================================
 
-strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
+strip_ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]")
 
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
 
-#==============================================================================
+
+# ==============================================================================
 def get_filename_from_import(module_name, input_folder_name, output_folder_name):
     """
     Get the absolute path of a module_name, searching in a given folder.
@@ -75,42 +76,48 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
         None if Python file is not found.
     """
 
-    if (isinstance(module_name, AsName)):
+    if isinstance(module_name, AsName):
         module_name = str(module_name.name)
 
-    relative_project_path = module_name[0] == '.'
-    in_project = '.' in module_name
+    relative_project_path = module_name[0] == "."
+    in_project = "." in module_name
 
     input_folder = pathlib.Path(input_folder_name)
 
     if relative_project_path:
-        project_depth = next(i for i, c in enumerate(module_name) if c != '.')
+        project_depth = next(i for i, c in enumerate(module_name) if c != ".")
         if project_depth == 1:
             project_dir = input_folder
         else:
-            project_dir = input_folder.parents[project_depth-2]
-        module_path = module_name[project_depth:].split('.')
+            project_dir = input_folder.parents[project_depth - 2]
+        module_path = module_name[project_depth:].split(".")
         filename_stem = project_dir.joinpath(*module_path)
     elif in_project:
-        filename_stem = input_folder.joinpath(*module_name.split('.')).with_suffix('.py')
+        filename_stem = input_folder.joinpath(*module_name.split(".")).with_suffix(
+            ".py"
+        )
         if not filename_stem.exists():
-            module_name_parts = module_name.split('.')
+            module_name_parts = module_name.split(".")
             package = None
             for i in range(len(module_name_parts)):
                 try:
-                    package = importlib.import_module('.'.join(module_name_parts[:len(module_name_parts)-i]))
+                    package = importlib.import_module(
+                        ".".join(module_name_parts[: len(module_name_parts) - i])
+                    )
                     break
                 except ImportError:
                     pass
             if package is None:
                 return None, None
-            filename_stem = pathlib.Path(package.__file__).parent / module_name.split('.')[-1]
+            filename_stem = (
+                pathlib.Path(package.__file__).parent / module_name.split(".")[-1]
+            )
     else:
-        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split('.'))
+        filename_stem = pathlib.Path(input_folder).joinpath(*module_name.split("."))
 
     pyccel_folder = pathlib.Path(__file__).parent.parent
-    filename_py = filename_stem.with_suffix('.py')
-    filename_pyi = filename_stem.with_suffix('.pyi')
+    filename_py = filename_stem.with_suffix(".py")
+    filename_pyi = filename_stem.with_suffix(".pyi")
 
     # Look for .pyi files in the Pyccel folder
     # Stub files take priority in case .py files exist so files can run in Python
@@ -120,8 +127,13 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     # Look for Python files which should have been translated once
     elif filename_py.exists():
         rel_path = os.path.relpath(filename_py.parent, input_folder_name)
-        pyccel_output_folder = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
-        stashed_file = pathlib.Path(output_folder_name) / rel_path / pyccel_output_folder / filename_pyi.name
+        pyccel_output_folder = "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
+        stashed_file = (
+            pathlib.Path(output_folder_name)
+            / rel_path
+            / pyccel_output_folder
+            / filename_pyi.name
+        )
         return filename_py.absolute(), stashed_file.resolve()
     # Look for user-defined .pyi files
     elif filename_pyi.exists():
@@ -130,7 +142,8 @@ def get_filename_from_import(module_name, input_folder_name, output_folder_name)
     else:
         return None, None
 
-#==============================================================================
+
+# ==============================================================================
 class BasicParser:
     """
     Class for a basic parser.
@@ -168,7 +181,7 @@ class BasicParser:
         self._current_function = []
 
         # the following flags give us a status on the parsing stage
-        self._syntax_done   = False
+        self._syntax_done = False
         self._semantic_done = False
 
         # current position for errors
@@ -179,12 +192,11 @@ class BasicParser:
         # Pyccel to stop
         # TODO ERROR must be passed to the Parser __init__ as argument
 
-        self._blocking = error_mode.value == 'developer'
+        self._blocking = error_mode.value == "developer"
 
     @property
     def scope(self):
-        """ The Scope object containing all objects defined within the current scope
-        """
+        """The Scope object containing all objects defined within the current scope"""
         return self._scope
 
     @scope.setter
@@ -273,7 +285,7 @@ class BasicParser:
         """
 
         if self.filename:
-            return self.filename.suffix == '.pyi'
+            return self.filename.suffix == ".pyi"
         else:
             return False
 
@@ -294,7 +306,7 @@ class BasicParser:
     def blocking(self):
         return self._blocking
 
-    def insert_function(self, func, scope = None):
+    def insert_function(self, func, scope=None):
         """
         Insert a function into the current scope or a specified scope.
 
@@ -315,7 +327,7 @@ class BasicParser:
 
         assert isinstance(func, (FunctionDef, Interface, FunctionAddress))
         scope = scope or self.scope
-        if func.pyccel_staging == 'syntactic':
+        if func.pyccel_staging == "syntactic":
             scope.insert_function(func, func.name)
         else:
             name = func.name
@@ -336,17 +348,15 @@ class BasicParser:
             self._current_function.pop()
 
     def create_new_loop_scope(self):
-        """ Create a new scope describing a loop
-        """
+        """Create a new scope describing a loop"""
         self._scope = self._scope.create_new_loop_scope()
         return self._scope
 
     def exit_loop_scope(self):
-        """ Exit the loop scope and return to the encasing scope
-        """
+        """Exit the loop scope and return to the encasing scope"""
         self._scope = self._scope.parent_scope
 
-    def create_new_class_scope(self, name, base_scope = None, **kwargs):
+    def create_new_class_scope(self, name, base_scope=None, **kwargs):
         """
         Create a new scope for a Python class.
 
@@ -377,19 +387,19 @@ class BasicParser:
         """
         if base_scope is None:
             base_scope = self.scope
-        child = base_scope.new_child_scope(name, 'class', **kwargs)
+        child = base_scope.new_child_scope(name, "class", **kwargs)
         self._scope = child
 
         return child
 
 
-#==============================================================================
-if __name__ == '__main__':
+# ==============================================================================
+if __name__ == "__main__":
     import sys
 
     try:
         filename = sys.argv[1]
     except IndexError:
-        raise ValueError('Expecting an argument for filename')
+        raise ValueError("Expecting an argument for filename")
 
     parser = BasicParser(filename)

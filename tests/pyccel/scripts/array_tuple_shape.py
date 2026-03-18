@@ -1,10 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-def g():
-    return (2,3)
 
-if __name__ == '__main__':
+def g():
+    return (2, 3)
+
+
+if __name__ == "__main__":
     c_shape = (1, 2)
     a = np.zeros(g())
     b = np.zeros((4, 1))

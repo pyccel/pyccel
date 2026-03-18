@@ -2,12 +2,14 @@
 import numpy as np
 from pyccel.decorators import allow_negative_index
 
+
 def array_view():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     b = a[:, :]
     for i in range(2):
         for j in range(5):
             print(b[i][j])
+
 
 def array_view_negative_literal_step():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
@@ -16,12 +18,14 @@ def array_view_negative_literal_step():
         for j in range(5):
             print(b[i][j])
 
+
 def array_view_negative_literal_step__2():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     b = a[:, 4:2:-1]
     for i in range(2):
         for j in range(2):
             print(b[i][j])
+
 
 def array_view_negative_literal_step__3():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
@@ -30,7 +34,8 @@ def array_view_negative_literal_step__3():
         for j in range(2):
             print(b[i][j])
 
-@allow_negative_index('a')
+
+@allow_negative_index("a")
 def array_view_negative_variable_step():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     i = -1
@@ -39,20 +44,23 @@ def array_view_negative_variable_step():
         for j in range(5):
             print(b[i][j])
 
-@allow_negative_index('a')
+
+@allow_negative_index("a")
 def array_view_negative_var():
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 9, 5]])
     v = -1
-    x = a[v,1:]
+    x = a[v, 1:]
     for i in range(2):
         print(x[i])
 
-@allow_negative_index('a')
+
+@allow_negative_index("a")
 def array_view_negative_literal():
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 9, 5]])
-    x = a[-1,1:]
+    x = a[-1, 1:]
     for i in range(2):
         print(x[i])
+
 
 def array_view_positive_literal():
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 9, 5]])
@@ -61,12 +69,14 @@ def array_view_positive_literal():
         for j in range(2):
             print(y[i][j])
 
+
 def array_view_2():
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1]
     c = b[1:-1]
     for i in range(np.shape(c)[0]):
         print(c[i])
+
 
 def array_view_3():
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -76,14 +86,18 @@ def array_view_3():
     for i in range(np.shape(c)[0]):
         print(c[i])
 
-def array_1d_view_assign(x : 'int[:]', a : 'int'):
+
+def array_1d_view_assign(x: "int[:]", a: "int"):
     x[:] = a
 
-def array_2d_view_assign(x : 'int[:, :]', a : 'int'):
+
+def array_2d_view_assign(x: "int[:, :]", a: "int"):
     x[:, :] = a
 
-def array_3d_view_assign(x : 'int[:, :, :]', a : 'int'):
+
+def array_3d_view_assign(x: "int[:, :, :]", a: "int"):
     x[:, :, :] = a
+
 
 def array_1d_view():
     x = np.zeros((10,), dtype=int)
@@ -93,6 +107,7 @@ def array_1d_view():
     array_1d_view_assign(x[2:3], 4)
     for i in range(np.shape(x)[0]):
         print(x[i])
+
 
 def array_2d_view():
     x = np.zeros((5, 5), dtype=int)
@@ -112,6 +127,7 @@ def array_2d_view():
         for j in range(np.shape(x)[1]):
             print(x[i][j])
 
+
 def array_3d_view():
     x = np.zeros((3, 4, 5), dtype=int)
     array_3d_view_assign(x[::, ::, ::], 7)
@@ -128,7 +144,8 @@ def array_3d_view():
             for k in range(np.shape(x)[2]):
                 print(x[i][j][k])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     array_view()
     array_view_2()
     array_view_3()

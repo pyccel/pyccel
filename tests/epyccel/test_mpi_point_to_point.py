@@ -7,25 +7,27 @@ from modules import mpi_point_to_point as pmod
 
 from pyccel import epyccel
 
-#==============================================================================
+# ==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
-#==============================================================================
+# ==============================================================================
 
-def setup_module( module=None ):
+
+def setup_module(module=None):
 
     comm = MPI.COMM_WORLD
-    fmod = epyccel( pmod, comm=comm )
+    fmod = epyccel(pmod, comm=comm)
 
     if module:
         module.comm = comm
         module.fmod = fmod
     else:
-        globals().update( locals() )
+        globals().update(locals())
 
-#==============================================================================
+
+# ==============================================================================
 # UNIT TESTS
-#==============================================================================
-@pytest.mark.xfail(reason = 'issue 251: broken mpi4py support')
+# ==============================================================================
+@pytest.mark.xfail(reason="issue 251: broken mpi4py support")
 @pytest.mark.mpi
 @pytest.mark.fortran
 def test_np_sendrecv():
@@ -35,27 +37,29 @@ def test_np_sendrecv():
 
     # Send messages around in a ring
     source = (rank - 1) % size
-    dest   = (rank + 1) % size
+    dest = (rank + 1) % size
 
     # Create message to be sent, initialize receive buffer, choose some tag
     msg = rank + 1000
     tag = 1234
 
-    sendbuf     = np.array( [msg], dtype='i' )
-    recvbuf_py  = np.empty_like( sendbuf )
-    recvbuf_f90 = np.empty_like( sendbuf )
+    sendbuf = np.array([msg], dtype="i")
+    recvbuf_py = np.empty_like(sendbuf)
+    recvbuf_f90 = np.empty_like(sendbuf)
 
     # Python
-    pmod.np_sendrecv( sendbuf, dest, tag, recvbuf_py , source, tag )
+    pmod.np_sendrecv(sendbuf, dest, tag, recvbuf_py, source, tag)
 
     # Fortran
-    fmod.np_sendrecv( sendbuf, dest, tag, recvbuf_f90, source, tag )
+    fmod.np_sendrecv(sendbuf, dest, tag, recvbuf_f90, source, tag)
 
-    assert np.array_equal( recvbuf_py, recvbuf_f90 )
+    assert np.array_equal(recvbuf_py, recvbuf_f90)
 
-#==============================================================================
+
+# ==============================================================================
 # CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-#==============================================================================
+# ==============================================================================
+
 
 def teardown_module():
 
@@ -63,10 +67,11 @@ def teardown_module():
 
     if comm.rank == 0:
         import os, glob
-        dirname  = os.path.dirname( pmod.__file__ )
-        pattern  = os.path.join( dirname, '__epyccel__*' )
-        filelist = glob.glob( pattern )
+
+        dirname = os.path.dirname(pmod.__file__)
+        pattern = os.path.join(dirname, "__epyccel__*")
+        filelist = glob.glob(pattern)
         for f in filelist:
-            os.remove( f )
+            os.remove(f)
 
     comm.Barrier()

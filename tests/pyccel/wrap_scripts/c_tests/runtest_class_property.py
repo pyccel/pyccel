@@ -4,5 +4,4 @@ from class_property import Counter
 if __name__ == "__main__":
     c = Counter(10)
     c.increment()
-    print(c.value)   # expected 11
-
+    print(c.value)  # expected 11

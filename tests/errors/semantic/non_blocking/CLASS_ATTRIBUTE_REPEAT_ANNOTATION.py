@@ -1,10 +1,11 @@
 # Object has already been defined with type 'int'. Type 'float' in assignment is incompatible
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+
 class MyClass:
-    def __init__(self : 'MyClass', param1 : 'int'):
+    def __init__(self: "MyClass", param1: "int"):
         self.param1 = param1
         print("MyClass Object created!")
 
-    def help(self : 'MyClass', param1 : 'int|float'):
+    def help(self: "MyClass", param1: "int|float"):
         self.param1 = param1

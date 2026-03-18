@@ -1,8 +1,9 @@
-""" File containing functionalities which help output the CI annotations easily
-"""
+"""File containing functionalities which help output the CI annotations easily"""
+
 import importlib
 import inspect
 import os
+
 
 def print_to_string(*args, text):
     """
@@ -20,9 +21,10 @@ def print_to_string(*args, text):
         A list of strings where the output should also be saved.
     """
     print(*args)
-    text.append(' '.join(args)+'\n')
+    text.append(" ".join(args) + "\n")
 
-def get_code_file_and_lines(obj, pyccel_folder, mod_name = None):
+
+def get_code_file_and_lines(obj, pyccel_folder, mod_name=None):
     """
     Get the file and the relevant lines for the object.
 
@@ -56,20 +58,20 @@ def get_code_file_and_lines(obj, pyccel_folder, mod_name = None):
     if not pyccel_folder:
         pyccel_folder = os.getcwd()
 
-    obj_parts = obj.split('.')
+    obj_parts = obj.split(".")
     if mod_name is None:
         idx = len(obj_parts)
         print(pyccel_folder, obj)
-        filename = os.path.join(pyccel_folder, '/'.join(obj_parts[:idx])+'.py')
+        filename = os.path.join(pyccel_folder, "/".join(obj_parts[:idx]) + ".py")
         while idx > 0 and not os.path.isfile(filename):
             idx -= 1
-            filename = os.path.join(pyccel_folder, '/'.join(obj_parts[:idx])+'.py')
+            filename = os.path.join(pyccel_folder, "/".join(obj_parts[:idx]) + ".py")
         assert idx != 0
-        mod_name = '.'.join(obj_parts[:idx])
+        mod_name = ".".join(obj_parts[:idx])
         obj_parts = obj_parts[idx:]
 
     mod = importlib.import_module(mod_name)
-    filename = mod.__file__.split('/')
+    filename = mod.__file__.split("/")
     file = os.path.relpath(mod.__file__, pyccel_folder)
 
     if obj_parts:
@@ -79,14 +81,15 @@ def get_code_file_and_lines(obj, pyccel_folder, mod_name = None):
             obj = getattr(obj, o)
 
         # If the object is a class property, get the underlying function
-        obj = getattr(obj, 'fget', obj)
+        obj = getattr(obj, "fget", obj)
 
         source, start_line = inspect.getsourcelines(obj)
         length = len(source)
-        return file, start_line, start_line+length-1
+        return file, start_line, start_line + length - 1
     else:
         # Module
         return file, 1, 1
+
 
 def locate_code_blocks(lines):
     """
@@ -108,10 +111,13 @@ def locate_code_blocks(lines):
         code blocks.
     """
     stripped_lines = [l.strip() for l in lines]
-    code_block_indexes = [i for i, l in enumerate(stripped_lines,1) if l.startswith('```')]
+    code_block_indexes = [
+        i for i, l in enumerate(stripped_lines, 1) if l.startswith("```")
+    ]
     nblock_indexes = len(code_block_indexes)
     assert nblock_indexes % 2 == 0
     return list(zip(code_block_indexes[::2], code_block_indexes[1::2]))
+
 
 def is_text(line, start, end, line_number, code_blocks):
     """
@@ -154,19 +160,19 @@ def is_text(line, start, end, line_number, code_blocks):
         in_url = False
         while idx < start:
             if in_link:
-                link_idx = line[idx+1:].find(')')
+                link_idx = line[idx + 1 :].find(")")
                 assert link_idx != -1
                 code_idx = n
                 url_idx = n
             elif in_url:
-                url_idx = line[idx+1:].find('>')
+                url_idx = line[idx + 1 :].find(">")
                 assert url_idx != -1
                 code_idx = n
                 link_idx = n
             else:
-                code_idx = line[idx+1:].find('`')
-                link_idx = line[idx+1:].find('](')
-                url_idx = line[idx+1:].find('<')
+                code_idx = line[idx + 1 :].find("`")
+                link_idx = line[idx + 1 :].find("](")
+                url_idx = line[idx + 1 :].find("<")
                 if code_idx == -1:
                     code_idx = n
                 if link_idx == -1:
@@ -180,7 +186,7 @@ def is_text(line, start, end, line_number, code_blocks):
                 in_url = not in_url
             elif nearest_match == link_idx:
                 in_link = not in_link
-            idx += nearest_match+1
+            idx += nearest_match + 1
             last_block_was_text = not last_block_was_text
 
         return last_block_was_text

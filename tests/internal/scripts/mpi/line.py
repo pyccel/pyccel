@@ -16,7 +16,7 @@ from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -27,41 +27,41 @@ if __name__ == '__main__':
 
     comm = mpi_comm_world
 
-    mpi_comm_size (comm, sizes, ierr)
-    mpi_comm_rank (comm, rank, ierr)
+    mpi_comm_size(comm, sizes, ierr)
+    mpi_comm_rank(comm, rank, ierr)
 
-    nb_lines   = np.int32(3)
+    nb_lines = np.int32(3)
     nb_columns = np.int32(4)
-    tag        = np.int32(100)
+    tag = np.int32(100)
 
-    a      = np.zeros ((nb_lines, nb_columns), 'int')
-    status = np.zeros (mpi_status_size, 'int32')
+    a = np.zeros((nb_lines, nb_columns), "int")
+    status = np.zeros(mpi_status_size, "int32")
 
     # Initialization of the matrix on each process
-    a[:,:] = 1000 + rank
+    a[:, :] = 1000 + rank
 
     # Definition of the type_line datatype
     blocklength = np.int32(1)
     type_line = np.int32(-1)
-    mpi_type_vector (nb_columns, blocklength, nb_lines, MPI_INTEGER8, type_line, ierr)
+    mpi_type_vector(nb_columns, blocklength, nb_lines, MPI_INTEGER8, type_line, ierr)
 
     # Validation of the type_line datatype
-    mpi_type_commit (type_line, ierr)
+    mpi_type_commit(type_line, ierr)
 
     # Sending of the first column
-    if ( rank == 0 ):
+    if rank == 0:
         dest = np.int32(1)
-        mpi_send (a[1,0], nb_columns, MPI_INTEGER8, dest, tag, comm , ierr)
+        mpi_send(a[1, 0], nb_columns, MPI_INTEGER8, dest, tag, comm, ierr)
 
     # Reception in the last column
-    if ( rank == 1 ):
-        count  = np.int32(1)
+    if rank == 1:
+        count = np.int32(1)
         source = np.int32(0)
-        mpi_recv (a[nb_lines-1,0], count, type_line, source, tag, comm, status, ierr)
+        mpi_recv(a[nb_lines - 1, 0], count, type_line, source, tag, comm, status, ierr)
 
-    print('I process ', rank, ', has a = ', a)
+    print("I process ", rank, ", has a = ", a)
 
     # Free the datatype
-    mpi_type_free (type_line, ierr)
+    mpi_type_free(type_line, ierr)
 
     mpi_finalize(ierr)

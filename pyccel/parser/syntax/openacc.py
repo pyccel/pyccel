@@ -1,10 +1,9 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-"""
-"""
+# ------------------------------------------------------------------------------------------#
+""" """
 
 from os.path import join, dirname
 
@@ -14,6 +13,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import AnnotatedComment
 
 DEBUG = False
+
 
 class Openacc:
     """
@@ -26,8 +26,10 @@ class Openacc:
     statements : iterable
         The OpenACC statements.
     """
-    def __init__(self, statements = ()):
+
+    def __init__(self, statements=()):
         self.statements = list(statements)
+
 
 class AccBasic(BasicStmt):
     pass
@@ -35,10 +37,10 @@ class AccBasic(BasicStmt):
 
 class OpenaccStmt(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.stmt = kwargs.pop('stmt')
+        """ """
+        self.stmt = kwargs.pop("stmt")
 
         super(OpenaccStmt, self).__init__(**kwargs)
 
@@ -48,37 +50,42 @@ class OpenaccStmt(AccBasic):
             print("> OpenaccStmt: expr")
 
         stmt = self.stmt
-        _valid_const = (AccParallelConstruct,
-                        AccKernelsConstruct,
-                        AccDataConstruct,
-                        AccEnterDataDirective,
-                        AccExitDataDirective,
-                        AccHostDataDirective,
-                        AccLoopConstruct,
-                        AccAtomicConstruct,
-                        AccDeclareDirective,
-                        AccInitDirective,
-                        AccShutDownDirective,
-                        AccSetDirective,
-                        AccUpdateDirective,
-                        AccRoutineDirective,
-                        AccWaitDirective,
-                        AccEndClause)
+        _valid_const = (
+            AccParallelConstruct,
+            AccKernelsConstruct,
+            AccDataConstruct,
+            AccEnterDataDirective,
+            AccExitDataDirective,
+            AccHostDataDirective,
+            AccLoopConstruct,
+            AccAtomicConstruct,
+            AccDeclareDirective,
+            AccInitDirective,
+            AccShutDownDirective,
+            AccSetDirective,
+            AccUpdateDirective,
+            AccRoutineDirective,
+            AccWaitDirective,
+            AccEndClause,
+        )
 
         if isinstance(stmt, _valid_const):
             return stmt.expr
         else:
-            raise TypeError('Unexpected construct or directive of type {0}'.format(type(stmt)))
+            raise TypeError(
+                "Unexpected construct or directive of type {0}".format(type(stmt))
+            )
+
 
 #################################################
 #           Constructs and Directives
 #################################################
 class AccParallelConstruct(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccParallelConstruct, self).__init__(**kwargs)
 
@@ -87,39 +94,42 @@ class AccParallelConstruct(AccBasic):
         if DEBUG:
             print("> AccParallelConstruct: expr")
 
-        _valid_clauses = (AccAsync,
-                          AccWait,
-                          AccNumGangs,
-                          AccNumWorkers,
-                          AccVectorLength,
-                          AccDeviceType,
-                          AccIf,
-                          AccReduction,
-                          AccCopy,
-                          AccCopyin,
-                          AccCopyout,
-                          AccCreate,
-                          AccPresent,
-                          AccDevicePtr,
-                          AccPrivate,
-                          AccFirstPrivate,
-                          AccDefault)
+        _valid_clauses = (
+            AccAsync,
+            AccWait,
+            AccNumGangs,
+            AccNumWorkers,
+            AccVectorLength,
+            AccDeviceType,
+            AccIf,
+            AccReduction,
+            AccCopy,
+            AccCopyin,
+            AccCopyout,
+            AccCreate,
+            AccPresent,
+            AccDevicePtr,
+            AccPrivate,
+            AccFirstPrivate,
+            AccDefault,
+        )
 
-        txt = 'parallel'
+        txt = "parallel"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccKernelsConstruct(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccKernelsConstruct, self).__init__(**kwargs)
 
@@ -128,36 +138,39 @@ class AccKernelsConstruct(AccBasic):
         if DEBUG:
             print("> AccKernelsConstruct: expr")
 
-        _valid_clauses = (AccAsync,
-                          AccWait,
-                          AccNumGangs,
-                          AccNumWorkers,
-                          AccVectorLength,
-                          AccDeviceType,
-                          AccIf,
-                          AccCopy,
-                          AccCopyin,
-                          AccCopyout,
-                          AccCreate,
-                          AccPresent,
-                          AccDevicePtr,
-                          AccDefault)
+        _valid_clauses = (
+            AccAsync,
+            AccWait,
+            AccNumGangs,
+            AccNumWorkers,
+            AccVectorLength,
+            AccDeviceType,
+            AccIf,
+            AccCopy,
+            AccCopyin,
+            AccCopyout,
+            AccCreate,
+            AccPresent,
+            AccDevicePtr,
+            AccDefault,
+        )
 
-        txt = 'kernels'
+        txt = "kernels"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccDataConstruct(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccDataConstruct, self).__init__(**kwargs)
 
@@ -166,29 +179,32 @@ class AccDataConstruct(AccBasic):
         if DEBUG:
             print("> AccDataConstruct: expr")
 
-        _valid_clauses = (AccIf,
-                          AccCopy,
-                          AccCopyin,
-                          AccCopyout,
-                          AccCreate,
-                          AccPresent,
-                          AccDevicePtr)
+        _valid_clauses = (
+            AccIf,
+            AccCopy,
+            AccCopyin,
+            AccCopyout,
+            AccCreate,
+            AccPresent,
+            AccDevicePtr,
+        )
 
-        txt = 'data'
+        txt = "data"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccEnterDataDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccEnterDataDirective, self).__init__(**kwargs)
 
@@ -197,27 +213,24 @@ class AccEnterDataDirective(AccBasic):
         if DEBUG:
             print("> AccEnterDataDirective: expr")
 
-        _valid_clauses = (AccIf,
-                          AccAsync,
-                          AccWait,
-                          AccCopyin,
-                          AccCreate)
+        _valid_clauses = (AccIf, AccAsync, AccWait, AccCopyin, AccCreate)
 
-        txt = 'enter data'
+        txt = "enter data"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccExitDataDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccExitDataDirective, self).__init__(**kwargs)
 
@@ -226,28 +239,24 @@ class AccExitDataDirective(AccBasic):
         if DEBUG:
             print("> AccExitDataDirective: expr")
 
-        _valid_clauses = (AccIf,
-                          AccAsync,
-                          AccWait,
-                          AccCopyout,
-                          AccDelete,
-                          AccFinalize)
+        _valid_clauses = (AccIf, AccAsync, AccWait, AccCopyout, AccDelete, AccFinalize)
 
-        txt = 'exit data'
+        txt = "exit data"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccHostDataDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccHostDataDirective, self).__init__(**kwargs)
 
@@ -256,23 +265,24 @@ class AccHostDataDirective(AccBasic):
         if DEBUG:
             print("> AccHostDataDirective: expr")
 
-        _valid_clauses = (AccUseDevice)
+        _valid_clauses = AccUseDevice
 
-        txt = 'host_data'
+        txt = "host_data"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccLoopConstruct(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccLoopConstruct, self).__init__(**kwargs)
 
@@ -281,33 +291,36 @@ class AccLoopConstruct(AccBasic):
         if DEBUG:
             print("> AccLoopConstruct: expr")
 
-        _valid_clauses = (AccCollapse,
-                          AccGang,
-                          AccWorker,
-                          AccVector,
-                          AccSeq,
-                          AccAuto,
-                          AccTile,
-                          AccDeviceType,
-                          AccIndependent,
-                          AccPrivate,
-                          AccReduction)
+        _valid_clauses = (
+            AccCollapse,
+            AccGang,
+            AccWorker,
+            AccVector,
+            AccSeq,
+            AccAuto,
+            AccTile,
+            AccDeviceType,
+            AccIndependent,
+            AccPrivate,
+            AccReduction,
+        )
 
-        txt = 'loop'
+        txt = "loop"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccAtomicConstruct(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccAtomicConstruct, self).__init__(**kwargs)
 
@@ -316,21 +329,22 @@ class AccAtomicConstruct(AccBasic):
         if DEBUG:
             print("> AccAtomicConstruct: expr")
 
-        txt = 'atomic'
+        txt = "atomic"
         for clause in self.clauses:
             if isinstance(clause, AccAtomicClause):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccDeclareDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccDeclareDirective, self).__init__(**kwargs)
 
@@ -339,30 +353,33 @@ class AccDeclareDirective(AccBasic):
         if DEBUG:
             print("> AccDeclareDirective: expr")
 
-        _valid_clauses = (AccCopy,
-                          AccCopyin,
-                          AccCopyout,
-                          AccCreate,
-                          AccPresent,
-                          AccDevicePtr,
-                          AccDeviceResident,
-                          AccLink)
+        _valid_clauses = (
+            AccCopy,
+            AccCopyin,
+            AccCopyout,
+            AccCreate,
+            AccPresent,
+            AccDevicePtr,
+            AccDeviceResident,
+            AccLink,
+        )
 
-        txt = 'declare'
+        txt = "declare"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccInitDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccInitDirective, self).__init__(**kwargs)
 
@@ -371,24 +388,24 @@ class AccInitDirective(AccBasic):
         if DEBUG:
             print("> AccInitDirective: expr")
 
-        _valid_clauses = (AccDeviceType,
-                          AccDeviceNum)
+        _valid_clauses = (AccDeviceType, AccDeviceNum)
 
-        txt = 'init'
+        txt = "init"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccShutDownDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccShutDownDirective, self).__init__(**kwargs)
 
@@ -397,24 +414,24 @@ class AccShutDownDirective(AccBasic):
         if DEBUG:
             print("> AccShutDownDirective: expr")
 
-        _valid_clauses = (AccDeviceType,
-                          AccDeviceNum)
+        _valid_clauses = (AccDeviceType, AccDeviceNum)
 
-        txt = 'shutdown'
+        txt = "shutdown"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccSetDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccSetDirective, self).__init__(**kwargs)
 
@@ -423,25 +440,24 @@ class AccSetDirective(AccBasic):
         if DEBUG:
             print("> AccSetDirective: expr")
 
-        _valid_clauses = (AccDefaultAsync,
-                          AccDeviceType,
-                          AccDeviceNum)
+        _valid_clauses = (AccDefaultAsync, AccDeviceType, AccDeviceNum)
 
-        txt = 'set'
+        txt = "set"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccUpdateDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccUpdateDirective, self).__init__(**kwargs)
 
@@ -450,30 +466,33 @@ class AccUpdateDirective(AccBasic):
         if DEBUG:
             print("> AccUpdateDirective: expr")
 
-        _valid_clauses = (AccAsync,
-                          AccWait,
-                          AccDeviceType,
-                          AccIf,
-                          AccIfPresent,
-                          AccSelf,
-                          AccHost,
-                          AccDevice)
+        _valid_clauses = (
+            AccAsync,
+            AccWait,
+            AccDeviceType,
+            AccIf,
+            AccIfPresent,
+            AccSelf,
+            AccHost,
+            AccDevice,
+        )
 
-        txt = 'update'
+        txt = "update"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccRoutineDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccRoutineDirective, self).__init__(**kwargs)
 
@@ -482,29 +501,32 @@ class AccRoutineDirective(AccBasic):
         if DEBUG:
             print("> AccRoutineDirective: expr")
 
-        _valid_clauses = (AccGang,
-                          AccWorker,
-                          AccVector,
-                          AccSeq,
-                          AccBind,
-                          AccDeviceType,
-                          AccNoHost)
+        _valid_clauses = (
+            AccGang,
+            AccWorker,
+            AccVector,
+            AccSeq,
+            AccBind,
+            AccDeviceType,
+            AccNoHost,
+        )
 
-        txt = 'routine'
+        txt = "routine"
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccWaitDirective(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        """ """
+        self.clauses = kwargs.pop("clauses")
 
         super(AccWaitDirective, self).__init__(**kwargs)
 
@@ -513,21 +535,22 @@ class AccWaitDirective(AccBasic):
         if DEBUG:
             print("> AccWaitDirective: expr")
 
-        txt = 'wait'
+        txt = "wait"
         for clause in self.clauses:
             if isinstance(clause, AccAsync):
-                txt = '{0} {1}'.format(txt, clause.expr)
+                txt = "{0} {1}".format(txt, clause.expr)
             else:
-                raise TypeError('Unexpected clause of type {0}'.format(type(clause)))
+                raise TypeError("Unexpected clause of type {0}".format(type(clause)))
 
-        return AnnotatedComment('acc', txt)
+        return AnnotatedComment("acc", txt)
+
 
 class AccEndClause(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.construct = kwargs.pop('construct')
+        """ """
+        self.construct = kwargs.pop("construct")
 
         super(AccEndClause, self).__init__(**kwargs)
 
@@ -536,20 +559,23 @@ class AccEndClause(AccBasic):
         if DEBUG:
             print("> AccEndClause: expr")
 
-        txt = 'end {0}'.format(self.construct)
-        return AnnotatedComment('acc', txt)
+        txt = "end {0}".format(self.construct)
+        return AnnotatedComment("acc", txt)
+
+
 #################################################
+
 
 #################################################
 #                 Clauses
 #################################################
-#AccAsync: 'async' '(' args+=ID[','] ')';
+# AccAsync: 'async' '(' args+=ID[','] ')';
 class AccAsync(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccAsync, self).__init__(**kwargs)
 
@@ -558,16 +584,17 @@ class AccAsync(AccBasic):
         if DEBUG:
             print("> AccAsync: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'async({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "async({})".format(args)
 
-#AccAuto: 'auto';
+
+# AccAuto: 'auto';
 class AccAuto(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccAuto, self).__init__(**kwargs)
 
     @property
@@ -575,15 +602,16 @@ class AccAuto(AccBasic):
         if DEBUG:
             print("> AccAuto: expr")
 
-        return 'auto'
+        return "auto"
 
-#AccBind: 'bind' '(' arg=STRING ')';
+
+# AccBind: 'bind' '(' arg=STRING ')';
 class AccBind(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.arg = kwargs.pop('arg')
+        """ """
+        self.arg = kwargs.pop("arg")
 
         super(AccBind, self).__init__(**kwargs)
 
@@ -592,17 +620,18 @@ class AccBind(AccBasic):
         if DEBUG:
             print("> AccBind: expr")
 
-        # TODO check if variable exist in scope
+        # TODO check if variable exist in scope
         arg = self.arg
-        return 'bind({})'.format(str(arg))
+        return "bind({})".format(str(arg))
 
-#AccCache: 'cache' '(' args+=ID[','] ')';
+
+# AccCache: 'cache' '(' args+=ID[','] ')';
 class AccCache(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccCache, self).__init__(**kwargs)
 
@@ -611,17 +640,18 @@ class AccCache(AccBasic):
         if DEBUG:
             print("> AccCache: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'cache({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "cache({})".format(args)
 
-#AccCollapse: 'collapse' '(' n=INT ')';
+
+# AccCollapse: 'collapse' '(' n=INT ')';
 class AccCollapse(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        """ """
+        self.n = kwargs.pop("n")
 
         super(AccCollapse, self).__init__(**kwargs)
 
@@ -630,15 +660,16 @@ class AccCollapse(AccBasic):
         if DEBUG:
             print("> AccCollapse: expr")
 
-        return 'collapse({})'.format(self.n)
+        return "collapse({})".format(self.n)
 
-#AccCopy: 'copy' '(' args+=ID[','] ')';
+
+# AccCopy: 'copy' '(' args+=ID[','] ')';
 class AccCopy(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccCopy, self).__init__(**kwargs)
 
@@ -647,17 +678,18 @@ class AccCopy(AccBasic):
         if DEBUG:
             print("> AccCopy: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'copy({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "copy({})".format(args)
 
-#AccCopyin: 'copyin' '(' args+=ID[','] ')';
+
+# AccCopyin: 'copyin' '(' args+=ID[','] ')';
 class AccCopyin(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccCopyin, self).__init__(**kwargs)
 
@@ -666,17 +698,18 @@ class AccCopyin(AccBasic):
         if DEBUG:
             print("> AccCopyin: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'copyin({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "copyin({})".format(args)
 
-#AccCopyout: 'copyout' '(' args+=ID[','] ')';
+
+# AccCopyout: 'copyout' '(' args+=ID[','] ')';
 class AccCopyout(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccCopyout, self).__init__(**kwargs)
 
@@ -685,17 +718,18 @@ class AccCopyout(AccBasic):
         if DEBUG:
             print("> AccCopyout: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'copyout({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "copyout({})".format(args)
 
-#AccCreate: 'create' '(' args+=ID[','] ')';
+
+# AccCreate: 'create' '(' args+=ID[','] ')';
 class AccCreate(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccCreate, self).__init__(**kwargs)
 
@@ -704,17 +738,18 @@ class AccCreate(AccBasic):
         if DEBUG:
             print("> AccCreate: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'create({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "create({})".format(args)
 
-#AccDefault: 'default' '(' status=DefaultStatus ')';
+
+# AccDefault: 'default' '(' status=DefaultStatus ')';
 class AccDefault(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.status = kwargs.pop('status')
+        """ """
+        self.status = kwargs.pop("status")
 
         super(AccDefault, self).__init__(**kwargs)
 
@@ -723,15 +758,16 @@ class AccDefault(AccBasic):
         if DEBUG:
             print("> AccDefault: expr")
 
-        return 'default({})'.format(self.status)
+        return "default({})".format(self.status)
 
-#AccDefaultAsync: 'default_async' '(' args+=ID[','] ')';
+
+# AccDefaultAsync: 'default_async' '(' args+=ID[','] ')';
 class AccDefaultAsync(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDefaultAsync, self).__init__(**kwargs)
 
@@ -740,17 +776,18 @@ class AccDefaultAsync(AccBasic):
         if DEBUG:
             print("> AccDefaultAsync: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'default_async({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "default_async({})".format(args)
 
-#AccDelete: 'delete' '(' args+=ID[','] ')';
+
+# AccDelete: 'delete' '(' args+=ID[','] ')';
 class AccDelete(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDelete, self).__init__(**kwargs)
 
@@ -759,17 +796,18 @@ class AccDelete(AccBasic):
         if DEBUG:
             print("> AccDelete: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'delete({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "delete({})".format(args)
 
-#AccDevice: 'device' '(' args+=ID[','] ')';
+
+# AccDevice: 'device' '(' args+=ID[','] ')';
 class AccDevice(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDevice, self).__init__(**kwargs)
 
@@ -778,17 +816,18 @@ class AccDevice(AccBasic):
         if DEBUG:
             print("> AccDevice: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'device({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "device({})".format(args)
 
-#AccDeviceNum: 'device_num' '(' n=INT ')';
+
+# AccDeviceNum: 'device_num' '(' n=INT ')';
 class AccDeviceNum(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        """ """
+        self.n = kwargs.pop("n")
 
         super(AccDeviceNum, self).__init__(**kwargs)
 
@@ -797,15 +836,16 @@ class AccDeviceNum(AccBasic):
         if DEBUG:
             print("> AccDeviceNum: expr")
 
-        return 'device_num({})'.format(self.n)
+        return "device_num({})".format(self.n)
 
-#AccDevicePtr: 'deviceptr' '(' args+=ID[','] ')';
+
+# AccDevicePtr: 'deviceptr' '(' args+=ID[','] ')';
 class AccDevicePtr(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDevicePtr, self).__init__(**kwargs)
 
@@ -814,17 +854,18 @@ class AccDevicePtr(AccBasic):
         if DEBUG:
             print("> AccDevicePtr: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'deviceptr({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "deviceptr({})".format(args)
 
-#AccDeviceResident: 'device_resident' '(' args+=ID[','] ')';
+
+# AccDeviceResident: 'device_resident' '(' args+=ID[','] ')';
 class AccDeviceResident(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDeviceResident, self).__init__(**kwargs)
 
@@ -833,17 +874,18 @@ class AccDeviceResident(AccBasic):
         if DEBUG:
             print("> AccDeviceResident: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'device_resident({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "device_resident({})".format(args)
 
-#AccDeviceType: 'device_type' '(' args+=ID[','] ')';
+
+# AccDeviceType: 'device_type' '(' args+=ID[','] ')';
 class AccDeviceType(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccDeviceType, self).__init__(**kwargs)
 
@@ -852,16 +894,17 @@ class AccDeviceType(AccBasic):
         if DEBUG:
             print("> AccDeviceType: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'device_type({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "device_type({})".format(args)
 
-#AccFinalize: 'finalize';
+
+# AccFinalize: 'finalize';
 class AccFinalize(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccFinalize, self).__init__(**kwargs)
 
     @property
@@ -869,15 +912,16 @@ class AccFinalize(AccBasic):
         if DEBUG:
             print("> AccFinalize: expr")
 
-        return 'finalize'
+        return "finalize"
 
-#AccFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
+
+# AccFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
 class AccFirstPrivate(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccFirstPrivate, self).__init__(**kwargs)
 
@@ -886,17 +930,18 @@ class AccFirstPrivate(AccBasic):
         if DEBUG:
             print("> AccFirstPrivate: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'firstprivate({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "firstprivate({})".format(args)
 
-#AccGang: 'gang' '(' args+=GangArg[','] ')';
+
+# AccGang: 'gang' '(' args+=GangArg[','] ')';
 class AccGang(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccGang, self).__init__(**kwargs)
 
@@ -905,17 +950,18 @@ class AccGang(AccBasic):
         if DEBUG:
             print("> AccGang: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(a.arg) for a in self.args)
-        return 'gang({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(a.arg) for a in self.args)
+        return "gang({})".format(args)
 
-#AccHost: 'host' '(' args+=ID[','] ')';
+
+# AccHost: 'host' '(' args+=ID[','] ')';
 class AccHost(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccHost, self).__init__(**kwargs)
 
@@ -924,17 +970,18 @@ class AccHost(AccBasic):
         if DEBUG:
             print("> AccHost: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'host({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "host({})".format(args)
 
-#AccIf: 'if' cond=ID;
+
+# AccIf: 'if' cond=ID;
 class AccIf(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.cond = kwconds.pop('cond')
+        """ """
+        self.cond = kwconds.pop("cond")
 
         super(AccIf, self).__init__(**kwargs)
 
@@ -943,16 +990,17 @@ class AccIf(AccBasic):
         if DEBUG:
             print("> AccIf: expr")
 
-        # TODO check if variable exist in scope
+        # TODO check if variable exist in scope
         cond = self.cond
-        return 'if({})'.format(str(cond))
+        return "if({})".format(str(cond))
 
-#AccIfPresent: 'if_present';
+
+# AccIfPresent: 'if_present';
 class AccIfPresent(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccIfPresent, self).__init__(**kwargs)
 
     @property
@@ -960,14 +1008,15 @@ class AccIfPresent(AccBasic):
         if DEBUG:
             print("> AccIfPresent: expr")
 
-        return 'if_present'
+        return "if_present"
 
-#AccIndependent: 'independent';
+
+# AccIndependent: 'independent';
 class AccIndependent(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccIndependent, self).__init__(**kwargs)
 
     @property
@@ -975,15 +1024,16 @@ class AccIndependent(AccBasic):
         if DEBUG:
             print("> AccIndependent: expr")
 
-        return 'independent'
+        return "independent"
 
-#AccLink: 'link' '(' args+=ID[','] ')';
+
+# AccLink: 'link' '(' args+=ID[','] ')';
 class AccLink(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccLink, self).__init__(**kwargs)
 
@@ -992,16 +1042,17 @@ class AccLink(AccBasic):
         if DEBUG:
             print("> AccLink: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'link({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "link({})".format(args)
 
-#AccNoHost: 'nohost';
+
+# AccNoHost: 'nohost';
 class AccNoHost(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccNoHost, self).__init__(**kwargs)
 
     @property
@@ -1009,15 +1060,16 @@ class AccNoHost(AccBasic):
         if DEBUG:
             print("> AccNoHost: expr")
 
-        return 'nohost'
+        return "nohost"
 
-#AccNumGangs: 'num_gangs' '(' n=INT ')';
+
+# AccNumGangs: 'num_gangs' '(' n=INT ')';
 class AccNumGangs(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        """ """
+        self.n = kwargs.pop("n")
 
         super(AccNumGangs, self).__init__(**kwargs)
 
@@ -1026,15 +1078,16 @@ class AccNumGangs(AccBasic):
         if DEBUG:
             print("> AccNumGangs: expr")
 
-        return 'num_gangs({})'.format(self.n)
+        return "num_gangs({})".format(self.n)
 
-#AccNumWorkers: 'num_workers' '(' n=INT ')';
+
+# AccNumWorkers: 'num_workers' '(' n=INT ')';
 class AccNumWorkers(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        """ """
+        self.n = kwargs.pop("n")
 
         super(AccNumWorkers, self).__init__(**kwargs)
 
@@ -1043,15 +1096,16 @@ class AccNumWorkers(AccBasic):
         if DEBUG:
             print("> AccNumWorkers: expr")
 
-        return 'num_workers({})'.format(self.n)
+        return "num_workers({})".format(self.n)
 
-#AccPresent: 'present' '(' args+=ID[','] ')';
+
+# AccPresent: 'present' '(' args+=ID[','] ')';
 class AccPresent(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccPresent, self).__init__(**kwargs)
 
@@ -1060,17 +1114,18 @@ class AccPresent(AccBasic):
         if DEBUG:
             print("> AccPresent: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'present({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "present({})".format(args)
 
-#AccPrivate: 'private' '(' args+=ID[','] ')';
+
+# AccPrivate: 'private' '(' args+=ID[','] ')';
 class AccPrivate(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccPrivate, self).__init__(**kwargs)
 
@@ -1079,18 +1134,19 @@ class AccPrivate(AccBasic):
         if DEBUG:
             print("> AccPrivate: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'private({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "private({})".format(args)
 
-#AccReduction: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')';
+
+# AccReduction: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')';
 class AccReduction(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.op   = kwargs.pop('op')
-        self.args = kwargs.pop('args')
+        """ """
+        self.op = kwargs.pop("op")
+        self.args = kwargs.pop("args")
 
         super(AccReduction, self).__init__(**kwargs)
 
@@ -1099,18 +1155,19 @@ class AccReduction(AccBasic):
         if DEBUG:
             print("> AccReduction: expr")
 
-        # TODO check if variable exist in scope
-        op   = self.op
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'reduction({0}: {1})'.format(op, args)
+        # TODO check if variable exist in scope
+        op = self.op
+        args = ", ".join(str(arg) for arg in self.args)
+        return "reduction({0}: {1})".format(op, args)
 
-#AccSelf: 'self' '(' args+=ID[','] ')';
+
+# AccSelf: 'self' '(' args+=ID[','] ')';
 class AccSelf(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccSelf, self).__init__(**kwargs)
 
@@ -1119,16 +1176,17 @@ class AccSelf(AccBasic):
         if DEBUG:
             print("> AccSelf: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'self({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "self({})".format(args)
 
-#AccSeq: 'seq';
+
+# AccSeq: 'seq';
 class AccSeq(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
+        """ """
         super(AccSeq, self).__init__(**kwargs)
 
     @property
@@ -1136,15 +1194,16 @@ class AccSeq(AccBasic):
         if DEBUG:
             print("> AccSeq: expr")
 
-        return 'seq'
+        return "seq"
 
-#AccTile: 'tile' '(' args+=ID[','] ')';
+
+# AccTile: 'tile' '(' args+=ID[','] ')';
 class AccTile(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccTile, self).__init__(**kwargs)
 
@@ -1153,17 +1212,18 @@ class AccTile(AccBasic):
         if DEBUG:
             print("> AccTile: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'tile({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "tile({})".format(args)
 
-#AccUseDevice: 'use_device' '(' args+=ID[','] ')';
+
+# AccUseDevice: 'use_device' '(' args+=ID[','] ')';
 class AccUseDevice(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccUseDevice, self).__init__(**kwargs)
 
@@ -1172,17 +1232,18 @@ class AccUseDevice(AccBasic):
         if DEBUG:
             print("> AccUseDevice: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'use_device({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "use_device({})".format(args)
 
-#AccVector: 'vector' ('(' args+=VectorArg ')')?;
+
+# AccVector: 'vector' ('(' args+=VectorArg ')')?;
 class AccVector(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccVector, self).__init__(**kwargs)
 
@@ -1191,17 +1252,18 @@ class AccVector(AccBasic):
         if DEBUG:
             print("> AccVector: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(a.arg) for a in self.args)
-        return 'vector({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(a.arg) for a in self.args)
+        return "vector({})".format(args)
 
-#AccVectorLength: 'vector_length' '(' n=INT ')';
+
+# AccVectorLength: 'vector_length' '(' n=INT ')';
 class AccVectorLength(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        """ """
+        self.n = kwargs.pop("n")
 
         super(AccVectorLength, self).__init__(**kwargs)
 
@@ -1210,15 +1272,16 @@ class AccVectorLength(AccBasic):
         if DEBUG:
             print("> AccVectorLength: expr")
 
-        return 'vector_length({})'.format(self.n)
+        return "vector_length({})".format(self.n)
 
-#AccWait: 'wait' '(' args+=ID[','] ')';
+
+# AccWait: 'wait' '(' args+=ID[','] ')';
 class AccWait(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccWait, self).__init__(**kwargs)
 
@@ -1227,17 +1290,18 @@ class AccWait(AccBasic):
         if DEBUG:
             print("> AccWait: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'wait({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(arg) for arg in self.args)
+        return "wait({})".format(args)
 
-#AccWorker: 'worker' ('(' args+=WorkerArg ')')?;
+
+# AccWorker: 'worker' ('(' args+=WorkerArg ')')?;
 class AccWorker(AccBasic):
     """Class representing a ."""
+
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        """ """
+        self.args = kwargs.pop("args")
 
         super(AccWorker, self).__init__(**kwargs)
 
@@ -1246,69 +1310,75 @@ class AccWorker(AccBasic):
         if DEBUG:
             print("> AccWorker: expr")
 
-        # TODO check if variable exist in scope
-        args = ', '.join(str(a.arg) for a in self.args)
-        return 'worker({})'.format(args)
+        # TODO check if variable exist in scope
+        args = ", ".join(str(a.arg) for a in self.args)
+        return "worker({})".format(args)
+
+
 #################################################
 
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-acc_directives = [AccParallelConstruct,
-                  AccKernelsConstruct,
-                  AccDataConstruct,
-                  AccEnterDataDirective,
-                  AccExitDataDirective,
-                  AccHostDataDirective,
-                  AccLoopConstruct,
-                  AccAtomicConstruct,
-                  AccDeclareDirective,
-                  AccInitDirective,
-                  AccShutDownDirective,
-                  AccSetDirective,
-                  AccUpdateDirective,
-                  AccRoutineDirective,
-                  AccWaitDirective,
-                  AccEndClause]
+acc_directives = [
+    AccParallelConstruct,
+    AccKernelsConstruct,
+    AccDataConstruct,
+    AccEnterDataDirective,
+    AccExitDataDirective,
+    AccHostDataDirective,
+    AccLoopConstruct,
+    AccAtomicConstruct,
+    AccDeclareDirective,
+    AccInitDirective,
+    AccShutDownDirective,
+    AccSetDirective,
+    AccUpdateDirective,
+    AccRoutineDirective,
+    AccWaitDirective,
+    AccEndClause,
+]
 
-acc_clauses = [AccAsync,
-               AccAuto,
-               AccBind,
-               AccCollapse,
-               AccCopy,
-               AccCopyin,
-               AccCopyout,
-               AccCreate,
-               AccDefault,
-               AccDefaultAsync,
-               AccDelete,
-               AccDevice,
-               AccDeviceNum,
-               AccDevicePtr,
-               AccDeviceResident,
-               AccDeviceType,
-               AccFinalize,
-               AccFirstPrivate,
-               AccGang,
-               AccHost,
-               AccIf,
-               AccIfPresent,
-               AccIndependent,
-               AccLink,
-               AccNoHost,
-               AccNumGangs,
-               AccNumWorkers,
-               AccPresent,
-               AccPrivate,
-               AccReduction,
-               AccSelf,
-               AccSeq,
-               AccTile,
-               AccUseDevice,
-               AccVector,
-               AccVectorLength,
-               AccWait,
-               AccWorker]
+acc_clauses = [
+    AccAsync,
+    AccAuto,
+    AccBind,
+    AccCollapse,
+    AccCopy,
+    AccCopyin,
+    AccCopyout,
+    AccCreate,
+    AccDefault,
+    AccDefaultAsync,
+    AccDelete,
+    AccDevice,
+    AccDeviceNum,
+    AccDevicePtr,
+    AccDeviceResident,
+    AccDeviceType,
+    AccFinalize,
+    AccFirstPrivate,
+    AccGang,
+    AccHost,
+    AccIf,
+    AccIfPresent,
+    AccIndependent,
+    AccLink,
+    AccNoHost,
+    AccNumGangs,
+    AccNumWorkers,
+    AccPresent,
+    AccPrivate,
+    AccReduction,
+    AccSelf,
+    AccSeq,
+    AccTile,
+    AccUseDevice,
+    AccVector,
+    AccVectorLength,
+    AccWait,
+    AccWorker,
+]
 
 acc_classes = [Openacc, OpenaccStmt] + acc_directives + acc_clauses
 
@@ -1316,24 +1386,25 @@ acc_classes = [Openacc, OpenaccStmt] + acc_directives + acc_clauses
 this_folder = dirname(__file__)
 
 # Get meta-model from language description
-grammar = join(this_folder, '../grammar/openacc.tx')
+grammar = join(this_folder, "../grammar/openacc.tx")
 
 meta = metamodel_from_file(grammar, classes=acc_classes)
 
+
 def parse(filename=None, stmts=None):
-    """ Parse openacc pragmas
+    """Parse openacc pragmas
 
-      Parameters
-      ----------
+    Parameters
+    ----------
 
-      filename: str
+    filename: str
 
-      stmts   : list
+    stmts   : list
 
-      Results
-      -------
+    Results
+    -------
 
-      stmts  : list
+    stmts  : list
 
     """
     # Instantiate model
@@ -1342,7 +1413,7 @@ def parse(filename=None, stmts=None):
     elif stmts:
         model = meta.model_from_str(stmts)
     else:
-        raise ValueError('Expecting a filename or a string')
+        raise ValueError("Expecting a filename or a string")
 
     stmts = []
     for stmt in model.statements:
@@ -1354,4 +1425,6 @@ def parse(filename=None, stmts=None):
         return stmts[0]
     else:
         return stmts
+
+
 #################################################

@@ -1,4 +1,5 @@
 # Memory allocation should not be used in an expression
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-a = np.empty(4)*5
+
+a = np.empty(4) * 5

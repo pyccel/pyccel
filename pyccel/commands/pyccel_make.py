@@ -1,7 +1,7 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 File containing the `pyccel make` command line interface.
 """
@@ -13,11 +13,10 @@ from pathlib import Path
 from .argparse_helpers import add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import add_common_settings, path_with_suffix
 
-__all__ = ('pyccel_make',
-           'setup_pyccel_make_parser',
-           'PYCCEL_MAKE_DESCR')
+__all__ = ("pyccel_make", "setup_pyccel_make_parser", "PYCCEL_MAKE_DESCR")
 
-PYCCEL_MAKE_DESCR = 'Translate and compile multiple Python files in a project.'
+PYCCEL_MAKE_DESCR = "Translate and compile multiple Python files in a project."
+
 
 class GlobAction(argparse.Action):
     """
@@ -40,7 +39,10 @@ class GlobAction(argparse.Action):
     **kwargs : dict
         See argparse.Action.
     """
-    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs): #pylint: disable=redefined-builtin
+
+    def __init__(
+        self, option_strings, dest, nargs=None, type=None, **kwargs
+    ):  # pylint: disable=redefined-builtin
         self._type_check = type
         super().__init__(option_strings, dest, nargs=None, **kwargs)
 
@@ -57,6 +59,7 @@ class GlobAction(argparse.Action):
 
         # Save result
         setattr(namespace, self.dest, files)
+
 
 class FileDescriptionAction(argparse.Action):
     """
@@ -79,13 +82,16 @@ class FileDescriptionAction(argparse.Action):
     **kwargs : dict
         See argparse.Action.
     """
-    def __init__(self, option_strings, dest, nargs=None, type=None, **kwargs): #pylint: disable=redefined-builtin
+
+    def __init__(
+        self, option_strings, dest, nargs=None, type=None, **kwargs
+    ):  # pylint: disable=redefined-builtin
         self._type_check = type
         super().__init__(option_strings, dest, nargs=None, type=Path, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
         # Get files
-        with open(values, 'r', encoding='utf-8') as f:
+        with open(values, "r", encoding="utf-8") as f:
             files = [Path(fname.strip()) for fname in f.readlines()]
 
         # Check types
@@ -97,6 +103,7 @@ class FileDescriptionAction(argparse.Action):
 
         # Save result
         setattr(namespace, self.dest, files)
+
 
 def setup_pyccel_make_parser(parser):
     """
@@ -110,47 +117,91 @@ def setup_pyccel_make_parser(parser):
         The parser to be modified.
     """
     # ...
-    group = parser.add_argument_group('File specification',
-            description = "Use one of the below methods to specify which files should be translated."
-            ).add_mutually_exclusive_group(required=True)
-    group.add_argument('-f', '--files', nargs='+', type=path_with_suffix(('.py',)), metavar='FILE',
-            help="A list of files to be translated as a project.")
-    group.add_argument('-g', '--glob', dest='files', action=GlobAction, type=path_with_suffix(('.py',)),
-            help=("A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
-                  "Note: quote the pattern to prevent shell expansion."))
-    group.add_argument('-d', '--file-descr', dest='files', action=FileDescriptionAction, type=path_with_suffix(('.py',)),
-            help="A UTF-8 text file containing the paths to the files to be translated as a project. One path (relative or absolute) per line.")
+    group = parser.add_argument_group(
+        "File specification",
+        description="Use one of the below methods to specify which files should be translated.",
+    ).add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-f",
+        "--files",
+        nargs="+",
+        type=path_with_suffix((".py",)),
+        metavar="FILE",
+        help="A list of files to be translated as a project.",
+    )
+    group.add_argument(
+        "-g",
+        "--glob",
+        dest="files",
+        action=GlobAction,
+        type=path_with_suffix((".py",)),
+        help=(
+            "A glob that should be used to recognise files to be translated as a project (e.g. '**/*.py'). "
+            "Note: quote the pattern to prevent shell expansion."
+        ),
+    )
+    group.add_argument(
+        "-d",
+        "--file-descr",
+        dest="files",
+        action=FileDescriptionAction,
+        type=path_with_suffix((".py",)),
+        help="A UTF-8 text file containing the paths to the files to be translated as a project. One path (relative or absolute) per line.",
+    )
 
     # ... backend compiler options
-    group = parser.add_argument_group('Backend selection')
+    group = parser.add_argument_group("Backend selection")
 
-    group.add_argument('--language', choices=('Fortran', 'C', 'Python'), default='Fortran',
-                       help='Target language for translation, i.e. the main language of the generated code (default: Fortran).',
-                       type=str.title)
-    group.add_argument('--build-system', choices=('meson', 'cmake'), default='meson',
-                       help='Chosen build system for translation, i.e. the tool that will be used to compile the generated code (default: meson).',
-                       type=str.lower)
+    group.add_argument(
+        "--language",
+        choices=("Fortran", "C", "Python"),
+        default="Fortran",
+        help="Target language for translation, i.e. the main language of the generated code (default: Fortran).",
+        type=str.title,
+    )
+    group.add_argument(
+        "--build-system",
+        choices=("meson", "cmake"),
+        default="meson",
+        help="Chosen build system for translation, i.e. the tool that will be used to compile the generated code (default: meson).",
+        type=str.lower,
+    )
 
     # ... Compiler options
-    add_compiler_selection(parser, allow_compiler_config = True)
+    add_compiler_selection(parser, allow_compiler_config=True)
 
     # ... Additional compiler options
-    group = parser.add_argument_group('Additional compiler options')
-    group.add_argument('--debug', action=argparse.BooleanOptionalAction, default=None,
-                        help='Compile the code with debug flags, or not.\n' \
-                        ' Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.')
-    group.add_argument('--output', type=Path, default = None, dest='folder',
-                       help="Folder in which the output is stored (default: FILE's folder).")
+    group = parser.add_argument_group("Additional compiler options")
+    group.add_argument(
+        "--debug",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Compile the code with debug flags, or not.\n"
+        " Overrides the environment variable PYCCEL_DEBUG_MODE, if it exists. Otherwise default is False.",
+    )
+    group.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        dest="folder",
+        help="Folder in which the output is stored (default: FILE's folder).",
+    )
 
     # ... Accelerators
     add_accelerator_selection(parser)
     # ...
 
     # ... Other options
-    group = parser.add_argument_group('Other options')
+    group = parser.add_argument_group("Other options")
     add_common_settings(group)
-    group.add_argument('-t', '--convert-only', action='store_false', dest='build_code',
-                       help='Stop Pyccel after translation to the target language, before build.')
+    group.add_argument(
+        "-t",
+        "--convert-only",
+        action="store_false",
+        dest="build_code",
+        help="Stop Pyccel after translation to the target language, before build.",
+    )
+
 
 def pyccel_make(*, language, **kwargs) -> None:
     """
@@ -166,6 +217,6 @@ def pyccel_make(*, language, **kwargs) -> None:
         See execute_pyccel_make.
     """
 
-    from pyccel.codegen.make_pipeline  import execute_pyccel_make
+    from pyccel.codegen.make_pipeline import execute_pyccel_make
 
-    execute_pyccel_make(language = language.lower(), **kwargs)
+    execute_pyccel_make(language=language.lower(), **kwargs)

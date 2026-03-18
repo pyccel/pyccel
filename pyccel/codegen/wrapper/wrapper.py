@@ -1,15 +1,15 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module describing the base code-wrapping class : Wrapper.
 """
 
-from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
+from pyccel.parser.scope import Scope
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
 __all__ = ["Wrapper"]
 
@@ -29,6 +29,7 @@ class Wrapper:
     verbose : int
         The level of verbosity.
     """
+
     start_language = None
     target_language = None
 
@@ -104,12 +105,12 @@ class Wrapper:
             access the expression.
         """
         current_ast = self._current_ast_node
-        if getattr(expr,'python_ast', None) is not None:
+        if getattr(expr, "python_ast", None) is not None:
             self._current_ast_node = expr.python_ast
 
         classes = type(expr).mro()
         for cls in classes:
-            wrap_method = '_wrap_' + cls.__name__
+            wrap_method = "_wrap_" + cls.__name__
             if hasattr(self, wrap_method):
                 if self._verbose > 2:
                     print(f">>>> Calling {type(self).__name__}.{wrap_method}")
@@ -118,13 +119,19 @@ class Wrapper:
                 except PyccelError as err:
                     raise err
                 except NotImplementedError as error:
-                    errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-                        symbol = self._current_ast_node, severity='fatal',
-                        traceback=error.__traceback__)
-                except Exception as err: #pylint: disable=broad-exception-caught
-                    if ErrorsMode().value == 'user':
-                        errors.report(PYCCEL_INTERNAL_ERROR,
-                                symbol = self._current_ast_node, severity='fatal')
+                    errors.report(
+                        f"{error}\n" + PYCCEL_RESTRICTION_TODO,
+                        symbol=self._current_ast_node,
+                        severity="fatal",
+                        traceback=error.__traceback__,
+                    )
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    if ErrorsMode().value == "user":
+                        errors.report(
+                            PYCCEL_INTERNAL_ERROR,
+                            symbol=self._current_ast_node,
+                            severity="fatal",
+                        )
                     else:
                         raise err
                 self._current_ast_node = current_ast
@@ -133,9 +140,7 @@ class Wrapper:
         return self._wrap_not_supported(expr)
 
     def _wrap_not_supported(self, expr):
-        """ Print an error message if the wrap function for the type
-        is not implemented """
-        msg = f'_wrap_{type(expr).__name__} is not yet implemented for wrapper : {type(self)}\n'
-        errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
-                severity='fatal')
-
+        """Print an error message if the wrap function for the type
+        is not implemented"""
+        msg = f"_wrap_{type(expr).__name__} is not yet implemented for wrapper : {type(self)}\n"
+        errors.report(msg + PYCCEL_RESTRICTION_TODO, symbol=expr, severity="fatal")

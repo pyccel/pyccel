@@ -2,9 +2,10 @@
 
 
 # ==============================================================================
-def blas_dnrm2(x: 'float64[:]',
-               incx: 'int32' = 1,
-              ):
+def blas_dnrm2(
+    x: "float64[:]",
+    incx: "int32" = 1,
+):
     """
     Computes the Euclidean norm of a vector.
     """
@@ -13,12 +14,14 @@ def blas_dnrm2(x: 'float64[:]',
 
     n = np.int32(x.shape[0])
 
-    return dnrm2 (n, x, incx)
+    return dnrm2(n, x, incx)
+
 
 # ==============================================================================
-def blas_dasum(x: 'float64[:]',
-               incx: 'int32' = 1,
-              ):
+def blas_dasum(
+    x: "float64[:]",
+    incx: "int32" = 1,
+):
     """
     Computes the sum of magnitudes of the vector elements.
     """
@@ -27,12 +30,14 @@ def blas_dasum(x: 'float64[:]',
 
     n = np.int32(x.shape[0])
 
-    return dasum (n, x, incx)
+    return dasum(n, x, incx)
+
 
 # ==============================================================================
-def blas_idamax(x: 'float64[:]',
-               incx: 'int32' = 1,
-              ):
+def blas_idamax(
+    x: "float64[:]",
+    incx: "int32" = 1,
+):
     """
     Finds the index of the element with maximum absolute value.
     """
@@ -41,16 +46,14 @@ def blas_idamax(x: 'float64[:]',
 
     n = np.int32(x.shape[0])
 
-    i = idamax (n, x, incx)
+    i = idamax(n, x, incx)
     # we must substruct 1 because of the fortran indexing
-    i = i-np.int32(1)
+    i = i - np.int32(1)
     return i
 
+
 # ==============================================================================
-def blas_ddot(x: 'float64[:]', y: 'float64[:]',
-               incx: 'int32' = 1,
-               incy: 'int32' = 1
-              ):
+def blas_ddot(x: "float64[:]", y: "float64[:]", incx: "int32" = 1, incy: "int32" = 1):
     """
     Computes a vector-vector dot product.
     """
@@ -59,15 +62,16 @@ def blas_ddot(x: 'float64[:]', y: 'float64[:]',
 
     n = np.int32(x.shape[0])
 
-    return ddot (n, x, incx, y, incy)
+    return ddot(n, x, incx, y, incy)
+
 
 # ==============================================================================
-def blas_ddot_in_func(x: 'float64[:]', y: 'float64[:]'):
+def blas_ddot_in_func(x: "float64[:]", y: "float64[:]"):
     import numpy as np
-    def blas_ddot(x: 'float64[:]', y: 'float64[:]',
-                   incx: 'int32' = 1,
-                   incy: 'int32' = 1
-                  ):
+
+    def blas_ddot(
+        x: "float64[:]", y: "float64[:]", incx: "int32" = 1, incy: "int32" = 1
+    ):
         """
         Computes a vector-vector dot product.
         """
@@ -75,8 +79,8 @@ def blas_ddot_in_func(x: 'float64[:]', y: 'float64[:]'):
 
         n = np.int32(x.shape[0])
 
-        return ddot (n, x, incx, y, incy)
+        return ddot(n, x, incx, y, incy)
 
     incx = np.int32(1)
     incy = np.int32(1)
-    return blas_ddot(x,y,incx,incy)
+    return blas_ddot(x, y, incx, incy)

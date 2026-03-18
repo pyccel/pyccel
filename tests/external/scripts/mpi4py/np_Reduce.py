@@ -8,12 +8,12 @@ rank = comm.Get_rank()
 root = 0
 
 if rank == 0:
-    value = ones(50,'int')
+    value = ones(50, "int")
 else:
-    value = zeros(50,'int')
+    value = zeros(50, "int")
 
-sum_value = zeros(50,'int')
-comm.Reduce (value, sum_value, MPI.SUM, root)
+sum_value = zeros(50, "int")
+comm.Reduce(value, sum_value, MPI.SUM, root)
 
 if rank == 0:
-    print('I, process ', root,', have the global sum value ', sum_value)
+    print("I, process ", root, ", have the global sum value ", sum_value)

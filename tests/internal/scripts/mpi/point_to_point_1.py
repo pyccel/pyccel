@@ -13,7 +13,7 @@ from pyccel.stdlib.internal.mpi import MPI_REAL8
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         x[:] = 1.0
 
     source = np.int32(0)
-    dest   = np.int32(1)
+    dest = np.int32(1)
 
     # ...
     tag1 = np.int32(1234)

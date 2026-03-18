@@ -1,26 +1,29 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """This file contains different utilities for the Parser."""
+
 import os
 
-from pyccel.ast.variable       import DottedName
-from pyccel.ast.internals      import PyccelSymbol
+from pyccel.ast.variable import DottedName
+from pyccel.ast.internals import PyccelSymbol
 
-__all__ = ('get_default_path',
-           'pyccel_external_lib')
+__all__ = ("get_default_path", "pyccel_external_lib")
 
-pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
-                       "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
-                       "scipy.linalg.blas"  : "pyccel.stdlib.external.blas",
-                       "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
-                       "fitpack"            : "pyccel.stdlib.internal.fitpack",
-                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
+pyccel_external_lib = {
+    "mpi4py": "pyccel.stdlib.external.mpi4py",
+    "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
+    "scipy.linalg.blas": "pyccel.stdlib.external.blas",
+    "scipy.fftpack": "pyccel.stdlib.external.dfftpack",
+    "fitpack": "pyccel.stdlib.internal.fitpack",
+    "scipy.interpolate._fitpack": "pyccel.stdlib.external.fitpack",
+}
 
-#==============================================================================
+# ==============================================================================
+
 
 def get_default_path(name):
     """
@@ -42,10 +45,8 @@ def get_default_path(name):
         The name of the Pyccel-compatible source file for the import.
     """
     name_ = str(name)
-    name = pyccel_external_lib.get(name_, name_).split('.')
-    if len(name)>1:
+    name = pyccel_external_lib.get(name_, name_).split(".")
+    if len(name) > 1:
         return DottedName(*name)
     else:
         return name[0]
-
-

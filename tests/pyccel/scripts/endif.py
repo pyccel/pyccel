@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-def matmul(a: 'float[:,:](order=C)',
-           b: 'float[:,:](order=F)',
-           c: 'float[:,:](order=C)'):
+
+def matmul(
+    a: "float[:,:](order=C)", b: "float[:,:](order=F)", c: "float[:,:](order=C)"
+):
 
     m, p = a.shape
     q, n = b.shape
@@ -18,4 +19,3 @@ def matmul(a: 'float[:,:](order=C)',
                 c[i, j] += a[i, k] * b[k, j]
 
     return 0
-

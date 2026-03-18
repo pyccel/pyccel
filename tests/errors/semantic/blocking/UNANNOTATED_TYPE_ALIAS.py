@@ -3,5 +3,6 @@
 
 MyType = int
 
-def f(a : MyType):
+
+def f(a: MyType):
     pass
