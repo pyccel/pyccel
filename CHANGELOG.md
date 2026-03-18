@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   Added preliminary support for C++ translations.
+-   #2525 : Add preliminary support for C++ translations.
 
 ### Fixed
 
