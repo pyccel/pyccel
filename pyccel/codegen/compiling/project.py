@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module providing objects that are useful for describing the compilation of a project
 via the `pyccel make` command.
 """
+
 from collections.abc import Iterable
 from pathlib import Path
-from pyccel.errors.errors  import Errors
+from pyccel.errors.errors import Errors
 
 errors = Errors()
+
 
 class CompileTarget:
     """
@@ -40,8 +42,17 @@ class CompileTarget:
     stdlib_deps : iterable[str]
         An iterable containing the names of the stdlib targets of this object.
     """
-    __slots__ = ('_name', '_pyfile', '_file', '_wrapper_files',
-                 '_program_file', '_dependencies', '_stdlib_deps')
+
+    __slots__ = (
+        "_name",
+        "_pyfile",
+        "_file",
+        "_wrapper_files",
+        "_program_file",
+        "_dependencies",
+        "_stdlib_deps",
+    )
+
     def __init__(self, name, pyfile, file, wrapper_files, program_file, stdlib_deps):
         self._name = name
         self._pyfile = pyfile
@@ -143,7 +154,8 @@ class CompileTarget:
         return self._stdlib_deps
 
     def __repr__(self):
-        return f'CompileTarget({self.pyfile})'
+        return f"CompileTarget({self.pyfile})"
+
 
 class DirTarget:
     """
@@ -159,13 +171,15 @@ class DirTarget:
     compile_targets : iterable[CompileTarget]
         An iterable of the CompileTarget objects which are found in this directory.
     """
-    __slots__ = ('_folder', '_targets', '_dependencies')
-    def __init__(self, folder, compile_targets : Iterable[CompileTarget]):
+
+    __slots__ = ("_folder", "_targets", "_dependencies")
+
+    def __init__(self, folder, compile_targets: Iterable[CompileTarget]):
         # Group compile targets by subdirectory
         dirs = {}
         for c in compile_targets:
             dir_info = Path(c.pyfile).relative_to(folder).parent.parts
-            dirname = dir_info[0] if dir_info else '.'
+            dirname = dir_info[0] if dir_info else "."
             dirs.setdefault(folder / dirname, []).append(c)
 
         for n, c in dirs.items():
@@ -188,7 +202,9 @@ class DirTarget:
         placed = []
         targets = []
         while deps:
-            new_target = next((c for (c, d) in deps.items() if all(di in placed for di in d)), None)
+            new_target = next(
+                (c for (c, d) in deps.items() if all(di in placed for di in d)), None
+            )
             if new_target is None:
                 break
             deps.pop(new_target)
@@ -204,16 +220,30 @@ class DirTarget:
             while len(cycle) < 2 or cycle[-1] not in cycle[:-1]:
                 c = cycle[-1]
                 unfulfilled_dep = next(d for d in deps[c] if d not in placed)
-                cycle.append(next(c for c in deps if (c.pyfile if isinstance(c, CompileTarget) else c.folder) == unfulfilled_dep))
+                cycle.append(
+                    next(
+                        c
+                        for c in deps
+                        if (c.pyfile if isinstance(c, CompileTarget) else c.folder)
+                        == unfulfilled_dep
+                    )
+                )
 
-            cycle_example = ' -> '.join(str((c.pyfile if isinstance(c, CompileTarget) else c.folder)) for c in cycle)
+            cycle_example = " -> ".join(
+                str((c.pyfile if isinstance(c, CompileTarget) else c.folder))
+                for c in cycle
+            )
 
-            errors.report(f"Found circular dependencies between directories: {cycle_example}",
-                         severity='fatal')
+            errors.report(
+                f"Found circular dependencies between directories: {cycle_example}",
+                severity="fatal",
+            )
 
         self._folder = folder
         self._targets = targets
-        self._dependencies = {d for t in self._targets for d in t.dependencies if d not in self}
+        self._dependencies = {
+            d for t in self._targets for d in t.dependencies if d not in self
+        }
 
     @property
     def dependencies(self):
@@ -250,7 +280,8 @@ class DirTarget:
             return self.folder in other.folder.parents
 
     def __repr__(self):
-        return f'DirTarget({self.folder})'
+        return f"DirTarget({self.folder})"
+
 
 class BuildProject:
     """
@@ -272,6 +303,7 @@ class BuildProject:
         A dictionary mapping the names of standard library dependencies
         required for the build to the CompileObj describing how they are used.
     """
+
     def __init__(self, root_dir, compile_targets, languages, stdlib_deps):
         self._root_dir = Path(root_dir)
         self._dir_info = DirTarget(self._root_dir, compile_targets)

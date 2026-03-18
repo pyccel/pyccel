@@ -2,7 +2,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 ~a
 
-#$ this is invalid comment
+# $ this is invalid comment
 
 for cls in [B, C]:
     try:

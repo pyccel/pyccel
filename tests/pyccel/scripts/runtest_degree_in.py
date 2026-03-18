@@ -1,28 +1,31 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import stack_array, pure
 
+
 @pure
-@stack_array('tmp')
-def test_degree(degree : int):
+@stack_array("tmp")
+def test_degree(degree: int):
     from numpy import empty
 
     tmp = empty(degree, dtype=float)
     for i in range(degree):
-        tmp[i]=0.
+        tmp[i] = 0.0
     return 1
+
 
 @pure
-@stack_array('tmp')
-def test_degree2d(degree1 : int, degree2 : int):
+@stack_array("tmp")
+def test_degree2d(degree1: int, degree2: int):
     from numpy import empty
 
-    tmp = empty((degree1+1, degree2+1), dtype=float)
-    for i in range(degree1+1):
-        for j in range(degree2+1):
-            tmp[i,j]=0.
+    tmp = empty((degree1 + 1, degree2 + 1), dtype=float)
+    for i in range(degree1 + 1):
+        for j in range(degree2 + 1):
+            tmp[i, j] = 0.0
     return 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(test_degree(3))
     print(test_degree(3))
-    print(test_degree2d(3,4))
+    print(test_degree2d(3, 4))

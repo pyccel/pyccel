@@ -1,24 +1,25 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from mpi4py import MPI
-from numpy  import empty
-
+from numpy import empty
 
 # TODO: avoid declaration of integer variables 'ierr' and 'rank'
 # TODO: allow access to process rank through property 'comm.rank'
 # TODO: allow passing MPI communicator to functions
 # TODO: understand that 'recvbuf' has intent(inout)
 
-#==============================================================================
+# ==============================================================================
 
-def np_allreduce(sendbuf : 'int[:]', recvbuf : 'int[:]'):
+
+def np_allreduce(sendbuf: "int[:]", recvbuf: "int[:]"):
 
     comm = MPI.COMM_WORLD
     recvbuf[:] = 0
 
-    comm.Allreduce( sendbuf, recvbuf, MPI.SUM )
+    comm.Allreduce(sendbuf, recvbuf, MPI.SUM)
+
 
 # ...
-def np_bcast(buf : 'int[:]', root : int):
+def np_bcast(buf: "int[:]", root: int):
 
     comm = MPI.COMM_WORLD
     rank = -1
@@ -27,10 +28,11 @@ def np_bcast(buf : 'int[:]', root : int):
     if rank != root:
         buf[:] = 0
 
-    comm.Bcast( buf, root )
+    comm.Bcast(buf, root)
+
 
 # ...
-def np_gather(sendbuf : 'int[:]', recvbuf : 'int[:]', root : int):
+def np_gather(sendbuf: "int[:]", recvbuf: "int[:]", root: int):
 
     comm = MPI.COMM_WORLD
     rank = -1
@@ -39,4 +41,4 @@ def np_gather(sendbuf : 'int[:]', recvbuf : 'int[:]', root : int):
     if rank == root:
         recvbuf[:] = 0
 
-    comm.Gather( sendbuf, recvbuf, root )
+    comm.Gather(sendbuf, recvbuf, root)

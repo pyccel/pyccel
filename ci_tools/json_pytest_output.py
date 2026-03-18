@@ -12,13 +12,15 @@ Usage:
 Example:
     python script.py -t "Test Summary" --tests "Test 1:success:output.txt" "Test 2:failure:error.txt"
 """
+
 import argparse
 import json
 import os
 import re
 import sys
 
-def     mini_md_summary(title, outcome, failed_tests):
+
+def mini_md_summary(title, outcome, failed_tests):
     """
     Generate Markdown.
 
@@ -42,30 +44,38 @@ def     mini_md_summary(title, outcome, failed_tests):
     if outcome == "failure":
         for lang, errs in failed_tests.items():
             if len(errs) != 0:
-                md = md + '\n' + f"### {lang.capitalize()} Test summary: "
-                md = md + '\n'
+                md = md + "\n" + f"### {lang.capitalize()} Test summary: "
+                md = md + "\n"
                 for i in errs:
                     md = md + i + "\n"
     md = md + "\n"
-    return(md)
+    return md
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--title', nargs='?', required=True, help='Tests summary title')
-    parser.add_argument('-test', '--tests', nargs='+', help="'Test title':outcome{success, failure, cancelled, or skipped}:output_file")
+    parser.add_argument(
+        "-t", "--title", nargs="?", required=True, help="Tests summary title"
+    )
+    parser.add_argument(
+        "-test",
+        "--tests",
+        nargs="+",
+        help="'Test title':outcome{success, failure, cancelled, or skipped}:output_file",
+    )
     p_args = parser.parse_args()
 
     outfile = ""
     args = sys.argv[1:]
-    output_file = 'test_json_result.json'
+    output_file = "test_json_result.json"
     summary = ""
 
     failed_pattern = re.compile(r".*FAILED.*")
-    languages = ('c', 'fortran', 'python')
-    pattern = {lang: re.compile(r".*\["+lang+r"\]\ \_.*") for lang in languages}
+    languages = ("c", "fortran", "python")
+    pattern = {lang: re.compile(r".*\[" + lang + r"\]\ \_.*") for lang in languages}
 
     for i in p_args.tests:
-        values = i.split(':')
+        values = i.split(":")
         mini_title = values[0] if len(values) >= 1 else None
         outcome = values[1] if len(values) >= 2 else None
         out_file = values[2] if len(values) >= 3 else None
@@ -73,7 +83,7 @@ if __name__ == '__main__':
         fails = {}
 
         if out_file is not None and os.path.exists(out_file):
-            with open(out_file , 'r', encoding='utf-8') as f:
+            with open(out_file, "r", encoding="utf-8") as f:
                 outfile = f.read()
 
             c_tests = []
@@ -81,20 +91,24 @@ if __name__ == '__main__':
             py_tests = []
 
             failed_matches = failed_pattern.findall(outfile, re.MULTILINE)
-            failed_matches = [re.sub(r'.*FAILED ', "- ``", string) for string in failed_matches]
+            failed_matches = [
+                re.sub(r".*FAILED ", "- ``", string) for string in failed_matches
+            ]
 
             for lang in languages:
                 failed_matches = pattern[lang].findall(outfile, re.MULTILINE)
-                failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
-                fails[lang] = [re.sub(r'\['+lang+r'\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
+                failed_matches = [
+                    "- ``" + string.strip("_") for string in failed_matches
+                ]
+                fails[lang] = [
+                    re.sub(r"\[" + lang + r"\]", "`` :heavy_multiplication_x:", string)
+                    for string in failed_matches
+                ]
 
         summary = summary + mini_md_summary(mini_title, outcome, fails)
 
     print(summary)
-    json_output = {
-        "title":p_args.title,
-        "summary":summary
-    }
+    json_output = {"title": p_args.title, "summary": summary}
 
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(json_output,f)
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(json_output, f)

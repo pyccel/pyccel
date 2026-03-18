@@ -12,6 +12,7 @@ permissions:
 jobs:
   build_docs:
     runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN}}
     steps:

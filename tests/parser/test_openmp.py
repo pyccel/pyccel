@@ -3,10 +3,12 @@
 import pytest
 from pyccel.parser.syntax.openmp import parse
 
+
 @pytest.mark.language_agnostic
 def test_parallel():
-    d = parse(stmts='#$ omp parallel private(idx)')
+    d = parse(stmts="#$ omp parallel private(idx)")
+
 
 ######################
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_parallel()

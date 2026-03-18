@@ -5,53 +5,83 @@ import pytest
 from numpy.random import uniform
 import numpy as np
 
-from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
-                                min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
-from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
+from test_numpy_funcs import (
+    min_int,
+    max_int,
+    min_int8,
+    max_int8,
+    min_int16,
+    max_int16,
+    min_int32,
+    max_int32,
+    max_int64,
+    min_int64,
+)
+from test_numpy_funcs import (
+    max_float,
+    min_float,
+    max_float32,
+    min_float32,
+    max_float64,
+    min_float64,
+)
 from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 from pyccel import epyccel
 
-numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
+numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split(".")) >= (
+    1,
+    24,
+    0,
+)
 
-NT1 = TypeVar('NT1', 'int32', 'int64', 'float32', 'float64', 'complex64', 'complex128')
-NT2 = TypeVar('NT2', 'int32', 'int64', 'float32', 'float64', 'complex64', 'complex128')
-T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64')
+NT1 = TypeVar("NT1", "int32", "int64", "float32", "float64", "complex64", "complex128")
+NT2 = TypeVar("NT2", "int32", "int64", "float32", "float64", "complex64", "complex128")
+T = TypeVar(
+    "T", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"
+)
+
 
 def test_mult_numpy_python_type(language):
 
     def mult_on_array_int8():
         from numpy import ones, int8
+
         a = ones(5, dtype=int8)
         b = a * 2
         return b[0]
 
     def mult_on_array_int16():
         from numpy import ones, int16
+
         a = ones(5, dtype=int16)
         b = a * 2
         return b[0]
 
     def mult_on_array_int32():
         from numpy import ones, int32
+
         a = ones(5, dtype=int32)
         b = a * 2
         return b[0]
 
     def mult_on_array_int64():
         from numpy import ones, int64
+
         a = ones(5, dtype=int64)
         b = a * 2
         return b[0]
 
     def mult_on_array_float32():
         from numpy import ones, float32
+
         a = ones(5, dtype=float32)
         b = a * 2
         return b[0]
 
     def mult_on_array_float64():
         from numpy import ones, float64
+
         a = ones(5, dtype=float64)
         b = a * 2
         return b[0]
@@ -92,40 +122,52 @@ def test_mult_numpy_python_type(language):
     assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
+
 def test_numpy_scalar_promotion(language):
 
-    def add_numpy_to_numpy_type(np_s_l : NT1, np_s_r : NT2):
+    def add_numpy_to_numpy_type(np_s_l: NT1, np_s_r: NT2):
         rs = np_s_l + np_s_r
         return rs
 
-    integer32   = randint(min_int32 // 2, max_int32 // 2, dtype=np.int32)
-    integer64   = randint(min_int64 // 2, max_int64 // 2, dtype=np.int64)
-    fl32        = np.float32(uniform(min_float32 / 2, max_float32 / 2))
-    fl64        = np.float64(uniform(min_float64 / 2, max_float64 / 2))
-    complex64   = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
-    complex128  = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
+    integer32 = randint(min_int32 // 2, max_int32 // 2, dtype=np.int32)
+    integer64 = randint(min_int64 // 2, max_int64 // 2, dtype=np.int64)
+    fl32 = np.float32(uniform(min_float32 / 2, max_float32 / 2))
+    fl64 = np.float64(uniform(min_float64 / 2, max_float64 / 2))
+    complex64 = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
+    complex128 = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
 
-    epyccel_func    = epyccel(add_numpy_to_numpy_type, language=language)
+    epyccel_func = epyccel(add_numpy_to_numpy_type, language=language)
 
-    pyccel_result   = epyccel_func(integer32, integer64)
-    python_result   = add_numpy_to_numpy_type(integer32, integer64)
+    pyccel_result = epyccel_func(integer32, integer64)
+    python_result = add_numpy_to_numpy_type(integer32, integer64)
 
     assert pyccel_result == python_result
     assert isinstance(pyccel_result, type(python_result))
 
-    for type1, type2 in ((integer64, fl32), (integer64, fl64), (fl64, complex64), (complex128, fl64)):
+    for type1, type2 in (
+        (integer64, fl32),
+        (integer64, fl64),
+        (fl64, complex64),
+        (complex128, fl64),
+    ):
         pyccel_result = epyccel_func(type1, type2)
         python_result = add_numpy_to_numpy_type(type1, type2)
-        rtol = RTOL32 if isinstance(python_result, (np.float64, np.complex128)) else RTOL
-        atol = ATOL32 if isinstance(python_result, (np.float64, np.complex128)) else ATOL
+        rtol = (
+            RTOL32 if isinstance(python_result, (np.float64, np.complex128)) else RTOL
+        )
+        atol = (
+            ATOL32 if isinstance(python_result, (np.float64, np.complex128)) else ATOL
+        )
         assert np.isclose(pyccel_result, python_result, rtol=rtol, atol=atol)
         assert isinstance(pyccel_result, type(python_result))
+
 
 @pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
 def test_numpy_bool_scalar(language):
 
-    def get_bool(a : T):
+    def get_bool(a: T):
         from numpy import bool as NumpyBool
+
         b = NumpyBool(a)
         return b
 
@@ -139,7 +181,6 @@ def test_numpy_bool_scalar(language):
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
 
     epyccel_func = epyccel(get_bool, language=language)
 
@@ -156,7 +197,7 @@ def test_numpy_bool_scalar(language):
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = get_bool(integer)
+    test_int_output = get_bool(integer)
 
     assert f_integer_output == test_int_output
     assert matching_types(f_integer_output, test_int_output)
@@ -203,39 +244,60 @@ def test_numpy_bool_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
-def get_int(a : T):
+
+def get_int(a: T):
     from numpy import int as Numpyint
+
     b = Numpyint(a)
     return b
 
-def get_int64(a : T):
+
+def get_int64(a: T):
     from numpy import int64
+
     b = int64(a)
     return b
 
-def get_int32(a : T):
+
+def get_int32(a: T):
     from numpy import int32
+
     b = int32(a)
     return b
 
-def get_int16(a : T):
+
+def get_int16(a: T):
     from numpy import int16
+
     b = int16(a)
     return b
 
-def get_int8(a : T):
+
+def get_int8(a: T):
     from numpy import int8
+
     b = int8(a)
     return b
 
-if numpy_basic_types_deprecated:
-    int_functions_and_boundaries = [(get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
-                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)]
-else:
-    int_functions_and_boundaries = [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
-                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)]
 
-@pytest.mark.parametrize( 'function_boundaries', int_functions_and_boundaries)
+if numpy_basic_types_deprecated:
+    int_functions_and_boundaries = [
+        (get_int64, min_int64, max_int64),
+        (get_int32, min_int32, max_int32),
+        (get_int16, min_int16, max_int16),
+        (get_int8, min_int8, max_int8),
+    ]
+else:
+    int_functions_and_boundaries = [
+        (get_int, min_int, max_int),
+        (get_int64, min_int64, max_int64),
+        (get_int32, min_int32, max_int32),
+        (get_int16, min_int16, max_int16),
+        (get_int8, min_int8, max_int8),
+    ]
+
+
+@pytest.mark.parametrize("function_boundaries", int_functions_and_boundaries)
 def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -271,7 +333,7 @@ def test_numpy_int_scalar(language, function_boundaries):
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = get_int(integer)
+    test_int_output = get_int(integer)
 
     assert f_integer_output == test_int_output
     assert matching_types(f_integer_output, test_int_output)
@@ -318,37 +380,53 @@ def test_numpy_int_scalar(language, function_boundaries):
     assert f_fl32_output == test_float32_output
     assert matching_types(f_fl32_output, test_float32_output)
 
-def get_int64_arr_1d(arr : 'T[:]'):
+
+def get_int64_arr_1d(arr: "T[:]"):
     from numpy import int64, shape
+
     a = int64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_int32_arr_1d(arr : 'T[:]'):
+
+def get_int32_arr_1d(arr: "T[:]"):
     from numpy import int32, shape
+
     a = int32(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_int16_arr_1d(arr : 'T[:]'):
+
+def get_int16_arr_1d(arr: "T[:]"):
     from numpy import int16, shape
+
     a = int16(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_int8_arr_1d(arr : 'T[:]'):
+
+def get_int8_arr_1d(arr: "T[:]"):
     from numpy import int8, shape
+
     a = int8(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_1d, min_int64, max_int64), (get_int32_arr_1d, min_int32, max_int32),\
-                                                 (get_int16_arr_1d, min_int16, max_int16), (get_int8_arr_1d, min_int8, max_int8)])
+
+@pytest.mark.parametrize(
+    "function_boundaries",
+    [
+        (get_int64_arr_1d, min_int64, max_int64),
+        (get_int32_arr_1d, min_int32, max_int32),
+        (get_int16_arr_1d, min_int16, max_int16),
+        (get_int8_arr_1d, min_int8, max_int8),
+    ],
+)
 def test_numpy_int_array_like_1d(language, function_boundaries):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -380,37 +458,53 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
     assert epyccel_func(fl64) == get_int(fl64)
     assert epyccel_func(fl32) == get_int(fl32)
 
-def get_int64_arr_2d(arr : 'T[:,:]'):
+
+def get_int64_arr_2d(arr: "T[:,:]"):
     from numpy import int64, shape
+
     a = int64(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[1,0]
+    return len(s), s[0], s[1], a[0, 0], a[1, 0]
 
-def get_int32_arr_2d(arr : 'T[:,:]'):
+
+def get_int32_arr_2d(arr: "T[:,:]"):
     from numpy import int32, shape
+
     a = int32(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[1,0]
+    return len(s), s[0], s[1], a[0, 0], a[1, 0]
 
-def get_int16_arr_2d(arr : 'T[:,:]'):
+
+def get_int16_arr_2d(arr: "T[:,:]"):
     from numpy import int16, shape
+
     a = int16(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[1,0]
+    return len(s), s[0], s[1], a[0, 0], a[1, 0]
 
-def get_int8_arr_2d(arr : 'T[:,:]'):
+
+def get_int8_arr_2d(arr: "T[:,:]"):
     from numpy import int8, shape
+
     a = int8(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[1,0]
+    return len(s), s[0], s[1], a[0, 0], a[1, 0]
 
-@pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_2d, min_int64, max_int64), (get_int32_arr_2d, min_int32, max_int32),\
-                                                 (get_int16_arr_2d, min_int16, max_int16), (get_int8_arr_2d, min_int8, max_int8)])
+
+@pytest.mark.parametrize(
+    "function_boundaries",
+    [
+        (get_int64_arr_2d, min_int64, max_int64),
+        (get_int32_arr_2d, min_int32, max_int32),
+        (get_int16_arr_2d, min_int16, max_int16),
+        (get_int8_arr_2d, min_int8, max_int8),
+    ],
+)
 def test_numpy_int_array_like_2d(language, function_boundaries):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -442,27 +536,35 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     assert epyccel_func(fl64) == get_int(fl64)
     assert epyccel_func(fl32) == get_int(fl32)
 
-def get_float(a : T):
+
+def get_float(a: T):
     from numpy import float as NumpyFloat
+
     b = NumpyFloat(a)
     return b
 
-def get_float64(a : T):
+
+def get_float64(a: T):
     from numpy import float64
+
     b = float64(a)
     return b
 
-def get_float32(a : T):
+
+def get_float32(a: T):
     from numpy import float32
+
     b = float32(a)
     return b
+
 
 if numpy_basic_types_deprecated:
     float_functions = [get_float64, get_float32]
 else:
     float_functions = [get_float64, get_float32, get_float]
 
-@pytest.mark.parametrize( 'get_float', float_functions)
+
+@pytest.mark.parametrize("get_float", float_functions)
 def test_numpy_float_scalar(language, get_float):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -475,7 +577,6 @@ def test_numpy_float_scalar(language, get_float):
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float32 / 2, max_float32 / 2)
-
 
     epyccel_func = epyccel(get_float, language=language)
 
@@ -492,7 +593,7 @@ def test_numpy_float_scalar(language, get_float):
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = get_float(integer)
+    test_int_output = get_float(integer)
 
     assert f_integer_output == test_int_output
     assert matching_types(f_integer_output, test_int_output)
@@ -540,24 +641,28 @@ def test_numpy_float_scalar(language, get_float):
     assert matching_types(f_fl64_output, test_float64_output)
 
 
-def get_float64_arr_1d(arr : 'T[:]'):
+def get_float64_arr_1d(arr: "T[:]"):
     from numpy import float64, shape
+
     a = float64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_float32_arr_1d(arr : 'T[:]'):
+
+def get_float32_arr_1d(arr: "T[:]"):
     from numpy import float32, shape
+
     a = float32(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@pytest.mark.parametrize( 'get_float', [get_float64_arr_1d, get_float32_arr_1d])
+
+@pytest.mark.parametrize("get_float", [get_float64_arr_1d, get_float32_arr_1d])
 def test_numpy_float_array_like_1d(language, get_float):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -565,10 +670,10 @@ def test_numpy_float_array_like_1d(language, get_float):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size=size)
 
     epyccel_func = epyccel(get_float, language=language)
 
@@ -582,24 +687,29 @@ def test_numpy_float_array_like_1d(language, get_float):
     assert epyccel_func(fl64) == get_float(fl64)
     assert epyccel_func(fl32) == get_float(fl32)
 
-def get_float64_arr_2d(arr : 'T[:,:]'):
+
+def get_float64_arr_2d(arr: "T[:,:]"):
     from numpy import float64, shape
+
     a = float64(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], s[1], a[0, 0], a[0, 1]
 
-def get_float32_arr_2d(arr : 'T[:,:]'):
+
+def get_float32_arr_2d(arr: "T[:,:]"):
     from numpy import float32, shape
+
     a = float32(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], s[1], a[0, 0], a[0, 1]
 
-@pytest.mark.parametrize( 'get_float', [get_float64_arr_2d, get_float32_arr_2d])
+
+@pytest.mark.parametrize("get_float", [get_float64_arr_2d, get_float32_arr_2d])
 def test_numpy_float_array_like_2d(language, get_float):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -607,10 +717,10 @@ def test_numpy_float_array_like_2d(language, get_float):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size=size)
 
     epyccel_func = epyccel(get_float, language=language)
 
@@ -624,10 +734,12 @@ def test_numpy_float_array_like_2d(language, get_float):
     assert epyccel_func(fl64) == get_float(fl64)
     assert epyccel_func(fl32) == get_float(fl32)
 
+
 def test_numpy_double_scalar(language):
 
-    def get_double(a : T):
+    def get_double(a: T):
         from numpy import double
+
         b = double(a)
         return b
 
@@ -641,7 +753,6 @@ def test_numpy_double_scalar(language):
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
 
     epyccel_func = epyccel(get_double, language=language)
 
@@ -658,7 +769,7 @@ def test_numpy_double_scalar(language):
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = get_double(integer)
+    test_int_output = get_double(integer)
 
     assert f_integer_output == test_int_output
     assert matching_types(f_integer_output, test_int_output)
@@ -708,15 +819,16 @@ def test_numpy_double_scalar(language):
 
 def test_numpy_double_array_like_1d(language):
 
-    def get_double(arr : 'T[:]'):
+    def get_double(arr: "T[:]"):
         from numpy import double, shape
+
         a = double(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -724,10 +836,10 @@ def test_numpy_double_array_like_1d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float / 2, max_float / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
     epyccel_func = epyccel(get_double, language=language)
 
@@ -740,18 +852,20 @@ def test_numpy_double_array_like_1d(language):
     assert epyccel_func(fl) == get_double(fl)
     assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
+
 
 def test_numpy_double_array_like_2d(language):
 
-    def get_double(arr : 'T[:,:]'):
+    def get_double(arr: "T[:,:]"):
         from numpy import double, shape
+
         a = double(arr)
         s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,1]
+        return len(s), s[0], s[1], a[0, 0], a[0, 1]
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -759,10 +873,10 @@ def test_numpy_double_array_like_2d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float / 2, max_float / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
     epyccel_func = epyccel(get_double, language=language)
 
@@ -777,17 +891,21 @@ def test_numpy_double_array_like_2d(language):
     assert epyccel_func(fl32) == get_double(fl32)
 
 
-def get_complex64(a : T):
+def get_complex64(a: T):
     from numpy import complex64
+
     b = complex64(a)
     return b
 
-def get_complex128(a : T):
+
+def get_complex128(a: T):
     from numpy import complex128
+
     b = complex128(a)
     return b
 
-@pytest.mark.parametrize( 'get_complex', [get_complex128, get_complex64])
+
+@pytest.mark.parametrize("get_complex", [get_complex128, get_complex64])
 def test_numpy_complex_scalar(language, get_complex):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -796,7 +914,7 @@ def test_numpy_complex_scalar(language, get_complex):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl   = uniform(min_float32 / 2, max_float32 / 2)
+    fl = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float32 / 2, max_float32 / 2)
@@ -816,7 +934,7 @@ def test_numpy_complex_scalar(language, get_complex):
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = get_complex(integer)
+    test_int_output = get_complex(integer)
 
     assert f_integer_output == test_int_output
     assert matching_types(f_integer_output, test_int_output)
@@ -864,38 +982,44 @@ def test_numpy_complex_scalar(language, get_complex):
     assert matching_types(f_fl64_output, test_float64_output)
 
 
-
-def get_complex128_arr_1d(arr : 'T[:]'):
+def get_complex128_arr_1d(arr: "T[:]"):
     from numpy import complex128, shape
+
     a = complex128(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_complex64_arr_1d(arr : 'T[:]'):
+
+def get_complex64_arr_1d(arr: "T[:]"):
     from numpy import complex64, shape
+
     a = complex64(arr)
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-def get_complex128_arr_2d(arr : 'T[:,:]'):
+
+def get_complex128_arr_2d(arr: "T[:,:]"):
     from numpy import complex128, shape
+
     a = complex128(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], s[1], a[0, 0], a[0, 1]
 
-def get_complex64_arr_2d(arr : 'T[:,:]'):
+
+def get_complex64_arr_2d(arr: "T[:,:]"):
     from numpy import complex64, shape
+
     a = complex64(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], s[1], a[0, 0], a[0, 1]
 
 
-@pytest.mark.parametrize( 'get_complex', [get_complex128_arr_1d, get_complex64_arr_1d])
+@pytest.mark.parametrize("get_complex", [get_complex128_arr_1d, get_complex64_arr_1d])
 def test_numpy_complex_array_like_1d(language, get_complex):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -904,10 +1028,10 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     # float32 is used as the maximum for all float types to avoid overflow errors
-    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size=size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
@@ -916,21 +1040,32 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     atol = ATOL32 if is_complex64 else ATOL
 
     assert np.allclose(epyccel_func(bl), get_complex(bl), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol)
+    assert np.allclose(
+        epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol
+    )
     assert np.allclose(epyccel_func(fl), get_complex(fl), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
-@pytest.mark.parametrize( 'get_complex', [get_complex128_arr_2d, get_complex64_arr_2d])
+
+@pytest.mark.parametrize("get_complex", [get_complex128_arr_2d, get_complex64_arr_2d])
 def test_numpy_complex_array_like_2d(language, get_complex):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 1, size=size, dtype=bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -939,10 +1074,10 @@ def test_numpy_complex_array_like_2d(language, get_complex):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     # float32 is used as the maximum for all float types to avoid overflow errors
-    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size=size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size=size)
 
     epyccel_func = epyccel(get_complex, language=language)
 
@@ -951,19 +1086,31 @@ def test_numpy_complex_array_like_2d(language, get_complex):
     atol = ATOL32 if is_complex64 else ATOL
 
     assert np.allclose(epyccel_func(bl), get_complex(bl), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol)
-    assert np.allclose(epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol)
+    assert np.allclose(
+        epyccel_func(integer8), get_complex(integer8), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer16), get_complex(integer16), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer), get_complex(integer), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer32), get_complex(integer32), rtol=rtol, atol=atol
+    )
+    assert np.allclose(
+        epyccel_func(integer64), get_complex(integer64), rtol=rtol, atol=atol
+    )
     assert np.allclose(epyccel_func(fl), get_complex(fl), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl64), get_complex(fl64), rtol=rtol, atol=atol)
     assert np.allclose(epyccel_func(fl32), get_complex(fl32), rtol=rtol, atol=atol)
 
+
 def test_literal_complex64(language):
     def get_complex64():
         from numpy import complex64
-        compl = complex64(3+4j)
+
+        compl = complex64(3 + 4j)
         return compl, compl.real, compl.imag
 
     epyccel_func = epyccel(get_complex64, language=language)
@@ -974,10 +1121,12 @@ def test_literal_complex64(language):
         assert pyth == pycc
         assert isinstance(pycc, type(pyth))
 
+
 def test_literal_complex128(language):
     def get_complex128():
         from numpy import complex128
-        compl = complex128(3+4j)
+
+        compl = complex128(3 + 4j)
         return compl, compl.real, compl.imag
 
     epyccel_func = epyccel(get_complex128, language=language)

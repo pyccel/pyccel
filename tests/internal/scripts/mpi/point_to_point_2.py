@@ -13,7 +13,7 @@ from pyccel.stdlib.internal.mpi import MPI_REAL8
 
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -29,15 +29,15 @@ if __name__ == '__main__':
     nx = np.int32(4)
     ny = np.int32(3 * 2)
     x = np.zeros(nx)
-    y = np.zeros((3,2))
+    y = np.zeros((3, 2))
 
     if rank == 0:
         x[:] = 1.0
-        y[:,:] = 1.0
+        y[:, :] = 1.0
 
     source = np.int32(0)
-    dest   = np.int32(1)
-    status = np.zeros(mpi_status_size, 'int32')
+    dest = np.int32(1)
+    status = np.zeros(mpi_status_size, "int32")
 
     # ...
     tag1 = np.int32(1234)
@@ -79,26 +79,26 @@ if __name__ == '__main__':
     tag4 = np.int32(8765)
     count = np.int32(1)
     if rank == source:
-        y[:,:] = 0.0
-        y[1,1] = 2.0
-        mpi_send(y[1,1], count, MPI_REAL8, dest, tag4, comm, ierr)
-        print("> test 4: processor ", rank, " sent ", y[1,1])
+        y[:, :] = 0.0
+        y[1, 1] = 2.0
+        mpi_send(y[1, 1], count, MPI_REAL8, dest, tag4, comm, ierr)
+        print("> test 4: processor ", rank, " sent ", y[1, 1])
 
     if rank == dest:
-        mpi_recv(y[1,1], count, MPI_REAL8, source, tag4, comm, status, ierr)
-        print("> test 4: processor ", rank, " got  ", y[1,1])
+        mpi_recv(y[1, 1], count, MPI_REAL8, source, tag4, comm, status, ierr)
+        print("> test 4: processor ", rank, " got  ", y[1, 1])
     # ...
 
     # ...
     tag5 = np.int32(6587)
     count = np.int32(2)
     if rank == source:
-        mpi_send(y[1,:], count, MPI_REAL8, dest, tag5, comm, ierr)
-        print("> test 5: processor ", rank, " sent ", y[1,:])
+        mpi_send(y[1, :], count, MPI_REAL8, dest, tag5, comm, ierr)
+        print("> test 5: processor ", rank, " sent ", y[1, :])
 
     if rank == dest:
-        mpi_recv(y[1,:], count, MPI_REAL8, source, tag5, comm, status, ierr)
-        print("> test 5: processor ", rank, " got  ", y[1,:])
+        mpi_recv(y[1, :], count, MPI_REAL8, source, tag5, comm, status, ierr)
+        print("> test 5: processor ", rank, " got  ", y[1, :])
     # ...
 
     mpi_finalize(ierr)

@@ -1,9 +1,8 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)
-"""
+# ------------------------------------------------------------------------------------------#
+"""File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)"""
 
 import inspect
 import importlib
@@ -16,17 +15,17 @@ from importlib.machinery import ExtensionFileLoader
 
 from filelock import FileLock, Timeout
 
-from pyccel.utilities.stage    import PyccelStage
-from pyccel.utilities.strings  import random_string
-from pyccel.codegen.pipeline   import execute_pyccel
-from pyccel.errors.errors      import ErrorsMode, PyccelError, Errors
+from pyccel.utilities.stage import PyccelStage
+from pyccel.utilities.strings import random_string
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.errors.errors import ErrorsMode, PyccelError, Errors
 
 errors = Errors()
 
-__all__ = ['get_source_code_and_context', 'epyccel_seq', 'epyccel']
+__all__ = ["get_source_code_and_context", "epyccel_seq", "epyccel"]
 
 
-#==============================================================================
+# ==============================================================================
 def get_source_code_and_context(func_or_class):
     """
     Get the source code and context from a function or a class.
@@ -59,7 +58,7 @@ def get_source_code_and_context(func_or_class):
         callable.
     """
     if not callable(func_or_class):
-        raise TypeError('Expecting a callable function')
+        raise TypeError("Expecting a callable function")
 
     lines, _ = inspect.getsourcelines(func_or_class)
     # remove indentation if the first line is indented
@@ -70,22 +69,25 @@ def get_source_code_and_context(func_or_class):
     # Strip trailing comments (e.g. pylint disable)
     commentless_lines = []
     for l in lines:
-        comment = l.rfind('#')
+        comment = l.rfind("#")
         # Avoid # in a string
         if l[:comment].count("'") % 2 == 0 and l[:comment].count("'") % 2 == 0:
-            l = l[:comment] + '\n'
+            l = l[:comment] + "\n"
         commentless_lines.append(l)
 
     # Search for methods
-    methods = [(func_or_class.__name__, func_or_class)] if isinstance(func_or_class, FunctionType) else \
-                inspect.getmembers(func_or_class, predicate=inspect.isfunction)
+    methods = (
+        [(func_or_class.__name__, func_or_class)]
+        if isinstance(func_or_class, FunctionType)
+        else inspect.getmembers(func_or_class, predicate=inspect.isfunction)
+    )
 
-    func_name_regex = re.compile(r'^\s*def\s+([a-zA-Z0-9_]+)\s*\(')
+    func_name_regex = re.compile(r"^\s*def\s+([a-zA-Z0-9_]+)\s*\(")
     func_match = [re.match(func_name_regex, l) for l in lines]
     prototypes = {m[1]: i for i, m in enumerate(func_match) if m}
 
     if len(methods) == 0:
-        return ''.join(lines), {}
+        return "".join(lines), {}
 
     # Build context dict with globals
     _, method0 = methods[0]
@@ -93,7 +95,7 @@ def get_source_code_and_context(func_or_class):
 
     # Sort the methods in reverse order of appearance to preserve line indices
     # during treatment of methods
-    methods.sort(key = lambda m: prototypes[m[0]], reverse=True)
+    methods.sort(key=lambda m: prototypes[m[0]], reverse=True)
 
     for m_name, m in methods:
         # Update context dict with closure vars
@@ -109,11 +111,15 @@ def get_source_code_and_context(func_or_class):
         indent = len(method_prototype) - len(method_prototype.lstrip())
 
         # Handle multi-line prototypes
-        end_of_prototype_idx = next(i for i, l in enumerate(commentless_lines[prototype_idx:]) if l.strip().endswith(':'))
+        end_of_prototype_idx = next(
+            i
+            for i, l in enumerate(commentless_lines[prototype_idx:], prototype_idx)
+            if l.strip().endswith(":")
+        )
         if end_of_prototype_idx > prototype_idx:
-            lines = lines[:prototype_idx+1] + lines[end_of_prototype_idx+1:]
+            lines = lines[: prototype_idx + 1] + lines[end_of_prototype_idx + 1 :]
 
-        method_prototype = ' '*indent + f'def {m_name}{sig}:\n'
+        method_prototype = " " * indent + f"def {m_name}{sig}:\n"
 
         # TypeVar in a signature appear as +T, -T or ~T but the associated variable
         # T will not be available from the closure vars or globals, we therefore
@@ -126,20 +132,27 @@ def get_source_code_and_context(func_or_class):
                 name = annot.__name__
                 if name in context_dict:
                     if context_dict[name] != annot:
-                        errors.report("Multiple TypeVars found with the same name",
-                                severity='fatal', line=1)
+                        errors.report(
+                            "Multiple TypeVars found with the same name",
+                            severity="fatal",
+                            line=1,
+                        )
                 else:
                     context_dict[name] = annot
                 method_prototype = method_prototype.replace(str(annot), name)
-            elif isinstance(annot, typing.GenericAlias) or getattr(annot, '__origin__', None) is typing.Final:
+            elif (
+                isinstance(annot, typing.GenericAlias)
+                or getattr(annot, "__origin__", None) is typing.Final
+            ):
                 params.update(typing.get_args(annot))
 
         # Save the updated prototype
         lines[prototype_idx] = method_prototype
 
-    return ''.join(lines), context_dict
+    return "".join(lines), context_dict
 
-#==============================================================================
+
+# ==============================================================================
 def get_unique_name(prefix, path):
     """
     Get a unique module name.
@@ -162,7 +175,7 @@ def get_unique_name(prefix, path):
                   A file lock preventing other threads
                   from creating a module with the same name.
     """
-    module_import_prefix = prefix + '_'
+    module_import_prefix = prefix + "_"
 
     # Find an unused name
     tag = random_string(12)
@@ -172,13 +185,13 @@ def get_unique_name(prefix, path):
         tag = random_string(12)
         module_name = module_import_prefix + tag
 
-    module_name = module_name.split('.')[-1]
+    module_name = module_name.split(".")[-1]
 
     # Create new directories if not existing
     os.makedirs(path, exist_ok=True)
 
     # Ensure that the name is not in use by another thread
-    lock = FileLock(os.path.join(path, module_name) + '.lock')
+    lock = FileLock(os.path.join(path, module_name) + ".lock")
     try:
         lock.acquire(timeout=0.1)
         if module_name in sys.modules:
@@ -187,26 +200,29 @@ def get_unique_name(prefix, path):
         return get_unique_name(prefix, path)
     return module_name, lock
 
-#==============================================================================
-def epyccel_seq(function_class_or_module, *,
-                language        = 'fortran',
-                compiler_family = None,
-                compiler_config = None,
-                flags           = None,
-                wrapper_flags   = None,
-                debug           = None,
-                include         = (),
-                libdir          = (),
-                libs            = (),
-                folder          = None,
-                mpi             = False,
-                openmp          = False,
-                openacc         = False,
-                verbose         = 0,
-                time_execution  = False,
-                conda_warnings  = 'basic',
-                context_dict    = None
-    ):
+
+# ==============================================================================
+def epyccel_seq(
+    function_class_or_module,
+    *,
+    language="fortran",
+    compiler_family=None,
+    compiler_config=None,
+    flags=None,
+    wrapper_flags=None,
+    debug=None,
+    include=(),
+    libdir=(),
+    libs=(),
+    folder=None,
+    mpi=False,
+    openmp=False,
+    openacc=False,
+    verbose=0,
+    time_execution=False,
+    conda_warnings="basic",
+    context_dict=None,
+):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -271,41 +287,45 @@ def epyccel_seq(function_class_or_module, *,
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
-        raise TypeError('> Expecting a FunctionType, type, str, or a ModuleType')
+        raise TypeError("> Expecting a FunctionType, type, str, or a ModuleType")
 
     # Check if compiler_family and compiler_config are mutually exclusive
     if None not in (compiler_family, compiler_config):
-        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+        raise TypeError(
+            "> Only one of the parameters `compiler_family` or `compiler_config` may be provided"
+        )
 
     # Get the directory path of the function or module
     if isinstance(function_class_or_module, (FunctionType, type, str)):
         dirpath = os.getcwd()
-    else: # ModuleType
+    else:  # ModuleType
         dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
     folder = dirpath if folder is None else os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
-    epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+    epyccel_dirname = "__epyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
     # ... get the module source code
     if isinstance(function_class_or_module, (FunctionType, type)):
-        code, collected_context_dict = get_source_code_and_context(function_class_or_module)
+        code, collected_context_dict = get_source_code_and_context(
+            function_class_or_module
+        )
         if context_dict:
             collected_context_dict.update(context_dict)
         context_dict = collected_context_dict
-        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
+        module_name, module_lock = get_unique_name("mod", epyccel_dirpath)
 
     elif isinstance(function_class_or_module, str):
         code = function_class_or_module
-        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
+        module_name, module_lock = get_unique_name("mod", epyccel_dirpath)
 
-    else: # ModuleType
+    else:  # ModuleType
         pymod = function_class_or_module
         lines = inspect.getsourcelines(pymod)[0]
-        code = ''.join(lines)
+        code = "".join(lines)
         module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     # execute_pyccel wants a unique string for the compiler family and the JSON file
@@ -327,7 +347,7 @@ def epyccel_seq(function_class_or_module, *,
 
     # Try is necessary to ensure lock is released
     try:
-        pymod_filename = os.path.join(epyccel_dirpath, f'{module_name}.py')
+        pymod_filename = os.path.join(epyccel_dirpath, f"{module_name}.py")
         # ...
 
         # Create new directories if not existing
@@ -335,34 +355,35 @@ def epyccel_seq(function_class_or_module, *,
         os.makedirs(epyccel_dirpath, exist_ok=True)
 
         # Store python file in '__epyccel__' folder, so that execute_pyccel can run
-        with open(pymod_filename, 'w', encoding='utf-8') as f:
+        with open(pymod_filename, "w", encoding="utf-8") as f:
             f.writelines(code)
 
         pyccel_stage = PyccelStage()
         try:
             # Generate shared library
-            execute_pyccel(pymod_filename,
-                           verbose         = verbose,
-                           time_execution  = time_execution,
-                           language        = language,
-                           compiler_family = compiler_family_or_config,
-                           flags           = flags,
-                           wrapper_flags   = wrapper_flags,
-                           include         = include,
-                           libdir          = libdir,
-                           modules         = (),
-                           libs            = libs,
-                           debug           = debug,
-                           accelerators    = accelerators,
-                           output_name     = module_name,
-                           conda_warnings  = conda_warnings,
-                           context_dict    = context_dict)
+            execute_pyccel(
+                pymod_filename,
+                verbose=verbose,
+                time_execution=time_execution,
+                language=language,
+                compiler_family=compiler_family_or_config,
+                flags=flags,
+                wrapper_flags=wrapper_flags,
+                include=include,
+                libdir=libdir,
+                modules=(),
+                libs=libs,
+                debug=debug,
+                accelerators=accelerators,
+                output_name=module_name,
+                conda_warnings=conda_warnings,
+                context_dict=context_dict,
+            )
         except PyccelError as err:
             raise err
         finally:
             pyccel_stage.pyccel_finished()
-            print(errors, end='')
-
+            print(errors, end="")
 
         # Import shared library
         sys.path.insert(0, epyccel_dirpath)
@@ -374,11 +395,11 @@ def epyccel_seq(function_class_or_module, *,
         package = importlib.import_module(module_name)
         sys.path.remove(epyccel_dirpath)
 
-        if language and language.lower() != 'python':
+        if language and language.lower() != "python":
             # Verify that we have imported the shared library, not the Python one
-            loader = getattr(package, '__loader__', None)
+            loader = getattr(package, "__loader__", None)
             if not isinstance(loader, ExtensionFileLoader):
-                raise ImportError('Could not load shared library')
+                raise ImportError("Could not load shared library")
 
         # If Python object was a function or a class, extract it from module
         if isinstance(function_class_or_module, (FunctionType, type)):
@@ -391,32 +412,33 @@ def epyccel_seq(function_class_or_module, *,
     # Return accelerated Python module and function
     return package, func
 
-#==============================================================================
+
+# ==============================================================================
 def epyccel(
     function_class_or_module,
     *,
-    language        = 'fortran',
-    compiler_family = None,
-    compiler_config = None,
-    flags           = None,
-    wrapper_flags   = None,
-    debug           = None,
-    include         = (),
-    libdir          = (),
-    libs            = (),
-    folder          = None,
-    mpi             = False,
-    openmp          = False,
-#    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
-    verbose         = 0,
-    time_execution  = False,
-    developer_mode  = False,
-    conda_warnings  = 'basic',
-    context_dict    = None,
-    comm            = None,
-    root            = 0,
-    bcast           = True,
-    ):
+    language="fortran",
+    compiler_family=None,
+    compiler_config=None,
+    flags=None,
+    wrapper_flags=None,
+    debug=None,
+    include=(),
+    libdir=(),
+    libs=(),
+    folder=None,
+    mpi=False,
+    openmp=False,
+    #    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
+    verbose=0,
+    time_execution=False,
+    developer_mode=False,
+    conda_warnings="basic",
+    context_dict=None,
+    comm=None,
+    root=0,
+    bcast=True,
+):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -485,10 +507,10 @@ def epyccel(
     root : int, optional
         MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
-        If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
+        If False, only root process loads accelerated function/module (default: True) (for parallel mode).
 
-    See Also 
-    -------- 
+    See Also
+    --------
     epyccel_seq
         The version of this function called in a sequential context.
 
@@ -502,21 +524,24 @@ def epyccel(
     assert isinstance(function_class_or_module, (FunctionType, type, ModuleType, str))
 
     if None not in (compiler_family, compiler_config):
-        raise TypeError('> Only one of the parameters `compiler_family` or `compiler_config` may be provided')
+        raise TypeError(
+            "> Only one of the parameters `compiler_family` or `compiler_config` may be provided"
+        )
 
     err_mode = ErrorsMode()
     if developer_mode:
-        err_mode.set_mode('developer')
+        err_mode.set_mode("developer")
     else:
-        err_mode.set_mode(os.environ.get('PYCCEL_ERROR_MODE', 'user'))
+        err_mode.set_mode(os.environ.get("PYCCEL_ERROR_MODE", "user"))
 
     # Parallel version
     if comm is not None:
 
         from mpi4py import MPI
-        from tblib  import pickling_support   # [YG, 27.10.2020] We use tblib to
-        pickling_support.install()            # pickle tracebacks, which allows
-                                              # mpi4py to broadcast exceptions
+        from tblib import pickling_support  # [YG, 27.10.2020] We use tblib to
+
+        pickling_support.install()  # pickle tracebacks, which allows
+        # mpi4py to broadcast exceptions
         assert isinstance(comm, MPI.Comm)
         assert isinstance(root, int)
 
@@ -525,34 +550,34 @@ def epyccel(
             try:
                 mod, obj = epyccel_seq(
                     function_class_or_module,
-                    language        = language,
-                    compiler_family = compiler_family,
-                    compiler_config = compiler_config,
-                    flags           = flags,
-                    wrapper_flags   = wrapper_flags,
-                    include         = include,
-                    libdir          = libdir,
-                    libs            = libs,
-                    folder          = folder,
-                    mpi             = True,
-                    openmp          = openmp,
-                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
-                    verbose         = verbose,
-                    time_execution  = time_execution,
-                    debug           = debug,
-                    conda_warnings  = conda_warnings,
-                    context_dict    = context_dict
+                    language=language,
+                    compiler_family=compiler_family,
+                    compiler_config=compiler_config,
+                    flags=flags,
+                    wrapper_flags=wrapper_flags,
+                    include=include,
+                    libdir=libdir,
+                    libs=libs,
+                    folder=folder,
+                    mpi=True,
+                    openmp=openmp,
+                    openacc=False,  # [YG, 17.06.2025] OpenACC is not supported yet
+                    verbose=verbose,
+                    time_execution=time_execution,
+                    debug=debug,
+                    conda_warnings=conda_warnings,
+                    context_dict=context_dict,
                 )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
                 obj_name = function_class_or_module.__name__ if obj else None
-                success  = True
+                success = True
             # error handling carried out after broadcast to prevent deadlocks
             except PyccelError as e:
                 raise type(e)(str(e)) from None
-            except BaseException as e: # pylint: disable=broad-except
+            except BaseException as e:  # pylint: disable=broad-except
                 exc_info = e
-                success  = False
+                success = False
 
         # Non-master processes initialize empty variables
         else:
@@ -561,7 +586,7 @@ def epyccel(
             mod_name = None
             obj_name = None
             exc_info = None
-            success  = None
+            success = None
 
         # Broadcast success state, and raise exception if needed
         if not comm.bcast(success, root=root):
@@ -588,25 +613,25 @@ def epyccel(
     else:
         try:
             mod, obj = epyccel_seq(
-                    function_class_or_module,
-                    language        = language,
-                    compiler_family = compiler_family,
-                    compiler_config = compiler_config,
-                    flags           = flags,
-                    wrapper_flags   = wrapper_flags,
-                    include         = include,
-                    libdir          = libdir,
-                    libs            = libs,
-                    folder          = folder,
-                    mpi             = mpi,
-                    openmp          = openmp,
-                    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
-                    verbose         = verbose,
-                    time_execution  = time_execution,
-                    debug           = debug,
-                    conda_warnings  = conda_warnings,
-                    context_dict    = context_dict
-                )
+                function_class_or_module,
+                language=language,
+                compiler_family=compiler_family,
+                compiler_config=compiler_config,
+                flags=flags,
+                wrapper_flags=wrapper_flags,
+                include=include,
+                libdir=libdir,
+                libs=libs,
+                folder=folder,
+                mpi=mpi,
+                openmp=openmp,
+                openacc=False,  # [YG, 17.06.2025] OpenACC is not supported yet
+                verbose=verbose,
+                time_execution=time_execution,
+                debug=debug,
+                conda_warnings=conda_warnings,
+                context_dict=context_dict,
+            )
         except PyccelError as e:
             raise type(e)(str(e)) from None
 

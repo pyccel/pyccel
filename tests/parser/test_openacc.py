@@ -3,15 +3,18 @@
 import pytest
 from pyccel.parser.syntax.openacc import parse
 
+
 @pytest.mark.language_agnostic
 def test_parallel():
-    d = parse(stmts='#$ acc parallel private(idx)')
+    d = parse(stmts="#$ acc parallel private(idx)")
+
 
 @pytest.mark.language_agnostic
 def test_kernels():
-    d = parse(stmts='#$ acc kernels')
+    d = parse(stmts="#$ acc kernels")
+
 
 ######################
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_parallel()
     test_kernels()

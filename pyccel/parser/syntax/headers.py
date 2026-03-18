@@ -1,30 +1,35 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-"""
-"""
+# ------------------------------------------------------------------------------------------#
+""" """
+
 import warnings
 from os.path import join, dirname
 
 from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import MetaVariable
-from pyccel.ast.core      import FunctionDefArgument, EmptyNode
-from pyccel.ast.variable  import DottedName
-from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralEllipsis, Nil
+from pyccel.ast.headers import MetaVariable
+from pyccel.ast.core import FunctionDefArgument, EmptyNode
+from pyccel.ast.variable import DottedName
+from pyccel.ast.literals import LiteralString, LiteralInteger, LiteralFloat
+from pyccel.ast.literals import LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
-from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
-from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.variable import AnnotatedPyccelSymbol, IndexedElement
+from pyccel.ast.type_annotations import (
+    SyntacticTypeAnnotation,
+    FunctionTypeAnnotation,
+    UnionTypeAnnotation,
+)
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False
 errors = Errors()
 pyccel_stage = PyccelStage()
+
 
 class Header:
     """
@@ -39,9 +44,11 @@ class Header:
     **kwargs : dict
         TextX keyword arguments.
     """
-    def __init__(self, statements = (), **kwargs):
+
+    def __init__(self, statements=(), **kwargs):
         self.statements = statements
         super().__init__(**kwargs)
+
 
 class DoubleQuotedStr(BasicStmt):
     """
@@ -58,9 +65,11 @@ class DoubleQuotedStr(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, contents, **kwargs):
         self.contents = contents
         super().__init__(**kwargs)
+
 
 class SingleQuotedStr(BasicStmt):
     """
@@ -77,9 +86,11 @@ class SingleQuotedStr(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, contents, **kwargs):
         self.contents = contents
         super().__init__(**kwargs)
+
 
 class TrailerSubscriptList(BasicStmt):
     """
@@ -97,10 +108,12 @@ class TrailerSubscriptList(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, args, order, **kwargs):
         self.args = args
         self.order = order.capitalize() or None
         super().__init__(**kwargs)
+
 
 class Type(BasicStmt):
     """
@@ -118,6 +131,7 @@ class Type(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, dtype, trailer=None, **kwargs):
         self.dtype = dtype
         self.trailer = trailer
@@ -159,12 +173,13 @@ class Type(BasicStmt):
         """
         if isinstance(s, Type):
             return s.expr
-        elif s == ':':
+        elif s == ":":
             return Slice(None, None)
-        elif s == '...':
+        elif s == "...":
             return LiteralEllipsis()
         else:
             raise NotImplementedError(f"Unrecognised type trailer argument : {s}")
+
 
 class FuncType(BasicStmt):
     """
@@ -184,6 +199,7 @@ class FuncType(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, args, results, **kwargs):
         self.args = args
         self.results = results
@@ -201,6 +217,7 @@ class FuncType(BasicStmt):
 
         return FunctionTypeAnnotation(args, results)
 
+
 class UnionTypeStmt(BasicStmt):
     """
     Class describing a union of possible types.
@@ -215,6 +232,7 @@ class UnionTypeStmt(BasicStmt):
     **kwargs : dict
         TextX keyword arguments.
     """
+
     def __init__(self, dtypes, **kwargs):
         self.dtypes = list(dtypes)
         super().__init__(**kwargs)
@@ -228,7 +246,7 @@ class UnionTypeStmt(BasicStmt):
         To be removed when header support is deprecated.
         """
         dtypes = [i.expr for i in self.dtypes]
-        if len(dtypes)==1:
+        if len(dtypes) == 1:
             return dtypes[0]
 
         return UnionTypeAnnotation(*dtypes)
@@ -246,8 +264,8 @@ class MetavarHeaderStmt(BasicStmt):
         value: str
             associated value
         """
-        self.name = kwargs.pop('name')
-        self.value = kwargs.pop('value')
+        self.name = kwargs.pop("name")
+        self.value = kwargs.pop("value")
 
         super(MetavarHeaderStmt, self).__init__(**kwargs)
 
@@ -264,41 +282,48 @@ class MetavarHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType, DoubleQuotedStr, SingleQuotedStr]
-hdr_classes = [Header,
-               MetavarHeaderStmt]
+type_classes = [
+    UnionTypeStmt,
+    Type,
+    TrailerSubscriptList,
+    FuncType,
+    DoubleQuotedStr,
+    SingleQuotedStr,
+]
+hdr_classes = [Header, MetavarHeaderStmt]
 
 this_folder = dirname(__file__)
 
 # Get meta-model from language description
-types_grammar = join(this_folder, '../grammar/types.tx')
-header_grammar = join(this_folder, '../grammar/headers.tx')
+types_grammar = join(this_folder, "../grammar/types.tx")
+header_grammar = join(this_folder, "../grammar/headers.tx")
 
 types_meta = metamodel_from_file(types_grammar, classes=type_classes)
 register_language("types", metamodel=types_meta)
 
-with open(header_grammar, 'r', encoding="utf-8") as f:
+with open(header_grammar, "r", encoding="utf-8") as f:
     grammar = f.read()
-with open(types_grammar, 'r', encoding="utf-8") as f:
+with open(types_grammar, "r", encoding="utf-8") as f:
     grammar += f.read()
 
-meta = metamodel_from_str(grammar, classes=hdr_classes+type_classes)
+meta = metamodel_from_str(grammar, classes=hdr_classes + type_classes)
 register_language("headers", metamodel=meta)
 
+
 def parse(filename=None, stmts=None):
-    """ Parse header pragmas
+    """Parse header pragmas
 
-      Parameters
-      ----------
+    Parameters
+    ----------
 
-      filename: str
+    filename: str
 
-      stmts   : list
+    stmts   : list
 
-      Results
-      -------
+    Results
+    -------
 
-      stmts  : list
+    stmts  : list
 
     """
     # Instantiate model
@@ -307,9 +332,9 @@ def parse(filename=None, stmts=None):
     elif stmts:
         model = meta.model_from_str(stmts)
     else:
-        raise ValueError('Expecting a filename or a string')
+        raise ValueError("Expecting a filename or a string")
     # Ensure correct stage
-    pyccel_stage.set_stage('syntactic')
+    pyccel_stage.set_stage("syntactic")
 
     stmts = []
     for stmt in model.statements:
@@ -320,4 +345,3 @@ def parse(filename=None, stmts=None):
         return stmts[0]
     else:
         return stmts
-

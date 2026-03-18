@@ -1,15 +1,18 @@
 # Object has already been defined with type 'float'. Type 'int' in assignment is incompatible
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+
 class A:
-    x : float
-    def __init__(self : 'A'):
+    x: float
+
+    def __init__(self: "A"):
         self.x = 3
 
-    def get_4(self : 'A'):
+    def get_4(self: "A"):
         return 4
 
-if __name__ == '__main__':
-    myA : 'A' = A()
+
+if __name__ == "__main__":
+    myA: "A" = A()
 
     print(myA.x)
