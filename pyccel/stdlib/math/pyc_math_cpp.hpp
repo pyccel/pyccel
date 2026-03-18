@@ -20,6 +20,9 @@
 int64_t pyc_gcd(int64_t a, int64_t b);
 int64_t pyc_lcm(int64_t a, int64_t b);
 
+double fpyc_bankers_round(double arg, int64_t ndigits);
+int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
+
 inline double pyc_radians(double degrees)
 {
     return degrees * (M_PI / 180);
@@ -63,9 +66,6 @@ std::complex<T> sign(std::complex<T> x)
     T absolute = std::abs(x);
     return ((absolute == 0) ? 0.0 : (x / absolute));
 }
-
-double fpyc_bankers_round(double arg, int64_t ndigits);
-int64_t ipyc_bankers_round(int64_t arg, int64_t ndigits);
 
 template <class T>
 T py_floor_div(T x, T y)
