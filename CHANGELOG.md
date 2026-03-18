@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+-   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
+
 ## \[2.2.2\] - 2026-03-09
 
 ### Fixed
