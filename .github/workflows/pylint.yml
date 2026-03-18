@@ -60,7 +60,7 @@ jobs:
           git diff ${BASE}...HEAD
           git diff ${BASE}...HEAD > diff.patch
           # Run without failure on local reporter to allow use of -diff argument
-          reviewdog -runners=pylint -filter-mode=diff_context -diff="diff.patch"
+          reviewdog -runners=pylint -filter-mode=diff_context -diff="diff.patch" -tee
           reviewdog -runners=pylint -filter-mode=diff_context -diff="diff.patch" | reviewdog -reporter=github-annotations -fail-level=any
         shell: bash
         env:
