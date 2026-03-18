@@ -1007,7 +1007,7 @@ class CCodePrinter(CodePrinter):
                 Import("stc/common", AsName(VariableTypeAnnotation(arg.dtype), key))
             )
             args_code = ", ".join(self._print(a) for a in arg.args)
-            return f"{key}_{expr.name}({len(arg.args)}, {args_code})"
+            return f"{key}_{expr.name}(({key}[]){{{args_code}}}, {len(arg.args)})"
         elif isinstance(arg, Variable):
             if (
                 isinstance(arg.class_type, (HomogeneousListType, HomogeneousSetType))
