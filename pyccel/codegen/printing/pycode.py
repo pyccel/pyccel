@@ -10,7 +10,8 @@ are generated alongside the translated code. These files contain type
 annotations which are used by type checkers and IDEs to provide better support
 for the generated code. The `PythonCodePrinter` is also used to print the code
 for inline functions and interfaces which are not translated but must be
-available in Python for the translated code to work.
+available in Python for the translated code to work, as well as to simply print
+Python code for the tests.
 """
 
 import ast
