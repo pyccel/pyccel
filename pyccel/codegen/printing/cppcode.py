@@ -628,13 +628,16 @@ class CppCodePrinter(CodePrinter):
     # ------------------------------
 
     def _print_PyccelBitAnd(self, expr):
-        return " & ".join(self._print(a) for a in expr.args)
+        a, b = expr.args
+        return f"{self._print(a)} & {self._print(b)}"
 
     def _print_PyccelBitOr(self, expr):
-        return " | ".join(self._print(a) for a in expr.args)
+        a, b = expr.args
+        return f"{self._print(a)} | {self._print(b)}"
 
     def _print_PyccelBitXor(self, expr):
-        return " ^ ".join(self._print(a) for a in expr.args)
+        a, b = expr.args
+        return f"{self._print(a)} ^ {self._print(b)}"
 
     # ------------------------------
     #  Bit shifts
