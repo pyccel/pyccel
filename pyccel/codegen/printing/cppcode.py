@@ -128,9 +128,9 @@ cpp_library_headers = {
 
 class CppCodePrinter(CodePrinter):
     """
-    A printer for printing code in C.
+    A printer for printing code in C++.
 
-    A printer to convert Pyccel's AST to strings of c code.
+    A printer to convert Pyccel's AST to strings of C++ code.
     As for all printers the navigation of this file is done via _print_X
     functions.
 
