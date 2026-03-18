@@ -1096,10 +1096,22 @@ class PythonCodePrinter(CodePrinter):
 
         args = expr.args
         if func.arguments and func.arguments[0].bound_argument:
-            func_name = f"{self._print(args[0])}.{func_name}"
+            expected_cls = func.arguments[0].var.cls_base
+            received_cls = self.scope.find(args[0].value.class_type.name, "classes")
+            if received_cls is None:
+                cls_type_name = self.scope.get_import_alias(args[0].value.class_type)
+                received_cls = self.scope.find(
+                    cls_type_name, "classes", raise_if_missing=True
+                )
+            if expected_cls.get_method(
+                syntactic_name=func_name
+            ) is not received_cls.get_method(syntactic_name=func_name):
+                func_name = f"{expected_cls.name}.{func_name}"
+            else:
+                func_name = f"{self._print(args[0])}.{func_name}"
+                args = args[1:]
             if "property" in func.decorators:
                 return func_name
-            args = args[1:]
         args_str = ", ".join(self._print(i) for i in args)
         code = f"{func_name}({args_str})"
         if expr.funcdef.results:
@@ -1965,7 +1977,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ClassDef(self, expr):
         name = self.scope.get_python_name(expr.name)
-        superclasses = ", ".join(self._print(arg) for arg in expr.superclasses)
+        superclasses = ", ".join(arg.name for arg in expr.superclasses)
         classDefName = f"class {name}({superclasses}):"
         docstring = (
             self._indent_codestring(self._print(expr.docstring))

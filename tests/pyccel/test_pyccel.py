@@ -1092,6 +1092,7 @@ def test_array_binary_op(language):
         "scripts/classes/class_with_non_target_array_arg.py",
         "scripts/classes/class_pointer.py",
         "scripts/classes/class_pointer_2.py",
+        "scripts/classes/inheritance.py",
     ],
 )
 def test_classes(test_file, language):

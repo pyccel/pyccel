@@ -68,7 +68,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | `staticmethod` | No |
 | `str` | As a type annotation or with string arguments |
 | **`sum`** | **Yes** |
-| `super` | No |
+| **`super`** | **Yes** |
 | **`tuple`** | **Yes** |
 | **`type`** | **Yes** |
 | `vars` | No |

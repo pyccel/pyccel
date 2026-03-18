@@ -190,6 +190,15 @@ class Scope:
         return self._name
 
     @property
+    def scope_type(self):
+        """
+        The type of the scope.
+
+        The type of the scope [module, function, class, loop, program].
+        """
+        return self._scope_type
+
+    @property
     def symbol_prefix(self):
         """
         The prefix used for symbols.
@@ -514,6 +523,15 @@ class Scope:
             )
         assert name in self._used_symbols
         self._locals["classes"][name] = cls
+
+    def clear_classes(self):
+        """
+        Remove all classes from the scope.
+
+        Remove all classes from the scope. This is necessary to remove syntactic classes
+        before starting the semantic treatment.
+        """
+        self._locals["classes"] = {}
 
     def insert_cls_construct(self, class_type):
         """

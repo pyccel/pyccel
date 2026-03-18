@@ -869,6 +869,23 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
                     assigns, indices, new_index, language_has_vectors, result=result
                 )
 
+        elif isinstance(line, NumpyCross) and line.n_indices:
+            new_indices = [
+                new_index(PythonNativeInt(), "i") for _ in range(line.n_indices)
+            ]
+            indices.extend(new_indices)
+            block = line.insert_indices(*new_indices)
+            a_shape = [s for i, s in enumerate(line.a.shape) if i != line.axis_a]
+            b_shape = [s for i, s in enumerate(line.b.shape) if i != line.axis_b]
+            shape = [
+                a_s if a_s != LiteralInteger(1) else b_s
+                for a_s, b_s in zip(a_shape, b_shape)
+            ]
+            modified_vars = {line.a, line.b}
+            for sh in shape[::-1]:
+                block = LoopCollection([block], sh, modified_vars)
+            result.append(block)
+
         else:
             # Save line in top level (no for loop)
             result.append(line)

@@ -576,3 +576,36 @@ def test_class_variables(language):
         assert a_py.get_4() == a_l.get_4()
         assert np.array_equal(a_py.y, a_l.y)
         assert a_py.get_y_len() == a_l.get_y_len()
+
+
+def test_class_inheritance_implicit_constructor(language):
+    import classes.inheritance_implicit_constructor as mod
+
+    modnew = epyccel(mod, language=language)
+
+    b_py = mod.B()
+    b_l = modnew.B()
+
+    assert isinstance(b_l, modnew.B)
+    assert isinstance(b_l, modnew.A)
+
+    assert b_l.x == b_py.x
+
+
+def test_class_inheritance_dispatch(language):
+    import classes.inheritance_dispatch as mod
+
+    modnew = epyccel(mod, language=language)
+
+    a_py = mod.A()
+    a_l = modnew.A()
+    b_py = mod.B()
+    b_l = modnew.B()
+
+    assert isinstance(a_l, modnew.A)
+    assert not isinstance(a_l, modnew.B)
+    assert isinstance(b_l, modnew.B)
+    assert isinstance(b_l, modnew.A)
+
+    assert a_l.f() == a_py.f()
+    assert b_l.f() == b_py.f()

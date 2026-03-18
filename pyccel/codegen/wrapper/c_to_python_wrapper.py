@@ -24,6 +24,7 @@ from pyccel.ast.core import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core import Import, Module, AugAssign, CommentBlock, For
 from pyccel.ast.core import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
+from pyccel.ast.cwrapper import PyccelPyClassType
 from pyccel.ast.cwrapper import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper import PyErr_SetString, PyTypeError, PyNotImplementedError
@@ -185,11 +186,14 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
+            py_dtype = self._python_object_map[dtype]
             var = Variable(
-                self._python_object_map[dtype],
+                py_dtype,
                 self.scope.get_new_name(name),
                 memory_handling="alias",
-                cls_base=self.scope.find(dtype.name, "classes", raise_if_missing=True),
+                cls_base=self.scope.find(
+                    py_dtype.name, "classes", raise_if_missing=True
+                ),
                 is_temp=is_temp,
             )
         else:
@@ -385,8 +389,9 @@ class CToPythonWrapper(Wrapper):
         error_code = ()
         dtype = arg.dtype
         if isinstance(dtype, CustomDataType):
+            py_dtype = self._python_object_map[dtype]
             python_cls_base = self.scope.find(
-                dtype.name, "classes", raise_if_missing=True
+                py_dtype.name, "classes", raise_if_missing=True
             )
             type_check_condition = PyObject_TypeCheck(
                 py_obj, python_cls_base.type_object
@@ -1038,6 +1043,24 @@ class CToPythonWrapper(Wrapper):
             type_object = wrapped_class.type_object
             class_name = self.scope.get_python_name(wrapped_class.name)
 
+            if c.superclasses:
+                super_dtype = c.superclasses[0].class_type
+                py_super_dtype = self._python_object_map[super_dtype]
+                python_cls_base = self.scope.find(
+                    py_super_dtype.name, "classes", raise_if_missing=True
+                )
+                body.append(
+                    AliasAssign(
+                        DottedVariable(
+                            PyccelPyClassType(),
+                            "tp_base",
+                            memory_handling="alias",
+                            lhs=type_object,
+                        ),
+                        python_cls_base.type_object,
+                    )
+                )
+
             ready_type = PyType_Ready(type_object)
             if_expr = If(
                 IfSection(
@@ -1680,7 +1703,7 @@ class CToPythonWrapper(Wrapper):
             dtype = DataTypeFactory(
                 struct_name,
                 self.scope.get_python_name(struct_name),
-                BaseClass=WrapperCustomDataType,
+                BaseClass=(WrapperCustomDataType,),
             )()
 
             type_name = self.scope.get_new_name(f"Py{python_name}Type")
@@ -1693,11 +1716,15 @@ class CToPythonWrapper(Wrapper):
                 class_type=dtype,
             )
 
-            orig_cls_dtype = c.scope.parent_scope.cls_constructs[python_name]
+            parent_scope = c.scope.parent_scope
+            while parent_scope.scope_type == "class":
+                parent_scope = parent_scope.parent_scope
+
+            orig_cls_dtype = parent_scope.cls_constructs[python_name]
             self._python_object_map[c] = wrapped_class
             self._python_object_map[orig_cls_dtype] = dtype
 
-            self.scope.insert_class(wrapped_class, python_name)
+            self.scope.insert_class(wrapped_class, dtype.name)
 
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
@@ -2408,11 +2435,10 @@ class CToPythonWrapper(Wrapper):
             described in the array of PyGetSetDef objects.
         """
         lhs = expr.lhs
-        class_type = lhs.cls_base
+        class_base = lhs.cls_base
+        py_class = self._python_object_map[class_base]
         python_class_type = self.scope.find(
-            self.scope.get_python_name(class_type.name),
-            "classes",
-            raise_if_missing=True,
+            py_class.class_type.name, "classes", raise_if_missing=True
         )
         class_scope = python_class_type.scope
 
@@ -2424,7 +2450,7 @@ class CToPythonWrapper(Wrapper):
         #                        Create getter
         # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(
-            f"{class_type.name}_{expr.name}_getter", object_type="wrapper"
+            f"{class_base.name}_{expr.name}_getter", object_type="wrapper"
         )
         getter_scope = self.scope.new_child_scope(getter_name, "function")
         self.scope = getter_scope
@@ -2435,7 +2461,10 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_symbol(expr.name)
 
         class_obj = Variable(
-            lhs.dtype, self.scope.get_new_name("self"), memory_handling="alias"
+            lhs.dtype,
+            self.scope.get_new_name("self"),
+            memory_handling="alias",
+            cls_base=lhs.cls_base,
         )
         self.scope.insert_variable(class_obj, "self")
 
@@ -2492,7 +2521,7 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
         setter_name = self.scope.get_new_name(
-            f"{class_type.name}_{expr.name}_setter", object_type="wrapper"
+            f"{class_base.name}_{expr.name}_setter", object_type="wrapper"
         )
         setter_scope = self.scope.new_child_scope(setter_name, "function")
         self.scope = setter_scope
@@ -2510,7 +2539,10 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(
-                lhs.dtype, self.scope.get_new_name("self"), memory_handling="alias"
+                lhs.dtype,
+                self.scope.get_new_name("self"),
+                memory_handling="alias",
+                cls_base=lhs.cls_base,
             )
             self.scope.insert_variable(class_obj, "self")
 
@@ -2567,7 +2599,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.pop(new_set_val_arg)
         # ----------------------------------------------------------------------------------
 
-        python_name = class_type.scope.get_python_name(expr.name)
+        python_name = class_base.scope.get_python_name(expr.name)
         return PyGetSetDefElement(
             python_name,
             getter,
@@ -2764,7 +2796,10 @@ class CToPythonWrapper(Wrapper):
 
         bound_class = isinstance(expr, BindCClassDef)
 
-        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[python_name]
+        parent_scope = expr.scope.parent_scope
+        while parent_scope.scope_type == "class":
+            parent_scope = parent_scope.parent_scope
+        orig_cls_dtype = parent_scope.cls_constructs[python_name]
         wrapped_class = self._python_object_map[expr]
 
         orig_scope = expr.scope
@@ -2861,7 +2896,7 @@ class CToPythonWrapper(Wrapper):
                 name = t.scope.get_python_name(t.name)
                 struct_name = import_scope.get_new_name(f"Py{name}Object")
                 dtype = DataTypeFactory(
-                    struct_name, struct_name, BaseClass=WrapperCustomDataType
+                    struct_name, struct_name, BaseClass=(WrapperCustomDataType,)
                 )()
                 type_name = import_scope.get_new_name(f"Py{name}Type")
                 wrapped_class = PyClassDef(
@@ -2873,7 +2908,7 @@ class CToPythonWrapper(Wrapper):
                 )
                 self._python_object_map[t] = wrapped_class
                 self._python_object_map[t.class_type] = dtype
-                self.scope.imports["classes"][name] = wrapped_class
+                self.scope.imports["classes"][dtype.name] = wrapped_class
                 import_wrapper = True
 
         if import_wrapper:
@@ -3092,7 +3127,10 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(arg_var, orig_var.name)
 
         dtype = orig_var.dtype
-        python_cls_base = self.scope.find(dtype.name, "classes", raise_if_missing=True)
+        py_dtype = self._python_object_map[dtype]
+        python_cls_base = self.scope.find(
+            py_dtype.name, "classes", raise_if_missing=True
+        )
         scope = python_cls_base.scope
         attribute = scope.find("instance", "variables", raise_if_missing=True)
         if bound_argument:
@@ -3100,10 +3138,10 @@ class CToPythonWrapper(Wrapper):
             cast = []
         else:
             cast_type = Variable(
-                self._python_object_map[dtype],
+                py_dtype,
                 self.scope.get_new_name(collect_arg.name),
                 memory_handling="alias",
-                cls_base=self.scope.find(dtype.name, "classes", raise_if_missing=True),
+                cls_base=python_cls_base,
             )
             self.scope.insert_variable(cast_type)
             cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
