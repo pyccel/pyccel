@@ -58,10 +58,9 @@ jobs:
         run: |
           echo ${BASE}
           git diff ${BASE}...HEAD
-          git diff ${BASE}...HEAD > diff.patch
           # Run without failure on local reporter to allow use of -diff argument
-          reviewdog -runners=pylint -filter-mode=diff_context -diff="diff.patch" -tee
-          reviewdog -runners=pylint -filter-mode=diff_context -diff="diff.patch" | reviewdog -reporter=github-annotations -fail-level=any
+          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD"
+          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD" | reviewdog -reporter=github-annotations -fail-level=any
         shell: bash
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
