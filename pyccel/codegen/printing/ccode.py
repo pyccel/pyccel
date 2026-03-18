@@ -167,7 +167,7 @@ numpy_ufunc_to_c_complex = {
     "NumpySin": "csin",
     "NumpyCos": "ccos",
     "NumpyTan": "ctan",
-    "NumpyArcsin": "casin",
+    f"NumpyArcsin": "casin",
     "NumpyArccos": "cacos",
     "NumpyArctan": "catan",
     "NumpySinh": "csinh",
