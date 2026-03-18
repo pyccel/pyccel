@@ -40,9 +40,9 @@ cpp_imports = {
 }
 
 # dictionary mapping Math function to (argument_conditions, C_function).
-# Used in CCodePrinter._print_MathFunctionBase(self, expr)
+# Used in CppCodePrinter._print_MathFunctionBase(self, expr)
 # Math function ref https://docs.python.org/3/library/math.html
-math_function_to_c = {
+math_function_to_cpp = {
     # ---------- Number-theoretic and representation functions ------------
     "MathCeil": "ceil",
     # 'MathComb'   : TODO
@@ -700,7 +700,7 @@ class CppCodePrinter(CodePrinter):
         # add necessary include
         type_name = type(expr).__name__
         try:
-            func_name = math_function_to_c[type_name]
+            func_name = math_function_to_cpp[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity="fatal", symbol=expr)
 
