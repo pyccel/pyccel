@@ -5,7 +5,7 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from numpy import complex64, complex128, finfo, iinfo, isclose
+from numpy import finfo, iinfo, isclose
 from numpy.random import rand, randn, uniform
 
 from pyccel import epyccel
