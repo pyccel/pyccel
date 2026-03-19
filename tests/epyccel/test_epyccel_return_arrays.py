@@ -4,20 +4,64 @@ from numpy.random import randint, uniform
 import numpy as np
 import pytest
 
-from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
-                                min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
-from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
+from recognised_functions.test_numpy_funcs import (
+    min_int,
+    max_int,
+    min_int8,
+    max_int8,
+    min_int16,
+    max_int16,
+    min_int32,
+    max_int32,
+    max_int64,
+    min_int64,
+)
+from recognised_functions.test_numpy_funcs import (
+    max_float,
+    min_float,
+    max_float32,
+    min_float32,
+    max_float64,
+    min_float64,
+)
 from pyccel import epyccel
 
-T = TypeVar('T', 'bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
-NumType = TypeVar('NumType', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128')
-FArrays = TypeVar('FArrays', 'float[:,:,:](order=F)', 'float[:,:](order=F)')
-CArrays = TypeVar('CArrays', 'float[:,:,:](order=C)', 'float[:,:](order=C)')
+T = TypeVar(
+    "T",
+    "bool",
+    "int",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "float",
+    "float32",
+    "float64",
+    "complex64",
+    "complex128",
+)
+NumType = TypeVar(
+    "NumType",
+    "int",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "float",
+    "float32",
+    "float64",
+    "complex64",
+    "complex128",
+)
+FArrays = TypeVar("FArrays", "float[:,:,:](order=F)", "float[:,:](order=F)")
+CArrays = TypeVar("CArrays", "float[:,:,:](order=C)", "float[:,:](order=C)")
+
 
 def test_single_return(language):
-    def return_array(a : 'T', b : 'T'):
+    def return_array(a: "T", b: "T"):
         from numpy import array
-        x = array([a,b], dtype=type(a))
+
+        x = array([a, b], dtype=type(a))
         return x
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -31,11 +75,17 @@ def test_single_return(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_array, language=language)
 
@@ -52,7 +102,7 @@ def test_single_return(language):
     assert f_bl_true_output.dtype == test_bool_true_output.dtype
 
     f_integer_output = epyccel_func(integer, integer)
-    test_int_output  = return_array(integer, integer)
+    test_int_output = return_array(integer, integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output.dtype == test_int_output.dtype
@@ -113,10 +163,11 @@ def test_single_return(language):
 
 
 def test_multi_returns(language):
-    def return_array(a : 'T', b : 'T'):
+    def return_array(a: "T", b: "T"):
         from numpy import array
-        x = array([a,b], dtype=type(a))
-        y = array([a,b], dtype=type(a))
+
+        x = array([a, b], dtype=type(a))
+        y = array([a, b], dtype=type(a))
         return x, y
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -130,11 +181,17 @@ def test_multi_returns(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_array, language=language)
 
@@ -151,7 +208,7 @@ def test_multi_returns(language):
     assert f_bl_true_output[0].dtype == test_bool_true_output[0].dtype
 
     f_integer_output = epyccel_func(integer, integer)
-    test_int_output  = return_array(integer, integer)
+    test_int_output = return_array(integer, integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -210,12 +267,14 @@ def test_multi_returns(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_return_array_array_op(language):
 
-    def return_array(a : 'NumType', b : 'NumType'):
+    def return_array(a: "NumType", b: "NumType"):
         from numpy import array
-        x = array([a,b], dtype=type(a))
-        y = array([a,b], dtype=type(a))
+
+        x = array([a, b], dtype=type(a))
+        y = array([a, b], dtype=type(a))
         return x + y
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -229,16 +288,22 @@ def test_return_array_array_op(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_array, language=language)
 
     f_integer_output = epyccel_func(integer, integer)
-    test_int_output  = return_array(integer, integer)
+    test_int_output = return_array(integer, integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -297,12 +362,14 @@ def test_return_array_array_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_return_multi_array_array_op(language):
 
-    def return_array(a : 'NumType', b : 'NumType'):
+    def return_array(a: "NumType", b: "NumType"):
         from numpy import array
-        x = array([a,b], dtype=type(a))
-        y = array([a,b], dtype=type(a))
+
+        x = array([a, b], dtype=type(a))
+        y = array([a, b], dtype=type(a))
         return x + y, x - y
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -316,16 +383,22 @@ def test_return_multi_array_array_op(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_array, language=language)
 
     f_integer_output = epyccel_func(integer, integer)
-    test_int_output  = return_array(integer, integer)
+    test_int_output = return_array(integer, integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -384,10 +457,22 @@ def test_return_multi_array_array_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_return_array_scalar_op(language):
 
-    def return_array_scalar_op(a : NumType):
-        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 # pylint: disable=unused-import
+    def return_array_scalar_op(a: NumType):
+        from numpy import (
+            ones,
+            int8,
+            int16,
+            int32,
+            int64,
+            float32,
+            float64,
+            complex64,
+            complex128,
+        )  # pylint: disable=unused-import
+
         x = ones(5, dtype=type(a))
         return x * a
 
@@ -402,16 +487,22 @@ def test_return_array_scalar_op(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_array_scalar_op, language=language)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = return_array_scalar_op(integer)
+    test_int_output = return_array_scalar_op(integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -470,10 +561,22 @@ def test_return_array_scalar_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_multi_return_array_scalar_op(language):
 
-    def return_multi_array_scalar_op(a : NumType):
-        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 #pylint: disable=unused-import
+    def return_multi_array_scalar_op(a: NumType):
+        from numpy import (
+            ones,
+            int8,
+            int16,
+            int32,
+            int64,
+            float32,
+            float64,
+            complex64,
+            complex128,
+        )  # pylint: disable=unused-import
+
         x = ones(5, dtype=type(a))
         y = ones(5, dtype=type(a))
         return x * a, y * a
@@ -489,16 +592,22 @@ def test_multi_return_array_scalar_op(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_multi_array_scalar_op, language=language)
 
     f_integer_output = epyccel_func(integer)
-    test_int_output  = return_multi_array_scalar_op(integer)
+    test_int_output = return_multi_array_scalar_op(integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -557,10 +666,12 @@ def test_multi_return_array_scalar_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_multi_return_array_array_op(language):
 
-    def return_array_arg_array_op(a : 'NumType[:]'):
+    def return_array_arg_array_op(a: "NumType[:]"):
         from numpy import ones
+
         x = ones(7)
         return x * a
 
@@ -582,7 +693,7 @@ def test_multi_return_array_array_op(language):
     epyccel_func = epyccel(return_array_arg_array_op, language=language)
 
     f_integer_output = epyccel_func(arr_integer)
-    test_int_output  = return_array_arg_array_op(arr_integer)
+    test_int_output = return_array_arg_array_op(arr_integer)
 
     assert np.array_equal(f_integer_output, test_int_output)
     assert f_integer_output[0].dtype == test_int_output[0].dtype
@@ -641,12 +752,15 @@ def test_multi_return_array_array_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+
 def test_return_arrays_in_expression(language):
     def return_arrays_in_expression():
         def single_return():
             from numpy import array
-            return array([1,2,3,4])
-        b = single_return()+1
+
+            return array([1, 2, 3, 4])
+
+        b = single_return() + 1
 
         return b
 
@@ -658,12 +772,15 @@ def test_return_arrays_in_expression(language):
     assert np.array_equal(epyccel_function_output, return_arrays_in_expression_output)
     assert epyccel_function_output.dtype == return_arrays_in_expression_output.dtype
 
+
 def test_return_arrays_in_expression2(language):
-    def return_arrays_in_expression2(n : int):
-        def single_return(n : int):
+    def return_arrays_in_expression2(n: int):
+        def single_return(n: int):
             from numpy import ones
+
             return ones(n)
-        b = single_return(n)+1
+
+        b = single_return(n) + 1
 
         return b
 
@@ -677,9 +794,11 @@ def test_return_arrays_in_expression2(language):
     assert np.array_equal(epyccel_function_output, return_arrays_in_expression2_output)
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
 
+
 def test_c_array_return(language):
-    def return_c_array(b : NumType):
+    def return_c_array(b: NumType):
         from numpy import array
+
         a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b))
         return a
 
@@ -694,15 +813,32 @@ def test_c_array_return(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_c_array, language=language)
 
-    for arg in (integer8, integer16, integer, integer32, integer64, fl, fl32, fl64, cmplx64, cmplx128):
+    for arg in (
+        integer8,
+        integer16,
+        integer,
+        integer32,
+        integer64,
+        fl,
+        fl32,
+        fl64,
+        cmplx64,
+        cmplx128,
+    ):
         f_output = epyccel_func(arg)
         test_output = return_c_array(arg)
 
@@ -710,10 +846,12 @@ def test_c_array_return(language):
         assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
+
 def test_f_array_return(language):
-    def return_f_array(b : NumType):
+    def return_f_array(b: NumType):
         from numpy import array
-        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order='F')
+
+        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order="F")
         return a
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -727,15 +865,32 @@ def test_f_array_return(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float32 = (
+        uniform(low=min_float32 / 2, high=max_float32 / 2)
+        + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    )
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+    cmplx128 = np.complex128(
+        uniform(low=min_float64 / 2, high=max_float64 / 2)
+        + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    )
 
     epyccel_func = epyccel(return_f_array, language=language)
 
-    for arg in (integer8, integer16, integer, integer32, integer64, fl, fl32, fl64, cmplx64, cmplx128):
+    for arg in (
+        integer8,
+        integer16,
+        integer,
+        integer32,
+        integer64,
+        fl,
+        fl32,
+        fl64,
+        cmplx64,
+        cmplx128,
+    ):
         f_output = epyccel_func(arg)
         test_output = return_f_array(arg)
 
@@ -743,15 +898,17 @@ def test_f_array_return(language):
         assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
+
 def test_copy_f_to_f(language):
-    def copy_f_to_f(b : FArrays):
+    def copy_f_to_f(b: FArrays):
         from numpy import array
-        a = array(b, order='F')
+
+        a = array(b, order="F")
         return a
 
     epyccel_func = epyccel(copy_f_to_f, language=language)
-    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2,3,4)), order='F')
-    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3,4)), order='F')
+    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
+    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_f_to_f(fl)
@@ -762,15 +919,17 @@ def test_copy_f_to_f(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_copy_f_to_c(language):
-    def copy_f_to_c(b : FArrays):
+    def copy_f_to_c(b: FArrays):
         from numpy import array
-        a = array(b, order='C')
+
+        a = array(b, order="C")
         return a
 
     epyccel_func = epyccel(copy_f_to_c, language=language)
-    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2,3,4)), order='F')
-    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3,4)), order='F')
+    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
+    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_f_to_c(fl)
@@ -781,15 +940,17 @@ def test_copy_f_to_c(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_copy_c_to_c(language):
-    def copy_c_to_c(b : CArrays):
+    def copy_c_to_c(b: CArrays):
         from numpy import array
-        a = array(b, order='C')
+
+        a = array(b, order="C")
         return a
 
     epyccel_func = epyccel(copy_c_to_c, language=language)
-    fl_3d = uniform(min_float / 2, max_float / 2, (2,3,4))
-    fl_2d = uniform(min_float / 2, max_float / 2, (3,4))
+    fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
+    fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_c_to_c(fl)
@@ -800,15 +961,17 @@ def test_copy_c_to_c(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_copy_c_to_f(language):
-    def copy_c_to_f(b : CArrays):
+    def copy_c_to_f(b: CArrays):
         from numpy import array
-        a = array(b, order='F')
+
+        a = array(b, order="F")
         return a
 
     epyccel_func = epyccel(copy_c_to_f, language=language)
-    fl_3d = uniform(min_float / 2, max_float / 2, (2,3,4))
-    fl_2d = uniform(min_float / 2, max_float / 2, (3,4))
+    fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
+    fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_c_to_f(fl)
@@ -819,15 +982,17 @@ def test_copy_c_to_f(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_copy_c_to_default(language):
-    def copy_c_to_default(b : CArrays):
+    def copy_c_to_default(b: CArrays):
         from numpy import array
+
         a = array(b)
         return a
 
     epyccel_func = epyccel(copy_c_to_default, language=language)
-    fl_3d = uniform(min_float / 2, max_float / 2, (2,3,4))
-    fl_2d = uniform(min_float / 2, max_float / 2, (3,4))
+    fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
+    fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_c_to_default(fl)
@@ -838,15 +1003,17 @@ def test_copy_c_to_default(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_copy_f_to_default(language):
-    def copy_f_to_default(b : FArrays):
+    def copy_f_to_default(b: FArrays):
         from numpy import array
+
         a = array(b)
         return a
 
     epyccel_func = epyccel(copy_f_to_default, language=language)
-    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2,3,4)), order='F')
-    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3,4)), order='F')
+    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
+    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
     for fl in (fl_2d, fl_3d):
         pyth_out = copy_f_to_default(fl)
@@ -857,13 +1024,14 @@ def test_copy_f_to_default(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_annotated_return(language):
-    def annotated_return(b : 'float[:,:]', c : 'float[:,:]') -> 'float[:,:]':
+    def annotated_return(b: "float[:,:]", c: "float[:,:]") -> "float[:,:]":
         return b + c
 
     epyccel_func = epyccel(annotated_return, language=language)
-    fl_b = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
-    fl_c = np.array(uniform(min_float / 2, max_float / 2, (3,4)))
+    fl_b = np.array(uniform(min_float / 2, max_float / 2, (3, 4)))
+    fl_c = np.array(uniform(min_float / 2, max_float / 2, (3, 4)))
 
     pyth_out = annotated_return(fl_b, fl_c)
     pycc_out = epyccel_func(fl_b, fl_c)
@@ -873,9 +1041,11 @@ def test_annotated_return(language):
     assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
     assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
+
 def test_unknown_size_array(language):
-    def unknown_size(b : bool):
+    def unknown_size(b: bool):
         from numpy import ones, zeros
+
         if b:
             a = ones(3)
         else:

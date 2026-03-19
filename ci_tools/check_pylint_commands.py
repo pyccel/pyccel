@@ -1,6 +1,7 @@
 """
 Script to check that pylint errors are not globally deactivated.
 """
+
 import argparse
 import os
 import pathlib
@@ -9,23 +10,26 @@ import shutil
 import subprocess
 import sys
 import json
-from git_evaluation_tools import get_diff_as_json
 
-accepted_pylint_commands = {re.compile('pyccel/ast/.*types.py'):['no-member', 'protected-access'],
-                            re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],
-                            re.compile('.*/TOO_FEW_ARGS.py'):['no-value-for-parameter'],
-                            re.compile('.*/UNKNOWN_IMPORT.py'):['unused-import'],
-                            re.compile('.*/UNKNOWN_IMPORT2.py'):['unused-import'],
-                            re.compile('.*/USELESS_EXPRESSION.py'):['pointless-statement'],
-                            re.compile('tests/errors/known_bugs/dicts.py'):['pointless-statement'],
-                            re.compile('.*/syntax/.*'):['pointless-statement','undefined-variable'],
-                            re.compile('tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
-                            re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
-                            re.compile('tests/semantic/scripts/calls.py'):['unused-variable'],
-                            re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'], # ignore Codacy bad pylint call
-                            re.compile('tests/errors/syntax_errors/import_star.py'):['wildcard-import'],
-                            re.compile('tests/stc_containers/leaks_check.py'):['unused-variable'],
-                           }
+accepted_pylint_commands = {
+    re.compile("pyccel/ast/.*types.py"): ["no-member", "protected-access"],
+    re.compile(".*/IMPORTING_EXISTING_IDENTIFIED3.py"): ["reimported"],
+    re.compile(".*/TOO_FEW_ARGS.py"): ["no-value-for-parameter"],
+    re.compile(".*/UNKNOWN_IMPORT.py"): ["unused-import"],
+    re.compile(".*/UNKNOWN_IMPORT2.py"): ["unused-import"],
+    re.compile(".*/USELESS_EXPRESSION.py"): ["pointless-statement"],
+    re.compile("tests/errors/known_bugs/dicts.py"): ["pointless-statement"],
+    re.compile(".*/syntax/.*"): ["pointless-statement", "undefined-variable"],
+    re.compile("tests/codegen/fcode/scripts/precision.py"): ["unused-variable"],
+    re.compile("tests/semantic/scripts/expressions.py"): ["unused-variable"],
+    re.compile("tests/semantic/scripts/calls.py"): ["unused-variable"],
+    re.compile("tests/pyccel/project_class_imports/.*"): [
+        "relative-beyond-top-level"
+    ],  # ignore Codacy bad pylint call
+    re.compile("tests/errors/syntax_errors/import_star.py"): ["wildcard-import"],
+    re.compile("tests/stc_containers/leaks_check.py"): ["unused-variable"],
+}
+
 
 def run_pylint(file, flag, messages):
     """
@@ -45,23 +49,28 @@ def run_pylint(file, flag, messages):
     messages : list
         The list of messages which should be printed.
     """
-    with subprocess.Popen([shutil.which('pylint'), file, '--disable=all', f'--enable={flag}']) as r:
+    with subprocess.Popen(
+        [shutil.which("pylint"), file, "--disable=all", f"--enable={flag}"]
+    ) as r:
         r.communicate()
         result = r.returncode
     if result:
         output_item = {
             "annotations": [],
-            "flags":flag,
-            "summary":"-  Feel free to disable",
+            "flags": flag,
+            "summary": "-  Feel free to disable",
         }
-        output_item["annotations"].append({
-            "annotation_level":"warning",
-            "start_line":1,
-            "end_line":1,
-            "path":file,
-            "message":f"Feel free to disable `{flag}`"
-        })
+        output_item["annotations"].append(
+            {
+                "annotation_level": "warning",
+                "start_line": 1,
+                "end_line": 1,
+                "path": file,
+                "message": f"Feel free to disable `{flag}`",
+            }
+        )
         messages.append(output_item)
+
 
 def check_expected_pylint_disable(file, disabled, flag, messages):
     """
@@ -96,26 +105,41 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
     else:
         run_pylint(file, flag, messages)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Check that pylint errors are not globally deactivated')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Check that pylint errors are not globally deactivated"
+    )
     args = parser.parse_args()
 
     folder = pathlib.Path(__file__).parent.parent
-    files = [os.path.relpath(os.path.join(root,f)) for root, dirs, filenames in os.walk(folder) \
-            for f in filenames if os.path.splitext(f)[1] == '.py']
+    files = [
+        os.path.relpath(os.path.join(root, f))
+        for root, dirs, filenames in os.walk(folder)
+        for f in filenames
+        if os.path.splitext(f)[1] == ".py"
+    ]
 
     success = True
 
-    messages = {"title":"Pyccel_lint","summary":"## Pylint Interaction:\n\n","annotations":[]}
+    messages = {
+        "title": "Pyccel_lint",
+        "summary": "## Pylint Interaction:\n\n",
+        "annotations": [],
+    }
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
-            lines = [l.replace(' ','') for l in myfile.readlines()]
-        pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
+            lines = [l.replace(" ", "") for l in myfile.readlines()]
+        pylint_lines_and_numbers = [
+            (l.strip(), i)
+            for i, l in enumerate(lines, 1)
+            if l.startswith("#pylint:disable=")
+        ]
         disabled = set()
         for value, key in pylint_lines_and_numbers:
-            disabled.update([(tuple(value.split('=')[1].split(',')), key)])
-        for r,d in accepted_pylint_commands.items():
+            disabled.update([(tuple(value.split("=")[1].split(",")), key)])
+        for r, d in accepted_pylint_commands.items():
             if r.match(f):
                 for di in d:
                     updated_disabled = disabled.copy()
@@ -128,25 +152,27 @@ if __name__ == '__main__':
                             if strings_list:
                                 disabled.update([(tuple(strings_list), num)])
         p = pathlib.Path(f)
-        if p.parts[0] == 'tests':
+        if p.parts[0] == "tests":
             msg = []
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
+            check_expected_pylint_disable(
+                f, disabled, "missing-function-docstring", msg
+            )
+            check_expected_pylint_disable(f, disabled, "missing-module-docstring", msg)
+            check_expected_pylint_disable(f, disabled, "missing-class-docstring", msg)
             first_iteration = True
             for item in msg:
                 if first_iteration:
-                    messages['summary'] += item['summary'] + ' `' + item['flags'] + '`'
-                    for value in item['annotations']:
-                        messages['annotations'].append(value)
+                    messages["summary"] += item["summary"] + " `" + item["flags"] + "`"
+                    for value in item["annotations"]:
+                        messages["annotations"].append(value)
                     first_iteration = False
                 else:
-                    messages['summary'] += ', `' + item['flags'] + '`'
-                    messages['annotations'][-1]['message'] += ', ' + item['flags']
+                    messages["summary"] += ", `" + item["flags"] + "`"
+                    messages["annotations"][-1]["message"] += ", " + item["flags"]
             if not first_iteration:
-                messages['summary'] += f' in `{f}`\n\n'
-                messages['annotations'][-1]['message'] += f' in {f}'
-            if p.parts[1] == 'epyccel':
+                messages["summary"] += f" in `{f}`\n\n"
+                messages["annotations"][-1]["message"] += f" in {f}"
+            if p.parts[1] == "epyccel":
                 updated_disabled = disabled.copy()
                 for item in updated_disabled:
                     statements, num = item
@@ -160,45 +186,55 @@ if __name__ == '__main__':
             for value, key in disabled:
                 for v in value:
                     if first_iteration:
-                        messages['summary'] += f"{summary_template}`{v}`"
-                        messages['annotations'].append({
-                            'path':f,
-                            'start_line':key,
-                            'end_line':key,
-                            'annotation_level':annotation_level,
-                            'message':f"{annotation_message}{v}"})
+                        messages["summary"] += f"{summary_template}`{v}`"
+                        messages["annotations"].append(
+                            {
+                                "path": f,
+                                "start_line": key,
+                                "end_line": key,
+                                "annotation_level": annotation_level,
+                                "message": f"{annotation_message}{v}",
+                            }
+                        )
                         first_iteration = False
                     else:
-                        messages['summary'] += ', `' + v + '`'
-                        if key == messages['annotations'][-1]['start_line']:
-                            messages['annotations'][-1]['message'] += ', ' + v
+                        messages["summary"] += ", `" + v + "`"
+                        if key == messages["annotations"][-1]["start_line"]:
+                            messages["annotations"][-1]["message"] += ", " + v
                         else:
-                            messages['annotations'].append({
-                                'path':f,
-                                'start_line':key,
-                                'end_line':key,
-                                'annotation_level':annotation_level,
-                                'message':f"{annotation_message}{v}"})
+                            messages["annotations"].append(
+                                {
+                                    "path": f,
+                                    "start_line": key,
+                                    "end_line": key,
+                                    "annotation_level": annotation_level,
+                                    "message": f"{annotation_message}{v}",
+                                }
+                            )
             if not first_iteration:
-                messages['summary'] += '\n\n'
+                messages["summary"] += "\n\n"
 
-    if not messages['summary'] and success:
-        messages['summary'] = "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
-        messages.pop('annotations')
-    if not success and not messages['summary']:
-        messages['summary'] = "## Pylint Interaction:\n\n**Error**: Something went wrong"
-        messages.pop('annotations')
+    if not messages["summary"] and success:
+        messages["summary"] = (
+            "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
+        )
+        messages.pop("annotations")
+    if not success and not messages["summary"]:
+        messages["summary"] = (
+            "## Pylint Interaction:\n\n**Error**: Something went wrong"
+        )
+        messages.pop("annotations")
 
-    with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
+    with open("test_json_result.json", mode="r", encoding="utf-8") as json_file:
         slots_data = json.load(json_file)
-        slots_data['summary'] += messages['summary']
+        slots_data["summary"] += messages["summary"]
         if "annotations" in slots_data:
-            slots_data['annotations'].extend(messages['annotations'])
-        elif messages['annotations']:
-            slots_data.update({'annotations': messages['annotations']})
-    with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
+            slots_data["annotations"].extend(messages["annotations"])
+        elif messages["annotations"]:
+            slots_data.update({"annotations": messages["annotations"]})
+    with open("test_json_result.json", mode="w", encoding="utf-8") as json_file:
         json.dump(slots_data, json_file)
-    print(messages['summary'])
+    print(messages["summary"])
 
     if not success:
         sys.exit(1)

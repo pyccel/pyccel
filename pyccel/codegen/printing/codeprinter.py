@@ -1,23 +1,24 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core      import Module, ModuleHeader, Program
+from pyccel.ast.core import Module, ModuleHeader, Program
 from pyccel.ast.internals import PyccelSymbol
 
-from pyccel.errors.errors     import Errors, ErrorsMode, PyccelError
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
 
-# TODO: add examples
+# TODO: add examples
 
 __all__ = ["CodePrinter"]
 
 errors = Errors()
+
 
 class CodePrinter:
     """
@@ -31,7 +32,9 @@ class CodePrinter:
     verbose : int
         The level of verbosity.
     """
+
     language = None
+
     def __init__(self, verbose):
         self._scope = None
         self._current_ast_node = None
@@ -60,7 +63,7 @@ class CodePrinter:
         lines = self._print(expr).splitlines(True)
 
         # Format the output
-        return ''.join(self._format_code(lines))
+        return "".join(self._format_code(lines))
 
     def get_additional_imports(self):
         """
@@ -97,19 +100,16 @@ class CodePrinter:
 
     @property
     def scope(self):
-        """ Return the scope associated with the object being printed
-        """
+        """Return the scope associated with the object being printed"""
         return self._scope
 
     def set_scope(self, scope):
-        """ Change the current scope
-        """
+        """Change the current scope"""
         assert scope is not None
         self._scope = scope
 
     def exit_scope(self):
-        """ Exit the current scope and return to the enclosing scope
-        """
+        """Exit the current scope and return to the enclosing scope"""
         self._scope = self._scope.parent_scope
 
     def _print(self, expr):
@@ -135,12 +135,12 @@ class CodePrinter:
         """
 
         current_ast = self._current_ast_node
-        if getattr(expr,'python_ast', None) is not None:
+        if getattr(expr, "python_ast", None) is not None:
             self._current_ast_node = expr.python_ast
 
         classes = type(expr).__mro__
         for cls in classes:
-            print_method = '_print_' + cls.__name__
+            print_method = "_print_" + cls.__name__
             if hasattr(self, print_method):
                 if self._verbose > 2:
                     print(f">>>> Calling {type(self).__name__}.{print_method}")
@@ -149,13 +149,19 @@ class CodePrinter:
                 except PyccelError as err:
                     raise err
                 except NotImplementedError as error:
-                    errors.report(f'{error}\n'+PYCCEL_RESTRICTION_TODO,
-                        symbol = self._current_ast_node, severity='fatal',
-                        traceback=error.__traceback__)
-                except Exception as err: #pylint: disable=broad-exception-caught
-                    if ErrorsMode().value == 'user':
-                        errors.report(PYCCEL_INTERNAL_ERROR,
-                                symbol = self._current_ast_node, severity='fatal')
+                    errors.report(
+                        f"{error}\n" + PYCCEL_RESTRICTION_TODO,
+                        symbol=self._current_ast_node,
+                        severity="fatal",
+                        traceback=error.__traceback__,
+                    )
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    if ErrorsMode().value == "user":
+                        errors.report(
+                            PYCCEL_INTERNAL_ERROR,
+                            symbol=self._current_ast_node,
+                            severity="fatal",
+                        )
                     else:
                         raise err
                 self._current_ast_node = current_ast
@@ -164,30 +170,33 @@ class CodePrinter:
 
     def _declare_number_const(self, name, value):
         """Declare a numeric constant at the top of a function"""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
+        raise NotImplementedError(
+            "This function must be implemented by " "subclass of CodePrinter."
+        )
 
     def _format_code(self, lines):
         """Take in a list of lines of code, and format them accordingly.
 
         This may include indenting, wrapping long lines, etc..."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
+        raise NotImplementedError(
+            "This function must be implemented by " "subclass of CodePrinter."
+        )
 
     def _print_NumberSymbol(self, expr):
-        """ Print sympy symbols used for constants"""
+        """Print sympy symbols used for constants"""
         return str(expr)
 
     def _print_str(self, expr):
-        """ Basic print functionality for strings """
+        """Basic print functionality for strings"""
         return expr
 
     def _print_not_supported(self, expr):
-        """ Print an error message if the print function for the type
-        is not implemented """
-        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
-        errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
-                severity='fatal')
+        """Print an error message if the print function for the type
+        is not implemented"""
+        msg = "_print_{} is not yet implemented for language : {}\n".format(
+            type(expr).__name__, self.language
+        )
+        errors.report(msg + PYCCEL_RESTRICTION_TODO, symbol=expr, severity="fatal")
 
     # Number constants
     _print_Catalan = _print_NumberSymbol

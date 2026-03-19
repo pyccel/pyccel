@@ -1,8 +1,8 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 This module provides us with functions and objects that allow us to compute
@@ -35,19 +35,19 @@ m =  WRITE + 2*n**2*(READ + WRITE)
 from sympy import sympify, Symbol
 from sympy import Poly, LT
 
-from pyccel.ast.basic        import PyccelAstNode
-from pyccel.ast.builtins     import PythonTuple
-from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
-from pyccel.ast.core         import Module, Program
-from pyccel.ast.internals    import PyccelSymbol
-from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
+from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.core import For, Assign, CodeBlock, FunctionDef
+from pyccel.ast.core import Module, Program
+from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
-
 __all__ = ["count_access", "MemComplexity"]
 
-# ...
+
+# ...
 def count_access(expr, visual=True):
     """
     returns the number of access to memory in terms of WRITE and READ.
@@ -63,8 +63,8 @@ def count_access(expr, visual=True):
         ignore their corresponding memory accesses.
     """
 
-    WRITE = Symbol('WRITE')
-    READ  = Symbol('READ')
+    WRITE = Symbol("WRITE")
+    READ = Symbol("READ")
 
     symbol_map = {}
     used_names = set()
@@ -87,20 +87,20 @@ def count_access(expr, visual=True):
     elif isinstance(expr, For):
         s = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
         ops = sum(count_access(i, visual) for i in expr.body.body)
-        return ops*s
+        return ops * s
 
     elif isinstance(expr, (NumpyZeros, NumpyOnes)):
         import numpy as np
-        return WRITE*np.prod(expr.shape)
+
+        return WRITE * np.prod(expr.shape)
 
     elif isinstance(expr, PyccelAstNode):
 
         atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
-        return READ*len(atoms)
+        return READ * len(atoms)
 
     else:
-        raise NotImplementedError('TODO count_access for {}'.format(type(expr)))
-
+        raise NotImplementedError("TODO count_access for {}".format(type(expr)))
 
 
 def leading_term(expr, *args):
@@ -116,9 +116,12 @@ def leading_term(expr, *args):
     expr = sympify(str(expr))
     P = Poly(expr, *args)
     return LT(P)
-# ...
 
-# ...
+
+# ...
+
+
+# ...
 class MemComplexity(Complexity):
     """
     Class for memory complexity computation.
@@ -184,6 +187,7 @@ class MemComplexity(Complexity):
 
     and this is exactly what we were expecting.
     """
+
     def cost(self):
         """
         Computes the complexity of the given code.
@@ -210,35 +214,33 @@ class MemComplexity(Complexity):
         verbose: bool
             talk more
         """
-        # ...
+        # ...
         if d is None:
             d = self.cost(local_vars=local_vars)
-        # ...
+        # ...
 
-        # ...
+        # ...
         if args is None:
             args = self.free_parameters
-        # ...
+        # ...
 
-        # ...
-        f = d['f']
-        m = d['m']
-        # ...
+        # ...
+        f = d["f"]
+        m = d["m"]
+        # ...
 
-        # ...
+        # ...
         lt_f = leading_term(f, *args)
         lt_m = leading_term(m, *args)
 
-        q = lt_f/lt_m
-        # ...
+        q = lt_f / lt_m
+        # ...
 
-        # ...
+        # ...
         if verbose:
             print((" arithmetic cost         ~ " + str(f)))
             print((" memory cost             ~ " + str(m)))
             print((" computational intensity ~ " + str(q)))
-        # ...
+        # ...
 
         return q
-
-

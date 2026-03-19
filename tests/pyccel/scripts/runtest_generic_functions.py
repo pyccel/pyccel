@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import generic_functions as mod
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(mod.tst_gen_1())
     print(mod.tst_gen_2())
     print(mod.tst_gen_3())

@@ -1,50 +1,54 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing objects from the cmath module understood by pyccel
-"""
+# ------------------------------------------------------------------------------------------#
+"""Module containing objects from the cmath module understood by pyccel"""
 
 import cmath
 
-from pyccel.ast.builtins  import PythonReal, PythonImag
-from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
+from pyccel.ast.builtins import PythonReal, PythonImag
+from pyccel.ast.core import PyccelFunctionDef, Module
+from pyccel.ast.datatypes import (
+    PythonNativeBool,
+    PythonNativeFloat,
+    PythonNativeComplex,
+)
 from pyccel.ast.datatypes import PrimitiveComplexType, HomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.literals  import LiteralInteger
+from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
-from pyccel.ast.variable  import Constant
+from pyccel.ast.variable import Constant
 
 from .mathext import math_constants, MathFunctionBase
 from .mathext import MathIsfinite, MathIsinf, MathIsnan
 
 __all__ = (
-        'CmathAcos',
-        'CmathAcosh',
-        'CmathAsin',
-        'CmathAsinh',
-        'CmathAtan',
-        'CmathAtanh',
-        'CmathCos',
-        'CmathCosh',
-        'CmathExp',
-        'CmathFunctionBool',
-        'CmathFunctionComplex',
-        'CmathIsclose',
-        'CmathIsfinite',
-        'CmathIsinf',
-        'CmathIsnan',
-        'CmathPhase',
-        'CmathPolar',
-        'CmathRect',
-        'CmathSin',
-        'CmathSinh',
-        'CmathSqrt',
-        'CmathTan',
-        'CmathTanh',
-        'cmath_mod',
-    )
+    "CmathAcos",
+    "CmathAcosh",
+    "CmathAsin",
+    "CmathAsinh",
+    "CmathAtan",
+    "CmathAtanh",
+    "CmathCos",
+    "CmathCosh",
+    "CmathExp",
+    "CmathFunctionBool",
+    "CmathFunctionComplex",
+    "CmathIsclose",
+    "CmathIsfinite",
+    "CmathIsinf",
+    "CmathIsnan",
+    "CmathPhase",
+    "CmathPolar",
+    "CmathRect",
+    "CmathSin",
+    "CmathSinh",
+    "CmathSqrt",
+    "CmathTan",
+    "CmathTanh",
+    "cmath_mod",
+)
+
 
 class CmathFunctionBool(MathFunctionBase):
     """
@@ -58,8 +62,10 @@ class CmathFunctionBool(MathFunctionBase):
     *args : TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
     _class_type = PythonNativeBool()
+
 
 class CmathFunctionComplex(MathFunctionBase):
     """
@@ -73,22 +79,25 @@ class CmathFunctionComplex(MathFunctionBase):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = PythonNativeComplex()
 
-    def __init__(self, z : 'TypedAstNode'):
+    def __init__(self, z: "TypedAstNode"):
         super().__init__(z)
 
-#==============================================================================
+
+# ==============================================================================
 # Functions that return one value
-#==============================================================================
+# ==============================================================================
 
-#==============================================================================
+# ==============================================================================
 # Complex results
-#==============================================================================
+# ==============================================================================
 
-class CmathAcos    (CmathFunctionComplex):
+
+class CmathAcos(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.acos` function.
 
@@ -99,12 +108,15 @@ class CmathAcos    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'acos'
+    name = "acos"
 
-#==============================================================================
 
-class CmathAcosh   (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathAcosh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.acosh` function.
 
@@ -115,12 +127,15 @@ class CmathAcosh   (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'acosh'
+    name = "acosh"
 
-#==============================================================================
 
-class CmathAsin    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathAsin(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.asin` function.
 
@@ -131,12 +146,15 @@ class CmathAsin    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'asin'
+    name = "asin"
 
-#==============================================================================
 
-class CmathAsinh   (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathAsinh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.asinh` function.
 
@@ -147,12 +165,15 @@ class CmathAsinh   (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'asinh'
+    name = "asinh"
 
-#==============================================================================
 
-class CmathAtan    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathAtan(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.atan` function.
 
@@ -163,12 +184,15 @@ class CmathAtan    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'atan'
+    name = "atan"
 
-#==============================================================================
 
-class CmathAtanh    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathAtanh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.atanh` function.
 
@@ -179,12 +203,15 @@ class CmathAtanh    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'atanh'
+    name = "atanh"
 
-#==============================================================================
 
-class CmathCos     (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathCos(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.cos` function.
 
@@ -195,12 +222,15 @@ class CmathCos     (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'cos'
+    name = "cos"
 
-#==============================================================================
 
-class CmathCosh    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathCosh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.cosh` function.
 
@@ -211,12 +241,15 @@ class CmathCosh    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'cosh'
+    name = "cosh"
 
-#==============================================================================
 
-class CmathExp     (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathExp(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.exp` function.
 
@@ -227,12 +260,15 @@ class CmathExp     (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'exp'
+    name = "exp"
 
-#==============================================================================
 
-class CmathSin     (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathSin(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.sin` function.
 
@@ -243,12 +279,15 @@ class CmathSin     (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sin'
+    name = "sin"
 
-#==============================================================================
 
-class CmathSinh    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathSinh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.sinh` function.
 
@@ -259,12 +298,15 @@ class CmathSinh    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sinh'
+    name = "sinh"
 
-#==============================================================================
 
-class CmathSqrt    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathSqrt(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.sqrt` function.
 
@@ -275,12 +317,15 @@ class CmathSqrt    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sqrt'
+    name = "sqrt"
 
-#==============================================================================
 
-class CmathTan     (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathTan(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.tan` function.
 
@@ -291,12 +336,15 @@ class CmathTan     (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'tan'
+    name = "tan"
 
-#==============================================================================
 
-class CmathTanh    (CmathFunctionComplex):
+# ==============================================================================
+
+
+class CmathTanh(CmathFunctionComplex):
     """
     Class representing a call to the `cmath.tanh` function.
 
@@ -307,14 +355,17 @@ class CmathTanh    (CmathFunctionComplex):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'tanh'
+    name = "tanh"
 
-#==============================================================================
+
+# ==============================================================================
 # Boolean results
-#==============================================================================
+# ==============================================================================
 
-class CmathIsclose (CmathFunctionBool):
+
+class CmathIsclose(CmathFunctionBool):
     """
     Class representing a call to the `cmath.isclose` function.
 
@@ -331,12 +382,16 @@ class CmathIsclose (CmathFunctionBool):
     abs_tol : TypedAstNode
         The absolute tolerance.
     """
+
     __slots__ = ()
-    name = 'isclose'
+    name = "isclose"
+
     def __init__(self, a, b, *, rel_tol=1e-09, abs_tol=0.0):
         super().__init__(a, b, rel_tol, abs_tol)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class CmathIsfinite(CmathFunctionBool):
     """
@@ -349,17 +404,21 @@ class CmathIsfinite(CmathFunctionBool):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isfinite'
+    name = "isfinite"
+
     def __new__(cls, z):
         if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsfinite(z)
         else:
             return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
 
-#==============================================================================
 
-class CmathIsinf   (CmathFunctionBool):
+# ==============================================================================
+
+
+class CmathIsinf(CmathFunctionBool):
     """
     Class representing a call to the `cmath.isinf` function.
 
@@ -370,17 +429,21 @@ class CmathIsinf   (CmathFunctionBool):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isinf'
+    name = "isinf"
+
     def __new__(cls, z):
         if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsinf(z)
         else:
             return PyccelOr(MathIsinf(PythonImag(z)), MathIsinf(PythonReal(z)))
 
-#==============================================================================
 
-class CmathIsnan   (CmathFunctionBool):
+# ==============================================================================
+
+
+class CmathIsnan(CmathFunctionBool):
     """
     Class representing a call to the `cmath.isnan` function.
 
@@ -391,17 +454,21 @@ class CmathIsnan   (CmathFunctionBool):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isnan'
+    name = "isnan"
+
     def __new__(cls, z):
         if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsnan(z)
         else:
             return PyccelOr(MathIsnan(PythonImag(z)), MathIsnan(PythonReal(z)))
 
-#==============================================================================
+
+# ==============================================================================
 # Dictionary to map math functions to classes above
-#==============================================================================
+# ==============================================================================
+
 
 class CmathPhase(PyccelFunction):
     """
@@ -415,10 +482,13 @@ class CmathPhase(PyccelFunction):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'phase'
+    name = "phase"
+
     def __init__(self, z):
         super().__init__(z)
+
 
 class CmathPolar(PyccelFunction):
     """
@@ -431,13 +501,15 @@ class CmathPolar(PyccelFunction):
     z : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'polar'
+    name = "polar"
     _shape = (LiteralInteger(2),)
     _class_type = HomogeneousTupleType.get_new(PythonNativeFloat())
 
     def __init__(self, z):
         super().__init__(z)
+
 
 class CmathRect(PyccelFunction):
     """
@@ -452,27 +524,51 @@ class CmathRect(PyccelFunction):
     phi : TypedAstNode
         The second argument to the function, representing the polar angle.
     """
+
     __slots__ = ()
-    name = 'rect'
+    name = "rect"
     _shape = None
     _class_type = PythonNativeComplex()
+
     def __init__(self, r, phi):
         super().__init__(r, phi)
 
-#==============================================================================
+
+# ==============================================================================
 # Dictionary to map cmath functions to classes above
-#==============================================================================
+# ==============================================================================
 
-cmath_functions = [PyccelFunctionDef(v.name, v) for v in
-        (CmathAcos, CmathAcosh, CmathAsin, CmathAsinh, CmathAtan, CmathAtanh, CmathCos, CmathCosh,
-            CmathExp, CmathIsclose, CmathIsfinite, CmathIsinf, CmathIsnan, CmathPhase,
-            CmathPolar, CmathRect, CmathSin, CmathSinh, CmathSqrt, CmathTan, CmathTanh)]
+cmath_functions = [
+    PyccelFunctionDef(v.name, v)
+    for v in (
+        CmathAcos,
+        CmathAcosh,
+        CmathAsin,
+        CmathAsinh,
+        CmathAtan,
+        CmathAtanh,
+        CmathCos,
+        CmathCosh,
+        CmathExp,
+        CmathIsclose,
+        CmathIsfinite,
+        CmathIsinf,
+        CmathIsnan,
+        CmathPhase,
+        CmathPolar,
+        CmathRect,
+        CmathSin,
+        CmathSinh,
+        CmathSqrt,
+        CmathTan,
+        CmathTanh,
+    )
+]
 
-cmath_constants = { **math_constants,
-    'infj': Constant(PythonNativeComplex(), 'infj', value=cmath.infj),
-    'nanj': Constant(PythonNativeComplex(), 'nanj', value=cmath.nanj),
-    }
+cmath_constants = {
+    **math_constants,
+    "infj": Constant(PythonNativeComplex(), "infj", value=cmath.infj),
+    "nanj": Constant(PythonNativeComplex(), "nanj", value=cmath.nanj),
+}
 
-cmath_mod = Module('cmath',
-        variables = math_constants.values(),
-        funcs     = cmath_functions)
+cmath_mod = Module("cmath", variables=math_constants.values(), funcs=cmath_functions)

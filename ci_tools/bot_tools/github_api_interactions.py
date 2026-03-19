@@ -1,9 +1,10 @@
-""" File containing all functions useful for handling interactions with the GitHub API.
-"""
+"""File containing all functions useful for handling interactions with the GitHub API."""
+
 import os
 import time
 import jwt
 import requests
+
 
 def get_authorization():
     """
@@ -25,14 +26,22 @@ def get_authorization():
     # Issued at time
     # JWT expiration time (10 minutes maximum)
     # GitHub App's identifier
-    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 364561}
+    payload = {"iat": int(time.time()), "exp": int(time.time()) + 60, "iss": 364561}
 
-    jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+    jw_token = jwt.JWT().encode(payload, signing_key, alg="RS256")
 
-    headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {jw_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
 
     # Create JWT
-    reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers)
+    reply = requests.post(
+        "https://api.github.com/app/installations/39885334/access_tokens",
+        headers=headers,
+        timeout=10,
+    )
 
     print(reply.text)
 
@@ -40,23 +49,24 @@ def get_authorization():
 
     print(json_reply)
 
-    token  = json_reply["token"]
+    token = json_reply["token"]
     expiry = json_reply["expires_at"]
 
-    with open(os.environ["GITHUB_ENV"], "r", encoding='utf-8') as f:
+    with open(os.environ["GITHUB_ENV"], "r", encoding="utf-8") as f:
         output = f.read()
 
     if "installation_token" in output:
-        lines = output.split('\n')
+        lines = output.split("\n")
         print("Parsed : ", lines)
-        output = '\n'.join(l for l in lines if "installation_token" not in l)
+        output = "\n".join(l for l in lines if "installation_token" not in l)
 
-    with open(os.environ["GITHUB_ENV"], "w", encoding='utf-8') as f:
+    with open(os.environ["GITHUB_ENV"], "w", encoding="utf-8") as f:
         f.write(output)
         print(f"installation_token={token}", file=f)
         print(f"installation_token_exp={expiry}", file=f)
 
     return token, expiry
+
 
 class GitHubAPIInteractions:
     """
@@ -71,13 +81,16 @@ class GitHubAPIInteractions:
         A string which identifies the repository where the requests
         should be made (e.g. 'pyccel/pyccel').
     """
+
     def __init__(self, repo):
         repo = repo or os.environ["GITHUB_REPOSITORY"]
-        self._org, self._repo = repo.split('/')
+        self._org, self._repo = repo.split("/")
         if "installation_token" in os.environ:
             self._authenticated = True
             self._install_token = os.environ["installation_token"]
-            self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
+            self._install_token_exp = time.strptime(
+                os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ"
+            )
         elif "PEM" in os.environ:
             self._authenticated = True
             self._install_token, expiry = get_authorization()
@@ -110,7 +123,9 @@ class GitHubAPIInteractions:
         requests.Response
             The response collected from the request.
         """
-        reply = requests.request(method, url, json=json, headers=self.get_headers(), **kwargs)
+        reply = requests.request(
+            method, url, json=json, headers=self.get_headers(), timeout=10, **kwargs
+        )
         return reply
 
     def get_branch_details(self, branch_name):
@@ -132,27 +147,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/branches/{branch_name}"
         return self._post_request("GET", url).json()
 
-    def check_runs(self, commit):
-        """
-        Get a list of all check runs which were run on the commit.
-
-        Get a list of all check runs which were run in the repository for
-        the commit passed as an argument.
-
-        Parameters
-        ----------
-        commit : str
-            The SHA of the commit of interest.
-
-        Returns
-        -------
-        dict
-            A dictionary containing information about the check runs.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
-        return self._post_request("GET", url).json()
-
-    def create_run(self, commit, name):
+    def post_coverage_run(self, commit, name, json):
         """
         Create a new check run.
 
@@ -167,75 +162,6 @@ class GitHubAPIInteractions:
 
         name : str
             The name of the check run.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all properties of the new check run.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the check run was not successfully posted.
-        """
-        assert self._authenticated
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
-        workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-        print("create_run:", url)
-        json = {"name": name,
-                "head_sha": commit,
-                "status": "in_progress",
-                "details_url": workflow_url}
-        run = self._post_request("POST", url, json)
-        assert run.status_code == 201
-        return run.json()
-
-    def prepare_run(self, commit, name):
-        """
-        Add a new check run to the queue.
-
-        Create a new check run with the specified name which tests the mentioned commit.
-        The check run is marked as queued.
-
-        Parameters
-        ----------
-        commit : str
-            The commit to be tested.
-
-        name : str
-            The name of the check run.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all properties of the new check run.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the check run was not successfully posted.
-        """
-        assert self._authenticated
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
-        json = {"name": name,
-                "head_sha": commit,
-                "status": "queued"}
-        run = self._post_request("POST", url, json)
-        assert run.status_code == 201
-        return run.json()
-
-    def update_run(self, run_id, json):
-        """
-        Update an existing check run.
-
-        Update information on the check run with id "run_id" using the information
-        in the json dictionary as described here:
-        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#update-a-check-run
-
-        Parameters
-        ----------
-        run_id : int
-            The id of the check run.
 
         json : dictionary
             The information that should be updated in the check run.
@@ -248,86 +174,24 @@ class GitHubAPIInteractions:
         Raises
         ------
         AssertionError
-            An assertion error is raised if the check run was not successfully updated.
-        """
-        assert self._authenticated
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
-        run = self._post_request("PATCH", url, json)
-        print(run.text)
-        assert run.status_code == 200
-        return run
-
-    def rerequest_run(self, run_id):
-        """
-        Rerequest an existing check run.
-
-        Rerequest the check run with id "run_id" as described here:
-        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#rerequest-a-check-run
-
-        Parameters
-        ----------
-        run_id : int
-            The id of the check run.
-
-        Returns
-        -------
-        requests.Response
-            The response collected from the request.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the check run was not successfully rerequested.
-        """
-        assert self._authenticated
-        print("Rerequesting : ", run_id)
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}/rerequest"
-        run = self._post_request("POST", url)
-        print(run.text)
-        assert run.status_code == 201
-        run_url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
-        return self._post_request("GET", run_url)
-
-    def create_run_from_old(self, commit, name, old_check_run):
-        """
-        Create a new check run.
-
-        Create a new check run with the specified name which tests the mentioned commit.
-        The check run is marked as in progress. The details url is pointed at the
-        run summary page for this run.
-
-        Parameters
-        ----------
-        commit : str
-            The commit to be reported on.
-
-        name : str
-            The name of the check run.
-
-        old_check_run : dict
-            A dictionary describing the commit run that this run is created from.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all properties of the new check run.
-
-        Raises
-        ------
-        AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
         assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
+        workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
-        json = {"name": name,
+        json.update(
+            {
+                "name": name,
                 "head_sha": commit,
-                "status": "completed"}
-        for key in ('conclusion', 'details_url', 'started_at', 'completed_at'):
-            json[key] = old_check_run[key]
+                "status": "in_progress",
+                "details_url": workflow_url,
+            }
+        )
         run = self._post_request("POST", url, json)
+        print(run.text)
         assert run.status_code == 201
-        return run.json()
+        return run
 
     def get_pr_details(self, pr_id):
         """
@@ -347,71 +211,6 @@ class GitHubAPIInteractions:
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
         return self._post_request("GET", url).json()
-
-    def run_workflow(self, filename, branch, inputs):
-        """
-        Create a workflow dispatch event.
-
-        Create a workflow dispatch event as described in the API docs here:
-        https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28
-
-        All workflows are run from the devel branch, they then use the inputs
-        to checkout the relevant code.
-
-        Parameters
-        ----------
-        filename : str
-            The name of the file containing the workflow we wish to run.
-
-        branch : str
-            The name of the branch that the tests should be run on.
-
-        inputs : dict
-            A dictionary of any inputs required for the workflow.
-
-        Raises
-        ------
-        AssertionError
-            An assertion error is raised if the workflow was not successfully started.
-        """
-        assert self._authenticated
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
-        json = {"ref": branch,
-                "inputs": inputs}
-        print(url, json)
-        reply = self._post_request("POST", url, json)
-        print(reply.text)
-        assert reply.status_code == 204
-
-    def get_comments(self, pr_id):
-        """
-        Get all comments left on a given pull request or issue.
-
-        Get a dictionary containing a list of all the comments left
-        on a given pull request or issue. This list is obtained using
-        the API as described here:
-        https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request or comment.
-
-        Returns
-        -------
-        dict
-            A dictionary containing the comments.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
-        results = []
-        page = 1
-        new_results = [None]
-        while len(new_results) != 0:
-            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
-            new_results = request.json()
-            results.extend(new_results)
-            page += 1
-        return results
 
     def get_review_comments(self, pr_id):
         """
@@ -438,13 +237,15 @@ class GitHubAPIInteractions:
         page = 1
         new_results = [None]
         while len(new_results) != 0:
-            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            request = self._post_request(
+                "GET", url, params={"per_page": "100", "page": str(page)}
+            )
             new_results = request.json()
             results.extend(new_results)
             page += 1
         return results
 
-    def create_comment(self, pr_id, comment, reply_to = None):
+    def create_comment(self, pr_id, comment, reply_to=None):
         """
         Create a comment on a pull request or issue.
 
@@ -475,36 +276,15 @@ class GitHubAPIInteractions:
         assert self._authenticated
         if reply_to:
             suffix = f"/{reply_to}/replies"
-            issue_type = 'pulls'
+            issue_type = "pulls"
         else:
-            issue_type = 'issues'
-            suffix = ''
+            issue_type = "issues"
+            suffix = ""
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/{issue_type}/{pr_id}/comments{suffix}"
         print(url)
-        return self._post_request("POST", url, json={"body":comment})
+        return self._post_request("POST", url, json={"body": comment})
 
-    def modify_comment(self, comment_url, new_body):
-        """
-        Modify an existing comment.
-
-        Modify an existing comment by replacing the body with the new text.
-
-        Parameters
-        ----------
-        comment_url : str
-            The url of the comment to be modified.
-        new_body : str
-            The new body of the comment.
-
-        Returns
-        -------
-        requests.Response
-            The response collected from the request.
-        """
-        assert self._authenticated
-        return self._post_request("PATCH", comment_url, json={"body":new_body})
-
-    def create_review(self, pr_id, commit, comment, status, comments = ()):
+    def create_review(self, pr_id, commit, comment, status, comments=()):
         """
         Create a review on the specified pull request.
 
@@ -541,297 +321,19 @@ class GitHubAPIInteractions:
         """
         assert self._authenticated
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
+        review = {
+            "commit_id": commit,
+            "body": comment,
+            "event": status,
+            "comments": comments,
+        }
         print(review)
         reply = self._post_request("POST", url, json=review)
         print(reply.text)
         assert reply.status_code == 200
         return reply
 
-    def check_for_user_in_team(self, user, team):
-        """
-        Check to determine if a user belongs to a given team.
-
-        Use the API to check to determine if a user belongs to a given team
-        as described here:
-        https://docs.github.com/en/rest/teams/members?apiVersion=2022-11-28#get-team-membership-for-a-user
-
-        Parameters
-        ----------
-        user : str
-            The user of interest.
-
-        team : str
-            The team which we are checking.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the result.
-        """
-        assert self._authenticated
-        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/memberships/{user}'
-        return self._post_request("GET", url).json()
-
-    def get_prs(self, state='open'):
-        """
-        Get a list of all pull requests in the repository.
-
-        Use the API to get a list of all pull requests in the repository which have
-        the specified state as described here:
-        https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#list-pull-requests
-
-        Parameters
-        ----------
-        state : str, default='open'
-            The state of the pull requests to report [open/closed/all].
-
-        Returns
-        -------
-        dict
-            A dictionary describing the pull requests.
-        """
-        url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
-        return self._post_request("GET", url, params={'state':state}).json()
-
-    def get_check_runs(self, commit):
-        """
-        Get a list of all check runs which have run on a given commit.
-
-        Use the API to get a list of all check runs which have run on a given
-        commit as described here:
-        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#list-check-runs-for-a-git-reference
-
-        Parameters
-        ----------
-        commit : str
-            The SHA of the most recent commit at the moment of the review.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the check runs.
-        """
-        url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
-        return self._post_request("GET", url).json()
-
-    def get_pr_events(self, pr_id):
-        """
-        Get a list of all events which occurred on this pull request.
-
-        Use the API to get a list of all events which occurred on this pull
-        request as described here:
-        https://docs.github.com/en/rest/issues/events?apiVersion=2022-11-28#list-issue-events
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the events.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
-        return self._post_request("GET", url).json()
-
-    def get_artifacts(self, name):
-        """
-        Find all artifacts with the specified name.
-
-        Find all artifacts in the repository with the specified name using
-        the API as described here:
-        https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-artifacts-for-a-repository
-
-        Parameters
-        ----------
-        name : str
-            The name of the artifact.
-
-        Returns
-        -------
-        dict
-            A dictionary describing all artifacts found.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts"
-        query= {'name': name}
-        return self._post_request("GET", url, query).json()
-
-    def download_artifact(self, name, url):
-        """
-        Download the specified artifact from the url.
-
-        Use the API to download the specified artifact from the url
-        into a file called `name` as described here:
-        https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#download-an-artifact
-
-        Parameters
-        ----------
-        name : str
-            The name of the file where the result should be saved.
-
-        url : str
-            The url where the file is located.
-        """
-        reply = self._post_request("GET", url, stream=True)
-        with open(name, 'wb') as f:
-            f.write(reply.content)
-
-    def get_reviews(self, pr_id):
-        """
-        Get a list of all reviews which have been left on a given pull request.
-
-        Use the API to get a list of all reviews left on a given pull request
-        as described here:
-        https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#list-reviews-for-a-pull-request
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the reviews.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        results = []
-        page = 1
-        new_results = [None]
-        while len(new_results) != 0:
-            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
-            new_results = request.json()
-            results.extend(new_results)
-            page += 1
-        return results
-
-    def get_events(self, pr_id, page = 1):
-        """
-        Get a timeline of events which occurred on a given pull request.
-
-        Use the API to get a list of events on a pull request as described
-        here:
-        https://docs.github.com/en/rest/issues/timeline?apiVersion=2022-11-28
-
-        These events are described here:
-        https://docs.github.com/en/webhooks-and-events/events/issue-event-types
-
-        The events are loaded in pages of 100 events. If the full history is
-        required then this function must be called multiple times increasing
-        the page argument each time.
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        page : int
-            The page to load.
-
-        Returns
-        -------
-        dict
-            A dictionary describing the events.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
-        configs = {'per_page':100, 'page': page}
-        return self._post_request("GET", url, params=configs).json()
-
-    def clear_labels(self, pr_id, labels):
-        """
-        Remove the specified labels from the indicated pull request.
-
-        Use the API to remove the specified labels from the indicated pull
-        request as described here:
-        https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28#remove-a-label-from-an-issue
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        labels : list of str
-            A list containing the names of the labels to be removed.
-        """
-        for l in labels:
-            url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels/{l}"
-            self._post_request("DELETE", url)
-
-    def add_labels(self, pr_id, labels):
-        """
-        Add the specified labels to the indicated pull request.
-
-        Use the API to add the specified labels from the indicated pull
-        request as described here:
-        https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28#add-labels-to-an-issue
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        labels : list of str
-            A list containing the names of the labels to be added.
-        """
-        assert labels
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
-        self._post_request("POST", url, {"labels":labels})
-
-    def get_current_labels(self, pr_id):
-        """
-        Get a description of all labels currently on the pull request.
-
-        Use the API to get a description of all labels currently used
-        on the specified pull request.
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        Returns
-        -------
-        list of dict
-            A list of dictionaries describing each of the labels.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
-        return self._post_request("GET", url).json()
-
-    def request_reviewers(self, pr_id, request_team = False, reviewers = ()):
-        """
-        Request reviewers for a pull request.
-
-        Use the API to request reviews for a pull request as described here:
-        https://docs.github.com/en/rest/pulls/review-requests?apiVersion=2022-11-28#request-reviewers-for-a-pull-request
-
-        Both the pyccel/pyccel-dev team and individuals can be requested, but
-        at least one or the other must be chosen.
-
-        Parameters
-        ----------
-        pr_id : int
-            The id of the pull request.
-
-        request_team : bool
-            Indicate whether the pyccel/pyccel-dev team should be requested.
-
-        reviewers : iterable
-            A list of individual reviewers to be requested.
-        """
-        assert self._authenticated
-        assert request_team or reviewers
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
-        review_requests = {}
-        if request_team:
-            review_requests['team_reviewers'] = ['pyccel-dev']
-        if reviewers:
-            review_requests['reviewers'] = list(reviewers)
-
-        self._post_request("POST", url, review_requests)
-
-    def wait_for_runs(self, commit_sha, run_names, max_time=15*60, wait_time=15):
+    def wait_for_runs(self, commit_sha, run_names, max_time=15 * 60, wait_time=15):
         """
         Wait for the specified workflow runs associated with the commit.
 
@@ -866,54 +368,39 @@ class GitHubAPIInteractions:
         # Run for 15 mins maximum
         timeout = time.time() + max_time
 
-        request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
-        workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
-        completed = all(j['status'] == 'completed' for j in workflow_runs)
+        request_result = self._post_request(
+            "GET", url, params={"head_sha": commit_sha}
+        ).json()
+        workflow_runs = [
+            j for j in request_result["workflow_runs"] if j["name"] in run_names
+        ]
+        completed = all(j["status"] == "completed" for j in workflow_runs)
 
         print(commit_sha)
         print(workflow_runs)
-        print([j['name'] for j in workflow_runs])
-        print([j['status'] for j in workflow_runs])
-        print([j['conclusion'] for j in workflow_runs])
+        print([j["name"] for j in workflow_runs])
+        print([j["status"] for j in workflow_runs])
+        print([j["conclusion"] for j in workflow_runs])
 
         while not completed and time.time() < timeout:
             time.sleep(15)
-            request_result = self._post_request("GET", url, params={'head_sha': commit_sha}).json()
-            workflow_runs = [j for j in request_result['workflow_runs'] if j['name'] in run_names]
-            completed = all(j['status'] == 'completed' for j in workflow_runs)
+            request_result = self._post_request(
+                "GET", url, params={"head_sha": commit_sha}
+            ).json()
+            workflow_runs = [
+                j for j in request_result["workflow_runs"] if j["name"] in run_names
+            ]
+            completed = all(j["status"] == "completed" for j in workflow_runs)
             print(workflow_runs)
-            print([j['name'] for j in workflow_runs])
-            print([j['status'] for j in workflow_runs])
-            print([j['conclusion'] for j in workflow_runs])
+            print([j["name"] for j in workflow_runs])
+            print([j["status"] for j in workflow_runs])
+            print([j["conclusion"] for j in workflow_runs])
 
         assert completed
 
-        success = all(j['conclusion'] == 'success' for j in workflow_runs)
+        success = all(j["conclusion"] == "success" for j in workflow_runs)
 
         return success
-
-    def has_valid_artifacts(self, run_id):
-        """
-        Check if all the artifacts associated with a run id are valid (i.e. not expired).
-
-        Check if all the artifacts associated with a run id are valid (i.e. not expired).
-        This is done by collecting all artifacts associated with a run id using the GitHub
-        API as described here:
-        <https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-workflow-run-artifacts>
-
-        Parameters
-        ----------
-        run_id : int
-            The id of the run to be investigated.
-
-        Returns
-        -------
-        bool
-            True if all artifacts are valid. False otherwise.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs/{run_id}/artifacts"
-        artifacts = self._post_request("GET", url).json()['artifacts']
-        return all(not a['expired'] for a in artifacts)
 
     def get_headers(self):
         """
@@ -933,9 +420,13 @@ class GitHubAPIInteractions:
                 self._install_token, expiry = get_authorization()
                 self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
-            return {"Accept": "application/vnd.github+json",
-                     "Authorization": f"Bearer {self._install_token}",
-                     "X-GitHub-Api-Version": "2022-11-28"}
+            return {
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {self._install_token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }
         else:
-            return {"Accept": "application/vnd.github+json",
-                     "X-GitHub-Api-Version": "2022-11-28"}
+            return {
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }

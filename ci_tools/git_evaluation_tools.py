@@ -1,5 +1,5 @@
-""" Tools to help examine git information and interact with git
-"""
+"""Tools to help examine git information and interact with git"""
+
 from collections import namedtuple
 from datetime import datetime
 import json
@@ -7,26 +7,28 @@ import shutil
 import subprocess
 import time
 
-__all__ = ('github_cli',
-           'ReviewComment',
-           'get_diff_as_json',
-           'get_previous_pr_comments',
-           'check_previous_comments',
-           'get_labels',
-           'get_review_status',
-           'leave_comment',
-           'add_labels',
-           'remove_labels',
-           'set_draft',
-           'set_ready',
-           'get_job_information',
-           'check_previous_contributions'
-           )
+__all__ = (
+    "github_cli",
+    "ReviewComment",
+    "get_diff_as_json",
+    "get_previous_pr_comments",
+    "check_previous_comments",
+    "get_labels",
+    "get_review_status",
+    "leave_comment",
+    "add_labels",
+    "remove_labels",
+    "set_draft",
+    "set_ready",
+    "get_job_information",
+    "check_previous_contributions",
+)
 
-github_cli = shutil.which('gh')
+github_cli = shutil.which("gh")
 
-ReviewComment = namedtuple('ReviewComment', ['state', 'date', 'author'])
-Comment = namedtuple('Comment', ['body', 'date', 'author'])
+ReviewComment = namedtuple("ReviewComment", ["state", "date", "author"])
+Comment = namedtuple("Comment", ["body", "date", "author"])
+
 
 def get_status_json(pr_id, tags):
     """
@@ -54,17 +56,18 @@ def get_status_json(pr_id, tags):
     dict/str : The output of the request.
     """
     # Check status of PR
-    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', tags]
+    cmds = [github_cli, "pr", "view", str(pr_id), "--json", tags]
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, err = p.communicate()
     print(err)
 
     data = json.loads(result)
 
-    if ',' in tags:
+    if "," in tags:
         return data
     else:
         return data[tags]
+
 
 def get_diff_as_json(filename):
     """
@@ -94,7 +97,7 @@ def get_diff_as_json(filename):
         lines = f.readlines()
 
     lines = [l.strip() for l in lines]
-    changes ={}
+    changes = {}
     i = 0
     n = len(lines)
 
@@ -107,56 +110,57 @@ def get_diff_as_json(filename):
         if l.startswith("diff "):
             if current_file_name:
                 changes[current_file_name] = {}
-                changes[current_file_name]['addition'] = current_file_additions
-                changes[current_file_name]['deletion'] = current_file_deletions
+                changes[current_file_name]["addition"] = current_file_additions
+                changes[current_file_name]["deletion"] = current_file_deletions
                 current_file_additions = []
                 current_file_deletions = []
-            current_file_name = l.split(' ')[3][2:]
-            i+=1
-        elif l.startswith('++') and '/dev/null' in l:
+            current_file_name = l.split(" ")[3][2:]
+            i += 1
+        elif l.startswith("++") and "/dev/null" in l:
             current_file_name = None
             i += 1
-        elif l.startswith('@@'):
-            line_info = l.split('@@')[1].split()
+        elif l.startswith("@@"):
+            line_info = l.split("@@")[1].split()
             for info in line_info:
                 key = info[0]
                 info = info[1:]
-                if ',' in info:
-                    line_num, n_lines = [int(li) for li in info.split(',')]
+                if "," in info:
+                    line_num, n_lines = [int(li) for li in info.split(",")]
                 else:
                     n_lines = 1
                     line_num = int(info)
-                if key == '+':
+                if key == "+":
                     insert_index = line_num
                     n_append = n_lines
-                elif key == '-':
+                elif key == "-":
                     delete_index = line_num
                     n_delete = n_lines
-            i+=1
-            j=0
-            while j<n_delete and lines[i].startswith('-'):
-                current_file_deletions.append(delete_index+j)
-                j+=1
-                i+=1
+            i += 1
+            j = 0
+            while j < n_delete and lines[i].startswith("-"):
+                current_file_deletions.append(delete_index + j)
+                j += 1
+                i += 1
             assert n_delete == j
-            while i<n and lines[i].startswith('\\'):
-                i+=1
-            j=0
-            while j<n_append and lines[i].startswith('+'):
-                current_file_additions.append(insert_index+j)
-                j+=1
-                i+=1
+            while i < n and lines[i].startswith("\\"):
+                i += 1
+            j = 0
+            while j < n_append and lines[i].startswith("+"):
+                current_file_additions.append(insert_index + j)
+                j += 1
+                i += 1
             assert n_append == j
         else:
             print(lines[i])
-            i+=1
+            i += 1
 
     if current_file_name:
         changes[current_file_name] = {}
-        changes[current_file_name]['addition'] = current_file_additions
-        changes[current_file_name]['deletion'] = current_file_deletions
+        changes[current_file_name]["addition"] = current_file_additions
+        changes[current_file_name]["deletion"] = current_file_deletions
 
     return changes
+
 
 def get_previous_pr_comments(pr_id):
     """
@@ -174,11 +178,18 @@ def get_previous_pr_comments(pr_id):
     -------
     list : A list of all the messages left on the PR.
     """
-    relevant_comments = get_status_json(pr_id, 'comments')
+    relevant_comments = get_status_json(pr_id, "comments")
 
-    comments = [Comment(c["body"], datetime.fromisoformat(c['createdAt'].strip('Z')), c['author']['login'])
-                        for c in relevant_comments]
+    comments = [
+        Comment(
+            c["body"],
+            datetime.fromisoformat(c["createdAt"].strip("Z")),
+            c["author"]["login"],
+        )
+        for c in relevant_comments
+    ]
     return comments
+
 
 def check_previous_comments(pr_id):
     """
@@ -201,10 +212,10 @@ def check_previous_comments(pr_id):
     datetime : The last time the bot commented.
     """
     comments = get_previous_pr_comments(pr_id)
-    my_comments = [c for c in comments if c.author == 'github-actions']
+    my_comments = [c for c in comments if c.author == "github-actions"]
 
     if len(my_comments) == 0:
-        return [], '', None
+        return [], "", None
     else:
         last_messages = {}
         final_message = my_comments[0].body
@@ -234,10 +245,9 @@ def get_labels(pr_id):
     -------
     list : A list of the names of all the labels.
     """
-    label_json = get_status_json(pr_id, 'labels')
-    current_labels = [l['name'] for l in label_json]
+    label_json = get_status_json(pr_id, "labels")
+    current_labels = [l["name"] for l in label_json]
     return current_labels
-
 
 
 def get_review_status(pr_id):
@@ -245,32 +255,34 @@ def get_review_status(pr_id):
     Get the reviews left on the PR.
 
     Get a dictionary describing the current state of the reviews
-    on the PR. 
+    on the PR.
 
     Results
     -------
     dict : Keys are authors of reviews, values are the state of their review.
     """
-    reviews = get_status_json(pr_id, 'reviews')
-    requests = get_status_json(pr_id, 'reviewRequests')
+    reviews = get_status_json(pr_id, "reviews")
+    requests = get_status_json(pr_id, "reviewRequests")
 
     requested_authors = [r["login"] for r in requests]
 
     review_status = {}
     for r in reviews:
-        author = r['author']['login']
-        date = datetime.fromisoformat(r['submittedAt'].strip('Z'))
-        state = r['state']
+        author = r["author"]["login"]
+        date = datetime.fromisoformat(r["submittedAt"].strip("Z"))
+        state = r["state"]
         if author not in review_status:
             review_status[author] = ReviewComment(state, date, author)
-        elif state != 'COMMENTED' and review_status[author].date < date:
+        elif state != "COMMENTED" and review_status[author].date < date:
             review_status[author] = ReviewComment(state, date, author)
     for a in review_status:
         if a in requested_authors:
-            review_status[a] = ReviewComment('REVIEW_REQUESTED', review_status[a].date, a)
+            review_status[a] = ReviewComment(
+                "REVIEW_REQUESTED", review_status[a].date, a
+            )
     for a in requested_authors:
         if a not in review_status:
-            review_status[a] = ReviewComment('UNRESPONSIVE', None, a)
+            review_status[a] = ReviewComment("UNRESPONSIVE", None, a)
     return review_status, requested_authors
 
 
@@ -285,14 +297,14 @@ def get_job_information(run_id):
     -------
     bool : Indicates if tests are passed
     """
-    cmd = [github_cli, 'run', 'view', str(run_id), '--json', 'jobs']
+    cmd = [github_cli, "run", "view", str(run_id), "--json", "jobs"]
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as p:
         result, err = p.communicate()
     print(err)
-    return json.loads(result)['jobs']
+    return json.loads(result)["jobs"]
 
 
-def leave_comment(number, comment, edit = False):
+def leave_comment(number, comment, edit=False):
     """
     Leave a comment on the PR.
 
@@ -311,15 +323,14 @@ def leave_comment(number, comment, edit = False):
         Indicates whether the bot should edit the last comment
         or just write a new comment.
     """
-    cmds = [github_cli, 'pr', 'comment', str(number), '-b', comment]
+    cmds = [github_cli, "pr", "comment", str(number), "-b", comment]
 
     if edit:
-        cmds.append('--edit-last')
+        cmds.append("--edit-last")
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        _,err = p.communicate()
+        _, err = p.communicate()
     print(err)
-
 
 
 def add_labels(number, labels):
@@ -338,9 +349,9 @@ def add_labels(number, labels):
         A list of the labels to be added.
     """
 
-    cmds = [github_cli, 'pr', 'edit', str(number)]
+    cmds = [github_cli, "pr", "edit", str(number)]
     for lab in labels:
-        cmds += ['--add-label', lab]
+        cmds += ["--add-label", lab]
 
     with subprocess.Popen(cmds) as p:
         _, err = p.communicate()
@@ -363,9 +374,9 @@ def remove_labels(number, labels):
         A list of the labels to be removed.
     """
 
-    cmds = [github_cli, 'pr', 'edit', str(number)]
+    cmds = [github_cli, "pr", "edit", str(number)]
     for lab in labels:
-        cmds += ['--remove-label', lab]
+        cmds += ["--remove-label", lab]
 
     with subprocess.Popen(cmds) as p:
         _, err = p.communicate()
@@ -384,7 +395,7 @@ def set_ready(number):
     number : int
         The number of the PR.
     """
-    cmds = [github_cli, 'pr', 'ready', str(number)]
+    cmds = [github_cli, "pr", "ready", str(number)]
 
     with subprocess.Popen(cmds) as p:
         _, err = p.communicate()
@@ -402,11 +413,12 @@ def set_draft(number):
     number : int
         The number of the PR.
     """
-    cmds = [github_cli, 'pr', 'ready', str(number), '--undo']
+    cmds = [github_cli, "pr", "ready", str(number), "--undo"]
 
     with subprocess.Popen(cmds) as p:
         _, err = p.communicate()
     print(err)
+
 
 def check_previous_contributions(repo, author):
     """
@@ -423,7 +435,17 @@ def check_previous_contributions(repo, author):
     author : str
         The username of the author
     """
-    cmds = [github_cli, 'search', 'prs', '--author', author, '--repo', repo, '--json', 'number,state']
+    cmds = [
+        github_cli,
+        "search",
+        "prs",
+        "--author",
+        author,
+        "--repo",
+        repo,
+        "--json",
+        "number,state",
+    ]
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, err = p.communicate()
@@ -439,6 +461,5 @@ def check_previous_contributions(repo, author):
                 result, err = p.communicate()
                 returncode = p.returncode
             print("New returncode : ", returncode)
-
 
     return json.loads(result)

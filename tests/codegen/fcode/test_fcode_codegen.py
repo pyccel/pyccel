@@ -7,22 +7,30 @@
 import os
 import pytest
 
-from pyccel.parser.parser   import Parser
+from pyccel.parser.parser import Parser
 from pyccel.codegen.codegen import Codegen
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors import Errors
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
-path_dir = os.path.join(base_dir, 'scripts')
+path_dir = os.path.join(base_dir, "scripts")
 
 files = sorted(os.listdir(path_dir))
-failing_files = {'ListComprehension.py': 'Lists of tuples not yet implemented with gFTL',
-                 }
-files = [os.path.join(path_dir,f) \
-         if f not in failing_files \
-         else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
-         for f in files \
-         if f.endswith(".py") \
-        ]
+failing_files = {
+    "ListComprehension.py": "Lists of tuples not yet implemented with gFTL",
+}
+files = [
+    (
+        os.path.join(path_dir, f)
+        if f not in failing_files
+        else pytest.param(
+            os.path.join(path_dir, f), marks=pytest.mark.xfail(reason=failing_files[f])
+        )
+    )
+    for f in files
+    if f.endswith(".py")
+]
+
+
 @pytest.mark.fortran
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
@@ -31,13 +39,13 @@ def test_codegen(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder = os.getcwd())
-    ast = pyccel.parse(verbose = 0)
+    pyccel = Parser(f, output_folder=os.getcwd())
+    ast = pyccel.parse(verbose=0)
 
     # Assert syntactic success
     assert not errors.has_errors()
 
-    ast = pyccel.annotate(verbose = 0)
+    ast = pyccel.annotate(verbose=0)
 
     # Assert semantic success
     assert not errors.has_errors()
@@ -45,22 +53,23 @@ def test_codegen(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'fortran', verbose=0)
+    codegen = Codegen(ast, name, "fortran", verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success
     assert not errors.has_errors()
 
+
 ######################
-if __name__ == '__main__':
-    print('*********************************')
-    print('***                           ***')
-    print('***   TESTING CODEGEN FCODE   ***')
-    print('***                           ***')
-    print('*********************************')
+if __name__ == "__main__":
+    print("*********************************")
+    print("***                           ***")
+    print("***   TESTING CODEGEN FCODE   ***")
+    print("***                           ***")
+    print("*********************************")
 
     for f in files:
-        print('> testing {0}'.format(str(os.path.basename(f))))
+        print("> testing {0}".format(str(os.path.basename(f))))
         test_codegen(f)
 
-    print('\n')
+    print("\n")

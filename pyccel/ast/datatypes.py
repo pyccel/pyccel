@@ -1,14 +1,15 @@
 # coding: utf-8
-#pylint: disable=no-member, protected-access
+# pylint: disable=no-member, protected-access
 
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
+
 from functools import lru_cache
 
 import numpy
@@ -17,46 +18,47 @@ from pyccel.utilities.metaclasses import Singleton
 from .basic import iterable
 
 __all__ = (
-        # ------------ Super classes ------------
-        'ContainerType',
-        'FixedSizeType',
-        'PrimitiveType',
-        'PyccelType',
-        # ------------ Primitive types ------------
-        'PrimitiveBooleanType',
-        'PrimitiveCharacterType',
-        'PrimitiveComplexType',
-        'PrimitiveFloatingPointType',
-        'PrimitiveIntegerType',
-        # ------------ Modifying types ------------
-        'FinalType',
-        # ------------ Fixed size types ------------
-        'CharType',
-        'FixedSizeNumericType',
-        'GenericType',
-        'PythonNativeBool',
-        'PythonNativeComplex',
-        'PythonNativeFloat',
-        'PythonNativeInt',
-        'PythonNativeNumericType',
-        'SymbolicType',
-        'TypeAlias',
-        'VoidType',
-        # ------------ Container types ------------
-        'CustomDataType',
-        'DictType',
-        'HomogeneousContainerType',
-        'HomogeneousListType',
-        'HomogeneousSetType',
-        'HomogeneousTupleType',
-        'InhomogeneousTupleType',
-        'StringType',
-        'TupleType',
-        # ---------- Functions -------------------
-        'DataTypeFactory',
+    # ------------ Super classes ------------
+    "ContainerType",
+    "FixedSizeType",
+    "PrimitiveType",
+    "PyccelType",
+    # ------------ Primitive types ------------
+    "PrimitiveBooleanType",
+    "PrimitiveCharacterType",
+    "PrimitiveComplexType",
+    "PrimitiveFloatingPointType",
+    "PrimitiveIntegerType",
+    # ------------ Modifying types ------------
+    "FinalType",
+    # ------------ Fixed size types ------------
+    "CharType",
+    "FixedSizeNumericType",
+    "GenericType",
+    "PythonNativeBool",
+    "PythonNativeComplex",
+    "PythonNativeFloat",
+    "PythonNativeInt",
+    "PythonNativeNumericType",
+    "SymbolicType",
+    "TypeAlias",
+    "VoidType",
+    # ------------ Container types ------------
+    "CustomDataType",
+    "DictType",
+    "HomogeneousContainerType",
+    "HomogeneousListType",
+    "HomogeneousSetType",
+    "HomogeneousTupleType",
+    "InhomogeneousTupleType",
+    "StringType",
+    "TupleType",
+    # ---------- Functions -------------------
+    "DataTypeFactory",
 )
 
-#==============================================================================
+
+# ==============================================================================
 class PrimitiveType(metaclass=Singleton):
     """
     Base class representing types of datatypes.
@@ -64,10 +66,11 @@ class PrimitiveType(metaclass=Singleton):
     The base class representing the category of datatype to which a FixedSizeType
     may belong (e.g. integer, floating point).
     """
-    __slots__ = ()
-    _name = '__UNDEFINED__'
 
-    def __init__(self): #pylint: disable=useless-parent-delegation
+    __slots__ = ()
+    _name = "__UNDEFINED__"
+
+    def __init__(self):  # pylint: disable=useless-parent-delegation
         # This __init__ function is required so the Singleton can
         # always detect a signature
         super().__init__()
@@ -75,14 +78,17 @@ class PrimitiveType(metaclass=Singleton):
     def __str__(self):
         return self._name
 
+
 class PrimitiveBooleanType(PrimitiveType):
     """
     Class representing a boolean datatype.
 
     Class representing a boolean datatype.
     """
+
     __slots__ = ()
-    _name = 'boolean'
+    _name = "boolean"
+
 
 class PrimitiveIntegerType(PrimitiveType):
     """
@@ -90,8 +96,10 @@ class PrimitiveIntegerType(PrimitiveType):
 
     Class representing an integer datatype.
     """
+
     __slots__ = ()
-    _name = 'integer'
+    _name = "integer"
+
 
 class PrimitiveFloatingPointType(PrimitiveType):
     """
@@ -99,8 +107,10 @@ class PrimitiveFloatingPointType(PrimitiveType):
 
     Class representing a floating point datatype.
     """
+
     __slots__ = ()
-    _name = 'floating point'
+    _name = "floating point"
+
 
 class PrimitiveComplexType(PrimitiveType):
     """
@@ -108,8 +118,10 @@ class PrimitiveComplexType(PrimitiveType):
 
     Class representing a complex datatype.
     """
+
     __slots__ = ()
-    _name = 'complex'
+    _name = "complex"
+
 
 class PrimitiveCharacterType(PrimitiveType):
     """
@@ -117,10 +129,13 @@ class PrimitiveCharacterType(PrimitiveType):
 
     Class representing a character datatype.
     """
-    __slots__ = ()
-    _name = 'character'
 
-#==============================================================================
+    __slots__ = ()
+    _name = "character"
+
+
+# ==============================================================================
+
 
 class PyccelType(metaclass=Singleton):
     """
@@ -139,18 +154,19 @@ class PyccelType(metaclass=Singleton):
     A type also contains an attribute _name which can be useful to examine
     the type.
     """
+
     __slots__ = ()
 
     @property
     def name(self):
         """
         Get the name of the pyccel type.
-        
+
         Get the name of the pyccel type.
         """
         return self._name
 
-    def __init__(self): #pylint: disable=useless-parent-delegation
+    def __init__(self):  # pylint: disable=useless-parent-delegation
         # This __init__ function is required so the Singleton can
         # always detect a signature
         super().__init__()
@@ -199,13 +215,15 @@ class PyccelType(metaclass=Singleton):
         """
         return shape is None
 
-#==============================================================================
+
+# ==============================================================================
 class FinalType:
     """
     A class to get PyccelType subclasses describing constant values.
 
     A class to get PyccelType subclasses describing constant values.
     """
+
     __slots__ = ()
 
     @classmethod
@@ -226,13 +244,17 @@ class FinalType:
             return underlying_type
 
         type_class = type(underlying_type)
+
         def __init__(self):
             self._underlying_type = underlying_type
             type(underlying_type).__init__(self)
+
         def __hash__(self):
             return type_class.__hash__(underlying_type)
+
         def __eq__(self, other):
             return type_class.__eq__(underlying_type, other)
+
         def get_underlying_type(self):
             """
             Get the type that is indicated as const.
@@ -240,16 +262,27 @@ class FinalType:
             Get the type that is indicated as const.
             """
             return self._underlying_type
-        return type(f'Final[{type_class.__name__}]', (FinalType, type_class,),
-                    {'__init__' : __init__,
-                     '__hash__' : __hash__,
-                     '__eq__' : __eq__,
-                     'underlying_type': property(get_underlying_type)})()
+
+        return type(
+            f"Final[{type_class.__name__}]",
+            (
+                FinalType,
+                type_class,
+            ),
+            {
+                "__init__": __init__,
+                "__hash__": __hash__,
+                "__eq__": __eq__,
+                "underlying_type": property(get_underlying_type),
+            },
+        )()
 
     def __str__(self):
-        return f'Final[{self._underlying_type}]'
+        return f"Final[{self._underlying_type}]"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class FixedSizeType(PyccelType):
     """
@@ -258,6 +291,7 @@ class FixedSizeType(PyccelType):
     The base class representing a built-in scalar datatype which can be
     represented in memory. E.g. int32, int64.
     """
+
     __slots__ = ()
 
     @property
@@ -319,6 +353,7 @@ class FixedSizeType(PyccelType):
         assert isinstance(new_type, FixedSizeType)
         return new_type
 
+
 class FixedSizeNumericType(FixedSizeType):
     """
     Base class representing a scalar numeric datatype.
@@ -326,6 +361,7 @@ class FixedSizeNumericType(FixedSizeType):
     The base class representing a scalar numeric datatype which can be
     represented in memory. E.g. int32, int64.
     """
+
     __slots__ = ()
 
     @property
@@ -346,13 +382,16 @@ class FixedSizeNumericType(FixedSizeType):
         """
         return self._precision
 
+
 class PythonNativeNumericType(FixedSizeNumericType):
     """
     Base class representing a built-in scalar numeric datatype.
 
     Base class representing a built-in scalar numeric datatype.
     """
+
     __slots__ = ()
+
 
 class PythonNativeBool(PythonNativeNumericType):
     """
@@ -360,8 +399,9 @@ class PythonNativeBool(PythonNativeNumericType):
 
     Class representing Python's native boolean type.
     """
+
     __slots__ = ()
-    _name = 'bool'
+    _name = "bool"
     _primitive_type = PrimitiveBooleanType()
     _precision = -1
 
@@ -383,14 +423,16 @@ class PythonNativeBool(PythonNativeNumericType):
         else:
             return NotImplemented
 
+
 class PythonNativeInt(PythonNativeNumericType):
     """
     Class representing Python's native integer type.
 
     Class representing Python's native integer type.
     """
+
     __slots__ = ()
-    _name = 'int'
+    _name = "int"
     _primitive_type = PrimitiveIntegerType()
     _precision = numpy.dtype(int).alignment
 
@@ -417,8 +459,9 @@ class PythonNativeFloat(PythonNativeNumericType):
 
     Class representing Python's native floating point type.
     """
+
     __slots__ = ()
-    _name = 'float'
+    _name = "float"
     _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
@@ -438,8 +481,9 @@ class PythonNativeComplex(PythonNativeNumericType):
 
     Class representing Python's native complex type.
     """
-    __slots__ = ('_element_type',)
-    _name = 'complex'
+
+    __slots__ = ("_element_type",)
+    _name = "complex"
     _primitive_type = PrimitiveComplexType()
     _precision = 8
 
@@ -460,6 +504,7 @@ class PythonNativeComplex(PythonNativeNumericType):
         """
         return PythonNativeFloat()
 
+
 class VoidType(FixedSizeType):
     """
     Class representing a void datatype.
@@ -468,9 +513,11 @@ class VoidType(FixedSizeType):
     in the C-Python wrapper when a `void*` type is needed to collect
     pointers from Fortran.
     """
+
     __slots__ = ()
-    _name = 'void'
+    _name = "void"
     _primitive_type = None
+
 
 class GenericType(FixedSizeType):
     """
@@ -480,8 +527,9 @@ class GenericType(FixedSizeType):
     useful for describing the type of an empty container (list/tuple/etc)
     or an argument which can accept any type (e.g. MPI arguments).
     """
+
     __slots__ = ()
-    _name = 'Generic'
+    _name = "Generic"
     _primitive_type = None
 
     @lru_cache
@@ -494,6 +542,7 @@ class GenericType(FixedSizeType):
     def __hash__(self):
         return hash(self.__class__)
 
+
 class SymbolicType(FixedSizeType):
     """
     Class representing the datatype of a placeholder symbol.
@@ -502,9 +551,11 @@ class SymbolicType(FixedSizeType):
     be used for objects which will not appear in the generated code but are
     used to identify objects (e.g. Type aliases).
     """
+
     __slots__ = ()
-    _name = 'Symbolic'
+    _name = "Symbolic"
     _primitive_type = None
+
 
 class CharType(FixedSizeType):
     """
@@ -513,11 +564,13 @@ class CharType(FixedSizeType):
     Class representing a char type in C/Fortran. This datatype is
     useful for describing strings.
     """
+
     __slots__ = ()
-    _name = 'char'
+    _name = "char"
     _primitive_type = PrimitiveCharacterType()
 
-#==============================================================================
+
+# ==============================================================================
 class TypeAlias(SymbolicType):
     """
     Class representing the type of a symbolic object describing a type descriptor.
@@ -530,10 +583,13 @@ class TypeAlias(SymbolicType):
     typing.TypeAlias :
         See documentation of `typing.TypeAlias`: https://docs.python.org/3/library/typing.html#typing.TypeAlias .
     """
-    __slots__ = ()
-    _name = 'TypeAlias'
 
-#==============================================================================
+    __slots__ = ()
+    _name = "TypeAlias"
+
+
+# ==============================================================================
+
 
 class ContainerType(PyccelType):
     """
@@ -542,6 +598,7 @@ class ContainerType(PyccelType):
     Base class representing a type which contains objects of other types.
     E.g. classes, arrays, etc.
     """
+
     __slots__ = ()
 
     def shape_is_compatible(self, shape):
@@ -563,7 +620,9 @@ class ContainerType(PyccelType):
         """
         return isinstance(shape, tuple) and len(shape) == self.container_rank
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class TupleType:
     """
@@ -571,10 +630,13 @@ class TupleType:
 
     The class from which tuple datatypes must inherit.
     """
-    __slots__ = ()
-    _name = 'tuple'
 
-#==============================================================================
+    __slots__ = ()
+    _name = "tuple"
+
+
+# ==============================================================================
+
 
 class HomogeneousContainerType(ContainerType):
     """
@@ -583,6 +645,7 @@ class HomogeneousContainerType(ContainerType):
     Base class representing a datatype which contains multiple elements of a given type.
     This is the case for objects such as arrays, lists, etc.
     """
+
     __slots__ = ()
 
     @classmethod
@@ -597,7 +660,9 @@ class HomogeneousContainerType(ContainerType):
         element_type : PyccelType
             The type of the elements of the homogeneous container.
         """
-        raise NotImplementedError("Subclasses should implement a get_new method to create the parametrised sub-class.")
+        raise NotImplementedError(
+            "Subclasses should implement a get_new method to create the parametrised sub-class."
+        )
 
     @property
     def datatype(self):
@@ -645,7 +710,7 @@ class HomogeneousContainerType(ContainerType):
         return self._element_type
 
     def __str__(self):
-        return f'{self._name}[{self._element_type}]'
+        return f"{self._name}[{self._element_type}]"
 
     def switch_basic_type(self, new_type):
         """
@@ -671,7 +736,7 @@ class HomogeneousContainerType(ContainerType):
         cls = type(self)
         return cls.get_new(self.element_type.switch_basic_type(new_type))
 
-    def switch_rank(self, new_rank, new_order = None):
+    def switch_rank(self, new_rank, new_order=None):
         """
         Get a type which is identical to this type in all aspects except the rank.
 
@@ -734,14 +799,16 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order
 
+
 class StringType(ContainerType):
     """
     Class representing Python's native string type.
 
     Class representing Python's native string type.
     """
+
     __slots__ = ()
-    _name = 'str'
+    _name = "str"
 
     @property
     def datatype(self):
@@ -753,7 +820,7 @@ class StringType(ContainerType):
         return self
 
     def __str__(self):
-        return 'str'
+        return "str"
 
     @property
     def primitive_type(self):
@@ -810,6 +877,7 @@ class StringType(ContainerType):
     def __hash__(self):
         return hash(self.__class__)
 
+
 class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     """
     Class representing the homogeneous tuple type.
@@ -817,8 +885,9 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     Class representing the type of a homogeneous tuple. This
     is a container type and should be used as the class_type.
     """
-    _name = 'tuple'
-    __slots__ = ('_element_type', '_order')
+
+    _name = "tuple"
+    __slots__ = ("_element_type", "_order")
     _container_rank = 1
 
     @classmethod
@@ -835,16 +904,22 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType):
         element_type : PyccelType
             The type of the elements of the homogeneous tuple.
         """
+
         def __init__(self):
             self._element_type = element_type
-            self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
+            self._order = (
+                "C" if (element_type.order == "C" or element_type.rank == 1) else None
+            )
             HomogeneousContainerType.__init__(self)
 
-        return type(f'HomogeneousTuple[{type(element_type)}, ...]', (HomogeneousTupleType,),
-                    {'__init__' : __init__})()
+        return type(
+            f"HomogeneousTuple[{type(element_type)}, ...]",
+            (HomogeneousTupleType,),
+            {"__init__": __init__},
+        )()
 
     def __str__(self):
-        return f'tuple[{self._element_type}, ...]'
+        return f"tuple[{self._element_type}, ...]"
 
     def shape_is_compatible(self, shape):
         """
@@ -867,10 +942,14 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType):
         return isinstance(shape, tuple) and len(shape) == self.rank
 
     def __eq__(self, other):
-        return isinstance(other, HomogeneousTupleType) and self.element_type == other.element_type
+        return (
+            isinstance(other, HomogeneousTupleType)
+            and self.element_type == other.element_type
+        )
 
     def __hash__(self):
         return hash((HomogeneousTupleType, self.element_type))
+
 
 class HomogeneousListType(HomogeneousContainerType):
     """
@@ -879,8 +958,9 @@ class HomogeneousListType(HomogeneousContainerType):
     Class representing the type of a homogeneous list. This
     is a container type and should be used as the class_type.
     """
-    __slots__ = ('_element_type', '_order')
-    _name = 'list'
+
+    __slots__ = ("_element_type", "_order")
+    _name = "list"
     _container_rank = 1
 
     @classmethod
@@ -897,20 +977,30 @@ class HomogeneousListType(HomogeneousContainerType):
         element_type : PyccelType
             The type which is stored in the homogeneous list.
         """
+
         def __init__(self):
             self._element_type = element_type
-            self._order = 'C' if (element_type.order == 'C' or element_type.rank == 1) else None
+            self._order = (
+                "C" if (element_type.order == "C" or element_type.rank == 1) else None
+            )
             HomogeneousContainerType.__init__(self)
 
-        return type(f'HomogeneousList[{type(element_type)}]', (HomogeneousListType,),
-                    {'__init__' : __init__})()
+        return type(
+            f"HomogeneousList[{type(element_type)}]",
+            (HomogeneousListType,),
+            {"__init__": __init__},
+        )()
 
     def __eq__(self, other):
-        return isinstance(other, HomogeneousListType) and self._element_type == other._element_type \
-                and self._order == other._order
+        return (
+            isinstance(other, HomogeneousListType)
+            and self._element_type == other._element_type
+            and self._order == other._order
+        )
 
     def __hash__(self):
         return hash((HomogeneousListType, self._element_type, self._order))
+
 
 class HomogeneousSetType(HomogeneousContainerType):
     """
@@ -919,8 +1009,9 @@ class HomogeneousSetType(HomogeneousContainerType):
     Class representing the type of a homogeneous set. This
     is a container type and should be used as the class_type.
     """
-    __slots__ = ('_element_type',)
-    _name = 'set'
+
+    __slots__ = ("_element_type",)
+    _name = "set"
     _container_rank = 1
     _order = None
 
@@ -938,20 +1029,29 @@ class HomogeneousSetType(HomogeneousContainerType):
         element_type : PyccelType
             The type which is stored in the homogeneous set.
         """
+
         def __init__(self):
             self._element_type = element_type
             HomogeneousContainerType.__init__(self)
 
-        return type(f'HomogeneousSet[{type(element_type)}]', (HomogeneousSetType,),
-                    {'__init__' : __init__})()
+        return type(
+            f"HomogeneousSet[{type(element_type)}]",
+            (HomogeneousSetType,),
+            {"__init__": __init__},
+        )()
 
     def __eq__(self, other):
-        return isinstance(other, HomogeneousSetType) and self._element_type == other._element_type
+        return (
+            isinstance(other, HomogeneousSetType)
+            and self._element_type == other._element_type
+        )
 
     def __hash__(self):
         return hash((HomogeneousSetType, self._element_type))
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class CustomDataType(PyccelType):
     """
@@ -960,6 +1060,7 @@ class CustomDataType(PyccelType):
     A general class for custom data types which is used as a
     base class when a user defines their own type using classes.
     """
+
     __slots__ = ()
 
     @property
@@ -992,6 +1093,7 @@ class CustomDataType(PyccelType):
         """
         return None
 
+
 class InhomogeneousTupleType(ContainerType, TupleType):
     """
     Class representing the inhomogeneous tuple type.
@@ -1000,7 +1102,8 @@ class InhomogeneousTupleType(ContainerType, TupleType):
     basic datatype as it cannot be arbitrarily indexed. It is
     therefore parametrised by the datatypes that it contains.
     """
-    __slots__ = ('_element_types', '_datatype', '_container_rank', '_order')
+
+    __slots__ = ("_element_types", "_datatype", "_container_rank", "_order")
 
     @classmethod
     @lru_cache
@@ -1031,11 +1134,11 @@ class InhomogeneousTupleType(ContainerType, TupleType):
 
         # Determine order
         if container_rank == 2:
-            order = 'C'
+            order = "C"
         elif container_rank > 2:
             elem_orders = set(elem.order for elem in args)
-            if len(elem_orders) == 1 and elem_orders.pop() == 'C':
-                order = 'C'
+            if len(elem_orders) == 1 and elem_orders.pop() == "C":
+                order = "C"
             else:
                 order = None
         else:
@@ -1049,14 +1152,13 @@ class InhomogeneousTupleType(ContainerType, TupleType):
             self._order = order
             ContainerType.__init__(self)
 
-        name = 'InhomogeneousTuple[' + ', '.join(str(type(e)) for e in args) + ']'
+        name = "InhomogeneousTuple[" + ", ".join(str(type(e)) for e in args) + "]"
 
-        return type(name, (InhomogeneousTupleType,),
-                    {'__init__' : __init__})()
+        return type(name, (InhomogeneousTupleType,), {"__init__": __init__})()
 
     def __str__(self):
-        element_types = ', '.join(str(d) for d in self._element_types)
-        return f'tuple[{element_types}]'
+        element_types = ", ".join(str(d) for d in self._element_types)
+        return f"tuple[{element_types}]"
 
     def __getitem__(self, i):
         return self._element_types[i]
@@ -1126,7 +1228,10 @@ class InhomogeneousTupleType(ContainerType, TupleType):
         bool
             True if the shape is acceptable, False otherwise.
         """
-        return super().shape_is_compatible(shape) and shape[0] == len(self._element_types)
+        return super().shape_is_compatible(shape) and shape[0] == len(
+            self._element_types
+        )
+
 
 class DictType(ContainerType):
     """
@@ -1135,8 +1240,9 @@ class DictType(ContainerType):
     Class representing the type of a homogeneous dict. This
     is a container type and should be used as the class_type.
     """
-    __slots__ = ('_key_type', '_value_type')
-    _name = 'dict'
+
+    __slots__ = ("_key_type", "_value_type")
+    _name = "dict"
     _container_rank = 1
     _order = None
 
@@ -1156,16 +1262,20 @@ class DictType(ContainerType):
         value_type : PyccelType
             The type of the values of the homogeneous dictionary.
         """
+
         def __init__(self):
             self._key_type = key_type
             self._value_type = value_type
             ContainerType.__init__(self)
 
-        return type(f'Dict[{type(key_type)}, {type(value_type)}]', (DictType,),
-                    {'__init__' : __init__})()
+        return type(
+            f"Dict[{type(key_type)}, {type(value_type)}]",
+            (DictType,),
+            {"__init__": __init__},
+        )()
 
     def __str__(self):
-        return f'dict[{self._key_type}, {self._value_type}]'
+        return f"dict[{self._key_type}, {self._value_type}]"
 
     @property
     def datatype(self):
@@ -1226,15 +1336,20 @@ class DictType(ContainerType):
         return None
 
     def __eq__(self, other):
-        return isinstance(other, DictType) and self.key_type == other.key_type \
-                and self.value_type == other.value_type
+        return (
+            isinstance(other, DictType)
+            and self.key_type == other.key_type
+            and self.value_type == other.value_type
+        )
 
     def __hash__(self):
         return hash((DictType, self._key_type, self._value_type))
 
-#==============================================================================
 
-def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomDataType):
+# ==============================================================================
+
+
+def DataTypeFactory(ll_name, python_name, argnames=(), *, BaseClass=CustomDataType):
     """
     Create a new data class.
 
@@ -1261,6 +1376,7 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
     type
         A new DataType class.
     """
+
     def class_init_func(self, **kwargs):
         """
         The __init__ function for the new CustomDataType class.
@@ -1269,10 +1385,12 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
             if key not in argnames:
-                raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
+                raise TypeError(
+                    f"Argument {key} not valid for {self.__class__.__name__}"
+                )
             setattr(self, key, value)
 
-        BaseClass.__init__(self) # pylint: disable=unnecessary-dunder-call
+        BaseClass.__init__(self)  # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)
@@ -1282,10 +1400,10 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
         The name function for the new CustomDataType class.
         """
         if argnames:
-            param = ', '.join(str(getattr(self, a)) for a in argnames)
-            return f'{self._name}[{param}]' #pylint: disable=protected-access
+            param = ", ".join(str(getattr(self, a)) for a in argnames)
+            return f"{self._name}[{param}]"  # pylint: disable=protected-access
         else:
-            return self._name #pylint: disable=protected-access
+            return self._name  # pylint: disable=protected-access
 
     def low_level_name(self):
         """
@@ -1294,21 +1412,27 @@ def DataTypeFactory(ll_name, python_name, argnames = (), *, BaseClass=CustomData
         """
         return ll_name
 
-    newclass = type(f'Pyccel{python_name}', (BaseClass,),
-                    {"__init__": class_init_func,
-                     "name": property(class_name_func),
-                     "_name": python_name,
-                     "low_level_name": property(low_level_name)})
+    newclass = type(
+        f"Pyccel{python_name}",
+        (BaseClass,),
+        {
+            "__init__": class_init_func,
+            "name": property(class_name_func),
+            "_name": python_name,
+            "low_level_name": property(low_level_name),
+        },
+    )
 
     return newclass
 
-#==============================================================================
+
+# ==============================================================================
 
 pyccel_type_to_original_type = {
-        PythonNativeBool()    : bool,
-        PythonNativeInt()     : int,
-        PythonNativeFloat()   : float,
-        PythonNativeComplex() : complex,
-        }
+    PythonNativeBool(): bool,
+    PythonNativeInt(): int,
+    PythonNativeFloat(): float,
+    PythonNativeComplex(): complex,
+}
 
-original_type_to_pyccel_type = {v: k for k,v in pyccel_type_to_original_type.items()}
+original_type_to_pyccel_type = {v: k for k, v in pyccel_type_to_original_type.items()}

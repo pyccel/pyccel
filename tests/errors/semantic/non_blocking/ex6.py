@@ -5,12 +5,12 @@
 from numpy import zeros
 
 x1 = zeros(4)
-x2 = zeros((4,3))
+x2 = zeros((4, 3))
 
 ## bad
-x1 = 1.
-x2 = 1.
+x1 = 1.0
+x2 = 1.0
 
 # good
-x1[:] = 1.
-x2[:,:] = 1.
+x1[:] = 1.0
+x2[:, :] = 1.0

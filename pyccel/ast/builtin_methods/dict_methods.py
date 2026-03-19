@@ -1,8 +1,8 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 The dict container has a number of built-in methods that are
 always available.
@@ -12,24 +12,25 @@ This module contains objects which describe these methods within Pyccel's AST.
 
 from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
 from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
-from pyccel.ast.literals  import LiteralInteger
-from pyccel.ast.variable  import IndexedElement, Variable
+from pyccel.ast.literals import LiteralInteger
+from pyccel.ast.variable import IndexedElement, Variable
+
+__all__ = (
+    "DictClear",
+    "DictCopy",
+    "DictGet",
+    "DictGetItem",
+    "DictItems",
+    "DictKeys",
+    "DictMethod",
+    "DictPop",
+    "DictPopitem",
+    "DictSetDefault",
+    "DictValues",
+)
 
 
-__all__ = ('DictClear',
-           'DictCopy',
-           'DictGet',
-           'DictGetItem',
-           'DictItems',
-           'DictKeys',
-           'DictMethod',
-           'DictPop',
-           'DictPopitem',
-           'DictSetDefault',
-           'DictValues',
-           )
-
-#==============================================================================
+# ==============================================================================
 class DictMethod(PyccelFunction):
     """
     Abstract class for dict method calls.
@@ -45,6 +46,7 @@ class DictMethod(PyccelFunction):
     *args : TypedAstNode
         The arguments passed to dict methods.
     """
+
     __slots__ = ("_dict_obj",)
     _attribute_nodes = PyccelFunction._attribute_nodes + ("_dict_obj",)
 
@@ -71,7 +73,8 @@ class DictMethod(PyccelFunction):
         """
         return (self._dict_obj,)
 
-#==============================================================================
+
+# ==============================================================================
 class DictPop(DictMethod):
     """
     Represents a call to the .pop() method.
@@ -92,17 +95,22 @@ class DictPop(DictMethod):
         The value that should be returned if the key is not present in the
         dictionary.
     """
-    __slots__ = ('_class_type',)
-    _shape = None
-    name = 'pop'
 
-    def __init__(self, dict_obj, k, d = None):
+    __slots__ = ("_class_type",)
+    _shape = None
+    name = "pop"
+
+    def __init__(self, dict_obj, k, d=None):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
         if k.class_type != dict_type.key_type:
-            raise TypeError(f"Key passed to pop method has type {k.class_type}. Expected {dict_type.key_type}")
+            raise TypeError(
+                f"Key passed to pop method has type {k.class_type}. Expected {dict_type.key_type}"
+            )
         if d and d.class_type != dict_type.value_type:
-            raise TypeError(f"Default value passed to pop method has type {d.class_type}. Expected {dict_type.value_type}")
+            raise TypeError(
+                f"Default value passed to pop method has type {d.class_type}. Expected {dict_type.value_type}"
+            )
         super().__init__(dict_obj, k, d)
 
     @property
@@ -135,13 +143,16 @@ class DictPopitem(DictMethod):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_class_type',)
+
+    __slots__ = ("_class_type",)
     _shape = (2,)
-    name = 'popitem'
+    name = "popitem"
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
-        self._class_type = InhomogeneousTupleType.get_new(dict_type.key_type, dict_type.value_type)
+        self._class_type = InhomogeneousTupleType.get_new(
+            dict_type.key_type, dict_type.value_type
+        )
         super().__init__(dict_obj)
 
     def __iter__(self):
@@ -154,7 +165,8 @@ class DictPopitem(DictMethod):
         """
         return iter((IndexedElement(self, 0), IndexedElement(self, 1)))
 
-#==============================================================================
+
+# ==============================================================================
 class DictGet(DictMethod):
     """
     Represents a call to the .get() method.
@@ -174,23 +186,30 @@ class DictGet(DictMethod):
         The value that should be returned if the key is not present in the
         dictionary.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'get'
 
-    def __init__(self, dict_obj, k, d = None):
+    __slots__ = ("_class_type", "_shape")
+    name = "get"
+
+    def __init__(self, dict_obj, k, d=None):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
         self._shape = None
         if k.class_type != dict_type.key_type:
-            raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
+            raise TypeError(
+                f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}"
+            )
         if d and d.class_type != dict_type.value_type:
-            raise TypeError(f"Default value passed to get method has type {d.class_type}. Expected {dict_type.value_type}")
+            raise TypeError(
+                f"Default value passed to get method has type {d.class_type}. Expected {dict_type.value_type}"
+            )
 
         super().__init__(dict_obj, k, d)
 
         if self._class_type.rank:
-            self._shape = tuple(PyccelArrayShapeElement(self,LiteralInteger(i)) \
-                    for i in range(self._class_type.rank))
+            self._shape = tuple(
+                PyccelArrayShapeElement(self, LiteralInteger(i))
+                for i in range(self._class_type.rank)
+            )
 
     @property
     def key(self):
@@ -220,7 +239,8 @@ class DictGet(DictMethod):
         """
         return ()
 
-#==============================================================================
+
+# ==============================================================================
 class DictSetDefault(DictMethod):
     """
     Represents a call to the .setdefault() method.
@@ -244,21 +264,28 @@ class DictSetDefault(DictMethod):
         The value that should be returned. if the value is not present in the
         dictionary then default value is returned.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'setdefault'
 
-    def __init__(self, dict_obj, k, d = None):
+    __slots__ = ("_class_type", "_shape")
+    name = "setdefault"
+
+    def __init__(self, dict_obj, k, d=None):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
 
         self._shape = (None,) * self._class_type.rank if self._class_type.rank else None
 
         if k.class_type != dict_type.key_type:
-            raise TypeError(f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}")
+            raise TypeError(
+                f"Key passed to setdefault method has type {k.class_type}. Expected {dict_type.key_type}"
+            )
         if d is None:
-            raise TypeError("None cannot be used as the default argument for the setdefault method.")
+            raise TypeError(
+                "None cannot be used as the default argument for the setdefault method."
+            )
         if d and d.class_type != dict_type.value_type:
-            raise TypeError(f"Default value passed to setdefault method has type {d.class_type}. Expected {dict_type.value_type}")
+            raise TypeError(
+                f"Default value passed to setdefault method has type {d.class_type}. Expected {dict_type.value_type}"
+            )
         super().__init__(dict_obj, k, d)
 
     @property
@@ -279,8 +306,9 @@ class DictSetDefault(DictMethod):
         """
         return self._args[1]
 
-#==============================================================================
-class DictClear(DictMethod) :
+
+# ==============================================================================
+class DictClear(DictMethod):
     """
     Represents a call to the .clear() method.
 
@@ -291,15 +319,17 @@ class DictClear(DictMethod) :
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
+
     __slots__ = ()
     _shape = None
     _class_type = VoidType()
-    name = 'clear'
+    name = "clear"
 
     def __init__(self, dict_obj):
         super().__init__(dict_obj)
 
-#==============================================================================
+
+# ==============================================================================
 class DictCopy(DictMethod):
     """
     Represents a call to the .copy() method.
@@ -311,8 +341,9 @@ class DictCopy(DictMethod):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'copy'
+
+    __slots__ = ("_class_type", "_shape")
+    name = "copy"
 
     def __init__(self, dict_obj):
         dict_type = dict_obj.class_type
@@ -330,7 +361,8 @@ class DictCopy(DictMethod):
         """
         return ()
 
-#==============================================================================
+
+# ==============================================================================
 class DictItems(Iterable):
     """
     Represents a call to the .items() method.
@@ -342,11 +374,12 @@ class DictItems(Iterable):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_dict_obj',)
+
+    __slots__ = ("_dict_obj",)
     _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
     _shape = None
     _class_type = SymbolicType()
-    name = 'items'
+    name = "items"
 
     def __init__(self, dict_obj):
         self._dict_obj = dict_obj
@@ -377,7 +410,8 @@ class DictItems(Iterable):
         item = DictPopitem(self._dict_obj)
         return [IndexedElement(item, 0), IndexedElement(item, 1)]
 
-#==============================================================================
+
+# ==============================================================================
 class DictKeys(Iterable):
     """
     Represents a call to the .keys() method.
@@ -390,11 +424,12 @@ class DictKeys(Iterable):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_dict_obj',)
+
+    __slots__ = ("_dict_obj",)
     _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
     _shape = None
     _class_type = SymbolicType()
-    name = 'keys'
+    name = "keys"
 
     def __init__(self, dict_obj):
         self._dict_obj = dict_obj
@@ -423,9 +458,16 @@ class DictKeys(Iterable):
             A list containing the object that should be assigned to the target variable.
         """
         class_type = self._dict_obj.class_type.key_type
-        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
+        return [
+            Variable(
+                class_type,
+                "_",
+                memory_handling="heap" if class_type.rank > 0 else "stack",
+            )
+        ]
 
-#==============================================================================
+
+# ==============================================================================
 class DictGetItem(DictMethod):
     """
     Represents a call to the .__getitem__() method.
@@ -440,21 +482,26 @@ class DictGetItem(DictMethod):
     k : TypedAstNode
         The key which is used to select the value from the dictionary.
     """
-    __slots__ = ('_class_type', '_shape')
-    name = 'get'
+
+    __slots__ = ("_class_type", "_shape")
+    name = "get"
 
     def __init__(self, dict_obj, k):
         dict_type = dict_obj.class_type
         self._class_type = dict_type.value_type
         self._shape = None
         if k.class_type != dict_type.key_type:
-            raise TypeError(f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}")
+            raise TypeError(
+                f"Key passed to get method has type {k.class_type}. Expected {dict_type.key_type}"
+            )
 
         super().__init__(dict_obj, k)
 
         if self._class_type.rank:
-            self._shape = tuple(PyccelArrayShapeElement(self,LiteralInteger(i)) \
-                    for i in range(self._class_type.rank))
+            self._shape = tuple(
+                PyccelArrayShapeElement(self, LiteralInteger(i))
+                for i in range(self._class_type.rank)
+            )
 
     @property
     def key(self):
@@ -465,7 +512,8 @@ class DictGetItem(DictMethod):
         """
         return self._args[0]
 
-#==============================================================================
+
+# ==============================================================================
 class DictValues(Iterable):
     """
     Represents a call to the .values() method.
@@ -478,11 +526,12 @@ class DictValues(Iterable):
     dict_obj : TypedAstNode
         The object from which the method is called.
     """
-    __slots__ = ('_dict_obj',)
+
+    __slots__ = ("_dict_obj",)
     _attribute_nodes = Iterable._attribute_nodes + ("_dict_obj",)
     _shape = None
     _class_type = SymbolicType()
-    name = 'keys'
+    name = "keys"
 
     def __init__(self, dict_obj):
         self._dict_obj = dict_obj
@@ -511,4 +560,10 @@ class DictValues(Iterable):
             A list containing the object that should be assigned to the target variable.
         """
         class_type = self._dict_obj.class_type.value_type
-        return [Variable(class_type, '_', memory_handling = 'heap' if class_type.rank > 0 else 'stack')]
+        return [
+            Variable(
+                class_type,
+                "_",
+                memory_handling="heap" if class_type.rank > 0 else "stack",
+            )
+        ]

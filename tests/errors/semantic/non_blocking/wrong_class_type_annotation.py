@@ -1,13 +1,16 @@
 # Unexpected type annotation in creation of A
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+
 class A:
-    x : int
-    def __init__(self : 'A'):
+    x: int
+
+    def __init__(self: "A"):
         self.x = 3
 
-    def get_4(self : 'A'):
+    def get_4(self: "A"):
         return 4
 
-if __name__ == '__main__':
-    myA : int = A()
+
+if __name__ == "__main__":
+    myA: int = A()

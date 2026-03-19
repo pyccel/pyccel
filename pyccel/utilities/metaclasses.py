@@ -1,14 +1,13 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing metaclasses which are useful for the rest of pyccel
-"""
+# ------------------------------------------------------------------------------------------#
+"""Module containing metaclasses which are useful for the rest of pyccel"""
+
 from inspect import signature
 
-__all__ = (
-    'Singleton',
-)
+__all__ = ("Singleton",)
+
 
 class Singleton(type):
     """
@@ -27,6 +26,7 @@ class Singleton(type):
     dct : dict
         A dictionary of the class attributes.
     """
+
     def __init__(cls, name, bases, dct):
         cls._instance = None
         # Trick inspect.signature into seeing the signature of

@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-if __name__ == '__main__':
+if __name__ == "__main__":
     import numpy as np
 
     ones = np.ones(3)

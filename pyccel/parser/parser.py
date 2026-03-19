@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 Module containing the Parser object
 """
+
 from pathlib import Path
 
-from pyccel.errors.errors    import Errors
+from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.ast.utilities import recognised_source
 
-from pyccel.parser.base      import get_filename_from_import
+from pyccel.parser.base import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
-from pyccel.parser.semantic  import SemanticParser
+from pyccel.parser.semantic import SemanticParser
 
 errors = Errors()
+
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
@@ -48,23 +50,31 @@ class Parser:
         Any keyword arguments for BasicParser.
     """
 
-    def __init__(self, filename, *, output_folder, context_dict = None, original_filename = None, **kwargs):
+    def __init__(
+        self,
+        filename,
+        *,
+        output_folder,
+        context_dict=None,
+        original_filename=None,
+        **kwargs,
+    ):
 
         filename = Path(filename)
         self._filename = filename
-        self._kwargs   = kwargs
+        self._kwargs = kwargs
 
         # we use it to store the imports
         self._parents = []
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._sons      = []
+        self._sons = []
         self._d_parsers = {}
 
-        self._syntax_parser   = None
+        self._syntax_parser = None
         self._semantic_parser = None
-        self._compile_obj     = None
+        self._compile_obj = None
 
         self._context_dict = context_dict
 
@@ -75,17 +85,17 @@ class Parser:
 
     @property
     def semantic_parser(self):
-        """ Semantic parser """
+        """Semantic parser"""
         return self._semantic_parser
 
     @property
     def syntax_parser(self):
-        """ Syntax parser """
+        """Syntax parser"""
         return self._syntax_parser
 
     @property
     def compile_obj(self):
-        """ Compile object """
+        """Compile object"""
         return self._compile_obj
 
     @semantic_parser.setter
@@ -104,7 +114,7 @@ class Parser:
 
     @property
     def filename(self):
-        """ Python file to be parsed. """
+        """Python file to be parsed."""
         return self._filename
 
     @property
@@ -185,10 +195,11 @@ class Parser:
             return self._syntax_parser.ast
 
         if verbose:
-            print ('>> Parsing :: ', self._filename)
+            print(">> Parsing :: ", self._filename)
 
-        parser             = SyntaxParser(self._filename, verbose = verbose,
-                                            context_dict = self._context_dict)
+        parser = SyntaxParser(
+            self._filename, verbose=verbose, context_dict=self._context_dict
+        )
         self.syntax_parser = parser
 
         if d_parsers_by_filename is None:
@@ -224,21 +235,23 @@ class Parser:
         self._annotate_sons(verbose=verbose)
 
         if verbose:
-            print ('>> Calculating semantic annotations :: ', self._filename)
+            print(">> Calculating semantic annotations :: ", self._filename)
 
         # Create a new semantic parser and store it in object
-        parser = SemanticParser(self._syntax_parser,
-                                d_parsers = self.d_parsers,
-                                parents = self.parents,
-                                context_dict = self._context_dict,
-                                verbose = verbose)
+        parser = SemanticParser(
+            self._syntax_parser,
+            d_parsers=self.d_parsers,
+            parents=self.parents,
+            context_dict=self._context_dict,
+            verbose=verbose,
+        )
         self._semantic_parser = parser
-        parser.metavars.setdefault('printer_imports', '')
+        parser.metavars.setdefault("printer_imports", "")
         # Get all possible printer imports. Use a dict for reproducible ordering
-        printer_imports = {p.metavars['printer_imports']: None for p in self.sons}
-        printer_imports[parser.metavars['printer_imports']] = None
-        printer_imports.pop('', None)
-        parser.metavars['printer_imports'] = ', '.join(printer_imports)
+        printer_imports = {p.metavars["printer_imports"]: None for p in self.sons}
+        printer_imports[parser.metavars["printer_imports"]] = None
+        printer_imports.pop("", None)
+        parser.metavars["printer_imports"] = ", ".join(printer_imports)
 
         # Return the new semantic parser (maybe used by codegen)
         return parser
@@ -281,27 +294,48 @@ class Parser:
         """
         to_parse = list(d_parsers_by_filename.keys())
         for p in to_parse:
-            d_parsers_by_filename[p].parse(verbose=verbose, d_parsers_by_filename = d_parsers_by_filename)
+            d_parsers_by_filename[p].parse(
+                verbose=verbose, d_parsers_by_filename=d_parsers_by_filename
+            )
 
-        imports = [i for i in self.imports if not recognised_source(getattr(i, 'name', i))]
-        source_to_filename = {i: get_filename_from_import(i, self._input_folder, self._output_folder) for i in imports}
+        imports = [
+            i for i in self.imports if not recognised_source(getattr(i, "name", i))
+        ]
+        source_to_filename = {
+            i: get_filename_from_import(i, self._input_folder, self._output_folder)
+            for i in imports
+        }
 
         if (None, None) in source_to_filename.values():
-            unfound_modules = ', '.join(str(getattr(i, 'name', i)) for i, f in source_to_filename.items() if f == (None, None))
-            errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=unfound_modules,
-                          filename = self._filename, severity='fatal')
+            unfound_modules = ", ".join(
+                str(getattr(i, "name", i))
+                for i, f in source_to_filename.items()
+                if f == (None, None)
+            )
+            errors.report(
+                PYCCEL_UNFOUND_IMPORTED_MODULE,
+                symbol=unfound_modules,
+                filename=self._filename,
+                severity="fatal",
+            )
 
         for imp, (filename_py, stashed_file) in source_to_filename.items():
             if filename_py in d_parsers_by_filename:
                 source_to_filename[imp] = (filename_py, filename_py)
                 continue
             if not stashed_file.exists():
-                errors.report("Imported files must be pyccelised before they can be used.",
-                        symbol=imp, severity='fatal')
+                errors.report(
+                    "Imported files must be pyccelised before they can be used.",
+                    symbol=imp,
+                    severity="fatal",
+                )
             if stashed_file.stat().st_mtime < filename_py.stat().st_mtime:
-                errors.report(f"File {filename_py} has been modified since Pyccel was last run on this file.",
-                        symbol=imp, severity='fatal')
-        treated     = d_parsers_by_filename.keys()
+                errors.report(
+                    f"File {filename_py} has been modified since Pyccel was last run on this file.",
+                    symbol=imp,
+                    severity="fatal",
+                )
+        treated = d_parsers_by_filename.keys()
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename, stashed_filename in not_treated:
             filename = str(filename)
@@ -311,20 +345,27 @@ class Parser:
                 q = d_parsers_by_filename[filename]
             else:
                 q_output_folder = stashed_filename.parent
-                if stashed_filename.suffix == '.pyi' and q_output_folder.name.startswith('__pyccel__'):
+                if (
+                    stashed_filename.suffix == ".pyi"
+                    and q_output_folder.name.startswith("__pyccel__")
+                ):
                     q_output_folder = q_output_folder.parent
-                q = Parser(stashed_filename, output_folder = q_output_folder, original_filename = filename)
+                q = Parser(
+                    stashed_filename,
+                    output_folder=q_output_folder,
+                    original_filename=filename,
+                )
             q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)
             d_parsers_by_filename[filename] = q
 
         d_parsers = {}
         # link self to its sons
         for source in imports:
-            filename,_ = source_to_filename[source]
+            filename, _ = source_to_filename[source]
             son = d_parsers_by_filename[str(filename)]
             son.append_parent(self)
             self.append_son(son)
-            d_parsers[getattr(source, 'name', source)] = son
+            d_parsers[getattr(source, "name", source)] = son
             d_parsers.update(son.d_parsers)
 
         return d_parsers
@@ -352,5 +393,3 @@ class Parser:
         for p in self.sons:
             if p.sons:
                 p.annotate(verbose)
-
-

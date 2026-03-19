@@ -1,12 +1,14 @@
 # coding: utf-8
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Handles name clash problems in C
 """
+
 from .languagenameclashchecker import LanguageNameClashChecker
+
 
 class CNameClashChecker(LanguageNameClashChecker):
     """
@@ -16,25 +18,100 @@ class CNameClashChecker(LanguageNameClashChecker):
     verify that they do not cause name clashes. Name clashes may be due to
     new variables, or due to the use of reserved keywords.
     """
+
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
-        'continue', 'default', 'do', 'double', 'else', 'enum',
-        'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
-        'long', 'register', 'restrict', 'return', 'short', 'signed',
-        'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
-        'unsigned', 'void', 'volatile', 'whie', '_Alignas',
-        '_Alignof', '_Atomic', '_Bool', '_Complex', 'Decimal128',
-        '_Decimal32', '_Decimal64', '_Generic', '_Imaginary',
-        '_Noreturn', '_Static_assert', '_Thread_local',
-        'I', 'cspan_copy', 'c_foreach', 'c_COLMAJOR', 'c_ROWMAJOR', 'cspan_md_layout',
-        'using_cspan', 'STC_CSPAN_INDEX_TYPE', 'array_int64_1d', 'array_int64_2d',
-        'array_int64_3d', 'array_int32_1d', 'array_int32_2d', 'array_int32_3d',
-        'array_float_1d', 'array_float_2d', 'array_float_3d', 'array_double_1d',
-        'array_double_2d', 'array_double_3d', 'array_bool_1d', 'array_bool_2d',
-        'array_bool_3d', 'array_float_complex_1d', 'array_float_complex_2d',
-        'array_float_complex_3d', 'array_double_complex_1d', 'array_double_complex_2d',
-        'array_double_complex_3d', 'c_ALL', 'c_END', 'cspan_slice', 'cspan_transpose',
-        'complex_max', 'complex_min', 'expm1', 'complex_expm1', 'main'])
+    keywords = set(
+        [
+            "isign",
+            "fsign",
+            "csign",
+            "auto",
+            "break",
+            "case",
+            "char",
+            "const",
+            "continue",
+            "default",
+            "do",
+            "double",
+            "else",
+            "enum",
+            "extern",
+            "float",
+            "for",
+            "goto",
+            "if",
+            "inline",
+            "int",
+            "long",
+            "register",
+            "restrict",
+            "return",
+            "short",
+            "signed",
+            "sizeof",
+            "static",
+            "struct",
+            "switch",
+            "typedef",
+            "union",
+            "unsigned",
+            "void",
+            "volatile",
+            "whie",
+            "_Alignas",
+            "_Alignof",
+            "_Atomic",
+            "_Bool",
+            "_Complex",
+            "Decimal128",
+            "_Decimal32",
+            "_Decimal64",
+            "_Generic",
+            "_Imaginary",
+            "_Noreturn",
+            "_Static_assert",
+            "_Thread_local",
+            "I",
+            "cspan_copy",
+            "c_foreach",
+            "c_COLMAJOR",
+            "c_ROWMAJOR",
+            "cspan_md_layout",
+            "using_cspan",
+            "STC_CSPAN_INDEX_TYPE",
+            "array_int64_1d",
+            "array_int64_2d",
+            "array_int64_3d",
+            "array_int32_1d",
+            "array_int32_2d",
+            "array_int32_3d",
+            "array_float_1d",
+            "array_float_2d",
+            "array_float_3d",
+            "array_double_1d",
+            "array_double_2d",
+            "array_double_3d",
+            "array_bool_1d",
+            "array_bool_2d",
+            "array_bool_3d",
+            "array_float_complex_1d",
+            "array_float_complex_2d",
+            "array_float_complex_3d",
+            "array_double_complex_1d",
+            "array_double_complex_2d",
+            "array_double_complex_3d",
+            "c_ALL",
+            "c_END",
+            "cspan_slice",
+            "cspan_transpose",
+            "complex_max",
+            "complex_min",
+            "expm1",
+            "complex_expm1",
+            "main",
+        ]
+    )
 
     def has_clash(self, name, symbols):
         """
@@ -83,21 +160,22 @@ class CNameClashChecker(LanguageNameClashChecker):
         str
             A new name which is collision free.
         """
-        assert context in ('module', 'function', 'class', 'variable', 'wrapper')
-        assert parent_context in ('module', 'function', 'class', 'loop', 'program')
-        if context == 'wrapper':
+        assert context in ("module", "function", "class", "variable", "wrapper")
+        assert parent_context in ("module", "function", "class", "loop", "program")
+        if context == "wrapper":
             # wrapper names are based off names which already have prefixes so there is no
             # need to add more
             return self._get_collisionless_name(name, symbols)
-        if name == '__init__':
-            name = 'init'
-        if name == '__del__':
-            name = 'drop'
-        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
-            name = 'operator' + name[1:-2]
-        if name[0] == '_':
-            name = 'private'+name
-        if context == 'function' or (parent_context == 'module' and context != 'module'):
+        if name == "__init__":
+            name = "init"
+        if name == "__del__":
+            name = "drop"
+        if len(name) > 4 and all(name[i] == "_" for i in (0, 1, -1, -2)):
+            name = "operator" + name[1:-2]
+        if name[0] == "_":
+            name = "private" + name
+        if context == "function" or (
+            parent_context == "module" and context != "module"
+        ):
             name = prefix + name
         return self._get_collisionless_name(name, symbols)
-

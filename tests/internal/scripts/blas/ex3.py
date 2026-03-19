@@ -2,11 +2,11 @@
 from pyccel.stdlib.internal.blas import dger
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     n = np.int32(4)
     m = np.int32(5)
 
-    a = np.zeros((n,m), order='F')
+    a = np.zeros((n, m), order="F")
     x = np.zeros(m)
     y = np.zeros(n)
 
@@ -19,9 +19,9 @@ if __name__ == '__main__':
     # ...
 
     # ...
-    y[0] =  1.0
+    y[0] = 1.0
     y[1] = -1.0
-    y[2] =  1.0
+    y[2] = 1.0
     y[3] = -1.0
     # ...
 

@@ -8,11 +8,15 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #2571 : Fix scope of `stdlib/math` dependencies in build files.
--   #2571 : Fix conversion warnings in `stdlib/math/pyc_math_f90.f90`.
--   #2571 : Rename `stdlib/math/pyc_math_f90.f90` to `stdlib/math/pyc_math_f90.F90` so preprocessor is run during compilation.
+-   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+-   #2587 : Fix compilation error when using an array slice in an expression.
+-   #2590 : Fix missing `const` annotation on string arguments in C.
+-   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
 
 ### Changed
+
+-   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   \[DEVELOPER\] Require black formatting.
 
 ### Deprecated
 
@@ -21,6 +25,26 @@ All notable changes to this project will be documented in this file.
 -   #2522 : Remove use of `pyccel` without sub-command.
 -   #2522 : Remove use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
 -   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
+-   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
+-   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
+
+## \[2.2.2\] - 2026-03-09
+
+### Fixed
+
+-   #2577 : Fix missing dependency when linking `stdlib/math` to Fortran code when using `pyccel make`.
+
+### Changed
+
+-   #2577 : Remove compilation of unnecessary files in `stdlib/math` when using `pyccel make`.
+
+## \[2.2.1\] - 2026-03-02
+
+### Fixed
+
+-   #2571 : Fix scope of `stdlib/math` dependencies in build files.
+-   #2571 : Fix conversion warnings in `stdlib/math/pyc_math_f90.f90`.
+-   #2571 : Rename `stdlib/math/pyc_math_f90.f90` to `stdlib/math/pyc_math_f90.F90` so preprocessor is run during compilation.
 
 ## \[2.2.0\] - 2026-02-26
 
@@ -45,6 +69,8 @@ All notable changes to this project will be documented in this file.
 -   #2565 : Fix type of the shape of an array in C.
 -   #2567 : Fix Pyccel installation following release of `scikit-build-core` v0.12.0.
 -   #2563 : Fix crashes on macOS with GCC compiler.
+-   #2566 : Allow array-creating functions to be used in expressions with C.
+-   #2251 : Fix `FunctionalMin`/`FunctionalMax` with non-default integer and float types in C.
 
 ### Deprecated
 

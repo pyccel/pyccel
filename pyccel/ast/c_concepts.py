@@ -1,28 +1,37 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 
 """
 Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
 """
+
 from functools import cache
 
-from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import HomogeneousContainerType, FixedSizeType, FixedSizeNumericType, PrimitiveIntegerType
+from .basic import TypedAstNode, PyccelAstNode
+from .datatypes import (
+    HomogeneousContainerType,
+    FixedSizeType,
+    FixedSizeNumericType,
+    PrimitiveIntegerType,
+)
 from .datatypes import CharType
 from .internals import PyccelFunction
-from .literals  import LiteralString
+from .literals import LiteralString
 
-__all__ = ('CMacro',
-           'CNativeInt',
-           'CStackArray',
-           'CStrStr',
-           'CStringExpression',
-           'ObjectAddress',
-           'PointerCast')
+__all__ = (
+    "CMacro",
+    "CNativeInt",
+    "CStackArray",
+    "CStrStr",
+    "CStringExpression",
+    "ObjectAddress",
+    "PointerCast",
+)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class CNativeInt(FixedSizeNumericType):
     """
@@ -30,12 +39,15 @@ class CNativeInt(FixedSizeNumericType):
 
     Class representing C's native integer type.
     """
+
     __slots__ = ()
-    _name = 'int'
+    _name = "int"
     _primitive_type = PrimitiveIntegerType()
     _precision = None
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+
 
 class CStackArray(HomogeneousContainerType):
     """
@@ -44,8 +56,9 @@ class CStackArray(HomogeneousContainerType):
     A data type representing an array allocated on the stack.
     E.g. `float a[4];`
     """
-    __slots__ = ('_element_type',)
-    _name = 'c_stackarray'
+
+    __slots__ = ("_element_type",)
+    _name = "c_stackarray"
     _container_rank = 1
     _order = None
 
@@ -62,13 +75,19 @@ class CStackArray(HomogeneousContainerType):
         element_type : FixedSizeType
             The type of the elements inside the array.
         """
+
         def __init__(self):
             self._element_type = element_type
             HomogeneousContainerType.__init__(self)
-        return type(f'CStackArray{type(element_type).__name__}', (CStackArray,),
-                    {'__init__' : __init__})()
 
-#------------------------------------------------------------------------------
+        return type(
+            f"CStackArray{type(element_type).__name__}",
+            (CStackArray,),
+            {"__init__": __init__},
+        )()
+
+
+# ------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
     """
     Class representing the address of an object.
@@ -91,21 +110,20 @@ class ObjectAddress(TypedAstNode):
     'a'
     """
 
-    __slots__ = ('_obj', '_shape', '_class_type')
-    _attribute_nodes = ('_obj',)
+    __slots__ = ("_obj", "_shape", "_class_type")
+    _attribute_nodes = ("_obj",)
 
     def __init__(self, obj):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
-        self._obj        = obj
-        self._shape      = obj.shape
+        self._obj = obj
+        self._shape = obj.shape
         self._class_type = obj.class_type
         super().__init__()
 
     @property
     def obj(self):
-        """The object whose address is of interest
-        """
+        """The object whose address is of interest"""
         return self._obj
 
     @property
@@ -117,7 +135,8 @@ class ObjectAddress(TypedAstNode):
         """
         return True
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class PointerCast(TypedAstNode):
     """
     A class which represents the casting of one pointer to another.
@@ -134,17 +153,18 @@ class PointerCast(TypedAstNode):
     cast_type : TypedAstNode
         A TypedAstNode describing the object resulting from the cast.
     """
-    __slots__ = ('_obj', '_shape', '_class_type', '_cast_type')
-    _attribute_nodes = ('_obj',)
+
+    __slots__ = ("_obj", "_shape", "_class_type", "_cast_type")
+    _attribute_nodes = ("_obj",)
 
     def __init__(self, obj, cast_type):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
-        assert getattr(obj, 'is_alias', False)
-        self._obj        = obj
-        self._shape      = cast_type.shape
+        assert getattr(obj, "is_alias", False)
+        self._obj = obj
+        self._shape = cast_type.shape
         self._class_type = cast_type.class_type
-        self._cast_type  = cast_type
+        self._cast_type = cast_type
         super().__init__()
 
     @property
@@ -174,7 +194,8 @@ class PointerCast(TypedAstNode):
         """
         return self._obj.is_argument
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class CStringExpression(PyccelAstNode):
     """
     Internal class used to hold a C string that has LiteralStrings and C macros.
@@ -196,8 +217,9 @@ class CStringExpression(PyccelAstNode):
     ...     LiteralString("."),
     ... )
     """
-    __slots__  = ('_expression',)
-    _attribute_nodes  = ('_expression',)
+
+    __slots__ = ("_expression",)
+    _attribute_nodes = ("_expression",)
 
     def __init__(self, *args):
         self._expression = []
@@ -206,10 +228,10 @@ class CStringExpression(PyccelAstNode):
             self.append(arg)
 
     def __repr__(self):
-        return ''.join(repr(e) for e in self._expression)
+        return "".join(repr(e) for e in self._expression)
 
     def __str__(self):
-        return ''.join(str(e) for e in self._expression)
+        return "".join(str(e) for e in self._expression)
 
     def __add__(self, o):
         """
@@ -223,7 +245,9 @@ class CStringExpression(PyccelAstNode):
         if isinstance(o, str):
             o = LiteralString(o)
         if not isinstance(o, (LiteralString, CMacro, CStringExpression)):
-            raise TypeError(f"unsupported operand type(s) for +: '{self.__class__}' and '{type(o)}'")
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{self.__class__}' and '{type(o)}'"
+            )
         return CStringExpression(*self._expression, o)
 
     def __radd__(self, o):
@@ -247,7 +271,9 @@ class CStringExpression(PyccelAstNode):
         if isinstance(o, str):
             o = LiteralString(o)
         if not isinstance(o, (LiteralString, CMacro, CStringExpression)):
-            raise TypeError(f"unsupported operand type(s) for append: '{self.__class__}' and '{type(o)}'")
+            raise TypeError(
+                f"unsupported operand type(s) for append: '{self.__class__}' and '{type(o)}'"
+            )
         self._expression += (o,)
         o.set_current_user_node(self)
 
@@ -311,20 +337,21 @@ class CStringExpression(PyccelAstNode):
 
     @property
     def expression(self):
-        """ The list containing the literal strings and c macros
-        """
+        """The list containing the literal strings and c macros"""
         return self._expression
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class CMacro(PyccelAstNode):
     """Represents a c macro"""
-    __slots__ = ('_macro',)
-    _attribute_nodes  = ()
+
+    __slots__ = ("_macro",)
+    _attribute_nodes = ()
 
     def __init__(self, arg):
         super().__init__()
         if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
+            raise TypeError("arg must be of type str")
         self._macro = arg
 
     def __repr__(self):
@@ -342,13 +369,13 @@ class CMacro(PyccelAstNode):
 
     @property
     def macro(self):
-        """ The string containing macro name
-        """
+        """The string containing macro name"""
         return self._macro
 
-#-------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 #                         String functions
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 class CStrStr(PyccelFunction):
     """
     A class which extracts a const char* from a literal string.
@@ -362,6 +389,7 @@ class CStrStr(PyccelFunction):
     arg : TypedAstNode | CMacro
         The object which should be passed as a const char*.
     """
+
     __slots__ = ()
     _class_type = CharType()
     _shape = (None,)

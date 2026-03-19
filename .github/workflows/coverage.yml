@@ -1,93 +1,154 @@
 name: Unit test coverage
 
 on:
+  workflow_run:
+    workflows: ["PR Tests"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       python_version:
-        required: true
-        type: string
-      ref:
         required: false
         type: string
-      base:
-        required: true
-        type: string
-      check_run_id:
+        default: '3.10'
+      run_id:
+        description: "The id of the run where the artifacts can be found, by default the last run automatically triggered on the PR"
         required: false
         type: string
-      artifact_urls:
-        required: true
-        type: string
-      pr_id:
-        required: true
-        type: id
+        default: ''
       pr_repo:
+        description: "The repository where the tests ran, by default the current repo."
         required: false
         type: string
 
+permissions:
+  actions: read
+  pull-requests: write
+
 env:
-  COMMIT: ${{ inputs.ref || github.event.ref }}
-  PEM: ${{ secrets.BOT_PEM }}
-  GITHUB_RUN_ID: ${{ github.run_id }}
-  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_ID: ${{ inputs.pr_id }}
-  PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYTHON_VERSION: ${{ inputs.python_version || '3.10' }}
 
 jobs:
   CoverageChecker:
 
     runs-on: ubuntu-latest
     name: Unit tests
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ env.COMMIT }}
-          repository: ${{ env.PR_REPO }}
+          path: origin
+          fetch-depth: 0
+      - name: Get PR info
+        id: pr_info
+        run: |
+          cd origin # Run in origin so gh connects to target repo
+
+          # Define HEAD_SHA and PR_REPO environment variables
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            HEAD_SHA="${{ github.sha }}"
+            PR_REPO="${{ inputs.pr_repo || github.repository }}"
+          else
+            HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+            PR_REPO="${{ github.event.workflow_run.head_repository.full_name }}"
+          fi
+
+          echo $HEAD_SHA
+
+          # Find PR_ID
+          PR_ID=$(gh pr list --state open --json number,headRefOid \
+                  --jq ".[] | select(.headRefOid == \"${HEAD_SHA}\") | .number")
+          echo $PR_ID
+          # Get the BASE_SHA from the PR
+          BASE_NAME=$(gh pr view $PR_ID --json baseRefName --jq '.["baseRefName"]')
+          echo $BASE_NAME
+          BASE_SHA=$(git log -1 origin/${BASE_NAME} --pretty="%H")
+          echo $BASE_SHA
+
+          # Get the run_id
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RUN_ID="${{ github.event.workflow_run.id }}"
+          else
+            if [ -n "${{ inputs.run_id }}" ]
+            then
+              RUN_ID="${{ inputs.run_id }}"
+            else
+              # If workflow dispatch does not provide run id. Get the id of the last PR Tests run on the PR
+              links=$(gh pr checks $PR_ID --required --json=workflow,state,link \
+                     --jq='.[] | select(.workflow == "PR Tests" and .state == "SUCCESS") | .link')
+              link=$(echo $links | cut -f 1 -d " ")
+              echo $link
+              RUN_ID=$(echo "$link" | grep -oP '(?<=/runs/)[0-9]+')
+              echo $RUN_ID
+            fi
+          fi
+
+          # Save outputs
+          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          echo "pr_repo=${PR_REPO}" >> $GITHUB_OUTPUT
+          echo "base=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "pr_id=${PR_ID}" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr_info.outputs.head_sha }}
+          repository: ${{ steps.pr_info.outputs.pr_repo }}
           submodules: true
-      - name: Set up Python ${{ inputs.python_version }}
+          fetch-depth: 0
+          path: pr_contents
+      - name: Fetch base from upstream
+        if: steps.pr_info.outputs.pr_repo != github.repository
+        run: |
+          git remote add upstream https://github.com/${{ github.repository }}.git
+          git fetch upstream
+        shell: bash
+        working-directory: pr_contents
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version }}
-      - name: "Setup"
-        id: token
-        run: |
-          pip install jwt requests
-          python ci_tools/setup_check_run.py coverage
-        shell: bash
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install defusedxml
           python -m pip install coverage
+          python -m pip install jwt requests
         shell: bash
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ steps.pr_info.outputs.run_id }}
+          pattern: coverage-artifact*
+          path: pr_contents/coverage_files
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Collect coverage information
         run: |
-          python ci_tools/fetch_artifacts.py ${{ inputs.artifact_urls }}
           echo -e "[paths]\nsource =\n   $(pwd)/pyccel\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
-          coverage combine
+          coverage combine $(find coverage_files -name '.coverage')
           coverage xml
         shell: bash
+        working-directory: pr_contents
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
-      - name: Add remote
-        if: env.PR_REPO != 'pyccel/pyccel'
-        run: |
-          git remote add -f pyccel git@github.com:pyccel/pyccel.git
-        shell: bash
+          coverage-reports: pr_contents/cobertura.xml
       - name: Collect diff information
         run: |
-          git fetch
-          git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
-          git checkout ${{ env.COMMIT }}
-          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ steps.pr_info.outputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
+        working-directory: pr_contents
       - name: Check coverage
         id: coverage
         run: |
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_STEP_SUMMARY
         shell: bash
+        working-directory: pr_contents
+        env:
+          HEAD_SHA: ${{ steps.pr_info.outputs.head_sha }}
+          PEM: ${{ secrets.BOT_PEM }}
+          PR_ID: ${{ steps.pr_info.outputs.pr_id }}
