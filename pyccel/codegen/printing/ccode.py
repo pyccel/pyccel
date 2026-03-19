@@ -3794,7 +3794,6 @@ class CCodePrinter(CodePrinter):
     # =====================================
 
     def _print_Program(self, expr):
-        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
         self.set_scope(expr.scope)
         body = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -3809,9 +3808,7 @@ class CCodePrinter(CodePrinter):
         imports = "".join(self._print(i) for i in imports)
 
         self.exit_scope()
-        return (
-            "{imports}" "int main()\n{{\n" "{decs}" "{body}" "return 0;\n" "}}"
-        ).format(imports=imports, decs=decs, body=body)
+        return f"{imports}int main()\n{{\n{decs}{body}return 0;\n}}"
 
     # ================== CLASSES ==================
 
