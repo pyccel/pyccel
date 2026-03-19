@@ -31,7 +31,12 @@ def setup_pyccel_compile_parser(parser):
     # ... Positional arguments
     group = parser.add_argument_group("Positional arguments")
 
-    group.add_argument('filename', metavar='FILE', path_with_suffix(('.py',)),
+    group.add_argument(
+        "filename",
+        metavar="FILE",
+        type=path_with_suffix((".py",)),
+        help="Path (relative or absolute) to the Python file to be translated.",
+    )
     # ...
 
     # ... backend compiler options
