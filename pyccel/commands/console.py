@@ -1,9 +1,16 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `pyccel_command` function which is the entry point for
+the `pyccel` console command. This function sets up an argument parser for the
+Pyccel command line interface and executes the appropriate function based on
+the sub-command provided by the user.
+"""
+
 import argparse
-import pathlib
 import sys
 
 from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR

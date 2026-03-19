@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Contains the execute_pyccel function which carries out the main steps required to execute pyccel
 """
@@ -13,13 +14,12 @@ import shutil
 import time
 from pathlib import Path
 
-from pyccel.errors.errors import Errors, PyccelError
+from pyccel.errors.errors import Errors
 from pyccel.errors.errors import (
     PyccelSyntaxError,
     PyccelSemanticError,
     PyccelCodegenError,
 )
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.codegen.utilities import (

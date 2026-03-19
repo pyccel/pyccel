@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """
 This file contains some useful functions to compile the generated fortran code
@@ -17,7 +18,6 @@ from pyccel.errors.errors import Errors
 from .codegen import printer_registry
 from .compiling.basic import CompileObj
 from .compiling.library_config import recognised_libs
-from .compiling.file_locks import FileLockSet
 
 # get path to pyccel/
 pyccel_root = Path(__file__).parent.parent

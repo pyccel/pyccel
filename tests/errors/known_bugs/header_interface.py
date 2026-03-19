@@ -1,5 +1,5 @@
 # Invalid header. Expected 'metavar'
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, unused-import
 from pyccel.stdlib.internal.blas import daxpy
 from pyccel.stdlib.internal.blas import saxpy
 

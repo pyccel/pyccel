@@ -17,7 +17,7 @@ from scipy.linalg.lapack import dgetrs
 
 # from scipy.linalg.lapack import dgetri
 
-from numpy import zeros, empty, int32
+from numpy import zeros, int32
 
 
 def test_1():

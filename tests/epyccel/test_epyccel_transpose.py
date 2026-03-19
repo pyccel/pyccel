@@ -89,7 +89,7 @@ def test_mixed_order(language):
         return n, m, z[-1, 0], z[0, -1]
 
     def f2(x: "int[:,:]"):
-        from numpy import transpose, ones
+        from numpy import ones
 
         n, m = x.shape
         y = ones((m, n), order="F")

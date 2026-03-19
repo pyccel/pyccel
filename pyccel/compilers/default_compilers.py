@@ -13,8 +13,6 @@ import shutil
 
 from numpy import get_include as get_numpy_include
 
-from pyccel import __version__ as pyccel_version
-
 gfort_info = {
     "exec": "gfortran",
     "mpi_exec": "mpif90",
