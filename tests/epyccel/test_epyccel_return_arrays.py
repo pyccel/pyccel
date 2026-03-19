@@ -2,7 +2,6 @@
 from typing import TypeVar
 from numpy.random import randint, uniform
 import numpy as np
-import pytest
 
 from recognised_functions.test_numpy_funcs import (
     min_int,
@@ -461,17 +460,7 @@ def test_return_multi_array_array_op(language):
 def test_return_array_scalar_op(language):
 
     def return_array_scalar_op(a: NumType):
-        from numpy import (
-            ones,
-            int8,
-            int16,
-            int32,
-            int64,
-            float32,
-            float64,
-            complex64,
-            complex128,
-        )  # pylint: disable=unused-import
+        from numpy import ones
 
         x = ones(5, dtype=type(a))
         return x * a
@@ -565,17 +554,7 @@ def test_return_array_scalar_op(language):
 def test_multi_return_array_scalar_op(language):
 
     def return_multi_array_scalar_op(a: NumType):
-        from numpy import (
-            ones,
-            int8,
-            int16,
-            int32,
-            int64,
-            float32,
-            float64,
-            complex64,
-            complex128,
-        )  # pylint: disable=unused-import
+        from numpy import ones
 
         x = ones(5, dtype=type(a))
         y = ones(5, dtype=type(a))

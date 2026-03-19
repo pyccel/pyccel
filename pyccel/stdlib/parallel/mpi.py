@@ -1,8 +1,15 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `Cart` class which maps MPI's Cart concepts to a single
+place, providing a convenient interface with encapsulated MPI functionality.
+The functions of the `Cart` class are imported from the `mpi` module in
+`pyccel.stdlib.parallel` and are translated to the appropriate MPI calls in
+the target language. This may need removing with #251.
+"""
 
 # TODO - improve communicate method
 #      - debug reduce method: it must return the global error

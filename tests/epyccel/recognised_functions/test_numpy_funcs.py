@@ -4244,7 +4244,7 @@ def test_empty_like_dtype(language):
         return a[0]
 
     def create_empty_like_val_float32_auto():
-        from numpy import empty_like, array, float32
+        from numpy import empty_like, array
 
         arr = array([5, 1, 8, 0, 9], dtype="float32")
         a = empty_like(arr)
@@ -4933,7 +4933,7 @@ def test_zeros_like_dtype_auto(language):
         return a[0]
 
     def create_zeros_like_val_float32_auto():
-        from numpy import zeros_like, array, float32
+        from numpy import zeros_like, array
 
         arr = array([5, 1, 8, 0, 9], dtype="float32")
         a = zeros_like(arr)
@@ -6346,7 +6346,6 @@ def test_numpy_norm_array_like_2d(language):
 
     def get_norm(arr: "C[:,:]"):
         from numpy.linalg import norm
-        from numpy import shape
 
         a = norm(arr)
         return a
@@ -7910,7 +7909,7 @@ def test_numpy_count_non_zero_axis(language):
 )
 def test_numpy_count_non_zero_axis_keep_dims(language):
     def count(arr: "F[:,:,:]"):
-        from numpy import count_nonzero, empty
+        from numpy import count_nonzero
 
         a = count_nonzero(arr, axis=0, keepdims=True)
         s = a.shape

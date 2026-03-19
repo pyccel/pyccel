@@ -7,7 +7,7 @@ from pyccel.parser.parser import Parser
 from pyccel.errors.errors import Errors
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.core import Assign, Return, FunctionDef, AugAssign, FunctionDefArgument
+from pyccel.ast.core import Assign, FunctionDef, AugAssign, FunctionDefArgument
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.operators import PyccelOperator, PyccelAdd, PyccelMinus, PyccelMul
