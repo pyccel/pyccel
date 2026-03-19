@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2525 : Add preliminary support for C++ translations.
+
 ### Fixed
 
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.

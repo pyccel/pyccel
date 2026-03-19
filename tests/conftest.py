@@ -12,7 +12,7 @@ if github_debugging:
 
     sys.stdout = sys.stderr
 
-language_markers = ("language_agnostic", "fortran", "c", "python")
+language_markers = ("language_agnostic", "fortran", "c", "cpp", "python")
 
 
 @pytest.fixture(autouse=True)
@@ -23,6 +23,23 @@ def check_language_markers(request):
     markers = [m.name for m in request.node.iter_markers()]
     assert len(markers) > 0
     assert any(l in markers for l in language_markers)
+
+
+@pytest.fixture(
+    params=[
+        pytest.param("fortran", marks=pytest.mark.fortran),
+        pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
+        pytest.param("python", marks=pytest.mark.python),
+    ],
+    scope="session",
+)
+def experimental_language(request):
+    """
+    Temporary fixture while working towards C++ support.
+    This is designed to be removed once more complete support is available.
+    """
+    return request.param
 
 
 @pytest.fixture(

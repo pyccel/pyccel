@@ -49,7 +49,7 @@ def setup_pyccel_compile_parser(parser):
 
     group.add_argument(
         "--language",
-        choices=("Fortran", "C", "Python"),
+        choices=("Fortran", "C", "C++", "Python"),
         default="Fortran",
         help="Target language for translation, i.e. the main language of the generated code (default: Fortran).",
         type=str.title,

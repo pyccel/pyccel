@@ -286,7 +286,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_ModuleHeader(self, expr):
         mod = expr.module
         self.set_scope(mod.scope)
-        self._current_module = expr.module
         name = mod.name
 
         # Print imports last to be sure that all additional_imports have been collected
@@ -337,7 +336,6 @@ class CWrapperCodePrinter(CCodePrinter):
         import_func = self._print(mod.import_func)
 
         self.exit_scope()
-        self._current_module = None
         header_id = f"{name.upper()}_WRAPPER"
         header_guard = f"{header_id}_H"
         start = f"#ifndef {header_guard}\n#define {header_guard}\n"
@@ -360,7 +358,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
-        self._current_module = expr
 
         # Insert declared objects into scope
         variables = (
@@ -447,7 +444,6 @@ class CWrapperCodePrinter(CCodePrinter):
         imports = "".join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self._current_module = None
 
         return "\n".join(
             [

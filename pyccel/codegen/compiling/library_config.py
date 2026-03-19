@@ -728,6 +728,7 @@ recognised_libs = {
     # Internal libs
     "pyc_math_f90": StdlibInstaller("pyc_math_f90.F90", "math", libs=("m",)),
     "pyc_math_c": StdlibInstaller("pyc_math_c.c", "math", dependencies=("stc",)),
+    "pyc_math_cpp": StdlibInstaller("pyc_math_cpp.cpp", "math"),
     "pyc_tools_f90": StdlibInstaller("pyc_tools_f90.f90", "tools"),
     "cwrapper": CWrapperInstaller(
         "cwrapper.c", "cwrapper", extra_compilation_tools=("python",)
