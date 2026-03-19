@@ -16,6 +16,9 @@ import pybind11
 
 from pyccel import __version__ as pyccel_version
 
+# ------------------------------------------------------------
+#             GNU compilation configurations
+# ------------------------------------------------------------
 gfort_info = {
     "exec": "gfortran",
     "mpi_exec": "mpif90",
@@ -31,58 +34,6 @@ gfort_info = {
     },
     "openacc": {
         "flags": ["-ta=multicore", "-Minfo=accel"],
-    },
-}
-
-# ------------------------------------------------------------
-ifort_info = {
-    "exec": "ifx",
-    "mpi_exec": "mpiifx",
-    "module_output_flag": "-module",
-    "debug_flags": ["-check", "bounds", "-g", "-O0"],
-    "release_flags": ["-O3", "-funroll-loops", "-DNDEBUG"],
-    "general_flags": ["-fPIC", "-fpp"],
-    "standard_flags": ["-std=f2003"],
-    "openmp": {
-        "flags": ["-qopenmp", "-nostandard-realloc-lhs"],
-        "libs": ["iomp5"],
-    },
-    "openacc": {
-        "flags": ["-ta=multicore", "-Minfo=accel"],
-    },
-}
-
-# ------------------------------------------------------------
-pgfortran_info = {
-    "exec": "pgfortran",
-    "mpi_exec": "pgfortran",
-    "module_output_flag": "-module",
-    "debug_flags": ["-Mbounds", "-g", "-O0"],
-    "release_flags": ["-O3", "-Munroll", "-DNDEBUG"],
-    "general_flags": ["-fPIC", "-cpp"],
-    "standard_flags": ["-Mstandard"],
-    "openmp": {
-        "flags": ["-mp"],
-    },
-    "openacc": {
-        "flags": ["-acc"],
-    },
-}
-
-# ------------------------------------------------------------
-nvfort_info = {
-    "exec": "nvfort",
-    "mpi_exec": "mpifort",
-    "module_output_flag": "-module",
-    "debug_flags": ["-Mbounds", "-g", "-O0"],
-    "release_flags": ["-O3", "-Munroll", "-DNDEBUG"],
-    "general_flags": ["-fPIC", "-cpp"],
-    "standard_flags": ["-Mstandard"],
-    "openmp": {
-        "flags": ["-mp"],
-    },
-    "openacc": {
-        "flags": ["-acc"],
     },
 }
 
@@ -105,78 +56,20 @@ gcc_info = {
 }
 
 # ------------------------------------------------------------
-clang_info = {
-    "exec": "clang",
-    "mpi_exec": "mpicc",
-    "debug_flags": ["-g", "-O0"],
-    "release_flags": ["-O3", "-funroll-loops", "-DNDEBUG"],
-    "general_flags": ["-fPIC"],
-    "standard_flags": ["-std=c99"],
-    "mpi": {},
-    "openmp": {
-        "flags": ["-fopenmp"],
-    },
-    "openacc": {
-        "flags": ["-fopenacc"],
-    },
-}
-
-# ------------------------------------------------------------
 gpp_info = {
     "exec": "g++",
     "mpi_exec": "mpic++",
-    "debug_flags": ("-g", "-O0"),
-    "release_flags": (
-        "-O3",
-        "-funroll-loops",
-    ),
-    "general_flags": ("-fPIC",),
-    "standard_flags": ("--std=c++20",),
-    "mpi": {},
-    "openmp": {
-        "flags": ("-fopenmp",),
-        "libs": ("gomp",),
-    },
-    "openacc": {
-        "flags": ("-ta=multicore", "-Minfo=accel"),
-    },
-}
-
-# ------------------------------------------------------------
-clangpp_info = {
-    "exec": "clang++",
-    "mpi_exec": "mpic++",
-    "debug_flags": (
-        "-g",
-        "-O0",
-    ),
-    "release_flags": ("-O3", "-funroll-loops"),
-    "general_flags": ("-fPIC",),
-    "standard_flags": ("--std=c++20",),
-    "mpi": {},
-    "openmp": {
-        "flags": ("-fopenmp",),
-    },
-    "openacc": {
-        "flags": ("-fopenacc",),
-    },
-}
-
-# ------------------------------------------------------------
-flang_info = {
-    "exec": "flang",
-    "mpi_exec": "mpifort",
-    "module_output_flag": "-J",
     "debug_flags": ["-g", "-O0"],
-    "release_flags": ["-O3", "-DNDEBUG"],
-    "general_flags": ["-fPIC", "-cpp"],
-    "standard_flags": ["-std=f2003"],
+    "release_flags": ["-O3", "-funroll-loops"],
+    "general_flags": ["-fPIC"],
+    "standard_flags": ["--std=c++20"],
     "mpi": {},
     "openmp": {
         "flags": ["-fopenmp"],
+        "libs": ["gomp"],
     },
     "openacc": {
-        "flags": ["-fopenacc"],
+        "flags": ["-ta=multicore", "-Minfo=accel"],
     },
 }
 
@@ -198,6 +91,26 @@ if sys.platform == "darwin":
         gcc_info["openmp"]["include"] = [os.path.join(OMP_PATH, "include")]
 
 # ------------------------------------------------------------
+#                  Intel compilation configurations
+# ------------------------------------------------------------
+ifort_info = {
+    "exec": "ifx",
+    "mpi_exec": "mpiifx",
+    "module_output_flag": "-module",
+    "debug_flags": ["-check", "bounds", "-g", "-O0"],
+    "release_flags": ["-O3", "-funroll-loops", "-DNDEBUG"],
+    "general_flags": ["-fPIC", "-fpp"],
+    "standard_flags": ["-std=f2003"],
+    "openmp": {
+        "flags": ["-qopenmp", "-nostandard-realloc-lhs"],
+        "libs": ["iomp5"],
+    },
+    "openacc": {
+        "flags": ["-ta=multicore", "-Minfo=accel"],
+    },
+}
+
+# ------------------------------------------------------------
 icc_info = {
     "exec": "icx",
     "mpi_exec": "mpiicx",
@@ -217,18 +130,34 @@ icc_info = {
 icpp_info = {
     "exec": "icpx",
     "mpi_exec": "mpiicpx",
-    "debug_flags": ("-g", "-O0"),
-    "release_flags": (
-        "-O3",
-        "-funroll-loops",
-    ),
-    "general_flags": ("-fPIC",),
-    "standard_flags": ("--std=c++20",),
+    "debug_flags": ["-g", "-O0"],
+    "release_flags": ["-O3", "-funroll-loops"],
+    "general_flags": ["-fPIC"],
+    "standard_flags": ["--std=c++20"],
     "openmp": {
-        "flags": ("-qopenmp",),
+        "flags": ["-qopenmp"],
     },
     "openacc": {
-        "flags": ("-ta=multicore", "-Minfo=accel"),
+        "flags": ["-ta=multicore", "-Minfo=accel"],
+    },
+}
+
+# ------------------------------------------------------------
+#               PGI compilation configurations
+# ------------------------------------------------------------
+pgfortran_info = {
+    "exec": "pgfortran",
+    "mpi_exec": "pgfortran",
+    "module_output_flag": "-module",
+    "debug_flags": ["-Mbounds", "-g", "-O0"],
+    "release_flags": ["-O3", "-Munroll", "-DNDEBUG"],
+    "general_flags": ["-fPIC", "-cpp"],
+    "standard_flags": ["-Mstandard"],
+    "openmp": {
+        "flags": ["-mp"],
+    },
+    "openacc": {
+        "flags": ["-acc"],
     },
 }
 
@@ -240,6 +169,25 @@ pgcc_info = {
     "release_flags": ["-O3", "-Munroll", "-DNDEBUG"],
     "general_flags": ["-fPIC"],
     "standard_flags": ["-std=c99"],
+    "openmp": {
+        "flags": ["-mp"],
+    },
+    "openacc": {
+        "flags": ["-acc"],
+    },
+}
+
+# ------------------------------------------------------------
+#                  Nvidia compilation configurations
+# ------------------------------------------------------------
+nvfort_info = {
+    "exec": "nvfort",
+    "mpi_exec": "mpifort",
+    "module_output_flag": "-module",
+    "debug_flags": ["-Mbounds", "-g", "-O0"],
+    "release_flags": ["-O3", "-Munroll", "-DNDEBUG"],
+    "general_flags": ["-fPIC", "-cpp"],
+    "standard_flags": ["-Mstandard"],
     "openmp": {
         "flags": ["-mp"],
     },
@@ -268,18 +216,69 @@ nvc_info = {
 nvcpp_info = {
     "exec": "nvc++",
     "mpi_exec": "mpic++",
-    "debug_flags": ("-g", "-O0"),
-    "release_flags": (
-        "-O3",
-        "-Munroll",
-    ),
-    "general_flags": ("-fPIC",),
-    "standard_flags": ("--std=c++20",),
+    "debug_flags": ["-g", "-O0"],
+    "release_flags": ["-O3", "-Munroll"],
+    "general_flags": ["-fPIC"],
+    "standard_flags": ["--std=c++20"],
     "openmp": {
-        "flags": ("-mp",),
+        "flags": ["-mp"],
     },
     "openacc": {
-        "flags": ("-acc"),
+        "flags": ["-acc"],
+    },
+}
+
+# ------------------------------------------------------------
+#             Clang compiler configurations
+# ------------------------------------------------------------
+flang_info = {
+    "exec": "flang",
+    "mpi_exec": "mpifort",
+    "module_output_flag": "-J",
+    "debug_flags": ["-g", "-O0"],
+    "release_flags": ["-O3", "-DNDEBUG"],
+    "general_flags": ["-fPIC", "-cpp"],
+    "standard_flags": ["-std=f2003"],
+    "mpi": {},
+    "openmp": {
+        "flags": ["-fopenmp"],
+    },
+    "openacc": {
+        "flags": ["-fopenacc"],
+    },
+}
+
+# ------------------------------------------------------------
+clang_info = {
+    "exec": "clang",
+    "mpi_exec": "mpicc",
+    "debug_flags": ["-g", "-O0"],
+    "release_flags": ["-O3", "-funroll-loops", "-DNDEBUG"],
+    "general_flags": ["-fPIC"],
+    "standard_flags": ["-std=c99"],
+    "mpi": {},
+    "openmp": {
+        "flags": ["-fopenmp"],
+    },
+    "openacc": {
+        "flags": ["-fopenacc"],
+    },
+}
+
+# ------------------------------------------------------------
+clangpp_info = {
+    "exec": "clang++",
+    "mpi_exec": "mpic++",
+    "debug_flags": ["-g", "-O0"],
+    "release_flags": ["-O3", "-funroll-loops"],
+    "general_flags": ["-fPIC"],
+    "standard_flags": ["--std=c++20"],
+    "mpi": {},
+    "openmp": {
+        "flags": ["-fopenmp"],
+    },
+    "openacc": {
+        "flags": ["-fopenacc"],
     },
 }
 
