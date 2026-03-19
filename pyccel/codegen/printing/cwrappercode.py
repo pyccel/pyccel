@@ -31,7 +31,7 @@ from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.errors.errors import Errors
 
-__all__ = ("CWrapperCodePrinter", "cwrappercode")
+__all__ = ("CWrapperCodePrinter",)
 
 errors = Errors()
 
