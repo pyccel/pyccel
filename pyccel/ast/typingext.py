@@ -11,7 +11,7 @@ from immutabledict import immutabledict
 
 from .basic import TypedAstNode
 from .core import Module, PyccelFunctionDef
-from .datatypes import TypeAlias, GenericType, FinalType
+from .datatypes import FinalType, GenericType, TypeAlias
 
 __all__ = (
     "TypingAnnotation",

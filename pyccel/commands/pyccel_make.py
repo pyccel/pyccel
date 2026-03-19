@@ -11,8 +11,12 @@ import argparse
 import glob
 from pathlib import Path
 
-from .argparse_helpers import add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import add_common_settings, path_with_suffix
+from .argparse_helpers import (
+    add_accelerator_selection,
+    add_common_settings,
+    add_compiler_selection,
+    path_with_suffix,
+)
 
 __all__ = ("pyccel_make", "setup_pyccel_make_parser", "PYCCEL_MAKE_DESCR")
 

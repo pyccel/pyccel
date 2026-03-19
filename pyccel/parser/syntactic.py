@@ -13,113 +13,140 @@ for more details on the syntactic stage.
 
 import ast
 import inspect
-from itertools import chain
 import os
 import re
 import types
 import warnings
+from itertools import chain
 
 from textx.exceptions import TextXSyntaxError
 
-# ==============================================================================
-
 from pyccel.ast.basic import PyccelAstNode
-
-from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import Module, Program
-from pyccel.ast.core import Assign
-from pyccel.ast.core import AugAssign
-from pyccel.ast.core import Return
-from pyccel.ast.core import Pass
-from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For
-from pyccel.ast.core import If, IfSection
-from pyccel.ast.core import While
-from pyccel.ast.core import Del
-from pyccel.ast.core import Assert
-from pyccel.ast.core import Comment, EmptyNode
-from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import FunctionDefArgument
-from pyccel.ast.core import FunctionDefResult
-from pyccel.ast.core import Import
-from pyccel.ast.core import AsName
-from pyccel.ast.core import CommentBlock
-from pyccel.ast.core import With
-from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import CodeBlock
-from pyccel.ast.core import IndexedElement
-
-from pyccel.ast.datatypes import TypeAlias, FinalType
-
 from pyccel.ast.bitwise_operators import (
-    PyccelRShift,
-    PyccelLShift,
-    PyccelBitXor,
-    PyccelBitOr,
     PyccelBitAnd,
+    PyccelBitOr,
+    PyccelBitXor,
     PyccelInvert,
+    PyccelLShift,
+    PyccelRShift,
 )
-from pyccel.ast.operators import (
-    PyccelPow,
-    PyccelAdd,
-    PyccelMul,
-    PyccelDiv,
-    PyccelMod,
-    PyccelFloorDiv,
+from pyccel.ast.builtins import (
+    PythonDict,
+    PythonList,
+    PythonPrint,
+    PythonSet,
+    PythonTuple,
 )
-from pyccel.ast.operators import (
-    PyccelEq,
-    PyccelNe,
-    PyccelLt,
-    PyccelLe,
-    PyccelGt,
-    PyccelGe,
+from pyccel.ast.core import (
+    AsName,
+    Assert,
+    Assign,
+    AugAssign,
+    Break,
+    ClassDef,
+    CodeBlock,
+    Comment,
+    CommentBlock,
+    Continue,
+    Del,
+    EmptyNode,
+    For,
+    FunctionCall,
+    FunctionCallArgument,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    IndexedElement,
+    InlineFunctionDef,
+    Module,
+    Pass,
+    Program,
+    Return,
+    StarredArguments,
+    While,
+    With,
 )
-from pyccel.ast.operators import PyccelAnd, PyccelOr, PyccelNot, PyccelMinus
-from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, PyccelIn
-from pyccel.ast.operators import IfTernaryOperator
-from pyccel.ast.numpyext import NumpyMatmul
-
-from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet, PythonDict
-from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.headers import MetaVariable
-from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
-from pyccel.ast.literals import Nil, LiteralEllipsis
+from pyccel.ast.datatypes import FinalType, TypeAlias
 from pyccel.ast.functionalexpr import (
-    FunctionalSum,
+    FunctionalFor,
     FunctionalMax,
     FunctionalMin,
+    FunctionalSum,
     GeneratorComprehension,
-    FunctionalFor,
 )
-from pyccel.ast.variable import DottedName, AnnotatedPyccelSymbol
-
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelFunction
-
+from pyccel.ast.headers import MetaVariable
+from pyccel.ast.internals import PyccelFunction, PyccelSymbol, Slice
+from pyccel.ast.literals import (
+    LiteralComplex,
+    LiteralEllipsis,
+    LiteralFalse,
+    LiteralFloat,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+)
+from pyccel.ast.numpyext import NumpyMatmul
+from pyccel.ast.operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelAnd,
+    PyccelDiv,
+    PyccelEq,
+    PyccelFloorDiv,
+    PyccelGe,
+    PyccelGt,
+    PyccelIn,
+    PyccelIs,
+    PyccelIsNot,
+    PyccelLe,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelNe,
+    PyccelNot,
+    PyccelOr,
+    PyccelPow,
+    PyccelUnary,
+    PyccelUnarySub,
+)
 from pyccel.ast.type_annotations import (
     SyntacticTypeAnnotation,
     UnionTypeAnnotation,
     VariableTypeAnnotation,
 )
-
-from pyccel.parser.base import BasicParser
-from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.scope import Scope
-from pyccel.parser.utilities import get_default_path
-
-from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
-from pyccel.parser.syntax.openmp import parse as omp_parse
-from pyccel.parser.syntax.openacc import parse as acc_parse
-
-from pyccel.utilities.stage import PyccelStage
-
+from pyccel.ast.variable import AnnotatedPyccelSymbol, DottedName
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
+from pyccel.parser.base import BasicParser
+from pyccel.parser.extend_tree import extend_tree
+from pyccel.parser.scope import Scope
+from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.headers import types_meta
+from pyccel.parser.syntax.openacc import parse as acc_parse
+from pyccel.parser.syntax.openmp import parse as omp_parse
+from pyccel.parser.utilities import get_default_path
+from pyccel.utilities.stage import PyccelStage
+
+# ==============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def get_name(a):

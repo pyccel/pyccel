@@ -14,8 +14,8 @@ for i in range(0, 10):
 n = 2
 m = 3
 
-from numpy import zeros
 from numpy import sum as np_sum
+from numpy import zeros
 
 z = zeros((n, m, 2), "double")
 

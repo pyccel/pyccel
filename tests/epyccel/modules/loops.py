@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
+
 from pyccel.decorators import allow_negative_index
 
 # ==============================================================================
@@ -69,8 +70,9 @@ def double_loop_on_2d_array_F(z: "int[:,:](order=F)"):
 # ...
 def product_loop_on_2d_array_C(z: "int[:,:](order=C)"):
 
-    from numpy import shape
     from itertools import product
+
+    from numpy import shape
 
     m, n = shape(z)
 
@@ -84,8 +86,9 @@ def product_loop_on_2d_array_C(z: "int[:,:](order=C)"):
 # ...
 def product_loop_on_2d_array_F(z: "int[:,:](order=F)"):
 
-    from numpy import shape
     from itertools import product
+
+    from numpy import shape
 
     m, n = shape(z)
 

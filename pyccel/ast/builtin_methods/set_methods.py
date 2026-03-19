@@ -11,7 +11,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import VoidType, PythonNativeBool
+from pyccel.ast.datatypes import PythonNativeBool, VoidType
 from pyccel.ast.internals import PyccelFunction
 
 __all__ = (

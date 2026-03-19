@@ -9,7 +9,9 @@
 
 """
 
-from ast import AST, If as IfNode, parse
+from ast import AST
+from ast import If as IfNode
+from ast import parse
 
 from numpy import array, logical_and, where
 

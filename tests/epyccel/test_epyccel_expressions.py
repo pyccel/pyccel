@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy.random import randint, rand
 import numpy as np
 from numpy import iinfo
+from numpy.random import rand, randint
+
 from pyccel import epyccel
 
 # Use int32 for Windows compatibility

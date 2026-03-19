@@ -1,9 +1,9 @@
 """Parse pylint output and format the output for neat bot results."""
 
 import argparse
-from collections import namedtuple
 import json
 import sys
+from collections import namedtuple
 
 import coverage_analysis_tools as cov
 from git_evaluation_tools import get_diff_as_json

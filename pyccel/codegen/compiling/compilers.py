@@ -12,10 +12,11 @@ Module handling everything related to the compilers used to compile the various 
 import json
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
-import platform
 import warnings
+
 from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 

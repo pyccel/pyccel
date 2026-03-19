@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
 import math
+from typing import TypeVar
 
 T = TypeVar("T", int, float)
 

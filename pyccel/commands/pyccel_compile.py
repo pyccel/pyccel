@@ -9,11 +9,13 @@ import argparse
 import pathlib
 import sys
 
-from .argparse_helpers import add_compiler_selection, add_accelerator_selection
-
 # TODO: Uncomment for v2.3 to check for existence and file type
 # from .argparse_helpers import path_with_suffix, add_common_settings
-from .argparse_helpers import add_common_settings
+from .argparse_helpers import (
+    add_accelerator_selection,
+    add_common_settings,
+    add_compiler_selection,
+)
 from .pyccel_config import pyccel_config_export
 
 __all__ = ("pyccel_compile", "setup_pyccel_compile_parser", "PYCCEL_COMPILE_DESCR")
@@ -162,8 +164,8 @@ def pyccel_compile(*, filename, language, output, export_compiler_config, **kwar
         See execute_pyccel.
     """
     # Imports
-    from pyccel.errors.errors import Errors
     from pyccel.codegen.pipeline import execute_pyccel
+    from pyccel.errors.errors import Errors
 
     errors = Errors()
     # ...

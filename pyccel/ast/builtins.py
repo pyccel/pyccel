@@ -15,20 +15,49 @@ In this module we implement some of them in alphabetical order.
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode, TypedAstNode
-from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, CharType
-from .datatypes import PrimitiveBooleanType, PrimitiveComplexType
-from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, TupleType
-from .datatypes import HomogeneousListType, HomogeneousContainerType
-from .datatypes import FixedSizeNumericType, HomogeneousSetType, SymbolicType
-from .datatypes import DictType, VoidType, TypeAlias, StringType
-from .datatypes import original_type_to_pyccel_type
-from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
-from .literals import LiteralInteger, LiteralFloat, LiteralComplex, Nil
-from .literals import Literal, LiteralImaginaryUnit, convert_to_literal
-from .literals import LiteralString
-from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
-from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .datatypes import (
+    CharType,
+    DictType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousContainerType,
+    HomogeneousListType,
+    HomogeneousSetType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PrimitiveBooleanType,
+    PrimitiveComplexType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    SymbolicType,
+    TupleType,
+    TypeAlias,
+    VoidType,
+    original_type_to_pyccel_type,
+)
+from .internals import Iterable, PyccelArrayShapeElement, PyccelFunction, Slice
+from .literals import (
+    Literal,
+    LiteralComplex,
+    LiteralFloat,
+    LiteralImaginaryUnit,
+    LiteralInteger,
+    LiteralString,
+    Nil,
+    convert_to_literal,
+)
+from .operators import (
+    PyccelAdd,
+    PyccelAnd,
+    PyccelIsNot,
+    PyccelMinus,
+    PyccelMul,
+    PyccelNot,
+    PyccelUnarySub,
+)
 from .variable import IndexedElement, Variable
 
 pyccel_stage = PyccelStage()

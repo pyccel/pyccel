@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
-import numpy as np
-import scipy.linalg.blas as sp_blas
 import modules.external_functions as mod
+import numpy as np
+import pytest
+import scipy.linalg.blas as sp_blas
+
 from pyccel import epyccel
 
 

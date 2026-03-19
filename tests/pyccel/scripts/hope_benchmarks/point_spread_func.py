@@ -12,7 +12,8 @@ def pdf(
     b: "double",
     a: "double",
 ):
-    from numpy import sqrt, pi, sum as np_sum
+    from numpy import pi, sqrt
+    from numpy import sum as np_sum
 
     for x in range(x_range):
         for y in range(y_range):

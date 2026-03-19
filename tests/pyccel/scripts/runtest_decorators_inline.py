@@ -1,14 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import decorators_inline
 import numpy as np
 from decorators_inline import (
-    power_4,
-    get_powers,
     f,
-    sin_base_1,
     fill_pi,
+    get_powers,
     positron_charge,
+    power_4,
+    sin_base_1,
 )
-import decorators_inline
 
 
 def g(s: int):

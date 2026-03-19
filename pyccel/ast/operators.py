@@ -13,17 +13,26 @@ They also have specific rules to determine the dtype, rank, shape, class_type
 from pyccel.utilities.stage import PyccelStage
 
 from ..errors.errors import Errors, PyccelSemanticError
-
 from .basic import TypedAstNode
-
-from .datatypes import PythonNativeBool, PythonNativeFloat
-from .datatypes import StringType, FixedSizeNumericType
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType
-
-from .literals import Literal, LiteralInteger, LiteralFloat, LiteralComplex
-from .literals import Nil, NilArgument, LiteralTrue, LiteralFalse
-from .literals import convert_to_literal
-
+from .datatypes import (
+    FixedSizeNumericType,
+    PrimitiveBooleanType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeFloat,
+    StringType,
+)
+from .literals import (
+    Literal,
+    LiteralComplex,
+    LiteralFalse,
+    LiteralFloat,
+    LiteralInteger,
+    LiteralTrue,
+    Nil,
+    NilArgument,
+    convert_to_literal,
+)
 from .numpytypes import NumpyNDArrayType
 
 errors = Errors()

@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import array
-from numpy import zeros_like
+from numpy import array, zeros_like
 
 
 @elemental

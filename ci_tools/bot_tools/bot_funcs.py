@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+
 from .github_api_interactions import GitHubAPIInteractions
 
 # Tests which require the base branch to be passed as an argument to the workflow dispatch

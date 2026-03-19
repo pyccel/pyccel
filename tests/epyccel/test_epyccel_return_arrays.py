@@ -1,28 +1,27 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
-from numpy.random import randint, uniform
-import numpy as np
 
-from recognised_functions.test_numpy_funcs import (
-    min_int,
-    max_int,
-    min_int8,
-    max_int8,
-    min_int16,
-    max_int16,
-    min_int32,
-    max_int32,
-    max_int64,
-    min_int64,
-)
+import numpy as np
+from numpy.random import randint, uniform
 from recognised_functions.test_numpy_funcs import (
     max_float,
-    min_float,
     max_float32,
-    min_float32,
     max_float64,
+    max_int,
+    max_int8,
+    max_int16,
+    max_int32,
+    max_int64,
+    min_float,
+    min_float32,
     min_float64,
+    min_int,
+    min_int8,
+    min_int16,
+    min_int32,
+    min_int64,
 )
+
 from pyccel import epyccel
 
 T = TypeVar(

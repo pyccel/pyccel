@@ -2,7 +2,7 @@
 
 
 def pairwise_python(X: "double[:,:]", D: "double[:,:]"):
-    from numpy import sqrt, shape
+    from numpy import shape, sqrt
 
     M, N = shape(X)
     for i in range(M):

@@ -7,17 +7,9 @@
 
 # TODO: - assert
 
-from pyccel.stdlib.internal.lapack import dgbtrf
-from pyccel.stdlib.internal.lapack import dgbtrs
+from numpy import int32, zeros
 
-from pyccel.stdlib.internal.lapack import dgetrf
-from pyccel.stdlib.internal.lapack import dgecon
-
-from pyccel.stdlib.internal.lapack import dgetrs
-
-from pyccel.stdlib.internal.lapack import dgetri
-
-from numpy import zeros, int32
+from pyccel.stdlib.internal.lapack import dgbtrf, dgbtrs, dgecon, dgetrf, dgetri, dgetrs
 
 
 def test_1():

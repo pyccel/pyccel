@@ -1,11 +1,11 @@
 """Tools to help examine git information and interact with git"""
 
-from collections import namedtuple
-from datetime import datetime
 import json
 import shutil
 import subprocess
 import time
+from collections import namedtuple
+from datetime import datetime
 
 __all__ = (
     "github_cli",

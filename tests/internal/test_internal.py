@@ -5,7 +5,9 @@
 #      execute the binary file
 
 import os
+
 import pytest
+
 from pyccel.codegen.pipeline import execute_pyccel
 
 # Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
