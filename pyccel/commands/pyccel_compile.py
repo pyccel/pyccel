@@ -130,7 +130,7 @@ def setup_pyccel_compile_parser(parser):
     # ...
 
 
-def pyccel_compile(*, filename, language, output, export_compiler_config, **kwargs):
+def pyccel_compile(*, filename, language, output, **kwargs):
     """
     Call the pyccel pipeline.
 
@@ -144,8 +144,6 @@ def pyccel_compile(*, filename, language, output, export_compiler_config, **kwar
         The target language Pyccel is translating to.
     output : str
         Path to the working directory.
-    export_compiler_config : bool
-        Indicates if compiler information should be exported.
     **kwargs : dict
         See execute_pyccel.
     """
