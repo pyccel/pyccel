@@ -3875,14 +3875,15 @@ class CCodePrinter(CodePrinter):
         init_method = expr.get_method('__init__')
         init_printed = self._print(init_method)
         if virtual_methods:
-            ending = f"}}\n{sep}"
+            init_lines = init_printed.split('\n')
             self_name = init_method.arguments[0].var.name
-            fp_assignments = "".join(
+            fp_assignments = "    // Save virtual function addresses\n" + "".join(
                 f"    {self_name}->{m.cls_name} = {m.name};\n"
                 for m in virtual_methods
             )
-            init_printed = init_printed.removesuffix(ending)
-            init_printed = init_printed + fp_assignments + ending
+            insert_pos = init_lines.index("{") + 1
+            init_lines.insert(insert_pos, fp_assignments)
+            init_printed = "\n".join(init_lines)
 
         methods = init_printed + "".join(
             self._print(method) for method in expr.methods if method is not init_method
