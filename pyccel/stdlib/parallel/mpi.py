@@ -14,26 +14,26 @@ the target language. This may need removing with #251.
 # TODO - improve communicate method
 #      - debug reduce method: it must return the global error
 
-from pyccel.stdlib.parallel.mpi import (
-    MPI_DOUBLE,
-    MPI_SUM,
-    mpi_allreduce,
-    mpi_cart_coords,
-    mpi_cart_create,
-    mpi_cart_shift,
-    mpi_cart_sub,
-    mpi_comm_free,
-    mpi_comm_rank,
-    mpi_comm_size,
-    mpi_comm_world,
-    mpi_dims_create,
-    mpi_sendrecv,
-    mpi_status_size,
-    mpi_type_commit,
-    mpi_type_contiguous,
-    mpi_type_free,
-    mpi_type_vector,
-)
+#from pyccel.stdlib.parallel.mpi import (
+#    MPI_DOUBLE,
+#    MPI_SUM,
+#    mpi_allreduce,
+#    mpi_cart_coords,
+#    mpi_cart_create,
+#    mpi_cart_shift,
+#    mpi_cart_sub,
+#    mpi_comm_free,
+#    mpi_comm_rank,
+#    mpi_comm_size,
+#    mpi_comm_world,
+#    mpi_dims_create,
+#    mpi_sendrecv,
+#    mpi_status_size,
+#    mpi_type_commit,
+#    mpi_type_contiguous,
+#    mpi_type_free,
+#    mpi_type_vector,
+#)
 
 # $ header class Cart(public)
 # $ header method __init__(Cart, int [:], int [:], bool [:], bool)
