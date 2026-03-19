@@ -27,7 +27,7 @@ from .pyccel_config import (
     pyccel_config,
     PYCCEL_CONFIG_DESCR,
 )
-from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
+from .argparse_helpers import add_help_flag, add_version_flag
 
 __all__ = ("pyccel_command",)
 

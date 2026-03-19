@@ -9,10 +9,9 @@ import json
 import os
 import pathlib
 import sys
-from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
-from .argparse_helpers import add_help_flag, add_version_flag
+from .argparse_helpers import add_help_flag
 from .pyccel_clean import pyccel_clean
 
 __all__ = (

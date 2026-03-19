@@ -11,7 +11,6 @@ import sys
 
 from .argparse_helpers import add_compiler_selection, add_accelerator_selection
 from .argparse_helpers import path_with_suffix, add_common_settings
-from .pyccel_config import pyccel_config_export
 
 __all__ = ("pyccel_compile", "setup_pyccel_compile_parser", "PYCCEL_COMPILE_DESCR")
 

@@ -7,11 +7,9 @@
 
 import os
 import shutil
-import sys
 import sysconfig
-from argparse import ArgumentParser
 
-from .argparse_helpers import add_help_flag, add_version_flag
+from .argparse_helpers import add_help_flag
 
 __all__ = (
     "pyccel_clean",
