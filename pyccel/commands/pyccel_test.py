@@ -1,9 +1,9 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing scripts to run the unit tests of Pyccel
-"""
+# ------------------------------------------------------------------------------------------#
+"""Module containing scripts to run the unit tests of Pyccel"""
+
 import json
 import os
 import pathlib
@@ -14,12 +14,14 @@ from importlib.metadata import Distribution
 from .argparse_helpers import add_help_flag, add_version_flag
 from .pyccel_clean import pyccel_clean
 
-__all__ = ('pyccel_test',
-           'pyccel_test_command',
-           'setup_pyccel_test_parser',
-           'PYCCEL_TEST_DESCR')
+__all__ = (
+    "pyccel_test",
+    "pyccel_test_command",
+    "setup_pyccel_test_parser",
+    "PYCCEL_TEST_DESCR",
+)
 
-PYCCEL_TEST_DESCR = 'Run tests to check installation.'
+PYCCEL_TEST_DESCR = "Run tests to check installation."
 
 install_msg = """
 In order to run the tests, Pyccel must be installed with the optional [test] dependencies.
@@ -28,6 +30,7 @@ You can do this by running one of the following commands:
   2. Standard install, from sources: pip install ".[test]"
   3. Editable install, from sources: pip install ".[test]" --editable
 """
+
 
 def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     """
@@ -86,7 +89,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     try:
         import pyccel
     except ImportError:
-        print('ERROR: It appears that Pyccel is not installed.')
+        print("ERROR: It appears that Pyccel is not installed.")
         print(install_msg)
         sys.exit(1)
 
@@ -94,7 +97,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     try:
         import pytest
     except ImportError:
-        print('ERROR: It appears that pytest is not installed.')
+        print("ERROR: It appears that pytest is not installed.")
         print(install_msg)
         sys.exit(1)
 
@@ -102,15 +105,17 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     if folder is not None:
         test_dir = folder.resolve()
         if not test_dir.is_dir():
-            print(f"ERROR: The provided folder '{test_dir}' does not exist or is not a directory.")
+            print(
+                f"ERROR: The provided folder '{test_dir}' does not exist or is not a directory."
+            )
             sys.exit(1)
         print(f"Using the provided folder as the test directory: {test_dir}")
     else:
         test_dir = None
 
     version = pyccel.__version__
-    zip_url = f'https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip'
-    download_location = f'pyccel-v{version}'
+    zip_url = f"https://github.com/pyccel/pyccel/archive/refs/tags/v{version}.zip"
+    download_location = f"pyccel-v{version}"
 
     if test_dir is None:
         # Determine the version of Pyccel that we are using
@@ -125,33 +130,43 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
                 if test_dir.exists():
                     print(f"Using the local test directory from direct URL: {test_dir}")
                 else:
-                    print(f"Pyccel was installed from source but the source directory {test_dir} has been deleted.")
-                    print(("Tests will be downloaded from the devel branch but this may lead to "
-                           "failures if the branch does not match or has been updated since the "
-                           "last installation"))
+                    print(
+                        f"Pyccel was installed from source but the source directory {test_dir} has been deleted."
+                    )
+                    print(
+                        (
+                            "Tests will be downloaded from the devel branch but this may lead to "
+                            "failures if the branch does not match or has been updated since the "
+                            "last installation"
+                        )
+                    )
 
-                    zip_url = 'https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip'
+                    zip_url = (
+                        "https://github.com/pyccel/pyccel/archive/refs/heads/devel.zip"
+                    )
                     download_location = "Pyccel's devel branch"
 
     if test_dir is None:
 
         # Download the test files
         from urllib.request import urlopen
+
         print(f"Downloading the test files from GitHub for {download_location}...")
-        zip_path = 'pyccel.zip'
-        with urlopen(zip_url, timeout=5) as response: # nosec urllib_urlopen
-            with open(zip_path, 'wb') as output_file:
+        zip_path = "pyccel.zip"
+        with urlopen(zip_url, timeout=5) as response:  # nosec urllib_urlopen
+            with open(zip_path, "wb") as output_file:
                 output_file.write(response.read())
 
-        test_dir = f'pyccel-{version}/tests'
+        test_dir = f"pyccel-{version}/tests"
 
         # Unzip the test files
         import zipfile
+
         print("Unzipping the test files...")
-        with zipfile.ZipFile(zip_path, 'r') as archive:
+        with zipfile.ZipFile(zip_path, "r") as archive:
             for file in archive.namelist():
                 if file.startswith(test_dir):
-                    archive.extract(file, path='.')
+                    archive.extract(file, path=".")
 
     # Change into the test directory
     print("Changing into the test directory...")
@@ -161,28 +176,37 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Descriptions of the tests:
     desc_1 = "Run the single-process tests which must be run one at a time... [all languages]"
     desc_2 = "Run the single-process tests which can be run in parallel... [language-agnostic]"
-    desc_3 = "Run the single-process tests which can be run in parallel... [language: C]"
+    desc_3 = (
+        "Run the single-process tests which can be run in parallel... [language: C]"
+    )
     desc_4 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
     desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
     descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
 
     # Commands to run the tests:
-    cmd_1 = ['-ra', '-m (xdist_incompatible)']
-    cmd_2 = ['-ra', '-m (not xdist_incompatible and language_agnostic)', '-n', 'auto']
-    cmd_3 = ['-ra', '-m (not xdist_incompatible and c)', '-n', 'auto']
-    cmd_4 = ['-ra', '-m (not xdist_incompatible and fortran)', '-n', 'auto']
-    cmd_5 = ['-ra', '-m (not xdist_incompatible and python)', '-n', 'auto']
+    cmd_1 = ["-ra", "-m (xdist_incompatible)"]
+    cmd_2 = ["-ra", "-m (not xdist_incompatible and language_agnostic)", "-n", "auto"]
+    cmd_3 = ["-ra", "-m (not xdist_incompatible and c)", "-n", "auto"]
+    cmd_4 = ["-ra", "-m (not xdist_incompatible and fortran)", "-n", "auto"]
+    cmd_5 = ["-ra", "-m (not xdist_incompatible and python)", "-n", "auto"]
     commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
 
-    if language != 'All':
-        cmd_1[-1] = cmd_1[-1].removesuffix(')') + f' and {language})'
-        relevant_language = [True,
-                *[language == desc.split('language: ')[1].removesuffix(']').lower() for desc in descriptions[1:]]]
-        descriptions = [desc for i, desc in enumerate(descriptions) if relevant_language[i]]
+    if language != "All":
+        cmd_1[-1] = cmd_1[-1].removesuffix(")") + f" and {language})"
+        relevant_language = [
+            True,
+            *[
+                language == desc.split("language: ")[1].removesuffix("]").lower()
+                for desc in descriptions[1:]
+            ],
+        ]
+        descriptions = [
+            desc for i, desc in enumerate(descriptions) if relevant_language[i]
+        ]
         commands = [cmd for i, cmd in enumerate(commands) if relevant_language[i]]
 
     if verbose > 0:
-        verbose_flag = '-' + 'v' * verbose
+        verbose_flag = "-" + "v" * verbose
         for cmd in commands:
             cmd.append(verbose_flag)
 
@@ -194,17 +218,22 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         import subprocess
 
         desc_mpi = "Run the parallel tests... [all languages]"
-        mpi_prefix = ['mpirun', '-n', '4']
-        cmd_pytest = ['pytest', '--with-mpi', '-ra', 'epyccel/test_parallel_epyccel.py']
+        mpi_prefix = ["mpirun", "-n", "4"]
+        cmd_pytest = ["pytest", "--with-mpi", "-ra", "epyccel/test_parallel_epyccel.py"]
 
         # Check if --oversubscribe is supported
-        p = subprocess.run(mpi_prefix + ['--oversubscribe', sys.executable, '--version'], check=False, capture_output=True, text=True)
-        if 'oversubscribe' not in p.stderr:
-            mpi_prefix.append('--oversubscribe')
+        p = subprocess.run(
+            mpi_prefix + ["--oversubscribe", sys.executable, "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if "oversubscribe" not in p.stderr:
+            mpi_prefix.append("--oversubscribe")
         if verbose:
-            cmd_pytest += ['-' + 'v' * verbose]
-        if language != 'All':
-            cmd_pytest.append(f'-m={language.lower()}')
+            cmd_pytest += ["-" + "v" * verbose]
+        if language != "All":
+            cmd_pytest.append(f"-m={language.lower()}")
         cmd_mpi = mpi_prefix + cmd_pytest
         print()
         print(desc_mpi)
@@ -212,10 +241,14 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         if dry_run:
             print("Dry run, not executing the parallel tests.")
         else:
-            p = subprocess.run(cmd_mpi, check=False, capture_output=True, universal_newlines=True)
+            p = subprocess.run(
+                cmd_mpi, check=False, capture_output=True, universal_newlines=True
+            )
             print(p.stdout)
             if p.returncode != 0:
-                print(f"Error running parallel tests. Failed with error code {p.returncode}")
+                print(
+                    f"Error running parallel tests. Failed with error code {p.returncode}"
+                )
                 print(p.stderr)
                 retcode = pytest.ExitCode.TESTS_FAILED
 
@@ -234,11 +267,12 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
             if retcode == pytest.ExitCode.INTERRUPTED:
                 print("\nTest execution was interrupted by the user, exiting...\n")
                 sys.exit(retcode)
-            pyccel_clean(remove_shared_libs = True)
+            pyccel_clean(remove_shared_libs=True)
             final_retcode = final_retcode or retcode
 
     # Return the final return code
     sys.exit(final_retcode)
+
 
 def setup_pyccel_test_parser(parser):
     """
@@ -251,23 +285,42 @@ def setup_pyccel_test_parser(parser):
     parser : argparse.ArgumentParser
         The parser to be modified.
     """
-    group = parser.add_argument_group('Options')
+    group = parser.add_argument_group("Options")
 
     add_help_flag(group)
 
-    group.add_argument('--dry-run', action='store_true',
-        help='Run all steps without actually running the tests.')
+    group.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run all steps without actually running the tests.",
+    )
 
-    group.add_argument('-v', '--verbose', action='count', default=0,
-        help='Increase output verbosity (use -v, -vv for more detailed output).')
+    group.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase output verbosity (use -v, -vv for more detailed output).",
+    )
 
-    group.add_argument('--folder', type=pathlib.Path, default=None,
-        help="Run tests located in custom folder (default: use Pyccel's distribution).")
+    group.add_argument(
+        "--folder",
+        type=pathlib.Path,
+        default=None,
+        help="Run tests located in custom folder (default: use Pyccel's distribution).",
+    )
 
-    group.add_argument('--language', choices=('Fortran', 'C', 'Python', 'All'), default='All',
-        help='Target language for translation, i.e. the main language of the generated code (default: All).',
-        type=str.title)
+    group.add_argument(
+        "--language",
+        choices=("Fortran", "C", "Python", "All"),
+        default="All",
+        help="Target language for translation, i.e. the main language of the generated code (default: All).",
+        type=str.title,
+    )
 
-    group.add_argument('--no-mpi', action='store_false', dest='run_mpi',
-        help="Do not run the parallel tests.")
-
+    group.add_argument(
+        "--no-mpi",
+        action="store_false",
+        dest="run_mpi",
+        help="Do not run the parallel tests.",
+    )

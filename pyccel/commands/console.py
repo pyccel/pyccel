@@ -1,20 +1,29 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 import argparse
 import pathlib
 import sys
 
 from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR
-from .pyccel_compile import setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR
+from .pyccel_compile import (
+    setup_pyccel_compile_parser,
+    pyccel_compile,
+    PYCCEL_COMPILE_DESCR,
+)
 from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
 from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
 from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
-from .pyccel_config import setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR
+from .pyccel_config import (
+    setup_pyccel_config_parser,
+    pyccel_config,
+    PYCCEL_CONFIG_DESCR,
+)
 from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
 
-__all__ = ('pyccel_command',)
+__all__ = ("pyccel_command",)
+
 
 def pyccel_command() -> None:
     """
@@ -35,28 +44,33 @@ def pyccel_command() -> None:
     file contains an `if __name__ == '__main__':` block, an executable will be
     generated for the corresponding block of code.
     """
-    parser = argparse.ArgumentParser(description="Pyccel's command line interface.",
-                                     add_help=False, exit_on_error=False)
+    parser = argparse.ArgumentParser(
+        description="Pyccel's command line interface.",
+        add_help=False,
+        exit_on_error=False,
+    )
 
     group = parser.add_argument_group("Options")
-    #... Help and Version
+    # ... Help and Version
     add_help_flag(group)
     add_version_flag(group)
 
-    sub_commands = {'clean': (setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR),
-                    'compile' : (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
-                    'config': (setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR),
-                    'make':  (setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR),
-                    'test':  (setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR),
-                    'wrap':  (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
-                    }
+    sub_commands = {
+        "clean": (setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR),
+        "compile": (setup_pyccel_compile_parser, pyccel_compile, PYCCEL_COMPILE_DESCR),
+        "config": (setup_pyccel_config_parser, pyccel_config, PYCCEL_CONFIG_DESCR),
+        "make": (setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR),
+        "test": (setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR),
+        "wrap": (setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR),
+    }
 
-    subparsers = parser.add_subparsers(required=True, title='Subcommands', metavar='COMMAND')
+    subparsers = parser.add_subparsers(
+        required=True, title="Subcommands", metavar="COMMAND"
+    )
     for key, (parser_setup, exe_func, descr) in sub_commands.items():
-        sparser = subparsers.add_parser(key,
-                                        help=descr,
-                                        description=f"Pyccel's CLI: {descr}",
-                                        add_help=False)
+        sparser = subparsers.add_parser(
+            key, help=descr, description=f"Pyccel's CLI: {descr}", add_help=False
+        )
         parser_setup(sparser)
         sparser.set_defaults(func=exe_func)
 
@@ -72,18 +86,18 @@ def pyccel_command() -> None:
         parser.print_usage()
         sys.exit(2)
 
-    from pyccel.errors.errors     import PyccelError, Errors
-    from pyccel.utilities.stage   import PyccelStage
+    from pyccel.errors.errors import PyccelError, Errors
+    from pyccel.utilities.stage import PyccelStage
 
     pyccel_stage = PyccelStage()
     errors = Errors()
 
-    func = kwargs.pop('func')
+    func = kwargs.pop("func")
     try:
         func(**kwargs)
     except PyccelError:
         pass
 
     pyccel_stage.pyccel_finished()
-    print(errors, end='')
+    print(errors, end="")
     sys.exit(errors.has_errors())
