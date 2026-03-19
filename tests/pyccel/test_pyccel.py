@@ -1454,30 +1454,6 @@ def test_json():
     assert dict_1 == dict_2
 
 
-# ------------------------------------------------------------------------------
-@pytest.mark.language_agnostic
-def test_ambiguous_json():
-    # TODO: Remove in v2.3 when --export-compiler-config is deprecated
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
-    cmd = [shutil.which("pyccel"), "--export-compiler-config", f"{output_dir}/test"]
-    subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test.json"), "r", encoding="utf-8") as f:
-        dict_1 = json.load(f)
-    cmd = [
-        shutil.which("pyccel"),
-        "config",
-        "export",
-        f"{output_dir}/test2.json",
-        "--compiler-config",
-        f"{output_dir}/test.json",
-    ]
-    subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test2.json"), "r", encoding="utf-8") as f:
-        dict_2 = json.load(f)
-
-    assert dict_1 == dict_2
-
-
 @pytest.mark.xdist_incompatible
 @pytest.mark.language_agnostic
 def test_json_relative_path():
