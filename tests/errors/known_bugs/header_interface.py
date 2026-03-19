@@ -14,7 +14,6 @@ from pyccel.stdlib.internal.blas import daxpy, saxpy
 #   ./a.out
 
 
-
 def test_daxpy():
     n = 5
     sa = 1.0

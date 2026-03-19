@@ -15,7 +15,6 @@ from scipy.linalg.lapack import dgbtrf, dgbtrs, dgetrf, dgetrs
 # from scipy.linalg.lapack import dgetri
 
 
-
 def test_1():
     n = int32(25)
     ml = int32(1)

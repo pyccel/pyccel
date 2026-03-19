@@ -137,18 +137,6 @@ from pyccel.utilities.stage import PyccelStage
 # ==============================================================================
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 def get_name(a):
     """get the name of variable or an argument of the AST node."""
     if isinstance(a, ast.Name):
