@@ -296,12 +296,6 @@ def setup_pyccel_test_parser(parser):
     )
 
     group.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run all steps without actually running the tests.",
-    )
-
-    group.add_argument(
         "-v",
         "--verbose",
         action="count",
