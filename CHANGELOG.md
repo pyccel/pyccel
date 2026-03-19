@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+-   #2522 : Remove use of `pyccel` without sub-command.
+-   #2522 : Remove use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
+
 ## \[2.2.0\] - 2026-02-26
 
 ### Added
