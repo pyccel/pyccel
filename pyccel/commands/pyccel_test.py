@@ -11,7 +11,7 @@ import sys
 from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
-from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
+from .argparse_helpers import add_help_flag, add_version_flag
 from .pyccel_clean import pyccel_clean
 
 __all__ = ('pyccel_test',
@@ -240,7 +240,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     # Return the final return code
     sys.exit(final_retcode)
 
-def setup_pyccel_test_parser(parser, add_version=False):
+def setup_pyccel_test_parser(parser):
     """
     Add the `pyccel test` arguments to the parser.
 
@@ -250,16 +250,10 @@ def setup_pyccel_test_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
-    add_version : bool, default=False
-        Indicates whether a --version flag should be added to the command.
-        This option will be removed in v2.3.
     """
     group = parser.add_argument_group('Options')
 
     add_help_flag(group)
-
-    if add_version:
-        add_version_flag(group)
 
     group.add_argument('--dry-run', action='store_true',
         help='Run all steps without actually running the tests.')
@@ -276,30 +270,4 @@ def setup_pyccel_test_parser(parser, add_version=False):
 
     group.add_argument('--no-mpi', action='store_false', dest='run_mpi',
         help="Do not run the parallel tests.")
-
-def pyccel_test_command():
-    """
-    Command line wrapper for the deprecated `pyccel-test` command line tool.
-
-    Command line wrapper for the deprecated `pyccel-test` command line tool.
-
-    Returns
-    -------
-    pytest.ExitCode
-        The pytest return code.
-    """
-    parser = ArgumentParser(description='Tool for running the test suite of Pyccel', add_help = False)
-
-    setup_pyccel_test_parser(parser, add_version=True)
-
-    print(deprecation_warning('test'), file=sys.stderr)
-
-    # Parse the command line arguments
-    args = parser.parse_args()
-
-    print()
-    retcode = pyccel_test(**vars(args))
-    print()
-
-    return retcode
 
