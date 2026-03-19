@@ -3121,13 +3121,25 @@ class CCodePrinter(CodePrinter):
                 args.append(ObjectAddress(v))
 
         self._temporary_args = []
+
+        if func.cls_name:
+            self_arg = args[0]
+            if isinstance(self_arg, ObjectAddress):
+                self_arg = self_arg.obj
+            if self.is_c_pointer(self_arg):
+                name = f"{self._print(ObjectAddress(self_arg))}->{func.cls_name}"
+            else:
+                name = f"{self._print(self_arg)}.{func.cls_name}"
+        else:
+            name = func.name
+
         args = ", ".join(
             self._print(ai)
             for a in args
             for ai in self.scope.collect_all_tuple_elements(a)
         )
 
-        call_code = f"{func.name}({args})"
+        call_code = f"{name}({args})"
         if func.results.var is not Nil() and not isinstance(
             func.results.var.class_type, InhomogeneousTupleType
         ):
@@ -3848,15 +3860,15 @@ class CCodePrinter(CodePrinter):
         for method in expr.methods:
             if method.is_semantic:
                 python_name = expr.scope.get_python_name(method.name)
-                if python_name != '__init__':
+                if python_name not in ('__init__', '__del__'):
                     empty_scope.remove_symbol(python_name)
                     method.cls_name = empty_scope.get_new_name(python_name, object_type="variable")
                     virtual_methods.append(method)
         for interface in expr.interfaces:
-            for func in interface.functions:
+            for i, func in enumerate(interface.functions):
                 python_name = expr.scope.get_python_name(func.name)
                 empty_scope.remove_symbol(python_name)
-                func.cls_name = empty_scope.get_new_name(python_name, object_type="variable")
+                func.cls_name = empty_scope.get_new_name(f'{python_name}_{i:0=4d}', object_type="variable")
                 virtual_methods.append(func)
 
         # Print __init__ with injected function pointer assignments
