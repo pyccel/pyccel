@@ -56,6 +56,7 @@ jobs:
       - name: Run Pylint
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
+          pylint --disable=all --enable=unused-import . --ignore-paths=pyccel/extensions/STC/.*
           reviewdog -reporter=github-pr-check -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE} "
         shell: bash
         env:

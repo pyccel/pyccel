@@ -6,7 +6,6 @@ from pyccel.stdlib.internal.mpi import mpi_finalize
 from pyccel.stdlib.internal.mpi import mpi_comm_size
 from pyccel.stdlib.internal.mpi import mpi_comm_rank
 from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_status_size
 from pyccel.stdlib.internal.mpi import mpi_bcast
 from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 

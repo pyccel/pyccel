@@ -1,5 +1,5 @@
 # <class 'pyccel.ast.core.Import'> not currently supported in classes
-# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring, unused-import
 
 # should not pass
 import foo.bar.baz as stuff
