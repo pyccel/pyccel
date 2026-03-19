@@ -1189,7 +1189,9 @@ class CCodePrinter(CodePrinter):
                     sig = self.function_signature(method)
                     func_blocks[-1] += f"{sig};\n"
                     if method.cls_name is not None:
-                        fp_sig = sig.replace(f" {method.name}(", f" (*{method.cls_name})(", 1)
+                        fp_sig = sig.replace(
+                            f" {method.name}(", f" (*{method.cls_name})(", 1
+                        )
                         classes += f"    {fp_sig};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
@@ -3852,34 +3854,41 @@ class CCodePrinter(CodePrinter):
     def _print_ClassDef(self, expr):
         sep = self._print(SeparatorComment(40))
 
-        empty_scope = Scope(name="tmp", scope_type="class", used_symbols = expr.scope.local_used_symbols.copy(),
-                            original_symbols = expr.scope.python_names.copy())
+        empty_scope = Scope(
+            name="tmp",
+            scope_type="class",
+            used_symbols=expr.scope.local_used_symbols.copy(),
+            original_symbols=expr.scope.python_names.copy(),
+        )
 
         # Generate safe C names for function pointer members and store on cls_name
         virtual_methods = []
         for method in expr.methods:
             if method.is_semantic:
                 python_name = expr.scope.get_python_name(method.name)
-                if python_name not in ('__init__', '__del__'):
+                if python_name not in ("__init__", "__del__"):
                     empty_scope.remove_symbol(python_name)
-                    method.cls_name = empty_scope.get_new_name(python_name, object_type="variable")
+                    method.cls_name = empty_scope.get_new_name(
+                        python_name, object_type="variable"
+                    )
                     virtual_methods.append(method)
         for interface in expr.interfaces:
             for i, func in enumerate(interface.functions):
                 python_name = expr.scope.get_python_name(func.name)
                 empty_scope.remove_symbol(python_name)
-                func.cls_name = empty_scope.get_new_name(f'{python_name}_{i:0=4d}', object_type="variable")
+                func.cls_name = empty_scope.get_new_name(
+                    f"{python_name}_{i:0=4d}", object_type="variable"
+                )
                 virtual_methods.append(func)
 
         # Print __init__ with injected function pointer assignments
-        init_method = expr.get_method('__init__')
+        init_method = expr.get_method("__init__")
         init_printed = self._print(init_method)
         if virtual_methods:
-            init_lines = init_printed.split('\n')
+            init_lines = init_printed.split("\n")
             self_name = init_method.arguments[0].var.name
             fp_assignments = "    // Save virtual function addresses\n" + "".join(
-                f"    {self_name}->{m.cls_name} = {m.name};\n"
-                for m in virtual_methods
+                f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
             )
             insert_pos = init_lines.index("{") + 1
             init_lines.insert(insert_pos, fp_assignments)
