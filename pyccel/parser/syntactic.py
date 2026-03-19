@@ -121,9 +121,18 @@ from pyccel.ast.type_annotations import (
 )
 from pyccel.ast.variable import AnnotatedPyccelSymbol, DottedName
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
-
-# TODO - remove import * and only import what we need
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (
+    FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
+    PYCCEL_INTERNAL_ERROR,
+    PYCCEL_INVALID_HEADER,
+    PYCCEL_RESTRICTION_IMPORT_STAR,
+    PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
+    PYCCEL_RESTRICTION_RAISE,
+    PYCCEL_RESTRICTION_TODO,
+    PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
+    PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+    PYCCEL_RESTRICTION_YIELD,
+)
 from pyccel.parser.base import BasicParser
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.scope import Scope

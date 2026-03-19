@@ -157,7 +157,11 @@ from pyccel.ast.utilities import (
 from pyccel.ast.variable import DottedName, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (
+    ALLOCATABLE_IN_EXPRESSION,
+    PYCCEL_RESTRICTION_IS_ISNOT,
+    PYCCEL_RESTRICTION_TODO,
+)
 from pyccel.parser.scope import Scope
 
 # TODO: add examples
