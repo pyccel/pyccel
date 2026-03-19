@@ -53,7 +53,7 @@ jobs:
       - name: Run isort
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
-          python -m isort --check $(git ls-files "*.py")
+          python -m isort --check $(git ls-files "*.py" | grep -v "FOUND_DUPLICATED_IMPORT.py")
         shell: bash
       - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0
         if: steps.duplicate_check.outputs.should_skip != 'true'
