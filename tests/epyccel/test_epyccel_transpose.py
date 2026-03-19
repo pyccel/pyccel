@@ -174,7 +174,7 @@ def test_transpose_of_expression(language):
 def test_force_transpose(language):
 
     def f1(x: "int[:,:]"):
-        from numpy import empty, transpose
+        from numpy import transpose
 
         n, m = x.shape
         y = empty((m, n))
@@ -183,7 +183,6 @@ def test_force_transpose(language):
         return n, m, y[-1, 0], y[0, -1]
 
     def f2(x: "int[:,:,:]"):
-        from numpy import empty
 
         n, m, p = x.shape
         y = empty((p, m, n))
