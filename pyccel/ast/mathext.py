@@ -7,8 +7,8 @@
 
 import math
 
-from pyccel.ast.core import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.core import Module, PyccelFunctionDef
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeInt
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import Literal, LiteralInteger
 from pyccel.ast.variable import Constant

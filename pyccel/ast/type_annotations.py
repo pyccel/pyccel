@@ -10,22 +10,20 @@
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
-
 from .bitwise_operators import PyccelBitOr
-
 from .core import FunctionDefArgument, FunctionDefResult
-
 from .datatypes import (
+    GenericType,
+    PyccelType,
     PythonNativeBool,
-    PythonNativeInt,
-    PythonNativeFloat,
     PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
 )
-from .datatypes import VoidType, GenericType, StringType, PyccelType
-
 from .literals import LiteralString
-
-from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
+from .variable import AnnotatedPyccelSymbol, DottedName, IndexedElement
 
 __all__ = (
     "FunctionTypeAnnotation",

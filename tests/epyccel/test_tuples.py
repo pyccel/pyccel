@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import inspect
 from typing import TypeVar
-import pytest
-import numpy as np
 
+import numpy as np
+import pytest
 from modules import tuples as tuples_module
 
 from pyccel import epyccel

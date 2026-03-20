@@ -10,118 +10,150 @@ strings of C code.
 
 import ast
 import functools
-from itertools import chain, product
 import sys
+from itertools import chain, product
 
 import numpy as np
 
 from pyccel.ast.bind_c import BindCPointer
-
-from pyccel.ast.builtins import PythonRange, PythonComplex, PythonMin, PythonMax
-from pyccel.ast.builtins import PythonPrint, PythonType, VariableIterator
-from pyccel.ast.builtins import (
-    PythonList,
-    PythonTuple,
-    PythonSet,
-    PythonDict,
-    PythonLen,
-    PythonConjugate,
-)
-
 from pyccel.ast.builtin_methods.dict_methods import (
     DictItems,
     DictKeys,
-    DictValues,
     DictPopitem,
+    DictValues,
 )
-
-from pyccel.ast.core import Declare, For, CodeBlock
-from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import Deallocate, If, IfSection
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Assign, Import, AugAssign, AliasAssign
-from pyccel.ast.core import SeparatorComment
-from pyccel.ast.core import Module, AsName, FunctionDef, Return
-
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
-from pyccel.ast.c_concepts import CStackArray, CStrStr
-
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
-from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.builtins import (
+    PythonComplex,
+    PythonConjugate,
+    PythonDict,
+    PythonLen,
+    PythonList,
+    PythonMax,
+    PythonMin,
+    PythonPrint,
+    PythonRange,
+    PythonSet,
+    PythonTuple,
+    PythonType,
+    VariableIterator,
+)
+from pyccel.ast.c_concepts import (
+    CMacro,
+    CStackArray,
+    CStringExpression,
+    CStrStr,
+    ObjectAddress,
+    PointerCast,
+)
+from pyccel.ast.core import (
+    AliasAssign,
+    AsName,
+    Assign,
+    AugAssign,
+    CodeBlock,
+    Deallocate,
+    Declare,
+    For,
+    FunctionAddress,
+    FunctionCall,
+    FunctionCallArgument,
+    FunctionDef,
+    If,
+    IfSection,
+    Import,
+    Module,
+    Return,
+    SeparatorComment,
+)
 from pyccel.ast.datatypes import (
-    InhomogeneousTupleType,
+    CharType,
+    CustomDataType,
+    DictType,
+    FinalType,
+    FixedSizeNumericType,
+    FixedSizeType,
+    HomogeneousContainerType,
     HomogeneousListType,
     HomogeneousSetType,
-)
-from pyccel.ast.datatypes import (
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeInt,
+    StringType,
+    TupleType,
+    VoidType,
 )
-from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
-
-from pyccel.ast.internals import Slice, PyccelArrayShapeElement
-from pyccel.ast.internals import PyccelFunction
-
+from pyccel.ast.internals import PyccelArrayShapeElement, PyccelFunction, Slice
 from pyccel.ast.literals import (
-    LiteralTrue,
+    Literal,
     LiteralFalse,
-    LiteralImaginaryUnit,
     LiteralFloat,
+    LiteralImaginaryUnit,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
 )
-from pyccel.ast.literals import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals import Nil, convert_to_literal
-
 from pyccel.ast.low_level_tools import (
     IteratorType,
-    MemoryHandlerType,
     ManagedMemory,
+    MemoryHandlerType,
     UnpackManagedMemory,
 )
-
 from pyccel.ast.mathext import math_constants
-
 from pyccel.ast.numpyext import (
-    NumpyFull,
-    NumpyArray,
     DtypePrecisionToCastFunction,
+    NumpyAbs,
+    NumpyArray,
+    NumpyFloat,
+    NumpyFull,
+    NumpyImag,
+    NumpyMatmul,
+    NumpyReal,
+    NumpyReduction,
+    get_shape_of_multi_level_container,
 )
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAbs
-from pyccel.ast.numpyext import NumpyReduction, NumpyMatmul
-from pyccel.ast.numpyext import get_shape_of_multi_level_container
-
-from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
-
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelDiv, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
-
+from pyccel.ast.numpytypes import (
+    NumpyFloat32Type,
+    NumpyFloat64Type,
+    NumpyFloat128Type,
+    NumpyNDArrayType,
+    numpy_precision_map,
+)
+from pyccel.ast.operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelGt,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelNe,
+    PyccelOperator,
+    PyccelPow,
+    PyccelUnarySub,
+)
 from pyccel.ast.type_annotations import VariableTypeAnnotation
-
 from pyccel.ast.utilities import (
     expand_to_loops,
-    is_literal_integer,
     get_managed_memory_object,
+    is_literal_integer,
 )
-
-from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import Variable
-from pyccel.ast.variable import DottedName
-from pyccel.ast.variable import DottedVariable
-
+from pyccel.ast.variable import DottedName, DottedVariable, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
-    PYCCEL_RESTRICTION_TODO,
     INCOMPATIBLE_TYPEVAR_TO_FUNC,
-    PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_INTERNAL_ERROR,
+    PYCCEL_RESTRICTION_IS_ISNOT,
+    PYCCEL_RESTRICTION_TODO,
 )
 
 errors = Errors()

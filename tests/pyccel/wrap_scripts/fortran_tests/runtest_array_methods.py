@@ -1,6 +1,6 @@
 # pylint: disable=missing-module-docstring
-from array_methods import ArrayOps
 import numpy as np
+from array_methods import ArrayOps
 
 if __name__ == "__main__":
     a = ArrayOps()

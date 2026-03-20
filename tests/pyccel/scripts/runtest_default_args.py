@@ -5,12 +5,12 @@ import numpy as np
 if __name__ == "__main__":
     from default_args_mod import (
         f1,
-        f5,
         f3,
-        is_nil_default_arg,
-        recursivity,
-        print_var,
+        f5,
         f7,
+        is_nil_default_arg,
+        print_var,
+        recursivity,
     )
 
     print(f1(2))

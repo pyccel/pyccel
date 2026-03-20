@@ -10,23 +10,41 @@ by providing translations between the SymPy representation and the Pyccel nodes
 """
 
 import sympy as sp
-from sympy.core.numbers import One, NegativeOne, Zero, Half
+from sympy.core.numbers import Half, NegativeOne, One, Zero
 
 from pyccel.utilities.strings import create_incremented_string
 
-from .builtins import PythonRange, PythonTuple, PythonMin, PythonMax
-
+from .builtins import PythonMax, PythonMin, PythonRange, PythonTuple
 from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
-from .literals import LiteralInteger, LiteralFloat, LiteralComplex
-from .literals import LiteralTrue, LiteralFalse
+from .literals import (
+    LiteralComplex,
+    LiteralFalse,
+    LiteralFloat,
+    LiteralInteger,
+    LiteralTrue,
+)
 from .mathext import MathCeil, MathFabs
 from .numpyext import NumpyFloor
-from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
-from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .operators import PyccelFloorDiv
-from .operators import PyccelEq, PyccelNe, PyccelLt, PyccelLe, PyccelGt, PyccelGe
-from .operators import PyccelAnd, PyccelOr, PyccelNot
+from .operators import (
+    PyccelAdd,
+    PyccelAnd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelEq,
+    PyccelFloorDiv,
+    PyccelGe,
+    PyccelGt,
+    PyccelLe,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMul,
+    PyccelNe,
+    PyccelNot,
+    PyccelOr,
+    PyccelPow,
+    PyccelUnarySub,
+)
 from .variable import Variable
 
 __all__ = ("pyccel_to_sympy", "sympy_to_pyccel")

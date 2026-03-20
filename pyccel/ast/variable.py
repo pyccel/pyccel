@@ -16,25 +16,28 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    PyccelType,
-    InhomogeneousTupleType,
+    CharType,
+    ContainerType,
+    DictType,
     HomogeneousListType,
     HomogeneousSetType,
-    DictType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PyccelType,
+    StringType,
 )
-from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
-from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
-from .literals import LiteralInteger, Nil, LiteralEllipsis
-from .operators import (
-    PyccelMinus,
-    PyccelDiv,
-    PyccelMul,
-    PyccelLt,
-    PyccelUnarySub,
-    PyccelAdd,
-    IfTernaryOperator,
-)
+from .internals import PyccelArrayShapeElement, PyccelSymbol, Slice
+from .literals import LiteralEllipsis, LiteralInteger, Nil
 from .numpytypes import NumpyNDArrayType
+from .operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelDiv,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMul,
+    PyccelUnarySub,
+)
 
 errors = Errors()
 pyccel_stage = PyccelStage()

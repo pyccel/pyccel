@@ -188,8 +188,7 @@ def predator_prey_deriv(t: "float", rf: "Final[float[:]]", out: "float[:]"):
 
 
 def euler_test(t0: "float", t1: "float", y0: "float[:]", n: int):
-    from numpy import zeros
-    from numpy import linspace
+    from numpy import linspace, zeros
 
     m = len(y0)
 

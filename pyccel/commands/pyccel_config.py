@@ -11,7 +11,7 @@ import pathlib
 import shutil
 import sys
 
-from .argparse_helpers import add_help_flag, path_with_suffix, add_compiler_selection
+from .argparse_helpers import add_compiler_selection, add_help_flag, path_with_suffix
 
 __all__ = ("pyccel_config", "setup_pyccel_config_parser", "PYCCEL_CONFIG_DESCR")
 
@@ -405,9 +405,9 @@ def pyccel_config_register(compiler_family, filename, verbose, conda_warnings):
     # Check that a valid configuration was registered
     pyccel_config_check(filename)
 
-    from pyccel.codegen.compiling.library_config import recognised_libs
-    from pyccel.codegen.compiling.compilers import Compiler, get_condaless_search_path
     from pyccel import __version__ as pyccel_version
+    from pyccel.codegen.compiling.compilers import Compiler, get_condaless_search_path
+    from pyccel.codegen.compiling.library_config import recognised_libs
 
     installed_libs = {}
 

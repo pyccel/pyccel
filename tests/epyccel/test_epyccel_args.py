@@ -6,6 +6,7 @@ Test the arguments of epyccel itself.
 import os
 import sys
 import warnings
+
 import pytest
 
 from pyccel import epyccel

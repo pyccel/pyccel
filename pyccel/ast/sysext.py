@@ -6,10 +6,9 @@
 # ------------------------------------------------------------------------- #
 """Module containing objects from the sys module understood by pyccel"""
 
-from .core import PyccelFunctionDef, Module
-from .internals import PyccelFunction
+from .core import Module, PyccelFunctionDef
 from .datatypes import VoidType
-from .internals import LiteralInteger
+from .internals import LiteralInteger, PyccelFunction
 
 __all__ = (
     "SysExit",

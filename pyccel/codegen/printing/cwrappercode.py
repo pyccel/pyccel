@@ -10,29 +10,28 @@ printing the C-Python interface.
 
 import sys
 
-from pyccel.codegen.printing.ccode import CCodePrinter
-
-from pyccel.ast.bind_c import BindCPointer
-from pyccel.ast.bind_c import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray, CStrStr
-from pyccel.ast.core import FunctionAddress, SeparatorComment
-from pyccel.ast.core import Import, Module, Declare
+from pyccel.ast.bind_c import BindCFunctionDef, BindCModule, BindCPointer
+from pyccel.ast.c_concepts import CStackArray, CStrStr, ObjectAddress
+from pyccel.ast.core import Declare, FunctionAddress, Import, Module, SeparatorComment
 from pyccel.ast.cwrapper import (
+    Py_None,
+    Py_ssize_t,
     PyBuildValueNode,
-    PyCapsule_New,
     PyCapsule_Import,
+    PyCapsule_New,
+    PyccelPyObject,
+    PyccelPyTypeObject,
     PyModule_Create,
+    PyTuple_Pack,
+    WrapperCustomDataType,
 )
-from pyccel.ast.cwrapper import Py_None, WrapperCustomDataType, Py_ssize_t
-from pyccel.ast.cwrapper import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
 from pyccel.ast.datatypes import FinalType
-from pyccel.ast.literals import LiteralString, Nil, LiteralInteger
+from pyccel.ast.literals import LiteralInteger, LiteralString, Nil
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
-from pyccel.ast.c_concepts import ObjectAddress
-
+from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.errors.errors import Errors
 
-__all__ = ("CWrapperCodePrinter", "cwrappercode")
+__all__ = ("CWrapperCodePrinter",)
 
 errors = Errors()
 

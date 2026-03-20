@@ -14,15 +14,12 @@ import os
 import pathlib
 import re
 
-# ==============================================================================
-
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import AsName
-
-
+from pyccel.ast.core import AsName, FunctionAddress, FunctionDef, Interface
+from pyccel.errors.errors import ErrorsMode
 from pyccel.parser.scope import Scope
 
-from pyccel.errors.errors import ErrorsMode
+# ==============================================================================
+
 
 # ==============================================================================
 

@@ -7,12 +7,12 @@
 Module containing the nodes which represent OpenACC syntax descriptors.
 """
 
-from os.path import join, dirname
+from os.path import dirname, join
 
 from textx.metamodel import metamodel_from_file
 
-from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import AnnotatedComment
+from pyccel.parser.syntax.basic import BasicStmt
 
 DEBUG = False
 

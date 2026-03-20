@@ -11,8 +11,8 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
-from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
+from pyccel.ast.datatypes import InhomogeneousTupleType, SymbolicType, VoidType
+from pyccel.ast.internals import Iterable, PyccelArrayShapeElement, PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import IndexedElement, Variable
 

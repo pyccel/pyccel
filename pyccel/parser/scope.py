@@ -11,15 +11,17 @@ from immutabledict import immutabledict
 from pyccel.ast.bind_c import BindCVariable
 from pyccel.ast.core import ClassDef, FunctionDef
 from pyccel.ast.datatypes import InhomogeneousTupleType
-from pyccel.ast.internals import PyccelSymbol, PyccelFunction
+from pyccel.ast.internals import PyccelFunction, PyccelSymbol
 from pyccel.ast.typingext import TypingTypeVar
-from pyccel.ast.variable import Variable, DottedName, AnnotatedPyccelSymbol
-from pyccel.ast.variable import IndexedElement, DottedVariable
-
+from pyccel.ast.variable import (
+    AnnotatedPyccelSymbol,
+    DottedName,
+    DottedVariable,
+    IndexedElement,
+    Variable,
+)
 from pyccel.errors.errors import Errors
-
 from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
-
 from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()

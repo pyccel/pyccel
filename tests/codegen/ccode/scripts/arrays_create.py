@@ -54,7 +54,7 @@ def array_empty_like_c():
 
 def array_full_like_c():
 
-    from numpy import array, full_like, complex128
+    from numpy import array, complex128, full_like
 
     a = array([1, 2, 3, 3, 4, 5])
     b = full_like(a, 0.3 + 0.3j, complex128)  # pylint:disable=unused-variable
