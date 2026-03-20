@@ -27,7 +27,7 @@ public :: pyc_gcd, &
           pyc_floor_div, &
           expm1, &
           cross_product, &
-          pyc_randint_fill
+          pyc_randint
 
 private
 
@@ -94,12 +94,10 @@ interface cross_product
     module procedure cross_product_f64
 end interface cross_product
 
-interface pyc_randint_fill
-    module procedure pyc_randint_fill_i8
-    module procedure pyc_randint_fill_i16
-    module procedure pyc_randint_fill_i32
-    module procedure pyc_randint_fill_i64
-end interface pyc_randint_fill
+interface pyc_randint
+    module procedure pyc_randint_scalar_i64
+    module procedure pyc_randint_array_i64
+end interface pyc_randint
 
 contains
 
@@ -563,36 +561,20 @@ subroutine cross_product_i64(a,b,c)
 
 end subroutine cross_product_i64
 
-subroutine pyc_randint_fill_i8(arr, low, high)
-    integer(i8), intent(out) :: arr(:)
-    integer(i8), intent(in) :: low, high
-    real(f64) :: tmp(size(arr))
+subroutine pyc_randint_scalar_i64(r, low, high)
+    integer(i64), intent(out) :: r
+    integer(i64), intent(in) :: low, high
+    real(f64) :: tmp
     call random_number(tmp)
-    arr = floor((high - low) * tmp + low, kind=i8)
-end subroutine pyc_randint_fill_i8
+    r = floor((high - low) * tmp + low, kind=i64)
+end subroutine pyc_randint_scalar_i64
 
-subroutine pyc_randint_fill_i16(arr, low, high)
-    integer(i16), intent(out) :: arr(:)
-    integer(i16), intent(in) :: low, high
-    real(f64) :: tmp(size(arr))
-    call random_number(tmp)
-    arr = floor((high - low) * tmp + low, kind=i16)
-end subroutine pyc_randint_fill_i16
-
-subroutine pyc_randint_fill_i32(arr, low, high)
-    integer(i32), intent(out) :: arr(:)
-    integer(i32), intent(in) :: low, high
-    real(f64) :: tmp(size(arr))
-    call random_number(tmp)
-    arr = floor((high - low) * tmp + low, kind=i32)
-end subroutine pyc_randint_fill_i32
-
-subroutine pyc_randint_fill_i64(arr, low, high)
+subroutine pyc_randint_array_i64(arr, low, high)
     integer(i64), intent(out) :: arr(:)
     integer(i64), intent(in) :: low, high
     real(f64) :: tmp(size(arr))
     call random_number(tmp)
     arr = floor((high - low) * tmp + low, kind=i64)
-end subroutine pyc_randint_fill_i64
+end subroutine pyc_randint_array_i64
 
 end module pyc_math_f90
