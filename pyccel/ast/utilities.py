@@ -1,16 +1,23 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing utility functions which are used in the syntactic, semantic,
+and code-generation stages of Pyccel. These include functions for handling
+imports, checking whether an operation is compatible with the target language,
+and collecting code into loops. Most of these functions are used in multiple
+places in the code and are not specific to any one stage, so they are collected
+together in this module to avoid circular imports.
+"""
 
 import sys
 from itertools import chain
 from collections import namedtuple
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.errors.errors import Errors, PyccelError
+from pyccel.errors.errors import Errors
 
 from .core import (
     AsName,
@@ -28,7 +35,6 @@ from .core import (
 )
 
 from .builtins import (
-    builtin_functions_dict,
     PythonRange,
     PythonList,
     PythonTuple,

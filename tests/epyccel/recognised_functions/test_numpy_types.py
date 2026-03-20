@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
 from typing import TypeVar
 import pytest
 from numpy.random import uniform

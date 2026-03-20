@@ -1,9 +1,17 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the core Pyccel AST nodes which are used in the syntactic
+and semantic stages of Pyccel, and are relevant to all target languages. These
+include nodes representing variable assignment, code blocks, and memory
+allocation. All of these nodes inherit from `PyccelAstNode` either directly or
+through the subclasses `TypedAstNode` and `ScopedAstNode`, all of which are
+defined in `pyccel.ast.core.basic`.
+"""
+
 from itertools import chain
 
 from pyccel.errors.errors import Errors

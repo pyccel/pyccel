@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
@@ -74,7 +75,6 @@ from pyccel.ast.numpytypes import numpy_precision_map
 from pyccel.ast.numpy_wrapper import PyArray_DATA
 from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
 from pyccel.ast.numpy_wrapper import (
-    pyarray_to_ndarray,
     PyArray_SetBaseObject,
     import_array,
 )
@@ -92,7 +92,7 @@ from pyccel.ast.operators import (
     PyccelEq,
     PyccelIs,
 )
-from pyccel.ast.operators import PyccelLt, IfTernaryOperator, PyccelMul, PyccelAnd
+from pyccel.ast.operators import PyccelLt, IfTernaryOperator, PyccelAnd
 from pyccel.ast.operators import PyccelNe
 from pyccel.ast.variable import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope import Scope

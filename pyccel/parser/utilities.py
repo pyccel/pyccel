@@ -1,15 +1,13 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """This file contains different utilities for the Parser."""
 
-import os
-
 from pyccel.ast.variable import DottedName
-from pyccel.ast.internals import PyccelSymbol
 
 __all__ = ("get_default_path", "pyccel_external_lib")
 

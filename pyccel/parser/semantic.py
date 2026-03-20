@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """File containing SemanticParser. This class handles the semantic stage of the translation.
 See the developer docs for more details
 """
 
 from itertools import chain, product
 import os
-from types import ModuleType, BuiltinFunctionType
+from types import ModuleType
 import typing
-import warnings
 
-from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
@@ -25,7 +24,7 @@ from sympy import ceiling
 from textx.exceptions import TextXSyntaxError
 
 # ==============================================================================
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode, iterable
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.bitwise_operators import (
     PyccelBitOr,
@@ -146,7 +145,7 @@ from pyccel.ast.low_level_tools import (
     ManagedMemory,
 )
 
-from pyccel.ast.mathext import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
+from pyccel.ast.mathext import MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
@@ -244,9 +243,6 @@ from pyccel.errors.messages import (
     RECURSIVE_RESULTS_REQUIRED,
     PYCCEL_RESTRICTION_INHOMOG_LIST,
     UNDEFINED_IMPORT_OBJECT,
-    UNDEFINED_LAMBDA_VARIABLE,
-    UNDEFINED_LAMBDA_FUNCTION,
-    UNDEFINED_INIT_METHOD,
     UNDEFINED_FUNCTION,
     WRONG_NUMBER_OUTPUT_ARGS,
     INVALID_FOR_ITERABLE,
@@ -254,7 +250,6 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
     UNUSED_DECORATORS,
     UNSUPPORTED_POINTER_RETURN_VALUE,
-    PYCCEL_RESTRICTION_OPTIONAL_NONE,
     PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE,
     PYCCEL_RESTRICTION_IS_ISNOT,
     FOUND_DUPLICATED_IMPORT,

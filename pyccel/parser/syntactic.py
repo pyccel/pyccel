@@ -1,8 +1,16 @@
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module providing the `SyntaxParser` class which is responsible for the
+syntactic stage of Pyccel. This takes the Python abstract syntax tree (AST)
+using the built-in module `ast` and produces a Pyccel AST which is complete
+enough for a subsequent semantic stage. See developer_docs/syntactic_stage.md
+for more details on the syntactic stage.
+"""
+
 import ast
 import inspect
 from itertools import chain

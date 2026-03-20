@@ -1,10 +1,20 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `PythonCodePrinter` class which is responsible for
+printing Pyccel's AST in Python. This is used to print the .pyi files which
+are generated alongside the translated code. These files contain type
+annotations which are used by type checkers and IDEs to provide better support
+for the generated code. The `PythonCodePrinter` is also used to print the code
+for inline functions and interfaces which are not translated but must be
+available in Python for the translated code to work, as well as to simply print
+Python code for the tests.
+"""
+
 import ast
-import warnings
 import math
 
 from pyccel.decorators import __all__ as pyccel_decorators
