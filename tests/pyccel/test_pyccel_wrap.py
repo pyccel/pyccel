@@ -113,7 +113,9 @@ def check_pyccel_wrap_and_call_translation(
         cwd=cwd,
         check=True,
     )
-    subprocess.run([shutil.which("pyccel"), "compile", python_file, *pyccel_flags], check=True)
+    subprocess.run(
+        [shutil.which("pyccel"), "compile", python_file, *pyccel_flags], check=True
+    )
 
     exe_file = cwd / python_stem
     if sys.platform == "win32":
