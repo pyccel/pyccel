@@ -12,13 +12,7 @@ from itertools import chain
 
 from pygments.lexers.fortran import FortranLexer
 
-pyccel_dir = pathlib.Path(__file__).parent.parent.parent
-
-sys.path.append(str(pyccel_dir.resolve()))
-
-from pyccel.version import (  # pylint:disable=wrong-import-position
-    __version__ as pyccel_version,
-)
+from pyccel.version import __version__ as pyccel_version
 
 
 def setup(app):
