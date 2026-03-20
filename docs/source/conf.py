@@ -6,8 +6,6 @@ list see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import pathlib
-import sys
 from itertools import chain
 
 from pygments.lexers.fortran import FortranLexer
