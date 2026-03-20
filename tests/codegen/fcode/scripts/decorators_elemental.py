@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import array, zeros_like
+
 from pyccel.decorators import elemental
 
 
