@@ -74,76 +74,104 @@ MyClass Object created!
 ### - Header File Equivalent
 
 ```C
-struct MyClass {
+struct cls_test__MyClass {
     int64_t param1;
     array_double_1d param2;
     bool is_freed;
+    void (*get_param)(struct cls_test__MyClass* self);
 };
-struct MyClass1 {
+struct cls_test__MyClass1 {
+    struct cls_test__MyClass* param;
     bool is_freed;
-    struct MyClass* param;
+    struct cls_test__MyClass (*Method2)(struct cls_test__MyClass1* self);
+    void (*Method1)(struct cls_test__MyClass1* self, struct cls_test__MyClass* param1);
 };
 
-void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
-void get_param(struct MyClass* self);
-void MyClass__del__(struct MyClass* self);
-void MyClass1__init__(struct MyClass1* self);
-void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1);
-struct MyClass MyClass1__Method2(struct MyClass1* self);
-void MyClass1__del__(struct MyClass1* self);
+void cls_test__MyClass__init(struct cls_test__MyClass* self, int64_t param1, int64_t param2);
+void cls_test__MyClass__get_param(struct cls_test__MyClass* self);
+void cls_test__MyClass__drop(struct cls_test__MyClass* self);
+
+void cls_test__MyClass1__init(struct cls_test__MyClass1* self);
+struct cls_test__MyClass cls_test__MyClass1__Method2(struct cls_test__MyClass1* self);
+void cls_test__MyClass1__Method1(struct cls_test__MyClass1* self, struct cls_test__MyClass* param1);
+void cls_test__MyClass1__drop(struct cls_test__MyClass1* self);
 ```
 
 ### - C File Equivalent
 
 ```C
-void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
+/*........................................*/
+void cls_test__MyClass__init(struct cls_test__MyClass* self, int64_t param1, int64_t param2)
 {
+    // Save virtual function addresses
+    self->get_param = cls_test__MyClass__get_param;
+
     double* param2_ptr;
     self->is_freed = 0;
     self->param1 = param1;
     param2_ptr = malloc(sizeof(double) * (param2));
     self->param2 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, param2_ptr, param2);
-    c_foreach(Dummy_0000, array_double_1d, self->param2) {
+    for (c_each(Dummy_0000, array_double_1d, self->param2)) {
         *(Dummy_0000.ref) = 1.0;
     }
     printf("MyClass Object created!\n");
 }
 /*........................................*/
 /*........................................*/
-void MyClass__del__(struct MyClass* self)
+void cls_test__MyClass__get_param(struct cls_test__MyClass* self)
+{
+    int64_t i;
+    printf("%"PRId64" ", self->param1);
+    printf("[");
+    for (i = INT64_C(0); i < (int64_t)self->param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    {
+        printf("%.15lf ", (*cspan_at(&self->param2, i)));
+    }
+    if ((int64_t)self->param2.shape[INT64_C(0)] > INT64_C(0))
+    {
+        printf("%.15lf", (*cspan_at(&self->param2, (int64_t)self->param2.shape[INT64_C(0)] - INT64_C(1))));
+    }
+    printf("]\n");
+}
+/*........................................*/
+/*........................................*/
+void cls_test__MyClass__drop(struct cls_test__MyClass* self)
 {
     if (!self->is_freed)
     {
         // pass
-        free(self->param2.data);
-        self->param2.data = NULL;
         self->is_freed = 1;
     }
 }
 /*........................................*/
+
 /*........................................*/
-void MyClass1__init__(struct MyClass1* self)
+void cls_test__MyClass1__init(struct cls_test__MyClass1* self)
 {
+    // Save virtual function addresses
+    self->Method2 = cls_test__MyClass1__Method2;
+    self->Method1 = cls_test__MyClass1__Method1;
+
     self->is_freed = 0;
     printf("MyClass1 Object created!\n");
 }
 /*........................................*/
 /*........................................*/
-void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1)
+struct cls_test__MyClass cls_test__MyClass1__Method2(struct cls_test__MyClass1* self)
+{
+    struct cls_test__MyClass result;
+    cls_test__MyClass__init(&result, INT64_C(2), INT64_C(4));
+    return result;
+}
+/*........................................*/
+/*........................................*/
+void cls_test__MyClass1__Method1(struct cls_test__MyClass1* self, struct cls_test__MyClass* param1)
 {
     self->param = param1;
 }
 /*........................................*/
 /*........................................*/
-struct MyClass MyClass1__Method2(struct MyClass1* self)
-{
-    struct MyClass Out_0001;
-    MyClass__init__(&Out_0001, INT64_C(2), INT64_C(4));
-    return Out_0001;
-}
-/*........................................*/
-/*........................................*/
-void MyClass1__del__(struct MyClass1* self)
+void cls_test__MyClass1__drop(struct cls_test__MyClass1* self)
 {
     if (!self->is_freed)
     {
@@ -159,21 +187,25 @@ void MyClass1__del__(struct MyClass1* self)
 ```C
 int main()
 {
-    struct MyClass1 obj;
-    struct MyClass Dummy_0000;
+    struct cls_test__MyClass1 obj;
+    struct cls_test__MyClass Dummy_0000;
     int64_t i;
-    MyClass1__init__(&obj);
-    Dummy_0000 = MyClass1__Method2(&obj);
-    MyClass1__Method1(&obj, &Dummy_0000);
+    cls_test__MyClass1__init(&obj);
+    Dummy_0000 = obj.Method2(&obj);
+    obj.Method1(&obj, &Dummy_0000);
     printf("%"PRId64" ", obj.param->param1);
     printf("[");
-    for (i = INT64_C(0); i < obj.param->param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    for (i = INT64_C(0); i < (int64_t)obj.param->param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
     {
         printf("%.15lf ", (*cspan_at(&obj.param->param2, i)));
     }
-    printf("%.15lf]\n", (*cspan_at(&obj.param->param2, obj.param->param2.shape[INT64_C(0)] - INT64_C(1))));
-    MyClass__del__(&Dummy_0000);
-    MyClass1__del__(&obj);
+    if ((int64_t)obj.param->param2.shape[INT64_C(0)] > INT64_C(0))
+    {
+        printf("%.15lf", (*cspan_at(&obj.param->param2, (int64_t)obj.param->param2.shape[INT64_C(0)] - INT64_C(1))));
+    }
+    printf("]\n");
+    cls_test__MyClass__drop(&Dummy_0000);
+    cls_test__MyClass1__drop(&obj);
     return 0;
 }
 ```
@@ -415,60 +447,61 @@ MyClass Object created!
 ### - Header File Equivalent
 
 ```C
-struct MyClass {
+struct cls_test__MyClass {
     int64_t private_param1;
     array_double_1d private_param2;
     bool is_freed;
+    int64_t (*param1)(struct cls_test__MyClass* self);
+    array_double_1d (*param2)(struct cls_test__MyClass* self);
 };
 
-void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
-int64_t MyClass__param1(struct MyClass* self);
-array_double_1d MyClass__param2(struct MyClass* self);
-void MyClass__del__(struct MyClass* self);
+void cls_test__MyClass__init(struct cls_test__MyClass* self, int64_t param1, int64_t param2);
+int64_t cls_test__MyClass__param1(struct cls_test__MyClass* self);
+array_double_1d cls_test__MyClass__param2(struct cls_test__MyClass* self);
+void cls_test__MyClass__drop(struct cls_test__MyClass* self);
 ```
 
 ### - C File Equivalent
 
 ```C
-#include "cls_test.h"
-
-
 /*........................................*/
-void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
+void cls_test__MyClass__init(struct cls_test__MyClass* self, int64_t param1, int64_t param2)
 {
+    // Save virtual function addresses
+    self->param1 = cls_test__MyClass__param1;
+    self->param2 = cls_test__MyClass__param2;
+
     double* private_param2_ptr;
     self->is_freed = 0;
     self->private_param1 = param1;
     private_param2_ptr = malloc(sizeof(double) * (param2));
     self->private_param2 = (array_double_1d)cspan_md_layout(c_ROWMAJOR, private_param2_ptr, param2);
-    c_foreach(Dummy_0000, array_double_1d, self->private_param2) {
+    for (c_each(Dummy_0000, array_double_1d, self->private_param2)) {
         *(Dummy_0000.ref) = 1.0;
     }
     printf("MyClass Object created!\n");
 }
 /*........................................*/
 /*........................................*/
-int64_t MyClass__param1(struct MyClass* self)
+int64_t cls_test__MyClass__param1(struct cls_test__MyClass* self)
 {
     return self->private_param1;
 }
 /*........................................*/
 /*........................................*/
-array_double_1d MyClass__param2(struct MyClass* self)
+array_double_1d cls_test__MyClass__param2(struct cls_test__MyClass* self)
 {
-    array_double_1d Out_0001 = {0};
-    Out_0001 = cspan_slice(array_double_1d, &self->private_param2, {c_ALL});
-    return Out_0001;
+    array_double_1d result;
+    result = cspan_slice(&self->private_param2, array_double_1d, {c_ALL});
+    return result;
 }
 /*........................................*/
 /*........................................*/
-void MyClass__del__(struct MyClass* self)
+void cls_test__MyClass__drop(struct cls_test__MyClass* self)
 {
     if (!self->is_freed)
     {
         // pass
-        free(self->private_param2.data);
-        self->private_param2.data = NULL;
         self->is_freed = 1;
     }
 }
@@ -480,19 +513,23 @@ void MyClass__del__(struct MyClass* self)
 ```C
 int main()
 {
-    struct MyClass obj;
-    array_double_1d Dummy_0000 = {0};
+    struct cls_test__MyClass obj;
+    array_double_1d Dummy_0000;
     int64_t i;
-    MyClass__init__(&obj, INT64_C(2), INT64_C(4));
-    printf("%"PRId64"\n", MyClass__param1(&obj));
-    Dummy_0000 = MyClass__param2(&obj);
+    cls_test__MyClass__init(&obj, INT64_C(2), INT64_C(4));
+    printf("%"PRId64"\n", obj.param1(&obj));
+    Dummy_0000 = obj.param2(&obj);
     printf("[");
-    for (i = INT64_C(0); i < Dummy_0000.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    for (i = INT64_C(0); i < (int64_t)Dummy_0000.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
     {
         printf("%.15lf ", (*cspan_at(&Dummy_0000, i)));
     }
-    printf("%.15lf]\n", (*cspan_at(&Dummy_0000, Dummy_0000.shape[INT64_C(0)] - INT64_C(1))));
-    MyClass__del__(&obj);
+    if ((int64_t)Dummy_0000.shape[INT64_C(0)] > INT64_C(0))
+    {
+        printf("%.15lf", (*cspan_at(&Dummy_0000, (int64_t)Dummy_0000.shape[INT64_C(0)] - INT64_C(1))));
+    }
+    printf("]\n");
+    cls_test__MyClass__drop(&obj);
     return 0;
 }
 ```
