@@ -123,6 +123,7 @@ from pyccel.ast.numpyext import (
     NumpyNewArray,
     NumpyNonZero,
     NumpyRand,
+    NumpyRandint,
     NumpyReal,
     NumpySign,
     get_shape_of_multi_level_container,
@@ -2157,34 +2158,26 @@ class FCodePrinter(CodePrinter):
         kind = self.print_kind(expr)
         return f"floor({arg_code}, kind = {kind})"
 
-    def _print_NumpyRand(self, expr):
+    def _handle_random_expr(self, expr):
+        """Handle NumpyRand/NumpyRandint by assigning to a temp variable."""
         if expr.rank != 0:
-            errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
-
-        var = self.scope.get_temporary_variable(
-            expr.dtype, memory_handling="stack", shape=expr.shape
-        )
+            tmp_type = NumpyNDArrayType.get_new(expr.dtype, expr.rank, expr.order)
+            var = self.scope.get_temporary_variable(
+                tmp_type, memory_handling="stack", shape=expr.shape
+            )
+        else:
+            var = self.scope.get_temporary_variable(
+                expr.dtype, memory_handling="stack", shape=expr.shape
+            )
 
         self._additional_code += self._print(Assign(var, expr)) + "\n"
         return self._print(var)
 
-    def _print_NumpyRandint(self, expr):
-        if expr.rank != 0:
-            errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
-        if expr.low is None:
-            randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
-        else:
-            randfloat = self._print(
-                PyccelAdd.make_simplified(
-                    PyccelMul.make_simplified(
-                        PyccelMinus.make_simplified(expr.high, expr.low), NumpyRand()
-                    ),
-                    expr.low,
-                )
-            )
+    def _print_NumpyRand(self, expr):
+        return self._handle_random_expr(expr)
 
-        prec_code = self.print_kind(expr)
-        return "floor({}, kind={})".format(randfloat, prec_code)
+    def _print_NumpyRandint(self, expr):
+        return self._handle_random_expr(expr)
 
     def _print_NumpyFull(self, expr):
 
@@ -2508,6 +2501,36 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyRand):
             return f"call random_number({lhs_code})\n"
+
+        if isinstance(rhs, NumpyRandint):
+            if rhs.rank != 0:
+                self.add_import(Import("pyc_math_f90", Module("pyc_math_f90", (), ())))
+                int_kind = self.print_kind(rhs)
+                if rhs.low is None:
+                    low_code = f"0_{int_kind}"
+                else:
+                    low_code = self._print(rhs.low)
+                high_code = self._print(rhs.high)
+                return f"call pyc_randint_fill({lhs_code}, {low_code}, {high_code})\n"
+            else:
+                rand = rhs.rand_expr
+                if rhs.low is None:
+                    randfloat = self._print(PyccelMul.make_simplified(rhs.high, rand))
+                else:
+                    randfloat = self._print(
+                        PyccelAdd.make_simplified(
+                            PyccelMul.make_simplified(
+                                PyccelMinus.make_simplified(rhs.high, rhs.low), rand
+                            ),
+                            rhs.low,
+                        )
+                    )
+                additional = self._additional_code
+                self._additional_code = ""
+                prec_code = self.print_kind(rhs)
+                return (
+                    f"{additional}{lhs_code} = floor({randfloat}, kind={prec_code})\n"
+                )
 
         if isinstance(rhs, NumpyEmpty):
             return ""
