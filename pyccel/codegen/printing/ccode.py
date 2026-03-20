@@ -116,6 +116,8 @@ from pyccel.ast.variable import DottedVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+from pyccel.parser.scope import Scope
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_TODO,
@@ -1183,10 +1185,19 @@ class CCodePrinter(CodePrinter):
             func_blocks.append("")
             for method in classDef.methods:
                 if method.is_semantic:
-                    func_blocks[-1] += f"{self.function_signature(method)};\n"
+                    sig = self.function_signature(method)
+                    func_blocks[-1] += f"{sig};\n"
+                    if method.cls_name is not None:
+                        fp_sig = sig.replace(
+                            f" {method.name}(", f" (*{method.cls_name})(", 1
+                        )
+                        classes += f"    {fp_sig};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    func_blocks[-1] += f"{self.function_signature(func)};\n"
+                    sig = self.function_signature(func)
+                    func_blocks[-1] += f"{sig};\n"
+                    fp_sig = sig.replace(f" {func.name}(", f" (*{func.cls_name})(", 1)
+                    classes += f"    {fp_sig};\n"
             classes += "};\n"
         func_blocks.append(
             "".join(
@@ -3111,13 +3122,25 @@ class CCodePrinter(CodePrinter):
                 args.append(ObjectAddress(v))
 
         self._temporary_args = []
+
+        if func.cls_name:
+            self_arg = args[0]
+            if isinstance(self_arg, ObjectAddress):
+                self_arg = self_arg.obj
+            if self.is_c_pointer(self_arg):
+                name = f"{self._print(ObjectAddress(self_arg))}->{func.cls_name}"
+            else:
+                name = f"{self._print(self_arg)}.{func.cls_name}"
+        else:
+            name = func.name
+
         args = ", ".join(
             self._print(ai)
             for a in args
             for ai in self.scope.collect_all_tuple_elements(a)
         )
 
-        call_code = f"{func.name}({args})"
+        call_code = f"{name}({args})"
         if func.results.var is not Nil() and not isinstance(
             func.results.var.class_type, InhomogeneousTupleType
         ):
@@ -3828,13 +3851,56 @@ class CCodePrinter(CodePrinter):
         return "".join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
-        methods = "".join(self._print(method) for method in expr.methods)
+        sep = self._print(SeparatorComment(40))
+
+        empty_scope = Scope(
+            name="tmp",
+            scope_type="class",
+            used_symbols=expr.scope.local_used_symbols.copy(),
+            original_symbols=expr.scope.python_names.copy(),
+        )
+
+        # Generate safe C names for function pointer members and store on cls_name
+        virtual_methods = []
+        for method in expr.methods:
+            if method.is_semantic:
+                python_name = expr.scope.get_python_name(method.name)
+                if python_name not in ("__init__", "__del__"):
+                    empty_scope.remove_symbol(python_name)
+                    method.cls_name = empty_scope.get_new_name(
+                        python_name, object_type="variable"
+                    )
+                    virtual_methods.append(method)
+        for interface in expr.interfaces:
+            for i, func in enumerate(interface.functions):
+                python_name = expr.scope.get_python_name(func.name)
+                empty_scope.remove_symbol(python_name)
+                func.cls_name = empty_scope.get_new_name(
+                    f"{python_name}_{i:0=4d}", object_type="variable"
+                )
+                virtual_methods.append(func)
+
+        # Print __init__ with injected function pointer assignments
+        init_method = expr.get_method("__init__")
+        init_printed = self._print(init_method)
+        if virtual_methods:
+            init_lines = init_printed.split("\n")
+            self_name = init_method.arguments[0].var.name
+            fp_assignments = "    // Save virtual function addresses\n" + "".join(
+                f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
+            )
+            insert_pos = init_lines.index("{") + 1
+            init_lines.insert(insert_pos, fp_assignments)
+            init_printed = "\n".join(init_lines)
+
+        methods = init_printed + "".join(
+            self._print(method) for method in expr.methods if method is not init_method
+        )
         interfaces = "".join(
             self._print(function)
             for interface in expr.interfaces
             for function in interface.functions
         )
-
         return methods + interfaces
 
     # ================== Tuple methods =================
