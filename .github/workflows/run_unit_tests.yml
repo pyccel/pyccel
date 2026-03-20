@@ -16,6 +16,7 @@ on:
           - llvm
           - macosx
           - windows
+        default: linux
       python_version:
         description: 'Python version to use (leave empty to use the default for the selected suite)'
         required: false

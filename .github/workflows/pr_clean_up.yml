@@ -8,6 +8,7 @@ on:
 permissions:
   pull-requests: write
   issues: write
+  contents: write
 
 jobs:
   update_status:
@@ -30,15 +31,17 @@ jobs:
         id: status_check
         if: steps.find_pr.outputs.pr_number != ''
         run: |
-          gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch
+          gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --watch || true
           status=$(gh pr checks ${{ steps.find_pr.outputs.pr_number }} --required --json state --jq '.[]["state"]' | sort -u)
           if [[ $status == "SUCCESS" ]]
           then
-            echo "conclusion=SUCCESS"
+            conclusion="SUCCESS"
           elif [[ $status == *"FAILURE"* ]]
           then
-            echo "conclusion=FAILURE"
+            conclusion="FAILURE"
           fi
+          echo "conclusion=$conclusion"
+          echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,9 +49,9 @@ jobs:
         if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'FAILURE'
         run: |
           gh pr ready ${{ steps.find_pr.outputs.pr_number }} --undo
-          gh pr edit --remove-label needs_initial_review
-          gh pr edit --remove-label Ready_for_review
-          gh pr edit --remove-label Ready_to_merge
+          gh pr edit ${{ steps.find_pr.outputs.pr_number }} --remove-label needs_initial_review
+          gh pr edit ${{ steps.find_pr.outputs.pr_number }} --remove-label Ready_for_review
+          gh pr edit ${{ steps.find_pr.outputs.pr_number }} --remove-label Ready_to_merge
           gh pr comment ${{ steps.find_pr.outputs.pr_number }} --body "Unfortunately your PR is not passing the tests so it is not quite ready for review yet."
         shell: bash
         env:
