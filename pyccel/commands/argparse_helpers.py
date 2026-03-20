@@ -25,7 +25,6 @@ __all__ = (
     "add_compiler_selection",
     "add_help_flag",
     "add_version_flag",
-    "get_warning_and_line",
     "path_with_suffix",
     "ErrorModeSelector",
 )
