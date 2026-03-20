@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #2309 : Fix `np.random.randint` with `size` argument for Fortran.
+
 ### Changed
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.

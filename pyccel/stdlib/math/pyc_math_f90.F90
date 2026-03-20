@@ -26,7 +26,8 @@ public :: pyc_gcd, &
           pyc_bankers_round, &
           pyc_floor_div, &
           expm1, &
-          cross_product
+          cross_product, &
+          pyc_randint
 
 private
 
@@ -92,6 +93,11 @@ interface cross_product
     module procedure cross_product_f32
     module procedure cross_product_f64
 end interface cross_product
+
+interface pyc_randint
+    module procedure pyc_randint_scalar_i64
+    module procedure pyc_randint_array_i64
+end interface pyc_randint
 
 contains
 
@@ -554,5 +560,21 @@ subroutine cross_product_i64(a,b,c)
     c(3) = a(1) * b(2) - a(2) * b(1)
 
 end subroutine cross_product_i64
+
+subroutine pyc_randint_scalar_i64(r, low, high)
+    integer(i64), intent(out) :: r
+    integer(i64), intent(in) :: low, high
+    real(f64) :: tmp
+    call random_number(tmp)
+    r = floor((high - low) * tmp + low, kind=i64)
+end subroutine pyc_randint_scalar_i64
+
+subroutine pyc_randint_array_i64(arr, low, high)
+    integer(i64), intent(out) :: arr(:)
+    integer(i64), intent(in) :: low, high
+    real(f64) :: tmp(size(arr))
+    call random_number(tmp)
+    arr = floor((high - low) * tmp + low, kind=i64)
+end subroutine pyc_randint_array_i64
 
 end module pyc_math_f90
