@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
+
 from pyccel.decorators import allow_negative_index
 
 # ==============================================================================
@@ -69,13 +70,14 @@ def double_loop_on_2d_array_F(z: "int[:,:](order=F)"):
 # ...
 def product_loop_on_2d_array_C(z: "int[:,:](order=C)"):
 
-    from numpy import shape
     from itertools import product
+
+    from numpy import shape
 
     m, n = shape(z)
 
-    x = [i for i in range(m)]
-    y = [j for j in range(n)]
+    x = [i for i in range(m)]  # pylint: disable=unnecessary-comprehension
+    y = [j for j in range(n)]  # pylint: disable=unnecessary-comprehension
 
     for i, j in product(x, y):
         z[i, j] = i - j
@@ -84,13 +86,14 @@ def product_loop_on_2d_array_C(z: "int[:,:](order=C)"):
 # ...
 def product_loop_on_2d_array_F(z: "int[:,:](order=F)"):
 
-    from numpy import shape
     from itertools import product
+
+    from numpy import shape
 
     m, n = shape(z)
 
-    x = [i for i in range(m)]
-    y = [j for j in range(n)]
+    x = [i for i in range(m)]  # pylint: disable=unnecessary-comprehension
+    y = [j for j in range(n)]  # pylint: disable=unnecessary-comprehension
 
     for i, j in product(x, y):
         z[i, j] = i - j

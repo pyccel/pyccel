@@ -97,6 +97,7 @@ jobs:
         run: |
           cd compare
           python -m pip install -r docs/requirements.txt
+          python -m pip install -e .
           make -C docs html
         shell: bash
       - name: Setup Pages

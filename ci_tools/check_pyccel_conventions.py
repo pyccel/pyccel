@@ -11,11 +11,12 @@ The coding conventions are:
 import argparse
 import importlib
 import inspect
+import json
 import pathlib
 import sys
-import json
+
 from pyccel import ast
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
+from pyccel.ast.basic import PyccelAstNode, ScopedAstNode, TypedAstNode
 
 
 def extract_dict_elements(input_dict):

@@ -9,8 +9,12 @@ import argparse
 import pathlib
 import sys
 
-from .argparse_helpers import add_compiler_selection, add_accelerator_selection
-from .argparse_helpers import path_with_suffix, add_common_settings
+from .argparse_helpers import (
+    add_accelerator_selection,
+    add_common_settings,
+    add_compiler_selection,
+    path_with_suffix,
+)
 
 __all__ = ("pyccel_compile", "setup_pyccel_compile_parser", "PYCCEL_COMPILE_DESCR")
 
@@ -148,8 +152,8 @@ def pyccel_compile(*, filename, language, output, **kwargs):
         See execute_pyccel.
     """
     # Imports
-    from pyccel.errors.errors import Errors
     from pyccel.codegen.pipeline import execute_pyccel
+    from pyccel.errors.errors import Errors
 
     errors = Errors()
     # ...

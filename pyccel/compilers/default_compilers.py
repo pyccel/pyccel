@@ -6,10 +6,10 @@ avoiding the need for a large number of imports
 
 import glob
 import os
+import shutil
+import subprocess
 import sys
 import sysconfig
-import subprocess
-import shutil
 
 from numpy import get_include as get_numpy_include
 

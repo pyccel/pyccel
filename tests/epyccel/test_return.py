@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
+
 from pyccel import epyccel
 
 # Most of the tests are currently skipped for LLVM because

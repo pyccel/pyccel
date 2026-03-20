@@ -12,9 +12,8 @@ scope.
 """
 
 from pyccel.ast.core import Module, ModuleHeader, Program
-
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
+from pyccel.errors.messages import PYCCEL_INTERNAL_ERROR, PYCCEL_RESTRICTION_TODO
 
 # TODO: add examples
 

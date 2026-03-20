@@ -9,12 +9,14 @@ File containing the `pyccel wrap` command line interface.
 
 import argparse
 import pathlib
+import sys
 
 from .argparse_helpers import (
     add_accelerator_selection,
+    add_common_settings,
     add_compiler_selection,
+    path_with_suffix,
 )
-from .argparse_helpers import path_with_suffix, add_common_settings
 
 __all__ = (
     "pyccel_wrap",

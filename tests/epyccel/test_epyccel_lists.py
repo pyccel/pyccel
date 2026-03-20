@@ -1,7 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import Final, TypeVar
-import pytest
+
 import numpy as np
+import pytest
+
 from pyccel import epyccel
 
 
@@ -658,7 +660,7 @@ def test_extend_tuple_as_arg(limited_language):
 
 def test_extend_np_int(limited_language):
     def f():
-        from numpy import ones, int64
+        from numpy import int64, ones
 
         a = [int64(1), int64(2), int64(3)]
         b = ones(3, dtype=int64)
@@ -671,7 +673,7 @@ def test_extend_np_int(limited_language):
 
 def test_extend_np_float(limited_language):
     def f():
-        from numpy import ones, float64
+        from numpy import float64, ones
 
         a = [float64(1.0), float64(2.0), float64(3.0)]
         b = ones(3, dtype=float64)

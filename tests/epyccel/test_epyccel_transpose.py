@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import empty, array_equal, array
+from numpy import array, array_equal, empty
 from numpy.random import randint
 
 from pyccel import epyccel
@@ -80,7 +80,7 @@ def test_transpose_in_expression(language):
 def test_mixed_order(language):
 
     def f1(x: "int[:,:]"):
-        from numpy import transpose, ones
+        from numpy import ones, transpose
 
         n, m = x.shape
         y = ones((m, n), order="F")
@@ -98,7 +98,7 @@ def test_mixed_order(language):
         return n, m, z[-1, 0], z[0, -1]
 
     def f3(x: "int[:,:,:]"):
-        from numpy import transpose, ones
+        from numpy import ones, transpose
 
         n, m, p = x.shape
         y = ones((p, m, n))
@@ -174,7 +174,7 @@ def test_transpose_of_expression(language):
 def test_force_transpose(language):
 
     def f1(x: "int[:,:]"):
-        from numpy import transpose, empty
+        from numpy import transpose
 
         n, m = x.shape
         y = empty((m, n))
@@ -183,7 +183,6 @@ def test_force_transpose(language):
         return n, m, y[-1, 0], y[0, -1]
 
     def f2(x: "int[:,:,:]"):
-        from numpy import empty
 
         n, m, p = x.shape
         y = empty((p, m, n))

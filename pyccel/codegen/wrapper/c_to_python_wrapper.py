@@ -10,94 +10,181 @@ which creates an interface exposing C code to Python.
 """
 
 import warnings
-from pyccel.ast.bind_c import BindCFunctionDef, BindCPointer
-from pyccel.ast.bind_c import BindCModule, BindCModuleVariable, BindCVariable
-from pyccel.ast.bind_c import BindCClassDef, BindCClassProperty, BindCArrayType
-from pyccel.ast.builtins import PythonTuple, PythonRange, PythonLen, PythonSet
-from pyccel.ast.builtins import VariableIterator, PythonStr, PythonList
+
+from pyccel.ast.bind_c import (
+    BindCArrayType,
+    BindCClassDef,
+    BindCClassProperty,
+    BindCFunctionDef,
+    BindCModule,
+    BindCModuleVariable,
+    BindCPointer,
+    BindCVariable,
+)
 from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtin_methods.set_methods import SetAdd, SetPop
+from pyccel.ast.builtins import (
+    PythonLen,
+    PythonList,
+    PythonRange,
+    PythonSet,
+    PythonStr,
+    PythonTuple,
+    VariableIterator,
+)
+from pyccel.ast.c_concepts import (
+    CNativeInt,
+    CStackArray,
+    CStrStr,
+    ObjectAddress,
+    PointerCast,
+)
 from pyccel.ast.class_defs import StackArrayClass
-from pyccel.ast.core import Interface, If, IfSection, Return, FunctionCall
-from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import Assign, AliasAssign, Deallocate, Allocate
-from pyccel.ast.core import Import, Module, AugAssign, CommentBlock, For
-from pyccel.ast.core import FunctionAddress, Declare, ClassDef, AsName
-from pyccel.ast.cwrapper import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
-from pyccel.ast.cwrapper import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
-from pyccel.ast.cwrapper import py_to_c_registry, check_type_registry, PyBuildValueNode
-from pyccel.ast.cwrapper import PyErr_SetString, PyTypeError, PyNotImplementedError
-from pyccel.ast.cwrapper import PyAttributeError, Py_ssize_t, Py_ssize_t_Cast
-from pyccel.ast.cwrapper import C_to_Python, PyFunctionDef, PyInterface, PyTuple_Pack
-from pyccel.ast.cwrapper import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
-from pyccel.ast.cwrapper import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper import (
-    PyList_New,
-    PyList_Append,
-    PyList_GetItem,
-    PyList_SetItem,
+from pyccel.ast.core import (
+    AliasAssign,
+    Allocate,
+    AsName,
+    Assign,
+    AugAssign,
+    ClassDef,
+    CommentBlock,
+    Deallocate,
+    Declare,
+    For,
+    FunctionAddress,
+    FunctionCall,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    Interface,
+    Module,
+    Return,
 )
-from pyccel.ast.cwrapper import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper import (
-    PySys_GetObject,
-    PyUnicode_FromString,
+    C_to_Python,
+    Py_DECREF,
+    Py_INCREF,
+    Py_None,
+    Py_ssize_t,
+    Py_ssize_t_Cast,
+    PyArg_ParseTupleNode,
+    PyArgKeywords,
+    PyArgumentError,
+    PyAttributeError,
+    PyBuildValueNode,
+    PyCapsule_Import,
+    PyCapsule_New,
+    PyccelPyObject,
+    PyccelPyTypeObject,
+    PyClassDef,
+    PyDict_New,
+    PyDict_SetItem,
+    PyErr_SetString,
+    PyFunctionDef,
     PyGetSetDefElement,
+    PyInterface,
+    PyIter_Next,
+    PyList_Append,
+    PyList_Check,
+    PyList_Clear,
+    PyList_GetItem,
+    PyList_New,
+    PyList_SetItem,
+    PyList_Size,
+    PyModInitFunc,
+    PyModule,
+    PyModule_AddObject,
+    PyModule_Create,
+    PyNotImplementedError,
+    PyObject_GetIter,
+    PyObject_TypeCheck,
+    PySet_Add,
+    PySet_Check,
+    PySet_Clear,
+    PySet_New,
+    PySet_Size,
+    PySys_GetObject,
+    PyTuple_Check,
+    PyTuple_GetItem,
+    PyTuple_New,
+    PyTuple_Pack,
+    PyTuple_SetItem,
+    PyTuple_Size,
+    PyType_Ready,
+    PyTypeError,
+    PyUnicode_AsUTF8,
+    PyUnicode_Check,
+    PyUnicode_FromString,
+    PyUnicode_GetLength,
+    WrapperCustomDataType,
+    check_type_registry,
+    py_to_c_registry,
 )
-from pyccel.ast.cwrapper import PyTuple_Size, PyTuple_Check, PyTuple_New
-from pyccel.ast.cwrapper import PyTuple_GetItem, PyTuple_SetItem
-from pyccel.ast.cwrapper import PySet_New, PySet_Add, PyList_Check, PyList_Size
-from pyccel.ast.cwrapper import PySet_Size, PySet_Check, PyObject_GetIter, PySet_Clear
-from pyccel.ast.cwrapper import PyIter_Next, PyList_Clear, PyArgumentError
-from pyccel.ast.cwrapper import PyDict_New, PyDict_SetItem
-from pyccel.ast.cwrapper import PyUnicode_AsUTF8, PyUnicode_Check, PyUnicode_GetLength
-from pyccel.ast.c_concepts import ObjectAddress, PointerCast, CStackArray, CNativeInt
-from pyccel.ast.c_concepts import CStrStr
 from pyccel.ast.datatypes import (
-    VoidType,
-    PythonNativeInt,
+    CharType,
     CustomDataType,
     DataTypeFactory,
-)
-from pyccel.ast.datatypes import (
+    FinalType,
     FixedSizeNumericType,
+    HomogeneousContainerType,
+    HomogeneousListType,
+    HomogeneousSetType,
     HomogeneousTupleType,
     PythonNativeBool,
+    PythonNativeInt,
+    StringType,
+    TupleType,
+    VoidType,
 )
-from pyccel.ast.datatypes import HomogeneousSetType, HomogeneousListType
-from pyccel.ast.datatypes import HomogeneousContainerType, FinalType
-from pyccel.ast.datatypes import TupleType, CharType, StringType
 from pyccel.ast.internals import Slice
-from pyccel.ast.literals import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.literals import LiteralFalse, convert_to_literal
-from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt64Type, NumpyInt32Type
-from pyccel.ast.numpytypes import numpy_precision_map
-from pyccel.ast.numpy_wrapper import PyArray_DATA
-from pyccel.ast.numpy_wrapper import get_strides_and_shape_from_numpy_array
+from pyccel.ast.literals import (
+    LiteralFalse,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
+)
 from pyccel.ast.numpy_wrapper import (
+    PyArray_DATA,
     PyArray_SetBaseObject,
+    PyccelPyArrayObject,
+    get_strides_and_shape_from_numpy_array,
     import_array,
-)
-from pyccel.ast.numpy_wrapper import PyccelPyArrayObject, to_pyarray
-from pyccel.ast.numpy_wrapper import (
+    is_numpy_array,
+    no_order_check,
     numpy_dtype_registry,
-    numpy_flag_f_contig,
     numpy_flag_c_contig,
+    numpy_flag_f_contig,
+    pyarray_check,
+    to_pyarray,
 )
-from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
+from pyccel.ast.numpytypes import (
+    NumpyInt32Type,
+    NumpyInt64Type,
+    NumpyNDArrayType,
+    numpy_precision_map,
+)
 from pyccel.ast.operators import (
-    PyccelNot,
-    PyccelIsNot,
-    PyccelUnarySub,
+    IfTernaryOperator,
+    PyccelAnd,
     PyccelEq,
     PyccelIs,
+    PyccelIsNot,
+    PyccelLt,
+    PyccelNe,
+    PyccelNot,
+    PyccelUnarySub,
 )
-from pyccel.ast.operators import PyccelLt, IfTernaryOperator, PyccelAnd
-from pyccel.ast.operators import PyccelNe
-from pyccel.ast.variable import Variable, DottedVariable, IndexedElement
-from pyccel.parser.scope import Scope
+from pyccel.ast.variable import DottedVariable, IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.scope import Scope
+
 from .wrapper import Wrapper
 
 errors = Errors()

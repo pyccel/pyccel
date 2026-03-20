@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy.random import randint, uniform
 from numpy import isclose
+from numpy.random import randint, uniform
 
 from pyccel import epyccel
 

@@ -9,28 +9,28 @@ Contains the execute_pyccel function which carries out the main steps required t
 """
 
 import os
-import sys
 import shutil
+import sys
 import time
 from pathlib import Path
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import (
-    PyccelSyntaxError,
-    PyccelSemanticError,
-    PyccelCodegenError,
-)
-from pyccel.parser.parser import Parser
-from pyccel.codegen.codegen import Codegen
-from pyccel.codegen.utilities import (
-    manage_dependencies,
-    get_module_and_compile_dependencies,
-)
-from pyccel.codegen.python_wrapper import create_shared_library
-from pyccel.naming import name_clash_checkers
-from pyccel.utilities.stage import PyccelStage
 from pyccel.ast.utilities import python_builtin_libs
+from pyccel.codegen.codegen import Codegen
+from pyccel.codegen.python_wrapper import create_shared_library
+from pyccel.codegen.utilities import (
+    get_module_and_compile_dependencies,
+    manage_dependencies,
+)
+from pyccel.errors.errors import (
+    Errors,
+    PyccelCodegenError,
+    PyccelSemanticError,
+    PyccelSyntaxError,
+)
+from pyccel.naming import name_clash_checkers
+from pyccel.parser.parser import Parser
 from pyccel.parser.scope import Scope
+from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path

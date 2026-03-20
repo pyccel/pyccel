@@ -7,17 +7,12 @@
 
 # TODO: - assert
 
-from scipy.linalg.lapack import dgbtrf
-from scipy.linalg.lapack import dgbtrs
-
-from scipy.linalg.lapack import dgetrf
-from scipy.linalg.lapack import dgetrs
+from numpy import int32, zeros
+from scipy.linalg.lapack import dgbtrf, dgbtrs, dgetrf, dgetrs
 
 # from scipy.linalg.lapack import dgecon
 
 # from scipy.linalg.lapack import dgetri
-
-from numpy import zeros, int32
 
 
 def test_1():

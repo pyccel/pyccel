@@ -13,21 +13,21 @@ the sub-command provided by the user.
 import argparse
 import sys
 
-from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR
-from .pyccel_compile import (
-    setup_pyccel_compile_parser,
-    pyccel_compile,
-    PYCCEL_COMPILE_DESCR,
-)
-from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
-from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
-from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
-from .pyccel_config import (
-    setup_pyccel_config_parser,
-    pyccel_config,
-    PYCCEL_CONFIG_DESCR,
-)
 from .argparse_helpers import add_help_flag, add_version_flag
+from .pyccel_clean import PYCCEL_CLEAN_DESCR, pyccel_clean, setup_pyccel_clean_parser
+from .pyccel_compile import (
+    PYCCEL_COMPILE_DESCR,
+    pyccel_compile,
+    setup_pyccel_compile_parser,
+)
+from .pyccel_config import (
+    PYCCEL_CONFIG_DESCR,
+    pyccel_config,
+    setup_pyccel_config_parser,
+)
+from .pyccel_make import PYCCEL_MAKE_DESCR, pyccel_make, setup_pyccel_make_parser
+from .pyccel_test import PYCCEL_TEST_DESCR, pyccel_test, setup_pyccel_test_parser
+from .pyccel_wrap import PYCCEL_WRAP_DESCR, pyccel_wrap, setup_pyccel_wrap_parser
 
 __all__ = ("pyccel_command",)
 
@@ -93,7 +93,7 @@ def pyccel_command() -> None:
         parser.print_usage()
         sys.exit(2)
 
-    from pyccel.errors.errors import PyccelError, Errors
+    from pyccel.errors.errors import Errors, PyccelError
     from pyccel.utilities.stage import PyccelStage
 
     pyccel_stage = PyccelStage()

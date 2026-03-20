@@ -11,7 +11,6 @@ that could be shown by pyccel.
 
 import ast
 import traceback as tb
-
 from collections import OrderedDict
 
 from pyccel.ast.basic import PyccelAstNode

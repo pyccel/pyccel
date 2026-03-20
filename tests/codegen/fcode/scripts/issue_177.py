@@ -1,8 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 # coding: utf-8
 
-from numpy import zeros
-from numpy import ones
+from numpy import ones, zeros
 
 
 def test_1():

@@ -8,20 +8,21 @@
 #      - expected errors in log files for every script
 
 import os
+
 import pytest
 
-from pyccel.parser.parser import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import (
     Errors,
-    PyccelSyntaxError,
-    PyccelSemanticError,
+    ErrorsMode,
     PyccelCodegenError,
     PyccelError,
+    PyccelSemanticError,
+    PyccelSyntaxError,
 )
-from pyccel.errors.errors import ErrorsMode
 from pyccel.naming import name_clash_checkers
+from pyccel.parser.parser import Parser
 from pyccel.parser.scope import Scope
 
 error_mode = ErrorsMode()

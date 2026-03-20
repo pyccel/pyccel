@@ -43,21 +43,41 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pylint
           python -m pip install black==26.1
+          python -m pip install isort==7.0
         shell: bash
       - name: Run Black
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           python -m black --check $(git ls-files "*.py")
         shell: bash
+      - name: Run isort
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          python -m isort --check $(git ls-files "*.py" | grep -v "FOUND_DUPLICATED_IMPORT.py")
+        shell: bash
       - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0
         if: steps.duplicate_check.outputs.should_skip != 'true'
         with:
           reviewdog_version: latest # Optional. [latest,nightly,v.X.Y.Z]
-      - name: Run Pylint
+      - name: Run Pylint for unused imports
         if: steps.duplicate_check.outputs.should_skip != 'true'
         run: |
           pylint --disable=all --enable=unused-import . --ignore-paths=pyccel/extensions/STC/.*
-          reviewdog -reporter=github-pr-check -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE} "
+        shell: bash
+      - name: Run Filtered Pylint (not pull_request)
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name != 'pull_request'
+        run: |
+          # The default reporter is the only reporter which allows a custom diff
+          reviewdog -runners=pylint -filter-mode=diff_context -diff="git diff ${BASE}...HEAD" -fail-level=any
+        shell: bash
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Filtered Pylint (pull_request only)
+        if: steps.duplicate_check.outputs.should_skip != 'true' && github.event_name == 'pull_request'
+        run: |
+          # GitHub-annotations always uses the diff from the context so it should
+          # only be used for pull requests
+          reviewdog -runners=pylint -reporter=github-annotations -filter-mode=diff_context -fail-level=any
         shell: bash
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}

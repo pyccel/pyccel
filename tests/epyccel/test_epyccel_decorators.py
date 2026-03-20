@@ -1,10 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-from typing import TypeVar, Final
-import pytest
+from typing import Final, TypeVar
+
 import numpy as np
+import pytest
+
 from pyccel import epyccel
-from pyccel.decorators import private, inline
+from pyccel.decorators import inline, private
 
 
 @pytest.mark.parametrize(

@@ -1,13 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
-
 from test_pyccel import compare_pyth_fort_output
+
 from pyccel.utilities.introspect import get_compiler_info
 
 

@@ -15,33 +15,36 @@ import re
 
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
-
 from .basic import PyccelAstNode, TypedAstNode
-
 from .bind_c import BindCPointer
-
 from .builtins import PythonInt
-
-from .datatypes import FixedSizeType, CustomDataType
-from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import PythonNativeBool, StringType, VoidType, CharType
-from .datatypes import (
-    PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
-    PrimitiveComplexType,
+from .c_concepts import CNativeInt, ObjectAddress
+from .core import (
+    ClassDef,
+    Declare,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    Interface,
+    Module,
 )
-
-from .core import FunctionDefArgument, FunctionDefResult
-from .core import FunctionDef, ClassDef
-from .core import Module, Interface, Declare
-
-from .c_concepts import ObjectAddress, CNativeInt
-
+from .datatypes import (
+    CharType,
+    CustomDataType,
+    FixedSizeType,
+    PrimitiveBooleanType,
+    PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
+)
 from .internals import PyccelFunction
-
 from .literals import LiteralInteger, Nil
-
 from .variable import Variable
 
 errors = Errors()

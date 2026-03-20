@@ -1,17 +1,19 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import subprocess
 import json
 import os
 import platform
-import shutil
-import sys
-import re
 import random
-import pytest
+import re
+import shutil
+import subprocess
+import sys
+
 import numpy as np
+import pytest
 from filelock import FileLock
-from pyccel.codegen.pipeline import execute_pyccel
+
 from pyccel.ast.utilities import python_builtin_libs
+from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.compilers.default_compilers import available_compilers
 
 # ==============================================================================

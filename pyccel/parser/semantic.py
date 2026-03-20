@@ -8,262 +8,280 @@
 See the developer docs for more details
 """
 
-from itertools import chain, product
 import os
-from types import ModuleType
 import typing
+from itertools import chain, product
+from types import ModuleType
 
-
+from sympy import Integer as sp_Integer
 from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
-from sympy import Integer as sp_Integer
-from sympy.logic.boolalg import BooleanTrue as sp_True
-from sympy.logic.boolalg import BooleanFalse as sp_False
 from sympy import ceiling
-
+from sympy.logic.boolalg import BooleanFalse as sp_False
+from sympy.logic.boolalg import BooleanTrue as sp_True
 from textx.exceptions import TextXSyntaxError
 
-# ==============================================================================
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
+import pyccel.decorators as def_decorators
 
+# ==============================================================================
+from pyccel.ast.basic import PyccelAstNode, ScopedAstNode, TypedAstNode
 from pyccel.ast.bitwise_operators import (
+    PyccelBitAnd,
     PyccelBitOr,
     PyccelLShift,
     PyccelRShift,
-    PyccelBitAnd,
 )
-
-from pyccel.ast.builtins import PythonPrint, PythonTupleFunction, PythonSetFunction
-from pyccel.ast.builtins import PythonComplex, PythonDict, PythonListFunction
-from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate, PythonSet, VariableIterator
-from pyccel.ast.builtins import PythonRange, PythonZip, PythonEnumerate, PythonTuple
-from pyccel.ast.builtins import PythonMap, PythonBool, PythonIsInstance
-
-from pyccel.ast.builtin_methods.dict_methods import DictKeys
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListInsert
-from pyccel.ast.builtin_methods.set_methods import (
-    SetAdd,
-    SetUnion,
-    SetCopy,
-    SetIntersectionUpdate,
-)
-from pyccel.ast.builtin_methods.set_methods import SetPop, SetDifferenceUpdate
 from pyccel.ast.builtin_methods.dict_methods import (
-    DictGetItem,
     DictGet,
+    DictGetItem,
+    DictKeys,
     DictPop,
     DictPopitem,
 )
-
-from pyccel.ast.core import Comment, CommentBlock, Pass
-from pyccel.ast.core import If, IfSection
-from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Assign, AliasAssign
-from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import ConstructorCall, InlineFunctionDef
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop
+from pyccel.ast.builtin_methods.set_methods import (
+    SetAdd,
+    SetCopy,
+    SetDifferenceUpdate,
+    SetIntersectionUpdate,
+    SetPop,
+    SetUnion,
+)
+from pyccel.ast.builtins import (
+    PythonBool,
+    PythonComplex,
+    PythonConjugate,
+    PythonDict,
+    PythonEnumerate,
+    PythonImag,
+    PythonIsInstance,
+    PythonList,
+    PythonListFunction,
+    PythonMap,
+    PythonPrint,
+    PythonRange,
+    PythonReal,
+    PythonSet,
+    PythonSetFunction,
+    PythonTuple,
+    PythonTupleFunction,
+    PythonZip,
+    VariableIterator,
+    builtin_functions_dict,
+)
+from pyccel.ast.class_defs import SetClass, get_builtin_cls_base
 from pyccel.ast.core import (
-    FunctionDef,
-    Interface,
+    AliasAssign,
+    AllDeclaration,
+    Allocate,
+    AsName,
+    Assert,
+    Assign,
+    AugAssign,
+    ClassDef,
+    CodeBlock,
+    Comment,
+    CommentBlock,
+    Concatenate,
+    ConstructorCall,
+    Deallocate,
+    Decorator,
+    Del,
+    Duplicate,
+    EmptyNode,
+    For,
     FunctionAddress,
     FunctionCall,
     FunctionCallArgument,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    InlineFunctionDef,
+    Interface,
+    Module,
+    Pass,
+    Program,
+    PyccelFunctionDef,
+    Return,
+    StarredArguments,
+    While,
+    With,
 )
-from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For
-from pyccel.ast.core import Module
-from pyccel.ast.core import While
-from pyccel.ast.core import Del
-from pyccel.ast.core import Program
-from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Concatenate
-from pyccel.ast.core import Import
-from pyccel.ast.core import AsName
-from pyccel.ast.core import With
-from pyccel.ast.core import Duplicate
-from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import Decorator
-from pyccel.ast.core import PyccelFunctionDef
-from pyccel.ast.core import Assert
-from pyccel.ast.core import AllDeclaration
-
-from pyccel.ast.class_defs import get_builtin_cls_base, SetClass
-
 from pyccel.ast.datatypes import (
     CustomDataType,
-    PyccelType,
-    TupleType,
-    VoidType,
-    GenericType,
-)
-from pyccel.ast.datatypes import PrimitiveIntegerType, StringType, SymbolicType
-from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, HomogeneousContainerType, FinalType
-from pyccel.ast.datatypes import (
-    InhomogeneousTupleType,
-    HomogeneousTupleType,
-    HomogeneousSetType,
-    HomogeneousListType,
-)
-from pyccel.ast.datatypes import (
-    PrimitiveComplexType,
-    FixedSizeNumericType,
+    DataTypeFactory,
     DictType,
+    FinalType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousContainerType,
+    HomogeneousListType,
+    HomogeneousSetType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PrimitiveComplexType,
+    PrimitiveIntegerType,
+    PyccelType,
+    PythonNativeBool,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    SymbolicType,
+    TupleType,
     TypeAlias,
+    VoidType,
+    original_type_to_pyccel_type,
 )
-from pyccel.ast.datatypes import original_type_to_pyccel_type
-
 from pyccel.ast.functionalexpr import (
-    FunctionalSum,
+    FunctionalFor,
     FunctionalMax,
     FunctionalMin,
+    FunctionalSum,
     GeneratorComprehension,
-    FunctionalFor,
+    MaxLimit,
+    MinLimit,
 )
-from pyccel.ast.functionalexpr import MaxLimit, MinLimit
-
 from pyccel.ast.headers import Header
-
 from pyccel.ast.internals import (
-    PyccelFunction,
-    Slice,
-    PyccelSymbol,
+    Iterable,
     PyccelArrayShapeElement,
+    PyccelFunction,
+    PyccelSymbol,
+    Slice,
 )
-from pyccel.ast.internals import Iterable
 from pyccel.ast.itertoolsext import Product
-
-from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
-from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
-
+from pyccel.ast.literals import (
+    Literal,
+    LiteralEllipsis,
+    LiteralFalse,
+    LiteralFloat,
+    LiteralImaginaryUnit,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
+)
 from pyccel.ast.low_level_tools import (
+    ManagedMemory,
     MemoryHandlerType,
     UnpackManagedMemory,
-    ManagedMemory,
 )
-
-from pyccel.ast.mathext import MathSqrt, MathAtan2, MathSin, MathCos
-
-from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
-from pyccel.ast.numpyext import NumpyWhere, NumpyArray, NumpyNonZero
-from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
-from pyccel.ast.numpyext import NumpyNewArray, NumpyResultType
+from pyccel.ast.mathext import MathAtan2, MathCos, MathSin, MathSqrt
+from pyccel.ast.numpyext import (
+    NumpyArray,
+    NumpyConjugate,
+    NumpyMatmul,
+    NumpyNewArray,
+    NumpyNonZero,
+    NumpyResultType,
+    NumpyTranspose,
+    NumpyWhere,
+    get_shape_of_multi_level_container,
+    numpy_funcs,
+)
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
-from pyccel.ast.numpyext import get_shape_of_multi_level_container
-
 from pyccel.ast.numpytypes import NumpyNDArrayType
-
 from pyccel.ast.omp import (
-    OMP_For_Loop,
-    OMP_Simd_Construct,
     OMP_Distribute_Construct,
-    OMP_TaskLoop_Construct,
-    OMP_Sections_Construct,
     Omp_End_Clause,
+    OMP_For_Loop,
+    OMP_Sections_Construct,
+    OMP_Simd_Construct,
     OMP_Single_Construct,
+    OMP_TaskLoop_Construct,
 )
-
 from pyccel.ast.operators import (
-    PyccelArithmeticOperator,
-    PyccelIs,
-    PyccelIsNot,
     IfTernaryOperator,
-    PyccelUnarySub,
-)
-from pyccel.ast.operators import (
-    PyccelNot,
     PyccelAdd,
-    PyccelMinus,
-    PyccelMul,
-    PyccelPow,
-    PyccelOr,
-)
-from pyccel.ast.operators import (
+    PyccelAnd,
+    PyccelArithmeticOperator,
     PyccelAssociativeParenthesis,
     PyccelDiv,
     PyccelIn,
+    PyccelIs,
+    PyccelIsNot,
+    PyccelMinus,
+    PyccelMul,
+    PyccelNot,
     PyccelOperator,
+    PyccelOr,
+    PyccelPow,
+    PyccelUnarySub,
 )
-from pyccel.ast.operators import PyccelAnd
-
-from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
-
+from pyccel.ast.sympy_helper import pyccel_to_sympy, sympy_to_pyccel
 from pyccel.ast.type_annotations import (
-    VariableTypeAnnotation,
-    UnionTypeAnnotation,
+    FunctionTypeAnnotation,
     SyntacticTypeAnnotation,
+    UnionTypeAnnotation,
+    VariableTypeAnnotation,
+    typenames_to_dtypes,
 )
-from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
-
-from pyccel.ast.typingext import TypingFinal, TypingTypeVar, TypingAnnotation
-
+from pyccel.ast.typingext import TypingAnnotation, TypingFinal, TypingTypeVar
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import (
     builtin_import_registry as pyccel_builtin_import_registry,
 )
-from pyccel.ast.utilities import split_positional_keyword_arguments
 from pyccel.ast.utilities import (
-    recognised_source,
-    is_literal_integer,
     get_managed_memory_object,
+    is_literal_integer,
+    recognised_source,
+    split_positional_keyword_arguments,
 )
-
-from pyccel.ast.variable import Constant
-from pyccel.ast.variable import Variable
-from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
-from pyccel.ast.variable import DottedName, DottedVariable
-
+from pyccel.ast.variable import (
+    AnnotatedPyccelSymbol,
+    Constant,
+    DottedName,
+    DottedVariable,
+    IndexedElement,
+    Variable,
+)
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError, PyccelSemanticError
-
 from pyccel.errors.messages import (
-    PYCCEL_RESTRICTION_TODO,
-    UNDERSCORE_NOT_A_THROWAWAY,
-    UNDEFINED_VARIABLE,
-    IMPORTING_EXISTING_IDENTIFIED,
-    INDEXED_TUPLE,
-    LIST_OF_TUPLES,
-    INVALID_INDICES,
-    INCOMPATIBLE_ARGUMENT,
-    UNRECOGNISED_FUNCTION_CALL,
-    STACK_ARRAY_SHAPE_UNPURE_FUNC,
-    STACK_ARRAY_UNKNOWN_SHAPE,
     ARRAY_DEFINITION_IN_LOOP,
-    STACK_ARRAY_DEFINITION_IN_LOOP,
-    MISSING_TYPE_ANNOTATIONS,
-    INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-    TARGET_ALREADY_IN_USE,
-    ASSIGN_ARRAYS_ONE_ANOTHER,
-    INVALID_POINTER_REASSIGN,
     ARRAY_IS_ARG,
-    INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
     ARRAY_REALLOCATION,
-    RECURSIVE_RESULTS_REQUIRED,
-    PYCCEL_RESTRICTION_INHOMOG_LIST,
-    UNDEFINED_IMPORT_OBJECT,
-    UNDEFINED_FUNCTION,
-    WRONG_NUMBER_OUTPUT_ARGS,
+    ASSIGN_ARRAYS_ONE_ANOTHER,
+    FOUND_DUPLICATED_IMPORT,
+    IMPORTING_EXISTING_IDENTIFIED,
+    INCOMPATIBLE_ARGUMENT,
+    INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
+    INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+    INDEXED_TUPLE,
     INVALID_FOR_ITERABLE,
+    INVALID_INDICES,
+    INVALID_POINTER_REASSIGN,
+    LIST_OF_TUPLES,
+    MISSING_TYPE_ANNOTATIONS,
+    PYCCEL_INTERNAL_ERROR,
+    PYCCEL_RESTRICTION_INHOMOG_LIST,
+    PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS,
     PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
-    UNUSED_DECORATORS,
-    UNSUPPORTED_POINTER_RETURN_VALUE,
     PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE,
-    PYCCEL_RESTRICTION_IS_ISNOT,
-    FOUND_DUPLICATED_IMPORT,
+    PYCCEL_RESTRICTION_TODO,
+    RECURSIVE_RESULTS_REQUIRED,
+    STACK_ARRAY_DEFINITION_IN_LOOP,
+    STACK_ARRAY_SHAPE_UNPURE_FUNC,
+    STACK_ARRAY_UNKNOWN_SHAPE,
+    TARGET_ALREADY_IN_USE,
+    UNDEFINED_FUNCTION,
+    UNDEFINED_IMPORT_OBJECT,
+    UNDEFINED_VARIABLE,
     UNDEFINED_WITH_ACCESS,
-    PYCCEL_INTERNAL_ERROR,
+    UNDERSCORE_NOT_A_THROWAWAY,
+    UNRECOGNISED_FUNCTION_CALL,
+    UNSUPPORTED_POINTER_RETURN_VALUE,
+    UNUSED_DECORATORS,
+    WRONG_NUMBER_OUTPUT_ARGS,
 )
-
 from pyccel.parser.base import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.syntax.headers import types_meta
-
 from pyccel.utilities.stage import PyccelStage
-
-import pyccel.decorators as def_decorators
 
 # ==============================================================================
 
