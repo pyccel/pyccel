@@ -6,11 +6,15 @@ list see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import pathlib
 from itertools import chain
 
 from pygments.lexers.fortran import FortranLexer
 
+import pyccel
 from pyccel.version import __version__ as pyccel_version
+
+pyccel_dir = pathlib.Path(pyccel.__file__).parent.parent
 
 
 def setup(app):
