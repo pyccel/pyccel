@@ -898,6 +898,18 @@ def test_numpy_kernels_compile(language):
 
 
 # ------------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "language",
+    (
+        pytest.param("fortran", marks=pytest.mark.fortran),
+        pytest.param("python", marks=pytest.mark.python),
+    ),
+)
+def test_randint_size_program(language):
+    pyccel_test("scripts/numpy/randint_size.py", language=language)
+
+
+# ------------------------------------------------------------------------------
 def test_multiple_results(language):
     pyccel_test(
         "scripts/runtest_multiple_results.py",
