@@ -13,53 +13,66 @@ together in this module to avoid circular imports.
 """
 
 import sys
-from itertools import chain
 from collections import namedtuple
+from itertools import chain
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors
 
+from .builtins import (
+    PythonList,
+    PythonRange,
+    PythonSet,
+    PythonTuple,
+)
+from .c_concepts import ObjectAddress
+from .cmathext import cmath_mod
 from .core import (
-    AsName,
-    Import,
-    FunctionCall,
+    AliasAssign,
     Allocate,
-    Duplicate,
+    AsName,
     Assign,
-    For,
     CodeBlock,
     Concatenate,
+    Duplicate,
+    For,
+    FunctionCall,
+    Import,
     Module,
     PyccelFunctionDef,
-    AliasAssign,
 )
-
-from .builtins import (
-    PythonRange,
-    PythonList,
-    PythonTuple,
-    PythonSet,
+from .datatypes import (
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PythonNativeInt,
+    StringType,
 )
-from .cmathext import cmath_mod
-from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
-from .datatypes import StringType
-from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
+from .internals import PyccelArrayShapeElement, PyccelFunction, Slice
 from .itertoolsext import itertools_mod
-from .literals import LiteralInteger, LiteralEllipsis, Nil
-from .low_level_tools import UnpackManagedMemory, ManagedMemory
+from .literals import LiteralEllipsis, LiteralInteger, Nil
+from .low_level_tools import ManagedMemory, UnpackManagedMemory
 from .mathext import math_mod
-from .numpyext import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
-from .numpyext import NumpyCross
-from .numpyext import get_shape_of_multi_level_container
+from .numpyext import (
+    NumpyArray,
+    NumpyCross,
+    NumpyEmpty,
+    NumpyLinspace,
+    NumpyTranspose,
+    get_shape_of_multi_level_container,
+    numpy_mod,
+)
 from .numpytypes import NumpyNDArrayType
-from .operators import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .operators import PyccelUnarySub
+from .operators import (
+    PyccelAdd,
+    PyccelArithmeticOperator,
+    PyccelIs,
+    PyccelMul,
+    PyccelUnarySub,
+)
 from .scipyext import scipy_mod
 from .sysext import sys_mod
 from .typingext import typing_mod
-from .variable import Variable, IndexedElement
-
-from .c_concepts import ObjectAddress
+from .variable import IndexedElement, Variable
 
 errors = Errors()
 

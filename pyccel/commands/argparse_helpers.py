@@ -15,9 +15,10 @@ import os
 import pathlib
 import sys
 
-from pyccel import __version__ as pyccel_version, __path__ as pyccel_path
-from pyccel.errors.errors import ErrorsMode
+from pyccel import __path__ as pyccel_path
+from pyccel import __version__ as pyccel_version
 from pyccel.compilers.default_compilers import available_compilers
+from pyccel.errors.errors import ErrorsMode
 
 __all__ = (
     "add_accelerator_selection",

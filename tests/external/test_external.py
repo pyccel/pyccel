@@ -4,10 +4,11 @@
 # TODO test if compiler exists before running mpi, openacc
 #      execute the binary file
 
+import os
+
 import pytest
 
 from pyccel.codegen.pipeline import execute_pyccel
-import os
 
 
 def get_files_from_folder(foldername):

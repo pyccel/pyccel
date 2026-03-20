@@ -28,12 +28,11 @@ f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)
 
 """
 
-from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
+from sympy import count_ops as sympy_count_ops
 
-from pyccel.ast.core import For, Assign, CodeBlock, Comment
-from pyccel.ast.core import Module, Program
-from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
+from pyccel.ast.core import Assign, CodeBlock, Comment, For, Module, Program
+from pyccel.ast.numpyext import NumpyOnes, NumpyZeros
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 

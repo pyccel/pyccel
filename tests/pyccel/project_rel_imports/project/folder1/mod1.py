@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
+
 from pyccel.decorators import pure
 
 T = TypeVar("T", int, float)

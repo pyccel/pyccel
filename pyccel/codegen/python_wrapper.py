@@ -14,8 +14,8 @@ import os
 import time
 
 from pyccel.codegen.compiling.basic import CompileObj
-from pyccel.codegen.wrappergen import Wrappergen
 from pyccel.codegen.utilities import manage_dependencies
+from pyccel.codegen.wrappergen import Wrappergen
 from pyccel.errors.errors import Errors
 
 errors = Errors()

@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import zeros, shape
+from numpy import shape, zeros
 
 
 def matmat(a: "float[:,:]", b: "float[:,:]", c: "float[:,:]"):

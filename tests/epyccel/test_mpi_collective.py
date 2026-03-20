@@ -1,10 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from mpi4py import MPI
 import numpy as np
 import pytest
+from modules import mpi_collective as pmod
+from mpi4py import MPI
 
 from pyccel import epyccel
-from modules import mpi_collective as pmod
 
 # ==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
@@ -132,7 +132,8 @@ def teardown_module():
     comm = MPI.COMM_WORLD
 
     if comm.rank == 0:
-        import os, glob
+        import glob
+        import os
 
         dirname = os.path.dirname(pmod.__file__)
         pattern = os.path.join(dirname, "__epyccel__*")

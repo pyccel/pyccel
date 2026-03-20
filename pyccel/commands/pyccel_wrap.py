@@ -7,16 +7,18 @@
 File containing the `pyccel wrap` command line interface.
 """
 
-import sys
 import argparse
 import pathlib
+import sys
 
 from .argparse_helpers import (
-    add_version_flag,
     add_accelerator_selection,
+    add_common_settings,
     add_compiler_selection,
+    add_version_flag,
+    deprecation_warning,
+    path_with_suffix,
 )
-from .argparse_helpers import path_with_suffix, add_common_settings, deprecation_warning
 
 __all__ = (
     "pyccel_wrap",

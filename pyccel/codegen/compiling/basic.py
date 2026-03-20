@@ -9,8 +9,9 @@
 Module handling classes for compiler information relevant to a given object
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from filelock import FileLock
 
 

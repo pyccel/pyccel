@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import zeros as zilch
 from numpy import shape as form
+from numpy import zeros as zilch
 
 
 def matmat(a: "float[:,:]", b: "float[:,:]", c: "float[:,:]"):

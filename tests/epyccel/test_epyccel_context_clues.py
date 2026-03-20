@@ -1,8 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring
 import sys
-from typing import TypeVar, Final
+from typing import Final, TypeVar
+
 import numpy as np
 import pytest
+
 from pyccel import epyccel
 from pyccel.errors.errors import PyccelError
 

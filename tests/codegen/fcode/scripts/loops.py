@@ -1,4 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from numpy import sum as np_sum
+from numpy import zeros
+
 x = 0
 for i in range(0, 4):
     x = 2 * i
@@ -13,9 +16,6 @@ for i in range(0, 10):
 
 n = 2
 m = 3
-
-from numpy import zeros
-from numpy import sum as np_sum
 
 z = zeros((n, m, 2), "double")
 

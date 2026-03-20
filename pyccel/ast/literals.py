@@ -6,17 +6,23 @@
 """This module contains all literal types"""
 
 import numpy as np
+
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic import TypedAstNode, PyccelAstNode
-from .datatypes import VoidType, PythonNativeInt, PythonNativeBool
-from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
+from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
+    FixedSizeNumericType,
     PrimitiveBooleanType,
+    PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
 )
-from .datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 __all__ = (
     "Literal",

@@ -1,30 +1,33 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
+
+import numpy as np
 import pytest
 from numpy.random import uniform
-import numpy as np
-
 from test_numpy_funcs import (
-    min_int,
+    ATOL,
+    ATOL32,
+    RTOL,
+    RTOL32,
+    matching_types,
+    max_float,
+    max_float32,
+    max_float64,
     max_int,
-    min_int8,
     max_int8,
-    min_int16,
     max_int16,
-    min_int32,
     max_int32,
     max_int64,
-    min_int64,
-)
-from test_numpy_funcs import (
-    max_float,
     min_float,
-    max_float32,
     min_float32,
-    max_float64,
     min_float64,
+    min_int,
+    min_int8,
+    min_int16,
+    min_int32,
+    min_int64,
+    randint,
 )
-from test_numpy_funcs import matching_types, RTOL, ATOL, RTOL32, ATOL32, randint
 
 from pyccel import epyccel
 
@@ -44,42 +47,42 @@ T = TypeVar(
 def test_mult_numpy_python_type(language):
 
     def mult_on_array_int8():
-        from numpy import ones, int8
+        from numpy import int8, ones
 
         a = ones(5, dtype=int8)
         b = a * 2
         return b[0]
 
     def mult_on_array_int16():
-        from numpy import ones, int16
+        from numpy import int16, ones
 
         a = ones(5, dtype=int16)
         b = a * 2
         return b[0]
 
     def mult_on_array_int32():
-        from numpy import ones, int32
+        from numpy import int32, ones
 
         a = ones(5, dtype=int32)
         b = a * 2
         return b[0]
 
     def mult_on_array_int64():
-        from numpy import ones, int64
+        from numpy import int64, ones
 
         a = ones(5, dtype=int64)
         b = a * 2
         return b[0]
 
     def mult_on_array_float32():
-        from numpy import ones, float32
+        from numpy import float32, ones
 
         a = ones(5, dtype=float32)
         b = a * 2
         return b[0]
 
     def mult_on_array_float64():
-        from numpy import ones, float64
+        from numpy import float64, ones
 
         a = ones(5, dtype=float64)
         b = a * 2

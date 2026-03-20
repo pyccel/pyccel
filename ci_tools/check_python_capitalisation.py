@@ -2,12 +2,12 @@
 
 import argparse
 import json
-from pathlib import Path
 import re
 import sys
-import yaml
+from pathlib import Path
 
-from annotation_helpers import locate_code_blocks, is_text, print_to_string
+import yaml
+from annotation_helpers import is_text, locate_code_blocks, print_to_string
 
 if __name__ == "__main__":
 

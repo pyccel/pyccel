@@ -2,10 +2,11 @@
 import os
 import sys
 from typing import TypeVar
-import pytest
-from numpy.random import rand, randn, uniform
-from numpy import isclose, iinfo, finfo, complex64, complex128
+
 import numpy as np
+import pytest
+from numpy import finfo, iinfo, isclose
+from numpy.random import rand, randn, uniform
 
 from pyccel import epyccel
 
@@ -1970,25 +1971,25 @@ def test_full_dtype(language):
         return a[0]
 
     def create_full_val_real_float32(val: "float"):
-        from numpy import full, float32
+        from numpy import float32, full
 
         a = full(3, val, float32)
         return a[0]
 
     def create_full_val_real_float64(val: "float"):
-        from numpy import full, float64
+        from numpy import float64, full
 
         a = full(3, val, float64)
         return a[0]
 
     def create_full_val_real_complex64(val: "float"):
-        from numpy import full, complex64
+        from numpy import complex64, full
 
         a = full(3, val, complex64)
         return a[0]
 
     def create_full_val_real_complex128(val: "float"):
-        from numpy import full, complex128
+        from numpy import complex128, full
 
         a = full(3, val, complex128)
         return a[0]
@@ -2268,13 +2269,13 @@ def test_empty_dtype(language):
         return a[0]
 
     def create_empty_val_complex64():
-        from numpy import empty, complex64
+        from numpy import complex64, empty
 
         a = empty(3, complex64)
         return a[0]
 
     def create_empty_val_complex128():
-        from numpy import empty, complex128
+        from numpy import complex128, empty
 
         a = empty(3, complex128)
         return a[0]
@@ -2429,31 +2430,31 @@ def test_ones_dtype(language):
         return a[0]
 
     def create_ones_val_int32():
-        from numpy import ones, int32
+        from numpy import int32, ones
 
         a = ones(3, int32)
         return a[0]
 
     def create_ones_val_float32():
-        from numpy import ones, float32
+        from numpy import float32, ones
 
         a = ones(3, float32)
         return a[0]
 
     def create_ones_val_float64():
-        from numpy import ones, float64
+        from numpy import float64, ones
 
         a = ones(3, float64)
         return a[0]
 
     def create_ones_val_complex64():
-        from numpy import ones, complex64
+        from numpy import complex64, ones
 
         a = ones(3, complex64)
         return a[0]
 
     def create_ones_val_complex128():
-        from numpy import ones, complex128
+        from numpy import complex128, ones
 
         a = ones(3, complex128)
         return a[0]
@@ -2576,14 +2577,14 @@ def test_ones_in_expression(language):
 
 def test_zeros_basic(language):
     def create_zeros_shape_1d(n: "int"):
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros(n)
         s = shape(a)
         return len(s), s[0]
 
     def create_zeros_shape_2d(n: "int"):
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros((n, n))
         s = shape(a)
@@ -2600,14 +2601,14 @@ def test_zeros_basic(language):
 
 def test_zeros_order(language):
     def create_zeros_shape_C(n: "int", m: "int"):
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros((n, m), order="C")
         s = shape(a)
         return len(s), s[0], s[1]
 
     def create_zeros_shape_F(n: "int", m: "int"):
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros((n, m), order="F")
         s = shape(a)
@@ -2643,31 +2644,31 @@ def test_zeros_dtype(language):
         return a[0]
 
     def create_zeros_val_int32():
-        from numpy import zeros, int32
+        from numpy import int32, zeros
 
         a = zeros(3, int32)
         return a[0]
 
     def create_zeros_val_float32():
-        from numpy import zeros, float32
+        from numpy import float32, zeros
 
         a = zeros(3, float32)
         return a[0]
 
     def create_zeros_val_float64():
-        from numpy import zeros, float64
+        from numpy import float64, zeros
 
         a = zeros(3, float64)
         return a[0]
 
     def create_zeros_val_complex64():
-        from numpy import zeros, complex64
+        from numpy import complex64, zeros
 
         a = zeros(3, complex64)
         return a[0]
 
     def create_zeros_val_complex128():
-        from numpy import zeros, complex128
+        from numpy import complex128, zeros
 
         a = zeros(3, complex128)
         return a[0]
@@ -2711,7 +2712,7 @@ def test_zeros_dtype(language):
 
 def test_zeros_combined_args(language):
     def create_zeros_1_shape():
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros((2, 1), int, "F")
         s = shape(a)
@@ -2724,7 +2725,7 @@ def test_zeros_combined_args(language):
         return a[0, 0]
 
     def create_zeros_2_shape():
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros((4, 2), dtype=float)
         s = shape(a)
@@ -2737,7 +2738,7 @@ def test_zeros_combined_args(language):
         return a[0, 0]
 
     def create_zeros_3_shape():
-        from numpy import zeros, shape
+        from numpy import shape, zeros
 
         a = zeros(order="F", shape=(4, 2), dtype=complex)
         s = shape(a)
@@ -2788,7 +2789,7 @@ def test_zeros_in_expression(language):
         return a.sum()
 
     def zeros_plus_ones():
-        from numpy import zeros, ones
+        from numpy import ones, zeros
 
         a = zeros(3) + ones(3)
         return a.sum()
@@ -3593,7 +3594,7 @@ def test_amax_out_axis(language):
 
 def test_full_like_basic_int(language):
     def create_full_like_shape_1d(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, n, int, "F")
@@ -3601,7 +3602,7 @@ def test_full_like_basic_int(language):
         return len(s), s[0]
 
     def create_full_like_shape_2d(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, n, int, "F")
@@ -3609,14 +3610,14 @@ def test_full_like_basic_int(language):
         return len(s), s[0], s[1]
 
     def create_full_like_val(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, int, "F")
         return a[0], a[1], a[2]
 
     def create_full_like_arg_names(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, val, int, "F", shape=(2, 3))
@@ -3641,7 +3642,7 @@ def test_full_like_basic_int(language):
 
 def test_full_like_basic_real(language):
     def create_full_like_shape_1d(n: "float"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, n, float, "F")
@@ -3649,7 +3650,7 @@ def test_full_like_basic_real(language):
         return len(s), s[0]
 
     def create_full_like_shape_2d(n: "float"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, n, float, "F")
@@ -3657,14 +3658,14 @@ def test_full_like_basic_real(language):
         return len(s), s[0], s[1]
 
     def create_full_like_val(val: "float"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, float, "F")
         return a[0], a[1], a[2]
 
     def create_full_like_arg_names(val: "float"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, val, float, "F", shape=(2, 3))
@@ -3701,7 +3702,7 @@ def test_full_like_basic_real(language):
 )
 def test_full_like_basic_bool(language):
     def create_full_like_shape_1d(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, n, int, "F")
@@ -3709,7 +3710,7 @@ def test_full_like_basic_bool(language):
         return len(s), s[0]
 
     def create_full_like_shape_2d(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, n, int, "F")
@@ -3717,14 +3718,14 @@ def test_full_like_basic_bool(language):
         return len(s), s[0], s[1]
 
     def create_full_like_val(val: "bool"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, 3, bool, "F")
         return a[0], a[1], a[2]
 
     def create_full_like_arg_names(val: "bool"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, fill_value=val, dtype=bool, shape=(2, 3))
@@ -3750,7 +3751,7 @@ def test_full_like_basic_bool(language):
 
 def test_full_like_order(language):
     def create_full_like_shape_C(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, 4, order="C")
@@ -3758,7 +3759,7 @@ def test_full_like_order(language):
         return len(s), s[0], s[1]
 
     def create_full_like_shape_F(n: "int"):
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, 4, order="F")
@@ -3784,112 +3785,112 @@ def test_full_like_order(language):
 )
 def test_full_like_dtype(language):
     def create_full_like_val_int_int_auto(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9], int)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_int_int(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, int)
         return a[0]
 
     def create_full_like_val_int_float_auto(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9], float)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_int_float(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, float)
         return a[0]
 
     def create_full_like_val_int_complex_auto(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9], complex)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_int_complex(val: "int"):
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, complex)
         return a[0]
 
     def create_full_like_val_real_int32_auto(val: "float"):
-        from numpy import full_like, int32, array
+        from numpy import array, full_like, int32
 
         arr = array([5, 1, 8, 0, 9], int32)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_real_int32(val: "float"):
-        from numpy import full_like, int32, array
+        from numpy import array, full_like, int32
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, int32)
         return a[0]
 
     def create_full_like_val_real_float32_auto(val: "float"):
-        from numpy import full_like, float32, array
+        from numpy import array, float32, full_like
 
         arr = array([5, 1, 8, 0, 9], float32)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_real_float32(val: "float"):
-        from numpy import full_like, float32, array
+        from numpy import array, float32, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, float32)
         return a[0]
 
     def create_full_like_val_real_float64_auto(val: "float"):
-        from numpy import full_like, float64, array
+        from numpy import array, float64, full_like
 
         arr = array([5, 1, 8, 0, 9], float64)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_real_float64(val: "float"):
-        from numpy import full_like, float64, array
+        from numpy import array, float64, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, float64)
         return a[0]
 
     def create_full_like_val_real_complex64_auto(val: "float"):
-        from numpy import full_like, complex64, array
+        from numpy import array, complex64, full_like
 
         arr = array([5, 1, 8, 0, 9], complex64)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_real_complex64(val: "float"):
-        from numpy import full_like, complex64, array
+        from numpy import array, complex64, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, complex64)
         return a[0]
 
     def create_full_like_val_real_complex128_auto(val: "float"):
-        from numpy import full_like, complex128, array
+        from numpy import array, complex128, full_like
 
         arr = array([5, 1, 8, 0, 9], complex128)
         a = full_like(arr, val)
         return a[0]
 
     def create_full_like_val_real_complex128(val: "float"):
-        from numpy import full_like, complex128, array
+        from numpy import array, complex128, full_like
 
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr, val, complex128)
@@ -4069,7 +4070,7 @@ def test_full_like_dtype(language):
 
 def test_full_like_combined_args(language):
     def create_full_like_1_shape():
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, 5, int, "F")
@@ -4077,14 +4078,14 @@ def test_full_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_full_like_1_val():
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, 4.0, int, "F")
         return a[0, 0]
 
     def create_full_like_2_shape():
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, dtype=float, fill_value=1)
@@ -4092,14 +4093,14 @@ def test_full_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_full_like_2_val():
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, dtype=float, fill_value=1)
         return a[0, 0]
 
     def create_full_like_3_shape():
-        from numpy import full_like, shape, array
+        from numpy import array, full_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, order="F", shape=(4, 2), dtype=complex, fill_value=1)
@@ -4107,7 +4108,7 @@ def test_full_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_full_like_3_val():
-        from numpy import full_like, array
+        from numpy import array, full_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = full_like(arr, order="F", shape=(4, 2), dtype=complex, fill_value=1)
@@ -4134,7 +4135,7 @@ def test_full_like_combined_args(language):
 
 def test_empty_like_basic(language):
     def create_empty_like_shape_1d(n: "int"):
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, int)
@@ -4142,7 +4143,7 @@ def test_empty_like_basic(language):
         return len(s), s[0]
 
     def create_empty_like_shape_2d(n: "int"):
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, int)
@@ -4160,7 +4161,7 @@ def test_empty_like_basic(language):
 
 def test_empty_like_order(language):
     def create_empty_like_shape_C(n: "int", m: "int"):
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, int, order="C")
@@ -4168,7 +4169,7 @@ def test_empty_like_order(language):
         return len(s), s[0], s[1]
 
     def create_empty_like_shape_F(n: "int", m: "int"):
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, int, order="F")
@@ -4188,112 +4189,112 @@ def test_empty_like_order(language):
 def test_empty_like_dtype(language):
 
     def create_empty_like_val_int_auto():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype=int)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_int():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, int)
         return a[0]
 
     def create_empty_like_val_float_auto():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype=float)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_float():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=float)
         return a[0]
 
     def create_empty_like_val_complex_auto():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_complex():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=complex)
         return a[0]
 
     def create_empty_like_val_int32_auto():
-        from numpy import empty_like, array, int32
+        from numpy import array, empty_like, int32
 
         arr = array([5, 1, 8, 0, 9], dtype=int32)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_int32():
-        from numpy import empty_like, int32, array
+        from numpy import array, empty_like, int32
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=int32)
         return a[0]
 
     def create_empty_like_val_float32_auto():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype="float32")
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_float32():
-        from numpy import empty_like, float32, array
+        from numpy import array, empty_like, float32
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=float32)
         return a[0]
 
     def create_empty_like_val_float64_auto():
-        from numpy import empty_like, array, float64
+        from numpy import array, empty_like, float64
 
         arr = array([5, 1, 8, 0, 9], dtype=float64)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_float64():
-        from numpy import empty_like, float64, array
+        from numpy import array, empty_like, float64
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=float64)
         return a[0]
 
     def create_empty_like_val_complex64_auto():
-        from numpy import empty_like, array, complex64
+        from numpy import array, complex64, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex64)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_complex64():
-        from numpy import empty_like, complex64, array
+        from numpy import array, complex64, empty_like
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=complex64)
         return a[0]
 
     def create_empty_like_val_complex128_auto():
-        from numpy import empty_like, array, complex128
+        from numpy import array, complex128, empty_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex128)
         a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_complex128():
-        from numpy import empty_like, complex128, array
+        from numpy import array, complex128, empty_like
 
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=complex128)
@@ -4354,7 +4355,7 @@ def test_empty_like_dtype(language):
 def test_empty_like_combined_args(language):
 
     def create_empty_like_1_shape():
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, dtype=int, order="F")
@@ -4362,14 +4363,14 @@ def test_empty_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_empty_like_1_val():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, dtype=int, order="F")
         return a[0, 0]
 
     def create_empty_like_2_shape():
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, dtype=float)
@@ -4377,14 +4378,14 @@ def test_empty_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_empty_like_2_val():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, dtype=float)
         return a[0, 0]
 
     def create_empty_like_3_shape():
-        from numpy import empty_like, shape, array
+        from numpy import array, empty_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -4392,7 +4393,7 @@ def test_empty_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_empty_like_3_val():
-        from numpy import empty_like, array
+        from numpy import array, empty_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -4416,7 +4417,7 @@ def test_empty_like_combined_args(language):
 
 def test_ones_like_basic(language):
     def create_ones_like_shape_1d(n: "int"):
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr)
@@ -4424,7 +4425,7 @@ def test_ones_like_basic(language):
         return len(s), s[0]
 
     def create_ones_like_shape_2d(n: "int"):
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr)
@@ -4442,7 +4443,7 @@ def test_ones_like_basic(language):
 
 def test_ones_like_order(language):
     def create_ones_like_shape_C(n: "int", m: "int"):
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, order="C")
@@ -4450,7 +4451,7 @@ def test_ones_like_order(language):
         return len(s), s[0], s[1]
 
     def create_ones_like_shape_F(n: "int", m: "int"):
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, order="F")
@@ -4470,112 +4471,112 @@ def test_ones_like_order(language):
 def test_ones_like_dtype(language):
 
     def create_ones_like_val_int_auto():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9], int)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_int():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, int)
         return a[0]
 
     def create_ones_like_val_float_auto():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9], float)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_float():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, float)
         return a[0]
 
     def create_ones_like_val_complex_auto():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9], complex)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_complex():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, complex)
         return a[0]
 
     def create_ones_like_val_int32_auto():
-        from numpy import ones_like, int32, array
+        from numpy import array, int32, ones_like
 
         arr = array([5, 1, 8, 0, 9], int32)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_int32():
-        from numpy import ones_like, int32, array
+        from numpy import array, int32, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, int32)
         return a[0]
 
     def create_ones_like_val_float32_auto():
-        from numpy import ones_like, float32, array
+        from numpy import array, float32, ones_like
 
         arr = array([5, 1, 8, 0, 9], float32)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_float32():
-        from numpy import ones_like, float32, array
+        from numpy import array, float32, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, float32)
         return a[0]
 
     def create_ones_like_val_float64_auto():
-        from numpy import ones_like, float64, array
+        from numpy import array, float64, ones_like
 
         arr = array([5, 1, 8, 0, 9], float64)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_float64():
-        from numpy import ones_like, float64, array
+        from numpy import array, float64, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, float64)
         return a[0]
 
     def create_ones_like_val_complex64_auto():
-        from numpy import ones_like, complex64, array
+        from numpy import array, complex64, ones_like
 
         arr = array([5, 1, 8, 0, 9], complex64)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_complex64():
-        from numpy import ones_like, complex64, array
+        from numpy import array, complex64, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, complex64)
         return a[0]
 
     def create_ones_like_val_complex128_auto():
-        from numpy import ones_like, complex128, array
+        from numpy import array, complex128, ones_like
 
         arr = array([5, 1, 8, 0, 9], complex128)
         a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_complex128():
-        from numpy import ones_like, complex128, array
+        from numpy import array, complex128, ones_like
 
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, complex128)
@@ -4685,7 +4686,7 @@ def test_ones_like_dtype(language):
 def test_ones_like_combined_args(language):
 
     def create_ones_like_1_shape():
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, int, "F")
@@ -4693,14 +4694,14 @@ def test_ones_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_ones_like_1_val():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, int, "F")
         return a[0, 0]
 
     def create_ones_like_2_shape():
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, dtype=float)
@@ -4708,14 +4709,14 @@ def test_ones_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_ones_like_2_val():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, dtype=float)
         return a[0, 0]
 
     def create_ones_like_3_shape():
-        from numpy import ones_like, shape, array
+        from numpy import array, ones_like, shape
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -4723,7 +4724,7 @@ def test_ones_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_ones_like_3_val():
-        from numpy import ones_like, array
+        from numpy import array, ones_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = ones_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -4750,7 +4751,7 @@ def test_ones_like_combined_args(language):
 
 def test_zeros_like_basic(language):
     def create_zeros_like_shape_1d(n: "int"):
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, int)
@@ -4758,7 +4759,7 @@ def test_zeros_like_basic(language):
         return len(s), s[0]
 
     def create_zeros_like_shape_2d(n: "int"):
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, int)
@@ -4776,7 +4777,7 @@ def test_zeros_like_basic(language):
 
 def test_zeros_like_order(language):
     def create_zeros_like_shape_C(n: "int", m: "int"):
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, order="C")
@@ -4784,7 +4785,7 @@ def test_zeros_like_order(language):
         return len(s), s[0], s[1]
 
     def create_zeros_like_shape_F(n: "int", m: "int"):
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, order="F")
@@ -4804,56 +4805,56 @@ def test_zeros_like_order(language):
 def test_zeros_like_dtype(language):
 
     def create_zeros_like_val_int():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, int)
         return a[0]
 
     def create_zeros_like_val_float():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, float)
         return a[0]
 
     def create_zeros_like_val_complex():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, complex)
         return a[0]
 
     def create_zeros_like_val_int32():
-        from numpy import zeros_like, int32, array
+        from numpy import array, int32, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, int32)
         return a[0]
 
     def create_zeros_like_val_float32():
-        from numpy import zeros_like, float32, array
+        from numpy import array, float32, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, float32)
         return a[0]
 
     def create_zeros_like_val_float64():
-        from numpy import zeros_like, float64, array
+        from numpy import array, float64, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, float64)
         return a[0]
 
     def create_zeros_like_val_complex64():
-        from numpy import zeros_like, complex64, array
+        from numpy import array, complex64, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, complex64)
         return a[0]
 
     def create_zeros_like_val_complex128():
-        from numpy import zeros_like, complex128, array
+        from numpy import array, complex128, zeros_like
 
         arr = array([5, 1, 8, 0, 9])
         a = zeros_like(arr, complex128)
@@ -4905,56 +4906,56 @@ def test_zeros_like_dtype(language):
 def test_zeros_like_dtype_auto(language):
 
     def create_zeros_like_val_int_auto():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=int)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_float_auto():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=float)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_complex_auto():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_int32_auto():
-        from numpy import zeros_like, array, int32
+        from numpy import array, int32, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=int32)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_float32_auto():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype="float32")
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_float64_auto():
-        from numpy import zeros_like, array, float64
+        from numpy import array, float64, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=float64)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_complex64_auto():
-        from numpy import zeros_like, array, complex64
+        from numpy import array, complex64, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex64)
         a = zeros_like(arr)
         return a[0]
 
     def create_zeros_like_val_complex128_auto():
-        from numpy import zeros_like, array, complex128
+        from numpy import array, complex128, zeros_like
 
         arr = array([5, 1, 8, 0, 9], dtype=complex128)
         a = zeros_like(arr)
@@ -4990,7 +4991,7 @@ def test_zeros_like_dtype_auto(language):
 def test_zeros_like_combined_args(language):
 
     def create_zeros_like_1_shape():
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, int, "F")
@@ -4998,14 +4999,14 @@ def test_zeros_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_zeros_like_1_val():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, int, "F")
         return a[0, 0]
 
     def create_zeros_like_2_shape():
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, dtype=float)
@@ -5013,14 +5014,14 @@ def test_zeros_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_zeros_like_2_val():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, dtype=float)
         return a[0, 0]
 
     def create_zeros_like_3_shape():
-        from numpy import zeros_like, shape, array
+        from numpy import array, shape, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -5028,7 +5029,7 @@ def test_zeros_like_combined_args(language):
         return len(s), s[0], s[1]
 
     def create_zeros_like_3_val():
-        from numpy import zeros_like, array
+        from numpy import array, zeros_like
 
         arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
         a = zeros_like(arr, shape=(4, 2), order="F", dtype=complex)
@@ -6434,8 +6435,8 @@ def test_numpy_norm_array_like_2d(language):
 def test_numpy_norm_array_like_2d_fortran_order(language):
 
     def get_norm(arr: "C[:,:](order=F)"):
-        from numpy.linalg import norm
         from numpy import shape
+        from numpy.linalg import norm
 
         a = norm(arr, axis=0)
         b = norm(arr, axis=1)
@@ -6629,8 +6630,8 @@ def test_numpy_norm_array_like_3d(language):
 def test_numpy_norm_array_like_3d_fortran_order(language):
 
     def get_norm(arr: "C[:,:,:](order=F)"):
-        from numpy.linalg import norm
         from numpy import shape
+        from numpy.linalg import norm
 
         a = norm(arr, axis=0)
         b = norm(arr, axis=1)
@@ -6969,7 +6970,7 @@ def test_matmul_3d_broadcast_batch(language):
 def test_numpy_where_array_like_1d_with_condition(language):
 
     def get_chosen_elements(arr: "F[:]"):
-        from numpy import where, shape
+        from numpy import shape, where
 
         a = where(arr > 0, arr, arr * 2)
         s = shape(a)
@@ -7017,7 +7018,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
 def test_numpy_where_array_like_1d_1_arg(language):
 
     def get_chosen_elements(arr: "S[:]"):
-        from numpy import where, shape
+        from numpy import shape, where
 
         a = where(arr > 5)
         s = shape(a)
@@ -7051,7 +7052,7 @@ def test_numpy_where_array_like_1d_1_arg(language):
 def test_numpy_where_array_like_2d_with_condition(language):
 
     def get_chosen_elements(arr: "F[:,:]"):
-        from numpy import where, shape
+        from numpy import shape, where
 
         a = where(arr < 0, arr, arr + 1)
         s = shape(a)
@@ -7087,7 +7088,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
 def test_numpy_where_complex(language):
     def where_wrapper(arr1: "CNT[:]", arr2: "CNT[:]", cond: "bool[:]"):
-        from numpy import where, shape
+        from numpy import shape, where
 
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -7134,7 +7135,7 @@ def test_where_combined_types(language):
         arr1: "int32[:] | float64[:] | complex128[:]",
         arr2: "int64[:] | float32[:]",
     ):
-        from numpy import where, shape
+        from numpy import shape, where
 
         a = where(cond, arr1, arr2)
         s = shape(a)
@@ -7382,7 +7383,6 @@ def test_numpy_linspace_array_like_1d(language):
 
     def test_linspace_dtype(start: "int[:] | float64[:]", stop: int, endpoint: bool):
         from numpy import linspace
-        import numpy as np
 
         numberOfSamplesToGenerate = 7
         a = linspace(

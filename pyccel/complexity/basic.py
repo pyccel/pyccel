@@ -11,6 +11,7 @@ or the memory/space complexity.
 """
 
 import os
+
 from pyccel.parser.parser import Parser
 
 __all__ = ["Complexity"]
