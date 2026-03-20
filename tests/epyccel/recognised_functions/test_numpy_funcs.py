@@ -7382,7 +7382,6 @@ def test_numpy_linspace_array_like_1d(language):
                 out[i][j] = a[i][j]
 
     def test_linspace_dtype(start: "int[:] | float64[:]", stop: int, endpoint: bool):
-        import numpy as np
         from numpy import linspace
 
         numberOfSamplesToGenerate = 7
