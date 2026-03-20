@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
 -   \[DEVELOPER\] Require black formatting.
+-   #2606 : Make class methods non-final by default.
 
 ### Deprecated
 
