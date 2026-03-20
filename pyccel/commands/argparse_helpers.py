@@ -39,30 +39,6 @@ if pyccel_home.exists():
 
 
 # -----------------------------------------------------------------------------------------
-def get_warning_and_line():
-    """
-    Get colored WARNING and LINE strings.
-
-    Get colored WARNING and LINE strings if termcolor is installed, otherwise return
-    plain strings.
-
-    Returns
-    -------
-    tuple[str, str]
-        The WARNING and LINE strings.
-    """
-    try:
-        from termcolor import colored
-
-        WARNING = colored("WARNING", "red", attrs=["bold", "blink"])
-        LINE = colored("-------", "red", attrs=["bold", "blink"])
-    except ImportError:
-        WARNING = "WARNING"
-        LINE = "-------"
-    return WARNING, LINE
-
-
-# -----------------------------------------------------------------------------------------
 def path_with_suffix(suffixes, must_exist=True):
     """
     Get the function which returns a Path to a file with one of the suffixes.
