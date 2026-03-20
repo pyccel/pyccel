@@ -76,8 +76,8 @@ def product_loop_on_2d_array_C(z: "int[:,:](order=C)"):
 
     m, n = shape(z)
 
-    x = [i for i in range(m)] #pylint: disable=unnecessary-comprehension
-    y = [j for j in range(n)] #pylint: disable=unnecessary-comprehension
+    x = [i for i in range(m)]  # pylint: disable=unnecessary-comprehension
+    y = [j for j in range(n)]  # pylint: disable=unnecessary-comprehension
 
     for i, j in product(x, y):
         z[i, j] = i - j
@@ -92,8 +92,8 @@ def product_loop_on_2d_array_F(z: "int[:,:](order=F)"):
 
     m, n = shape(z)
 
-    x = [i for i in range(m)] #pylint: disable=unnecessary-comprehension
-    y = [j for j in range(n)] #pylint: disable=unnecessary-comprehension
+    x = [i for i in range(m)]  # pylint: disable=unnecessary-comprehension
+    y = [j for j in range(n)]  # pylint: disable=unnecessary-comprehension
 
     for i, j in product(x, y):
         z[i, j] = i - j

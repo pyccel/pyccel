@@ -2,6 +2,7 @@
 from numpy import array, zeros_like
 from pyccel.decorators import elemental
 
+
 @elemental
 def square(x: float):
     s = x * x

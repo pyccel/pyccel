@@ -14,7 +14,7 @@ the target language. This may need removing with #251.
 # TODO - improve communicate method
 #      - debug reduce method: it must return the global error
 
-#from pyccel.stdlib.parallel.mpi import (
+# from pyccel.stdlib.parallel.mpi import (
 #    MPI_DOUBLE,
 #    MPI_SUM,
 #    mpi_allreduce,
@@ -33,7 +33,7 @@ the target language. This may need removing with #251.
 #    mpi_type_contiguous,
 #    mpi_type_free,
 #    mpi_type_vector,
-#)
+# )
 
 # $ header class Cart(public)
 # $ header method __init__(Cart, int [:], int [:], bool [:], bool)
