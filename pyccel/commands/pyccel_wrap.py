@@ -9,7 +9,6 @@ File containing the `pyccel wrap` command line interface.
 
 import argparse
 import pathlib
-import sys
 
 from .argparse_helpers import (
     add_accelerator_selection,
