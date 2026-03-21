@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+-   #2522 : Remove use of `pyccel` without sub-command.
+-   #2522 : Remove use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 -   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
 -   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
 

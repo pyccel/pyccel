@@ -9,14 +9,12 @@ import argparse
 import pathlib
 import sys
 
-# TODO: Uncomment for v2.3 to check for existence and file type
-# from .argparse_helpers import path_with_suffix, add_common_settings
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
     add_compiler_selection,
+    path_with_suffix,
 )
-from .pyccel_config import pyccel_config_export
 
 __all__ = ("pyccel_compile", "setup_pyccel_compile_parser", "PYCCEL_COMPILE_DESCR")
 
@@ -37,12 +35,10 @@ def setup_pyccel_compile_parser(parser):
     # ... Positional arguments
     group = parser.add_argument_group("Positional arguments")
 
-    # TODO: Uncomment for v2.3 to check for existence and file type
-    # group.add_argument('filename', metavar='FILE', path_with_suffix(('.py',)),
     group.add_argument(
         "filename",
         metavar="FILE",
-        type=pathlib.Path,
+        type=path_with_suffix((".py",)),
         help="Path (relative or absolute) to the Python file to be translated.",
     )
     # ...
@@ -135,16 +131,10 @@ def setup_pyccel_compile_parser(parser):
     # ... Other options
     group = parser.add_argument_group("Other options")
     add_common_settings(group)
-    group.add_argument(
-        "--export-compiler-config",
-        action="store_true",
-        help="Export all compiler information to a JSON file with the given path (relative or absolute). "
-        "This flag is deprecated and will be removed in v2.3. Please use `pyccel config export` instead.",
-    )
     # ...
 
 
-def pyccel_compile(*, filename, language, output, export_compiler_config, **kwargs):
+def pyccel_compile(*, filename, language, output, **kwargs):
     """
     Call the pyccel pipeline.
 
@@ -158,8 +148,6 @@ def pyccel_compile(*, filename, language, output, export_compiler_config, **kwar
         The target language Pyccel is translating to.
     output : str
         Path to the working directory.
-    export_compiler_config : bool
-        Indicates if compiler information should be exported.
     **kwargs : dict
         See execute_pyccel.
     """
@@ -168,40 +156,6 @@ def pyccel_compile(*, filename, language, output, export_compiler_config, **kwar
     from pyccel.errors.errors import Errors
 
     errors = Errors()
-    # ...
-    # To be removed with v2.3
-    # ...
-    cext = filename.suffix
-    if export_compiler_config:
-        print(
-            "Warning: The flag --export-compiler-config is deprecated and will be removed in v2.3. Please use `pyccel config` instead.",
-            file=sys.stderr,
-        )
-        if cext == "":
-            filename = filename.with_suffix(".json")
-            cext = ".json"
-        if cext != ".json":
-            # severity is error to avoid needing to catch exception
-            errors.report(
-                "Wrong file extension. Expecting `json`, but found",
-                symbol=cext,
-                severity="error",
-            )
-        else:
-            pyccel_config_export(filename)
-            execute_pyccel(
-                "",
-                compiler_family=kwargs["compiler_family"],
-                compiler_export_file=filename,
-            )
-            sys.exit(0)
-    elif cext != ".py":
-        # severity is error to avoid needing to catch exception
-        errors.report(
-            "Wrong file extension. Expecting `py`, but found",
-            symbol=cext,
-            severity="error",
-        )
     # ...
     if not filename.is_file():
         errors.report(f"File not found: {filename}", severity="error")

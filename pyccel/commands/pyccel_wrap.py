@@ -9,14 +9,11 @@ File containing the `pyccel wrap` command line interface.
 
 import argparse
 import pathlib
-import sys
 
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
     add_compiler_selection,
-    add_version_flag,
-    deprecation_warning,
     path_with_suffix,
 )
 
@@ -30,7 +27,7 @@ __all__ = (
 PYCCEL_WRAP_DESCR = "Create the wrapper to allow code to be called from Python."
 
 
-def setup_pyccel_wrap_parser(parser, add_version=False):
+def setup_pyccel_wrap_parser(parser):
     """
     Add the `pyccel wrap` arguments to the parser.
 
@@ -40,9 +37,6 @@ def setup_pyccel_wrap_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
-    add_version : bool, default=False
-        Indicates whether a --version flag should be added to the command.
-        This option will be removed in v2.3.
     """
     # ... Positional arguments
     group = parser.add_argument_group("Positional arguments")
@@ -98,45 +92,10 @@ def setup_pyccel_wrap_parser(parser, add_version=False):
         action="store_true",
         help="Stop Pyccel after generating the wrapper files but before building the Python extension file.",
     )
-    if add_version:
-        add_version_flag(group)
     add_common_settings(group)
 
 
 # ==============================================================================
-def pyccel_wrap_command() -> None:
-    """
-    Command line wrapper for the deprecated `pyccel-wrap` command line tool.
-
-    Command line wrapper for the deprecated `pyccel-wrap` command line tool.
-    """
-
-    parser = argparse.ArgumentParser(
-        description="Pyccel's command line interface.", add_help=False
-    )
-
-    setup_pyccel_wrap_parser(parser, add_version=True)
-
-    print(deprecation_warning("wrap"), file=sys.stderr)
-
-    args = parser.parse_args()
-
-    from pyccel.errors.errors import Errors, PyccelError
-    from pyccel.utilities.stage import PyccelStage
-
-    pyccel_stage = PyccelStage()
-    errors = Errors()
-
-    try:
-        pyccel_wrap(**vars(args))
-    except PyccelError:
-        pass
-
-    pyccel_stage.pyccel_finished()
-    print(errors, end="")
-    sys.exit(errors.has_errors())
-
-
 def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
     """
     Call the `pyccel wrap` pipeline.
