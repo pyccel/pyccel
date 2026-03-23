@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import stack_array, pure
+from pyccel.decorators import pure, stack_array
 
 
 @pure

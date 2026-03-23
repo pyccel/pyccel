@@ -3,15 +3,14 @@ import os
 
 import pytest
 
-from pyccel.parser.parser import Parser
-from pyccel.errors.errors import Errors
-
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.core import Assign, FunctionDef, AugAssign, FunctionDefArgument
+from pyccel.ast.core import Assign, AugAssign, FunctionDef, FunctionDefArgument
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.literals import LiteralInteger
-from pyccel.ast.operators import PyccelOperator, PyccelAdd, PyccelMinus, PyccelMul
+from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelOperator
 from pyccel.ast.variable import Variable
+from pyccel.errors.errors import Errors
+from pyccel.parser.parser import Parser
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, "scripts")

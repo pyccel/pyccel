@@ -3,6 +3,7 @@ that they pass. This is must succeed before the code can be deployed to PyPi.
 """
 
 import os
+
 from bot_tools.github_api_interactions import GitHubAPIInteractions
 
 if __name__ == "__main__":

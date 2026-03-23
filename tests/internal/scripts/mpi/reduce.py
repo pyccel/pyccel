@@ -1,16 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
-from pyccel.stdlib.internal.mpi import mpi_init
-from pyccel.stdlib.internal.mpi import mpi_finalize
-from pyccel.stdlib.internal.mpi import mpi_comm_size
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_reduce
-from pyccel.stdlib.internal.mpi import MPI_INTEGER8
-from pyccel.stdlib.internal.mpi import MPI_SUM
-
 import numpy as np
+
+from pyccel.stdlib.internal.mpi import (
+    MPI_INTEGER8,
+    MPI_SUM,
+    mpi_comm_rank,
+    mpi_comm_size,
+    mpi_comm_world,
+    mpi_finalize,
+    mpi_init,
+    mpi_reduce,
+)
 
 if __name__ == "__main__":
     # we need to declare these variables somehow,

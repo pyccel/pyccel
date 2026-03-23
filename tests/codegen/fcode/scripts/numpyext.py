@@ -1,13 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import zeros
-from numpy import ones
-from numpy import sum as np_sum
-from numpy import array
-from numpy import shape
-
 # from numpy import diag
-from numpy import zeros_like
-from numpy import full_like
+from numpy import array, full_like, ones, shape
+from numpy import sum as np_sum
+from numpy import zeros, zeros_like
 
 x1 = array((1, 2, 3, 5, 8, 5), "float")
 x2 = array((5, 8, 6, 9, 8, 2), "int")

@@ -1,8 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import gc
 import sys
+
 import numpy as np
 import pytest
+
 from pyccel import epyccel
 
 

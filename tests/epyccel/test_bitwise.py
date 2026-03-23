@@ -2,9 +2,9 @@
 import sys
 
 import pytest
+from modules import bitwise
 
 from pyccel import epyccel
-from modules import bitwise
 
 
 @pytest.mark.parametrize("a, b", [(True, False), (True, True)])

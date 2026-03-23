@@ -11,10 +11,9 @@ They also have specific rules to determine the datatype, rank, shape
 """
 
 from .builtins import DtypePrecisionToCastFunction
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType
-from .datatypes import PythonNativeInt
-from .operators import PyccelUnaryOperator, PyccelBinaryOperator
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PythonNativeInt
 from .numpytypes import NumpyInt8Type
+from .operators import PyccelBinaryOperator, PyccelUnaryOperator
 
 __all__ = (
     "PyccelBitAnd",

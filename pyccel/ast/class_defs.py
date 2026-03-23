@@ -7,73 +7,73 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
+from pyccel.ast.builtin_methods.dict_methods import (
+    DictClear,
+    DictCopy,
+    DictGet,
+    DictGetItem,
+    DictItems,
+    DictKeys,
+    DictPop,
+    DictPopitem,
+    DictSetDefault,
+    DictValues,
+)
+from pyccel.ast.builtin_methods.list_methods import (
+    ListAppend,
+    ListClear,
+    ListCopy,
+    ListExtend,
+    ListInsert,
+    ListPop,
+    ListRemove,
+    ListReverse,
+    ListSort,
+)
 from pyccel.ast.builtin_methods.set_methods import (
     SetAdd,
     SetClear,
     SetCopy,
-    SetPop,
+    SetDifference,
+    SetDifferenceUpdate,
     SetDiscard,
-    SetUpdate,
-    SetUnion,
     SetIntersection,
     SetIntersectionUpdate,
     SetIsDisjoint,
-    SetDifference,
-    SetDifferenceUpdate,
-)
-from pyccel.ast.builtin_methods.list_methods import (
-    ListAppend,
-    ListInsert,
-    ListPop,
-    ListClear,
-    ListExtend,
-    ListRemove,
-    ListCopy,
-    ListSort,
-    ListReverse,
-)
-from pyccel.ast.builtin_methods.dict_methods import (
-    DictPop,
-    DictPopitem,
-    DictGet,
-    DictClear,
-    DictCopy,
-    DictSetDefault,
-    DictItems,
-    DictGetItem,
-    DictKeys,
-    DictValues,
+    SetPop,
+    SetUnion,
+    SetUpdate,
 )
 
-from .builtins import PythonImag, PythonReal, PythonConjugate
+from .builtins import PythonConjugate, PythonImag, PythonReal
 from .core import ClassDef, PyccelFunctionDef
 from .datatypes import (
-    PythonNativeBool,
-    PythonNativeInt,
-    PythonNativeFloat,
-    PythonNativeComplex,
-    StringType,
-    TupleType,
+    DictType,
+    GenericType,
     HomogeneousListType,
     HomogeneousSetType,
-    DictType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
     SymbolicType,
-    GenericType,
+    TupleType,
 )
 from .numpyext import (
-    NumpyShape,
-    NumpySum,
-    NumpyAmin,
     NumpyAmax,
+    NumpyAmin,
+    NumpyArray,
+    NumpyConjugate,
     NumpyImag,
     NumpyReal,
-    NumpyTranspose,
-    NumpyConjugate,
-    NumpySize,
     NumpyResultType,
-    NumpyArray,
+    NumpyShape,
+    NumpySize,
+    NumpySum,
+    NumpyTranspose,
 )
-from .numpytypes import NumpyNumericType, NumpyNDArrayType
+from .numpytypes import NumpyNDArrayType, NumpyNumericType
 
 __all__ = (
     "BooleanClass",

@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring, relative-beyond-top-level
 import numpy as np
+
 from .Point_mod import Point
 
 

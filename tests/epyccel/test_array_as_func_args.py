@@ -4,7 +4,8 @@ in the function arguments.
 """
 
 # pylint: disable=missing-function-docstring
-from typing import TypeVar, Final
+from typing import Final, TypeVar
+
 import numpy as np
 import pytest
 from numpy.random import randint, uniform

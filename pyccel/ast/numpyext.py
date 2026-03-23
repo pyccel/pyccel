@@ -11,74 +11,82 @@ import numpy
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
-    WRONG_LINSPACE_ENDPOINT,
-    NON_LITERAL_KEEP_DIMS,
     NON_LITERAL_AXIS,
+    NON_LITERAL_KEEP_DIMS,
+    WRONG_LINSPACE_ENDPOINT,
 )
-
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import TypedAstNode
 from .builtins import (
-    PythonInt,
-    PythonBool,
-    PythonFloat,
-    PythonTuple,
-    PythonComplex,
-    PythonReal,
-    PythonImag,
-    PythonList,
-    PythonType,
-    PythonConjugate,
     DtypePrecisionToCastFunction,
+    PythonBool,
+    PythonComplex,
+    PythonConjugate,
+    PythonFloat,
+    PythonImag,
+    PythonInt,
+    PythonList,
+    PythonReal,
+    PythonTuple,
+    PythonType,
 )
-
-from .core import Module, Import, PyccelFunctionDef, FunctionCall
-
-from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
+from .core import FunctionCall, Import, Module, PyccelFunctionDef
 from .datatypes import (
+    ContainerType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeFloat,
+    PythonNativeInt,
+    SymbolicType,
+    VoidType,
 )
-from .datatypes import HomogeneousTupleType, FixedSizeNumericType, GenericType
-from .datatypes import InhomogeneousTupleType, ContainerType, SymbolicType
-from .datatypes import VoidType
-
-from .internals import PyccelFunction, Slice
-from .internals import PyccelArraySize, PyccelArrayShapeElement
-
-from .literals import LiteralInteger, LiteralString, convert_to_literal
-from .literals import LiteralTrue, LiteralFalse, Literal
-from .literals import Nil
+from .internals import PyccelArrayShapeElement, PyccelArraySize, PyccelFunction, Slice
+from .literals import (
+    Literal,
+    LiteralFalse,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
+)
 from .mathext import MathCeil
-from .numpytypes import (
-    NumpyNumericType,
-    NumpyInt8Type,
-    NumpyInt16Type,
-    NumpyInt32Type,
-    NumpyInt64Type,
-)
-from .numpytypes import (
-    NumpyFloat32Type,
-    NumpyFloat64Type,
-    NumpyFloat128Type,
-    NumpyNDArrayType,
-)
 from .numpytypes import (
     NumpyComplex64Type,
     NumpyComplex128Type,
     NumpyComplex256Type,
+    NumpyFloat32Type,
+    NumpyFloat64Type,
+    NumpyFloat128Type,
+    NumpyInt8Type,
+    NumpyInt16Type,
+    NumpyInt32Type,
+    NumpyInt64Type,
+    NumpyNDArrayType,
+    NumpyNumericType,
     numpy_precision_map,
 )
-from .operators import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .operators import PyccelUnarySub
+from .operators import (
+    PyccelAdd,
+    PyccelDiv,
+    PyccelMinus,
+    PyccelMul,
+    PyccelUnarySub,
+    broadcast,
+)
 from .type_annotations import (
     VariableTypeAnnotation,
-    typenames_to_dtypes as dtype_registry,
 )
-from .variable import Variable, Constant, IndexedElement
+from .type_annotations import typenames_to_dtypes as dtype_registry
+from .variable import Constant, IndexedElement, Variable
 
 errors = Errors()
 pyccel_stage = PyccelStage()

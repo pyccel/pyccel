@@ -1,5 +1,6 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 from typing import Final
+
 import numpy as np
 
 

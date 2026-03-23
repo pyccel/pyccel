@@ -16,37 +16,37 @@ from itertools import chain
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
-
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
-
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
-
+from .basic import PyccelAstNode, ScopedAstNode, TypedAstNode, iterable
+from .bitwise_operators import PyccelBitAnd, PyccelBitOr, PyccelLShift, PyccelRShift
 from .builtins import PythonBool, PythonTuple
-
 from .datatypes import (
-    PyccelType,
     CustomDataType,
+    DictType,
     FinalType,
-    TupleType,
-    PythonNativeBool,
+    HomogeneousListType,
+    HomogeneousSetType,
     InhomogeneousTupleType,
+    PyccelType,
+    PythonNativeBool,
     SymbolicType,
+    TupleType,
 )
-
-from .internals import PyccelSymbol, PyccelFunction, Iterable
-
-from .literals import Nil, LiteralFalse, LiteralString
-from .literals import NilArgument, LiteralTrue
-
-from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
-from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
-from .operators import PyccelFloorDiv
-
-from .variable import DottedName, IndexedElement
-from .variable import Variable, AnnotatedPyccelSymbol
-from .datatypes import HomogeneousSetType, HomogeneousListType, DictType
+from .internals import Iterable, PyccelFunction, PyccelSymbol
+from .literals import LiteralFalse, LiteralString, LiteralTrue, Nil, NilArgument
+from .operators import (
+    PyccelAdd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelFloorDiv,
+    PyccelIs,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelOperator,
+)
+from .variable import AnnotatedPyccelSymbol, DottedName, IndexedElement, Variable
 
 errors = Errors()
 pyccel_stage = PyccelStage()

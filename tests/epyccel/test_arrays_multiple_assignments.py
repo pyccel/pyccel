@@ -5,13 +5,13 @@ from pyccel import epyccel
 from pyccel.decorators import stack_array
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (
-    ARRAY_REALLOCATION,
     ARRAY_DEFINITION_IN_LOOP,
+    ARRAY_REALLOCATION,
+    ASSIGN_ARRAYS_ONE_ANOTHER,
     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
     STACK_ARRAY_DEFINITION_IN_LOOP,
-    ASSIGN_ARRAYS_ONE_ANOTHER,
-    TARGET_ALREADY_IN_USE,
     STACK_ARRAY_UNKNOWN_SHAPE,
+    TARGET_ALREADY_IN_USE,
 )
 
 

@@ -14,15 +14,19 @@ import numpy as np
 
 from pyccel.utilities.stage import PyccelStage
 
-from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import (
+    CharType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousContainerType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    original_type_to_pyccel_type,
+    pyccel_type_to_original_type,
 )
-from .datatypes import GenericType, CharType
-from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
     "NumpyComplex64Type",

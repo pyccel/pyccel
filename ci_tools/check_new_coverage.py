@@ -2,9 +2,10 @@
 
 import argparse
 import os
-from git_evaluation_tools import get_diff_as_json
-from bot_tools.bot_funcs import Bot
+
 import coverage_analysis_tools as cov
+from bot_tools.bot_funcs import Bot
+from git_evaluation_tools import get_diff_as_json
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

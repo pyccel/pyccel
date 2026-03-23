@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
+from modules import python_annotations
 from numpy.random import randint
 
 from pyccel import epyccel
-from modules import python_annotations
 
 
 def test_array_int32_1d_scalar_add(language):

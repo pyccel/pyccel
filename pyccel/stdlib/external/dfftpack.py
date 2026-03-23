@@ -10,13 +10,7 @@ Module exposing the dfftpack library functions to pyccel (see https://www.netlib
 
 # $ header metavar print=True
 
-from pyccel.stdlib.internal.dfftpack import dffti
-from pyccel.stdlib.internal.dfftpack import dfftf
-from pyccel.stdlib.internal.dfftpack import dfftb
-
-from pyccel.stdlib.internal.dfftpack import zffti
-from pyccel.stdlib.internal.dfftpack import zfftf
-from pyccel.stdlib.internal.dfftpack import zfftb
+from pyccel.stdlib.internal.dfftpack import dfftb, dfftf, dffti, zfftb, zfftf, zffti
 
 
 # $ header function fft(double[:]|complex[:], complex[:], int)

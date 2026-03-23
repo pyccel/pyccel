@@ -16,6 +16,7 @@ from functools import lru_cache
 import numpy
 
 from pyccel.utilities.metaclasses import Singleton
+
 from .basic import iterable
 
 __all__ = (

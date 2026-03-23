@@ -6,8 +6,8 @@
 # ------------------------------------------------------------------------- #
 """Module containing helper functions for managing strings"""
 
-import string
 import random
+import string
 
 __all__ = ("random_string", "create_incremented_string")
 # ==============================================================================

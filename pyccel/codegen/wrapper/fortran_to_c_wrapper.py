@@ -9,39 +9,70 @@ Module describing the code-wrapping class : FortranToCWrapper
 which creates an interface exposing Fortran code to C.
 """
 
-from functools import reduce
 import warnings
-from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCModuleVariable
-from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
-from pyccel.ast.bind_c import BindCClassProperty, c_malloc, BindCSizeOf
-from pyccel.ast.bind_c import BindCVariable, BindCArrayType, C_NULL_CHAR
-from pyccel.ast.builtins import VariableIterator, PythonRange
+from functools import reduce
+
+from pyccel.ast.bind_c import (
+    C_NULL_CHAR,
+    BindCArrayType,
+    BindCArrayVariable,
+    BindCClassDef,
+    BindCClassProperty,
+    BindCFunctionDef,
+    BindCModule,
+    BindCModuleVariable,
+    BindCPointer,
+    BindCSizeOf,
+    BindCVariable,
+    C_F_Pointer,
+    CLocFunc,
+    DeallocatePointer,
+    c_malloc,
+)
+from pyccel.ast.builtin_methods.dict_methods import DictItems
 from pyccel.ast.builtin_methods.list_methods import ListAppend
 from pyccel.ast.builtin_methods.set_methods import SetAdd
-from pyccel.ast.builtin_methods.dict_methods import DictItems
-from pyccel.ast.core import Assign, FunctionCallArgument
-from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
-from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
-from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.core import For, FunctionDef, Pass
-from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
-from pyccel.ast.datatypes import TupleType, FinalType
-from pyccel.ast.datatypes import PythonNativeInt, CharType
+from pyccel.ast.builtins import PythonRange, VariableIterator
+from pyccel.ast.core import (
+    AliasAssign,
+    Allocate,
+    AsName,
+    Assign,
+    EmptyNode,
+    For,
+    FunctionAddress,
+    FunctionCallArgument,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    Interface,
+    Module,
+    Pass,
+)
 from pyccel.ast.datatypes import (
-    InhomogeneousTupleType,
-    HomogeneousSetType,
+    CharType,
+    CustomDataType,
+    FinalType,
+    FixedSizeNumericType,
     HomogeneousListType,
+    HomogeneousSetType,
+    InhomogeneousTupleType,
+    PythonNativeInt,
+    TupleType,
 )
 from pyccel.ast.internals import Slice
-from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue, LiteralString
+from pyccel.ast.literals import LiteralInteger, LiteralString, LiteralTrue, Nil
 from pyccel.ast.numpyext import NumpyInt32
-from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyInt32Type, numpy_precision_map
-from pyccel.ast.operators import PyccelIsNot, PyccelMul, PyccelAdd
-from pyccel.ast.variable import Variable, IndexedElement, DottedVariable
+from pyccel.ast.numpytypes import NumpyInt32Type, NumpyNDArrayType, numpy_precision_map
+from pyccel.ast.operators import PyccelAdd, PyccelIsNot, PyccelMul
+from pyccel.ast.variable import DottedVariable, IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.scope import Scope
+
 from .wrapper import Wrapper
 
 errors = Errors()

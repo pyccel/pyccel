@@ -2,8 +2,10 @@
 import logging
 import os
 import shutil
+
 import pytest
 from mpi4py import MPI
+
 from pyccel.commands.pyccel_clean import pyccel_clean
 
 github_debugging = "DEBUG" in os.environ

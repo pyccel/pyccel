@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from mpi4py import MPI
-from numpy import ones
-from numpy import zeros
+from numpy import ones, zeros
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()

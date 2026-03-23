@@ -3,17 +3,17 @@ A module to handle everything related to CMake for the `pyccel make` command.
 """
 
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
-from pyccel.codegen.compiling.project import DirTarget
 from pyccel.codegen.compiling.library_config import (
-    recognised_libs,
     ExternalLibInstaller,
+    recognised_libs,
 )
+from pyccel.codegen.compiling.project import DirTarget
 
 from .build_gen import BuildSystemHandler
 

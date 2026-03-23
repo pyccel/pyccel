@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
 import importlib
+import sys
 
 for modname in sys.argv[1:]:
     mod = importlib.import_module(modname)

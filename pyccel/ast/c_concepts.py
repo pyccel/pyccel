@@ -10,13 +10,13 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 
 from functools import cache
 
-from .basic import TypedAstNode, PyccelAstNode
+from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    HomogeneousContainerType,
+    CharType,
     FixedSizeNumericType,
+    HomogeneousContainerType,
     PrimitiveIntegerType,
 )
-from .datatypes import CharType
 from .internals import PyccelFunction
 from .literals import LiteralString
 

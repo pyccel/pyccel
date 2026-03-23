@@ -11,6 +11,7 @@ via the `pyccel make` command.
 
 from collections.abc import Iterable
 from pathlib import Path
+
 from pyccel.errors.errors import Errors
 
 errors = Errors()

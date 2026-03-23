@@ -41,10 +41,6 @@ test = [
 
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel_command"
-pyccel-make = "pyccel.commands.pyccel_make:pyccel_make_command"
-pyccel-wrap = "pyccel.commands.pyccel_wrap:pyccel_wrap_command"
-pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
-pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"

@@ -33,15 +33,13 @@ m =  WRITE + 2*n**2*(READ + WRITE)
 
 """
 
-from sympy import sympify, Symbol
-from sympy import Poly, LT
+from sympy import LT, Poly, Symbol, sympify
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.builtins import PythonTuple
-from pyccel.ast.core import For, Assign, CodeBlock, FunctionDef
-from pyccel.ast.core import Module, Program
+from pyccel.ast.core import Assign, CodeBlock, For, FunctionDef, Module, Program
 from pyccel.ast.internals import PyccelSymbol
-from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
+from pyccel.ast.numpyext import NumpyOnes, NumpyZeros
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 

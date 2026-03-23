@@ -11,22 +11,21 @@ the same name is defined in `pyccel.ast.headers`, which inherits from the
 class `PyccelAstNode` defined in `pyccel.ast.basic`.
 """
 
-from os.path import join, dirname
+from os.path import dirname, join
 
-from textx import metamodel_from_file, register_language, metamodel_from_str
+from textx import metamodel_from_file, metamodel_from_str, register_language
 
-from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers import MetaVariable
-from pyccel.ast.literals import LiteralString
-from pyccel.ast.literals import LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
-from pyccel.ast.variable import IndexedElement
+from pyccel.ast.literals import LiteralEllipsis, LiteralString, Nil
 from pyccel.ast.type_annotations import (
-    SyntacticTypeAnnotation,
     FunctionTypeAnnotation,
+    SyntacticTypeAnnotation,
     UnionTypeAnnotation,
 )
+from pyccel.ast.variable import IndexedElement
 from pyccel.errors.errors import Errors
+from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False

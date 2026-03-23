@@ -11,13 +11,12 @@ Module containing the Parser object
 
 from pathlib import Path
 
+from pyccel.ast.utilities import recognised_source
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
-from pyccel.ast.utilities import recognised_source
-
 from pyccel.parser.base import get_filename_from_import
-from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic import SemanticParser
+from pyccel.parser.syntactic import SyntaxParser
 
 errors = Errors()
 

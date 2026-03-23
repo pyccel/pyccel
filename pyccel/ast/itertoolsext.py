@@ -7,7 +7,7 @@
 This module represent a call to the itertools functions for code generation.
 """
 
-from .core import PyccelFunctionDef, Module
+from .core import Module, PyccelFunctionDef
 from .internals import Iterable
 
 __all__ = (

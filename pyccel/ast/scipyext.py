@@ -8,7 +8,8 @@
 """Module containing objects from the scipy module understood by pyccel"""
 
 from numpy import pi
-from .core import Module, Import
+
+from .core import Import, Module
 from .datatypes import PythonNativeFloat
 from .variable import Constant
 

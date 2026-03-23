@@ -2,10 +2,11 @@
 # coding: utf-8
 
 import os
+
 import pytest
 
-from pyccel.parser.parser import Parser
 from pyccel.errors.errors import Errors
+from pyccel.parser.parser import Parser
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, "scripts")

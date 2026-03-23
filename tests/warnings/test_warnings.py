@@ -7,13 +7,13 @@
 # TODO warnings for syntax and semantic stages
 
 import os
-import pytest
 
+import pytest
 from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
 
-from pyccel.parser.parser import Parser
-from pyccel.errors.errors import Errors
 from pyccel import epyccel
+from pyccel.errors.errors import Errors
+from pyccel.parser.parser import Parser
 
 
 def get_files_from_folder(foldername):

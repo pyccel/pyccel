@@ -10,8 +10,7 @@ This module contains functions mapping the python mpi4py interface onto their eq
 
 from numpy import int32
 
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_size
+from pyccel.stdlib.internal.mpi import mpi_comm_rank, mpi_comm_size
 
 # ===================================================================================
 # TODO: check error code in 'ierr' and raise an error in Fortran if (ierr != 0)

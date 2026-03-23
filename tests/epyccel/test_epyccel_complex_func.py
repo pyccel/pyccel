@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 
-import pytest
+import modules.complex_func as mod
 import numpy as np
+import pytest
 from numpy.random import rand, randint
 
-import modules.complex_func as mod
 from pyccel import epyccel
 
 # ==============================================================================
