@@ -3851,8 +3851,6 @@ class CCodePrinter(CodePrinter):
         return "".join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
-        sep = self._print(SeparatorComment(40))
-
         empty_scope = Scope(
             name="tmp",
             scope_type="class",
