@@ -148,9 +148,6 @@ from pyccel.ast.utilities import (
 )
 from pyccel.ast.variable import DottedName, DottedVariable, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-from pyccel.parser.scope import Scope
-
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
     INCOMPATIBLE_TYPEVAR_TO_FUNC,
@@ -158,6 +155,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.parser.scope import Scope
 
 errors = Errors()
 
