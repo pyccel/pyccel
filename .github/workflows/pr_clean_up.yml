@@ -14,6 +14,8 @@ jobs:
   update_status:
     name: Update PR status
     runs-on: ubuntu-latest
+    # Possible conclusions : ~action_required~, cancelled, failure, ~neutral~, skipped, stale, success, timed_out, startup_failure, null
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion != 'failure' }}
 
     steps:
       - uses: actions/checkout@v6
