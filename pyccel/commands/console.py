@@ -13,7 +13,7 @@ the sub-command provided by the user.
 import argparse
 import sys
 
-from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
+from .argparse_helpers import add_help_flag, add_version_flag
 from .pyccel_clean import PYCCEL_CLEAN_DESCR, pyccel_clean, setup_pyccel_clean_parser
 from .pyccel_compile import (
     PYCCEL_COMPILE_DESCR,
@@ -89,20 +89,9 @@ def pyccel_command() -> None:
     try:
         kwargs = vars(parser.parse_args())
     except argparse.ArgumentError as err:
-        if "invalid choice" in err.message:
-            WARNING, LINE = get_warning_and_line()
-            message = (
-                f"{WARNING}: Using pyccel with no sub-command is deprecated and will be removed in v2.3."
-                " Please use `pyccel compile` instead."
-            )
-            print(f"{LINE}\n{message}\n{LINE}", file=sys.stderr)
-            argv = ("compile", *argv)
-            parser.exit_on_error = True
-            kwargs = vars(parser.parse_args(argv))
-        else:
-            print(err)
-            parser.print_usage()
-            sys.exit(2)
+        print(err)
+        parser.print_usage()
+        sys.exit(2)
 
     from pyccel.errors.errors import Errors, PyccelError
     from pyccel.utilities.stage import PyccelStage
