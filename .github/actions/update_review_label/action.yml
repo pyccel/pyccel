@@ -20,6 +20,14 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Remove pre-existing labels
+      run: |
+        gh pr edit $PR_NUMBER --remove-label needs_initial_review
+        gh pr edit $PR_NUMBER --remove-label Ready_for_review
+        gh pr edit $PR_NUMBER --remove-label Ready_to_merge
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
     - name: Compute and apply label
       id: compute
       run: |
