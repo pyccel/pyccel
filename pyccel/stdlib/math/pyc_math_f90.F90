@@ -27,7 +27,8 @@ public :: pyc_gcd, &
           pyc_floor_div, &
           expm1, &
           cross_product, &
-          pyc_randint
+          pyc_randint, &
+          pyc_randint_array_i64
 
 private
 
@@ -96,7 +97,6 @@ end interface cross_product
 
 interface pyc_randint
     module procedure pyc_randint_scalar_i64
-    module procedure pyc_randint_array_i64
 end interface pyc_randint
 
 contains
@@ -569,10 +569,11 @@ subroutine pyc_randint_scalar_i64(r, low, high)
     r = floor((high - low) * tmp + low, kind=i64)
 end subroutine pyc_randint_scalar_i64
 
-subroutine pyc_randint_array_i64(arr, low, high)
-    integer(i64), intent(out) :: arr(:)
+subroutine pyc_randint_array_i64(arr, n, low, high)
+    integer(i64), intent(in) :: n
+    integer(i64), intent(out) :: arr(n)
     integer(i64), intent(in) :: low, high
-    real(f64) :: tmp(size(arr))
+    real(f64) :: tmp(n)
     call random_number(tmp)
     arr = floor((high - low) * tmp + low, kind=i64)
 end subroutine pyc_randint_array_i64

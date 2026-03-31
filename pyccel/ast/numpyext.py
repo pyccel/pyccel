@@ -1742,21 +1742,21 @@ class NumpyRandint(PyccelFunction):
     _attribute_nodes = ("_low", "_high")
 
     def __init__(self, low, high=None, size=None):
-        if size is not None and not hasattr(size, "__iter__"):
-            size = (size,)
-
         if high is None:
             high = low
             low = None
 
-        self._shape = size
-        if size is None:
+        is_scalar = size is None
+        self._shape = process_shape(is_scalar, size)
+
+        if is_scalar:
             self._class_type = PythonNativeInt()
+            self._rand = NumpyRand()
         else:
-            rank = len(self.shape)
+            rank = len(self._shape)
             order = None if rank < 2 else "C"
             self._class_type = NumpyNDArrayType.get_new(NumpyInt64Type(), rank, order)
-        self._rand = NumpyRand() if size is None else NumpyRand(*size)
+            self._rand = NumpyRand(*self._shape)
         self._low = low
         self._high = high
         super().__init__()
