@@ -2511,7 +2511,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, NumpyRand):
             return f"call random_number({lhs_code})\n"
 
-        if isinstance(rhs, NumpyRandint):
+        if isinstance(rhs, NumpyRandint) and rhs.rank > 0:
             self.add_import(Import("pyc_math_f90", Module("pyc_math_f90", (), ())))
             int_kind = self.print_kind(rhs)
             if rhs.low is None:
@@ -2519,10 +2519,7 @@ class FCodePrinter(CodePrinter):
             else:
                 low_code = self._print(rhs.low)
             high_code = self._print(rhs.high)
-            if lhs.rank == 0:
-                return f"call pyc_randint({lhs_code}, {low_code}, {high_code})\n"
-            else:
-                return f"call pyc_randint_array_i64({lhs_code}, size({lhs_code}, kind={int_kind}), {low_code}, {high_code})\n"
+            return f"call pyc_randint_array_i64({lhs_code}, size({lhs_code}, kind={int_kind}), {low_code}, {high_code})\n"
 
         if isinstance(rhs, NumpyEmpty):
             return ""
