@@ -1739,7 +1739,7 @@ class NumpyRandint(PyccelFunction):
         The data type of the result. If None, int64 is used.
     """
 
-    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type")
+    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type", "_init_dtype")
     name = "randint"
     _attribute_nodes = ("_low", "_high")
 
@@ -1747,6 +1747,8 @@ class NumpyRandint(PyccelFunction):
         if high is None:
             high = low
             low = None
+
+        self._init_dtype = dtype
 
         if dtype is None:
             dtype = NumpyInt64Type()
@@ -1792,6 +1794,16 @@ class NumpyRandint(PyccelFunction):
     def low(self):
         """return low property of NumpyRandint"""
         return self._low
+
+    @property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
 
 # ==============================================================================
