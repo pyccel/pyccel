@@ -27,6 +27,9 @@ public :: pyc_gcd, &
           pyc_floor_div, &
           expm1, &
           cross_product, &
+          pyc_randint_array_i8, &
+          pyc_randint_array_i16, &
+          pyc_randint_array_i32, &
           pyc_randint_array_i64
 
 private
@@ -555,6 +558,33 @@ subroutine cross_product_i64(a,b,c)
     c(3) = a(1) * b(2) - a(2) * b(1)
 
 end subroutine cross_product_i64
+
+subroutine pyc_randint_array_i8(arr, n, low, high)
+    integer(i64), intent(in) :: n
+    integer(i8), intent(out) :: arr(n)
+    integer(i8), intent(in) :: low, high
+    real(f64) :: tmp(n)
+    call random_number(tmp)
+    arr = floor((high - low) * tmp + low, kind=i8)
+end subroutine pyc_randint_array_i8
+
+subroutine pyc_randint_array_i16(arr, n, low, high)
+    integer(i64), intent(in) :: n
+    integer(i16), intent(out) :: arr(n)
+    integer(i16), intent(in) :: low, high
+    real(f64) :: tmp(n)
+    call random_number(tmp)
+    arr = floor((high - low) * tmp + low, kind=i16)
+end subroutine pyc_randint_array_i16
+
+subroutine pyc_randint_array_i32(arr, n, low, high)
+    integer(i64), intent(in) :: n
+    integer(i32), intent(out) :: arr(n)
+    integer(i32), intent(in) :: low, high
+    real(f64) :: tmp(n)
+    call random_number(tmp)
+    arr = floor((high - low) * tmp + low, kind=i32)
+end subroutine pyc_randint_array_i32
 
 subroutine pyc_randint_array_i64(arr, n, low, high)
     integer(i64), intent(in) :: n
