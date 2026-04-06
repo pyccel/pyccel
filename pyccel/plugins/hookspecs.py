@@ -58,6 +58,12 @@ def get_updated_fcode_methods():
 
 
 @hookspec
+def get_updated_pycode_methods():
+    """
+    """
+
+
+@hookspec
 def get_updated_c_to_python_wrapper_methods():
     """
     """
