@@ -18,6 +18,7 @@ from filelock import FileLock, Timeout
 
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
+from pyccel.plugins.plugin_tools import get_plugin_manager, deactivate_plugins
 from pyccel.utilities.stage import PyccelStage
 from pyccel.utilities.strings import random_string
 
@@ -223,6 +224,7 @@ def epyccel_seq(
     time_execution=False,
     conda_warnings="basic",
     context_dict=None,
+    **kwargs
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -285,6 +287,14 @@ def epyccel_seq(
     module | class | function
         Return accelerated Python module, class or function.
     """
+    plugin_manager = get_plugin_manager()
+    deactivate_plugins(plugin_manager, kwargs)
+
+    # Deactivate unused plugins
+    for plugin in plugin_manager.get_plugins():
+        if plugin_manager.get_name(plugin) not in kwargs:
+            plugin_manager.unregister(plugin)
+
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):

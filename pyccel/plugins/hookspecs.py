@@ -6,6 +6,13 @@ hookspec = pluggy.HookspecMarker("pyccel")
 
 
 @hookspec
+def get_description() -> str:
+    """
+    Get a description of the plugin for use in the CLI.
+    """
+
+
+@hookspec
 def add_cli_options(parser : argparse.ArgumentParser, cli_tool : str):
     """
     Add options to the command line tools.

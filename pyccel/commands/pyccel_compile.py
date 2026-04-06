@@ -16,6 +16,8 @@ from .argparse_helpers import (
     path_with_suffix,
 )
 
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+
 __all__ = ("pyccel_compile", "setup_pyccel_compile_parser", "PYCCEL_COMPILE_DESCR")
 
 PYCCEL_COMPILE_DESCR = "Translate and compile a single Python file."
@@ -128,13 +130,17 @@ def setup_pyccel_compile_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, parser, 'compile')
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     add_common_settings(group)
     # ...
 
 
-def pyccel_compile(*, filename, language, output, **kwargs):
+def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
     """
     Call the pyccel pipeline.
 
@@ -154,6 +160,8 @@ def pyccel_compile(*, filename, language, output, **kwargs):
     # Imports
     from pyccel.codegen.pipeline import execute_pyccel
     from pyccel.errors.errors import Errors
+
+    deactivate_plugins(plugin_manager, kwargs)
 
     errors = Errors()
     # ...

@@ -17,6 +17,8 @@ from .argparse_helpers import (
     path_with_suffix,
 )
 
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+
 __all__ = (
     "pyccel_wrap",
     "pyccel_wrap_command",
@@ -84,6 +86,10 @@ def setup_pyccel_wrap_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, parser, 'compile')
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     group.add_argument(
@@ -96,7 +102,7 @@ def setup_pyccel_wrap_parser(parser):
 
 
 # ==============================================================================
-def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
+def pyccel_wrap(*, filename, language, output, plugin_manager, **kwargs) -> None:
     """
     Call the `pyccel wrap` pipeline.
 
@@ -115,6 +121,8 @@ def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
     """
     # Imports
     from pyccel.codegen.wrap_pipeline import execute_pyccel_wrap
+
+    deactivate_plugins(plugin_manager, kwargs)
 
     # ...
 

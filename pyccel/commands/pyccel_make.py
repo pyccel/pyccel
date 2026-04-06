@@ -18,6 +18,8 @@ from .argparse_helpers import (
     path_with_suffix,
 )
 
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+
 __all__ = ("pyccel_make", "setup_pyccel_make_parser", "PYCCEL_MAKE_DESCR")
 
 PYCCEL_MAKE_DESCR = "Translate and compile multiple Python files in a project."
@@ -196,6 +198,10 @@ def setup_pyccel_make_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, group, 'make')
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     add_common_settings(group)
@@ -208,7 +214,7 @@ def setup_pyccel_make_parser(parser):
     )
 
 
-def pyccel_make(*, language, **kwargs) -> None:
+def pyccel_make(*, language, plugin_manager, **kwargs) -> None:
     """
     Call the `pyccel make` pipeline.
 
@@ -223,5 +229,7 @@ def pyccel_make(*, language, **kwargs) -> None:
     """
 
     from pyccel.codegen.make_pipeline import execute_pyccel_make
+
+    deactivate_plugins(plugin_manager, kwargs)
 
     execute_pyccel_make(language=language.lower(), **kwargs)

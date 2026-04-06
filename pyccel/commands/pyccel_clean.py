@@ -11,6 +11,8 @@ import sysconfig
 
 from .argparse_helpers import add_help_flag
 
+from pyccel.plugins.plugin_tools import get_plugin_manager
+
 __all__ = (
     "pyccel_clean",
     "pyccel_clean_command",
@@ -121,3 +123,7 @@ def setup_pyccel_clean_parser(parser):
         action="store_true",
         help="Also remove any programs from the folder. Beware this may remove programs unrelated to pyccel.",
     )
+
+    plugin_manager = get_plugin_manager()
+    plugin_manager.hook.add_cli_options(parser=group, cli_tool='clean')
+    parser.set_defaults(plugin_manager = plugin_manager)
