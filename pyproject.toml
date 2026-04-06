@@ -25,6 +25,7 @@ dependencies = [
     "immutabledict >= 4.0.0",
     "ninja",
     "meson",
+    "pluggy" #TODO: Version
 ]
 
 [project.optional-dependencies]
