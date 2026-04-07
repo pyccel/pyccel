@@ -2519,8 +2519,7 @@ class FCodePrinter(CodePrinter):
             else:
                 low_code = self._print(rhs.low)
             high_code = self._print(rhs.high)
-            size_kind = self.print_kind(NumpyInt64Type())
-            return f"call pyc_randint_array_{int_kind}({lhs_code}, size({lhs_code}, kind={size_kind}), {low_code}, {high_code})\n"
+            return f"call pyc_randint({lhs_code}, {low_code}, {high_code})\n"
 
         if isinstance(rhs, NumpyEmpty):
             return ""
