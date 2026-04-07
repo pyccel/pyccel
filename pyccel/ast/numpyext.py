@@ -1735,28 +1735,48 @@ class NumpyRandint(PyccelFunction):
         the generated number.
     size : TypedAstNode, optional
         The size of the array that will be generated.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        The data type of the result. If None, int64 is used.
     """
 
-    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type")
+    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type", "_init_dtype")
     name = "randint"
     _attribute_nodes = ("_low", "_high")
 
-    def __init__(self, low, high=None, size=None):
-        if size is not None and not hasattr(size, "__iter__"):
-            size = (size,)
-
+    def __init__(self, low, high=None, size=None, dtype=None):
         if high is None:
             high = low
             low = None
 
-        self._shape = size
-        if size is None:
-            self._class_type = PythonNativeInt()
+        self._init_dtype = dtype
+
+        if dtype is None:
+            dtype = NumpyInt64Type()
+            scalar_type = PythonNativeInt()
         else:
-            rank = len(self.shape)
+            dtype = process_dtype(dtype)
+            if not isinstance(dtype.primitive_type, PrimitiveIntegerType):
+                raise TypeError("Unsupported dtype for randint")
+            scalar_type = dtype
+
+        is_scalar = size is None
+        self._shape = process_shape(is_scalar, size)
+
+        if not is_scalar:
+            cast_func = DtypePrecisionToCastFunction[dtype]
+            if high.dtype != dtype:
+                high = cast_func(high)
+            if low is not None and low.dtype != dtype:
+                low = cast_func(low)
+
+        if is_scalar:
+            self._class_type = scalar_type
+            self._rand = NumpyRand()
+        else:
+            rank = len(self._shape)
             order = None if rank < 2 else "C"
-            self._class_type = NumpyNDArrayType.get_new(NumpyInt64Type(), rank, order)
-        self._rand = NumpyRand() if size is None else NumpyRand(*size)
+            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
+            self._rand = NumpyRand(*self._shape)
         self._low = low
         self._high = high
         super().__init__()
@@ -1774,6 +1794,16 @@ class NumpyRandint(PyccelFunction):
     def low(self):
         """return low property of NumpyRandint"""
         return self._low
+
+    @property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
 
 # ==============================================================================

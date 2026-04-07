@@ -6,7 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
+
 ### Fixed
+
+-   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
 
 ### Changed
 

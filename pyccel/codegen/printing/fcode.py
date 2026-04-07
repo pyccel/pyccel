@@ -123,6 +123,7 @@ from pyccel.ast.numpyext import (
     NumpyNewArray,
     NumpyNonZero,
     NumpyRand,
+    NumpyRandint,
     NumpyReal,
     NumpySign,
     get_shape_of_multi_level_container,
@@ -2171,6 +2172,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
             errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
+
         if expr.low is None:
             randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
         else:
@@ -2184,7 +2186,7 @@ class FCodePrinter(CodePrinter):
             )
 
         prec_code = self.print_kind(expr)
-        return "floor({}, kind={})".format(randfloat, prec_code)
+        return f"floor({randfloat}, kind={prec_code})"
 
     def _print_NumpyFull(self, expr):
 
@@ -2508,6 +2510,16 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyRand):
             return f"call random_number({lhs_code})\n"
+
+        if isinstance(rhs, NumpyRandint) and rhs.rank > 0:
+            self.add_import(Import("pyc_math_f90", Module("pyc_math_f90", (), ())))
+            int_kind = self.print_kind(rhs)
+            if rhs.low is None:
+                low_code = f"0_{int_kind}"
+            else:
+                low_code = self._print(rhs.low)
+            high_code = self._print(rhs.high)
+            return f"call pyc_randint({lhs_code}, {low_code}, {high_code})\n"
 
         if isinstance(rhs, NumpyEmpty):
             return ""
