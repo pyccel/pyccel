@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing objects from the sys module understood by pyccel"""
 
-from .core import PyccelFunctionDef, Module
-from .internals import PyccelFunction
+from .core import Module, PyccelFunctionDef
 from .datatypes import VoidType
-from .internals import LiteralInteger
+from .internals import LiteralInteger, PyccelFunction
 
 __all__ = (
     "SysExit",

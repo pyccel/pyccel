@@ -2,10 +2,10 @@
 
 import argparse
 import difflib
-import os
-import sys
 import json
+import os
 import re
+import sys
 
 
 def find_all_words(file_path, search_word):

@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from typing import Final
+
 from pyccel.decorators import pure
 
 

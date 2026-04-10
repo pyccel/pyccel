@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 
 import filecmp
 import importlib.resources
-from itertools import chain
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from itertools import chain
+from pathlib import Path
 
 from filelock import FileLock
 
-from pyccel.ast.numpy_wrapper import get_numpy_max_acceptable_version_file
-from pyccel.errors.errors import Errors
-
 import pyccel.extensions as ext_folder
 import pyccel.stdlib as stdlib_folder
+from pyccel.ast.numpy_wrapper import get_numpy_max_acceptable_version_file
+from pyccel.errors.errors import Errors
 
 from .basic import CompileObj
 

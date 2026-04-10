@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.stdlib.internal.blas import dger
 import numpy as np
+
+from pyccel.stdlib.internal.blas import dger
 
 if __name__ == "__main__":
     n = np.int32(4)

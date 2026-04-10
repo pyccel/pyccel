@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # Matrix inverse test using dgetri and dgetrf subroutines
 
-from numpy import zeros, float64, int32
-from pyccel.stdlib.internal.lapack import dgetrf
-from pyccel.stdlib.internal.lapack import dgetri
+from numpy import float64, int32, zeros
+
+from pyccel.stdlib.internal.lapack import dgetrf, dgetri
 
 
 def dgetrf_test(A: "float64[:,:](order=F)", piv: "int32[:]"):

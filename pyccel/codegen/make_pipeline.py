@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Contains the `execute_pyccel_make` function which carries out the main steps required to execute Pyccel on a multi-file project.
 """
@@ -13,22 +14,22 @@ import sys
 import time
 from pathlib import Path
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import (
-    PyccelSyntaxError,
-    PyccelSemanticError,
-    PyccelCodegenError,
-)
-from pyccel.parser.parser import Parser
 from pyccel.codegen.build_generation.cmake_gen import CMakeHandler
 from pyccel.codegen.build_generation.meson_gen import MesonHandler
 from pyccel.codegen.codegen import Codegen
-from pyccel.codegen.compiling.project import CompileTarget, BuildProject
+from pyccel.codegen.compiling.project import BuildProject, CompileTarget
 from pyccel.codegen.utilities import manage_dependencies
 from pyccel.codegen.wrappergen import Wrappergen
+from pyccel.errors.errors import (
+    Errors,
+    PyccelCodegenError,
+    PyccelSemanticError,
+    PyccelSyntaxError,
+)
 from pyccel.naming import name_clash_checkers
-from pyccel.utilities.stage import PyccelStage
+from pyccel.parser.parser import Parser
 from pyccel.parser.scope import Scope
+from pyccel.utilities.stage import PyccelStage
 
 from .compiling.compilers import Compiler, get_condaless_search_path
 

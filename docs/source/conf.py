@@ -6,19 +6,15 @@ list see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-from itertools import chain
 import pathlib
-import sys
+from itertools import chain
 
 from pygments.lexers.fortran import FortranLexer
 
-pyccel_dir = pathlib.Path(__file__).parent.parent.parent
+import pyccel
+from pyccel.version import __version__ as pyccel_version
 
-sys.path.append(str(pyccel_dir.resolve()))
-
-from pyccel.version import (
-    __version__ as pyccel_version,
-)  # pylint:disable=wrong-import-position
+pyccel_dir = pathlib.Path(pyccel.__file__).parent.parent
 
 
 def setup(app):

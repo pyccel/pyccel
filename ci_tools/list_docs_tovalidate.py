@@ -1,9 +1,10 @@
 """Script to list the objects that should be numpydoc validated"""
 
-import ast
-from _ast import FunctionDef, ClassDef
 import argparse
+import ast
+from _ast import ClassDef, FunctionDef
 from pathlib import PurePath
+
 from git_evaluation_tools import get_diff_as_json
 
 

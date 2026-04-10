@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module describing all elements of the AST needed to represent elements which appear in a Fortran-C binding
 file.
@@ -11,11 +12,20 @@ file.
 from functools import cache
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode
-from pyccel.ast.core import Module, Deallocate
-from pyccel.ast.core import FunctionDef, ClassDef
-from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
-from pyccel.ast.datatypes import StringType
+from pyccel.ast.core import (
+    ClassDef,
+    Deallocate,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    Module,
+)
+from pyccel.ast.datatypes import (
+    FixedSizeType,
+    InhomogeneousTupleType,
+    PythonNativeInt,
+    StringType,
+)
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable

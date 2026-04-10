@@ -5,8 +5,8 @@ import json
 import os
 import sys
 
+from annotation_helpers import get_code_file_and_lines, print_to_string
 from list_docs_tovalidate import should_ignore
-from annotation_helpers import print_to_string, get_code_file_and_lines
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check doc coverage change")

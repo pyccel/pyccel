@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar, Final
+from typing import Final, TypeVar
+
 import pytest
+
 from pyccel import epyccel
 
 

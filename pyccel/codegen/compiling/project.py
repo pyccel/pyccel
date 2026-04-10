@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module providing objects that are useful for describing the compilation of a project
 via the `pyccel make` command.
@@ -10,6 +11,7 @@ via the `pyccel make` command.
 
 from collections.abc import Iterable
 from pathlib import Path
+
 from pyccel.errors.errors import Errors
 
 errors = Errors()

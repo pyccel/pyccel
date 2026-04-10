@@ -1,21 +1,28 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """This module contains all literal types"""
 
 import numpy as np
+
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic import TypedAstNode, PyccelAstNode
-from .datatypes import VoidType, PythonNativeInt, PythonNativeBool
-from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
+from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
+    FixedSizeNumericType,
     PrimitiveBooleanType,
+    PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
 )
-from .datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 __all__ = (
     "Literal",

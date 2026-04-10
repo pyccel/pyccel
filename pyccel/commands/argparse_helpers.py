@@ -1,7 +1,8 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 File containing functions that help build argparse.ArgumentParser objects.
 
@@ -14,9 +15,10 @@ import os
 import pathlib
 import sys
 
-from pyccel import __version__ as pyccel_version, __path__ as pyccel_path
-from pyccel.errors.errors import ErrorsMode
+from pyccel import __path__ as pyccel_path
+from pyccel import __version__ as pyccel_version
 from pyccel.compilers.default_compilers import available_compilers
+from pyccel.errors.errors import ErrorsMode
 
 __all__ = (
     "add_accelerator_selection",
@@ -24,8 +26,6 @@ __all__ = (
     "add_compiler_selection",
     "add_help_flag",
     "add_version_flag",
-    "deprecation_warning",
-    "get_warning_and_line",
     "path_with_suffix",
     "ErrorModeSelector",
 )
@@ -36,52 +36,6 @@ pyccel_home = pathlib.Path(
 )
 if pyccel_home.exists():
     compiler_choices += [d.stem for d in pyccel_home.iterdir() if d.is_dir]
-
-
-# -----------------------------------------------------------------------------------------
-def get_warning_and_line():
-    """
-    Get colored WARNING and LINE strings.
-
-    Get colored WARNING and LINE strings if termcolor is installed, otherwise return
-    plain strings.
-
-    Returns
-    -------
-    tuple[str, str]
-        The WARNING and LINE strings.
-    """
-    try:
-        from termcolor import colored
-
-        WARNING = colored("WARNING", "red", attrs=["bold", "blink"])
-        LINE = colored("-------", "red", attrs=["bold", "blink"])
-    except ImportError:
-        WARNING = "WARNING"
-        LINE = "-------"
-    return WARNING, LINE
-
-
-# -----------------------------------------------------------------------------------------
-def deprecation_warning(tool):
-    """
-    Create a deprecation warning message for an old pyccel-TOOL command.
-
-    Create a deprecation warning message for an old pyccel-TOOL command.
-
-    Parameters
-    ----------
-    tool : str
-        The name of the tool for which pyccel-TOOL is a deprecated command.
-
-    Returns
-    -------
-    str
-        The deprecation warning message.
-    """
-    WARNING, LINE = get_warning_and_line()
-    message = f"{WARNING}: The pyccel-{tool} command is deprecated and will be removed in v 2.3. Please use `pyccel {tool}` instead."
-    return "\n".join([LINE, message, LINE])
 
 
 # -----------------------------------------------------------------------------------------

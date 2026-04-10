@@ -3,12 +3,11 @@ import multiprocessing
 import os
 import sys
 
-import pytest
 import numpy as np
-from numpy import random
-from numpy import matmul
-
+import pytest
 from modules import openmp
+from numpy import matmul, random
+
 from pyccel import epyccel
 from pyccel.utilities.introspect import get_compiler_info
 

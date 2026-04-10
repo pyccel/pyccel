@@ -1,72 +1,95 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `PythonCodePrinter` class which is responsible for
+printing Pyccel's AST in Python. This is used to print the .pyi files which
+are generated alongside the translated code. These files contain type
+annotations which are used by type checkers and IDEs to provide better support
+for the generated code. The `PythonCodePrinter` is also used to print the code
+for inline functions and interfaces which are not translated but must be
+available in Python for the translated code to work, as well as to simply print
+Python code for the tests.
+"""
+
 import ast
-import warnings
 import math
 
-from pyccel.decorators import __all__ as pyccel_decorators
-
-from pyccel.ast.builtins import (
-    PythonMin,
-    PythonMax,
-    PythonType,
-    PythonBool,
-    PythonInt,
-    PythonFloat,
-)
-from pyccel.ast.builtins import (
-    PythonComplex,
-    DtypePrecisionToCastFunction,
-    PythonTuple,
-    PythonDict,
-)
 from pyccel.ast.builtin_methods.list_methods import ListAppend
-from pyccel.ast.core import (
-    CodeBlock,
-    Import,
-    Assign,
-    FunctionCall,
-    For,
-    AsName,
-    FunctionAddress,
-    If,
+from pyccel.ast.builtins import (
+    DtypePrecisionToCastFunction,
+    PythonBool,
+    PythonComplex,
+    PythonDict,
+    PythonFloat,
+    PythonInt,
+    PythonMax,
+    PythonMin,
+    PythonTuple,
+    PythonType,
 )
-from pyccel.ast.core import IfSection, FunctionDef, Module, PyccelFunctionDef, ClassDef
-from pyccel.ast.core import Interface, FunctionDefArgument, FunctionDefResult
+from pyccel.ast.core import (
+    AsName,
+    Assign,
+    ClassDef,
+    CodeBlock,
+    For,
+    FunctionAddress,
+    FunctionCall,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    Interface,
+    Module,
+    PyccelFunctionDef,
+)
 from pyccel.ast.datatypes import (
-    HomogeneousTupleType,
+    DictType,
+    FixedSizeNumericType,
     HomogeneousListType,
     HomogeneousSetType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PyccelType,
+    VoidType,
 )
-from pyccel.ast.datatypes import VoidType, DictType, InhomogeneousTupleType, PyccelType
-from pyccel.ast.datatypes import FixedSizeNumericType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.internals import PyccelSymbol, Slice
-from pyccel.ast.literals import LiteralTrue, LiteralString, LiteralInteger, Nil
+from pyccel.ast.literals import LiteralInteger, LiteralString, LiteralTrue, Nil
 from pyccel.ast.low_level_tools import UnpackManagedMemory
 from pyccel.ast.mathext import math_constants
-from pyccel.ast.numpyext import numpy_target_swap, numpy_linalg_mod, numpy_random_mod
-from pyccel.ast.numpyext import NumpyArray, NumpyNonZero, NumpyResultType, NumpyCross
+from pyccel.ast.numpyext import (
+    NumpyArray,
+    NumpyBool,
+    NumpyCross,
+    NumpyNDArray,
+    NumpyNonZero,
+    NumpyResultType,
+    numpy_linalg_mod,
+    numpy_random_mod,
+    numpy_target_swap,
+)
 from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
-from pyccel.ast.numpyext import NumpyNDArray, NumpyBool
-from pyccel.ast.numpytypes import NumpyNumericType, NumpyNDArrayType
-from pyccel.ast.type_annotations import VariableTypeAnnotation, SyntacticTypeAnnotation
-from pyccel.ast.typingext import TypingTypeVar, TypingFinal, TypingAnnotation
+from pyccel.ast.numpytypes import NumpyNDArrayType, NumpyNumericType
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, VariableTypeAnnotation
+from pyccel.ast.typingext import TypingAnnotation, TypingFinal, TypingTypeVar
 from pyccel.ast.utilities import (
     builtin_import_registry as pyccel_builtin_import_registry,
 )
-from pyccel.ast.utilities import decorators_mod
-from pyccel.ast.variable import DottedName, Variable, IndexedElement
-
-from pyccel.parser.semantic import magic_method_map
-
+from pyccel.ast.utilities import (
+    decorators_mod,
+)
+from pyccel.ast.variable import DottedName, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
+from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.semantic import magic_method_map
 
 errors = Errors()
 
@@ -1454,6 +1477,10 @@ class PythonCodePrinter(CodePrinter):
         if expr.rank != 0:
             size = self._print(expr.shape)
             args.append(f"size = {size}")
+        if expr.init_dtype is not None:
+            dtype = self._print_dtype_argument(expr, expr.init_dtype)
+            if dtype:
+                args.append(dtype)
         return f"{name}({', '.join(args)})"
 
     def _print_NumpyNorm(self, expr):

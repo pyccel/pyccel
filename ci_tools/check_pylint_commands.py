@@ -3,13 +3,13 @@ Script to check that pylint errors are not globally deactivated.
 """
 
 import argparse
+import json
 import os
 import pathlib
 import re
 import shutil
 import subprocess
 import sys
-import json
 
 accepted_pylint_commands = {
     re.compile("pyccel/ast/.*types.py"): ["no-member", "protected-access"],

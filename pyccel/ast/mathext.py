@@ -1,13 +1,14 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing objects from the math module understood by pyccel"""
 
 import math
 
-from pyccel.ast.core import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.core import Module, PyccelFunctionDef
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeInt
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import Literal, LiteralInteger
 from pyccel.ast.variable import Constant

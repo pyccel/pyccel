@@ -33,7 +33,7 @@ jobs:
         sudo apt install graphviz
     - name: Install Python dependencies
       run: |
-        pip3 install .
+        pip3 install -e .
         pip3 install -r docs/requirements.txt
     - name: Make the sphinx doc
       run: |

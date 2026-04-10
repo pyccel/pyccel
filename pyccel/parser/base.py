@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """
 Module containing aspects of a parser which are in common over all stages.
@@ -12,19 +13,13 @@ import importlib
 import os
 import pathlib
 import re
-import warnings
 
-# ==============================================================================
-from pyccel.version import __version__
-
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import Import, AsName
-
-from pyccel.ast.variable import DottedName
-
+from pyccel.ast.core import AsName, FunctionAddress, FunctionDef, Interface
+from pyccel.errors.errors import ErrorsMode
 from pyccel.parser.scope import Scope
 
-from pyccel.errors.errors import ErrorsMode
+# ==============================================================================
+
 
 # ==============================================================================
 

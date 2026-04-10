@@ -2,18 +2,18 @@
 A module to handle everything related to meson for the `pyccel make` command.
 """
 
-from itertools import chain
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from itertools import chain
+from pathlib import Path
 
-from pyccel.codegen.compiling.project import DirTarget
 from pyccel.codegen.compiling.library_config import (
-    recognised_libs,
     ExternalLibInstaller,
+    recognised_libs,
 )
+from pyccel.codegen.compiling.project import DirTarget
 
 from .build_gen import BuildSystemHandler
 

@@ -8,9 +8,9 @@ Module containing all classes which handle name collision rules
 for different languages.
 """
 
-from .fortrannameclashchecker import FortranNameClashChecker
 from .cnameclashchecker import CNameClashChecker
 from .cppnameclashchecker import CppNameClashChecker
+from .fortrannameclashchecker import FortranNameClashChecker
 from .pythonnameclashchecker import PythonNameClashChecker
 
 name_clash_checkers = {
