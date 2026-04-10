@@ -8,12 +8,12 @@ which creates an interface exposing C++ code to Python using pybind11.
 """
 
 from pyccel.ast.core import Import
-from pyccel.ast.cwrapper import PyccelPyObject
-from pyccel.ast.cwrapper import PyModule, PyModInitFunc
+from pyccel.ast.cwrapper import PyccelPyObject, PyModInitFunc, PyModule
 from pyccel.ast.literals import Nil
 from pyccel.ast.variable import Variable
-from pyccel.parser.scope import Scope
 from pyccel.errors.errors import Errors
+from pyccel.parser.scope import Scope
+
 from .wrapper import Wrapper
 
 errors = Errors()

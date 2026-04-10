@@ -11,8 +11,8 @@ import subprocess
 import sys
 import sysconfig
 
-from numpy import get_include as get_numpy_include
 import pybind11
+from numpy import get_include as get_numpy_include
 
 # ------------------------------------------------------------
 #             GNU compilation configurations

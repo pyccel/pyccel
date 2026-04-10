@@ -4,10 +4,8 @@
 # ------------------------------------------------------------------------------------------#
 """Functions for printing PyBind11 code."""
 
+from pyccel.ast.core import Import, Module, SeparatorComment
 from pyccel.codegen.printing.cppcode import CppCodePrinter
-
-from pyccel.ast.core import SeparatorComment
-from pyccel.ast.core import Import, Module
 
 __all__ = ("PyBindCodePrinter",)
 

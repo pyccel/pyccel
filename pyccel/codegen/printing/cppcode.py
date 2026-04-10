@@ -6,21 +6,22 @@
 """Functions for printing C++ code."""
 
 from itertools import chain
-from pyccel.ast.core import Declare, Import, Module, AsName
+
+from pyccel.ast.core import AsName, Declare, Import, Module
 from pyccel.ast.datatypes import (
-    PrimitiveIntegerType,
+    FinalType,
     PrimitiveBooleanType,
+    PrimitiveComplexType,
     PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeFloat,
+    StringType,
 )
-from pyccel.ast.datatypes import PrimitiveComplexType
-from pyccel.ast.datatypes import PythonNativeFloat
-from pyccel.ast.datatypes import FinalType, StringType
-from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
+from pyccel.ast.literals import LiteralString, LiteralTrue, Nil
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
-from pyccel.ast.variable import Variable, DottedName
+from pyccel.ast.variable import DottedName, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
