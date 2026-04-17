@@ -20,6 +20,7 @@ api_docs: ../pyccel/**/*.py
 html: api_docs
 	@mkdir -p source/docs
 	@cp *.md source/docs
+	@cp -r tutorials source/tutorials
 	@mkdir -p source/developer_docs
 	@cp ../developer_docs/*.md source/developer_docs
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

@@ -10,9 +10,9 @@ rank_in_world = comm.Get_rank()
 
 size_ = comm.Get_size()
 master = 0
-m      = 8
+m = 8
 
-a = zeros(m, 'int')
+a = zeros(m, "int")
 
 if rank_in_world == 1:
     a[:] = 1
@@ -25,7 +25,7 @@ if rank_in_world == 1:
 if rank_in_world == 2:
     key = -1
 
-two   = 2
+two = 2
 color = rank_in_world % two
 
 newcomm = -1
@@ -40,5 +40,3 @@ print("> processor ", rank_in_world, " has a = ", a)
 
 # Destruction of the communicators
 newcomm.Free()
-
-

@@ -1,19 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-
-from pyccel.stdlib.internal.mpi import mpi_init
-from pyccel.stdlib.internal.mpi import mpi_finalize
-from pyccel.stdlib.internal.mpi import mpi_comm_size
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_status_size
-from pyccel.stdlib.internal.mpi import mpi_send
-from pyccel.stdlib.internal.mpi import mpi_recv
-from pyccel.stdlib.internal.mpi import MPI_REAL8
-
 import numpy as np
 
-if __name__ == '__main__':
+from pyccel.stdlib.internal.mpi import (
+    MPI_REAL8,
+    mpi_comm_rank,
+    mpi_comm_size,
+    mpi_comm_world,
+    mpi_finalize,
+    mpi_init,
+    mpi_send,
+)
+
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -33,7 +32,7 @@ if __name__ == '__main__':
         x[:] = 1.0
 
     source = np.int32(0)
-    dest   = np.int32(1)
+    dest = np.int32(1)
 
     # ...
     tag1 = np.int32(1234)

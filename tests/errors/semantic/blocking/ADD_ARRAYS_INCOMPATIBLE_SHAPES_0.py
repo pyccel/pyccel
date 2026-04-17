@@ -1,3 +1,4 @@
+# operands could not be broadcast together with shapes
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 

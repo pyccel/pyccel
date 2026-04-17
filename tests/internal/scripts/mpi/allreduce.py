@@ -1,19 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
-from pyccel.stdlib.internal.mpi import mpi_init
-from pyccel.stdlib.internal.mpi import mpi_finalize
-from pyccel.stdlib.internal.mpi import mpi_comm_size
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_status_size
-from pyccel.stdlib.internal.mpi import mpi_allreduce
-from pyccel.stdlib.internal.mpi import MPI_INTEGER8
-from pyccel.stdlib.internal.mpi import MPI_PROD
-
 import numpy as np
 
-if __name__ == '__main__':
+from pyccel.stdlib.internal.mpi import (
+    MPI_INTEGER8,
+    MPI_PROD,
+    mpi_allreduce,
+    mpi_comm_rank,
+    mpi_comm_size,
+    mpi_comm_world,
+    mpi_finalize,
+    mpi_init,
+)
+
+if __name__ == "__main__":
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
@@ -33,8 +34,8 @@ if __name__ == '__main__':
 
     product_value = 0
     length = np.int32(1)
-    mpi_allreduce (value, product_value, length, MPI_INTEGER8, MPI_PROD, comm, ierr)
+    mpi_allreduce(value, product_value, length, MPI_INTEGER8, MPI_PROD, comm, ierr)
 
-    print('I, process ', rank,', have the global product value ', product_value)
+    print("I, process ", rank, ", have the global product value ", product_value)
 
     mpi_finalize(ierr)

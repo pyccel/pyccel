@@ -7,7 +7,7 @@ rank = comm.Get_rank()
 size_ = comm.Get_size()
 
 n = 10
-x = [0.]*n
+x = [0.0] * n
 
 if rank == 0:
     x[:] = 1.0

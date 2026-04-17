@@ -1,67 +1,78 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-def my_pow(n : 'int', m : 'int'):
-    return n ** m
+
+def my_pow(n: "int", m: "int"):
+    return n**m
+
 
 def array_func_mult():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = arr * my_pow(2, 3)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_func_div():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = arr / my_pow(2, 3)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_1():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.array(arr * 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_2():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.array(arr / 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_3():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.array(arr * my_pow(2, 2))
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_4():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.array(arr / my_pow(2, 2) + arr * 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_5():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.where(arr > 5, arr, (arr * 2) + arr)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_6():
-    arr = np.array([1,2,3,4])
+    arr = np.array([1, 2, 3, 4])
     arr1 = np.where(arr < 5, arr / 2, arr * 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_7():
-    arr = np.array([1,2,3,4])
-    arr1 = np.array([4,3,2,1])
+    arr = np.array([1, 2, 3, 4])
+    arr1 = np.array([4, 3, 2, 1])
     arr2 = np.array(arr + arr1)
     shape = np.shape(arr2)
     return arr[0], arr2[0], len(shape), shape[0]
 
+
 def array_arithmetic_op_func_call_8():
-    arr = np.array([1,2,3,4])
-    arr1 = np.array([4,3,2,1])
+    arr = np.array([1, 2, 3, 4])
+    arr1 = np.array([4, 3, 2, 1])
     arr2 = np.array(arr - arr1)
     shape = np.shape(arr2)
     return arr[0], arr2[0], len(shape), shape[0]

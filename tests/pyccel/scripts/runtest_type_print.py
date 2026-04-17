@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(type(int(3)))
     print(type(np.int16(3)))
     print(type(np.int32(3)))

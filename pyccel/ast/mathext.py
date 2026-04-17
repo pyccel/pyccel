@@ -1,78 +1,80 @@
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing objects from the math module understood by pyccel
-"""
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""Module containing objects from the math module understood by pyccel"""
 
 import math
 
-from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.core import Module, PyccelFunctionDef
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeInt
 from pyccel.ast.internals import PyccelFunction
-from pyccel.ast.variable  import Constant
+from pyccel.ast.literals import Literal, LiteralInteger
+from pyccel.ast.variable import Constant
 
 __all__ = (
     # --- Base classes ---
-    'MathFunctionBase',
-    'MathFunctionBool',
-    'MathFunctionFloat',
-    'MathFunctionInt',
+    "MathFunctionBase",
+    "MathFunctionBool",
+    "MathFunctionFloat",
+    "MathFunctionInt",
     # --- Functions in Math module ---
-    'MathAcos',
-    'MathAcosh',
-    'MathAsin',
-    'MathAsinh',
-    'MathAtan',
-    'MathAtan2',
-    'MathAtanh',
-    'MathCeil',
-    'MathCopysign',
-    'MathCos',
-    'MathCosh',
-    'MathDegrees',
-    'MathErf',
-    'MathErfc',
-    'MathExp',
-    'MathExpm1',
-    'MathFabs',
-    'MathFactorial',
-    'MathFloor',
-    'MathFmod',
-    'MathFrexp',
-    'MathFsum',
-    'MathGamma',
-    'MathGcd',
-    'MathHypot',
-    'MathIsclose',
-    'MathIsfinite',
-    'MathIsinf',
-    'MathIsnan',
-    'MathLcm',
-    'MathLdexp',
-    'MathLgamma',
-    'MathLog',
-    'MathLog10',
-    'MathLog1p',
-    'MathLog2',
-    'MathModf',
-    'MathPow',
-    'MathRadians',
-    'MathRemainder',
-    'MathSin',
-    'MathSinh',
-    'MathSqrt',
-    'MathTan',
-    'MathTanh',
-    'MathTrunc',
+    "MathAcos",
+    "MathAcosh",
+    "MathAsin",
+    "MathAsinh",
+    "MathAtan",
+    "MathAtan2",
+    "MathAtanh",
+    "MathCeil",
+    "MathCopysign",
+    "MathCos",
+    "MathCosh",
+    "MathDegrees",
+    "MathErf",
+    "MathErfc",
+    "MathExp",
+    "MathExpm1",
+    "MathFabs",
+    "MathFactorial",
+    "MathFloor",
+    "MathFmod",
+    "MathFrexp",
+    "MathFsum",
+    "MathGamma",
+    "MathGcd",
+    "MathHypot",
+    "MathIsclose",
+    "MathIsfinite",
+    "MathIsinf",
+    "MathIsnan",
+    "MathLcm",
+    "MathLdexp",
+    "MathLgamma",
+    "MathLog",
+    "MathLog10",
+    "MathLog1p",
+    "MathLog2",
+    "MathModf",
+    "MathPow",
+    "MathRadians",
+    "MathRemainder",
+    "MathSin",
+    "MathSinh",
+    "MathSqrt",
+    "MathTan",
+    "MathTanh",
+    "MathTrunc",
     # --- Import tools ---
-    'math_constants',
-    'math_mod',
+    "math_constants",
+    "math_mod",
 )
 
-#==============================================================================
+
+# ==============================================================================
 # Base classes
-#==============================================================================
+# ==============================================================================
 class MathFunctionBase(PyccelFunction):
     """
     Abstract base class for the Math Functions.
@@ -85,6 +87,7 @@ class MathFunctionBase(PyccelFunction):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
     _shape = None
 
@@ -101,8 +104,9 @@ class MathFunctionFloat(MathFunctionBase):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'float'
+    name = "float"
     _class_type = PythonNativeFloat()
 
 
@@ -118,8 +122,9 @@ class MathFunctionInt(MathFunctionBase):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'int'
+    name = "int"
     _class_type = PythonNativeInt()
 
 
@@ -135,13 +140,16 @@ class MathFunctionBool(MathFunctionBase):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'bool'
+    name = "bool"
     _class_type = PythonNativeBool()
 
-#==============================================================================
+
+# ==============================================================================
 # Functions that return one value
-#==============================================================================
+# ==============================================================================
+
 
 # Floating-point result
 class MathAcos(MathFunctionFloat):
@@ -155,8 +163,10 @@ class MathAcos(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'acos'
+    name = "acos"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -172,8 +182,10 @@ class MathAcosh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'acosh'
+    name = "acosh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -189,8 +201,10 @@ class MathAsin(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'asin'
+    name = "asin"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -206,8 +220,10 @@ class MathAsinh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'asinh'
+    name = "asinh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -223,13 +239,15 @@ class MathAtan(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'atan'
+    name = "atan"
+
     def __init__(self, x):
         super().__init__(x)
 
 
-class MathAtan2   (MathFunctionFloat):
+class MathAtan2(MathFunctionFloat):
     """
     Class representing a call to the `math.atan2` function.
 
@@ -242,10 +260,13 @@ class MathAtan2   (MathFunctionFloat):
     x : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'atan2'
+    name = "atan2"
+
     def __init__(self, y, x):
         super().__init__(y, x)
+
 
 class MathAtanh(MathFunctionFloat):
     """
@@ -258,8 +279,10 @@ class MathAtanh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'atanh'
+    name = "atanh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -277,8 +300,10 @@ class MathCopysign(MathFunctionFloat):
     y : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'copysign'
+    name = "copysign"
+
     def __init__(self, x, y):
         super().__init__(x, y)
 
@@ -294,8 +319,10 @@ class MathCos(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'cos'
+    name = "cos"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -311,8 +338,10 @@ class MathCosh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'cosh'
+    name = "cosh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -328,8 +357,10 @@ class MathErf(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'erf'
+    name = "erf"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -345,8 +376,10 @@ class MathErfc(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'erfc'
+    name = "erfc"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -362,13 +395,15 @@ class MathExp(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'exp'
+    name = "exp"
+
     def __init__(self, x):
         super().__init__(x)
 
 
-class MathExpm1   (MathFunctionFloat):
+class MathExpm1(MathFunctionFloat):
     """
     Class representing a call to the `math.expm1` function.
 
@@ -379,8 +414,10 @@ class MathExpm1   (MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'expm1'
+    name = "expm1"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -396,8 +433,10 @@ class MathFabs(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'fabs'
+    name = "fabs"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -413,8 +452,10 @@ class MathFmod(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'fmod'
+    name = "fmod"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -430,8 +471,10 @@ class MathFsum(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'fsum'
+    name = "fsum"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -447,8 +490,10 @@ class MathGamma(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'gamma'
+    name = "gamma"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -464,8 +509,9 @@ class MathHypot(MathFunctionFloat):
     *args : TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'hypot'
+    name = "hypot"
 
 
 class MathLdexp(MathFunctionFloat):
@@ -481,8 +527,10 @@ class MathLdexp(MathFunctionFloat):
     i : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'ldexp'
+    name = "ldexp"
+
     def __init__(self, x, i):
         super().__init__(x, i)
 
@@ -498,8 +546,10 @@ class MathLgamma(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'lgamma'
+    name = "lgamma"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -515,13 +565,15 @@ class MathLog(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'log'
+    name = "log"
+
     def __init__(self, x):
         super().__init__(x)
 
 
-class MathLog10   (MathFunctionFloat):
+class MathLog10(MathFunctionFloat):
     """
     Class representing a call to the `math.log10` function.
 
@@ -532,13 +584,15 @@ class MathLog10   (MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'log10'
+    name = "log10"
+
     def __init__(self, x):
         super().__init__(x)
 
 
-class MathLog1p   (MathFunctionFloat):
+class MathLog1p(MathFunctionFloat):
     """
     Class representing a call to the `math.log1p` function.
 
@@ -549,13 +603,15 @@ class MathLog1p   (MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'log1p'
+    name = "log1p"
+
     def __init__(self, x):
         super().__init__(x)
 
 
-class MathLog2    (MathFunctionFloat):
+class MathLog2(MathFunctionFloat):
     """
     Class representing a call to the `math.log2` function.
 
@@ -566,8 +622,10 @@ class MathLog2    (MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'log2'
+    name = "log2"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -585,8 +643,10 @@ class MathPow(MathFunctionFloat):
     y : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'pow'
+    name = "pow"
+
     def __init__(self, x, y):
         super().__init__(x, y)
 
@@ -602,8 +662,10 @@ class MathSin(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sin'
+    name = "sin"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -619,8 +681,10 @@ class MathSinh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sinh'
+    name = "sinh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -636,8 +700,10 @@ class MathSqrt(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'sqrt'
+    name = "sqrt"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -653,8 +719,10 @@ class MathTan(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'tan'
+    name = "tan"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -670,8 +738,10 @@ class MathTanh(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'tanh'
+    name = "tanh"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -689,10 +759,13 @@ class MathRemainder(MathFunctionFloat):
     y : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'remainder'
+    name = "remainder"
+
     def __init__(self, x, y):
         super().__init__(x, y)
+
 
 class MathRadians(MathFunctionFloat):
     """
@@ -705,8 +778,10 @@ class MathRadians(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'radians'
+    name = "radians"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -722,10 +797,13 @@ class MathDegrees(MathFunctionFloat):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'degrees'
+    name = "degrees"
+
     def __init__(self, x):
         super().__init__(x)
+
 
 # Integer result
 class MathFactorial(MathFunctionInt):
@@ -739,8 +817,10 @@ class MathFactorial(MathFunctionInt):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'factorial'
+    name = "factorial"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -756,8 +836,9 @@ class MathGcd(MathFunctionInt):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'gcd'
+    name = "gcd"
 
 
 class MathLcm(MathFunctionInt):
@@ -771,8 +852,10 @@ class MathLcm(MathFunctionInt):
     *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
+
     __slots__ = ()
-    name = 'lcm'
+    name = "lcm"
+
 
 class MathCeil(MathFunctionInt):
     """
@@ -785,8 +868,16 @@ class MathCeil(MathFunctionInt):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'ceil'
+    name = "ceil"
+
+    def __new__(cls, x):
+        if isinstance(x, Literal):
+            return LiteralInteger(math.ceil(x.python_value), dtype=cls._class_type)
+        else:
+            return super().__new__(cls)
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -802,8 +893,16 @@ class MathFloor(MathFunctionInt):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'floor'
+    name = "floor"
+
+    def __new__(cls, x):
+        if isinstance(x, Literal):
+            return LiteralInteger(math.floor(x.python_value), dtype=cls._class_type)
+        else:
+            return super().__new__(cls)
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -819,10 +918,13 @@ class MathTrunc(MathFunctionInt):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'trunc'
+    name = "trunc"
+
     def __init__(self, x):
         super().__init__(x)
+
 
 # Boolean result
 class MathIsclose(MathFunctionBool):
@@ -838,8 +940,10 @@ class MathIsclose(MathFunctionBool):
     b : TypedAstNode
         The second expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isclose'
+    name = "isclose"
+
     def __init__(self, a, b):
         super().__init__(a, b)
 
@@ -855,8 +959,10 @@ class MathIsfinite(MathFunctionBool):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isfinite'
+    name = "isfinite"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -872,8 +978,10 @@ class MathIsinf(MathFunctionBool):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isinf'
+    name = "isinf"
+
     def __init__(self, x):
         super().__init__(x)
 
@@ -889,14 +997,18 @@ class MathIsnan(MathFunctionBool):
     x : TypedAstNode
         The expression passed as argument to the function.
     """
+
     __slots__ = ()
-    name = 'isnan'
+    name = "isnan"
+
     def __init__(self, x):
         super().__init__(x)
 
-#==============================================================================
+
+# ==============================================================================
 # Functions that return two values
-#==============================================================================
+# ==============================================================================
+
 
 # TODO
 class MathFrexp(MathFunctionBase):
@@ -907,8 +1019,10 @@ class MathFrexp(MathFunctionBase):
     m is a float and e is an int, such that x = m * 2.**e.
     If x is 0, m and e are both 0.  Else 0.5 <= abs(m) < 1.0.
     """
+
     __slots__ = ()
-    name = 'frexp'
+    name = "frexp"
+
 
 # TODO
 class MathModf(MathFunctionBase):
@@ -918,34 +1032,37 @@ class MathModf(MathFunctionBase):
     Return the fractional and integer parts of x.  Both results carry the sign
     of x and are floats.
     """
-    __slots__ = ()
-    name = 'modf'
 
-#==============================================================================
+    __slots__ = ()
+    name = "modf"
+
+
+# ==============================================================================
 # Dictionary to map math functions to classes above
-#==============================================================================
+# ==============================================================================
 
 _base_classes = (
-    'MathFunctionBase',
-    'MathFunctionFloat',
-    'MathFunctionInt',
-    'MathFunctionBool'
+    "MathFunctionBase",
+    "MathFunctionFloat",
+    "MathFunctionInt",
+    "MathFunctionBool",
 )
 
-math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().items() \
-        if k.startswith('Math') and (k not in _base_classes)]
+math_functions = [
+    PyccelFunctionDef(v.name, v)
+    for k, v in globals().copy().items()
+    if k.startswith("Math") and (k not in _base_classes)
+]
 
-#==============================================================================
+# ==============================================================================
 # Constants
-#==============================================================================
+# ==============================================================================
 math_constants = {
-    'e'  : Constant(PythonNativeFloat(), 'e'  , value=math.e  ),
-    'pi' : Constant(PythonNativeFloat(), 'pi' , value=math.pi ),
-    'inf': Constant(PythonNativeFloat(), 'inf', value=math.inf),
-    'nan': Constant(PythonNativeFloat(), 'nan', value=math.nan),
-    'tau': Constant(PythonNativeFloat(), 'tau', value=2.*math.pi),
+    "e": Constant(PythonNativeFloat(), "e", value=math.e),
+    "pi": Constant(PythonNativeFloat(), "pi", value=math.pi),
+    "inf": Constant(PythonNativeFloat(), "inf", value=math.inf),
+    "nan": Constant(PythonNativeFloat(), "nan", value=math.nan),
+    "tau": Constant(PythonNativeFloat(), "tau", value=2.0 * math.pi),
 }
 
-math_mod = Module('math',
-        variables = math_constants.values(),
-        funcs     = math_functions)
+math_mod = Module("math", variables=math_constants.values(), funcs=math_functions)

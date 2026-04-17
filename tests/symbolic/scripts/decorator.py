@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
-#@sympy
-#def g_sympy(t,i0):
+# @sympy
+# def g_sympy(t,i0):
 #    #This function must return a sympy expression
 #    #that depends on the arguments of the function
 #    from sympy import symbols, Eq, dsolve, solve, Derivative, sin
@@ -19,17 +19,20 @@
 
 @sympy
 def f1_sympy():
-    #This function must return a sympy expression
-    #that depends on the arguments of the function
-    from sympy.abc import x,y
-    expr = x*y + 2
+    # This function must return a sympy expression
+    # that depends on the arguments of the function
+    from sympy.abc import x, y
+
+    expr = x * y + 2
     return expr
+
 
 @sympy
 def f2_sympy(x):
-    #This function must return a sympy expression
-    #that depends on the arguments of the function
+    # This function must return a sympy expression
+    # that depends on the arguments of the function
     from sympy import diff
-    u = x**2 + 2*x
+
+    u = x**2 + 2 * x
     u_dx = diff(u, x)
     return u_dx

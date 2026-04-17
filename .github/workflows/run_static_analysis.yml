@@ -1,0 +1,66 @@
+name: Run static analysis tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: 'Python version to use (leave empty to use the default for the selected suite)'
+        required: false
+        type: string
+        default: ''
+
+      base:
+        description: 'The SHA to which the code should be compared'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  base_check:
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.pr_info.outputs.base }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Get PR info
+        id: pr_info
+        run: |
+          if [ -n "${{ inputs.base }}" ]
+          then
+            echo "base=${{ inputs.base }}" >> $GITHUB_OUTPUT
+          else
+            # Define HEAD_SHA and PR_REPO environment variables
+            # Find PR_ID
+            PR_ID=$(gh pr list --state open --json number,headRefOid \
+                    --jq ".[] | select(.headRefOid == \"${{ github.sha }}\") | .number")
+            # Get the BASE_SHA from the PR
+            BASE_NAME=$(gh pr view $PR_ID --json baseRefName --jq '.["baseRefName"]')
+            BASE_SHA=$(git log -1 origin/${BASE_NAME} --pretty="%H")
+            echo "base=${BASE_SHA}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  docs:
+    needs: [base_check]
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{needs.base_check.outputs.base}}
+
+  markdown_lint:
+    uses: ./.github/workflows/markdown_lint.yml
+
+  pyccel_lint:
+    uses: ./.github/workflows/pyccel_lint.yml
+
+  pylint:
+    needs: [base_check]
+    uses: ./.github/workflows/pylint.yml
+    with:
+      base: ${{needs.base_check.outputs.base}}
+
+  spelling:
+    uses: ./.github/workflows/spelling.yml

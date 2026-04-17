@@ -1,5 +1,6 @@
+# Expecting an argument of the same type as the elements of the set
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 a = {2, 9, 5}
-b = {8.9, 6.}
+b = {8.9, 6.0}
 a.update(b)

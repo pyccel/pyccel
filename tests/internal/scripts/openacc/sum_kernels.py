@@ -3,7 +3,7 @@
 
 from numpy import zeros
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     nx = 1024
 
     vecA = zeros(nx)
@@ -12,17 +12,17 @@ if __name__ == '__main__':
 
     # Initialization of vectors
     for i in range(0, nx):
-        vecA[i] = 1.0/(nx-i+1)
-        vecB[i] = vecA[i]**2
+        vecA[i] = 1.0 / (nx - i + 1)
+        vecB[i] = vecA[i] ** 2
 
-    #$ acc kernels
+    # $ acc kernels
     for i in range(0, nx):
         vecC[i] = vecA[i] * vecB[i]
-    #$ acc end kernels
+    # $ acc end kernels
 
     # Compute the check value
     c_sum = 0.0
     for i in range(0, nx):
         c_sum += vecC[i]
 
-    print(' Reduction sum: ', c_sum)
+    print(" Reduction sum: ", c_sum)

@@ -12,6 +12,7 @@ permissions:
 jobs:
   build_docs:
     runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN}}
     steps:
@@ -22,7 +23,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install dependencies
       if: steps.duplicate_check.outputs.should_skip != 'true'
       uses: ./.github/actions/linux_install
@@ -32,7 +33,7 @@ jobs:
         sudo apt install graphviz
     - name: Install Python dependencies
       run: |
-        pip3 install .
+        pip3 install -e .
         pip3 install -r docs/requirements.txt
     - name: Make the sphinx doc
       run: |

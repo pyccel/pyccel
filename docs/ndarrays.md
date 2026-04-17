@@ -11,6 +11,8 @@ Different ndarrays can share the same data, so that changes made in one ndarray 
 
 Pyccel relies on [STC](https://github.com/Stclib/STC/) for the implementation of ndarrays in C and uses Fortran's intrinsic arrays for Fortran support. The implementation is very similar to NumPy's ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
 
+STC is provided with Pyccel, but any version of this package installed locally will take precedent.
+
 Below we will show some rules that Pyccel has set to handles those differences.
 
 ### Dynamically and statically typed languages ###

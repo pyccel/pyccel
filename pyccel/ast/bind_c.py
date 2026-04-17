@@ -1,80 +1,110 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module describing all elements of the AST needed to represent elements which appear in a Fortran-C binding
 file.
 """
 
+from functools import cache
+
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode
-from pyccel.ast.core import Module, Deallocate
-from pyccel.ast.core import FunctionDef, ClassDef
-from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt, InhomogeneousTupleType
-from pyccel.ast.datatypes import StringType
+from pyccel.ast.core import (
+    ClassDef,
+    Deallocate,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    Module,
+)
+from pyccel.ast.datatypes import (
+    FixedSizeType,
+    InhomogeneousTupleType,
+    PythonNativeInt,
+    StringType,
+)
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable
-from pyccel.errors.errors     import Errors
-from pyccel.utilities.metaclasses import Singleton
+from pyccel.errors.errors import Errors
 
 errors = Errors()
 
 __all__ = (
-    'BindCArrayType',
-    'BindCArrayVariable',
-    'BindCClassDef',
-    'BindCClassProperty',
-    'BindCFunctionDef',
-    'BindCModule',
-    'BindCModuleVariable',
-    'BindCPointer',
-    'BindCSizeOf',
-    'BindCVariable',
-    'CLocFunc',
-    'C_F_Pointer',
-    'C_NULL_CHAR',
-    'DeallocatePointer',
-    'c_malloc',
+    "BindCArrayType",
+    "BindCArrayVariable",
+    "BindCClassDef",
+    "BindCClassProperty",
+    "BindCFunctionDef",
+    "BindCModule",
+    "BindCModuleVariable",
+    "BindCPointer",
+    "BindCSizeOf",
+    "BindCVariable",
+    "CLocFunc",
+    "C_F_Pointer",
+    "C_NULL_CHAR",
+    "DeallocatePointer",
+    "c_malloc",
 )
 
 # =======================================================================================
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(FixedSizeType, metaclass = Singleton):
+
+class BindCPointer(FixedSizeType):
     """
     Datatype representing a C pointer in Fortran.
 
     Datatype representing a C pointer in Fortran. This data type is defined
     in the iso_c_binding module.
     """
-    __slots__ = ()
-    _name = 'bindcpointer'
 
-class BindCArrayType(InhomogeneousTupleType):
+    __slots__ = ()
+    _name = "bindcpointer"
+
+
+class BindCArrayType:
     """
     Datatype for a tuple containing all the information necessary to describe an array.
 
     Datatype for a tuple containing a pointer to array data and integers describing their
     shape and strides.
-
-    Parameters
-    ----------
-    rank : int
-        The rank of the array being described.
-    has_strides : bool
-        Indicates whether strides are used to describe the array.
     """
-    __slots__ = ()
-    _name = 'BindCArrayType'
 
-    def __init__(self, rank, has_strides):
-        shape_types = (PythonNativeInt(),)*rank
-        stride_types = (PythonNativeInt(),)*rank*has_strides
-        super().__init__(BindCPointer(), *shape_types, *stride_types)
+    __slots__ = ()
+    _name = "BindCArrayType"
+
+    @classmethod
+    @cache
+    def get_new(cls, rank, has_strides):
+        """
+        Get the parametrised BindCArrayType subclass.
+
+        Get the parametrised BindCArrayType subclass.
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array being described.
+        has_strides : bool
+            Indicates whether strides are used to describe the array.
+        """
+        base_shape_types = (PythonNativeInt(),) * rank
+        stride_types = (PythonNativeInt(),) * rank * has_strides
+        ubound_types = (PythonNativeInt(),) * rank * has_strides
+        name = "BindCArray{rank}DType"
+        if has_strides:
+            name += "_strided"
+        super_class_instance = InhomogeneousTupleType.get_new(
+            BindCPointer(), *base_shape_types, *stride_types, *ubound_types
+        )
+        return type(name, (type(super_class_instance), BindCArrayType), {})()
+
 
 # =======================================================================================
 #                                   Wrapper classes
@@ -108,8 +138,9 @@ class BindCFunctionDef(FunctionDef):
         The class from which BindCFunctionDef inherits which contains all
         details about the args and kwargs.
     """
-    __slots__ = ('_original_function',)
-    _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
+
+    __slots__ = ("_original_function",)
+    _attribute_nodes = (*FunctionDef._attribute_nodes, "_original_function")
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
@@ -141,7 +172,9 @@ class BindCFunctionDef(FunctionDef):
         assert newname == newname.lower()
         self._name = newname
 
+
 # =======================================================================================
+
 
 class BindCVariable(Variable):
     """
@@ -159,16 +192,20 @@ class BindCVariable(Variable):
     original_var : Variable
         The original variable in the target language.
     """
-    __slots__ = ('_new_var', '_original_var')
-    _attribute_nodes = Variable._attribute_nodes + ('_new_var', '_original_var')
+
+    __slots__ = ("_new_var", "_original_var")
+    _attribute_nodes = Variable._attribute_nodes + ("_new_var", "_original_var")
 
     def __init__(self, new_var, original_var):
         self._new_var = new_var
         self._original_var = original_var
-        super().__init__(new_var.class_type, new_var.name,
-                    memory_handling = new_var.memory_handling,
-                    is_optional = new_var.is_optional,
-                    shape = new_var.shape)
+        super().__init__(
+            new_var.class_type,
+            new_var.name,
+            memory_handling=new_var.memory_handling,
+            is_optional=new_var.is_optional,
+            shape=new_var.shape,
+        )
 
     @property
     def new_var(self):
@@ -187,6 +224,7 @@ class BindCVariable(Variable):
         The original variable from the target language that was wrapped.
         """
         return self._original_var
+
 
 # =======================================================================================
 class BindCModule(Module):
@@ -221,10 +259,22 @@ class BindCModule(Module):
         The class from which BindCModule inherits which contains all details
         about the args and kwargs.
     """
-    __slots__ = ('_orig_mod','_variable_wrappers', '_removed_functions')
-    _attribute_nodes = Module._attribute_nodes + ('_orig_mod','_variable_wrappers', '_removed_functions')
 
-    def __init__(self, *args, original_module, variable_wrappers = (), removed_functions = None, **kwargs):
+    __slots__ = ("_orig_mod", "_variable_wrappers", "_removed_functions")
+    _attribute_nodes = Module._attribute_nodes + (
+        "_orig_mod",
+        "_variable_wrappers",
+        "_removed_functions",
+    )
+
+    def __init__(
+        self,
+        *args,
+        original_module,
+        variable_wrappers=(),
+        removed_functions=None,
+        **kwargs,
+    ):
         self._orig_mod = original_module
         self._variable_wrappers = variable_wrappers
         self._removed_functions = removed_functions
@@ -269,7 +319,9 @@ class BindCModule(Module):
         """
         return ()
 
+
 # =======================================================================================
+
 
 class BindCModuleVariable(Variable):
     """
@@ -291,35 +343,15 @@ class BindCModuleVariable(Variable):
     --------
     Variable : The super class.
     """
-    __slots__ = ('_f_name',)
+
+    __slots__ = ()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._f_name = self._name.lower()
 
-    @property
-    def name(self):
-        """
-        The name of the external variable that should be printed in C.
-
-        The name of the external variable that should be printed in C.
-        In order to be compatible with Fortran the name must be printed
-        in lower case letters.
-        """
-        return self._f_name
-
-    @property
-    def indexed_name(self):
-        """
-        The name under which the variable is indexed in the scope.
-
-        The name under which the variable is indexed in the scope. This is
-        important in order to be able to collect the original Python name
-        used by the user in case of collisions.
-        """
-        return self._name
 
 # =======================================================================================
+
 
 class BindCArrayVariable(Variable):
     """
@@ -345,8 +377,10 @@ class BindCArrayVariable(Variable):
     --------
     Variable : The super class.
     """
-    __slots__ = ('_wrapper_function', '_original_variable')
-    _attribute_nodes = ('_wrapper_function', '_original_variable')
+
+    __slots__ = ("_wrapper_function", "_original_variable")
+    _attribute_nodes = ("_wrapper_function", "_original_variable")
+
     def __init__(self, *args, wrapper_function, original_variable, **kwargs):
         self._original_variable = original_variable
         self._wrapper_function = wrapper_function
@@ -374,7 +408,9 @@ class BindCArrayVariable(Variable):
         """
         return self._wrapper_function
 
+
 # =======================================================================================
+
 
 class BindCClassProperty(PyccelAstNode):
     """
@@ -397,9 +433,11 @@ class BindCClassProperty(PyccelAstNode):
     docstring : LiteralString, optional
         The docstring of the property.
     """
-    __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_type')
-    _attribute_nodes = ('_getter', '_setter')
-    def __init__(self, python_name, getter, setter, class_type, docstring = None):
+
+    __slots__ = ("_getter", "_setter", "_python_name", "_docstring", "_class_type")
+    _attribute_nodes = ("_getter", "_setter")
+
+    def __init__(self, python_name, getter, setter, class_type, docstring=None):
         assert isinstance(getter, BindCFunctionDef)
         assert isinstance(setter, BindCFunctionDef) or setter is None
         self._python_name = python_name
@@ -456,7 +494,9 @@ class BindCClassProperty(PyccelAstNode):
         """
         return self._docstring
 
+
 # =======================================================================================
+
 
 class BindCClassDef(ClassDef):
     """
@@ -477,12 +517,13 @@ class BindCClassDef(ClassDef):
     **kwargs : dict
         See ClassDef.
     """
-    __slots__ = ('_original_class', '_new_func')
+
+    __slots__ = ("_original_class", "_new_func")
 
     def __init__(self, original_class, new_func, **kwargs):
         self._original_class = original_class
         self._new_func = new_func
-        super().__init__(original_class.name, scope = original_class.scope, **kwargs)
+        super().__init__(original_class.name, scope=original_class.scope, **kwargs)
 
     @property
     def new_func(self):
@@ -493,9 +534,11 @@ class BindCClassDef(ClassDef):
         """
         return self._new_func
 
+
 # =======================================================================================
 #                                   Utility functions
 # =======================================================================================
+
 
 class CLocFunc(PyccelAstNode):
     """
@@ -512,7 +555,8 @@ class CLocFunc(PyccelAstNode):
     result : Variable of dtype BindCPointer
         The variable where the C-compatible pointer should be stored.
     """
-    __slots__ = ('_arg', '_result')
+
+    __slots__ = ("_arg", "_result")
     _attribute_nodes = ()
 
     def __init__(self, argument, result):
@@ -540,7 +584,9 @@ class CLocFunc(PyccelAstNode):
         """
         return self._result
 
+
 # =======================================================================================
+
 
 class C_F_Pointer(PyccelAstNode):
     """
@@ -561,10 +607,11 @@ class C_F_Pointer(PyccelAstNode):
     shape : list of Variables
         A list describing the Variables which dictate the size of the array in each dimension.
     """
-    __slots__ = ('_c_expr', '_f_expr', '_shape')
-    _attribute_nodes = ('_c_expr', '_f_expr', '_shape')
 
-    def __init__(self, c_expr, f_expr, shape = None):
+    __slots__ = ("_c_expr", "_f_expr", "_shape")
+    _attribute_nodes = ("_c_expr", "_f_expr", "_shape")
+
+    def __init__(self, c_expr, f_expr, shape=None):
         self._c_expr = c_expr
         self._f_expr = f_expr
         self._shape = shape
@@ -598,6 +645,7 @@ class C_F_Pointer(PyccelAstNode):
         """
         return self._shape
 
+
 class DeallocatePointer(Deallocate):
     """
     Represents memory deallocation for memory only stored in a pointer.
@@ -611,7 +659,9 @@ class DeallocatePointer(Deallocate):
     variable : pyccel.ast.core.Variable
         The typed variable (usually an array) that needs memory deallocation.
     """
+
     __slots__ = ()
+
 
 class BindCSizeOf(PyccelFunction):
     """
@@ -624,12 +674,14 @@ class BindCSizeOf(PyccelFunction):
     element : TypedAstNode
         The object whose type should be determined.
     """
+
     __slots__ = ()
     _class_type = PythonNativeInt()
     _shape = None
 
     def __init__(self, element):
         super().__init__(element)
+
 
 class C_NULL_CHAR(TypedAstNode):
     """
@@ -639,10 +691,16 @@ class C_NULL_CHAR(TypedAstNode):
     This object should be appended to strings before returning them from Fortran
     to C.
     """
+
     __slots__ = ()
     _class_type = StringType()
     _shape = (LiteralInteger(1),)
     _attribute_nodes = ()
 
-c_malloc = FunctionDef('c_malloc', (FunctionDefArgument(Variable(PythonNativeInt(), 'size')),),
-                        (), FunctionDefResult(Variable(BindCPointer(), 'ptr')))
+
+c_malloc = FunctionDef(
+    "c_malloc",
+    (FunctionDefArgument(Variable(PythonNativeInt(), "size")),),
+    (),
+    FunctionDefResult(Variable(BindCPointer(), "ptr")),
+)

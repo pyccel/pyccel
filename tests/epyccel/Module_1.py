@@ -1,11 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 
-def f(x : 'float [:]'):
-    x[0] = 2.
+def f(x: "float [:]"):
+    x[0] = 2.0
 
-def g(x : 'float [:]'):
-    x[1] = 4.
 
-def h(x : 'float [:]'):
-    x[2] = 8.
+def g(x: "float [:]"):
+    x[1] = 4.0
+
+
+def h(x: "float [:]"):
+    x[2] = 8.0

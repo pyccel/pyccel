@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
@@ -10,20 +11,20 @@ To avoid circular imports this file should only import from basic, datatypes, an
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt, PrimitiveIntegerType, SymbolicType
-from .literals  import LiteralInteger
+from .basic import Immutable, PyccelAstNode, TypedAstNode
+from .datatypes import PrimitiveIntegerType, PythonNativeInt, SymbolicType
+from .literals import LiteralInteger
 
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'Iterable',
-    'PrecomputedCode',
-    'PyccelArrayShapeElement',
-    'PyccelArraySize',
-    'PyccelFunction',
-    'PyccelSymbol',
-    'Slice',
+    "Iterable",
+    "PrecomputedCode",
+    "PyccelArrayShapeElement",
+    "PyccelArraySize",
+    "PyccelFunction",
+    "PyccelSymbol",
+    "Slice",
 )
 
 
@@ -40,8 +41,9 @@ class PyccelFunction(TypedAstNode):
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ('_args',)
-    _attribute_nodes = ('_args',)
+
+    __slots__ = ("_args",)
+    _attribute_nodes = ("_args",)
     name = None
 
     def __init__(self, *args):
@@ -77,6 +79,18 @@ class PyccelFunction(TypedAstNode):
         """
         return ()
 
+    @property
+    def is_indexable(self):
+        """
+        Indicate whether the expression can be indexed.
+
+        Indicate whether the expression can be indexed to get an element without
+        calculating the entire result. E.g `cos(x)[i]` is equivalent to `cos(x[i])`
+        but `func_call(x)[i]` is not equivalent to `func_call(x[i])`.
+        """
+        return self.is_elemental
+
+
 class PyccelArraySize(PyccelFunction):
     """
     Gets the total number of elements in an array.
@@ -89,8 +103,9 @@ class PyccelArraySize(PyccelFunction):
     arg : TypedAstNode
         An array of unknown size.
     """
+
     __slots__ = ()
-    name = 'size'
+    name = "size"
 
     _shape = None
     _class_type = PythonNativeInt()
@@ -109,7 +124,7 @@ class PyccelArraySize(PyccelFunction):
         return self._args[0]
 
     def __str__(self):
-        return f'Size({self.arg})'
+        return f"Size({self.arg})"
 
     def __eq__(self, other):
         if isinstance(other, PyccelArraySize):
@@ -133,20 +148,21 @@ class PyccelArrayShapeElement(PyccelFunction):
     index : int
         The dimension along which the shape should be provided.
     """
+
     __slots__ = ()
-    name = 'shape'
+    name = "shape"
 
     _shape = None
     _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError(f'Unknown type {type(arg)} of {arg}.')
+            raise TypeError(f"Unknown type {type(arg)} of {arg}.")
 
         if isinstance(index, int):
             index = LiteralInteger(index)
         elif not isinstance(index, TypedAstNode):
-            raise TypeError(f'Unknown type {type(index)} of {index}.')
+            raise TypeError(f"Unknown type {type(index)} of {index}.")
 
         super().__init__(arg, index)
 
@@ -171,7 +187,7 @@ class PyccelArrayShapeElement(PyccelFunction):
         return self._args[1]
 
     def __repr__(self):
-        return f'Shape({self.arg}, {self.index})'
+        return f"Shape({self.arg}, {self.index})"
 
     def __eq__(self, other):
         if isinstance(other, PyccelArrayShapeElement):
@@ -221,48 +237,53 @@ class Slice(PyccelAstNode):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-    __slots__ = ('_start','_stop','_step', '_slice_type')
-    _attribute_nodes = ('_start','_stop','_step', '_slice_type')
+
+    __slots__ = ("_start", "_stop", "_step", "_slice_type")
+    _attribute_nodes = ("_start", "_stop", "_step", "_slice_type")
 
     Range = LiteralInteger(1)
     Element = LiteralInteger(0)
 
-    def __init__(self, start, stop, step = None, slice_type = Range):
+    def __init__(self, start, stop, step=None, slice_type=Range):
         self._start = start
         self._stop = stop
         self._step = step
         self._slice_type = slice_type
         super().__init__()
-        if pyccel_stage == 'syntactic':
+        if pyccel_stage == "syntactic":
             return
-        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PrimitiveIntegerType)
-        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PrimitiveIntegerType)
-        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert start is None or isinstance(
+            getattr(start.dtype, "primitive_type", None), PrimitiveIntegerType
+        )
+        assert stop is None or isinstance(
+            getattr(stop.dtype, "primitive_type", None), PrimitiveIntegerType
+        )
+        assert step is None or isinstance(
+            getattr(step.dtype, "primitive_type", None), PrimitiveIntegerType
+        )
         if slice_type not in (Slice.Range, Slice.Element):
-            raise TypeError('Slice type must be Range (1) or Element (0)')
+            raise TypeError("Slice type must be Range (1) or Element (0)")
 
     @property
     def start(self):
-        """ Index where the slicing of the object starts
-        """
+        """Index where the slicing of the object starts"""
         return self._start
 
     @property
     def stop(self):
-        """ Index until which the slicing takes place
-        """
+        """Index until which the slicing takes place"""
         return self._stop
 
     @property
     def step(self):
-        """ The difference between each index of the
+        """The difference between each index of the
         objects in the slice
         """
         return self._step
 
     @property
     def slice_type(self):
-        """ The type of the slice (Range or Element)
+        """The type of the slice (Range or Element)
         Range <=> [..., :, ...]
         Element <=> [..., 3, ...]
         """
@@ -270,14 +291,14 @@ class Slice(PyccelAstNode):
 
     def __str__(self):
         if self.start is None:
-            start = ''
+            start = ""
         else:
             start = str(self.start)
         if self.stop is None:
-            stop = ''
+            stop = ""
         else:
             stop = str(self.stop)
-        return f'{start} : {stop} : {self.step}'
+        return f"{start} : {stop} : {self.step}"
 
 
 class PyccelSymbol(str, Immutable):
@@ -304,7 +325,8 @@ class PyccelSymbol(str, Immutable):
     >>> x = PyccelSymbol('x')
     x
     """
-    __slots__ = ('_is_temp',)
+
+    __slots__ = ("_is_temp",)
 
     def __new__(cls, name, is_temp=False):
         return super().__new__(cls, name)
@@ -321,6 +343,7 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
+
 class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
@@ -335,7 +358,8 @@ class PrecomputedCode(PyccelAstNode):
     code : str
            A string containing the precomputed code
     """
-    __slots__ = ('_code',)
+
+    __slots__ = ("_code",)
     _attribute_nodes = ()
 
     def __init__(self, code):
@@ -347,8 +371,7 @@ class PrecomputedCode(PyccelAstNode):
 
     @property
     def code(self):
-        """ The string containing the precomputed code
-        """
+        """The string containing the precomputed code"""
         return self._code
 
 
@@ -391,14 +414,15 @@ class Iterable(TypedAstNode):
         The number of indices that the semantic stage should generate to correctly
         iterate over the object.
     """
-    __slots__ = ('_indices', '_num_indices_required')
-    _attribute_nodes = ('_indices',)
+
+    __slots__ = ("_indices", "_num_indices_required")
+    _attribute_nodes = ("_indices",)
     _class_type = SymbolicType()
     _shape = None
 
     def __init__(self, num_indices_required):
         assert isinstance(num_indices_required, int)
-        self._indices  = None
+        self._indices = None
         self._num_indices_required = num_indices_required
 
         super().__init__()
@@ -451,6 +475,7 @@ class Iterable(TypedAstNode):
         """
         return ()
 
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
@@ -474,7 +499,6 @@ def symbols(names):
     >>> x, y, z = symbols('x,y,z')
     (x, y, z)
     """
-    names = names.split(',')
+    names = names.split(",")
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
-

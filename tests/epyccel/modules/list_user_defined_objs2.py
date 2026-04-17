@@ -1,8 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+
 class A:
-    def __init__(self, x : int):
+    def __init__(self, x: int):
         self.x = x
+
 
 def fn():
     a = A(1)

@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # ------------------------------- Strings ------------------------------------
 
-from numpy import int32, int64, int16, int8
-if __name__ == '__main__':
+from numpy import int8, int16, int32, int64
+
+if __name__ == "__main__":
     print(0)
     print(00)
     print(1)

@@ -7,8 +7,10 @@
 
 # TODO add saxpy test
 
-from pyccel.stdlib.internal.blas import daxpy
 import numpy as np
+
+from pyccel.stdlib.internal.blas import daxpy
+
 
 def test_daxpy():
     n = np.int32(5)
@@ -30,5 +32,6 @@ def test_daxpy():
 
     daxpy(n, sa, sx, incx, sy, incy)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_daxpy()

@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from project.basics.Point_mod import Point
 from project.basics.Line_mod import Line
+from project.basics.Point_mod import Point
 from project.shapes.Square_mod import Square
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     p1 = Point(0.0, 0.0)
     p2 = Point(1.0, 0.0)
     p3 = Point(0.0, 1.0)
@@ -11,10 +11,10 @@ if __name__ == '__main__':
 
     s = Square(p1, p2, p3, p4)
 
-    print(s.get_corner_1())
-    print(s.get_corner_2())
-    print(s.get_corner_3())
-    print(s.get_corner_4())
+    print(s.corner_1)
+    print(s.corner_2)
+    print(s.corner_3)
+    print(s.corner_4)
 
     l = Line(p1, p2)
 
