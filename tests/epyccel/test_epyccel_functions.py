@@ -567,8 +567,10 @@ def test_lambda(experimental_language):
 def test_lambda_2(experimental_language):
     def f(a: int):
         f2 = (
-            lambda x, y: x**2 + y**2 + 1
-        )  # pylint: disable=unnecessary-lambda-assignment
+            lambda x, y: x**2  # pylint: disable=unnecessary-lambda-assignment
+            + y**2
+            + 1
+        )
         return f2(a, 3 * a)
 
     epyc_f = epyccel(f, language=experimental_language)
