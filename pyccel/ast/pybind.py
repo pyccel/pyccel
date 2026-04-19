@@ -29,8 +29,8 @@ class FunctionDeclaration(PyccelAstNode):
     orig_func : FunctionDef
         The function being wrapped.
     """
-
-    _my_attribute_nodes = ("_func", "_mod_var", "_orig_func")
+    __slots__ = ("_func", "_mod_var", "_orig_func")
+    _attribute_nodes = ("_func", "_mod_var", "_orig_func")
 
     def __init__(self, func, mod_var, orig_func):
         self._func = func
