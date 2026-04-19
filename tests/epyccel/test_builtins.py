@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 from typing import TypeVar
-import pytest
-from numpy.random import randint, uniform
-from numpy import iinfo, finfo
+
 import numpy as np
+import pytest
+from numpy import finfo, iinfo
+from numpy.random import randint, uniform
 
 from pyccel import epyccel
 

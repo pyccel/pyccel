@@ -1,8 +1,8 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Handles name clash problems in C++
 """
@@ -83,11 +83,11 @@ class CppNameClashChecker(LanguageNameClashChecker):
 
     def get_collisionless_name(self, name, symbols, *, prefix, context, parent_context):
         """
-        Get a valid name which doesn't collision with symbols or C keywords.
+        Get a valid name which doesn't collision with symbols or C++ keywords.
 
         Find a new name based on the suggested name which will not cause
-        conflicts with C keywords, does not appear in the provided symbols,
-        and is a valid name in C code.
+        conflicts with C++ keywords, does not appear in the provided symbols,
+        and is a valid name in C++ code.
 
         Parameters
         ----------

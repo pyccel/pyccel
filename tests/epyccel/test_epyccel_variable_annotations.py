@@ -4,12 +4,13 @@
 Once headers are deprecated this file can be removed.
 """
 
-from typing import Final, Annotated
+from typing import Annotated, Final
+
 import pytest
 
 from pyccel import epyccel
-from pyccel.errors.errors import PyccelSemanticError, Errors
 from pyccel.decorators import allow_negative_index, stack_array
+from pyccel.errors.errors import Errors, PyccelSemanticError
 
 
 def test_local_type_annotation(language):

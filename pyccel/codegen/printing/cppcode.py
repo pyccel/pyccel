@@ -1,10 +1,29 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Functions for printing C++ code."""
 
+from itertools import chain
+
+from pyccel.ast.core import AsName, Declare, Import, Module
+from pyccel.ast.datatypes import (
+    FinalType,
+    PrimitiveBooleanType,
+    PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeFloat,
+    StringType,
+)
+from pyccel.ast.literals import LiteralString, LiteralTrue, Nil
+from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.utilities import expand_to_loops
+from pyccel.ast.variable import DottedName, Variable
+from pyccel.codegen.printing.codeprinter import CodePrinter
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 from itertools import chain
 from pyccel.ast.builtins import DtypePrecisionToCastFunction
 from pyccel.ast.core import Declare, Import, Module, AsName, Assign
@@ -26,9 +45,6 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import Variable, DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -933,22 +949,6 @@ class CppCodePrinter(CodePrinter):
             .replace('"', '\\"')
         )
         return f'"{escaped_str}"'
-
-    def _print_LiteralString(self, expr):
-        format_str = format(expr.python_value)
-        format_str = (
-            format_str.replace("\\", "\\\\")
-            .replace("\a", "\\a")
-            .replace("\b", "\\b")
-            .replace("\f", "\\f")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-            .replace("\v", "\\v")
-            .replace('"', '\\"')
-            .replace("'", "\\'")
-        )
-        return f'"{expr.python_value}"'
 
     def _print_InhomogeneousTuple(self, expr):
         args = ", ".join(self._print(a) for a in expr)

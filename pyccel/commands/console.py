@@ -1,26 +1,33 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `pyccel_command` function which is the entry point for
+the `pyccel` console command. This function sets up an argument parser for the
+Pyccel command line interface and executes the appropriate function based on
+the sub-command provided by the user.
+"""
+
 import argparse
-import pathlib
 import sys
 
-from .pyccel_clean import setup_pyccel_clean_parser, pyccel_clean, PYCCEL_CLEAN_DESCR
+from .argparse_helpers import add_help_flag, add_version_flag
+from .pyccel_clean import PYCCEL_CLEAN_DESCR, pyccel_clean, setup_pyccel_clean_parser
 from .pyccel_compile import (
-    setup_pyccel_compile_parser,
-    pyccel_compile,
     PYCCEL_COMPILE_DESCR,
+    pyccel_compile,
+    setup_pyccel_compile_parser,
 )
-from .pyccel_make import setup_pyccel_make_parser, pyccel_make, PYCCEL_MAKE_DESCR
-from .pyccel_test import setup_pyccel_test_parser, pyccel_test, PYCCEL_TEST_DESCR
-from .pyccel_wrap import setup_pyccel_wrap_parser, pyccel_wrap, PYCCEL_WRAP_DESCR
 from .pyccel_config import (
-    setup_pyccel_config_parser,
-    pyccel_config,
     PYCCEL_CONFIG_DESCR,
+    pyccel_config,
+    setup_pyccel_config_parser,
 )
-from .argparse_helpers import add_help_flag, add_version_flag, get_warning_and_line
+from .pyccel_make import PYCCEL_MAKE_DESCR, pyccel_make, setup_pyccel_make_parser
+from .pyccel_test import PYCCEL_TEST_DESCR, pyccel_test, setup_pyccel_test_parser
+from .pyccel_wrap import PYCCEL_WRAP_DESCR, pyccel_wrap, setup_pyccel_wrap_parser
 
 __all__ = ("pyccel_command",)
 
@@ -82,22 +89,11 @@ def pyccel_command() -> None:
     try:
         kwargs = vars(parser.parse_args())
     except argparse.ArgumentError as err:
-        if "invalid choice" in err.message:
-            WARNING, LINE = get_warning_and_line()
-            message = (
-                f"{WARNING}: Using pyccel with no sub-command is deprecated and will be removed in v2.3."
-                " Please use `pyccel compile` instead."
-            )
-            print(f"{LINE}\n{message}\n{LINE}", file=sys.stderr)
-            argv = ("compile", *argv)
-            parser.exit_on_error = True
-            kwargs = vars(parser.parse_args(argv))
-        else:
-            print(err)
-            parser.print_usage()
-            sys.exit(2)
+        print(err)
+        parser.print_usage()
+        sys.exit(2)
 
-    from pyccel.errors.errors import PyccelError, Errors
+    from pyccel.errors.errors import Errors, PyccelError
     from pyccel.utilities.stage import PyccelStage
 
     pyccel_stage = PyccelStage()

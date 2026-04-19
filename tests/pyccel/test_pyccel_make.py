@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
+
 import pytest
-from test_pyccel import get_python_output, compare_pyth_fort_output
+from test_pyccel import compare_pyth_fort_output, get_python_output
 
 current_folder = Path(__file__).parent
 

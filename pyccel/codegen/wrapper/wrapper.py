@@ -1,15 +1,16 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module describing the base code-wrapping class : Wrapper.
 """
 
-from pyccel.parser.scope import Scope
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_INTERNAL_ERROR
+from pyccel.errors.messages import PYCCEL_INTERNAL_ERROR, PYCCEL_RESTRICTION_TODO
+from pyccel.parser.scope import Scope
 
 __all__ = ["Wrapper"]
 

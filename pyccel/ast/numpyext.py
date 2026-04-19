@@ -1,83 +1,92 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing objects from the numpy module understood by pyccel"""
 
 import numpy
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
-    WRONG_LINSPACE_ENDPOINT,
-    NON_LITERAL_KEEP_DIMS,
     NON_LITERAL_AXIS,
+    NON_LITERAL_KEEP_DIMS,
+    WRONG_LINSPACE_ENDPOINT,
 )
-
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import TypedAstNode
 from .builtins import (
-    PythonInt,
-    PythonBool,
-    PythonFloat,
-    PythonTuple,
-    PythonComplex,
-    PythonReal,
-    PythonImag,
-    PythonList,
-    PythonType,
-    PythonConjugate,
     DtypePrecisionToCastFunction,
+    PythonBool,
+    PythonComplex,
+    PythonConjugate,
+    PythonFloat,
+    PythonImag,
+    PythonInt,
+    PythonList,
+    PythonReal,
+    PythonTuple,
+    PythonType,
 )
-
-from .core import Module, Import, PyccelFunctionDef, FunctionCall
-
-from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
+from .core import FunctionCall, Import, Module, PyccelFunctionDef
 from .datatypes import (
+    ContainerType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeFloat,
+    PythonNativeInt,
+    SymbolicType,
+    VoidType,
 )
-from .datatypes import HomogeneousTupleType, FixedSizeNumericType, GenericType
-from .datatypes import InhomogeneousTupleType, ContainerType, SymbolicType
-from .datatypes import VoidType
-
-from .internals import PyccelFunction, Slice
-from .internals import PyccelArraySize, PyccelArrayShapeElement
-
-from .literals import LiteralInteger, LiteralString, convert_to_literal
-from .literals import LiteralTrue, LiteralFalse, Literal
-from .literals import Nil
+from .internals import PyccelArrayShapeElement, PyccelArraySize, PyccelFunction, Slice
+from .literals import (
+    Literal,
+    LiteralFalse,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
+)
 from .mathext import MathCeil
-from .numpytypes import (
-    NumpyNumericType,
-    NumpyInt8Type,
-    NumpyInt16Type,
-    NumpyInt32Type,
-    NumpyInt64Type,
-)
-from .numpytypes import (
-    NumpyFloat32Type,
-    NumpyFloat64Type,
-    NumpyFloat128Type,
-    NumpyNDArrayType,
-)
 from .numpytypes import (
     NumpyComplex64Type,
     NumpyComplex128Type,
     NumpyComplex256Type,
+    NumpyFloat32Type,
+    NumpyFloat64Type,
+    NumpyFloat128Type,
+    NumpyInt8Type,
+    NumpyInt16Type,
+    NumpyInt32Type,
+    NumpyInt64Type,
+    NumpyNDArrayType,
+    NumpyNumericType,
     numpy_precision_map,
 )
-from .operators import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .operators import PyccelUnarySub
+from .operators import (
+    PyccelAdd,
+    PyccelDiv,
+    PyccelMinus,
+    PyccelMul,
+    PyccelUnarySub,
+    broadcast,
+)
 from .type_annotations import (
     VariableTypeAnnotation,
-    typenames_to_dtypes as dtype_registry,
 )
-from .variable import Variable, Constant, IndexedElement
+from .type_annotations import typenames_to_dtypes as dtype_registry
+from .variable import Constant, IndexedElement, Variable
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -1726,28 +1735,48 @@ class NumpyRandint(PyccelFunction):
         the generated number.
     size : TypedAstNode, optional
         The size of the array that will be generated.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        The data type of the result. If None, int64 is used.
     """
 
-    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type")
+    __slots__ = ("_rand", "_low", "_high", "_shape", "_class_type", "_init_dtype")
     name = "randint"
     _attribute_nodes = ("_low", "_high")
 
-    def __init__(self, low, high=None, size=None):
-        if size is not None and not hasattr(size, "__iter__"):
-            size = (size,)
-
+    def __init__(self, low, high=None, size=None, dtype=None):
         if high is None:
             high = low
             low = None
 
-        self._shape = size
-        if size is None:
-            self._class_type = PythonNativeInt()
+        self._init_dtype = dtype
+
+        if dtype is None:
+            dtype = NumpyInt64Type()
+            scalar_type = PythonNativeInt()
         else:
-            rank = len(self.shape)
+            dtype = process_dtype(dtype)
+            if not isinstance(dtype.primitive_type, PrimitiveIntegerType):
+                raise TypeError("Unsupported dtype for randint")
+            scalar_type = dtype
+
+        is_scalar = size is None
+        self._shape = process_shape(is_scalar, size)
+
+        if not is_scalar:
+            cast_func = DtypePrecisionToCastFunction[dtype]
+            if high.dtype != dtype:
+                high = cast_func(high)
+            if low is not None and low.dtype != dtype:
+                low = cast_func(low)
+
+        if is_scalar:
+            self._class_type = scalar_type
+            self._rand = NumpyRand()
+        else:
+            rank = len(self._shape)
             order = None if rank < 2 else "C"
-            self._class_type = NumpyNDArrayType.get_new(NumpyInt64Type(), rank, order)
-        self._rand = NumpyRand() if size is None else NumpyRand(*size)
+            self._class_type = NumpyNDArrayType.get_new(dtype, rank, order)
+            self._rand = NumpyRand(*self._shape)
         self._low = low
         self._high = high
         super().__init__()
@@ -1765,6 +1794,16 @@ class NumpyRandint(PyccelFunction):
     def low(self):
         """return low property of NumpyRandint"""
         return self._low
+
+    @property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
 
 # ==============================================================================

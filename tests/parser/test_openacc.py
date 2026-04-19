@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 import pytest
+
 from pyccel.parser.syntax.openacc import parse
 
 

@@ -1,7 +1,8 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """
 Handling the transitions between Python code and C code using (Numpy/C Api).
@@ -9,28 +10,30 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
-from .datatypes import PythonNativeBool, GenericType, VoidType, FixedSizeType, CharType
-
+from ..errors.errors import Errors
+from .c_concepts import CNativeInt, CStackArray
+from .core import FunctionDef, FunctionDefArgument, FunctionDefResult
 from .cwrapper import (
     PyccelPyObject,
-    check_type_registry,
     c_to_py_registry,
+    check_type_registry,
     pytype_parse_registry,
 )
-
-from .core import FunctionDef
-from .core import FunctionDefArgument, FunctionDefResult
-
-from .c_concepts import CNativeInt, CStackArray
-
-from .numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
-from .numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from .numpytypes import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
-from .numpytypes import NumpyNDArrayType
-
+from .datatypes import CharType, FixedSizeType, GenericType, PythonNativeBool, VoidType
+from .numpytypes import (
+    NumpyComplex64Type,
+    NumpyComplex128Type,
+    NumpyComplex256Type,
+    NumpyFloat32Type,
+    NumpyFloat64Type,
+    NumpyFloat128Type,
+    NumpyInt8Type,
+    NumpyInt16Type,
+    NumpyInt32Type,
+    NumpyInt64Type,
+    NumpyNDArrayType,
+)
 from .variable import Variable
-
-from ..errors.errors import Errors
 
 errors = Errors()
 

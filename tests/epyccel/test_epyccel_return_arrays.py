@@ -1,29 +1,27 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
-from numpy.random import randint, uniform
-import numpy as np
-import pytest
 
-from recognised_functions.test_numpy_funcs import (
-    min_int,
-    max_int,
-    min_int8,
-    max_int8,
-    min_int16,
-    max_int16,
-    min_int32,
-    max_int32,
-    max_int64,
-    min_int64,
-)
+import numpy as np
+from numpy.random import randint, uniform
 from recognised_functions.test_numpy_funcs import (
     max_float,
-    min_float,
     max_float32,
-    min_float32,
     max_float64,
+    max_int,
+    max_int8,
+    max_int16,
+    max_int32,
+    max_int64,
+    min_float,
+    min_float32,
     min_float64,
+    min_int,
+    min_int8,
+    min_int16,
+    min_int32,
+    min_int64,
 )
+
 from pyccel import epyccel
 
 T = TypeVar(
@@ -461,17 +459,7 @@ def test_return_multi_array_array_op(language):
 def test_return_array_scalar_op(language):
 
     def return_array_scalar_op(a: NumType):
-        from numpy import (
-            ones,
-            int8,
-            int16,
-            int32,
-            int64,
-            float32,
-            float64,
-            complex64,
-            complex128,
-        )  # pylint: disable=unused-import
+        from numpy import ones
 
         x = ones(5, dtype=type(a))
         return x * a
@@ -565,17 +553,7 @@ def test_return_array_scalar_op(language):
 def test_multi_return_array_scalar_op(language):
 
     def return_multi_array_scalar_op(a: NumType):
-        from numpy import (
-            ones,
-            int8,
-            int16,
-            int32,
-            int64,
-            float32,
-            float64,
-            complex64,
-            complex128,
-        )  # pylint: disable=unused-import
+        from numpy import ones
 
         x = ones(5, dtype=type(a))
         y = ones(5, dtype=type(a))

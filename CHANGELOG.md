@@ -6,14 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
 
 ### Fixed
 
--   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
--   #2587 : Fix compilation error when using an array slice in an expression.
--   #2590 : Fix missing `const` annotation on string arguments in C.
--   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
+-   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
 
 ### Changed
 
@@ -24,8 +22,20 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+-   #2522 : Remove use of `pyccel` without sub-command.
+-   #2522 : Remove use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 -   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
 -   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
+
+## \[2.2.3\] - 2026-03-20
+
+### Fixed
+
+-   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
+-   #2587 : Fix compilation error when using an array slice in an expression.
+-   #2590 : Fix missing `const` annotation on string arguments in C.
+-   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
 
 ## \[2.2.2\] - 2026-03-09
 

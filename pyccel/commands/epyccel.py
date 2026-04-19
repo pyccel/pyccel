@@ -1,24 +1,25 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)"""
 
-import inspect
 import importlib
+import inspect
+import os
 import re
 import sys
 import typing
-import os
-from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
+from types import FunctionType, ModuleType
 
 from filelock import FileLock, Timeout
 
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 from pyccel.utilities.stage import PyccelStage
 from pyccel.utilities.strings import random_string
-from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import ErrorsMode, PyccelError, Errors
 
 errors = Errors()
 

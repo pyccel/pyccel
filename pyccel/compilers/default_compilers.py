@@ -6,15 +6,14 @@ avoiding the need for a large number of imports
 
 import glob
 import os
+import shutil
+import subprocess
 import sys
 import sysconfig
-import subprocess
-import shutil
 
+import pybind11
 from numpy import get_include as get_numpy_include
 import pybind11
-
-from pyccel import __version__ as pyccel_version
 
 # ------------------------------------------------------------
 #             GNU compilation configurations

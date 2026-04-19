@@ -1,13 +1,12 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Functions for printing PyBind11 code."""
 
+from pyccel.ast.core import Import, Module, SeparatorComment
 from pyccel.codegen.printing.cppcode import CppCodePrinter
-
-from pyccel.ast.core import SeparatorComment
-from pyccel.ast.core import Import, Module
 
 __all__ = ("PyBindCodePrinter",)
 

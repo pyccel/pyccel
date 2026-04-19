@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy import array, zeros, ones
+from numpy import array, ones, zeros
 
 
 def create_array():

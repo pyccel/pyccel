@@ -1,9 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import modules.augassign as mod
 import numpy as np
 from numpy.random import random
-import pytest
 
-import modules.augassign as mod
 from pyccel import epyccel
 
 # += tests

@@ -1,29 +1,31 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
-""" """
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module providing the `Header` class and related classes which are used to
+represent header pragmas in the grammar. This class is deprecated and will be
+removed in a future release (see issue #1487). Moreover, another class with
+the same name is defined in `pyccel.ast.headers`, which inherits from the
+class `PyccelAstNode` defined in `pyccel.ast.basic`.
+"""
 
-import warnings
-from os.path import join, dirname
+from os.path import dirname, join
 
-from textx import metamodel_from_file, register_language, metamodel_from_str
+from textx import metamodel_from_file, metamodel_from_str, register_language
 
-from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers import MetaVariable
-from pyccel.ast.core import FunctionDefArgument, EmptyNode
-from pyccel.ast.variable import DottedName
-from pyccel.ast.literals import LiteralString, LiteralInteger, LiteralFloat
-from pyccel.ast.literals import LiteralEllipsis, Nil
 from pyccel.ast.internals import PyccelSymbol, Slice
-from pyccel.ast.variable import AnnotatedPyccelSymbol, IndexedElement
+from pyccel.ast.literals import LiteralEllipsis, LiteralString, Nil
 from pyccel.ast.type_annotations import (
-    SyntacticTypeAnnotation,
     FunctionTypeAnnotation,
+    SyntacticTypeAnnotation,
     UnionTypeAnnotation,
 )
+from pyccel.ast.variable import IndexedElement
 from pyccel.errors.errors import Errors
+from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False

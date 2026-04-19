@@ -1,7 +1,8 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """
 Module representing concepts that are only applicable to C code (e.g. ObjectAddress).
@@ -9,14 +10,13 @@ Module representing concepts that are only applicable to C code (e.g. ObjectAddr
 
 from functools import cache
 
-from .basic import TypedAstNode, PyccelAstNode
+from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    HomogeneousContainerType,
-    FixedSizeType,
+    CharType,
     FixedSizeNumericType,
+    HomogeneousContainerType,
     PrimitiveIntegerType,
 )
-from .datatypes import CharType
 from .internals import PyccelFunction
 from .literals import LiteralString
 

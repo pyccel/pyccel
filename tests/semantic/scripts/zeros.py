@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-from numpy import zeros
-from numpy import ones
+from numpy import ones, zeros
 
 n = 5
 x1 = zeros(4)

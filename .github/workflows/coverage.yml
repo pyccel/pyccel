@@ -139,7 +139,7 @@ jobs:
           coverage-reports: pr_contents/cobertura.xml
       - name: Collect diff information
         run: |
-          git diff ${{ steps.pr_info.outputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ steps.pr_info.outputs.base }}...HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
         working-directory: pr_contents
       - name: Check coverage
