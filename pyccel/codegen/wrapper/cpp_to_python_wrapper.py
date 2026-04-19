@@ -8,19 +8,33 @@ Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
 
-from pyccel.ast.core import Import, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import FunctionAddress, FunctionCall, Module, Assign
-from pyccel.ast.core import Return, EmptyNode
+from pyccel.ast.core import (
+    Assign,
+    EmptyNode,
+    FunctionAddress,
+    FunctionCall,
+    FunctionDefArgument,
+    FunctionDefResult,
+    Import,
+    Module,
+    Return,
+)
+from pyccel.ast.cwrapper import (
+    PyccelPyObject,
+    PyErr_SetString,
+    PyFunctionDef,
+    PyModInitFunc,
+    PyModule,
+    PyNotImplementedError,
+)
 from pyccel.ast.datatypes import pyccel_type_to_original_type
-from pyccel.ast.cwrapper import PyccelPyObject, PyErr_SetString
-from pyccel.ast.cwrapper import PyNotImplementedError
-from pyccel.ast.cwrapper import PyModule, PyModInitFunc, PyFunctionDef
-from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.literals import LiteralString, Nil
 from pyccel.ast.pybind import FunctionDeclaration
-from pyccel.ast.variable import Variable, IndexedElement
-from pyccel.parser.scope import Scope
+from pyccel.ast.variable import IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.scope import Scope
+
 from .wrapper import Wrapper
 
 errors = Errors()

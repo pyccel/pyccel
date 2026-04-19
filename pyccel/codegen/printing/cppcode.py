@@ -7,9 +7,22 @@
 
 from itertools import chain
 
-from pyccel.ast.core import AsName, Declare, Import, Module
+from pyccel.ast.builtins import DtypePrecisionToCastFunction
+from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.core import (
+    AsName,
+    Assign,
+    Declare,
+    For,
+    FunctionDef,
+    If,
+    Import,
+    Module,
+    While,
+)
 from pyccel.ast.datatypes import (
     FinalType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
     PrimitiveComplexType,
     PrimitiveFloatingPointType,
@@ -18,33 +31,14 @@ from pyccel.ast.datatypes import (
     StringType,
 )
 from pyccel.ast.literals import LiteralString, LiteralTrue, Nil
+from pyccel.ast.low_level_tools import UnpackManagedMemory
+from pyccel.ast.mathext import math_constants
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import DottedName, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-from itertools import chain
-from pyccel.ast.builtins import DtypePrecisionToCastFunction
-from pyccel.ast.core import Declare, Import, Module, AsName, Assign
-from pyccel.ast.core import FunctionDef, If, For, While
-from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.datatypes import (
-    PrimitiveIntegerType,
-    PrimitiveBooleanType,
-    PrimitiveFloatingPointType,
-)
-from pyccel.ast.datatypes import PrimitiveComplexType
-from pyccel.ast.datatypes import PythonNativeFloat
-from pyccel.ast.datatypes import FinalType, StringType
-from pyccel.ast.datatypes import InhomogeneousTupleType
-from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
-from pyccel.ast.low_level_tools import UnpackManagedMemory
-from pyccel.ast.mathext import math_constants
-from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.utilities import expand_to_loops
-from pyccel.ast.variable import Variable, DottedName
-from pyccel.codegen.printing.codeprinter import CodePrinter
 
 errors = Errors()
 

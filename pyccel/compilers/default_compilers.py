@@ -13,7 +13,6 @@ import sysconfig
 
 import pybind11
 from numpy import get_include as get_numpy_include
-import pybind11
 
 # ------------------------------------------------------------
 #             GNU compilation configurations
