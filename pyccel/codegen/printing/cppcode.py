@@ -8,6 +8,7 @@
 from itertools import chain
 
 from pyccel.ast.builtins import DtypePrecisionToCastFunction
+from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.core import (
     AsName,
     Assign,
@@ -38,7 +39,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import DottedName, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_RESTRICTION_IS_ISNOT
 
 errors = Errors()
 
@@ -374,7 +375,7 @@ class CppCodePrinter(CodePrinter):
         if a.dtype is PythonNativeBool() and b.dtype is PythonNativeBool():
             return f"{lhs} {Op} {rhs}"
         else:
-            errors.report(PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal")
+            raise errors.report(PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal")
 
     # -----------------------------------------------------------------------
     #                              Print methods
