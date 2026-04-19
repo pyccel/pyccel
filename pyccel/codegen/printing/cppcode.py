@@ -39,7 +39,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import DottedName, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO, PYCCEL_RESTRICTION_IS_ISNOT
+from pyccel.errors.messages import PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -375,7 +375,9 @@ class CppCodePrinter(CodePrinter):
         if a.dtype is PythonNativeBool() and b.dtype is PythonNativeBool():
             return f"{lhs} {Op} {rhs}"
         else:
-            raise errors.report(PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal")
+            raise errors.report(
+                PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal"
+            )
 
     # -----------------------------------------------------------------------
     #                              Print methods
