@@ -8,7 +8,6 @@
 from itertools import chain
 
 from pyccel.ast.builtins import DtypePrecisionToCastFunction
-from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.core import (
     AsName,
     Assign,
