@@ -26,6 +26,7 @@ from pyccel.ast.datatypes import (
     PrimitiveComplexType,
     PrimitiveFloatingPointType,
     PrimitiveIntegerType,
+    PythonNativeBool,
     PythonNativeFloat,
     StringType,
 )
@@ -327,6 +328,53 @@ class CppCodePrinter(CodePrinter):
         if expr.dtype != dtype:
             return f"static_cast<{self._print(dtype)}>" + "({})"
         return "{}"
+
+    def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+
+        Parameters
+        ----------
+        Op : str
+            The C++ operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
+
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if Nil() in expr.args:
+            lhs = (
+                ObjectAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            )
+            rhs = (
+                ObjectAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
+            )
+
+            lhs = self._print(lhs)
+            rhs = self._print(rhs)
+            return f"{lhs} {Op} {rhs}"
+
+        if a.dtype is PythonNativeBool() and b.dtype is PythonNativeBool():
+            return f"{lhs} {Op} {rhs}"
+        else:
+            errors.report(PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal")
 
     # -----------------------------------------------------------------------
     #                              Print methods
@@ -718,6 +766,12 @@ class CppCodePrinter(CodePrinter):
     def _print_PyccelLe(self, expr):
         a, b = expr.args
         return f"{self._print(a)} <= {self._print(b)}"
+
+    def _print_PyccelIsNot(self, expr):
+        return self._handle_is_operator("!=", expr)
+
+    def _print_PyccelIs(self, expr):
+        return self._handle_is_operator("==", expr)
 
     # ------------------------------
     #  Bitwise operators
