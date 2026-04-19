@@ -3,69 +3,77 @@ import platform
 import pytest
 from pyccel import epyccel
 
+
 def test_or_boolean(experimental_language):
-    def or_bool(a : 'bool', b : 'bool'):
+    def or_bool(a: "bool", b: "bool"):
         c = False
-        if (a):
+        if a:
             c = True
-        if (b):
+        if b:
             c = True
         return c
-    epyc_or_bool = epyccel(or_bool, language = experimental_language)
 
-    assert epyc_or_bool(True,True)==or_bool(True,True)
-    assert epyc_or_bool(True,False)==or_bool(True,False)
-    assert epyc_or_bool(False,False)==or_bool(False,False)
+    epyc_or_bool = epyccel(or_bool, language=experimental_language)
+
+    assert epyc_or_bool(True, True) == or_bool(True, True)
+    assert epyc_or_bool(True, False) == or_bool(True, False)
+    assert epyc_or_bool(False, False) == or_bool(False, False)
+
 
 def test_real_greater_bool(experimental_language):
-    def real_greater_bool(x0 : 'float', x1 : 'float'):
+    def real_greater_bool(x0: "float", x1: "float"):
         greater = False
         if x0 > x1:
             greater = True
         return greater
 
-    epyc_real_greater_bool = epyccel(real_greater_bool, language = experimental_language)
+    epyc_real_greater_bool = epyccel(real_greater_bool, language=experimental_language)
 
-    assert real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0)
-    assert real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2)
+    assert real_greater_bool(1.0, 2.0) == epyc_real_greater_bool(1.0, 2.0)
+    assert real_greater_bool(1.5, 1.2) == epyc_real_greater_bool(1.5, 1.2)
+
 
 # Skip test if PYCCEL_DEFAULT_COMPILER=LLVM
 @pytest.mark.skip_llvm
 def test_input_output_matching_types(experimental_language):
-    def add_real(a : 'float', b : 'float'):
-        c = a+b
+    def add_real(a: "float", b: "float"):
+        c = a + b
         return c
 
-    flags="-Werror -Wconversion"
-    if experimental_language=="fortran":
-        flags=flags+"-extra"
-    if platform.system() == 'Darwin' and experimental_language=='c': # If macosx
-        flags=flags+" -Wno-error=unused-command-line-argument"
-    epyc_add_real = epyccel(add_real, flags=flags, language = experimental_language)
+    flags = "-Werror -Wconversion"
+    if experimental_language == "fortran":
+        flags = flags + "-extra"
+    if platform.system() == "Darwin" and experimental_language == "c":  # If macosx
+        flags = flags + " -Wno-error=unused-command-line-argument"
+    epyc_add_real = epyccel(add_real, flags=flags, language=experimental_language)
 
-    assert add_real(1.0,2.0)==epyc_add_real(1.0,2.0)
+    assert add_real(1.0, 2.0) == epyc_add_real(1.0, 2.0)
+
 
 def test_output_types_1(experimental_language):
-    def cast_to_int(a : 'float'):
+    def cast_to_int(a: "float"):
         b = int(a)
         return b
 
-    f = epyccel(cast_to_int, language = experimental_language)
-    assert(type(cast_to_int(5.2)) == type(f(5.2))) # pylint: disable=unidiomatic-typecheck
+    f = epyccel(cast_to_int, language=experimental_language)
+    assert type(cast_to_int(5.2)) == type(
+        f(5.2)
+    )  # pylint: disable=unidiomatic-typecheck
+
 
 def test_output_types_2(experimental_language):
-    def cast_to_float(a : 'int'):
+    def cast_to_float(a: "int"):
         b = float(a)
         return b
 
-    f = epyccel(cast_to_float, language = experimental_language)
-    assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck
+    f = epyccel(cast_to_float, language=experimental_language)
+    assert type(cast_to_float(5)) == type(f(5))  # pylint: disable=unidiomatic-typecheck
+
 
 def test_output_types_3(experimental_language):
-    def cast_to_bool(a : 'int'):
+    def cast_to_bool(a: "int"):
         b = bool(a)
         return b
 
-    f = epyccel(cast_to_bool, language = experimental_language)
+    f = epyccel(cast_to_bool, language=experimental_language)
     assert cast_to_bool(1) == f(1)
-

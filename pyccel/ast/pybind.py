@@ -1,16 +1,18 @@
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------#
 """
 Module representing objects (functions/variables etc) required for the interface
 between Python code and C++ code (using pybind11).
 This file contains classes but also many FunctionDef/Variable instances representing
 objects defined by pybind11.
 """
+
 from .basic import PyccelAstNode
 
-__all__ = ('FunctionDeclaration',)
+__all__ = ("FunctionDeclaration",)
+
 
 class FunctionDeclaration(PyccelAstNode):
     """
@@ -27,7 +29,9 @@ class FunctionDeclaration(PyccelAstNode):
     orig_func : FunctionDef
         The function being wrapped.
     """
-    _my_attribute_nodes = ('_func', '_mod_var', '_orig_func')
+
+    _my_attribute_nodes = ("_func", "_mod_var", "_orig_func")
+
     def __init__(self, func, mod_var, orig_func):
         self._func = func
         self._mod_var = mod_var

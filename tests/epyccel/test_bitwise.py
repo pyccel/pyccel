@@ -66,6 +66,7 @@ def test_left_shift_b_b(experimental_language, a, b):
     assert r1 == r2
     assert type(r1) is type(r2)
 
+
 def test_bit_xor_b_b(experimental_language):
     f1 = bitwise.bit_xor_b_b
     f2 = epyccel(f1, language=experimental_language)
@@ -123,6 +124,7 @@ def test_bit_or_i_i(experimental_language, a, b):
     assert r1 == r2
     assert type(r1) is type(r2)
 
+
 def test_bit_or_b_b(experimental_language):
     f1 = bitwise.bit_or_b_b
     f2 = epyccel(f1, language=experimental_language)
@@ -150,6 +152,7 @@ def test_bit_and_i_i(experimental_language, a, b):
     r2 = f2(a, b)
     assert r1 == r2
     assert type(r1) is type(r2)
+
 
 def test_bit_and_b_b(experimental_language):
     f1 = bitwise.bit_and_b_b
@@ -194,6 +197,7 @@ def test_invert_b(experimental_language):
         assert r1 == r2
         assert type(r1) is type(r2)
 
+
 def test_invert_i(experimental_language):
     f1 = bitwise.invert_i
     f2 = epyccel(f1, language=experimental_language)
@@ -202,6 +206,7 @@ def test_invert_i(experimental_language):
         r2 = f2(a)
         assert r1 == r2
         assert type(r1) is type(r2)
+
 
 def test_or_ints(experimental_language):
     f1 = bitwise.or_ints

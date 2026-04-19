@@ -6,20 +6,21 @@
 Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
-from pyccel.ast.core          import Import, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core          import FunctionAddress, FunctionCall, Module, Assign
-from pyccel.ast.core          import Return, EmptyNode
-from pyccel.ast.datatypes     import pyccel_type_to_original_type
-from pyccel.ast.cwrapper      import PyccelPyObject, PyErr_SetString
-from pyccel.ast.cwrapper      import PyNotImplementedError
-from pyccel.ast.cwrapper      import PyModule, PyModInitFunc, PyFunctionDef
-from pyccel.ast.literals      import Nil, LiteralString
-from pyccel.ast.pybind        import FunctionDeclaration
-from pyccel.ast.variable      import Variable, IndexedElement
-from pyccel.parser.scope      import Scope
-from pyccel.errors.errors     import Errors
-from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
-from .wrapper                 import Wrapper
+
+from pyccel.ast.core import Import, FunctionDefArgument, FunctionDefResult
+from pyccel.ast.core import FunctionAddress, FunctionCall, Module, Assign
+from pyccel.ast.core import Return, EmptyNode
+from pyccel.ast.datatypes import pyccel_type_to_original_type
+from pyccel.ast.cwrapper import PyccelPyObject, PyErr_SetString
+from pyccel.ast.cwrapper import PyNotImplementedError
+from pyccel.ast.cwrapper import PyModule, PyModInitFunc, PyFunctionDef
+from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.pybind import FunctionDeclaration
+from pyccel.ast.variable import Variable, IndexedElement
+from pyccel.parser.scope import Scope
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from .wrapper import Wrapper
 
 errors = Errors()
 
@@ -132,12 +133,20 @@ class CppToPythonWrapper(Wrapper):
         """
         current_scope = self.scope
         self.scope = scope
-        func_args = [FunctionDefArgument(Variable(PyccelPyObject(),
-                           self.scope.get_new_name(name),
-                           is_temp=True)) for _ in original_function.args]
-        function = PyFunctionDef(name = name, arguments = func_args, results = Nil(),
-                body = [PyErr_SetString(PyNotImplementedError, LiteralString(error_msg))],
-                scope = scope, original_function = original_function)
+        func_args = [
+            FunctionDefArgument(
+                Variable(PyccelPyObject(), self.scope.get_new_name(name), is_temp=True)
+            )
+            for _ in original_function.args
+        ]
+        function = PyFunctionDef(
+            name=name,
+            arguments=func_args,
+            results=Nil(),
+            body=[PyErr_SetString(PyNotImplementedError, LiteralString(error_msg))],
+            scope=scope,
+            original_function=original_function,
+        )
 
         self.scope = current_scope
 
@@ -145,7 +154,7 @@ class CppToPythonWrapper(Wrapper):
 
         return function
 
-    #--------------------------------------------------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------------------------------------------------
     # Wrap functions
     # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -192,10 +201,18 @@ class CppToPythonWrapper(Wrapper):
 
         imports = [Import(mod_scope.get_python_name(expr.name), expr)]
         original_mod_name = expr.scope.get_python_name(name)
-        return PyModule(original_mod_name, (), funcs = funcs, imports = imports,
-                        interfaces = (), classes = (), scope = mod_scope,
-                        init_func = init_func, import_func = None,
-                        module_def_name = None)
+        return PyModule(
+            original_mod_name,
+            (),
+            funcs=funcs,
+            imports=imports,
+            interfaces=(),
+            classes=(),
+            scope=mod_scope,
+            init_func=init_func,
+            import_func=None,
+            module_def_name=None,
+        )
 
     def _wrap_FunctionDef(self, expr):
         """
@@ -213,8 +230,10 @@ class CppToPythonWrapper(Wrapper):
         PyFunctionDef
             The function which can be called from Python.
         """
-        func_name = self.scope.get_new_name(expr.name+'_wrapper', object_type = 'wrapper')
-        func_scope = self.scope.new_child_scope(func_name, 'function')
+        func_name = self.scope.get_new_name(
+            expr.name + "_wrapper", object_type="wrapper"
+        )
+        func_scope = self.scope.new_child_scope(func_name, "function")
         self.scope = func_scope
         func_scope.insert_symbol(func_name)
 
@@ -225,43 +244,52 @@ class CppToPythonWrapper(Wrapper):
         # Handle un-wrappable functions
         if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             self.exit_scope()
-            errors.report("Functions with functions as arguments will not be callable from Python",
-                          severity='warning', symbol=expr)
-            return self._get_untranslatable_function(func_name,
-                         func_scope, expr,
-                         "Cannot pass a function as an argument")
+            errors.report(
+                "Functions with functions as arguments will not be callable from Python",
+                severity="warning",
+                symbol=expr,
+            )
+            return self._get_untranslatable_function(
+                func_name, func_scope, expr, "Cannot pass a function as an argument"
+            )
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
             a_var = a.var
-            func_scope.insert_symbol(getattr(a_var, 'original_var', a_var).name)
+            func_scope.insert_symbol(getattr(a_var, "original_var", a_var).name)
 
         args_code = [self._extract_FunctionDefArgument(a) for a in expr.arguments]
 
-        body = [line for a in args_code for line in a['body']]
+        body = [line for a in args_code for line in a["body"]]
 
-        func_args = [a['wrapper_arg'] for a in args_code]
-        call_args = [a['func_arg'] for a in args_code]
+        func_args = [a["wrapper_arg"] for a in args_code]
+        call_args = [a["func_arg"] for a in args_code]
 
         imported_expr = expr.clone(expr.name, is_imported=True)
-        mod, = set(expr.get_direct_user_nodes(lambda m: isinstance(m, Module)))
+        (mod,) = set(expr.get_direct_user_nodes(lambda m: isinstance(m, Module)))
         imported_expr.set_current_user_node(mod)
         if expr.results.var is Nil():
             func_results = FunctionDefResult(Nil())
             body.append(FunctionCall(imported_expr, call_args))
         else:
             result_info = self._wrap_FunctionDefResult(expr.results)
-            func_results = FunctionDefResult(result_info['wrapper_result'])
-            call_out = result_info['func_result']
+            func_results = FunctionDefResult(result_info["wrapper_result"])
+            call_out = result_info["func_result"]
             body.append(Assign(call_out, FunctionCall(imported_expr, call_args)))
             self.scope.insert_variable(call_out)
             body.append(Return(call_out))
 
         self.exit_scope()
 
-        function = PyFunctionDef(func_name, func_args, body, func_results,
-                                 scope=func_scope, docstring = expr.docstring,
-                                 original_function = expr)
+        function = PyFunctionDef(
+            func_name,
+            func_args,
+            body,
+            func_results,
+            scope=func_scope,
+            docstring=expr.docstring,
+            original_function=expr,
+        )
 
         self.scope.insert_function(function, func_scope.get_python_name(func_name))
         self._python_object_map[expr] = function
@@ -296,22 +324,27 @@ class CppToPythonWrapper(Wrapper):
 
         classes = type(class_type).__mro__
         for cls in classes:
-            annotation_method = f'_extract_{cls.__name__}_FunctionDefArgument'
+            annotation_method = f"_extract_{cls.__name__}_FunctionDefArgument"
             if hasattr(self, annotation_method):
                 func_def_arg_info = getattr(self, annotation_method)(var)
-                func_def_arg_info['wrapper_arg'] = FunctionDefArgument(func_def_arg_info['wrapper_arg'],
-                                                                       value = expr.value,
-                                                                       posonly = expr.is_posonly,
-                                                                       kwonly = expr.is_kwonly,
-                                                                       bound_argument = expr.bound_argument,
-                                                                       is_vararg = expr.is_vararg,
-                                                                       is_kwarg = expr.is_kwarg)
+                func_def_arg_info["wrapper_arg"] = FunctionDefArgument(
+                    func_def_arg_info["wrapper_arg"],
+                    value=expr.value,
+                    posonly=expr.is_posonly,
+                    kwonly=expr.is_kwonly,
+                    bound_argument=expr.bound_argument,
+                    is_vararg=expr.is_vararg,
+                    is_kwarg=expr.is_kwarg,
+                )
                 return func_def_arg_info
 
-
         # Unknown object, we raise an error.
-        return errors.report(f"Wrapping function arguments is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO,
-                             symbol=var, severity='fatal')
+        return errors.report(
+            f"Wrapping function arguments is not implemented for type {class_type}. "
+            + PYCCEL_RESTRICTION_TODO,
+            symbol=var,
+            severity="fatal",
+        )
 
     def _extract_FixedSizeType_FunctionDefArgument(self, arg_var):
         """
@@ -336,7 +369,7 @@ class CppToPythonWrapper(Wrapper):
              - func_arg : the Variable which should be passed to call the C++ function being wrapped.
         """
         local_arg = arg_var.clone(arg_var.name)
-        return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
+        return {"body": [], "wrapper_arg": local_arg, "func_arg": local_arg}
 
     def _extract_StringType_FunctionDefArgument(self, arg_var):
         """
@@ -361,7 +394,7 @@ class CppToPythonWrapper(Wrapper):
              - func_arg : the Variable which should be passed to call the C++ function being wrapped.
         """
         local_arg = arg_var.clone(arg_var.name)
-        return {'body': [], 'wrapper_arg': local_arg, 'func_arg': local_arg}
+        return {"body": [], "wrapper_arg": local_arg, "func_arg": local_arg}
 
     def _wrap_FunctionDefResult(self, expr):
         """
@@ -415,13 +448,17 @@ class CppToPythonWrapper(Wrapper):
 
         classes = type(class_type).__mro__
         for cls in classes:
-            annotation_method = f'_extract_{cls.__name__}_FunctionDefResult'
+            annotation_method = f"_extract_{cls.__name__}_FunctionDefResult"
             if hasattr(self, annotation_method):
                 return getattr(self, annotation_method)(var)
 
         # Unknown object, we raise an error.
-        return errors.report(f"Wrapping function results is not implemented for type {class_type}. "+PYCCEL_RESTRICTION_TODO, symbol=var,
-            severity='fatal')
+        return errors.report(
+            f"Wrapping function results is not implemented for type {class_type}. "
+            + PYCCEL_RESTRICTION_TODO,
+            symbol=var,
+            severity="fatal",
+        )
 
     def _extract_FixedSizeType_FunctionDefResult(self, res_var):
         """
@@ -446,14 +483,14 @@ class CppToPythonWrapper(Wrapper):
              - func_result : the Variable which should be passed to call the C++ function being wrapped.
         """
         out_type = pyccel_type_to_original_type[res_var.class_type]
-        if out_type.__module__ == 'numpy':
+        if out_type.__module__ == "numpy":
             errors.report("NumPy return types are not yet handled")
         if isinstance(res_var, IndexedElement):
             local_var = Variable(res_var.class_type, self.scope.get_new_name())
             self.scope.insert_symbolic_alias(res_var, local_var)
         else:
             local_var = res_var.clone(res_var.name)
-        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
+        return {"wrapper_result": local_var, "func_result": local_var, "body": []}
 
     def _extract_StringType_FunctionDefResult(self, res_var):
         """
@@ -482,7 +519,7 @@ class CppToPythonWrapper(Wrapper):
             self.scope.insert_symbolic_alias(res_var, local_var)
         else:
             local_var = res_var.clone(res_var.name)
-        return {'wrapper_result': local_var, 'func_result': local_var, 'body': []}
+        return {"wrapper_result": local_var, "func_result": local_var, "body": []}
 
     def _extract_InhomogeneousTupleType_FunctionDefResult(self, res_var):
         """
@@ -507,6 +544,6 @@ class CppToPythonWrapper(Wrapper):
              - func_result : the Variable which should be passed to call the C++ function being wrapped.
         """
         info = [self._extract_FunctionDefResult(v) for v in res_var]
-        body = [l for i in info for l in i['body']]
-        local_var = res_var.clone(res_var.name, is_temp = False)
-        return {'wrapper_result': local_var, 'func_result': local_var, 'body': body}
+        body = [l for i in info for l in i["body"]]
+        local_var = res_var.clone(res_var.name, is_temp=False)
+        return {"wrapper_result": local_var, "func_result": local_var, "body": body}
