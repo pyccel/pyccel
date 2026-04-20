@@ -111,7 +111,8 @@ class CppToPythonWrapper(Wrapper):
 
         # TODO: Save functions/interfaces to the module variable
         for f in expr.funcs:
-            body.append(FunctionDeclaration(self._python_object_map[f], module_var, f))
+            if not f.is_private:
+                body.append(FunctionDeclaration(self._python_object_map[f], module_var, f))
 
         # TODO: Save module variables to the module variable
 
@@ -204,7 +205,7 @@ class CppToPythonWrapper(Wrapper):
         # TODO: Wrap classes
 
         # TODO: Wrap functions
-        funcs = [self._wrap(f) for f in expr.funcs]
+        funcs = [self._wrap(f) for f in expr.funcs if not f.is_private]
 
         # TODO: Wrap interfaces
 
@@ -251,10 +252,6 @@ class CppToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name, "function")
         self.scope = func_scope
         func_scope.insert_symbol(func_name)
-
-        if expr.is_private:
-            self.exit_scope()
-            return EmptyNode()
 
         # Handle un-wrappable functions
         if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
