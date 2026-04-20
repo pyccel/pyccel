@@ -112,7 +112,9 @@ class CppToPythonWrapper(Wrapper):
         # TODO: Save functions/interfaces to the module variable
         for f in expr.funcs:
             if not f.is_private:
-                body.append(FunctionDeclaration(self._python_object_map[f], module_var, f))
+                body.append(
+                    FunctionDeclaration(self._python_object_map[f], module_var, f)
+                )
 
         # TODO: Save module variables to the module variable
 
