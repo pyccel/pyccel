@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 -   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
+-   #2537 : Add support for C++ functions.
+-   #2537 : Add C++ support for scalar casting.
+-   #2537 : Add C++ support for `is`/`is not` operator.
+-   #2537 : Add C++ support for mathematical constants.
 
 ### Fixed
 
