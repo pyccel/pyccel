@@ -5,6 +5,7 @@ __all__ = [
     "two_quote",
     "three_quote",
     "return_literal",
+    "return_multiple",
     "concatenate",
     "concatenate_multiple",
     "concatenate_expr",
@@ -31,6 +32,10 @@ def three_quote():
 
 def return_literal():
     return "hello world"
+
+
+def return_multiple():
+    return "hello", "world"
 
 
 def empty_string():
