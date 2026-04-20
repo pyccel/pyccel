@@ -10,7 +10,6 @@ which creates an interface exposing C++ code to Python using pybind11.
 
 from pyccel.ast.core import (
     Assign,
-    EmptyNode,
     FunctionAddress,
     FunctionCall,
     FunctionDefArgument,
