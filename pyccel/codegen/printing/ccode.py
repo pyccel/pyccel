@@ -3905,6 +3905,7 @@ class CCodePrinter(CodePrinter):
         if virtual_methods:
             init_lines = init_printed.split("\n")
             self_name = init_method.arguments[0].var.name
+            virtual_methods.sort(key=lambda m: m.name)
             fp_assignments = "    // Save virtual function addresses\n" + "".join(
                 f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
             )

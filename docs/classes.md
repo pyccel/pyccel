@@ -149,8 +149,8 @@ void cls_test__MyClass__drop(struct cls_test__MyClass* self)
 void cls_test__MyClass1__init(struct cls_test__MyClass1* self)
 {
     // Save virtual function addresses
-    self->Method2 = cls_test__MyClass1__Method2;
     self->Method1 = cls_test__MyClass1__Method1;
+    self->Method2 = cls_test__MyClass1__Method2;
 
     self->is_freed = 0;
     printf("MyClass1 Object created!\n");
