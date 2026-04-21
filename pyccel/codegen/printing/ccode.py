@@ -401,7 +401,6 @@ class CCodePrinter(CodePrinter):
         self._additional_code = ""
         self._additional_args = []
         self._temporary_args = []
-        self._current_module = None
         self._in_header = False
 
     def sort_imports(self, imports):
@@ -1197,7 +1196,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
-        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -1265,7 +1263,6 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
-        self._current_module = None
         body = "\n".join(
             info_block
             for info_block in (imports, global_variables, classes, funcs)
@@ -1278,7 +1275,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr
         body = "\n".join(self._print(i) for i in expr.body)
 
         global_variables = "".join([self._print(d) for d in expr.declarations])
@@ -1292,7 +1288,6 @@ class CCodePrinter(CodePrinter):
         code = "\n".join((imports, global_variables, body))
 
         self.exit_scope()
-        self._current_module = None
         return code
 
     def _print_Break(self, expr):
@@ -3852,8 +3847,6 @@ class CCodePrinter(CodePrinter):
     # =====================================
 
     def _print_Program(self, expr):
-        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-        self._current_module = mod
         self.set_scope(expr.scope)
         body = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -3868,10 +3861,7 @@ class CCodePrinter(CodePrinter):
         imports = "".join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self._current_module = None
-        return (
-            "{imports}" "int main()\n{{\n" "{decs}" "{body}" "return 0;\n" "}}"
-        ).format(imports=imports, decs=decs, body=body)
+        return f"{imports}int main()\n{{\n{decs}{body}return 0;\n}}"
 
     # ================== CLASSES ==================
 

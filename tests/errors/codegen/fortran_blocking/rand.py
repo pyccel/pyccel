@@ -1,5 +1,5 @@
 # Memory allocation should not be used in an expression
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy.random import randint
+from numpy.random import rand
 
-a = randint(10, size=5) * 5
+a = rand(5) * 5
