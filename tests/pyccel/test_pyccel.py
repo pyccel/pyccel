@@ -665,7 +665,7 @@ def test_bool(language):
 
 
 # ------------------------------------------------------------------------------
-def test_expressions(language):
+def test_expressions(experimental_language):
     types = (
         [float, complex, int, float, float, int]
         + [float] * 3
@@ -684,7 +684,9 @@ def test_expressions(language):
         + [complex]
         + [bool] * 9
     )
-    pyccel_test("scripts/expressions.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/expressions.py", language=experimental_language, output_dtype=types
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -898,6 +900,18 @@ def test_numpy_kernels_compile(language):
 
 
 # ------------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "language",
+    (
+        pytest.param("fortran", marks=pytest.mark.fortran),
+        pytest.param("python", marks=pytest.mark.python),
+    ),
+)
+def test_randint_size_program(language):
+    pyccel_test("scripts/numpy/randint_size.py", language=language)
+
+
+# ------------------------------------------------------------------------------
 def test_multiple_results(language):
     pyccel_test(
         "scripts/runtest_multiple_results.py",
@@ -945,9 +959,11 @@ def test_elemental(language):
 
 
 # ------------------------------------------------------------------------------
-def test_print_strings(language):
+def test_print_strings(experimental_language):
     types = str
-    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_strings.py", language=experimental_language, output_dtype=types
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -977,9 +993,13 @@ def test_print_integers(language):
 
 
 # ------------------------------------------------------------------------------
-def test_print_sp_and_end(language):
+def test_print_sp_and_end(experimental_language):
     types = str
-    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_sp_and_end.py",
+        language=experimental_language,
+        output_dtype=types,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1206,8 +1226,12 @@ def test_lapack(test_file):
 
 
 # ------------------------------------------------------------------------------
-def test_type_print(language):
-    pyccel_test("scripts/runtest_type_print.py", language=language, output_dtype=str)
+def test_type_print(experimental_language):
+    pyccel_test(
+        "scripts/runtest_type_print.py",
+        language=experimental_language,
+        output_dtype=str,
+    )
 
 
 def test_container_type_print(language):

@@ -1,5 +1,5 @@
-# Memory allocation should not be used in an expression
+# Unsupported dtype for randint
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
 
-a = randint(10, size=5) * 5
+a = randint(0, 100, size=5, dtype="float64")

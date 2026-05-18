@@ -22,9 +22,9 @@ runs:
   steps:
     - name: Remove pre-existing labels
       run: |
-        gh pr edit $PR_NUMBER --remove-label needs_initial_review
-        gh pr edit $PR_NUMBER --remove-label Ready_for_review
-        gh pr edit $PR_NUMBER --remove-label Ready_to_merge
+        gh pr edit ${{ inputs.pr_number }} --remove-label needs_initial_review
+        gh pr edit ${{ inputs.pr_number }} --remove-label Ready_for_review
+        gh pr edit ${{ inputs.pr_number }} --remove-label Ready_to_merge
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}

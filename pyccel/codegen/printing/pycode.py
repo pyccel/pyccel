@@ -1477,6 +1477,10 @@ class PythonCodePrinter(CodePrinter):
         if expr.rank != 0:
             size = self._print(expr.shape)
             args.append(f"size = {size}")
+        if expr.init_dtype is not None:
+            dtype = self._print_dtype_argument(expr, expr.init_dtype)
+            if dtype:
+                args.append(dtype)
         return f"{name}({', '.join(args)})"
 
     def _print_NumpyNorm(self, expr):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------- #
 # This file is part of Pyccel which is released under MIT License. See the  #
 # LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
@@ -18,18 +17,22 @@ from ..utilities.stage import PyccelStage
 from .codegen import _extension_registry, _header_extension_registry
 from .printing.cwrappercode import CWrapperCodePrinter
 from .printing.fcode import FCodePrinter
+from .printing.pybindcode import PyBindCodePrinter
 from .wrapper.c_to_python_wrapper import CToPythonWrapper
+from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 
 wrapper_registry = {
     "fortran": [FortranToCWrapper, CToPythonWrapper],
     "c": [CToPythonWrapper],
+    "c++": [CppToPythonWrapper],
     "python": [],
 }
 
 printer_registry = {
     FortranToCWrapper: FCodePrinter,
     CToPythonWrapper: CWrapperCodePrinter,
+    CppToPythonWrapper: PyBindCodePrinter,
 }
 
 pyccel_stage = PyccelStage()
