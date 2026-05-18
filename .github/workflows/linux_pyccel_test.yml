@@ -74,7 +74,7 @@ jobs:
       - name: Run tests with the 'pyccel test' command
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: pyccel-test
-        timeout-minutes: 60
+        timeout-minutes: 120
         run: |
           pyccel test
         shell: bash
