@@ -1658,6 +1658,8 @@ def test_time_execution_flag(language):
         f"--language={language}",
         "--time-execution",
     ]
+    if language == 'python':
+        cmd.append(f"--output=__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}")
     with subprocess.Popen(
         cmd,
         universal_newlines=True,
