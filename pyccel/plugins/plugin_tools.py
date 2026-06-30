@@ -5,7 +5,7 @@ from . import LineAnnot
 def get_plugin_manager():
     pm = pluggy.PluginManager("pyccel")
 
-    # Register exected hook format
+    # Register expected hook format
     pm.add_hookspecs(hookspecs)
 
     # Search for available plugins on the system
