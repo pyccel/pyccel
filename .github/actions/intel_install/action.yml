@@ -54,8 +54,6 @@ runs:
         echo "INTEL_PYTHONHOME=$INTEL_PYTHONHOME" >> $GITHUB_ENV
         echo "CPATH=$CPATH" >> $GITHUB_ENV
         mpicc --version
-        ifx --version
-        which ifx
       shell: bash
     - name: Save Intel Cache
       id: cache-intel-save
