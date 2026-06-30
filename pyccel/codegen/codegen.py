@@ -179,9 +179,12 @@ class Codegen:
 
         if self._verbose:
             print(">>> Printing :: ", pyi_filename)
-        code = get_codegen_class(self._plugin_manager, printer_registry["python"], "python")(
+
+        PythonPrinter = get_codegen_class(self._plugin_manager, printer_registry["python"], "python")
+        code = PythonPrinter(
             self.parser.filename, verbose=self._verbose
         ).doprint(module_header)
+
         if self._language != "python":
             printer_imports = ", ".join(self.get_printer_imports().keys())
             if printer_imports:
