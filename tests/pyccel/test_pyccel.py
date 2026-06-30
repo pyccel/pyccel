@@ -1898,6 +1898,11 @@ def test_line_annotation_plugin(language):
 
     pyccel_commands = "-t --line_annotation --language=" + language
 
+    try:
+        os.rmdir(output_folder)
+    except OSError:
+        pass
+
     if language == "python":
         pyccel_commands += f" --output={output_folder}"
         output_folder = os.path.join(output_folder, "__pyccel__")
