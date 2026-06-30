@@ -290,11 +290,6 @@ def epyccel_seq(
     plugin_manager = get_plugin_manager()
     deactivate_plugins(plugin_manager, kwargs)
 
-    # Deactivate unused plugins
-    for plugin in plugin_manager.get_plugins():
-        if plugin_manager.get_name(plugin) not in kwargs:
-            plugin_manager.unregister(plugin)
-
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
@@ -389,6 +384,7 @@ def epyccel_seq(
                 output_name=module_name,
                 conda_warnings=conda_warnings,
                 context_dict=context_dict,
+                plugin_manager=plugin_manager
             )
         except PyccelError as err:
             raise err
