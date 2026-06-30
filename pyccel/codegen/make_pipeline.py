@@ -209,7 +209,7 @@ def execute_pyccel_make(
         semantic_parser = p.semantic_parser
         start_codegen = time.time()
         # Generate low-level code file
-        codegen = Codegen(semantic_parser, f, language, verbose, plugin_manager)
+        codegen = Codegen(semantic_parser, f, language, verbose, plugin_manager=plugin_manager)
         fname = (pyccel_dirpath / f).with_suffix("")
         output_dir = fname.parent
         os.makedirs(output_dir, exist_ok=True)
