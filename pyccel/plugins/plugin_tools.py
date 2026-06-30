@@ -1,5 +1,6 @@
 import pluggy
 from . import hookspecs
+from . import LineAnnot
 
 def get_plugin_manager():
     pm = pluggy.PluginManager("pyccel")
@@ -11,6 +12,7 @@ def get_plugin_manager():
     pm.load_setuptools_entrypoints("pyccel")
 
     # Register plugins provided inside Pyccel
+    pm.register(LineAnnot.plugin, 'line_annotation')
     #pm.register(openmp, 'openmp')
 
     return pm
