@@ -148,7 +148,12 @@ def execute_pyccel_wrap(
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=folder, context_dict={})
+    parser = Parser(
+        pymod_filepath,
+        output_folder=folder,
+        context_dict={},
+        plugin_manager=plugin_manager,
+    )
     parser.parse(verbose=verbose)
 
     if errors.has_errors():
