@@ -182,5 +182,6 @@ def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
         str(filename),
         language=language.lower(),
         folder=output or filename.parent,
+        plugin_manager=plugin_manager,
         **kwargs,
     )

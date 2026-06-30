@@ -17,6 +17,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.parser.base import get_filename_from_import
 from pyccel.parser.semantic import SemanticParser
 from pyccel.parser.syntactic import SyntaxParser
+from pyccel.plugins.plugin_tools import get_semantic_class
 
 errors = Errors()
 
@@ -57,6 +58,7 @@ class Parser:
         output_folder,
         context_dict=None,
         original_filename=None,
+        plugin_manager,
         **kwargs,
     ):
 
@@ -82,6 +84,8 @@ class Parser:
 
         self._input_folder = self._original_filename.parent
         self._output_folder = output_folder
+
+        self._plugin_manager = plugin_manager
 
     @property
     def semantic_parser(self):
@@ -238,7 +242,7 @@ class Parser:
             print(">> Calculating semantic annotations :: ", self._filename)
 
         # Create a new semantic parser and store it in object
-        parser = SemanticParser(
+        parser = get_semantic_class(self._plugin_manager, SemanticParser)(
             self._syntax_parser,
             d_parsers=self.d_parsers,
             parents=self.parents,

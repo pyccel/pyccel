@@ -50,6 +50,7 @@ __all__ = ["execute_pyccel"]
 def execute_pyccel(
     fname,
     *,
+    plugin_manager,
     syntax_only=False,
     semantic_only=False,
     convert_only=False,
@@ -216,7 +217,8 @@ def execute_pyccel(
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=folder, context_dict=context_dict)
+    parser = Parser(pymod_filepath, output_folder=folder, context_dict=context_dict,
+                    plugin_manager=plugin_manager)
     parser.parse(verbose=verbose)
     if errors.has_errors():
         raise PyccelSyntaxError("Syntax step failed")

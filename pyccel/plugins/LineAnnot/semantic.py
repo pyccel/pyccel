@@ -1,15 +1,15 @@
-
+from pyccel.ast.core import CodeBlock, Comment
 
 def _visit_CodeBlock(self, block):
-    visited_block = self._visit(block)
+    visited_block = super(type(self), self)._visit_CodeBlock(block)
     lines = visited_block.body
     new_lines = []
     for l in lines:
         ast = l.python_ast
         if ast:
-            new_lines.append(Comment("{self._filename} : Line {ast.line}"))
+            new_lines.append(Comment(f"{self._filename} : Line {ast.lineno}"))
         new_lines.append(l)
 
-    new_block = CodeBlock(visited_block)
+    new_block = CodeBlock(new_lines)
     visited_block.invalidate_node()
     return new_block

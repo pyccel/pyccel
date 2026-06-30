@@ -1,4 +1,5 @@
 from .. import hookimpl
+from .semantic import _visit_CodeBlock
 
 @hookimpl
 def get_description():
@@ -7,3 +8,7 @@ def get_description():
 @hookimpl
 def add_cli_options(parser, cli_tool):
     pass
+
+@hookimpl
+def get_updated_semantic_methods():
+    return (_visit_CodeBlock,)
