@@ -9,9 +9,9 @@ import os
 import shutil
 import sysconfig
 
-from .argparse_helpers import add_help_flag
-
 from pyccel.plugins.plugin_tools import get_plugin_manager
+
+from .argparse_helpers import add_help_flag
 
 __all__ = (
     "pyccel_clean",

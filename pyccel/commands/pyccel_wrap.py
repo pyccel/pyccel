@@ -10,14 +10,14 @@ File containing the `pyccel wrap` command line interface.
 import argparse
 import pathlib
 
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
     add_compiler_selection,
     path_with_suffix,
 )
-
-from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
 
 __all__ = (
     "pyccel_wrap",
