@@ -117,20 +117,15 @@ def pytest_runtest_teardown(item, nextitem):
 
     config = item.config
     xdist_plugin = config.pluginmanager.getplugin("xdist")
-    if (
-        xdist_plugin is None
-        or "PYTEST_XDIST_WORKER_COUNT" not in os.environ
-        or os.getenv("PYTEST_XDIST_WORKER_COUNT") == 1
-    ):
-        marks = [m.name for m in item.own_markers]
-        if "mpi" not in marks:
+    marks = [m.name for m in item.own_markers]
+    if "mpi" not in marks:
+        pyccel_clean(path_dir, remove_shared_libs=True)
+    else:
+        comm = MPI.COMM_WORLD
+        comm.Barrier()
+        if comm.rank == 0:
             pyccel_clean(path_dir, remove_shared_libs=True)
-        else:
-            comm = MPI.COMM_WORLD
-            comm.Barrier()
-            if comm.rank == 0:
-                pyccel_clean(path_dir, remove_shared_libs=True)
-            comm.Barrier()
+        comm.Barrier()
 
 
 def pytest_addoption(parser):
