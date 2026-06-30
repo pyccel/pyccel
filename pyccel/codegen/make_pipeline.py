@@ -29,6 +29,7 @@ from pyccel.errors.errors import (
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 from pyccel.parser.scope import Scope
+from pyccel.plugins.plugin_tools import get_build_generation_class
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.compilers import Compiler, get_condaless_search_path

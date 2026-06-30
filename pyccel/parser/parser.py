@@ -17,7 +17,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.parser.base import get_filename_from_import
 from pyccel.parser.semantic import SemanticParser
 from pyccel.parser.syntactic import SyntaxParser
-from pyccel.plugins.plugin_tools import get_semantic_class
+from pyccel.plugins.plugin_tools import get_syntactic_class, get_semantic_class
 
 errors = Errors()
 
