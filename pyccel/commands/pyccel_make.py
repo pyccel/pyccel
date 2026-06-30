@@ -208,7 +208,7 @@ def setup_pyccel_make_parser(parser):
     )
 
 
-def pyccel_make(*, language, **kwargs) -> None:
+def pyccel_make(*, language, folder, **kwargs) -> None:
     """
     Call the `pyccel make` pipeline.
 
@@ -218,10 +218,21 @@ def pyccel_make(*, language, **kwargs) -> None:
     ----------
     language : str
         The target language Pyccel is translating to.
+    folder : str
+        Path to the directory where output files are created. Generated files are created
+        following the same folder structure as found in the folder where the command line
+        tool is called. Default is the folder where the command line tool is called.
+        The __pyccel__ directory is created inside this folder.
     **kwargs : dict
         See execute_pyccel_make.
     """
 
     from pyccel.codegen.make_pipeline import execute_pyccel_make
 
-    execute_pyccel_make(language=language.lower(), **kwargs)
+    if language == "Python" and folder == "":
+        errors.report(
+            "Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
+            severity="error",
+        )
+
+    execute_pyccel_make(language=language.lower(), folder=folder, **kwargs)
