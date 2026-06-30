@@ -248,7 +248,7 @@ def execute_pyccel(
     semantic_parser = parser.semantic_parser
     start_codegen = time.time()
     # Generate .f90 file
-    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    codegen = Codegen(semantic_parser, module_name, language, verbose, plugin_manager)
     fname = os.path.join(pyccel_dirpath, module_name)
     fname, prog_name = codegen.export(fname)
 

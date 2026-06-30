@@ -232,4 +232,4 @@ def pyccel_make(*, language, plugin_manager, **kwargs) -> None:
 
     deactivate_plugins(plugin_manager, kwargs)
 
-    execute_pyccel_make(language=language.lower(), **kwargs)
+    execute_pyccel_make(language=language.lower(), plugin_manager=plugin_manager, **kwargs)

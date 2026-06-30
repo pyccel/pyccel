@@ -58,6 +58,7 @@ def execute_pyccel_make(
     accelerators,
     conda_warnings,
     build_code,
+    plugin_manager
 ):
     """
     Run `pyccel make` on the provided files.
@@ -207,7 +208,7 @@ def execute_pyccel_make(
         semantic_parser = p.semantic_parser
         start_codegen = time.time()
         # Generate low-level code file
-        codegen = Codegen(semantic_parser, f, language, verbose)
+        codegen = Codegen(semantic_parser, f, language, verbose, plugin_manager)
         fname = (pyccel_dirpath / f).with_suffix("")
         output_dir = fname.parent
         os.makedirs(output_dir, exist_ok=True)
@@ -290,7 +291,8 @@ def execute_pyccel_make(
         base_dirpath, targets.values(), printed_languages, stdlib_deps
     )
 
-    build_sys = build_system_handler[build_system](
+    BuildGenClass = get_build_generation_class(self._plugin_manager, build_system_handler.get(build_system, None), build_system)
+    build_sys = BuildGenClass(
         pyccel_dirpath,
         base_dirpath,
         folder,
