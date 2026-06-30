@@ -75,6 +75,9 @@ def get_codegen_class(plugin_manager, BaseClass, language):
                 continue
             break
 
+    if BaseClass is None:
+        raise ValueError(f"{language} language is not available")
+
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
@@ -97,6 +100,9 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
                 continue
             break
 
+    if BaseClass is None:
+        raise ValueError(f"Wrapping from {start_language} to {target_language} is not available")
+
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
@@ -118,6 +124,9 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
             except AttributeError:
                 continue
             break
+
+    if BaseClass is None:
+        raise ValueError(f"{build_gen_method} build generation method is not available")
 
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)

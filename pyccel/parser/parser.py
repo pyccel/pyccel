@@ -201,7 +201,7 @@ class Parser:
         if verbose:
             print(">> Parsing :: ", self._filename)
 
-        parser = SyntaxParser(
+        parser = get_syntactic_class(self._plugin_manager, SyntaxParser)(
             self._filename, verbose=verbose, context_dict=self._context_dict
         )
         self.syntax_parser = parser

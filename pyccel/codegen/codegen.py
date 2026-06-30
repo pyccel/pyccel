@@ -19,6 +19,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.cppcode import CppCodePrinter
 from pyccel.codegen.printing.fcode import FCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
+from pyccel.plugins.plugin_tool import get_codegen_class
 from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {"fortran": "f90", "c": "c", "c++": "cpp", "python": "py"}
@@ -54,7 +55,7 @@ class Codegen:
         The level of verbosity.
     """
 
-    def __init__(self, parser, name, language, verbose):
+    def __init__(self, parser, name, language, verbose, plugin_manager):
         pyccel_stage.set_stage("codegen")
         self._parser = parser
         self._ast = parser.ast
@@ -64,10 +65,8 @@ class Codegen:
         self._is_program = self.ast.program is not None
 
         # instantiate code_printer
-        try:
-            CodePrinterSubclass = printer_registry[language]
-        except KeyError as err:
-            raise ValueError(f"{language} language is not available") from err
+        self._plugin_manager = plugin_manager
+        CodePrinterSubclass = get_codegen_class(self._plugin_manager, printer_registry.get(language, None), language)
 
         self._printer = CodePrinterSubclass(self.parser.filename, verbose=self._verbose)
 
@@ -180,7 +179,7 @@ class Codegen:
 
         if self._verbose:
             print(">>> Printing :: ", pyi_filename)
-        code = printer_registry["python"](
+        code = get_codegen_class(self._plugin_manager, printer_registry["python"], "python")(
             self.parser.filename, verbose=self._verbose
         ).doprint(module_header)
         if self._language != "python":
