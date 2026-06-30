@@ -11,7 +11,11 @@ import argparse
 import glob
 from pathlib import Path
 
-from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, handle_plugin_arguments
+from pyccel.plugins.plugin_tools import (
+    get_plugin_manager,
+    get_plugin_cli_options,
+    handle_plugin_arguments,
+)
 
 from .argparse_helpers import (
     add_accelerator_selection,
@@ -200,7 +204,7 @@ def setup_pyccel_make_parser(parser):
 
     # ... Plugin options
     plugin_manager = get_plugin_manager()
-    get_plugin_cli_options(plugin_manager, group, 'make')
+    get_plugin_cli_options(plugin_manager, group, "make")
 
     # ... Other options
     group = parser.add_argument_group("Other options")
@@ -232,4 +236,6 @@ def pyccel_make(*, language, plugin_manager, **kwargs) -> None:
 
     handle_plugin_arguments(plugin_manager, kwargs)
 
-    execute_pyccel_make(language=language.lower(), plugin_manager=plugin_manager, **kwargs)
+    execute_pyccel_make(
+        language=language.lower(), plugin_manager=plugin_manager, **kwargs
+    )

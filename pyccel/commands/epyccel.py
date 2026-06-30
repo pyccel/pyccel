@@ -224,7 +224,7 @@ def epyccel_seq(
     time_execution=False,
     conda_warnings="basic",
     context_dict=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -384,7 +384,7 @@ def epyccel_seq(
                 output_name=module_name,
                 conda_warnings=conda_warnings,
                 context_dict=context_dict,
-                plugin_manager=plugin_manager
+                plugin_manager=plugin_manager,
             )
         except PyccelError as err:
             raise err

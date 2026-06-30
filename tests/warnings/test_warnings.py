@@ -52,7 +52,7 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)

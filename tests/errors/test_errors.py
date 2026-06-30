@@ -48,7 +48,7 @@ def test_syntax_blockers(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
 
@@ -72,7 +72,7 @@ def test_syntax_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
 
@@ -97,7 +97,7 @@ def test_semantic_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     Scope.name_clash_checker = name_clash_checkers["fortran"]
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
@@ -125,7 +125,7 @@ def test_traceback():
     errors.reset()
     error_mode.set_mode("developer")
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
@@ -158,7 +158,7 @@ def test_semantic_non_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
@@ -183,7 +183,7 @@ def test_semantic_non_blocking_developer_errors(f):
     errors.reset()
     error_mode.set_mode("developer")
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
@@ -205,7 +205,7 @@ def test_codegen_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
@@ -236,7 +236,7 @@ def test_codegen_non_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)

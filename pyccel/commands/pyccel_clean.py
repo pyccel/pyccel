@@ -125,5 +125,5 @@ def setup_pyccel_clean_parser(parser):
     )
 
     plugin_manager = get_plugin_manager()
-    plugin_manager.hook.add_cli_options(parser=group, cli_tool='clean')
-    parser.set_defaults(plugin_manager = plugin_manager)
+    plugin_manager.hook.add_cli_options(parser=group, cli_tool="clean")
+    parser.set_defaults(plugin_manager=plugin_manager)

@@ -25,9 +25,9 @@ from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 
 wrapper_registry = {
-    "fortran": (FortranToCWrapper, 'c'),
-    "c": (CToPythonWrapper, 'python'),
-    "c++": (CppToPythonWrapper, 'python'),
+    "fortran": (FortranToCWrapper, "c"),
+    "c": (CToPythonWrapper, "python"),
+    "c++": (CppToPythonWrapper, "python"),
 }
 
 printer_registry = {
@@ -71,13 +71,18 @@ class Wrappergen:
         languages = []
         self._wrapper_types = []
         while language != "python":
-            start_language=language
+            start_language = language
             languages.append(start_language)
             wrapper_base_class, language = wrapper_registry.get(language, (None, None))
-            wrapper, language = get_wrapper_class(plugin_manager, wrapper_base_class, start_language, language)
+            wrapper, language = get_wrapper_class(
+                plugin_manager, wrapper_base_class, start_language, language
+            )
             self._wrapper_types.append(wrapper)
 
-        self._printer_types = [get_wrapper_codegen_class(plugin_manager, printer_registry.get(l, None), l) for l in languages]
+        self._printer_types = [
+            get_wrapper_codegen_class(plugin_manager, printer_registry.get(l, None), l)
+            for l in languages
+        ]
         self._additional_imports = [{} for _ in self._wrapper_types]
 
     def wrap(self, sharedlib_dirpath):

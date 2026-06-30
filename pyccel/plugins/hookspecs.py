@@ -5,11 +5,11 @@ All functions in this module are decorated with ``@hookspec`` and define
 the interface that pyccel plugins may implement.  Plugin authors should
 decorate their implementations with :data:`pyccel.plugins.hookimpl`.
 """
+
 import argparse
 from typing import Iterable, Optional
 from types import FunctionType
 import pluggy
-
 
 hookspec = pluggy.HookspecMarker("pyccel")
 
@@ -29,7 +29,7 @@ def get_description() -> str:
 
 
 @hookspec
-def add_cli_options(parser : argparse.ArgumentParser, cli_tool : str):
+def add_cli_options(parser: argparse.ArgumentParser, cli_tool: str):
     """
     Add extra options to the command line tools.
 
@@ -45,7 +45,7 @@ def add_cli_options(parser : argparse.ArgumentParser, cli_tool : str):
     """
 
 
-def read_cli_arguments(kwargs : dict):
+def read_cli_arguments(kwargs: dict):
     """
     Read any arguments from the kwargs dictionary.
 
@@ -113,7 +113,7 @@ def get_updated_semantic_methods() -> Iterable[FunctionType]:
 
 
 @hookspec
-def get_codegen_class(language : str):
+def get_codegen_class(language: str):
     """
     Return the code-generation class to use for language.
 
@@ -134,7 +134,7 @@ def get_codegen_class(language : str):
 
 
 @hookspec
-def get_updated_codegen_methods(language : str) -> Iterable[FunctionType]:
+def get_updated_codegen_methods(language: str) -> Iterable[FunctionType]:
     """
     Return methods to be added to or to override methods in the code-generation class.
 
@@ -157,7 +157,7 @@ def get_updated_codegen_methods(language : str) -> Iterable[FunctionType]:
 
 
 @hookspec
-def get_wrapper_codegen_class(language : str):
+def get_wrapper_codegen_class(language: str):
     """
     Return the code-generation class to use for printing the wrapper in language.
 
@@ -178,7 +178,7 @@ def get_wrapper_codegen_class(language : str):
 
 
 @hookspec
-def get_updated_wrapper_codegen_methods(language : str) -> Iterable[FunctionType]:
+def get_updated_wrapper_codegen_methods(language: str) -> Iterable[FunctionType]:
     """
     Return methods to be added to or to override methods in the code-generation class for wrapping.
 
@@ -201,7 +201,7 @@ def get_updated_wrapper_codegen_methods(language : str) -> Iterable[FunctionType
 
 
 @hookspec
-def get_wrapper_class(start_language : str) -> Optional[tuple[type, str]]:
+def get_wrapper_class(start_language: str) -> Optional[tuple[type, str]]:
     """
     Return the wrapper class for converting code from start_language to target_language.
 
@@ -224,7 +224,9 @@ def get_wrapper_class(start_language : str) -> Optional[tuple[type, str]]:
 
 
 @hookspec
-def get_updated_wrapper_methods(start_language : str, target_language : str) -> Iterable[FunctionType]:
+def get_updated_wrapper_methods(
+    start_language: str, target_language: str
+) -> Iterable[FunctionType]:
     """
     Return methods to be added or overridden in the wrapper class for a language pair.
 
@@ -250,7 +252,7 @@ def get_updated_wrapper_methods(start_language : str, target_language : str) -> 
 
 
 @hookspec
-def get_build_generation_class(build_gen_method : str):
+def get_build_generation_class(build_gen_method: str):
     """
     Return the build-generation class for the requested build method.
 
@@ -271,7 +273,9 @@ def get_build_generation_class(build_gen_method : str):
 
 
 @hookspec
-def get_updated_build_generation_methods(build_gen_method : str) -> Iterable[FunctionType]:
+def get_updated_build_generation_methods(
+    build_gen_method: str,
+) -> Iterable[FunctionType]:
     """
     Return methods to be added or overridden in the build-generation class.
 

@@ -4,9 +4,11 @@ Utility functions for managing pyccel plugins.
 This module provides methods for creating the plugin manager, and calling the
 methods implemented as hooks in plugins.
 """
+
 import pluggy
 from . import hookspecs
 from . import LineAnnot
+
 
 def get_plugin_manager():
     """
@@ -30,10 +32,11 @@ def get_plugin_manager():
     pm.load_setuptools_entrypoints("pyccel")
 
     # Register plugins provided inside Pyccel
-    pm.register(LineAnnot.plugin, 'line_annotation')
-    #pm.register(openmp, 'openmp')
+    pm.register(LineAnnot.plugin, "line_annotation")
+    # pm.register(openmp, 'openmp')
 
     return pm
+
 
 def get_plugin_cli_options(plugin_manager, parser, cli_tool):
     """
@@ -56,14 +59,15 @@ def get_plugin_cli_options(plugin_manager, parser, cli_tool):
     group = parser.add_argument_group("Plugins")
     for plugin in plugin_manager.get_plugins():
         group.add_argument(
-            "--"+plugin_manager.get_name(plugin),
+            "--" + plugin_manager.get_name(plugin),
             action="store_true",
-            help=plugin.get_description()
+            help=plugin.get_description(),
         )
 
         plugin.add_cli_options(parser=group, cli_tool=cli_tool)
 
-    parser.set_defaults(plugin_manager = plugin_manager)
+    parser.set_defaults(plugin_manager=plugin_manager)
+
 
 def handle_plugin_arguments(plugin_manager, kwargs):
     """
@@ -95,6 +99,7 @@ def handle_plugin_arguments(plugin_manager, kwargs):
             plugin.read_cli_arguments(kwargs)
             kwargs.pop(name)
 
+
 def get_syntactic_class(plugin_manager, BaseClass):
     """
     Return a syntactic parser subclass augmented with methods from active plugins.
@@ -123,11 +128,14 @@ def get_syntactic_class(plugin_manager, BaseClass):
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass
+
 
 def get_semantic_class(plugin_manager, BaseClass):
     """
@@ -157,11 +165,14 @@ def get_semantic_class(plugin_manager, BaseClass):
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass
+
 
 def get_codegen_class(plugin_manager, BaseClass, language):
     """
@@ -213,11 +224,14 @@ def get_codegen_class(plugin_manager, BaseClass, language):
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass
+
 
 def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language):
     """
@@ -264,20 +278,27 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
             break
 
     if BaseClass is None:
-        raise ValueError(f"Wrapping from {start_language} to {target_language} is not available")
+        raise ValueError(
+            f"Wrapping from {start_language} to {target_language} is not available"
+        )
 
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
-            new_methods = plugin.get_updated_wrapper_methods(start_language, target_language)
+            new_methods = plugin.get_updated_wrapper_methods(
+                start_language, target_language
+            )
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass, target_language
+
 
 def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
     """
@@ -329,11 +350,14 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass
+
 
 def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
     """
@@ -385,8 +409,10 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
         except AttributeError:
             continue
 
-        BaseClass = type(name + BaseClass.__name__,
-                         (BaseClass,),
-                         {m.__name__: m for m in new_methods})
+        BaseClass = type(
+            name + BaseClass.__name__,
+            (BaseClass,),
+            {m.__name__: m for m in new_methods},
+        )
 
     return BaseClass

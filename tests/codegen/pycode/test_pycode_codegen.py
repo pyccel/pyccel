@@ -23,7 +23,7 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.python
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
-    plugin_manager=pluggy.PluginManager("pyccel")
+    plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     ast = pyccel.parse(verbose=0)

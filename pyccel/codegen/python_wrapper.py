@@ -35,7 +35,7 @@ def create_shared_library(
     compiler,
     sharedlib_modname=None,
     verbose,
-    plugin_manager
+    plugin_manager,
 ):
     """
     Create a shared library which can be called from Pyccel.

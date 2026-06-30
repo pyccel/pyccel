@@ -217,8 +217,12 @@ def execute_pyccel(
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=folder, context_dict=context_dict,
-                    plugin_manager=plugin_manager)
+    parser = Parser(
+        pymod_filepath,
+        output_folder=folder,
+        context_dict=context_dict,
+        plugin_manager=plugin_manager,
+    )
     parser.parse(verbose=verbose)
     if errors.has_errors():
         raise PyccelSyntaxError("Syntax step failed")
@@ -344,7 +348,7 @@ def execute_pyccel(
         compiler=compiler,
         sharedlib_modname=output_name,
         verbose=verbose,
-        plugin_manager=plugin_manager
+        plugin_manager=plugin_manager,
     )
 
     timers.update(shared_lib_timers)

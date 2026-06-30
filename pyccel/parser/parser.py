@@ -358,7 +358,7 @@ class Parser:
                     stashed_filename,
                     output_folder=q_output_folder,
                     original_filename=filename,
-                    plugin_manager=self._plugin_manager
+                    plugin_manager=self._plugin_manager,
                 )
             q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)
             d_parsers_by_filename[filename] = q

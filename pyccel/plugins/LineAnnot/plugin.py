@@ -1,8 +1,10 @@
 """
 Hook implementations for the LineAnnot pyccel plugin.
 """
+
 from .. import hookimpl
 from .semantic import _visit_CodeBlock
+
 
 @hookimpl
 def get_description():
@@ -17,6 +19,7 @@ def get_description():
         Human-readable description of what the plugin does.
     """
     return "Add comments in generated code indicating which line in the Python file corresponds to the generated code."
+
 
 @hookimpl
 def add_cli_options(parser, cli_tool):
@@ -34,6 +37,7 @@ def add_cli_options(parser, cli_tool):
     cli_tool : str
         The name of the CLI tool being invoked.
     """
+
 
 @hookimpl
 def get_updated_semantic_methods():

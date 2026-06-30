@@ -9,7 +9,11 @@ import argparse
 import pathlib
 import sys
 
-from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, handle_plugin_arguments
+from pyccel.plugins.plugin_tools import (
+    get_plugin_manager,
+    get_plugin_cli_options,
+    handle_plugin_arguments,
+)
 
 from .argparse_helpers import (
     add_accelerator_selection,
@@ -132,7 +136,7 @@ def setup_pyccel_compile_parser(parser):
 
     # ... Plugin options
     plugin_manager = get_plugin_manager()
-    get_plugin_cli_options(plugin_manager, parser, 'compile')
+    get_plugin_cli_options(plugin_manager, parser, "compile")
 
     # ... Other options
     group = parser.add_argument_group("Other options")

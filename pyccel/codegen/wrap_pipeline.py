@@ -55,7 +55,7 @@ def execute_pyccel_wrap(
     debug,
     accelerators,
     conda_warnings,
-    plugin_manager
+    plugin_manager,
 ):
     """
     Run Pyccel on the provided code.
@@ -170,7 +170,9 @@ def execute_pyccel_wrap(
     codegen = Codegen(semantic_parser, module_name, language, verbose)
 
     start_wrapper_creation = time.time()
-    wrappergen = Wrappergen(codegen, codegen.name, language, verbose, plugin_manager=plugin_manager)
+    wrappergen = Wrappergen(
+        codegen, codegen.name, language, verbose, plugin_manager=plugin_manager
+    )
     wrappergen.wrap(str(folder))
     timers["Wrapper creation"] = time.time() - start_wrapper_creation
 
