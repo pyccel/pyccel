@@ -31,9 +31,9 @@ wrapper_registry = {
 }
 
 printer_registry = {
-    FortranToCWrapper: FCodePrinter,
-    CToPythonWrapper: CWrapperCodePrinter,
-    CppToPythonWrapper: PyBindCodePrinter,
+    "fortran": FCodePrinter,
+    "c": CWrapperCodePrinter,
+    "c++": PyBindCodePrinter,
 }
 
 pyccel_stage = PyccelStage()
