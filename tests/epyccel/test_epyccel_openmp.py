@@ -794,7 +794,11 @@ def test_omp_sections(language):
 
 def should_skip(language):
     executable, version = get_compiler_info(language)
-    return ("gcc" in executable and version.major >= 15) or "clang" in executable or "icx" in executable
+    return (
+        ("gcc" in executable and version.major >= 15)
+        or "clang" in executable
+        or "icx" in executable
+    )
 
 
 @pytest.mark.skipif(
