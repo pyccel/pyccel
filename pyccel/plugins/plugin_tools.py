@@ -1,8 +1,26 @@
+"""
+Utility functions for managing pyccel plugins.
+
+This module provides methods for creating the plugin manager, and calling the
+methods implemented as hooks in plugins.
+"""
 import pluggy
 from . import hookspecs
 from . import LineAnnot
 
 def get_plugin_manager():
+    """
+    Create a plugin manager with all available pyccel plugins registered.
+
+    The manager registers the built-in hook specifications, loads any
+    third-party plugins published as `pyccel` entry points, and then
+    registers the plugins that ship with pyccel itself.
+
+    Returns
+    -------
+    pluggy.PluginManager
+        A fully initialised plugin manager ready for use.
+    """
     pm = pluggy.PluginManager("pyccel")
 
     # Register expected hook format
@@ -18,6 +36,23 @@ def get_plugin_manager():
     return pm
 
 def get_plugin_cli_options(plugin_manager, parser, cli_tool):
+    """
+    Add a "Plugins" argument group to parser populated by all registered plugins.
+
+    Each plugin gets an `--<name>` flag that enables it, followed by any
+    plugin-specific options contributed via the `add_cli_options` hook.
+    The plugin manager is stored in parser via the `plugin_manager` default,
+    so it is available to the command that processes the parsed arguments.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager whose registered plugins will contribute options.
+    parser : argparse.ArgumentParser
+        The argument parser to which the plugin argument group will be added.
+    cli_tool : str
+        The name of the CLI tool being invoked.
+    """
     group = parser.add_argument_group("Plugins")
     for plugin in plugin_manager.get_plugins():
         group.add_argument(
@@ -30,17 +65,57 @@ def get_plugin_cli_options(plugin_manager, parser, cli_tool):
 
     parser.set_defaults(plugin_manager = plugin_manager)
 
-def deactivate_plugins(plugin_manager, active_plugins):
+def handle_plugin_arguments(plugin_manager, kwargs):
+    """
+    Use kwargs to unregister unused plugins and collect arguments.
+
+    The arguments are used to recognise which plugins are registered. This is
+    those that are present and associated with a truthy value. Note that a
+    plugin may not appear in kwargs if epyccel is used. Unused plugins are
+    unregistered. The kwargs are passed to the remaining plugins to initialise
+    any options.
+    Plugin flags are removed from kwargs to ensure that the rest of the code
+    doesn't see plugin arguments.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing all plugins.
+    kwargs : dict
+        The keyword arguments passed to the pipeline.
+    """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
-        if name in active_plugins:
-            if not active_plugins[name]:
-                plugin_manager.unregister(plugin)
+        if name not in active_plugins:
+            plugin_manager.unregister(plugin)
+        elif not active_plugins[name]:
+            plugin_manager.unregister(plugin)
             active_plugins.pop(name)
         else:
-            plugin_manager.unregister(plugin)
+            plugin.read_cli_arguments(kwargs)
+            active_plugins.pop(name)
 
 def get_syntactic_class(plugin_manager, BaseClass):
+    """
+    Return a syntactic parser subclass augmented with methods from active plugins.
+
+    For each plugin that implements `get_updated_syntactic_methods`, a new
+    subclass of BaseClass (SyntaxParser) is created with the plugin's methods
+    injected. Plugins are applied in registration order, so later plugins can
+    override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type
+        The base syntactic parser class to augment.
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from BaseClass augmented with the plugin methods.
+    """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
@@ -55,6 +130,26 @@ def get_syntactic_class(plugin_manager, BaseClass):
     return BaseClass
 
 def get_semantic_class(plugin_manager, BaseClass):
+    """
+    Return a semantic parser subclass augmented with methods from active plugins.
+
+    For each plugin that implements `get_updated_semantic_methods`, a new
+    subclass of BaseClass (SemanticParser) is created with the plugin's methods
+    injected.  Plugins are applied in registration order, so later plugins can
+    override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type
+        The base semantic parser class to augment.
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from BaseClass augmented with the plugin methods.
+    """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
@@ -69,6 +164,37 @@ def get_semantic_class(plugin_manager, BaseClass):
     return BaseClass
 
 def get_codegen_class(plugin_manager, BaseClass, language):
+    """
+    Return a code-generation class for language augmented with plugin methods.
+
+    If BaseClass is `None`, the plugins are used to find an implementation of a
+    code-generation class for the requested language via the `get_codegen_class`
+    hook. A `ValueError` is raised if no base class can be found.
+
+    For each plugin that implements `get_updated_codegen_methods`, a new
+    subclass of BaseClass is created with the plugin's methods injected. Plugins
+    are applied in registration order, so later plugins can override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type or None
+        The base code-generation class, or `None` to discover one from
+        the registered plugins.
+    language : str
+        The target language (e.g. 'c', 'fortran').
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from CodePrinter augmented with the plugin methods.
+
+    Raises
+    ------
+    ValueError
+        If BaseClass is `None` and no plugin provides a class for language.
+    """
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
@@ -94,6 +220,39 @@ def get_codegen_class(plugin_manager, BaseClass, language):
     return BaseClass
 
 def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language):
+    """
+    Return a wrapper class for wrapping code in start_language to the target_language.
+
+    If BaseClass is `None`, the plugins are used to find an implementation of a
+    wrapper class for the requested languages via the `get_wrapper_class`
+    hook. A `ValueError` is raised if no base class can be found.
+
+    For each plugin that implements `get_updated_wrapper_methods`, a new
+    subclass of BaseClass is created with the plugin's methods injected. Plugins
+    are applied in registration order, so later plugins can override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type or None
+        The base wrapper class, or `None` to discover one from the
+        registered plugins.
+    start_language : str
+        The source language of the wrapper (e.g. 'fortran').
+    target_language : str
+        The target language of the wrapper (e.g. 'python').
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from BaseClass augmented with the plugin methods.
+
+    Raises
+    ------
+    ValueError
+        If *BaseClass* is `None` and no plugin provides a suitable wrapper class.
+    """
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
@@ -119,6 +278,37 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
     return BaseClass
 
 def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
+    """
+    Return a build-generation class for build_gen_method augmented with plugin methods.
+
+    If BaseClass is `None`, the plugins are used to find an implementation of a
+    build-generation class for the requested method via the `get_build_generation_class`
+    hook. A `ValueError` is raised if no base class can be found.
+
+    For each plugin that implements `get_updated_build_generation_methods`, a new
+    subclass of BaseClass is created with the plugin's methods injected. Plugins
+    are applied in registration order, so later plugins can override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type or None
+        The base build-generation class, or `None` to discover one from
+        the registered plugins.
+    build_gen_method : str
+        The name of the build generation method (e.g. 'cmake').
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from BaseClass augmented with the plugin methods.
+
+    Raises
+    ------
+    ValueError
+        If BaseClass is `None` and no plugin provides a class for build_gen_method.
+    """
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:

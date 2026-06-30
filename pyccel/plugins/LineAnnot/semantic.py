@@ -1,4 +1,7 @@
 #pylint: disable=protected-access
+"""
+Implementations of methods that override existing methods in the SemanticParser.
+"""
 from pyccel.ast.core import CodeBlock, Comment
 
 def _visit_CodeBlock(self, block):
