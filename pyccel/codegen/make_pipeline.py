@@ -162,7 +162,7 @@ def execute_pyccel_make(
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
 
-    parsers = {f: Parser(f.absolute(), output_folder=folder) for f in files}
+    parsers = {f: Parser(f.absolute(), output_folder=folder, plugin_manager=plugin_manager) for f in files}
 
     to_remove = []
     for f, p in parsers.items():
