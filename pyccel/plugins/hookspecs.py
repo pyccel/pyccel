@@ -7,8 +7,9 @@ decorate their implementations with :data:`pyccel.plugins.hookimpl`.
 """
 
 import argparse
-from typing import Iterable, Optional
 from types import FunctionType
+from typing import Iterable, Optional
+
 import pluggy
 
 hookspec = pluggy.HookspecMarker("pyccel")

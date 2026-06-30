@@ -6,8 +6,8 @@ methods implemented as hooks in plugins.
 """
 
 import pluggy
-from . import hookspecs
-from . import LineAnnot
+
+from . import LineAnnot, hookspecs
 
 
 def get_plugin_manager():

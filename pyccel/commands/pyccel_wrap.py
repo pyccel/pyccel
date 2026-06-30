@@ -11,8 +11,8 @@ import argparse
 import pathlib
 
 from pyccel.plugins.plugin_tools import (
-    get_plugin_manager,
     get_plugin_cli_options,
+    get_plugin_manager,
     handle_plugin_arguments,
 )
 
