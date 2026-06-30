@@ -292,7 +292,7 @@ def execute_pyccel_make(
         base_dirpath, targets.values(), printed_languages, stdlib_deps
     )
 
-    BuildGenClass = get_build_generation_class(self._plugin_manager, build_system_handler.get(build_system, None), build_system)
+    BuildGenClass = get_build_generation_class(plugin_manager, build_system_handler.get(build_system, None), build_system)
     build_sys = BuildGenClass(
         pyccel_dirpath,
         base_dirpath,
