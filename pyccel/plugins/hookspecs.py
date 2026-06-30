@@ -46,42 +46,36 @@ def get_updated_semantic_methods():
 
 
 @hookspec
-def get_updated_ccode_methods():
+def get_updated_codegen_methods(language : str):
     """
     """
 
 
 @hookspec
-def get_updated_fcode_methods():
+def get_codegen_class(language : str):
     """
     """
 
 
 @hookspec
-def get_updated_pycode_methods():
+def get_wrapper_class(start_language : str, target_language : str):
     """
     """
 
 
 @hookspec
-def get_updated_c_to_python_wrapper_methods():
+def get_updated_wrapper_methods(start_language : str, target_language : str):
     """
     """
 
 
 @hookspec
-def get_updated_fortran_to_c_wrapper_methods():
+def get_build_generation_class(build_gen_method : str):
     """
     """
 
 
 @hookspec
-def get_updated_cmake_gen_methods():
-    """
-    """
-
-
-@hookspec
-def get_updated_meson_gen_methods():
+def get_updated_build_generation_methods(build_gen_method : str):
     """
     """
