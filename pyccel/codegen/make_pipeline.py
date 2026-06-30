@@ -224,6 +224,7 @@ def execute_pyccel_make(
             new_location = folder / f
             if verbose:
                 print(f"cp {fname} {new_location}")
+            os.makedirs(new_location.parent, exist_ok = True)
             shutil.copyfile(fname, new_location)
         else:
             start_wrapper_creation = time.time()
