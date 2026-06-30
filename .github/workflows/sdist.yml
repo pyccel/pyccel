@@ -56,7 +56,7 @@ jobs:
           submodules: true
           path: pyccel_download
       - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: Install dependencies
