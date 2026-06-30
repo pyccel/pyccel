@@ -1901,7 +1901,6 @@ def test_line_annotation_plugin(language):
 
     compile_pyccel(folder, "funcs.py", pyccel_commands)
 
-    deps = []
     for fi in os.listdir(output_folder):
         _, ext = os.path.splitext(fi)
         if ext in (".c", ".f90", ".py"):
