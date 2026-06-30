@@ -263,11 +263,13 @@ def test_neat_errors_for_known_bugs(f):
     errors = Errors()
     errors.reset()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
     with pytest.raises(PyccelError):
-        execute_pyccel(f)
+        execute_pyccel(f, plugin_manager=plugin_manager)
 
     assert errors.has_errors()
     messages = [

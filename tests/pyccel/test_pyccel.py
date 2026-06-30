@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import numpy as np
+import pluggy
 import pytest
 from filelock import FileLock
 
@@ -1587,9 +1588,11 @@ def test_json_register(language):
 # ------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
 def test_reserved_file_name():
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     with pytest.raises(ValueError) as exc_info:
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py"  # nosec B311
-        execute_pyccel(fname=libname)
+        execute_pyccel(fname=libname, plugin_manager = plugin_manager)
     assert (
         str(exc_info.value)
         == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"

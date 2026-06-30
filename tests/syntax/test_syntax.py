@@ -3,6 +3,7 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.errors.errors import Errors
@@ -22,7 +23,9 @@ def test_syntax(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd())
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
 
     # Assert syntactic success

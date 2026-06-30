@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
 
+import pluggy
 import pytest
 
 from pyccel.ast.basic import PyccelAstNode
@@ -17,7 +18,9 @@ path_dir = os.path.join(base_dir, "scripts")
 
 
 def get_functions(filename):
-    pyccel = Parser(filename, output_folder=os.getcwd())
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    pyccel = Parser(filename, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     errors = Errors()
 
     ast = pyccel.parse(verbose=0)
