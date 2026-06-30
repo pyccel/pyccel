@@ -1592,7 +1592,7 @@ def test_reserved_file_name():
 
     with pytest.raises(ValueError) as exc_info:
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py"  # nosec B311
-        execute_pyccel(fname=libname, plugin_manager = plugin_manager)
+        execute_pyccel(fname=libname, plugin_manager=plugin_manager)
     assert (
         str(exc_info.value)
         == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
