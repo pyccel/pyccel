@@ -228,6 +228,8 @@ def pyccel_make(*, language, plugin_manager, **kwargs) -> None:
     ----------
     language : str
         The target language Pyccel is translating to.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     **kwargs : dict
         See execute_pyccel_make.
     """

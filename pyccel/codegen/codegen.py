@@ -53,6 +53,8 @@ class Codegen:
         The language which the printer should print to.
     verbose : int
         The level of verbosity.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
 
     def __init__(self, parser, name, language, verbose, plugin_manager):

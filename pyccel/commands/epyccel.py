@@ -281,6 +281,9 @@ def epyccel_seq(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
+    **kwargs : dict
+        Additional keyword arguments forwarded to the plugin system via
+        ``handle_plugin_arguments``.
 
     Returns
     -------

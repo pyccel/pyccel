@@ -107,6 +107,8 @@ def execute_pyccel_make(
         Specify the level of Conda warnings to display (choices: off, basic, verbose).
     build_code : bool
         Indicates if the build commands should be run.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
     start = time.time()
     timers = {}

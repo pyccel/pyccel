@@ -85,6 +85,8 @@ def execute_pyccel(
     ----------
     fname : str
         Name of the Python file to be translated.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     syntax_only : bool, optional
         Indicates whether the pipeline should stop after the syntax stage. Default is False.
     semantic_only : bool, optional

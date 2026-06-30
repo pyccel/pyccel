@@ -158,6 +158,8 @@ def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
         The target language Pyccel is translating to.
     output : str
         Path to the working directory.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     **kwargs : dict
         See execute_pyccel.
     """

@@ -47,6 +47,9 @@ class Parser:
         filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
         auto-generated to describe the prototypes of the methods).
 
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
+
     **kwargs : dict
         Any keyword arguments for BasicParser.
     """

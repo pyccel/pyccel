@@ -91,6 +91,8 @@ def execute_pyccel_wrap(
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
     start = time.time()
     timers = {}

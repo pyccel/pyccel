@@ -80,6 +80,9 @@ def create_shared_library(
     verbose : int
         Indicates the level of verbosity.
 
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
+
     Returns
     -------
     sharedlib_filepath : str

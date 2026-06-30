@@ -40,7 +40,7 @@ def add_cli_options(parser: argparse.ArgumentParser, cli_tool: str):
     Parameters
     ----------
     parser : ArgumentParser
-        The argument parser to which any options should be added
+        The argument parser to which any options should be added.
     cli_tool : str
         The name of the tool being used.
     """
@@ -55,8 +55,8 @@ def read_cli_arguments(kwargs: dict):
     the rest of the code cannot be influenced by the plugin. Beware kwargs can
     also come from epyccel so default values may be missing.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     kwargs : dict
         The keyword arguments passed to the pipeline.
     """
