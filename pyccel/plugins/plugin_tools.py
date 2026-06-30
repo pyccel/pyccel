@@ -37,6 +37,8 @@ def deactivate_plugins(plugin_manager, active_plugins):
             if not active_plugins[name]:
                 plugin_manager.unregister(plugin)
             active_plugins.pop(name)
+        else:
+            plugin_manager.unregister(plugin)
 
 def get_syntactic_class(plugin_manager, BaseClass):
     for plugin in plugin_manager.get_plugins():
