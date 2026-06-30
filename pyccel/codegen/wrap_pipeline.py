@@ -169,7 +169,9 @@ def execute_pyccel_wrap(
 
     semantic_parser = parser.semantic_parser
 
-    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    codegen = Codegen(
+        semantic_parser, module_name, language, verbose, plugin_manager=plugin_manager
+    )
 
     start_wrapper_creation = time.time()
     wrappergen = Wrappergen(
