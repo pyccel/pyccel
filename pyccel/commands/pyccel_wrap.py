@@ -136,5 +136,6 @@ def pyccel_wrap(*, filename, language, output, plugin_manager, **kwargs) -> None
         filename,
         language=language.lower(),
         folder=output or filename.parent,
-        plugin_manager=plugin_manager**kwargs,
+        plugin_manager=plugin_manager,
+        **kwargs,
     )
