@@ -9,6 +9,8 @@ A module containing the Wrappergen class which is responsible for the generation
 
 from pathlib import Path
 
+from pyccel.plugins.plugin_tool import get_wrapper_class, get_wrapper_codegen_class
+
 from ..ast.core import ModuleHeader
 from ..errors.errors import Errors
 from ..naming import name_clash_checkers
@@ -23,10 +25,10 @@ from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
 from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 
 wrapper_registry = {
-    "fortran": [FortranToCWrapper, CToPythonWrapper],
-    "c": [CToPythonWrapper],
-    "c++": [CppToPythonWrapper],
-    "python": [],
+    "fortran": (FortranToCWrapper, 'c'),
+    "c": (CToPythonWrapper, 'python'),
+    "c++": (CppToPythonWrapper, 'python'),
+    "python": (_, 'python'),
 }
 
 printer_registry = {
@@ -59,7 +61,7 @@ class Wrappergen:
         The level of verbosity.
     """
 
-    def __init__(self, codegen, name, language, verbose):
+    def __init__(self, codegen, name, language, verbose, plugin_manager):
         pyccel_stage.set_stage("cwrapper")
         self._ast = codegen.ast
         self._name = name
@@ -67,8 +69,16 @@ class Wrappergen:
         self._verbose = verbose
         self._wrapper_ast = []
 
-        self._wrapper_types = wrapper_registry[language]
-        self._printer_types = [printer_registry[w] for w in self._wrapper_types]
+        languages = []
+        self._wrapper_types = []
+        while language != python:
+            start_language=language
+            languages.append(start_language)
+            wrapper_base_class, language = wrapper_registry.get(language, (None, None))
+            wrapper, language = get_wrapper_class(plugin_manager, wrapper_base_class, start_language, language]
+            self._wrapper_types.append(wrapper)
+
+        self._printer_types = [get_wrapper_codegen_class(plugin_manager, printer_registry.get(l, None), l) for l in languages]
         self._additional_imports = [{} for _ in self._wrapper_types]
 
     def wrap(self, sharedlib_dirpath):

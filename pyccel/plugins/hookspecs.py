@@ -6,7 +6,7 @@ the interface that pyccel plugins may implement.  Plugin authors should
 decorate their implementations with :data:`pyccel.plugins.hookimpl`.
 """
 import argparse
-from typing import Iterable
+from typing import Iterable, Optional
 from types import FunctionType
 import pluggy
 
@@ -157,7 +157,51 @@ def get_updated_codegen_methods(language : str) -> Iterable[FunctionType]:
 
 
 @hookspec
-def get_wrapper_class(start_language : str, target_language : str):
+def get_wrapper_codegen_class(language : str):
+    """
+    Return the code-generation class to use for printing the wrapper in language.
+
+    Return a code-generation class which handles translation to the specified
+    language. This method can be used to add support for a new language.
+
+    Parameters
+    ----------
+    language : str
+        The target language (e.g. 'cuda').
+
+    Returns
+    -------
+    type
+        The code-generation class for the requested language or None if this
+        plugin doesn't implement the requested language.
+    """
+
+
+@hookspec
+def get_updated_wrapper_codegen_methods(language : str) -> Iterable[FunctionType]:
+    """
+    Return methods to be added to or to override methods in the code-generation class for wrapping.
+
+    Return methods to be added to or to override methods in the code-generation class
+    for language. The returned callables are injected into a dynamically created
+    subclass of the base code-generation class, so each callable must accept `self` as
+    its first argument. The name of the method will remain the same once it
+    is added to the class.
+
+    Parameters
+    ----------
+    language : str
+        The target language (e.g. 'c', 'fortran').
+
+    Returns
+    -------
+    Iterable[FunctionType]
+        Functions to be added or to override codegen methods.
+    """
+
+
+@hookspec
+def get_wrapper_class(start_language : str) -> Optional[tuple[type, str]]:
     """
     Return the wrapper class for converting code from start_language to target_language.
 
@@ -168,14 +212,14 @@ def get_wrapper_class(start_language : str, target_language : str):
     ----------
     start_language : str
         The source language of the wrapper (e.g. 'fortran').
-    target_language : str
-        The target language of the wrapper (e.g. 'python').
 
     Returns
     -------
-    type or None
+    wrapper_class : type
         The wrapper class for the requested language set or None if this
         plugin doesn't implement the requested language translation.
+    target_language : str
+        The target language of the wrapper (e.g. 'python').
     """
 
 

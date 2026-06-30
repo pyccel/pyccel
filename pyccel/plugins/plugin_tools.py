@@ -240,24 +240,26 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
         registered plugins.
     start_language : str
         The source language of the wrapper (e.g. 'fortran').
-    target_language : str
+    target_language : str or None
         The target language of the wrapper (e.g. 'python').
 
     Returns
     -------
-    type
+    BaseClass : type
         A (possibly new) class derived from BaseClass augmented with the plugin methods.
+    target_language : str
+        The target language of the wrapper (e.g. 'python').
 
     Raises
     ------
     ValueError
-        If *BaseClass* is `None` and no plugin provides a suitable wrapper class.
+        If BaseClass is `None` and no plugin provides a suitable wrapper class.
     """
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = plugin.get_wrapper_class(start_language, target_language)
-            except AttributeError:
+                BaseClass, target_language = plugin.get_wrapper_class(start_language)
+            except AttributeError, TypeError:
                 continue
             break
 
@@ -268,6 +270,62 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
         name = plugin_manager.get_name(plugin)
         try:
             new_methods = plugin.get_updated_wrapper_methods(start_language, target_language)
+        except AttributeError:
+            continue
+
+        BaseClass = type(name + BaseClass.__name__,
+                         (BaseClass,),
+                         {m.__name__: m for m in new_methods})
+
+    return BaseClass, target_language
+
+def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
+    """
+    Return a code-generation class for printing the wrapper in the language.
+
+    If BaseClass is `None`, the plugins are used to find an implementation of a
+    code-generation class for the requested language via the `get_codegen_class`
+    hook. A `ValueError` is raised if no base class can be found.
+
+    For each plugin that implements `get_updated_codegen_methods`, a new
+    subclass of BaseClass is created with the plugin's methods injected. Plugins
+    are applied in registration order, so later plugins can override earlier ones.
+
+    Parameters
+    ----------
+    plugin_manager : pluggy.PluginManager
+        The plugin manager containing the registered plugins.
+    BaseClass : type or None
+        The base code-generation class, or `None` to discover one from
+        the registered plugins.
+    language : str
+        The target language (e.g. 'c', 'fortran').
+
+    Returns
+    -------
+    type
+        A (possibly new) class derived from CodePrinter augmented with the plugin methods.
+
+    Raises
+    ------
+    ValueError
+        If BaseClass is `None` and no plugin provides a class for language.
+    """
+    if BaseClass is None:
+        for plugin in plugin_manager.get_plugins():
+            try:
+                BaseClass = plugin.get_codegen_class(language)
+            except AttributeError:
+                continue
+            break
+
+    if BaseClass is None:
+        raise ValueError(f"{language} language is not available")
+
+    for plugin in plugin_manager.get_plugins():
+        name = plugin_manager.get_name(plugin)
+        try:
+            new_methods = plugin.get_updated_codegen_methods(language)
         except AttributeError:
             continue
 
