@@ -3,7 +3,6 @@ Pyccel : write Python code, get Fortran speed
 
 Find documentation at pyccel.github.io/pyccel/
 """
-import pluggy
 
 from .commands.epyccel import epyccel
 from .commands.lambdify import lambdify
