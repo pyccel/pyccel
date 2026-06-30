@@ -39,6 +39,20 @@ def add_cli_options(parser, cli_tool):
     """
 
 
+def read_cli_arguments(kwargs: dict):
+    """
+    Read any arguments from the kwargs dictionary.
+
+    The LineAnnot plugin has no specific arguments to read, so this hook is a
+    no-op.
+
+    Parameters
+    ----------
+    kwargs : dict
+        The keyword arguments passed to the pipeline.
+    """
+
+
 @hookimpl
 def get_updated_semantic_methods():
     """
