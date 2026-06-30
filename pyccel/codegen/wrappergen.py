@@ -9,7 +9,7 @@ A module containing the Wrappergen class which is responsible for the generation
 
 from pathlib import Path
 
-from pyccel.plugins.plugin_tool import get_wrapper_class, get_wrapper_codegen_class
+from pyccel.plugins.plugin_tools import get_wrapper_class, get_wrapper_codegen_class
 
 from ..ast.core import ModuleHeader
 from ..errors.errors import Errors
@@ -28,7 +28,6 @@ wrapper_registry = {
     "fortran": (FortranToCWrapper, 'c'),
     "c": (CToPythonWrapper, 'python'),
     "c++": (CppToPythonWrapper, 'python'),
-    "python": (_, 'python'),
 }
 
 printer_registry = {
@@ -75,7 +74,7 @@ class Wrappergen:
             start_language=language
             languages.append(start_language)
             wrapper_base_class, language = wrapper_registry.get(language, (None, None))
-            wrapper, language = get_wrapper_class(plugin_manager, wrapper_base_class, start_language, language]
+            wrapper, language = get_wrapper_class(plugin_manager, wrapper_base_class, start_language, language)
             self._wrapper_types.append(wrapper)
 
         self._printer_types = [get_wrapper_codegen_class(plugin_manager, printer_registry.get(l, None), l) for l in languages]

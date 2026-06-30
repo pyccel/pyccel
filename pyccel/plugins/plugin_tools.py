@@ -259,7 +259,7 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
         for plugin in plugin_manager.get_plugins():
             try:
                 BaseClass, target_language = plugin.get_wrapper_class(start_language)
-            except AttributeError, TypeError:
+            except (AttributeError, TypeError):
                 continue
             break
 
