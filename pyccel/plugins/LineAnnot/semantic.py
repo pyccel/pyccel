@@ -1,3 +1,4 @@
+#pylint: disable=protected-access
 from pyccel.ast.core import CodeBlock, Comment
 
 def _visit_CodeBlock(self, block):
