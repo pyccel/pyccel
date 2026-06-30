@@ -168,7 +168,7 @@ def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
     if not filename.is_file():
         errors.report(f"File not found: {filename}", severity="error")
 
-    if language == "Python" and output == "":
+    if language == "Python" and output is None:
         errors.report(
             "Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
             severity="error",
