@@ -86,14 +86,14 @@ def handle_plugin_arguments(plugin_manager, kwargs):
     """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
-        if name not in active_plugins:
+        if name not in kwargs:
             plugin_manager.unregister(plugin)
-        elif not active_plugins[name]:
+        elif not kwargs[name]:
             plugin_manager.unregister(plugin)
-            active_plugins.pop(name)
+            kwargs.pop(name)
         else:
             plugin.read_cli_arguments(kwargs)
-            active_plugins.pop(name)
+            kwargs.pop(name)
 
 def get_syntactic_class(plugin_manager, BaseClass):
     """
@@ -198,7 +198,7 @@ def get_codegen_class(plugin_manager, BaseClass, language):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = get_codegen_class(language)
+                BaseClass = plugin.get_codegen_class(language)
             except AttributeError:
                 continue
             break
@@ -256,7 +256,7 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = get_wrapper_class(start_language, target_language)
+                BaseClass = plugin.get_wrapper_class(start_language, target_language)
             except AttributeError:
                 continue
             break
@@ -312,7 +312,7 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = get_build_generation_class(build_gen_method)
+                BaseClass = plugin.get_build_generation_class(build_gen_method)
             except AttributeError:
                 continue
             break
