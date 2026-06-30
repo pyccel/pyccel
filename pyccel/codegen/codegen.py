@@ -19,7 +19,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.cppcode import CppCodePrinter
 from pyccel.codegen.printing.fcode import FCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
-from pyccel.plugins.plugin_tool import get_codegen_class
+from pyccel.plugins.plugin_tools import get_codegen_class
 from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {"fortran": "f90", "c": "c", "c++": "cpp", "python": "py"}
