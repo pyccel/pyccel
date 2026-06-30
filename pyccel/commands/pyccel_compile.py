@@ -9,7 +9,7 @@ import argparse
 import pathlib
 import sys
 
-from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, handle_plugin_arguments
 
 from .argparse_helpers import (
     add_accelerator_selection,
@@ -161,7 +161,7 @@ def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
     from pyccel.codegen.pipeline import execute_pyccel
     from pyccel.errors.errors import Errors
 
-    deactivate_plugins(plugin_manager, kwargs)
+    handle_plugin_arguments(plugin_manager, kwargs)
 
     errors = Errors()
     # ...

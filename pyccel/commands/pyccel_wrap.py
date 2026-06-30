@@ -10,7 +10,7 @@ File containing the `pyccel wrap` command line interface.
 import argparse
 import pathlib
 
-from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, deactivate_plugins
+from pyccel.plugins.plugin_tools import get_plugin_manager, get_plugin_cli_options, handle_plugin_arguments
 
 from .argparse_helpers import (
     add_accelerator_selection,
@@ -122,7 +122,7 @@ def pyccel_wrap(*, filename, language, output, plugin_manager, **kwargs) -> None
     # Imports
     from pyccel.codegen.wrap_pipeline import execute_pyccel_wrap
 
-    deactivate_plugins(plugin_manager, kwargs)
+    handle_plugin_arguments(plugin_manager, kwargs)
 
     # ...
 
