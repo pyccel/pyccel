@@ -1883,3 +1883,26 @@ def test_complex_numbers(language):
     pyccel_test(
         "scripts/complex_numbers.py", output_dtype=[complex] * 6, language=language
     )
+
+
+# ------------------------------------------------------------------------------
+def test_line_annotation_plugin(language):
+    test_file = get_abs_path("scripts/funcs.py")
+    folder = os.path.dirname(test_file)
+    output_folder = os.path.join(folder, "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", ""))
+
+    pyccel_commands = "-t --line_annotation --language=" + language
+
+    if language == "python":
+        pyccel_commands += f" --output={output_folder}"
+        output_folder = os.path.join(output_folder, "__pyccel__")
+
+    compile_pyccel(folder, "funcs.py", pyccel_commands)
+
+    deps = []
+    for fi in os.listdir(output_folder):
+        _, ext = os.path.splitext(fi)
+        if ext in (".c", ".f90", ".py"):
+            with open(os.path.join(output_folder, fi), "r", encoding='utf-8') as file:
+                code = file.read()
+            assert test_file in code
