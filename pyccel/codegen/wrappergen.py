@@ -70,7 +70,7 @@ class Wrappergen:
 
         languages = []
         self._wrapper_types = []
-        while language != python:
+        while language != "python":
             start_language=language
             languages.append(start_language)
             wrapper_base_class, language = wrapper_registry.get(language, (None, None))

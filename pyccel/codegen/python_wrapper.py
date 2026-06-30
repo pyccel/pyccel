@@ -35,6 +35,7 @@ def create_shared_library(
     compiler,
     sharedlib_modname=None,
     verbose,
+    plugin_manager
 ):
     """
     Create a shared library which can be called from Pyccel.
@@ -96,7 +97,7 @@ def create_shared_library(
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    gen = Wrappergen(codegen, module_name, language, verbose)
+    gen = Wrappergen(codegen, module_name, language, verbose, plugin_manager)
 
     # -------------------------------------------
     #               Wrap code

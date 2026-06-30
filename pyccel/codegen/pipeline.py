@@ -344,6 +344,7 @@ def execute_pyccel(
         compiler=compiler,
         sharedlib_modname=output_name,
         verbose=verbose,
+        plugin_manager=plugin_manager
     )
 
     timers.update(shared_lib_timers)

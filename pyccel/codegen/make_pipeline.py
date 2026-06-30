@@ -229,7 +229,7 @@ def execute_pyccel_make(
             shutil.copyfile(fname, new_location)
         else:
             start_wrapper_creation = time.time()
-            wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+            wrappergen = Wrappergen(codegen, codegen.name, language, verbose, plugin_manager=plugin_manager)
             wrappergen.wrap(str((base_dirpath / f).parent))
             timers["Wrapper creation"] += time.time() - start_wrapper_creation
 
