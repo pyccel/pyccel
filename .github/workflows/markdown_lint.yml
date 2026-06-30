@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Markdownlint
         id: md_test
-        uses: DavidAnson/markdownlint-cli2-action@v19
+        uses: DavidAnson/markdownlint-cli2-action@v23
         with:
           config: './.markdownlint.json'
           globs: '**.md,!.github/*'
