@@ -8,6 +8,7 @@
 
 import os
 
+import pluggy
 import pytest
 from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
 
@@ -33,7 +34,9 @@ def get_files_from_folder(foldername):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f, output_folder = os.getcwd())
+#    plugin_manager=pluggy.PluginManager("pyccel")
+#
+#    pyccel = Parser(f, output_folder = os.getcwd(), plugin_manager=plugin_manager)
 #
 #    ast = pyccel.parse(verbose = 0)
 #
@@ -49,7 +52,9 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd())
+    plugin_manager=pluggy.PluginManager("pyccel")
+
+    pyccel = Parser(f, output_folder=os.getcwd(), plugin_manager=plugin_manager)
     pyccel.parse(verbose=0)
 
     pyccel.annotate(verbose=0)
@@ -65,7 +70,9 @@ def test_semantic_warnings(f):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f, output_folder = os.getcwd())
+#    plugin_manager=pluggy.PluginManager("pyccel")
+#
+#    pyccel = Parser(f, output_folder = os.getcwd(), plugin_manager=plugin_manager)
 #    ast = pyccel.parse(verbose = 0)
 #
 #    ast = pyccel.annotate(verbose = 0)
@@ -73,7 +80,7 @@ def test_semantic_warnings(f):
 #    name = os.path.basename(f)
 #    name = os.path.splitext(name)[0]
 #
-#    codegen = Codegen(ast, name, 'fortran', verbose = 0)
+#    codegen = Codegen(ast, name, 'fortran', verbose = 0, plugin_manager=plugin_manager)
 #    code = codegen.printer.doprint(codegen.ast)
 #
 #    assert errors.has_warnings()
