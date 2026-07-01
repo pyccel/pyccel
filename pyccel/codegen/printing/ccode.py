@@ -2271,7 +2271,9 @@ class CCodePrinter(CodePrinter):
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
             if base.rank == 1 and base.is_contiguous:
                 self.add_import(c_imports["CSpan_extensions"])
-                return f"(*contig_cspan_at({self._print(ObjectAddress(base))}, {indices}))"
+                return (
+                    f"(*contig_cspan_at({self._print(ObjectAddress(base))}, {indices}))"
+                )
             else:
                 return f"(*cspan_at({self._print(ObjectAddress(base))}, {indices}))"
         elif isinstance(base.class_type, CStackArray):
