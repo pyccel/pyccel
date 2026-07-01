@@ -424,6 +424,10 @@ class Variable(TypedAstNode):
         """
         return isinstance(self.class_type, NumpyNDArrayType)
 
+    @property
+    def is_contiguous(self):
+        return not self.is_ndarray or not self._is_argument
+
     def __str__(self):
         return str(self.name)
 
