@@ -2221,15 +2221,24 @@ class CCodePrinter(CodePrinter):
                         )
                     indices.append(self._print(idx))
                 base_code = self._print(ObjectAddress(base))
-                if expr.rank < 4 and base.rank < 5 and expr.rank < base.rank and all(isinstance(i, Slice) for i in inds[expr.rank:]):
-                    indices_code = ", ".join(indices[:expr.rank])
-                    return f"({c_type})cspan_submd{base.rank}({base_code}, {indices_code})"
+                if (
+                    expr.rank < 4
+                    and base.rank < 5
+                    and expr.rank < base.rank
+                    and all(isinstance(i, Slice) for i in inds[expr.rank :])
+                ):
+                    indices_code = ", ".join(indices[: expr.rank])
+                    return (
+                        f"({c_type})cspan_submd{base.rank}({base_code}, {indices_code})"
+                    )
                 else:
                     indices_code = ", ".join(f"{{{i}}}" for i in indices)
                     return f"cspan_slice({base_code}, {c_type}, {indices_code})"
             else:
                 new_type = base.class_type.switch_rank(expr.rank, expr.order)
-                tmp_var = self.scope.get_temporary_variable(new_type, shape=expr.shape, memory_handling='alias')
+                tmp_var = self.scope.get_temporary_variable(
+                    new_type, shape=expr.shape, memory_handling="alias"
+                )
                 assign = AliasAssign(tmp_var, expr)
                 code = self._print(assign)
                 self._additional_code += code
