@@ -426,7 +426,16 @@ class Variable(TypedAstNode):
 
     @property
     def is_contiguous(self):
-        return (not self.is_ndarray or not self._is_argument) and not self.is_alias
+        """
+        Check if the variable memory is contiguous.
+
+        Check if the memory used by a storage container is contiguous, this
+        allows for some optimisations.
+        """
+        return (
+            isinstance(self.class_type, (NumpyNDArrayType, HomogeneousTupleType))
+            and not self._is_argument
+        ) and not self.is_alias
 
     def __str__(self):
         return str(self.name)
