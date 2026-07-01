@@ -2269,7 +2269,15 @@ class CCodePrinter(CodePrinter):
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            return f"(*cspan_at({self._print(ObjectAddress(base))}, {indices}))"
+            if base.rank == 1 and base.is_contiguous:
+                data_obj = ObjectAddress(
+                    DottedVariable(
+                        VoidType(), "data", lhs=base, memory_handling="alias"
+                    )
+                )
+                return f"{self._print(data_obj)}[{indices}]"
+            else:
+                return f"(*cspan_at({self._print(ObjectAddress(base))}, {indices}))"
         elif isinstance(base.class_type, CStackArray):
             return f"{self._print(ObjectAddress(base))}[{indices}]"
         else:
