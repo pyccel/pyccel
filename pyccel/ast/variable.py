@@ -426,7 +426,7 @@ class Variable(TypedAstNode):
 
     @property
     def is_contiguous(self):
-        return not self.is_ndarray or not self._is_argument
+        return (not self.is_ndarray or not self._is_argument) and not self.is_alias
 
     def __str__(self):
         return str(self.name)
