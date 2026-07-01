@@ -12,8 +12,6 @@
         } \
     }
 
-#endif
-
 #define contig_cspan_at(self, ...) ((self)->data + contig_cspan_index(self, __VA_ARGS__))
 
 #define contig_cspan_index(...) cspan_index_fn(__VA_ARGS__, c_COMMA_N(cspan_index_3d), c_COMMA_N(cspan_index_2d), \
@@ -21,3 +19,5 @@
 #define contig_cspan_index_1d(self, i)     (c_static_assert(cspan_rank(self) == 1), \
                                      c_assert((i) < (self)->shape[0]), \
                                      i)
+
+#endif
