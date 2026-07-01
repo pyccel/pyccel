@@ -2269,7 +2269,7 @@ class CCodePrinter(CodePrinter):
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            if base.is_contiguous:
+            if base.rank == 1 and base.is_contiguous:
                 self.add_import(c_imports["CSpan_extensions"])
                 return f"(*contig_cspan_at({self._print(ObjectAddress(base))}, {indices}))"
             else:
