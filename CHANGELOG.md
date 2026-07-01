@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   Update STC to v6.0-RC4.
 -   \[DEVELOPER\] Require black formatting.
 
 ### Deprecated
