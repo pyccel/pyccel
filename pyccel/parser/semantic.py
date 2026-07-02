@@ -4265,10 +4265,15 @@ class SemanticParser(BasicParser):
             # TODO check consistency of indices with shape/rank
             args = [self._visit(idx) for idx in expr.indices]
 
-            if not (
-                isinstance(expr.current_user_node, Assign)
-                and expr.current_user_node.lhs is expr
-            ) and all(
+            try:
+                in_lhs_assign = (
+                    isinstance(expr.current_user_node, Assign)
+                    and expr.current_user_node.lhs is expr
+                )
+            except AssertionError:
+                in_lhs_assign = False
+
+            if not in_lhs_assign and all(
                 not isinstance(class_type, HomogeneousListType)
                 and isinstance(a, Slice)
                 and a.start is None
