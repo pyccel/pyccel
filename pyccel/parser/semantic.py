@@ -4265,7 +4265,13 @@ class SemanticParser(BasicParser):
             # TODO check consistency of indices with shape/rank
             args = [self._visit(idx) for idx in expr.indices]
 
-            if all(isinstance(a, Slice) for a in args):
+            if all(
+                isinstance(a, Slice)
+                and a.start is None
+                and a.stop is None
+                and a.step is None
+                for a in args
+            ):
                 return var
 
             elif len(args) == 1 and isinstance(
