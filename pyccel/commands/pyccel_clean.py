@@ -123,7 +123,3 @@ def setup_pyccel_clean_parser(parser):
         action="store_true",
         help="Also remove any programs from the folder. Beware this may remove programs unrelated to pyccel.",
     )
-
-    plugin_manager = get_plugin_manager()
-    plugin_manager.hook.add_cli_options(parser=group, cli_tool="clean")
-    parser.set_defaults(plugin_manager=plugin_manager)
