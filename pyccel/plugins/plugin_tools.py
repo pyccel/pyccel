@@ -335,7 +335,7 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = plugin.get_codegen_class(language)
+                BaseClass = plugin.get_wrapper_codegen_class(language)
             except AttributeError:
                 continue
             break
@@ -346,7 +346,7 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
-            new_methods = plugin.get_updated_codegen_methods(language)
+            new_methods = plugin.get_updated_wrapper_codegen_methods(language)
         except AttributeError:
             continue
 
