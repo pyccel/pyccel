@@ -13,10 +13,13 @@ All notable changes to this project will be documented in this file.
 
 -   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
 -   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
+-   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
+-   #2618 : Fix unnecessary slicing returning the whole array.
 
 ### Changed
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
 -   \[DEVELOPER\] Require black formatting.
 
 ### Deprecated

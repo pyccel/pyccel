@@ -2219,13 +2219,34 @@ class CCodePrinter(CodePrinter):
                             PyccelArrayShapeElement(base, i),
                             allow_negative_indexes,
                         )
-                    indices.append("{" + self._print(idx) + "}")
-                indices_code = ", ".join(indices)
+                    indices.append(self._print(idx))
                 base_code = self._print(ObjectAddress(base))
-                return f"cspan_slice({base_code}, {c_type}, {indices_code})"
+                if (
+                    # cspan_submd{N} exists only for N = 2, 3, 4,
+                    # where N is the rank of the array to be sliced
+                    expr.rank < 4
+                    and base.rank < 5
+                    and expr.rank < base.rank
+                    and all(
+                        isinstance(i, Slice)
+                        and i.start is None
+                        and i.stop is None
+                        and i.step is None
+                        for i in inds[expr.rank :]
+                    )
+                ):
+                    indices_code = ", ".join(indices[: -expr.rank])
+                    return (
+                        f"({c_type})cspan_submd{base.rank}({base_code}, {indices_code})"
+                    )
+                else:
+                    indices_code = ", ".join(f"{{{i}}}" for i in indices)
+                    return f"cspan_slice({base_code}, {c_type}, {indices_code})"
             else:
                 new_type = base.class_type.switch_rank(expr.rank, expr.order)
-                tmp_var = self.scope.get_temporary_variable(new_type, shape=expr.shape)
+                tmp_var = self.scope.get_temporary_variable(
+                    new_type, shape=expr.shape, memory_handling="alias"
+                )
                 assign = AliasAssign(tmp_var, expr)
                 code = self._print(assign)
                 self._additional_code += code
