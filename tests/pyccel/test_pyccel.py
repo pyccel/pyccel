@@ -1894,7 +1894,7 @@ def test_line_annotation_plugin(language):
     folder = os.path.dirname(test_file)
 
     # Choose an output folder that cannot contain translations of other files
-    output_folder = os.path.join(output_folder, "__pyccel__la__")
+    output_folder = os.path.join(folder, "__pyccel__la__")
 
     pyccel_commands = (
         "-t --line_annotation --language=" + language + f" --output={output_folder}"
