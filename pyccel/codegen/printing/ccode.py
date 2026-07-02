@@ -2225,7 +2225,13 @@ class CCodePrinter(CodePrinter):
                     expr.rank < 4
                     and base.rank < 5
                     and expr.rank < base.rank
-                    and all(isinstance(i, Slice) for i in inds[expr.rank :])
+                    and all(
+                        isinstance(i, Slice)
+                        and i.start is None
+                        and i.stop is None
+                        and i.step is None
+                        for i in inds[expr.rank :]
+                    )
                 ):
                     indices_code = ", ".join(indices[: -expr.rank])
                     return (
