@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
+-   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
 
 ### Changed
 
