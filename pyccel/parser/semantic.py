@@ -4281,6 +4281,8 @@ class SemanticParser(BasicParser):
                 and a.step is None
                 for a in args
             ):
+                # Replace a[:] with a to avoid printing
+                # unnecessary slicing in generated code
                 return var
 
             elif len(args) == 1 and isinstance(
