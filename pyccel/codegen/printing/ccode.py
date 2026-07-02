@@ -2222,6 +2222,8 @@ class CCodePrinter(CodePrinter):
                     indices.append(self._print(idx))
                 base_code = self._print(ObjectAddress(base))
                 if (
+                    # cspan_submd{N} exists only for N = 2, 3, 4,
+                    # where N is the rank of the array to be sliced
                     expr.rank < 4
                     and base.rank < 5
                     and expr.rank < base.rank
