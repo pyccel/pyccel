@@ -4270,6 +4270,8 @@ class SemanticParser(BasicParser):
                     isinstance(expr.current_user_node, Assign)
                     and expr.current_user_node.lhs is expr
                 )
+            # The property `current_user_node` of `PyccelAstNode`
+            # works for objects with only one user node
             except AssertionError:
                 in_lhs_assign = False
 
