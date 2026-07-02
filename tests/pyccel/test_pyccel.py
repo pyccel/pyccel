@@ -1892,20 +1892,18 @@ def test_complex_numbers(language):
 def test_line_annotation_plugin(language):
     test_file = get_abs_path("scripts/funcs.py")
     folder = os.path.dirname(test_file)
-    output_folder = os.path.join(
-        folder, "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
-    )
 
-    pyccel_commands = "-t --line_annotation --language=" + language
+    # Choose an output folder that cannot contain translations of other files
+    output_folder = os.path.join(output_folder, "__pyccel__la__")
+
+    pyccel_commands = (
+        "-t --line_annotation --language=" + language + f" --output={output_folder}"
+    )
 
     try:
         os.rmdir(output_folder)
     except OSError:
         pass
-
-    if language == "python":
-        pyccel_commands += f" --output={output_folder}"
-        output_folder = os.path.join(output_folder, "__pyccel__")
 
     compile_pyccel(folder, "funcs.py", pyccel_commands)
 
