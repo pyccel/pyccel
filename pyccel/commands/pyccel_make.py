@@ -204,7 +204,7 @@ def setup_pyccel_make_parser(parser):
 
     # ... Plugin options
     plugin_manager = get_plugin_manager()
-    get_plugin_cli_options(plugin_manager, group, "make")
+    get_plugin_cli_options(plugin_manager, parser, "make")
 
     # ... Other options
     group = parser.add_argument_group("Other options")
