@@ -2227,7 +2227,7 @@ class CCodePrinter(CodePrinter):
                     and expr.rank < base.rank
                     and all(isinstance(i, Slice) for i in inds[expr.rank :])
                 ):
-                    indices_code = ", ".join(indices[: expr.rank])
+                    indices_code = ", ".join(indices[: -expr.rank])
                     return (
                         f"({c_type})cspan_submd{base.rank}({base_code}, {indices_code})"
                     )
