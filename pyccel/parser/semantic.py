@@ -4266,7 +4266,8 @@ class SemanticParser(BasicParser):
             args = [self._visit(idx) for idx in expr.indices]
 
             if all(
-                isinstance(a, Slice)
+                not isinstance(class_type, HomogeneousListType)
+                and isinstance(a, Slice)
                 and a.start is None
                 and a.stop is None
                 and a.step is None
