@@ -1338,7 +1338,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        return "!" + comments + "\n"
+        return "! " + comments + "\n"
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
@@ -1358,11 +1358,11 @@ class FCodePrinter(CodePrinter):
         ln = len(top) - 2
         bottom = "!" + "_" * ln + "!"
 
-        txts = ["!" + txt + " " * (ln - len(txt)) + "!" for txt in txts]
+        txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
 
         body = "\n".join(i for i in txts)
 
-        return ("{0}\n" "{1}\n" "{2}\n").format(top, body, bottom)
+        return f"{top}\n{body}\n{bottom}\n"
 
     def _print_EmptyNode(self, expr):
         return ""
