@@ -1346,7 +1346,7 @@ class FCodePrinter(CodePrinter):
         header_size = len(expr.header)
 
         ln = max(len(i) for i in txts)
-        if ln < max(20, header_size + 2):
+        if ln < max(20, header_size + 4):
             ln = 20
         top = (
             "!"
@@ -1358,7 +1358,7 @@ class FCodePrinter(CodePrinter):
         ln = len(top) - 2
         bottom = "!" + "_" * ln + "!"
 
-        txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
+        txts = ["! " + txt + " " * (ln - len(txt)-1) + "!" for txt in txts]
 
         body = "\n".join(i for i in txts)
 
