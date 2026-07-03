@@ -29,12 +29,12 @@ jobs:
           paths: '["**/*.py", ".github/workflows/pylint.yml"]'
           do_not_skip: '["push"]'
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install python dependencies

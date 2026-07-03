@@ -4265,7 +4265,29 @@ class SemanticParser(BasicParser):
             # TODO check consistency of indices with shape/rank
             args = [self._visit(idx) for idx in expr.indices]
 
-            if len(args) == 1 and isinstance(
+            try:
+                in_lhs_assign = (
+                    isinstance(expr.current_user_node, Assign)
+                    and expr.current_user_node.lhs is expr
+                )
+            # The property `current_user_node` of `PyccelAstNode`
+            # works for objects with only one user node
+            except AssertionError:
+                in_lhs_assign = False
+
+            if not in_lhs_assign and all(
+                not isinstance(class_type, HomogeneousListType)
+                and isinstance(a, Slice)
+                and a.start is None
+                and a.stop is None
+                and a.step is None
+                for a in args
+            ):
+                # Replace a[:] with a to avoid printing
+                # unnecessary slicing in generated code
+                return var
+
+            elif len(args) == 1 and isinstance(
                 getattr(args[0], "class_type", None), TupleType
             ):
                 args = args[0]
