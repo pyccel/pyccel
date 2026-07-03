@@ -1360,7 +1360,7 @@ class FCodePrinter(CodePrinter):
             + "_!"
         )
         ln = len(top) - 3
-        bottom = "!" + "_" * (ln+1) + "!"
+        bottom = "!" + "_" * (ln + 1) + "!"
 
         txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
 
