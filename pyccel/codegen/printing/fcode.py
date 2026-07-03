@@ -1350,8 +1350,6 @@ class FCodePrinter(CodePrinter):
             ln = 20
         if ln % 2 == 1:
             ln += 1
-        print(ln)
-        print(int((ln - header_size) / 2))
         top = (
             "!_"
             + "_" * ((ln - header_size) // 2)
