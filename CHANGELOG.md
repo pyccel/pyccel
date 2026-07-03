@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
 -   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
 -   #2618 : Fix unnecessary slicing returning the whole array.
+-   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
 
 ### Changed
 
