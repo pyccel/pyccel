@@ -1352,9 +1352,9 @@ class FCodePrinter(CodePrinter):
             ln += 1
         top = (
             "!_"
-            + "_" * ((ln - header_size) // 2)
+            + "_" * int((ln - header_size) / 2)
             + header
-            + "_" * ((ln - header_size) // 2)
+            + "_" * int((ln - header_size) / 2)
             + "_!"
         )
         ln = len(top) - 3
