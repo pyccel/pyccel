@@ -833,6 +833,31 @@ class CppCodePrinter(CodePrinter):
 
         return f"//{comments}\n"
 
+    def _print_CommentBlock(self, expr):
+        txts = expr.comments
+        header = expr.header
+        header_size = len(expr.header)
+
+        ln = max(len(i) for i in txts)
+        if ln < max(20, header_size + 4):
+            ln = 20
+        if ln % 2 == 1:
+            ln += 1
+        top = (
+            "/*"
+            + "*" * int((ln - header_size) / 2)
+            + f" {header} "
+            + "*" * int((ln - header_size) / 2)
+            + "\n"
+        )
+        bottom = " *" + "*" * ln + "*/\n"
+
+        txts = [" * " + t + " " * (ln - len(t)) + "*\n" for t in txts]
+
+        body = "".join(i for i in txts)
+
+        return "".join([top, body, bottom])
+
     def _print_Import(self, expr):
         if expr.ignore:
             return ""
