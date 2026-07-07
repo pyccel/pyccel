@@ -426,7 +426,9 @@ class CWrapperCodePrinter(CCodePrinter):
         )
 
         if expr.docstring:
-            module_docstring = self._print(CStrStr(LiteralString('\n'.join(expr.docstring.comments))))
+            module_docstring = self._print(
+                CStrStr(LiteralString("\n".join(expr.docstring.comments)))
+            )
         else:
             module_docstring = "NULL"
 

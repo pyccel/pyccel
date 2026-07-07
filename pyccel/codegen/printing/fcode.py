@@ -939,7 +939,7 @@ class FCodePrinter(CodePrinter):
         if expr.docstring:
             docstring = self._print(expr.docstring)
         else:
-            docstring = ''
+            docstring = ""
 
         parts = [
             docstring,

@@ -1254,7 +1254,7 @@ class CCodePrinter(CodePrinter):
         if expr.module.docstring:
             docstring = self._print(expr.module.docstring)
         else:
-            docstring = ''
+            docstring = ""
 
         self._in_header = False
         self.exit_scope()
@@ -1263,11 +1263,15 @@ class CCodePrinter(CodePrinter):
             for info_block in (imports, global_variables, classes, funcs)
             if info_block
         )
-        return "\n".join((f"#ifndef {name.upper()}_H",
+        return "\n".join(
+            (
+                f"#ifndef {name.upper()}_H",
                 f"#define {name.upper()}_H",
                 docstring,
                 body,
-                f"#endif // {name}_H\n"))
+                f"#endif // {name}_H\n",
+            )
+        )
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)

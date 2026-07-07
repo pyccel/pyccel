@@ -592,7 +592,9 @@ class SyntaxParser(BasicParser):
         body = [l for b in body for l in (b.body if isinstance(b, CodeBlock) else [b])]
 
         docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
-        docstring_idx = next(i for i, l in enumerate(docstring) if isinstance(l, CommentBlock))
+        docstring_idx = next(
+            i for i, l in enumerate(docstring) if isinstance(l, CommentBlock)
+        )
         if docstring_idx:
             docstring_idx += 1
             docstring = CodeBlock(docstring[:docstring_idx])

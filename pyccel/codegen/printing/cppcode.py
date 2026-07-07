@@ -348,7 +348,7 @@ class CppCodePrinter(CodePrinter):
         if expr.module.docstring:
             docstring = self._print(expr.module.docstring)
         else:
-            docstring = ''
+            docstring = ""
 
         self.exit_scope()
         self._in_header = False
@@ -383,12 +383,18 @@ class CppCodePrinter(CodePrinter):
 
         docstring = self._print(expr.docstring) if expr.docstring else ""
 
-        parts = [docstring, imports_code, f"namespace {name} {{\n\n", global_variables, body, "\n}\n"]
+        parts = [
+            docstring,
+            imports_code,
+            f"namespace {name} {{\n\n",
+            global_variables,
+            body,
+            "\n}\n",
+        ]
 
         self.exit_scope()
 
-        return "".join(p for p in parts if p
-        )
+        return "".join(p for p in parts if p)
 
     def _print_Program(self, expr):
         mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
