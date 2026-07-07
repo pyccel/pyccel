@@ -593,7 +593,7 @@ class SyntaxParser(BasicParser):
 
         docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
         docstring_idx = next(
-            i for i, l in enumerate(docstring) if isinstance(l, CommentBlock)
+            (i for i, l in enumerate(docstring) if isinstance(l, CommentBlock)), None
         )
         if docstring_idx:
             docstring_idx += 1
