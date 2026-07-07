@@ -589,6 +589,17 @@ class SyntaxParser(BasicParser):
             if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
         ]
 
+        body = [l for b in body for l in (b.body if isinstance(b, CodeBlock) else [b])]
+
+        docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
+        docstring_idx = next(i for i, l in enumerate(docstring) if isinstance(l, CommentBlock))
+        if docstring_idx:
+            docstring_idx += 1
+            docstring = CodeBlock(docstring[:docstring_idx])
+            body = body[docstring_idx:]
+        else:
+            docstring = None
+
         functions = [self._visit(f) for f in ast_functions]
         classes = [self._visit(c) for c in ast_classes]
         imports = [i for i in body if isinstance(i, Import)]
@@ -618,6 +629,7 @@ class SyntaxParser(BasicParser):
             name,
             [],
             functions,
+            docstring=docstring,
             init_func=CodeBlock(body),
             scope=self.scope,
             classes=classes,
