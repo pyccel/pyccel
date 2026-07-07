@@ -1815,10 +1815,14 @@ class CToPythonWrapper(Wrapper):
         if not isinstance(expr, BindCModule):
             imports.append(Import(mod_scope.get_python_name(expr.name), expr))
         original_mod_name = mod_scope.get_python_name(original_mod.name)
+
+        docstring = next(d for d in original_mod.docstring.body if isinstance(d, CommentBlock)) if original_mod.docstring else None
+
         return PyModule(
             original_mod_name,
             [API_var],
             funcs,
+            docstring=docstring,
             imports=imports,
             interfaces=interfaces,
             classes=classes,
