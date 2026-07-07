@@ -1251,6 +1251,11 @@ class CCodePrinter(CodePrinter):
         imports = self.sort_imports(imports)
         imports = "".join(self._print(i) for i in imports)
 
+        if expr.module.docstring:
+            docstring = self._print(expr.module.docstring)
+        else:
+            docstring = ''
+
         self._in_header = False
         self.exit_scope()
         body = "\n".join(
@@ -1258,13 +1263,15 @@ class CCodePrinter(CodePrinter):
             for info_block in (imports, global_variables, classes, funcs)
             if info_block
         )
-        return f"#ifndef {name.upper()}_H\n \
-                #define {name.upper()}_H\n\n \
-                {body}\n \
-                #endif // {name}_H\n"
+        return "\n".join((f"#ifndef {name.upper()}_H",
+                f"#define {name.upper()}_H",
+                docstring,
+                body,
+                f"#endif // {name}_H\n"))
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
+
         body = "\n".join(self._print(i) for i in expr.body)
 
         global_variables = "".join([self._print(d) for d in expr.declarations])
@@ -1276,6 +1283,10 @@ class CCodePrinter(CodePrinter):
         imports = self._print(imports)
 
         code = "\n".join((imports, global_variables, body))
+
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+            code = f"{docstring}\n{code}"
 
         self.exit_scope()
         return code

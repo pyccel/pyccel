@@ -936,7 +936,13 @@ class FCodePrinter(CodePrinter):
         imports = self.print_constant_imports() + imports
         implicit_none = "" if expr.is_external else "implicit none\n"
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+        else:
+            docstring = ''
+
         parts = [
+            docstring,
             f"module {name}\n",
             imports,
             implicit_none,
