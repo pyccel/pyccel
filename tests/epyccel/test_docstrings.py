@@ -91,6 +91,7 @@ def test_property_docstring(language):
     python_doc, pyccel_doc = pad_docstrings(MyA.x.__doc__, B.x.__doc__)
     assert python_doc == pyccel_doc
 
+
 def test_module_docstring(language):
     from modules import Module_docstring as mod
 
