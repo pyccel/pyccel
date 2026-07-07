@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
+-   #2621 : Add support for module docstrings.
 
 ### Fixed
 
