@@ -3769,20 +3769,22 @@ class CCodePrinter(CodePrinter):
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
+        ln = max(len(i) for i in txts) + 2
         if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
             "/*"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "*/\n"
+            + "\n"
         )
-        ln = len(top) - 4
-        bottom = "/*" + "_" * ln + "*/\n"
+        ln = len(top) - 2
+        bottom = " *" + "_" * ln + "*/\n"
 
-        txts = ["/*" + t + " " * (ln - len(t)) + "*/\n" for t in txts]
+        txts = [" * " + t + "\n" for t in txts]
 
         body = "".join(i for i in txts)
 
@@ -4198,8 +4200,6 @@ class CCodePrinter(CodePrinter):
             return "".join(code_lines)
 
         tab = " " * self._default_settings["tabwidth"]
-
-        code = [line.lstrip(" \t") for line in code]
 
         increase = [int(line.endswith("{\n")) for line in code]
         decrease = [int(any(map(line.startswith, "}\n"))) for line in code]
