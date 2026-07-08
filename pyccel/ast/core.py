@@ -945,8 +945,12 @@ class Module(ScopedAstNode):
     funcs : list
         A list of FunctionDef instances.
 
-    docstring : str
-        The doc string of the function.
+    docstring : CodeBlock | CommentBlock, default=None
+        The doc string of the function. This is a CodeBlock containing
+        a CommentBlock or the CommentBlock itself.
+        Note that in the subclass PyModule this should always be a
+        CommentBlock as comments preceeding module docstrings (e.g.
+        licence information) are not used by the Python interface.
 
     init_func : FunctionDef, default: None
         The function which initialises the module (expressions in the
