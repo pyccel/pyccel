@@ -145,8 +145,8 @@ class CppToPythonWrapper(Wrapper):
         original_mod_name = expr.scope.get_python_name(name)
 
         docstring = (
-            next(d for d in original_mod.docstring.body if isinstance(d, CommentBlock))
-            if original_mod.docstring
+            next(d for d in expr.docstring.body if isinstance(d, CommentBlock))
+            if expr.docstring
             else None
         )
 
