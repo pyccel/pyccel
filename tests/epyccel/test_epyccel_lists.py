@@ -867,7 +867,9 @@ def test_list_equality(epyc_lists_mod):
     assert lists.list_equality(arg1, arg1) == epyccel_func(arg1, arg1)
     assert lists.list_equality(arg1, arg2) == epyccel_func(arg1, arg2)
     assert lists.list_equality(arg1, arg3) == epyccel_func(arg1, arg3)
-    assert lists.list_equality(arg2, arg1) == epyccel_func(  # pylint: disable=arguments-out-of-order
+    assert lists.list_equality(  # pylint: disable=arguments-out-of-order
+        arg2, arg1
+    ) == epyccel_func(
         arg2, arg1
     )  # pylint: disable=arguments-out-of-order
     assert lists.list_equality(arg3, arg1) == epyccel_func(arg3, arg1)
