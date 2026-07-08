@@ -8,7 +8,7 @@ Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
 
-from pyccel.ast.core import Import, CommentBlock
+from pyccel.ast.core import CommentBlock, Import
 from pyccel.ast.cwrapper import PyccelPyObject, PyModInitFunc, PyModule
 from pyccel.ast.literals import Nil
 from pyccel.ast.variable import Variable
