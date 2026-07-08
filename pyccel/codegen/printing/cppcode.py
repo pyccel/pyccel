@@ -345,11 +345,17 @@ class CppCodePrinter(CodePrinter):
         # imports = self.sort_imports(imports)
         imports = "".join(self._print(i) for i in imports)
 
+        if expr.module.docstring:
+            docstring = self._print(expr.module.docstring)
+        else:
+            docstring = ""
+
         self.exit_scope()
         self._in_header = False
 
         sections = (
             "#pragma once\n",
+            docstring,
             imports,
             f"namespace {name} {{\n",
             global_variables,
@@ -375,11 +381,20 @@ class CppCodePrinter(CodePrinter):
         if "complex" in self._additional_imports:
             imports_code += "using namespace std::complex_literals;\n"
 
+        docstring = self._print(expr.docstring) if expr.docstring else ""
+
+        parts = [
+            docstring,
+            imports_code,
+            f"namespace {name} {{\n\n",
+            global_variables,
+            body,
+            "\n}\n",
+        ]
+
         self.exit_scope()
 
-        return "".join(
-            (imports_code, f"namespace {name} {{\n\n", global_variables, body, "\n}\n")
-        )
+        return "".join(p for p in parts if p)
 
     def _print_Program(self, expr):
         mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]

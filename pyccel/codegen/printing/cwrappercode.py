@@ -425,13 +425,20 @@ class CWrapperCodePrinter(CCodePrinter):
             "};\n"
         )
 
+        if expr.docstring:
+            module_docstring = self._print(
+                CStrStr(LiteralString("\n".join(expr.docstring.comments)))
+            )
+        else:
+            module_docstring = "NULL"
+
         module_def = (
             f"static struct PyModuleDef {expr.module_def_name} = {{\n"
             "PyModuleDef_HEAD_INIT,\n"
             "/* name of module */\n"
             f'"{self._module_name}",\n'
             "/* module documentation, may be NULL */\n"
-            "NULL,\n"  # TODO: Add documentation
+            f"{module_docstring},\n"
             "/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n"
             "0,\n"
             f"{method_def_name},\n"

@@ -936,7 +936,13 @@ class FCodePrinter(CodePrinter):
         imports = self.print_constant_imports() + imports
         implicit_none = "" if expr.is_external else "implicit none\n"
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+        else:
+            docstring = ""
+
         parts = [
+            docstring,
             f"module {name}\n",
             imports,
             implicit_none,
@@ -1338,31 +1344,33 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        return "!" + comments + "\n"
+        return "! " + comments + "\n"
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
-        if ln < max(20, header_size + 2):
+        ln = max(len(i) for i in txts) + 2
+        if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
-            "!"
+            "!_"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "!"
+            + "_!"
         )
-        ln = len(top) - 2
-        bottom = "!" + "_" * ln + "!"
+        ln = len(top) - 3
+        bottom = "!" + "_" * (ln + 1) + "!"
 
-        txts = ["!" + txt + " " * (ln - len(txt)) + "!" for txt in txts]
+        txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
 
         body = "\n".join(i for i in txts)
 
-        return ("{0}\n" "{1}\n" "{2}\n").format(top, body, bottom)
+        return f"{top}\n{body}\n{bottom}\n"
 
     def _print_EmptyNode(self, expr):
         return ""
