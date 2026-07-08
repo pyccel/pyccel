@@ -25,7 +25,7 @@ class epyccel_test:
 
 
 # ==============================================================================
-class _LazyPerFunctionEpyccel:
+class LazyPerFunctionEpyccel:
     """
     Fallback proxy used when a whole-module `epyccel()` translation fails.
 
@@ -61,4 +61,4 @@ def epyccel_module_with_fallback(pymod, language):
     try:
         return epyccel(pymod, language=language)
     except Exception:
-        return _LazyPerFunctionEpyccel(pymod, language)
+        return LazyPerFunctionEpyccel(pymod, language)
