@@ -6,7 +6,6 @@ import shutil
 import pytest
 from mpi4py import MPI
 
-from pyccel.commands.epyccel import epyccel
 from pyccel.commands.pyccel_clean import pyccel_clean
 
 github_debugging = "DEBUG" in os.environ
@@ -68,7 +67,6 @@ def stc_language(request):
     return request.param
 
 
-
 @pytest.fixture(autouse=True)
 def skipif_by_language(request):
     """
@@ -113,7 +111,7 @@ def move_coverage(path_dir):
                 )
 
 
-def teardown_module(item, nextitem):
+def pytest_runtest_teardown(item, nextitem):
     path_dir = os.path.dirname(os.path.realpath(item.fspath))
     move_coverage(path_dir)
 
@@ -126,7 +124,6 @@ def teardown_module(item, nextitem):
     ):
         marks = [m.name for m in item.own_markers]
         if "mpi" not in marks:
-            print("Cleaning")
             pyccel_clean(path_dir, remove_shared_libs=True)
         else:
             comm = MPI.COMM_WORLD
