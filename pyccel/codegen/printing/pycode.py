@@ -1805,10 +1805,13 @@ class PythonCodePrinter(CodePrinter):
         else:
             prog = ""
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+        else:
+            docstring = ""
+
         self.exit_scope()
-        return ("{imports}\n" "{body}" "{prog}").format(
-            imports=imports, body=body, prog=prog
-        )
+        return f"{docstring}{imports}\n{body}{prog}"
 
     def _print_ModuleHeader(self, expr):
         self._in_header = True

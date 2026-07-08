@@ -3897,6 +3897,7 @@ class SemanticParser(BasicParser):
             mod_name,
             variables,
             funcs,
+            docstring=expr.docstring,
             init_func=init_func,
             free_func=free_func,
             interfaces=interfaces,
