@@ -92,7 +92,7 @@ def test_property_docstring(language):
     assert python_doc == pyccel_doc
 
 
-def test_module_docstring(language):
+def test_module_docstring(experimental_language):
     from modules import Module_docstring as mod
 
     epyc_mod = epyccel(mod, language=language)
