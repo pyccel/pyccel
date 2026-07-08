@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from pyccel import epyccel
-from conftest import epyccel_module_with_fallback
+from .utilities import epyccel_module_with_fallback
 from modules import lists
 
 
