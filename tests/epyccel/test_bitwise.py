@@ -73,7 +73,7 @@ def test_left_shift_b_b(epyc_bitwise_mod, a, b):
     assert type(r1) is type(r2)
 
 
-def test_bit_xor_b_b(language):
+def test_bit_xor_b_b(epyc_bitwise_mod):
     f1 = bitwise.bit_xor_b_b
     f2 = epyc_bitwise_mod.bit_xor_b_b
     r1 = f1(True, False)
@@ -131,7 +131,7 @@ def test_bit_or_i_i(epyc_bitwise_mod, a, b):
     assert type(r1) is type(r2)
 
 
-def test_bit_or_b_b(language):
+def test_bit_or_b_b(epyc_bitwise_mod):
     f1 = bitwise.bit_or_b_b
     f2 = epyc_bitwise_mod.bit_or_b_b
     r1 = f1(False, True)
@@ -160,7 +160,7 @@ def test_bit_and_i_i(epyc_bitwise_mod, a, b):
     assert type(r1) is type(r2)
 
 
-def test_bit_and_b_b(language):
+def test_bit_and_b_b(epyc_bitwise_mod):
     f1 = bitwise.bit_and_b_b
     f2 = epyc_bitwise_mod.bit_and_b_b
     r1 = f1(True, True)
@@ -194,7 +194,7 @@ def test_bit_and_b_b_i(epyc_bitwise_mod, a, b, c):
     reason="Bitwise inversion of bools was removed in Python 3.16",
 )
 @pytest.mark.filterwarnings("ignore:.*Bitwise inversion*:DeprecationWarning")
-def test_invert_b(language):
+def test_invert_b(epyc_bitwise_mod):
     f1 = bitwise.invert_b
     f2 = epyc_bitwise_mod.invert_b
     for a in [True, False]:
@@ -204,7 +204,7 @@ def test_invert_b(language):
         assert type(r1) is type(r2)
 
 
-def test_invert_i(language):
+def test_invert_i(epyc_bitwise_mod):
     f1 = bitwise.invert_i
     f2 = epyc_bitwise_mod.invert_i
     for a in [0, 1, 60, -45]:
@@ -214,7 +214,7 @@ def test_invert_i(language):
         assert type(r1) is type(r2)
 
 
-def test_or_ints(language):
+def test_or_ints(epyc_bitwise_mod):
     f1 = bitwise.or_ints
     f2 = epyc_bitwise_mod.or_ints
     for a in [0, 1, 60, -45]:
