@@ -42,7 +42,6 @@ class LazyPerFunctionEpyccel:
 
     def __getattr__(self, name):
         if name not in self._cache:
-            print("Translating function")
             self._cache[name] = epyccel(
                 getattr(self._pymod, name), language=self._language
             )
