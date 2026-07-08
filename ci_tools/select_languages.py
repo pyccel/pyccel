@@ -10,6 +10,7 @@ language is selected, since such a file could affect any backend.
 
 import argparse
 import os
+import shutil
 import subprocess
 
 FORTRAN_PATHS = (
@@ -40,17 +41,18 @@ def get_changed_files(base):
     Get the list of files changed between `base` and HEAD.
 
     Returns None if the diff could not be computed (e.g. the base ref is
-    unavailable), so that callers can fail safe and run every language.
+    unavailable), so that callers run every language.
     """
     result = subprocess.run(
-        ["git", "diff", "--name-only", f"{base}...HEAD"],
+        [shutil.which("git"), "diff", "--name-only", f"{base}...HEAD"],
         capture_output=True,
         text=True,
         check=False,
     )
     if result.returncode != 0:
         return None
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    lines = [line.strip() for line in result.stdout.splitlines()]
+    return [l for l in lines if l]
 
 
 def select_languages(changed_files):
@@ -63,22 +65,32 @@ def select_languages(changed_files):
     be selected (safe default).
     """
     if changed_files is None:
-        return dict.fromkeys(LANGUAGE_PATHS, True)
+        return dict.fromkeys(LANGUAGE_PATHS.keys(), True)
 
-    run = dict.fromkeys(LANGUAGE_PATHS, False)
+    run = dict.fromkeys(LANGUAGE_PATHS.keys(), False)
 
     for f in changed_files:
+        if f.startswith("tests/"):
+            continue
+
+        # Find which language is relevant for this file
         matched_language = next(
             (lang for lang, paths in LANGUAGE_PATHS.items() if f in paths), None
         )
+        # If a non-language specific file was modified
         if matched_language is None:
-            return dict.fromkeys(LANGUAGE_PATHS, True)
+            return dict.fromkeys(LANGUAGE_PATHS.keys(), True)
+
         run[matched_language] = True
+
+    # If no languages are activated, only tests were changed
+    if all(not run_lang for run_lang in run.values()):
+        return dict.fromkeys(LANGUAGE_PATHS.keys(), True)
 
     return run
 
 
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--base", required=True, help="Base commit/branch to diff against"
@@ -90,15 +102,10 @@ def main():
 
     print("Changed files:", changed_files if changed_files is not None else "<unknown>")
     for lang, should_run in run.items():
-        print(f"run_{lang}={str(should_run).lower()}")
+        print(f"run_{lang}={should_run}")
 
-    github_output = os.environ.get("GITHUB_OUTPUT")
-    if github_output:
-        with open(github_output, "a", encoding="utf-8") as f:
-            for lang, should_run in run.items():
-                f.write(f"run_{lang}={str(should_run).lower()}\n")
-            f.write("run_agnostic=true\n")
+    with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+        for lang, should_run in run.items():
+            f.write(f"run_{lang}={str(should_run).lower()}\n")
+        f.write("run_agnostic=True\n")
 
-
-if __name__ == "__main__":
-    main()
