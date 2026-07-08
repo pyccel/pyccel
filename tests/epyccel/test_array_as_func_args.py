@@ -4,11 +4,12 @@ in the function arguments.
 """
 
 # pylint: disable=missing-function-docstring
-from typing import Final, TypeVar
 
 import numpy as np
 import pytest
+from modules import array_as_func_args
 from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
@@ -17,15 +18,15 @@ float_types = ["float32", "float64"]
 complex_types = ["complex64", "complex128"]
 
 
-def test_array_int_1d_scalar_add(language):
-    T = TypeVar("T", "int8", "int16", "int32", "int64")
+@pytest.fixture(scope="module")
+def epyc_array_as_func_args_mod(language):
+    return epyccel_module_with_fallback(array_as_func_args, language)
 
-    def array_int_1d_scalar_add(x: "T[:]", a: T, x_len: int):
-        for i in range(x_len):
-            x[i] += a
 
-    f1 = array_int_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+def test_array_int_1d_scalar_add(epyc_array_as_func_args_mod):
+
+    f1 = array_as_func_args.array_int_1d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_int_1d_scalar_add
 
     for t in int_types:
         size = randint(1, 30)
@@ -39,15 +40,10 @@ def test_array_int_1d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_float_1d_scalar_add(language):
-    T = TypeVar("T", "float32", "float")
+def test_array_float_1d_scalar_add(epyc_array_as_func_args_mod):
 
-    def array_float_1d_scalar_add(x: "T[:]", a: T, x_len: int):
-        for i in range(x_len):
-            x[i] += a
-
-    f1 = array_float_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f1 = array_as_func_args.array_float_1d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_float_1d_scalar_add
 
     for t in float_types:
         size = randint(1, 30)
@@ -61,15 +57,10 @@ def test_array_float_1d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_complex_1d_scalar_add(language):
-    T = TypeVar("T", "complex64", "complex128")
+def test_array_complex_1d_scalar_add(epyc_array_as_func_args_mod):
 
-    def array_complex_1d_scalar_add(x: "T[:]", a: T, x_len: int):
-        for i in range(x_len):
-            x[i] += a
-
-    f1 = array_complex_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f1 = array_as_func_args.array_complex_1d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_complex_1d_scalar_add
 
     for t in float_types:
         size = randint(1, 30)
@@ -89,16 +80,10 @@ def test_array_complex_1d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_int_2d_scalar_add(language):
-    T = TypeVar("T", "int8", "int16", "int32", "int64")
+def test_array_int_2d_scalar_add(epyc_array_as_func_args_mod):
 
-    def array_int_2d_scalar_add(x: "T[:,:]", a: T, d1: int, d2: int):
-        for i in range(d1):
-            for j in range(d2):
-                x[i, j] += a
-
-    f1 = array_int_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f1 = array_as_func_args.array_int_2d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_int_2d_scalar_add
 
     for t in int_types:
         d1 = randint(1, 15)
@@ -113,16 +98,10 @@ def test_array_int_2d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_float_2d_scalar_add(language):
-    T = TypeVar("T", "float32", "float")
+def test_array_float_2d_scalar_add(epyc_array_as_func_args_mod):
 
-    def array_float_2d_scalar_add(x: "T[:,:]", a: T, d1: int, d2: int):
-        for i in range(d1):
-            for j in range(d2):
-                x[i, j] += a
-
-    f1 = array_float_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f1 = array_as_func_args.array_float_2d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_float_2d_scalar_add
 
     for t in float_types:
         d1 = randint(1, 15)
@@ -137,16 +116,10 @@ def test_array_float_2d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_complex_2d_scalar_add(language):
-    T = TypeVar("T", "complex64", "complex128")
+def test_array_complex_2d_scalar_add(epyc_array_as_func_args_mod):
 
-    def array_complex_2d_scalar_add(x: "T[:,:]", a: T, d1: int, d2: int):
-        for i in range(d1):
-            for j in range(d2):
-                x[i, j] += a
-
-    f1 = array_complex_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f1 = array_as_func_args.array_complex_2d_scalar_add
+    f2 = epyc_array_as_func_args_mod.array_complex_2d_scalar_add
 
     for t in float_types:
         d1 = randint(1, 15)
@@ -167,12 +140,9 @@ def test_array_complex_2d_scalar_add(language):
         assert np.array_equal(x1, x2)
 
 
-def test_array_final(language):
-    def array_final(x: "Final[float[:]]"):
-        return x[0]
-
-    f1 = array_final
-    f2 = epyccel(f1, language=language)
+def test_array_final(epyc_array_as_func_args_mod):
+    f1 = array_as_func_args.array_final
+    f2 = epyc_array_as_func_args_mod.array_final
 
     d = randint(1, 15)
     x1 = uniform(np.finfo(float).max, size=(d))
