@@ -6733,7 +6733,7 @@ class SemanticParser(BasicParser):
                 "decorators": decorators,
                 "is_recursive": is_recursive,
                 "is_virtual": "final" in decorators
-                or (bound_class and "final" in bound_class.decorators),
+                or (cls_name and "final" in bound_class.decorators),
                 "functions": sub_funcs,
                 "interfaces": func_interfaces,
                 "result_pointer_map": result_pointer_map,

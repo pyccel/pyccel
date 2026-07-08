@@ -3977,7 +3977,7 @@ class CCodePrinter(CodePrinter):
                 virtual_methods.append(func)
 
         # Print __init__ with injected function pointer assignments
-        init_method = expr.get_method("__init__")
+        init_method = expr.get_method(syntactic_name="__init__")
         init_printed = self._print(init_method)
         if virtual_methods:
             init_lines = init_printed.split("\n")
