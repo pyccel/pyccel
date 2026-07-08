@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
 -   #2620 : Improve formatting of comment blocks in Fortran and C.
 -   \[DEVELOPER\] Require black formatting.
+-   #2606 : Make class methods non-final by default.
 
 ### Deprecated
 
