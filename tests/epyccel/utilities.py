@@ -2,6 +2,7 @@
 import numpy as np
 
 from pyccel import epyccel
+from pyccel.errors.errors import PyccelError
 
 
 # ==============================================================================
@@ -60,5 +61,5 @@ def epyccel_module_with_fallback(pymod, language):
     """
     try:
         return epyccel(pymod, language=language)
-    except Exception:
+    except (PyccelError, ImportError):
         return LazyPerFunctionEpyccel(pymod, language)
