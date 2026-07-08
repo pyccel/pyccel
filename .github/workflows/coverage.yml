@@ -35,7 +35,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: origin
           fetch-depth: 0
@@ -92,7 +92,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr_info.outputs.head_sha }}
           repository: ${{ steps.pr_info.outputs.pr_repo }}
@@ -107,7 +107,7 @@ jobs:
         shell: bash
         working-directory: pr_contents
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install Python dependencies
@@ -139,7 +139,7 @@ jobs:
           coverage-reports: pr_contents/cobertura.xml
       - name: Collect diff information
         run: |
-          git diff ${{ steps.pr_info.outputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ steps.pr_info.outputs.base }}...HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
         working-directory: pr_contents
       - name: Check coverage

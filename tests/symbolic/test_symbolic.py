@@ -4,16 +4,15 @@
 import os
 from typing import TypeVar
 
-import pytest
+import mappings
 import numpy as np
+import pytest
 import sympy as sp
 
-import mappings
-
 from pyccel import lambdify as pyc_lambdify
-from pyccel.parser.parser import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors import Errors
+from pyccel.parser.parser import Parser
 
 RTOL = 1e-13
 ATOL = 1e-14

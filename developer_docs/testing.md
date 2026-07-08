@@ -116,6 +116,7 @@ This can be done locally with:
 
 ```bash
 pip3 install -r docs/requirements.txt
+pip3 install -e .
 make -C docs html
 ```
 

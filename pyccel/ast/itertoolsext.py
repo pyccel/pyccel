@@ -1,12 +1,13 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 This module represent a call to the itertools functions for code generation.
 """
 
-from .core import PyccelFunctionDef, Module
+from .core import Module, PyccelFunctionDef
 from .internals import Iterable
 
 __all__ = (

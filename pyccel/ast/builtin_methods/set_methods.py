@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 The Set container has a number of built-in methods that are
 always available.
@@ -10,7 +11,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import VoidType, PythonNativeBool
+from pyccel.ast.datatypes import PythonNativeBool, VoidType
 from pyccel.ast.internals import PyccelFunction
 
 __all__ = (

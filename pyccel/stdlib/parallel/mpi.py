@@ -1,30 +1,39 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `Cart` class which maps MPI's Cart concepts to a single
+place, providing a convenient interface with encapsulated MPI functionality.
+The functions of the `Cart` class are imported from the `mpi` module in
+`pyccel.stdlib.parallel` and are translated to the appropriate MPI calls in
+the target language. This may need removing with #251.
+"""
 
 # TODO - improve communicate method
 #      - debug reduce method: it must return the global error
 
-from pyccel.stdlib.parallel.mpi import mpi_comm_size
-from pyccel.stdlib.parallel.mpi import mpi_comm_rank
-from pyccel.stdlib.parallel.mpi import mpi_comm_world
-from pyccel.stdlib.parallel.mpi import mpi_status_size
-from pyccel.stdlib.parallel.mpi import mpi_dims_create
-from pyccel.stdlib.parallel.mpi import mpi_cart_create
-from pyccel.stdlib.parallel.mpi import mpi_cart_coords
-from pyccel.stdlib.parallel.mpi import mpi_cart_shift
-from pyccel.stdlib.parallel.mpi import mpi_cart_sub
-from pyccel.stdlib.parallel.mpi import mpi_comm_free
-from pyccel.stdlib.parallel.mpi import mpi_type_contiguous
-from pyccel.stdlib.parallel.mpi import mpi_type_vector
-from pyccel.stdlib.parallel.mpi import mpi_type_commit
-from pyccel.stdlib.parallel.mpi import mpi_type_free
-from pyccel.stdlib.parallel.mpi import mpi_sendrecv
-from pyccel.stdlib.parallel.mpi import mpi_allreduce
-from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
-from pyccel.stdlib.parallel.mpi import MPI_SUM
+# from pyccel.stdlib.parallel.mpi import (
+#    MPI_DOUBLE,
+#    MPI_SUM,
+#    mpi_allreduce,
+#    mpi_cart_coords,
+#    mpi_cart_create,
+#    mpi_cart_shift,
+#    mpi_cart_sub,
+#    mpi_comm_free,
+#    mpi_comm_rank,
+#    mpi_comm_size,
+#    mpi_comm_world,
+#    mpi_dims_create,
+#    mpi_sendrecv,
+#    mpi_status_size,
+#    mpi_type_commit,
+#    mpi_type_contiguous,
+#    mpi_type_free,
+#    mpi_type_vector,
+# )
 
 # $ header class Cart(public)
 # $ header method __init__(Cart, int [:], int [:], bool [:], bool)

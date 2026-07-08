@@ -32,18 +32,18 @@ jobs:
           paths_ignore: '["pyccel/version.py"]'
           do_not_skip: '[]'
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.BASE }}
           path: base
           submodules: true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: compare
           fetch-depth: 0
           submodules: true
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install python CI dependencies
@@ -97,6 +97,7 @@ jobs:
         run: |
           cd compare
           python -m pip install -r docs/requirements.txt
+          python -m pip install -e .
           make -C docs html
         shell: bash
       - name: Setup Pages

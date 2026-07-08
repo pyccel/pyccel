@@ -3,12 +3,11 @@ import multiprocessing
 import os
 import sys
 
-import pytest
 import numpy as np
-from numpy import random
-from numpy import matmul
-
+import pytest
 from modules import openmp
+from numpy import matmul, random
+
 from pyccel import epyccel
 from pyccel.utilities.introspect import get_compiler_info
 
@@ -795,7 +794,11 @@ def test_omp_sections(language):
 
 def should_skip(language):
     executable, version = get_compiler_info(language)
-    return ("gcc" in executable and version.major >= 15) or "clang" in executable
+    return (
+        ("gcc" in executable and version.major >= 15)
+        or "clang" in executable
+        or "icx" in executable
+    )
 
 
 @pytest.mark.skipif(
@@ -804,7 +807,7 @@ def should_skip(language):
 @pytest.mark.skipif_by_language(
     should_skip("c"),
     language="c",
-    reason="Type mismatch is an error with GCC >= 15 and clang",
+    reason="Type mismatch is an error with GCC >= 15, clang and icx",
 )
 @pytest.mark.external
 def test_omp_get_set_schedule(language):

@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from project.basics.Point_mod import Point
 from project.basics.Line_mod import Line
+from project.basics.Point_mod import Point
 from project.shapes.Square_mod import Square
 
 if __name__ == "__main__":

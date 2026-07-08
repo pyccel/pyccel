@@ -1,7 +1,8 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Contains the `execute_pyccel_wrap` function which carries out the main steps required
 to execute the `pyccel wrap` command.
@@ -11,21 +12,21 @@ import os
 import sys
 import time
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import (
-    PyccelSyntaxError,
-    PyccelSemanticError,
-    PyccelCodegenError,
-)
-from pyccel.parser.parser import Parser
+from pyccel.ast.utilities import python_builtin_libs
 from pyccel.codegen.codegen import Codegen
 from pyccel.codegen.pipeline import print_timers
 from pyccel.codegen.utilities import manage_dependencies
 from pyccel.codegen.wrappergen import Wrappergen
+from pyccel.errors.errors import (
+    Errors,
+    PyccelCodegenError,
+    PyccelSemanticError,
+    PyccelSyntaxError,
+)
 from pyccel.naming import name_clash_checkers
-from pyccel.utilities.stage import PyccelStage
-from pyccel.ast.utilities import python_builtin_libs
+from pyccel.parser.parser import Parser
 from pyccel.parser.scope import Scope
+from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path

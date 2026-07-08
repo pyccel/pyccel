@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-import numpy as np
 import modules.numpy_sign as mod
+import numpy as np
+from recognised_functions.test_numpy_funcs import ATOL, ATOL32, RTOL, RTOL32
 
-from recognised_functions.test_numpy_funcs import RTOL, ATOL, RTOL32, ATOL32
 from pyccel import epyccel
 
 

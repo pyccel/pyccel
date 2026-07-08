@@ -1,16 +1,18 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
-""" """
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the nodes which represent OpenACC syntax descriptors.
+"""
 
-from os.path import join, dirname
+from os.path import dirname, join
 
 from textx.metamodel import metamodel_from_file
 
-from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import AnnotatedComment
+from pyccel.parser.syntax.basic import BasicStmt
 
 DEBUG = False
 

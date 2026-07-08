@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """This module contains all classes which are used to handle memory block labels at
 different stages of pyccel. Memory block labels are usually either Variables or Indexed
 variables
@@ -15,25 +16,28 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode, TypedAstNode
 from .datatypes import (
-    PyccelType,
-    InhomogeneousTupleType,
+    CharType,
+    ContainerType,
+    DictType,
     HomogeneousListType,
     HomogeneousSetType,
-    DictType,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PyccelType,
+    StringType,
 )
-from .datatypes import ContainerType, HomogeneousTupleType, CharType, StringType
-from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
-from .literals import LiteralInteger, Nil, LiteralEllipsis
-from .operators import (
-    PyccelMinus,
-    PyccelDiv,
-    PyccelMul,
-    PyccelLt,
-    PyccelUnarySub,
-    PyccelAdd,
-    IfTernaryOperator,
-)
+from .internals import PyccelArrayShapeElement, PyccelSymbol, Slice
+from .literals import LiteralEllipsis, LiteralInteger, Nil
 from .numpytypes import NumpyNDArrayType
+from .operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelDiv,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMul,
+    PyccelUnarySub,
+)
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -419,6 +423,19 @@ class Variable(TypedAstNode):
         User friendly method to check if the variable is an ndarray.
         """
         return isinstance(self.class_type, NumpyNDArrayType)
+
+    @property
+    def is_contiguous(self):
+        """
+        Check if the variable memory is contiguous.
+
+        Check if the memory used by a storage container is contiguous, this
+        allows for some optimisations.
+        """
+        return (
+            isinstance(self.class_type, (NumpyNDArrayType, HomogeneousTupleType))
+            and not self._is_argument
+        ) and not self.is_alias
 
     def __str__(self):
         return str(self.name)

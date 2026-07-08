@@ -1,24 +1,25 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """File containing functions for calling Pyccel interactively (epyccel and epyccel_seq)"""
 
-import inspect
 import importlib
+import inspect
+import os
 import re
 import sys
 import typing
-import os
-from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
+from types import FunctionType, ModuleType
 
 from filelock import FileLock, Timeout
 
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
 from pyccel.utilities.stage import PyccelStage
 from pyccel.utilities.strings import random_string
-from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import ErrorsMode, PyccelError, Errors
 
 errors = Errors()
 
@@ -238,7 +239,7 @@ def epyccel_seq(
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
         file so it must include any necessary import statements.
-    language : {'fortran', 'c', 'python'}
+    language : {'fortran', 'c', 'c++', 'python'}
         Language of generated code (default: 'fortran').
     compiler_family : str, optional
         Compiler family for which Pyccel uses a default configuration (default: 'GNU').

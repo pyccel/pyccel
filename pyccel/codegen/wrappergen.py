@@ -1,34 +1,38 @@
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 A module containing the Wrappergen class which is responsible for the generation of wrapper files.
 """
 
 from pathlib import Path
 
-from .codegen import _extension_registry, _header_extension_registry
-from .printing.fcode import FCodePrinter
-from .printing.cwrappercode import CWrapperCodePrinter
-from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
-from .wrapper.c_to_python_wrapper import CToPythonWrapper
 from ..ast.core import ModuleHeader
 from ..errors.errors import Errors
 from ..naming import name_clash_checkers
 from ..parser.scope import Scope
 from ..utilities.stage import PyccelStage
+from .codegen import _extension_registry, _header_extension_registry
+from .printing.cwrappercode import CWrapperCodePrinter
+from .printing.fcode import FCodePrinter
+from .printing.pybindcode import PyBindCodePrinter
+from .wrapper.c_to_python_wrapper import CToPythonWrapper
+from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
+from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 
 wrapper_registry = {
     "fortran": [FortranToCWrapper, CToPythonWrapper],
     "c": [CToPythonWrapper],
+    "c++": [CppToPythonWrapper],
     "python": [],
 }
 
 printer_registry = {
     FortranToCWrapper: FCodePrinter,
     CToPythonWrapper: CWrapperCodePrinter,
+    CppToPythonWrapper: PyBindCodePrinter,
 }
 
 pyccel_stage = PyccelStage()

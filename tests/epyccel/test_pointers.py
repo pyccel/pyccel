@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import inspect
-import pytest
-import numpy as np
 
+import numpy as np
+import pytest
 from modules import pointers as pointers_module
 from modules import return_pointers
+
 from pyccel import epyccel
 
 pointers_funcs = [

@@ -1,8 +1,9 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 The dict container has a number of built-in methods that are
 always available.
@@ -10,8 +11,8 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import InhomogeneousTupleType, VoidType, SymbolicType
-from pyccel.ast.internals import PyccelFunction, Iterable, PyccelArrayShapeElement
+from pyccel.ast.datatypes import InhomogeneousTupleType, SymbolicType, VoidType
+from pyccel.ast.internals import Iterable, PyccelArrayShapeElement, PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import IndexedElement, Variable
 

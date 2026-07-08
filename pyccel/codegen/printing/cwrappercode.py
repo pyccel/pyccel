@@ -1,33 +1,37 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `CWrapperCodePrinter` class which is responsible for
+printing the C-Python interface.
+"""
+
 import sys
 
-from pyccel.codegen.printing.ccode import CCodePrinter
-
-from pyccel.ast.bind_c import BindCPointer
-from pyccel.ast.bind_c import BindCModule, BindCFunctionDef
-from pyccel.ast.c_concepts import CStackArray, CStrStr
-from pyccel.ast.core import FunctionAddress, SeparatorComment
-from pyccel.ast.core import Import, Module, Declare
+from pyccel.ast.bind_c import BindCFunctionDef, BindCModule, BindCPointer
+from pyccel.ast.c_concepts import CStackArray, CStrStr, ObjectAddress
+from pyccel.ast.core import Declare, FunctionAddress, Import, Module, SeparatorComment
 from pyccel.ast.cwrapper import (
+    Py_None,
+    Py_ssize_t,
     PyBuildValueNode,
-    PyCapsule_New,
     PyCapsule_Import,
+    PyCapsule_New,
+    PyccelPyObject,
+    PyccelPyTypeObject,
     PyModule_Create,
+    PyTuple_Pack,
+    WrapperCustomDataType,
 )
-from pyccel.ast.cwrapper import Py_None, WrapperCustomDataType, Py_ssize_t
-from pyccel.ast.cwrapper import PyccelPyObject, PyccelPyTypeObject, PyTuple_Pack
 from pyccel.ast.datatypes import FinalType
-from pyccel.ast.literals import LiteralString, Nil, LiteralInteger
+from pyccel.ast.literals import LiteralInteger, LiteralString, Nil
 from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
-from pyccel.ast.c_concepts import ObjectAddress
-
+from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.errors.errors import Errors
 
-__all__ = ("CWrapperCodePrinter", "cwrappercode")
+__all__ = ("CWrapperCodePrinter",)
 
 errors = Errors()
 
@@ -286,7 +290,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_ModuleHeader(self, expr):
         mod = expr.module
         self.set_scope(mod.scope)
-        self._current_module = expr.module
         name = mod.name
 
         # Print imports last to be sure that all additional_imports have been collected
@@ -337,7 +340,6 @@ class CWrapperCodePrinter(CCodePrinter):
         import_func = self._print(mod.import_func)
 
         self.exit_scope()
-        self._current_module = None
         header_id = f"{name.upper()}_WRAPPER"
         header_guard = f"{header_id}_H"
         start = f"#ifndef {header_guard}\n#define {header_guard}\n"
@@ -360,7 +362,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
-        self._current_module = expr
 
         # Insert declared objects into scope
         variables = (
@@ -424,13 +425,20 @@ class CWrapperCodePrinter(CCodePrinter):
             "};\n"
         )
 
+        if expr.docstring:
+            module_docstring = self._print(
+                CStrStr(LiteralString("\n".join(expr.docstring.comments)))
+            )
+        else:
+            module_docstring = "NULL"
+
         module_def = (
             f"static struct PyModuleDef {expr.module_def_name} = {{\n"
             "PyModuleDef_HEAD_INIT,\n"
             "/* name of module */\n"
             f'"{self._module_name}",\n'
             "/* module documentation, may be NULL */\n"
-            "NULL,\n"  # TODO: Add documentation
+            f"{module_docstring},\n"
             "/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n"
             "0,\n"
             f"{method_def_name},\n"
@@ -447,7 +455,6 @@ class CWrapperCodePrinter(CCodePrinter):
         imports = "".join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self._current_module = None
 
         return "\n".join(
             [

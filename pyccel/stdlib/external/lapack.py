@@ -1,7 +1,9 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+# pylint: disable=unused-import
 
 """
 Module exposing the lapack library functions to pyccel (see http://www.netlib.org/lapack/)
@@ -9,10 +11,7 @@ Module exposing the lapack library functions to pyccel (see http://www.netlib.or
 
 # $ header metavar ignore_at_import=True
 
-from pyccel.stdlib.internal.lapack import dgetrf
-from pyccel.stdlib.internal.lapack import dgetrs
-from pyccel.stdlib.internal.lapack import dgbtrf
-from pyccel.stdlib.internal.lapack import dgbtrs
+from pyccel.stdlib.internal.lapack import dgbtrf, dgbtrs, dgetrf, dgetrs
 
 # $ header macro (ab(:,:), IPIV(ab.shape[0]), info), dgetrf(ab) := dgetrf(ab.shape[0], ab.shape[1], ab, ab.shape[0], IPIV, info)
 # $ header macro (b(:,:), info), dgetrs(ab, piv, b, s='N') := dgetrs(s, ab.shape[1], 1, ab, ab.shape[0], piv, b, b.count, info)

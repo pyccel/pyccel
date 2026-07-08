@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # pylint: disable=no-member
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing types from the numpy module understood by pyccel"""
 
 from functools import lru_cache
@@ -13,15 +14,19 @@ import numpy as np
 
 from pyccel.utilities.stage import PyccelStage
 
-from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import (
+    CharType,
+    FixedSizeNumericType,
+    GenericType,
+    HomogeneousContainerType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    original_type_to_pyccel_type,
+    pyccel_type_to_original_type,
 )
-from .datatypes import GenericType, CharType
-from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
     "NumpyComplex64Type",

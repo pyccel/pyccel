@@ -1,7 +1,8 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 Module handling all Python builtin operators
 These operators all have a precision as detailed here:
@@ -9,13 +10,10 @@ https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
 
-import numpy
-
 from .builtins import DtypePrecisionToCastFunction
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType
-from .datatypes import PythonNativeInt
-from .operators import PyccelUnaryOperator, PyccelBinaryOperator
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PythonNativeInt
 from .numpytypes import NumpyInt8Type
+from .operators import PyccelBinaryOperator, PyccelUnaryOperator
 
 __all__ = (
     "PyccelBitAnd",

@@ -1,17 +1,19 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import subprocess
 import json
 import os
 import platform
-import shutil
-import sys
-import re
 import random
-import pytest
+import re
+import shutil
+import subprocess
+import sys
+
 import numpy as np
+import pytest
 from filelock import FileLock
-from pyccel.codegen.pipeline import execute_pyccel
+
 from pyccel.ast.utilities import python_builtin_libs
+from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.compilers.default_compilers import available_compilers
 
 # ==============================================================================
@@ -663,7 +665,7 @@ def test_bool(language):
 
 
 # ------------------------------------------------------------------------------
-def test_expressions(language):
+def test_expressions(experimental_language):
     types = (
         [float, complex, int, float, float, int]
         + [float] * 3
@@ -682,7 +684,9 @@ def test_expressions(language):
         + [complex]
         + [bool] * 9
     )
-    pyccel_test("scripts/expressions.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/expressions.py", language=experimental_language, output_dtype=types
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -896,6 +900,18 @@ def test_numpy_kernels_compile(language):
 
 
 # ------------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "language",
+    (
+        pytest.param("fortran", marks=pytest.mark.fortran),
+        pytest.param("python", marks=pytest.mark.python),
+    ),
+)
+def test_randint_size_program(language):
+    pyccel_test("scripts/numpy/randint_size.py", language=language)
+
+
+# ------------------------------------------------------------------------------
 def test_multiple_results(language):
     pyccel_test(
         "scripts/runtest_multiple_results.py",
@@ -943,9 +959,11 @@ def test_elemental(language):
 
 
 # ------------------------------------------------------------------------------
-def test_print_strings(language):
+def test_print_strings(experimental_language):
     types = str
-    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_strings.py", language=experimental_language, output_dtype=types
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -975,9 +993,13 @@ def test_print_integers(language):
 
 
 # ------------------------------------------------------------------------------
-def test_print_sp_and_end(language):
+def test_print_sp_and_end(experimental_language):
     types = str
-    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_sp_and_end.py",
+        language=experimental_language,
+        output_dtype=types,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1205,8 +1227,12 @@ def test_lapack(test_file):
 
 
 # ------------------------------------------------------------------------------
-def test_type_print(language):
-    pyccel_test("scripts/runtest_type_print.py", language=language, output_dtype=str)
+def test_type_print(experimental_language):
+    pyccel_test(
+        "scripts/runtest_type_print.py",
+        language=experimental_language,
+        output_dtype=str,
+    )
 
 
 def test_container_type_print(language):
@@ -1440,30 +1466,6 @@ def test_json():
     with open(get_abs_path(f"{output_dir}/test.json"), "r", encoding="utf-8") as f:
         dict_1 = json.load(f)
     assert dict_1["c"]["exec"] == "icx"
-    cmd = [
-        shutil.which("pyccel"),
-        "config",
-        "export",
-        f"{output_dir}/test2.json",
-        "--compiler-config",
-        f"{output_dir}/test.json",
-    ]
-    subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test2.json"), "r", encoding="utf-8") as f:
-        dict_2 = json.load(f)
-
-    assert dict_1 == dict_2
-
-
-# ------------------------------------------------------------------------------
-@pytest.mark.language_agnostic
-def test_ambiguous_json():
-    # TODO: Remove in v2.3 when --export-compiler-config is deprecated
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
-    cmd = [shutil.which("pyccel"), "--export-compiler-config", f"{output_dir}/test"]
-    subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test.json"), "r", encoding="utf-8") as f:
-        dict_1 = json.load(f)
     cmd = [
         shutil.which("pyccel"),
         "config",

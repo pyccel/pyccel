@@ -6,24 +6,44 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
+-   #2525 : Add preliminary support for C++ translations.
+-   #2621 : Add support for module docstrings.
+
+### Fixed
+
+-   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
+-   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
+-   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
+-   #2618 : Fix unnecessary slicing returning the whole array.
+-   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
+
+### Changed
+
+-   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
+-   #2620 : Improve formatting of comment blocks in Fortran and C.
+-   \[DEVELOPER\] Require black formatting.
+-   #2606 : Make class methods non-final by default.
+
+### Deprecated
+
+### Removed
+
+-   #2522 : Remove use of `pyccel` without sub-command.
+-   #2522 : Remove use of `--export-compiler-config` flag in favour of `pyccel config` subcommand.
+-   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
+-   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
+-   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
+
+## \[2.2.3\] - 2026-03-20
+
 ### Fixed
 
 -   #2586 : Allow loop unravelling for expressions containing lists, tuples, and sets.
 -   #2587 : Fix compilation error when using an array slice in an expression.
 -   #2590 : Fix missing `const` annotation on string arguments in C.
 -   #2597 : Fix parsing error when passing a function to `epyccel` whose definition is closed on a line containing only `):`.
-
-### Changed
-
--   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
--   \[DEVELOPER\] Require black formatting.
-
-### Deprecated
-
-### Removed
-
--   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
--   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
 
 ## \[2.2.2\] - 2026-03-09
 

@@ -1,14 +1,17 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 
 """Extended AST with CommentLine and CommentMultiLine nodes
 ===========================================================
 
 """
 
-from ast import AST, If as IfNode, parse
+from ast import AST
+from ast import If as IfNode
+from ast import parse
 
 from numpy import array, logical_and, where
 

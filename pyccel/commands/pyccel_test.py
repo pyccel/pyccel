@@ -1,17 +1,17 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing scripts to run the unit tests of Pyccel"""
 
 import json
 import os
 import pathlib
 import sys
-from argparse import ArgumentParser
 from importlib.metadata import Distribution
 
-from .argparse_helpers import add_help_flag, add_version_flag, deprecation_warning
+from .argparse_helpers import add_help_flag
 from .pyccel_clean import pyccel_clean
 
 __all__ = (
@@ -180,16 +180,20 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
         "Run the single-process tests which can be run in parallel... [language: C]"
     )
     desc_4 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
-    desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
-    descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
+    desc_5 = (
+        "Run the single-process tests which can be run in parallel... [language: C++]"
+    )
+    desc_6 = "Run the single-process tests which can be run in parallel... [language: Python]"
+    descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5, desc_6]
 
     # Commands to run the tests:
     cmd_1 = ["-ra", "-m (xdist_incompatible)"]
     cmd_2 = ["-ra", "-m (not xdist_incompatible and language_agnostic)", "-n", "auto"]
     cmd_3 = ["-ra", "-m (not xdist_incompatible and c)", "-n", "auto"]
     cmd_4 = ["-ra", "-m (not xdist_incompatible and fortran)", "-n", "auto"]
-    cmd_5 = ["-ra", "-m (not xdist_incompatible and python)", "-n", "auto"]
-    commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5]
+    cmd_5 = ["-ra", "-m (not xdist_incompatible and cpp)", "-n", "auto"]
+    cmd_6 = ["-ra", "-m (not xdist_incompatible and python)", "-n", "auto"]
+    commands = [cmd_1, cmd_2, cmd_3, cmd_4, cmd_5, cmd_6]
 
     if language != "All":
         cmd_1[-1] = cmd_1[-1].removesuffix(")") + f" and {language})"
@@ -274,7 +278,7 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     sys.exit(final_retcode)
 
 
-def setup_pyccel_test_parser(parser, add_version=False):
+def setup_pyccel_test_parser(parser):
     """
     Add the `pyccel test` arguments to the parser.
 
@@ -284,16 +288,10 @@ def setup_pyccel_test_parser(parser, add_version=False):
     ----------
     parser : argparse.ArgumentParser
         The parser to be modified.
-    add_version : bool, default=False
-        Indicates whether a --version flag should be added to the command.
-        This option will be removed in v2.3.
     """
     group = parser.add_argument_group("Options")
 
     add_help_flag(group)
-
-    if add_version:
-        add_version_flag(group)
 
     group.add_argument(
         "--dry-run",
@@ -330,32 +328,3 @@ def setup_pyccel_test_parser(parser, add_version=False):
         dest="run_mpi",
         help="Do not run the parallel tests.",
     )
-
-
-def pyccel_test_command():
-    """
-    Command line wrapper for the deprecated `pyccel-test` command line tool.
-
-    Command line wrapper for the deprecated `pyccel-test` command line tool.
-
-    Returns
-    -------
-    pytest.ExitCode
-        The pytest return code.
-    """
-    parser = ArgumentParser(
-        description="Tool for running the test suite of Pyccel", add_help=False
-    )
-
-    setup_pyccel_test_parser(parser, add_version=True)
-
-    print(deprecation_warning("test"), file=sys.stderr)
-
-    # Parse the command line arguments
-    args = parser.parse_args()
-
-    print()
-    retcode = pyccel_test(**vars(args))
-    print()
-
-    return retcode

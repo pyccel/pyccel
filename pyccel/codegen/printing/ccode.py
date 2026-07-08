@@ -1,129 +1,161 @@
-# coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the `CCodePrinter` class which converts Pyccel's AST to
+strings of C code.
+"""
+
 import ast
 import functools
-from itertools import chain, product
-import re
 import sys
+from itertools import chain, product
 
 import numpy as np
 
-from pyccel.ast.basic import ScopedAstNode
-
 from pyccel.ast.bind_c import BindCPointer
-
-from pyccel.ast.builtins import PythonRange, PythonComplex, PythonMin, PythonMax
-from pyccel.ast.builtins import PythonPrint, PythonType, VariableIterator
-
-from pyccel.ast.builtins import (
-    PythonList,
-    PythonTuple,
-    PythonSet,
-    PythonDict,
-    PythonLen,
-    PythonConjugate,
-)
-
 from pyccel.ast.builtin_methods.dict_methods import (
     DictItems,
     DictKeys,
-    DictValues,
     DictPopitem,
+    DictValues,
 )
-
-from pyccel.ast.core import Declare, For, CodeBlock
-from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import Deallocate, If, IfSection
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Assign, Import, AugAssign, AliasAssign
-from pyccel.ast.core import SeparatorComment
-from pyccel.ast.core import Module, AsName, FunctionDef, Return
-
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
-from pyccel.ast.c_concepts import CStackArray, CStrStr
-
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import TupleType, FixedSizeNumericType, CharType, FinalType
-from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
+from pyccel.ast.builtins import (
+    PythonComplex,
+    PythonConjugate,
+    PythonDict,
+    PythonLen,
+    PythonList,
+    PythonMax,
+    PythonMin,
+    PythonPrint,
+    PythonRange,
+    PythonSet,
+    PythonTuple,
+    PythonType,
+    VariableIterator,
+)
+from pyccel.ast.c_concepts import (
+    CMacro,
+    CStackArray,
+    CStringExpression,
+    CStrStr,
+    ObjectAddress,
+    PointerCast,
+)
+from pyccel.ast.core import (
+    AliasAssign,
+    AsName,
+    Assign,
+    AugAssign,
+    CodeBlock,
+    Deallocate,
+    Declare,
+    For,
+    FunctionAddress,
+    FunctionCall,
+    FunctionCallArgument,
+    FunctionDef,
+    If,
+    IfSection,
+    Import,
+    Module,
+    Return,
+    SeparatorComment,
+)
 from pyccel.ast.datatypes import (
-    InhomogeneousTupleType,
+    CharType,
+    CustomDataType,
+    DictType,
+    FinalType,
+    FixedSizeNumericType,
+    FixedSizeType,
+    HomogeneousContainerType,
     HomogeneousListType,
     HomogeneousSetType,
-)
-from pyccel.ast.datatypes import (
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
     PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PythonNativeBool,
+    PythonNativeInt,
+    StringType,
+    TupleType,
+    VoidType,
 )
-from pyccel.ast.datatypes import HomogeneousContainerType, DictType, FixedSizeType
-
-from pyccel.ast.internals import Slice, PyccelArrayShapeElement
-from pyccel.ast.internals import PyccelFunction
-
+from pyccel.ast.internals import PyccelArrayShapeElement, PyccelFunction, Slice
 from pyccel.ast.literals import (
-    LiteralTrue,
+    Literal,
     LiteralFalse,
-    LiteralImaginaryUnit,
     LiteralFloat,
+    LiteralImaginaryUnit,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
 )
-from pyccel.ast.literals import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals import Nil, convert_to_literal
-
 from pyccel.ast.low_level_tools import (
     IteratorType,
-    MemoryHandlerType,
     ManagedMemory,
+    MemoryHandlerType,
     UnpackManagedMemory,
 )
-
 from pyccel.ast.mathext import math_constants
-
 from pyccel.ast.numpyext import (
-    NumpyFull,
-    NumpyArray,
-    NumpySum,
     DtypePrecisionToCastFunction,
+    NumpyAbs,
+    NumpyArray,
+    NumpyFloat,
+    NumpyFull,
+    NumpyImag,
+    NumpyMatmul,
+    NumpyReal,
+    NumpyReduction,
+    get_shape_of_multi_level_container,
 )
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
-from pyccel.ast.numpyext import NumpyAbs
-from pyccel.ast.numpyext import NumpyReduction, NumpyMatmul
-from pyccel.ast.numpyext import get_shape_of_multi_level_container
-
-from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
-from pyccel.ast.numpytypes import NumpyNDArrayType, numpy_precision_map
-
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelDiv, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod, PyccelNe
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
-
+from pyccel.ast.numpytypes import (
+    NumpyFloat32Type,
+    NumpyFloat64Type,
+    NumpyFloat128Type,
+    NumpyNDArrayType,
+    numpy_precision_map,
+)
+from pyccel.ast.operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelGt,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelNe,
+    PyccelOperator,
+    PyccelPow,
+    PyccelUnarySub,
+)
 from pyccel.ast.type_annotations import VariableTypeAnnotation
-
 from pyccel.ast.utilities import (
     expand_to_loops,
-    is_literal_integer,
     get_managed_memory_object,
+    is_literal_integer,
 )
-
-from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import Variable
-from pyccel.ast.variable import DottedName
-from pyccel.ast.variable import DottedVariable
-
+from pyccel.ast.variable import DottedName, DottedVariable, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import (
-    PYCCEL_RESTRICTION_TODO,
     INCOMPATIBLE_TYPEVAR_TO_FUNC,
-    PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_INTERNAL_ERROR,
-    ALLOCATABLE_IN_EXPRESSION,
+    PYCCEL_RESTRICTION_IS_ISNOT,
+    PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.parser.scope import Scope
 
 errors = Errors()
 
@@ -369,7 +401,6 @@ class CCodePrinter(CodePrinter):
         self._additional_code = ""
         self._additional_args = []
         self._temporary_args = []
-        self._current_module = None
         self._in_header = False
 
     def sort_imports(self, imports):
@@ -1165,7 +1196,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_ModuleHeader(self, expr):
         self.set_scope(expr.module.scope)
-        self._current_module = expr.module
         self._in_header = True
         name = expr.module.name
         if isinstance(name, AsName):
@@ -1188,10 +1218,19 @@ class CCodePrinter(CodePrinter):
             func_blocks.append("")
             for method in classDef.methods:
                 if method.is_semantic:
-                    func_blocks[-1] += f"{self.function_signature(method)};\n"
+                    sig = self.function_signature(method)
+                    func_blocks[-1] += f"{sig};\n"
+                    if method.cls_name is not None:
+                        fp_sig = sig.replace(
+                            f" {method.name}(", f" (*{method.cls_name})(", 1
+                        )
+                        classes += f"    {fp_sig};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    func_blocks[-1] += f"{self.function_signature(func)};\n"
+                    sig = self.function_signature(func)
+                    func_blocks[-1] += f"{sig};\n"
+                    fp_sig = sig.replace(f" {func.name}(", f" (*{func.cls_name})(", 1)
+                    classes += f"    {fp_sig};\n"
             classes += "};\n"
         func_blocks.append(
             "".join(
@@ -1226,22 +1265,31 @@ class CCodePrinter(CodePrinter):
         imports = self.sort_imports(imports)
         imports = "".join(self._print(i) for i in imports)
 
+        if expr.module.docstring:
+            docstring = self._print(expr.module.docstring)
+        else:
+            docstring = ""
+
         self._in_header = False
         self.exit_scope()
-        self._current_module = None
         body = "\n".join(
             info_block
             for info_block in (imports, global_variables, classes, funcs)
             if info_block
         )
-        return f"#ifndef {name.upper()}_H\n \
-                #define {name.upper()}_H\n\n \
-                {body}\n \
-                #endif // {name}_H\n"
+        return "\n".join(
+            (
+                f"#ifndef {name.upper()}_H",
+                f"#define {name.upper()}_H",
+                docstring,
+                body,
+                f"#endif // {name}_H\n",
+            )
+        )
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        self._current_module = expr
+
         body = "\n".join(self._print(i) for i in expr.body)
 
         global_variables = "".join([self._print(d) for d in expr.declarations])
@@ -1254,8 +1302,11 @@ class CCodePrinter(CodePrinter):
 
         code = "\n".join((imports, global_variables, body))
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+            code = f"{docstring}\n{code}"
+
         self.exit_scope()
-        self._current_module = None
         return code
 
     def _print_Break(self, expr):
@@ -2197,13 +2248,34 @@ class CCodePrinter(CodePrinter):
                             PyccelArrayShapeElement(base, i),
                             allow_negative_indexes,
                         )
-                    indices.append("{" + self._print(idx) + "}")
-                indices_code = ", ".join(indices)
+                    indices.append(self._print(idx))
                 base_code = self._print(ObjectAddress(base))
-                return f"cspan_slice({base_code}, {c_type}, {indices_code})"
+                if (
+                    # cspan_submd{N} exists only for N = 2, 3, 4,
+                    # where N is the rank of the array to be sliced
+                    expr.rank < 4
+                    and base.rank < 5
+                    and expr.rank < base.rank
+                    and all(
+                        isinstance(i, Slice)
+                        and i.start is None
+                        and i.stop is None
+                        and i.step is None
+                        for i in inds[expr.rank :]
+                    )
+                ):
+                    indices_code = ", ".join(indices[: -expr.rank])
+                    return (
+                        f"({c_type})cspan_submd{base.rank}({base_code}, {indices_code})"
+                    )
+                else:
+                    indices_code = ", ".join(f"{{{i}}}" for i in indices)
+                    return f"cspan_slice({base_code}, {c_type}, {indices_code})"
             else:
                 new_type = base.class_type.switch_rank(expr.rank, expr.order)
-                tmp_var = self.scope.get_temporary_variable(new_type, shape=expr.shape)
+                tmp_var = self.scope.get_temporary_variable(
+                    new_type, shape=expr.shape, memory_handling="alias"
+                )
                 assign = AliasAssign(tmp_var, expr)
                 code = self._print(assign)
                 self._additional_code += code
@@ -2247,7 +2319,13 @@ class CCodePrinter(CodePrinter):
 
         indices = ", ".join(self._print(i) for i in inds)
         if isinstance(base.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
-            return f"(*cspan_at({self._print(ObjectAddress(base))}, {indices}))"
+            if base.rank == 1 and base.is_contiguous:
+                self.add_import(c_imports["CSpan_extensions"])
+                return (
+                    f"(*contig_cspan_at({self._print(ObjectAddress(base))}, {indices}))"
+                )
+            else:
+                return f"(*cspan_at({self._print(ObjectAddress(base))}, {indices}))"
         elif isinstance(base.class_type, CStackArray):
             return f"{self._print(ObjectAddress(base))}[{indices}]"
         else:
@@ -3145,13 +3223,25 @@ class CCodePrinter(CodePrinter):
                 args.append(ObjectAddress(v))
 
         self._temporary_args = []
+
+        if func.cls_name:
+            self_arg = args[0]
+            if isinstance(self_arg, ObjectAddress):
+                self_arg = self_arg.obj
+            if self.is_c_pointer(self_arg):
+                name = f"{self._print(ObjectAddress(self_arg))}->{func.cls_name}"
+            else:
+                name = f"{self._print(self_arg)}.{func.cls_name}"
+        else:
+            name = func.name
+
         args = ", ".join(
             self._print(ai)
             for a in args
             for ai in self.scope.collect_all_tuple_elements(a)
         )
 
-        call_code = f"{func.name}({args})"
+        call_code = f"{name}({args})"
         if func.results.var is not Nil() and not isinstance(
             func.results.var.class_type, InhomogeneousTupleType
         ):
@@ -3734,20 +3824,22 @@ class CCodePrinter(CodePrinter):
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
+        ln = max(len(i) for i in txts) + 2
         if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
             "/*"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "*/\n"
+            + "\n"
         )
-        ln = len(top) - 4
-        bottom = "/*" + "_" * ln + "*/\n"
+        ln = len(top) - 2
+        bottom = " *" + "_" * ln + "*/\n"
 
-        txts = ["/*" + t + " " * (ln - len(t)) + "*/\n" for t in txts]
+        txts = [" * " + t + "\n" for t in txts]
 
         body = "".join(i for i in txts)
 
@@ -3832,8 +3924,6 @@ class CCodePrinter(CodePrinter):
     # =====================================
 
     def _print_Program(self, expr):
-        mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-        self._current_module = mod
         self.set_scope(expr.scope)
         body = self._print(expr.body)
         variables = self.scope.variables.values()
@@ -3848,10 +3938,7 @@ class CCodePrinter(CodePrinter):
         imports = "".join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self._current_module = None
-        return (
-            "{imports}" "int main()\n{{\n" "{decs}" "{body}" "return 0;\n" "}}"
-        ).format(imports=imports, decs=decs, body=body)
+        return f"{imports}int main()\n{{\n{decs}{body}return 0;\n}}"
 
     # ================== CLASSES ==================
 
@@ -3862,13 +3949,55 @@ class CCodePrinter(CodePrinter):
         return "".join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
-        methods = "".join(self._print(method) for method in expr.methods)
+        empty_scope = Scope(
+            name="tmp",
+            scope_type="class",
+            used_symbols=expr.scope.local_used_symbols.copy(),
+            original_symbols=expr.scope.python_names.copy(),
+        )
+
+        # Generate safe C names for function pointer members and store on cls_name
+        virtual_methods = []
+        for method in expr.methods:
+            if method.is_semantic:
+                python_name = expr.scope.get_python_name(method.name)
+                if python_name not in ("__init__", "__del__"):
+                    empty_scope.remove_symbol(python_name)
+                    method.cls_name = empty_scope.get_new_name(
+                        python_name, object_type="variable"
+                    )
+                    virtual_methods.append(method)
+        for interface in expr.interfaces:
+            for i, func in enumerate(interface.functions):
+                python_name = expr.scope.get_python_name(func.name)
+                empty_scope.remove_symbol(python_name)
+                func.cls_name = empty_scope.get_new_name(
+                    f"{python_name}_{i:0=4d}", object_type="variable"
+                )
+                virtual_methods.append(func)
+
+        # Print __init__ with injected function pointer assignments
+        init_method = expr.get_method("__init__")
+        init_printed = self._print(init_method)
+        if virtual_methods:
+            init_lines = init_printed.split("\n")
+            self_name = init_method.arguments[0].var.name
+            virtual_methods.sort(key=lambda m: m.cls_name)
+            fp_assignments = "    // Save virtual function addresses\n" + "".join(
+                f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
+            )
+            insert_pos = init_lines.index("{") + 1
+            init_lines.insert(insert_pos, fp_assignments)
+            init_printed = "\n".join(init_lines)
+
+        methods = init_printed + "".join(
+            self._print(method) for method in expr.methods if method is not init_method
+        )
         interfaces = "".join(
             self._print(function)
             for interface in expr.interfaces
             for function in interface.functions
         )
-
         return methods + interfaces
 
     # ================== Tuple methods =================
@@ -4168,8 +4297,6 @@ class CCodePrinter(CodePrinter):
             return "".join(code_lines)
 
         tab = " " * self._default_settings["tabwidth"]
-
-        code = [line.lstrip(" \t") for line in code]
 
         increase = [int(line.endswith("{\n")) for line in code]
         decrease = [int(any(map(line.startswith, "}\n"))) for line in code]

@@ -1,59 +1,78 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing utility functions which are used in the syntactic, semantic,
+and code-generation stages of Pyccel. These include functions for handling
+imports, checking whether an operation is compatible with the target language,
+and collecting code into loops. Most of these functions are used in multiple
+places in the code and are not specific to any one stage, so they are collected
+together in this module to avoid circular imports.
+"""
 
 import sys
-from itertools import chain
 from collections import namedtuple
+from itertools import chain
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.errors.errors import Errors, PyccelError
-
-from .core import (
-    AsName,
-    Import,
-    FunctionCall,
-    Allocate,
-    Duplicate,
-    Assign,
-    For,
-    CodeBlock,
-    Concatenate,
-    Module,
-    PyccelFunctionDef,
-    AliasAssign,
-)
+from pyccel.errors.errors import Errors
 
 from .builtins import (
-    builtin_functions_dict,
-    PythonRange,
     PythonList,
-    PythonTuple,
+    PythonRange,
     PythonSet,
+    PythonTuple,
 )
+from .c_concepts import ObjectAddress
 from .cmathext import cmath_mod
-from .datatypes import HomogeneousTupleType, InhomogeneousTupleType, PythonNativeInt
-from .datatypes import StringType
-from .internals import PyccelFunction, Slice, PyccelArrayShapeElement
+from .core import (
+    AliasAssign,
+    Allocate,
+    AsName,
+    Assign,
+    CodeBlock,
+    Concatenate,
+    Duplicate,
+    For,
+    FunctionCall,
+    Import,
+    Module,
+    PyccelFunctionDef,
+)
+from .datatypes import (
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PythonNativeInt,
+    StringType,
+)
+from .internals import PyccelArrayShapeElement, PyccelFunction, Slice
 from .itertoolsext import itertools_mod
-from .literals import LiteralInteger, LiteralEllipsis, Nil
-from .low_level_tools import UnpackManagedMemory, ManagedMemory
+from .literals import LiteralEllipsis, LiteralInteger, Nil
+from .low_level_tools import ManagedMemory, UnpackManagedMemory
 from .mathext import math_mod
-from .numpyext import NumpyEmpty, NumpyArray, numpy_mod, NumpyTranspose, NumpyLinspace
-from .numpyext import NumpyCross
-from .numpyext import get_shape_of_multi_level_container
+from .numpyext import (
+    NumpyArray,
+    NumpyCross,
+    NumpyEmpty,
+    NumpyLinspace,
+    NumpyTranspose,
+    get_shape_of_multi_level_container,
+    numpy_mod,
+)
 from .numpytypes import NumpyNDArrayType
-from .operators import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .operators import PyccelUnarySub
+from .operators import (
+    PyccelAdd,
+    PyccelArithmeticOperator,
+    PyccelIs,
+    PyccelMul,
+    PyccelUnarySub,
+)
 from .scipyext import scipy_mod
 from .sysext import sys_mod
 from .typingext import typing_mod
-from .variable import Variable, IndexedElement
-
-from .c_concepts import ObjectAddress
+from .variable import IndexedElement, Variable
 
 errors = Errors()
 

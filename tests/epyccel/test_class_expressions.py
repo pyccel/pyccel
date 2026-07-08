@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-import pytest
 from numpy.random import randint
+
 from pyccel import epyccel
 
 

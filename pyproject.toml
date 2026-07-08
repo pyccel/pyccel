@@ -23,6 +23,7 @@ dependencies = [
     "textx >= 2.2",
     "packaging",
     "immutabledict >= 4.0.0",
+    "pybind11",
     "ninja",
     "meson",
 ]
@@ -41,10 +42,6 @@ test = [
 
 [project.scripts]
 pyccel = "pyccel.commands.console:pyccel_command"
-pyccel-make = "pyccel.commands.pyccel_make:pyccel_make_command"
-pyccel-wrap = "pyccel.commands.pyccel_wrap:pyccel_wrap_command"
-pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
-pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
@@ -88,6 +85,8 @@ sdist.include = [
   "pyccel/parser/grammar/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
+  "pyccel/stdlib/**/*.hpp",
+  "pyccel/stdlib/**/*.cpp",
   "pyccel/stdlib/**/*.f90",
   "pyccel/stdlib/**/*.F90",
   "pyccel/stdlib/**/*.inc",

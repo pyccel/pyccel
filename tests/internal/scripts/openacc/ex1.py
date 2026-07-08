@@ -1,8 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
-from pyccel.stdlib.internal.openacc import acc_get_device_type
-from pyccel.stdlib.internal.openacc import acc_get_num_devices
+from pyccel.stdlib.internal.openacc import acc_get_device_type, acc_get_num_devices
 
 if __name__ == "__main__":
     dev_kind = acc_get_device_type()

@@ -14,9 +14,11 @@ jobs:
   update_status:
     name: Update PR status
     runs-on: ubuntu-latest
+    # Possible conclusions : ~action_required~, cancelled, failure, ~neutral~, skipped, stale, success, timed_out, startup_failure, null
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure' }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Find PR number
         id: find_pr
         run: |
@@ -46,7 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Convert PR to draft
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'FAILURE'
+        if: steps.find_pr.outputs.pr_number != '' && steps.status_check.outputs.conclusion == 'FAILURE'
         run: |
           gh pr ready ${{ steps.find_pr.outputs.pr_number }} --undo
           gh pr edit ${{ steps.find_pr.outputs.pr_number }} --remove-label needs_initial_review
@@ -58,12 +60,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Update label
         id: update_label
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'SUCCESS'
+        if: steps.find_pr.outputs.pr_number != '' && steps.status_check.outputs.conclusion == 'SUCCESS'
         uses: ./.github/actions/update_review_label
         with:
           pr_number: ${{ steps.find_pr.outputs.pr_number }}
       - name: Post comment
-        if: steps.find_pr.outputs.pr_number != '' && github.status_check.outputs.conclusion == 'SUCCESS'
+        if: steps.find_pr.outputs.pr_number != '' && steps.status_check.outputs.conclusion == 'SUCCESS'
         run: |
           if [ -n "${{ steps.update_label.outputs.requesters }}" ]; then
             MESSAGE=$(sed "s/{reviewers}/${{ steps.update_label.outputs.requesters }}/g; s/{author}/${{ steps.update_label.outputs.author }}/g" \

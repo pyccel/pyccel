@@ -1,127 +1,169 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
 import ast
+import re
 import string
 import sys
-import re
 from collections import OrderedDict
 from itertools import chain
 
 import numpy as np
 
-from pyccel.ast.basic import TypedAstNode
-
-from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCModule, BindCClassDef
-from pyccel.ast.bind_c import BindCVariable
-
-from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
-from pyccel.ast.builtins import PythonBool, PythonList, PythonSet, VariableIterator
-
+from pyccel.ast.bind_c import (
+    BindCClassDef,
+    BindCFunctionDef,
+    BindCModule,
+    BindCPointer,
+    BindCVariable,
+)
 from pyccel.ast.builtin_methods.dict_methods import (
     DictItems,
     DictKeys,
-    DictValues,
     DictPopitem,
+    DictValues,
 )
-
 from pyccel.ast.builtin_methods.list_methods import ListPop
-
 from pyccel.ast.builtin_methods.set_methods import SetUnion
-
-from pyccel.ast.core import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import SeparatorComment, Comment
-from pyccel.ast.core import ConstructorCall, ClassDef
-from pyccel.ast.core import FunctionCallArgument, Interface
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Module, For, If, IfSection
-from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
-from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
-from pyccel.ast.core import FunctionCall, PyccelFunctionDef
-
-from pyccel.ast.datatypes import (
-    PrimitiveBooleanType,
-    PrimitiveIntegerType,
-    PrimitiveFloatingPointType,
-    PrimitiveComplexType,
+from pyccel.ast.builtins import (
+    DtypePrecisionToCastFunction,
+    PythonBool,
+    PythonInt,
+    PythonList,
+    PythonPrint,
+    PythonRange,
+    PythonSet,
+    PythonTuple,
+    PythonType,
+    VariableIterator,
 )
-from pyccel.ast.datatypes import PrimitiveCharacterType
+from pyccel.ast.core import (
+    AliasAssign,
+    AsName,
+    Assign,
+    CodeBlock,
+    ConstructorCall,
+    Deallocate,
+    Declare,
+    For,
+    FunctionAddress,
+    FunctionCall,
+    FunctionCallArgument,
+    FunctionDef,
+    FunctionDefArgument,
+    FunctionDefResult,
+    If,
+    IfSection,
+    Import,
+    Module,
+    PyccelFunctionDef,
+    SeparatorComment,
+)
 from pyccel.ast.datatypes import (
-    SymbolicType,
-    StringType,
+    CustomDataType,
+    DictType,
+    FinalType,
     FixedSizeNumericType,
+    FixedSizeType,
     HomogeneousContainerType,
-)
-from pyccel.ast.datatypes import (
-    HomogeneousTupleType,
     HomogeneousListType,
     HomogeneousSetType,
-    DictType,
-)
-from pyccel.ast.datatypes import (
-    PythonNativeInt,
+    HomogeneousTupleType,
+    InhomogeneousTupleType,
+    PrimitiveBooleanType,
+    PrimitiveCharacterType,
+    PrimitiveComplexType,
+    PrimitiveFloatingPointType,
+    PrimitiveIntegerType,
+    PyccelType,
     PythonNativeBool,
-    FixedSizeType,
-    FinalType,
+    PythonNativeInt,
+    StringType,
+    SymbolicType,
+    TupleType,
+    pyccel_type_to_original_type,
 )
-from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType, TupleType
-from pyccel.ast.datatypes import pyccel_type_to_original_type, PyccelType
-
 from pyccel.ast.fortran_concepts import KindSpecification
-
-from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
-
+from pyccel.ast.internals import PyccelArrayShapeElement, Slice
 from pyccel.ast.itertoolsext import Product
-
-from pyccel.ast.literals import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
-from pyccel.ast.literals import LiteralTrue, LiteralFalse, LiteralString
-from pyccel.ast.literals import Nil, convert_to_literal
-
-from pyccel.ast.low_level_tools import MacroDefinition, IteratorType, PairType
-from pyccel.ast.low_level_tools import MacroUndef
-
-from pyccel.ast.mathext import math_constants
-
-from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
-from pyccel.ast.numpyext import NumpyFloat, NumpyBool
-from pyccel.ast.numpyext import NumpyReal, NumpyImag
-from pyccel.ast.numpyext import NumpyRand, NumpyAbs
-from pyccel.ast.numpyext import NumpyNewArray, NumpyArray
-from pyccel.ast.numpyext import NumpyNonZero
-from pyccel.ast.numpyext import NumpySign
-from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
-from pyccel.ast.numpyext import get_shape_of_multi_level_container
-
-from pyccel.ast.numpytypes import (
-    NumpyNDArrayType,
-    NumpyInt64Type,
-    NumpyFloat64Type,
-    NumpyComplex128Type,
+from pyccel.ast.literals import (
+    Literal,
+    LiteralEllipsis,
+    LiteralFalse,
+    LiteralFloat,
+    LiteralInteger,
+    LiteralString,
+    LiteralTrue,
+    Nil,
+    convert_to_literal,
 )
-
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd, PyccelEq
-from pyccel.ast.operators import PyccelDiv
-from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
-
+from pyccel.ast.low_level_tools import (
+    IteratorType,
+    MacroDefinition,
+    MacroUndef,
+    PairType,
+)
+from pyccel.ast.mathext import math_constants
+from pyccel.ast.numpyext import (
+    NumpyAbs,
+    NumpyArray,
+    NumpyBool,
+    NumpyEmpty,
+    NumpyFloat,
+    NumpyImag,
+    NumpyInt32,
+    NumpyIsFinite,
+    NumpyIsNan,
+    NumpyNewArray,
+    NumpyNonZero,
+    NumpyRand,
+    NumpyRandint,
+    NumpyReal,
+    NumpySign,
+    get_shape_of_multi_level_container,
+)
+from pyccel.ast.numpytypes import (
+    NumpyComplex128Type,
+    NumpyFloat64Type,
+    NumpyInt64Type,
+    NumpyNDArrayType,
+)
+from pyccel.ast.operators import (
+    IfTernaryOperator,
+    PyccelAdd,
+    PyccelAnd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelEq,
+    PyccelGt,
+    PyccelLt,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelNot,
+    PyccelUnarySub,
+)
 from pyccel.ast.utilities import (
     builtin_import_registry as pyccel_builtin_import_registry,
 )
-from pyccel.ast.utilities import expand_to_loops
-
-from pyccel.ast.variable import Variable, IndexedElement, DottedName
-
-from pyccel.parser.scope import Scope
-
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.ast.utilities import (
+    expand_to_loops,
+)
+from pyccel.ast.variable import DottedName, IndexedElement, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import (
+    ALLOCATABLE_IN_EXPRESSION,
+    PYCCEL_RESTRICTION_IS_ISNOT,
+    PYCCEL_RESTRICTION_TODO,
+)
+from pyccel.parser.scope import Scope
 
 # TODO: add examples
 
@@ -894,7 +936,13 @@ class FCodePrinter(CodePrinter):
         imports = self.print_constant_imports() + imports
         implicit_none = "" if expr.is_external else "implicit none\n"
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+        else:
+            docstring = ""
+
         parts = [
+            docstring,
             f"module {name}\n",
             imports,
             implicit_none,
@@ -1296,31 +1344,33 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        return "!" + comments + "\n"
+        return "! " + comments + "\n"
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
-        if ln < max(20, header_size + 2):
+        ln = max(len(i) for i in txts) + 2
+        if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
-            "!"
+            "!_"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "!"
+            + "_!"
         )
-        ln = len(top) - 2
-        bottom = "!" + "_" * ln + "!"
+        ln = len(top) - 3
+        bottom = "!" + "_" * (ln + 1) + "!"
 
-        txts = ["!" + txt + " " * (ln - len(txt)) + "!" for txt in txts]
+        txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
 
         body = "\n".join(i for i in txts)
 
-        return ("{0}\n" "{1}\n" "{2}\n").format(top, body, bottom)
+        return f"{top}\n{body}\n{bottom}\n"
 
     def _print_EmptyNode(self, expr):
         return ""
@@ -2130,6 +2180,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
             errors.report(ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity="fatal")
+
         if expr.low is None:
             randfloat = self._print(PyccelMul.make_simplified(expr.high, NumpyRand()))
         else:
@@ -2143,7 +2194,7 @@ class FCodePrinter(CodePrinter):
             )
 
         prec_code = self.print_kind(expr)
-        return "floor({}, kind={})".format(randfloat, prec_code)
+        return f"floor({randfloat}, kind={prec_code})"
 
     def _print_NumpyFull(self, expr):
 
@@ -2467,6 +2518,16 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyRand):
             return f"call random_number({lhs_code})\n"
+
+        if isinstance(rhs, NumpyRandint) and rhs.rank > 0:
+            self.add_import(Import("pyc_math_f90", Module("pyc_math_f90", (), ())))
+            int_kind = self.print_kind(rhs)
+            if rhs.low is None:
+                low_code = f"0_{int_kind}"
+            else:
+                low_code = self._print(rhs.low)
+            high_code = self._print(rhs.high)
+            return f"call pyc_randint({lhs_code}, {low_code}, {high_code})\n"
 
         if isinstance(rhs, NumpyEmpty):
             return ""

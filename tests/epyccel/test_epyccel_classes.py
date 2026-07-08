@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-import pytest
-import numpy as np
 import modules.expose_classes as mod
+import numpy as np
+import pytest
+
 from pyccel import epyccel
 
 RTOL = 2e-14

@@ -1,26 +1,33 @@
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing objects from the cmath module understood by pyccel"""
 
 import cmath
 
-from pyccel.ast.builtins import PythonReal, PythonImag
-from pyccel.ast.core import PyccelFunctionDef, Module
+from pyccel.ast.builtins import PythonImag, PythonReal
+from pyccel.ast.core import Module, PyccelFunctionDef
 from pyccel.ast.datatypes import (
+    HomogeneousTupleType,
+    PrimitiveComplexType,
     PythonNativeBool,
-    PythonNativeFloat,
     PythonNativeComplex,
+    PythonNativeFloat,
 )
-from pyccel.ast.datatypes import PrimitiveComplexType, HomogeneousTupleType
 from pyccel.ast.internals import PyccelFunction
 from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable import Constant
 
-from .mathext import math_constants, MathFunctionBase
-from .mathext import MathIsfinite, MathIsinf, MathIsnan
+from .mathext import (
+    MathFunctionBase,
+    MathIsfinite,
+    MathIsinf,
+    MathIsnan,
+    math_constants,
+)
 
 __all__ = (
     "CmathAcos",

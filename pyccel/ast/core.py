@@ -1,44 +1,52 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the core Pyccel AST nodes which are used in the syntactic
+and semantic stages of Pyccel, and are relevant to all target languages. These
+include nodes representing variable assignment, code blocks, and memory
+allocation. All of these nodes inherit from `PyccelAstNode` either directly or
+through the subclasses `TypedAstNode` and `ScopedAstNode`, all of which are
+defined in `pyccel.ast.core.basic`.
+"""
+
 from itertools import chain
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
-
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
-
-from .bitwise_operators import PyccelBitOr, PyccelBitAnd, PyccelLShift, PyccelRShift
-
+from .basic import PyccelAstNode, ScopedAstNode, TypedAstNode, iterable
+from .bitwise_operators import PyccelBitAnd, PyccelBitOr, PyccelLShift, PyccelRShift
 from .builtins import PythonBool, PythonTuple
-
 from .datatypes import (
-    PyccelType,
     CustomDataType,
+    DictType,
     FinalType,
-    TupleType,
-    PythonNativeBool,
+    HomogeneousListType,
+    HomogeneousSetType,
     InhomogeneousTupleType,
+    PyccelType,
+    PythonNativeBool,
     SymbolicType,
+    TupleType,
 )
-
-from .internals import PyccelSymbol, PyccelFunction, Iterable
-
-from .literals import Nil, LiteralFalse, LiteralString
-from .literals import NilArgument, LiteralTrue
-
-from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
-from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
-from .operators import PyccelFloorDiv
-
-from .variable import DottedName, IndexedElement
-from .variable import Variable, AnnotatedPyccelSymbol
-from .datatypes import HomogeneousSetType, HomogeneousListType, DictType
+from .internals import Iterable, PyccelFunction, PyccelSymbol
+from .literals import LiteralFalse, LiteralString, LiteralTrue, Nil, NilArgument
+from .operators import (
+    PyccelAdd,
+    PyccelAssociativeParenthesis,
+    PyccelDiv,
+    PyccelFloorDiv,
+    PyccelIs,
+    PyccelMinus,
+    PyccelMod,
+    PyccelMul,
+    PyccelOperator,
+)
+from .variable import AnnotatedPyccelSymbol, DottedName, IndexedElement, Variable
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -937,6 +945,13 @@ class Module(ScopedAstNode):
     funcs : list
         A list of FunctionDef instances.
 
+    docstring : CodeBlock | CommentBlock, default=None
+        The doc string of the function. This is a CodeBlock containing
+        a CommentBlock or the CommentBlock itself.
+        Note that in the subclass PyModule this should always be a
+        CommentBlock as comments preceding module docstrings (e.g.
+        licence information) are not used by the Python interface.
+
     init_func : FunctionDef, default: None
         The function which initialises the module (expressions in the
         python module which are executed on import).
@@ -994,6 +1009,7 @@ class Module(ScopedAstNode):
         "_name",
         "_variables",
         "_funcs",
+        "_docstring",
         "_interfaces",
         "_classes",
         "_imports",
@@ -1007,6 +1023,7 @@ class Module(ScopedAstNode):
     _attribute_nodes = (
         "_variables",
         "_funcs",
+        "_docstring",
         "_interfaces",
         "_classes",
         "_imports",
@@ -1021,6 +1038,8 @@ class Module(ScopedAstNode):
         name,
         variables,
         funcs,
+        *,
+        docstring=None,
         init_func=None,
         free_func=None,
         program=None,
@@ -1085,6 +1104,7 @@ class Module(ScopedAstNode):
         self._variables = variables
         self._variable_inits = [None] * len(variables)
         self._funcs = funcs
+        self._docstring = docstring
         self._init_func = init_func
         self._free_func = free_func
         self._program = program
@@ -1117,7 +1137,7 @@ class Module(ScopedAstNode):
                 {v: t[0] for v, t in import_mods.items() if t}
             )
 
-            if init_func:
+            if init_func and pyccel_stage != "cwrapper":
                 init_if = init_func.body.body[0]
                 # The init function should always contain an If block unless it is part of a wrapper
                 if isinstance(init_if, If):
@@ -1137,6 +1157,15 @@ class Module(ScopedAstNode):
     def variables(self):
         """Module global variables"""
         return self._variables
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the module.
+
+        The docstring of the module.
+        """
+        return self._docstring
 
     @property
     def init_func(self):

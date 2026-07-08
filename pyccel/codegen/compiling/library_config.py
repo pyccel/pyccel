@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 This module contains tools useful for handling the compilation of stdlib imports.
 """
 
 import filecmp
 import importlib.resources
-from itertools import chain
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from itertools import chain
+from pathlib import Path
 
 from filelock import FileLock
 
-from pyccel.ast.numpy_wrapper import get_numpy_max_acceptable_version_file
-from pyccel.errors.errors import Errors
-
 import pyccel.extensions as ext_folder
 import pyccel.stdlib as stdlib_folder
+from pyccel.ast.numpy_wrapper import get_numpy_max_acceptable_version_file
+from pyccel.errors.errors import Errors
 
 from .basic import CompileObj
 
@@ -728,6 +728,7 @@ recognised_libs = {
     # Internal libs
     "pyc_math_f90": StdlibInstaller("pyc_math_f90.F90", "math", libs=("m",)),
     "pyc_math_c": StdlibInstaller("pyc_math_c.c", "math", dependencies=("stc",)),
+    "pyc_math_cpp": StdlibInstaller("pyc_math_cpp.cpp", "math"),
     "pyc_tools_f90": StdlibInstaller("pyc_tools_f90.f90", "tools"),
     "cwrapper": CWrapperInstaller(
         "cwrapper.c", "cwrapper", extra_compilation_tools=("python",)

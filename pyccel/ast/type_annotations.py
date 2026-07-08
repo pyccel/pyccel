@@ -1,30 +1,29 @@
 # coding: utf-8
 
-# ------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-# ------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """Module containing all classes useful for type annotation."""
 
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
-
 from .bitwise_operators import PyccelBitOr
-
 from .core import FunctionDefArgument, FunctionDefResult
-
 from .datatypes import (
+    GenericType,
+    PyccelType,
     PythonNativeBool,
-    PythonNativeInt,
-    PythonNativeFloat,
     PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
 )
-from .datatypes import VoidType, GenericType, StringType, PyccelType
-
 from .literals import LiteralString
-
-from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
+from .variable import AnnotatedPyccelSymbol, DottedName, IndexedElement
 
 __all__ = (
     "FunctionTypeAnnotation",

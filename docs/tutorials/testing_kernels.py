@@ -1,7 +1,7 @@
 """A test where the function integrated over a grid is varied. The integration is translated without rewriting the original function."""
 
 # pylint: disable=wrong-import-order, wrong-import-position, unnecessary-lambda-assignment
-from numpy import linspace, exp
+from numpy import exp, linspace
 
 # MIDPOINT_RULE
 

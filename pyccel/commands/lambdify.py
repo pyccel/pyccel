@@ -7,8 +7,8 @@ import sympy as sp
 from packaging import version
 
 from pyccel.commands.epyccel import epyccel
-from pyccel.utilities.strings import random_string
 from pyccel.errors.errors import PyccelError
+from pyccel.utilities.strings import random_string
 
 if version.parse(sp.__version__) >= version.parse("1.8"):
     from sympy.printing.numpy import NumPyPrinter
