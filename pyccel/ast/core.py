@@ -945,6 +945,13 @@ class Module(ScopedAstNode):
     funcs : list
         A list of FunctionDef instances.
 
+    docstring : CodeBlock | CommentBlock, default=None
+        The doc string of the function. This is a CodeBlock containing
+        a CommentBlock or the CommentBlock itself.
+        Note that in the subclass PyModule this should always be a
+        CommentBlock as comments preceding module docstrings (e.g.
+        licence information) are not used by the Python interface.
+
     init_func : FunctionDef, default: None
         The function which initialises the module (expressions in the
         python module which are executed on import).
@@ -1002,6 +1009,7 @@ class Module(ScopedAstNode):
         "_name",
         "_variables",
         "_funcs",
+        "_docstring",
         "_interfaces",
         "_classes",
         "_imports",
@@ -1015,6 +1023,7 @@ class Module(ScopedAstNode):
     _attribute_nodes = (
         "_variables",
         "_funcs",
+        "_docstring",
         "_interfaces",
         "_classes",
         "_imports",
@@ -1029,6 +1038,8 @@ class Module(ScopedAstNode):
         name,
         variables,
         funcs,
+        *,
+        docstring=None,
         init_func=None,
         free_func=None,
         program=None,
@@ -1093,6 +1104,7 @@ class Module(ScopedAstNode):
         self._variables = variables
         self._variable_inits = [None] * len(variables)
         self._funcs = funcs
+        self._docstring = docstring
         self._init_func = init_func
         self._free_func = free_func
         self._program = program
@@ -1145,6 +1157,15 @@ class Module(ScopedAstNode):
     def variables(self):
         """Module global variables"""
         return self._variables
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the module.
+
+        The docstring of the module.
+        """
+        return self._docstring
 
     @property
     def init_func(self):

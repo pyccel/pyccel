@@ -250,6 +250,7 @@ class FortranToCWrapper(Wrapper):
             name,
             variables,
             funcs,
+            docstring=expr.docstring,
             variable_wrappers=variable_getters,
             init_func=init_func,
             free_func=free_func,
