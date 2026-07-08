@@ -5,8 +5,13 @@ import numpy as np
 import pytest
 
 from pyccel import epyccel
+from conftest import epyccel_module_with_fallback
 from modules import lists
 
+
+@pytest.fixture(scope="module")
+def epyc_lists_mod(language):
+    return epyccel_module_with_fallback(lists, language)
 
 
 @pytest.fixture(
@@ -33,24 +38,24 @@ def limited_language(request):
     return request.param
 
 
-def test_pop_last_element(language):
-    epyc_last_element = epyccel(lists.pop_last_element, language=language)
+def test_pop_last_element(epyc_lists_mod):
+    epyc_last_element = epyc_lists_mod.pop_last_element
     pyccel_result = epyc_last_element()
     python_result = lists.pop_last_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_list_bool(language):
-    epyc_last_element = epyccel(lists.pop_list_bool, language=language)
+def test_pop_list_bool(epyc_lists_mod):
+    epyc_last_element = epyc_lists_mod.pop_list_bool
     pyccel_result = epyc_last_element()
     python_result = lists.pop_list_bool()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_list_float(language):
-    epyc_last_element = epyccel(lists.pop_list_float, language=language)
+def test_pop_list_float(epyc_lists_mod):
+    epyc_last_element = epyc_lists_mod.pop_list_float
     pyccel_result = epyc_last_element()
     python_result = lists.pop_list_float()
     assert isinstance(python_result, type(pyccel_result))
@@ -144,53 +149,53 @@ def test_pop_list_of_ndarrays(limited_language):
     assert np.array_equal(python_result, pyccel_result)
 
 
-def test_pop_specific_index(language):
-    epyc_specific_index = epyccel(lists.pop_specific_index, language=language)
+def test_pop_specific_index(epyc_lists_mod):
+    epyc_specific_index = epyc_lists_mod.pop_specific_index
     python_result = lists.pop_specific_index()
     pyccel_result = epyc_specific_index()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_negative_index(language):
-    epyc_negative_index = epyccel(lists.pop_negative_index, language=language)
+def test_pop_negative_index(epyc_lists_mod):
+    epyc_negative_index = epyc_lists_mod.pop_negative_index
     python_result = lists.pop_negative_index()
     pyccel_result = epyc_negative_index()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_2(language):
-    pop_2_epyc = epyccel(lists.pop_, language=language)2
+def test_pop_2(epyc_lists_mod):
+    pop_2_epyc = epyc_lists_mod.pop_2
     python_result = lists.pop_2()
     pyccel_result = pop_2_epyc()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_expression(language):
-    epyc_last_element = epyccel(lists.pop_expression, language=language)
+def test_pop_expression(epyc_lists_mod):
+    epyc_last_element = epyc_lists_mod.pop_expression
     pyccel_result = epyc_last_element()
     python_result = lists.pop_expression()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_as_arg(language):
-    epyc_as_arg = epyccel(lists.pop_as_arg, language=language)
+def test_pop_as_arg(epyc_lists_mod):
+    epyc_as_arg = epyc_lists_mod.pop_as_arg
     pyccel_result = epyc_as_arg()
     python_result = lists.pop_as_arg()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_append_basic(language):
-    epyc_f = epyccel(lists.append_basic, language=language)
+def test_append_basic(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_basic
     assert lists.append_basic() == epyc_f()
 
 
-def test_append_multiple(language):
-    epyc_f = epyccel(lists.append_multiple, language=language)
+def test_append_multiple(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_multiple
     assert lists.append_multiple() == epyc_f()
 
 
@@ -204,8 +209,8 @@ def test_append_list(stc_language):
     assert f() == epyc_f()
 
 
-def test_append_range(language):
-    epyc_f = epyccel(lists.append_range, language=language)
+def test_append_range(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_range
     assert lists.append_range() == epyc_f()
 
 
@@ -220,18 +225,18 @@ def test_append_range_list(limited_language):
     assert f() == epyc_f()
 
 
-def test_append_bool(language):
-    epyc_f = epyccel(lists.append_bool, language=language)
+def test_append_bool(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_bool
     assert lists.append_bool() == epyc_f()
 
 
-def test_append_float(language):
-    epyc_f = epyccel(lists.append_float, language=language)
+def test_append_float(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_float
     assert lists.append_float() == epyc_f()
 
 
-def test_append_complex(language):
-    epyc_f = epyccel(lists.append_complex, language=language)
+def test_append_complex(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.append_complex
     assert lists.append_complex() == epyc_f()
 
 
@@ -276,18 +281,18 @@ def test_insert_basic(limited_language):
     assert f() == epyc_f()
 
 
-def test_insert_booleans(language):
-    epyc_f = epyccel(lists.insert_booleans, language=language)
+def test_insert_booleans(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.insert_booleans
     assert lists.insert_booleans() == epyc_f()
 
 
-def test_insert_complex(language):
-    epyc_f = epyccel(lists.insert_complex, language=language)
+def test_insert_complex(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.insert_complex
     assert lists.insert_complex() == epyc_f()
 
 
-def test_insert_float(language):
-    epyc_f = epyccel(lists.insert_float, language=language)
+def test_insert_float(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.insert_float
     assert lists.insert_float() == epyc_f()
 
 
@@ -312,8 +317,8 @@ def test_insert_ndarrays(limited_language):
     assert f() == epyc_f()
 
 
-def test_insert_multiple(language):
-    epyc_f = epyccel(lists.insert_multiple, language=language)
+def test_insert_multiple(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.insert_multiple
     assert lists.insert_multiple() == epyc_f()
 
 
@@ -327,8 +332,8 @@ def test_insert_list(limited_language):
     assert f() == epyc_f()
 
 
-def test_insert_range(language):
-    epyc_f = epyccel(lists.insert_range, language=language)
+def test_insert_range(epyc_lists_mod):
+    epyc_f = epyc_lists_mod.insert_range
     assert lists.insert_range() == epyc_f()
 
 
@@ -352,17 +357,17 @@ def test_insert_user_defined_objects(limited_language):
     assert python_list == accelerated_list
 
 
-def test_clear_1(language):
+def test_clear_1(epyc_lists_mod):
 
-    epyc_clear_1 = epyccel(lists.clear_, language=language)1
+    epyc_clear_1 = epyc_lists_mod.clear_1
     pyccel_result = epyc_clear_1()
     python_result = lists.clear_1()
     assert python_result == pyccel_result
 
 
-def test_clear_2(language):
+def test_clear_2(epyc_lists_mod):
 
-    epyc_clear_2 = epyccel(lists.clear_, language=language)2
+    epyc_clear_2 = epyc_lists_mod.clear_2
     pyccel_result = epyc_clear_2()
     python_result = lists.clear_2()
     assert python_result == pyccel_result
@@ -776,24 +781,24 @@ def test_homogenous_list_unknown_size_copy(limited_language):
     assert python_out == pyccel_out
 
 
-def test_list_contains(language):
-    epyc_list_contains = epyccel(lists.list_contains, language=language)
+def test_list_contains(epyc_lists_mod):
+    epyc_list_contains = epyc_lists_mod.list_contains
     pyccel_result = epyc_list_contains()
     python_result = lists.list_contains()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_list_ptr(language):
-    epyc_list_ptr = epyccel(lists.list_ptr, language=language)
+def test_list_ptr(epyc_lists_mod):
+    epyc_list_ptr = epyc_lists_mod.list_ptr
     pyccel_result = epyc_list_ptr()
     python_result = lists.list_ptr()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_list_return(language):
-    epyccel_func = epyccel(lists.list_return, language=language)
+def test_list_return(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_return
     pyccel_result = epyccel_func()
     python_result = lists.list_return()
     assert python_result == pyccel_result
@@ -801,16 +806,16 @@ def test_list_return(language):
     assert isinstance(python_result.pop(), type(pyccel_result.pop()))
 
 
-def test_list_min_max(language):
-    epyccel_func = epyccel(lists.list_min_max, language=language)
+def test_list_min_max(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_min_max
     pyccel_result = epyccel_func()
     python_result = lists.list_min_max()
     assert python_result == pyccel_result
     assert isinstance(python_result, type(pyccel_result))
 
 
-def test_list_reverse(language):
-    epyccel_func = epyccel(lists.list_reverse, language=language)
+def test_list_reverse(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_reverse
     pyccel_result = epyccel_func()
     python_result = lists.list_reverse()
     assert python_result == pyccel_result
@@ -827,8 +832,8 @@ def test_list_str(stc_language):
     assert python_result == pyccel_result
 
 
-def test_list_const_arg(language):
-    epyccel_func = epyccel(lists.list_const_arg, language=language)
+def test_list_const_arg(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_const_arg
     int_arg = [1, 2, 3, 4, 5, 6, 7]
     float_arg = [1.5, 2.5, 3.5, 4.5, 6.7]
     complex_arg = [1 + 0j, 4j, 2.5 + 2j]
@@ -853,8 +858,8 @@ def test_list_arg(stc_language):
     assert arg_pyc == arg_pyt
 
 
-def test_list_equality(language):
-    epyccel_func = epyccel(lists.list_equality, language=language)
+def test_list_equality(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_equality
     arg1 = [1, 2, 3, 4, 5]
     arg2 = [4, 5, 6, 7, 8]
     arg3 = [1, 2, 3]
@@ -887,15 +892,15 @@ def test_list_equality_non_matching_types(limited_language):
     assert list_equality(arg_int3, arg_float1) == epyccel_func(arg_int3, arg_float1)
 
 
-def test_list_duplicate(language):
-    epyccel_func = epyccel(lists.list_duplicate, language=language)
+def test_list_duplicate(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_duplicate
 
     assert lists.list_duplicate(5) == epyccel_func(5)
     assert lists.list_duplicate(15) == epyccel_func(15)
 
 
-def test_list_assign_slices(language):
-    epyccel_func = epyccel(lists.list_assign_slices, language=language)
+def test_list_assign_slices(epyc_lists_mod):
+    epyccel_func = epyc_lists_mod.list_assign_slices
 
     arg_int1 = [1, 2, 3, 4, 5]
     arg_int2 = [29, 23, 19, 17, 13, 11, 7]
