@@ -3,10 +3,11 @@
 Functions used to test list support, block-translated as a single module
 via the `lists_mod` fixture in test_epyccel_lists.py.
 """
+
 from typing import Final, TypeVar
 
-
 T = TypeVar("T", int, float, complex)
+
 
 def pop_last_element():
     a = [1, 3, 45]
