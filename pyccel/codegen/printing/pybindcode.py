@@ -75,12 +75,12 @@ class PyBindCodePrinter(CppCodePrinter):
 
         mod = expr.current_user_node
 
-        docstring = ''
+        docstring = ""
         if mod.docstring:
             docstring_code = self._print(
                 LiteralString("\n".join(mod.docstring.comments))
             )
-            docstring = f'{mod_code}.doc() = {docstring_code};'
+            docstring = f"{mod_code}.doc() = {docstring_code};"
 
         parts = [
             f"PYBIND11_MODULE({expr.name}, {mod_code})\n",
