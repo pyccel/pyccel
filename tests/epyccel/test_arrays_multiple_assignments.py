@@ -13,25 +13,23 @@ from pyccel.errors.messages import (
     STACK_ARRAY_UNKNOWN_SHAPE,
     TARGET_ALREADY_IN_USE,
 )
+from modules import arrays_multiple_assignments
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_arrays_multiple_assignments_mod(language):
+    return epyccel_module_with_fallback(arrays_multiple_assignments, language)
+
+
 
 
 # ==============================================================================
-def test_no_reallocation(language):
-
-    @stack_array("y")
-    def f():
-        import numpy as np
-
-        x = np.zeros((2, 5), dtype=float)
-        x = np.ones((2, 5), dtype=float)
-
-        y = np.zeros((2, 2, 1), dtype=int)
-        y = np.ones((2, 2, 1), dtype=int)
-
-        return x.sum() + y.sum()
+def test_no_reallocation(epyc_arrays_multiple_assignments_mod):
+    f = arrays_multiple_assignments.no_reallocation
 
     # TODO: check that we don't get any Pyccel warnings
-    g = epyccel(f, language=language)
+    g = epyc_arrays_multiple_assignments_mod.no_reallocation
 
     # Check result of pyccelized function
     assert f() == g()
@@ -50,7 +48,6 @@ def test_reallocation_heap(language):
     # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # TODO: check if we get the correct Pyccel warning
     g = epyccel(f, language=language)
 
     # Check result of pyccelized function
@@ -108,7 +105,6 @@ def test_creation_in_loop_heap(language):
     # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # TODO: check if we get the correct Pyccel warning
     g = epyccel(f, language=language)
 
     # Check result of pyccelized function
@@ -161,19 +157,11 @@ def test_creation_in_loop_stack(language):
 
 
 # ==============================================================================
-def test_creation_in_if_heap(language):
-
-    def f(c: "float"):
-        import numpy as np
-
-        if c > 0.5:
-            x = np.ones(2, dtype=int)
-        else:
-            x = np.ones(7, dtype=int)
-        return x.sum()
+def test_creation_in_if_heap(epyc_arrays_multiple_assignments_mod):
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    f = arrays_multiple_assignments.creation_in_if_heap
+    g = epyc_arrays_multiple_assignments_mod.creation_in_if_heap
 
     # Check result of pyccelized function
     import numpy as np
@@ -183,20 +171,10 @@ def test_creation_in_if_heap(language):
 
 
 # ==============================================================================
-def test_creation_in_if_heap_shape(language):
+def test_creation_in_if_heap_shape(epyc_arrays_multiple_assignments_mod):
 
-    def f(c: "float"):
-        import numpy as np
-
-        if c > 0.5:
-            x = np.ones(3, dtype=int)
-        else:
-            x = np.ones(7, dtype=int)
-
-        y = x[1:-1]
-        return y.sum()
-
-    g = epyccel(f, language=language)
+    f = arrays_multiple_assignments.creation_in_if_heap_shape
+    g = epyc_arrays_multiple_assignments_mod.creation_in_if_heap_shape
 
     # Check result of pyccelized function
     import numpy as np
@@ -410,20 +388,10 @@ def test_Assign_after_If():
 
 
 # ==============================================================================
-def test_stack_array_if(language):
+def test_stack_array_if(epyc_arrays_multiple_assignments_mod):
 
-    @stack_array("x")
-    def f(b: bool):
-        import numpy as np
-
-        if b:
-            x = np.array([1, 2, 3])
-        else:
-            x = np.array([4, 5, 6])
-        return x[0]
-
-    # Initialize singleton that stores Pyccel errors
-    f2 = epyccel(f, language=language)
+    f = arrays_multiple_assignments.stack_array_if
+    f2 = epyc_arrays_multiple_assignments_mod.stack_array_if
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
