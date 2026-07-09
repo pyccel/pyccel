@@ -415,7 +415,7 @@ def pyccel_test(
 
     if output_dir is None:
         if language == "python":
-            output_dir = os.path.join(get_abs_path(rel_test_dir), "__pyccel__")
+            output_dir = os.path.join(get_abs_path(rel_test_dir), "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", ""))
 
     if dependencies:
         if isinstance(dependencies, str):

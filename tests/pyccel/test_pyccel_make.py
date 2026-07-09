@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import shutil
 import subprocess
 import sys
@@ -49,14 +50,21 @@ def pyccel_make_test(
     """
     python_output = get_python_output(folder / main_file, cwd=folder)
 
+    cmd = [
+        shutil.which("pyccel"),
+        "make",
+        *args,
+        f"--language={language}",
+        f"--build-system={build_system}",
+    ]
+
+    if language == "python":
+        cmd.append(
+            f'--output={folder / ("__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", ""))}'
+        )
+
     p = subprocess.run(
-        [
-            shutil.which("pyccel"),
-            "make",
-            *args,
-            f"--language={language}",
-            f"--build-system={build_system}",
-        ],
+        cmd,
         cwd=folder,
         check=True,
     )
