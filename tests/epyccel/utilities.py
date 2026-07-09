@@ -49,7 +49,7 @@ class LazyPerFunctionEpyccel:
 
 
 # ==============================================================================
-def epyccel_module_with_fallback(pymod, language):
+def epyccel_module_with_fallback(pymod, language, **kwargs):
     """
     Translate `pymod` as a whole module in one pass.
 
@@ -59,6 +59,6 @@ def epyccel_module_with_fallback(pymod, language):
     functions on first access.
     """
     try:
-        return epyccel(pymod, language=language)
+        return epyccel(pymod, language=language, **kwargs)
     except (PyccelError, ImportError):
         return LazyPerFunctionEpyccel(pymod, language)
