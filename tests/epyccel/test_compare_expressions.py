@@ -1,68 +1,63 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from utilities import epyccel_test
+import pytest
+import numpy as np
+from utilities import epyccel_module_with_fallback
+from modules import compare_expressions
+
+
+@pytest.fixture(scope="module")
+def epyc_compare_expressions_mod(language):
+    return epyccel_module_with_fallback(compare_expressions, language)
 
 
 # ==============================================================================
-def mod_eq_pow(a: int, m: int, n: int):
-    return a % m == n**2
-
-
-def mod_neq_pow(a: int, m: int, n: int):
-    return a % m != n**2
-
-
-def idiv_gt_add(a: int, m: int, n: int):
-    return a // m > n + 1
-
-
-def in_range(a: float, b: float, c: float):
-    return a <= b < c
-
-
-# ==============================================================================
-def test_mod_eq_pow(language):
-    test = epyccel_test(mod_eq_pow, lang=language)
+def test_mod_eq_pow(epyc_compare_expressions_mod):
+    f = compare_expressions.mod_eq_pow
+    epyc_f = epyc_compare_expressions_mod.mod_eq_pow
     # True
-    test.compare_epyccel(10, 3, 1)
-    test.compare_epyccel(19, 10, 3)
-    test.compare_epyccel(21, 3, 0)
+    np.equal(f(10, 3, 1), epyc_f(10, 3, 1))
+    np.equal(f(19, 10, 3), epyc_f(19, 10, 3))
+    np.equal(f(21, 3, 0), epyc_f(21, 3, 0))
     # False
-    test.compare_epyccel(10, 5, 2)
-    test.compare_epyccel(19, 10, 1)
-    test.compare_epyccel(21, 3, 1)
+    np.equal(f(10, 5, 2), epyc_f(10, 5, 2))
+    np.equal(f(19, 10, 1), epyc_f(19, 10, 1))
+    np.equal(f(21, 3, 1), epyc_f(21, 3, 1))
 
 
-def test_mod_neq_pow(language):
-    test = epyccel_test(mod_neq_pow, lang=language)
+def test_mod_neq_pow(epyc_compare_expressions_mod):
+    f = compare_expressions.mod_neq_pow
+    epyc_f = epyc_compare_expressions_mod.mod_neq_pow
     # True
-    test.compare_epyccel(10, 5, 2)
-    test.compare_epyccel(19, 10, 1)
-    test.compare_epyccel(21, 3, 1)
+    np.equal(f(10, 5, 2), epyc_f(10, 5, 2))
+    np.equal(f(19, 10, 1), epyc_f(19, 10, 1))
+    np.equal(f(21, 3, 1), epyc_f(21, 3, 1))
     # False
-    test.compare_epyccel(10, 3, 1)
-    test.compare_epyccel(19, 10, 3)
-    test.compare_epyccel(21, 3, 0)
+    np.equal(f(10, 3, 1), epyc_f(10, 3, 1))
+    np.equal(f(19, 10, 3), epyc_f(19, 10, 3))
+    np.equal(f(21, 3, 0), epyc_f(21, 3, 0))
 
 
-def test_idiv_gt_add(language):
-    test = epyccel_test(idiv_gt_add, lang=language)
+def test_idiv_gt_add(epyc_compare_expressions_mod):
+    f = compare_expressions.idiv_gt_add
+    epyc_f = epyc_compare_expressions_mod.idiv_gt_add
     # True
-    test.compare_epyccel(10, 3, 2)
-    test.compare_epyccel(8, 2, 2)
-    test.compare_epyccel(16, 3, 4)
+    np.equal(f(10, 3, 2), epyc_f(10, 3, 2))
+    np.equal(f(8, 2, 2), epyc_f(8, 2, 2))
+    np.equal(f(16, 3, 4), epyc_f(16, 3, 4))
     # False
-    test.compare_epyccel(10, 3, 2)
-    test.compare_epyccel(8, 2, 3)
-    test.compare_epyccel(16, 3, 5)
+    np.equal(f(10, 3, 2), epyc_f(10, 3, 2))
+    np.equal(f(8, 2, 3), epyc_f(8, 2, 3))
+    np.equal(f(16, 3, 5), epyc_f(16, 3, 5))
 
 
-def test_in_range(language):
-    test = epyccel_test(in_range, lang=language)
+def test_in_range(epyc_compare_expressions_mod):
+    f = compare_expressions.in_range
+    epyc_f = epyc_compare_expressions_mod.in_range
     # True
-    test.compare_epyccel(0.0, 1.0, 2.0)
-    test.compare_epyccel(-2.0, -1.0, 2.0)
-    test.compare_epyccel(-2.0, -1.3, -1.0)
+    np.equal(f(0.0, 1.0, 2.0), epyc_f(0.0, 1.0, 2.0))
+    np.equal(f(-2.0, -1.0, 2.0), epyc_f(-2.0, -1.0, 2.0))
+    np.equal(f(-2.0, -1.3, -1.0), epyc_f(-2.0, -1.3, -1.0))
     # False
-    test.compare_epyccel(0.0, 10.0, 2.0)
-    test.compare_epyccel(-2.0, -10.0, 2.0)
-    test.compare_epyccel(-2.0, -0.3, -1.0)
+    np.equal(f(0.0, 10.0, 2.0), epyc_f(0.0, 10.0, 2.0))
+    np.equal(f(-2.0, -10.0, 2.0), epyc_f(-2.0, -10.0, 2.0))
+    np.equal(f(-2.0, -0.3, -1.0), epyc_f(-2.0, -0.3, -1.0))
