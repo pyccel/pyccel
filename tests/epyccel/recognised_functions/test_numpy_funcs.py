@@ -9,6 +9,14 @@ from numpy import finfo, iinfo, isclose
 from numpy.random import rand, randn, uniform
 
 from pyccel import epyccel
+from modules import numpy_funcs
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_numpy_funcs_mod(language):
+    return epyccel_module_with_fallback(numpy_funcs, language)
+
 
 min_int8 = iinfo("int8").min
 max_int8 = iinfo("int8").max
@@ -107,40 +115,30 @@ def matching_types(pyccel_result, python_result):
 
 
 # -------------------------------- Fabs function ------------------------------#
-def test_fabs_call_r(language):
-    def fabs_call_r(x: "float"):
-        from numpy import fabs
+def test_fabs_call_r(epyc_numpy_funcs_mod):
+    fabs_call_r = numpy_funcs.fabs_call_r
 
-        return fabs(x)
-
-    f1 = epyccel(fabs_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.fabs_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), fabs_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), fabs_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), fabs_call_r(x))
 
 
-def test_fabs_call_i(language):
-    def fabs_call_i(x: "int"):
-        from numpy import fabs
+def test_fabs_call_i(epyc_numpy_funcs_mod):
+    fabs_call_i = numpy_funcs.fabs_call_i
 
-        return fabs(x)
-
-    f1 = epyccel(fabs_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.fabs_call_i
     x = randint(1e6)
     assert isclose(f1(x), fabs_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), fabs_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), fabs_call_i(x))
 
 
-def test_fabs_phrase_r_r(language):
-    def fabs_phrase_r_r(x: "float", y: "float"):
-        from numpy import fabs
+def test_fabs_phrase_r_r(epyc_numpy_funcs_mod):
+    fabs_phrase_r_r = numpy_funcs.fabs_phrase_r_r
 
-        a = fabs(x) * fabs(y)
-        return a
-
-    f2 = epyccel(fabs_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.fabs_phrase_r_r
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), fabs_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -149,14 +147,10 @@ def test_fabs_phrase_r_r(language):
     assert isclose(f2(-x, y), fabs_phrase_r_r(-x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_fabs_phrase_i_i(language):
-    def fabs_phrase_i_i(x: "int", y: "int"):
-        from numpy import fabs
+def test_fabs_phrase_i_i(epyc_numpy_funcs_mod):
+    fabs_phrase_i_i = numpy_funcs.fabs_phrase_i_i
 
-        a = fabs(x) * fabs(y)
-        return a
-
-    f2 = epyccel(fabs_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.fabs_phrase_i_i
     x = randint(1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), fabs_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -165,14 +159,10 @@ def test_fabs_phrase_i_i(language):
     assert isclose(f2(-x, y), fabs_phrase_i_i(-x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_fabs_phrase_r_i(language):
-    def fabs_phrase_r_i(x: "float", y: "int"):
-        from numpy import fabs
+def test_fabs_phrase_r_i(epyc_numpy_funcs_mod):
+    fabs_phrase_r_i = numpy_funcs.fabs_phrase_r_i
 
-        a = fabs(x) * fabs(y)
-        return a
-
-    f2 = epyccel(fabs_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.fabs_phrase_r_i
     x = uniform(high=1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), fabs_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -181,14 +171,10 @@ def test_fabs_phrase_r_i(language):
     assert isclose(f2(-x, y), fabs_phrase_r_i(-x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_fabs_phrase_i_r(language):
-    def fabs_phrase_r_i(x: "int", y: "float"):
-        from numpy import fabs
+def test_fabs_phrase_i_r(epyc_numpy_funcs_mod):
+    fabs_phrase_r_i = numpy_funcs.fabs_phrase_i_r
 
-        a = fabs(x) * fabs(y)
-        return a
-
-    f2 = epyccel(fabs_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.fabs_phrase_i_r
     x = randint(1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), fabs_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -198,25 +184,14 @@ def test_fabs_phrase_i_r(language):
 
 
 # ------------------------------ isnan function ----------------------------#
-def test_numpy_isnan(language):
-    def numpy_isnan_test(x: "float"):
-        from numpy import isnan
+def test_numpy_isnan(epyc_numpy_funcs_mod):
+    numpy_isnan_test = numpy_funcs.numpy_isnan__numpy_isnan_test
+    numpy_isnan_array_test = numpy_funcs.numpy_isnan__numpy_isnan_array_test
+    numpy_isnan_expr_test = numpy_funcs.numpy_isnan__numpy_isnan_expr_test
 
-        return isnan(x)
-
-    def numpy_isnan_array_test(x: "float[:]"):
-        from numpy import isnan
-
-        return isnan(x)
-
-    def numpy_isnan_expr_test(x: "float", y: "float"):
-        from numpy import isnan
-
-        return isnan(x + y)
-
-    f = epyccel(numpy_isnan_test, language=language)
-    f_arr = epyccel(numpy_isnan_array_test, language=language)
-    f_expr = epyccel(numpy_isnan_expr_test, language=language)
+    f = epyc_numpy_funcs_mod.numpy_isnan__numpy_isnan_test
+    f_arr = epyc_numpy_funcs_mod.numpy_isnan__numpy_isnan_array_test
+    f_expr = epyc_numpy_funcs_mod.numpy_isnan__numpy_isnan_expr_test
 
     input_data = np.nan
     expected_output = numpy_isnan_test(input_data)
@@ -273,25 +248,14 @@ def test_numpy_isnan(language):
 
 
 # ------------------------------ isinf function ----------------------------#
-def test_numpy_isinf(language):
-    def numpy_isinf_test(x: "float"):
-        from numpy import isinf
+def test_numpy_isinf(epyc_numpy_funcs_mod):
+    numpy_isinf_test = numpy_funcs.numpy_isinf__numpy_isinf_test
+    numpy_isinf_array_test = numpy_funcs.numpy_isinf__numpy_isinf_array_test
+    numpy_isinf_expr_test = numpy_funcs.numpy_isinf__numpy_isinf_expr_test
 
-        return isinf(x)
-
-    def numpy_isinf_array_test(x: "float[:]"):
-        from numpy import isinf
-
-        return isinf(x)
-
-    def numpy_isinf_expr_test(x: "float", y: "float"):
-        from numpy import isinf
-
-        return isinf(x + y)
-
-    f = epyccel(numpy_isinf_test, language=language)
-    f_arr = epyccel(numpy_isinf_array_test, language=language)
-    f_expr = epyccel(numpy_isinf_expr_test, language=language)
+    f = epyc_numpy_funcs_mod.numpy_isinf__numpy_isinf_test
+    f_arr = epyc_numpy_funcs_mod.numpy_isinf__numpy_isinf_array_test
+    f_expr = epyc_numpy_funcs_mod.numpy_isinf__numpy_isinf_expr_test
 
     input_data = np.inf
     expected_output = numpy_isinf_test(input_data)
@@ -352,25 +316,14 @@ def test_numpy_isinf(language):
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Different inf representation.",
 )
-def test_numpy_isfinite(language):
-    def numpy_isfinite_test(x: "float"):
-        from numpy import isfinite
+def test_numpy_isfinite(epyc_numpy_funcs_mod):
+    numpy_isfinite_test = numpy_funcs.numpy_isfinite__numpy_isfinite_test
+    numpy_isfinite_array_test = numpy_funcs.numpy_isfinite__numpy_isfinite_array_test
+    numpy_isfinite_expr_test = numpy_funcs.numpy_isfinite__numpy_isfinite_expr_test
 
-        return isfinite(x)
-
-    def numpy_isfinite_array_test(x: "float[:]"):
-        from numpy import isfinite
-
-        return isfinite(x)
-
-    def numpy_isfinite_expr_test(x: "float", y: "float"):
-        from numpy import isfinite
-
-        return isfinite(x + y)
-
-    f = epyccel(numpy_isfinite_test, language=language)
-    f_arr = epyccel(numpy_isfinite_array_test, language=language)
-    f_expr = epyccel(numpy_isfinite_expr_test, language=language)
+    f = epyc_numpy_funcs_mod.numpy_isfinite__numpy_isfinite_test
+    f_arr = epyc_numpy_funcs_mod.numpy_isfinite__numpy_isfinite_array_test
+    f_expr = epyc_numpy_funcs_mod.numpy_isfinite__numpy_isfinite_expr_test
 
     input_data = np.inf
     expected_output = numpy_isfinite_test(input_data)
@@ -427,39 +380,30 @@ def test_numpy_isfinite(language):
 
 
 # ------------------------------ absolute function ----------------------------#
-def test_absolute_call_r(language):
-    def absolute_call_r(x: "float"):
-        from numpy import absolute
+def test_absolute_call_r(epyc_numpy_funcs_mod):
+    absolute_call_r = numpy_funcs.absolute_call_r
 
-        return absolute(x)
-
-    f1 = epyccel(absolute_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.absolute_call_r
     x = uniform(high=1e6)
     assert f1(x) == absolute_call_r(x)
     assert f1(-x) == absolute_call_r(-x)
     assert matching_types(f1(x), absolute_call_r(x))
 
 
-def test_absolute_call_i(language):
-    def absolute_call_i(x: "int"):
-        from numpy import absolute
+def test_absolute_call_i(epyc_numpy_funcs_mod):
+    absolute_call_i = numpy_funcs.absolute_call_i
 
-        return absolute(x)
-
-    f1 = epyccel(absolute_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.absolute_call_i
     x = randint(1e6)
     assert f1(x) == absolute_call_i(x)
     assert f1(-x) == absolute_call_i(-x)
     assert matching_types(f1(x), absolute_call_i(x))
 
 
-def test_absolute_call_c(language):
-    def absolute_call_c(x: CT):
-        from numpy import absolute
+def test_absolute_call_c(epyc_numpy_funcs_mod):
+    absolute_call_c = numpy_funcs.absolute_call_c
 
-        return absolute(x)
-
-    f1 = epyccel(absolute_call_c, language=language)
+    f1 = epyc_numpy_funcs_mod.absolute_call_c
     x = uniform(high=1e6) + 1j * uniform(high=1e6)
     assert isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), absolute_call_c(-x), rtol=RTOL, atol=ATOL)
@@ -474,14 +418,10 @@ def test_absolute_call_c(language):
     assert matching_types(f1(x), absolute_call_c(x))
 
 
-def test_absolute_phrase_r_r(language):
-    def absolute_phrase_r_r(x: "float", y: "float"):
-        from numpy import absolute
+def test_absolute_phrase_r_r(epyc_numpy_funcs_mod):
+    absolute_phrase_r_r = numpy_funcs.absolute_phrase_r_r
 
-        a = absolute(x) * absolute(y)
-        return a
-
-    f2 = epyccel(absolute_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.absolute_phrase_r_r
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), absolute_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -490,14 +430,10 @@ def test_absolute_phrase_r_r(language):
     assert isclose(f2(x, -y), absolute_phrase_r_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_absolute_phrase_i_r(language):
-    def absolute_phrase_i_r(x: "int", y: "float"):
-        from numpy import absolute
+def test_absolute_phrase_i_r(epyc_numpy_funcs_mod):
+    absolute_phrase_i_r = numpy_funcs.absolute_phrase_i_r
 
-        a = absolute(x) * absolute(y)
-        return a
-
-    f2 = epyccel(absolute_phrase_i_r, language=language)
+    f2 = epyc_numpy_funcs_mod.absolute_phrase_i_r
     x = randint(1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), absolute_phrase_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -506,14 +442,10 @@ def test_absolute_phrase_i_r(language):
     assert isclose(f2(x, -y), absolute_phrase_i_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_absolute_phrase_r_i(language):
-    def absolute_phrase_r_i(x: "float", y: "int"):
-        from numpy import absolute
+def test_absolute_phrase_r_i(epyc_numpy_funcs_mod):
+    absolute_phrase_r_i = numpy_funcs.absolute_phrase_r_i
 
-        a = absolute(x) * absolute(y)
-        return a
-
-    f2 = epyccel(absolute_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.absolute_phrase_r_i
     x = uniform(high=1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), absolute_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -523,40 +455,30 @@ def test_absolute_phrase_r_i(language):
 
 
 # --------------------------------- sin function ------------------------------#
-def test_sin_call_r(language):
-    def sin_call_r(x: "float"):
-        from numpy import sin
+def test_sin_call_r(epyc_numpy_funcs_mod):
+    sin_call_r = numpy_funcs.sin_call_r
 
-        return sin(x)
-
-    f1 = epyccel(sin_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.sin_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), sin_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), sin_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sin_call_r(x))
 
 
-def test_sin_call_i(language):
-    def sin_call_i(x: "int"):
-        from numpy import sin
+def test_sin_call_i(epyc_numpy_funcs_mod):
+    sin_call_i = numpy_funcs.sin_call_i
 
-        return sin(x)
-
-    f1 = epyccel(sin_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.sin_call_i
     x = randint(1e6)
     assert isclose(f1(x), sin_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), sin_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sin_call_i(x))
 
 
-def test_sin_phrase_r_r(language):
-    def sin_phrase_r_r(x: "float", y: "float"):
-        from numpy import sin
+def test_sin_phrase_r_r(epyc_numpy_funcs_mod):
+    sin_phrase_r_r = numpy_funcs.sin_phrase_r_r
 
-        a = sin(x) + sin(y)
-        return a
-
-    f2 = epyccel(sin_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.sin_phrase_r_r
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), sin_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -565,14 +487,10 @@ def test_sin_phrase_r_r(language):
     assert isclose(f2(x, -y), sin_phrase_r_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_sin_phrase_i_i(language):
-    def sin_phrase_i_i(x: "int", y: "int"):
-        from numpy import sin
+def test_sin_phrase_i_i(epyc_numpy_funcs_mod):
+    sin_phrase_i_i = numpy_funcs.sin_phrase_i_i
 
-        a = sin(x) + sin(y)
-        return a
-
-    f2 = epyccel(sin_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.sin_phrase_i_i
     x = randint(1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), sin_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -581,14 +499,10 @@ def test_sin_phrase_i_i(language):
     assert isclose(f2(x, -y), sin_phrase_i_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_sin_phrase_i_r(language):
-    def sin_phrase_i_r(x: "int", y: "float"):
-        from numpy import sin
+def test_sin_phrase_i_r(epyc_numpy_funcs_mod):
+    sin_phrase_i_r = numpy_funcs.sin_phrase_i_r
 
-        a = sin(x) + sin(y)
-        return a
-
-    f2 = epyccel(sin_phrase_i_r, language=language)
+    f2 = epyc_numpy_funcs_mod.sin_phrase_i_r
     x = randint(1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), sin_phrase_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -597,14 +511,10 @@ def test_sin_phrase_i_r(language):
     assert isclose(f2(x, -y), sin_phrase_i_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_sin_phrase_r_i(language):
-    def sin_phrase_r_i(x: "float", y: "int"):
-        from numpy import sin
+def test_sin_phrase_r_i(epyc_numpy_funcs_mod):
+    sin_phrase_r_i = numpy_funcs.sin_phrase_r_i
 
-        a = sin(x) + sin(y)
-        return a
-
-    f2 = epyccel(sin_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.sin_phrase_r_i
     x = uniform(high=1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), sin_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -614,37 +524,30 @@ def test_sin_phrase_r_i(language):
 
 
 # --------------------------------- cos function ------------------------------#
-def test_cos_call_i(language):
-    def cos_call_i(x: "int"):
-        from numpy import cos
+def test_cos_call_i(epyc_numpy_funcs_mod):
+    cos_call_i = numpy_funcs.cos_call_i
 
-        return cos(x)
-
-    f1 = epyccel(cos_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.cos_call_i
     x = randint(1e6)
     assert isclose(f1(x), cos_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), cos_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), cos_call_i(x))
 
 
-def test_cos_call_r(language):
-    def cos_call_r(x: "float"):
-        from numpy import cos
+def test_cos_call_r(epyc_numpy_funcs_mod):
+    cos_call_r = numpy_funcs.cos_call_r
 
-        return cos(x)
-
-    f1 = epyccel(cos_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.cos_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), cos_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), cos_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), cos_call_r(x))
 
 
-def test_cos_call_out(language):
-    def cos_call(x: "float[:]", y: "float[:]"):
-        np.cos(x, out=y)
+def test_cos_call_out(epyc_numpy_funcs_mod):
+    cos_call = numpy_funcs.cos_call_out
 
-    f1 = epyccel(cos_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cos_call_out
     x = uniform(high=1e6, size=5)
     y_epyc = np.empty_like(x)
     y_pyth = np.empty_like(x)
@@ -653,14 +556,10 @@ def test_cos_call_out(language):
     assert np.allclose(y_epyc, y_pyth, rtol=RTOL, atol=ATOL)
 
 
-def test_cos_phrase_i_i(language):
-    def cos_phrase_i_i(x: "int", y: "int"):
-        from numpy import cos
+def test_cos_phrase_i_i(epyc_numpy_funcs_mod):
+    cos_phrase_i_i = numpy_funcs.cos_phrase_i_i
 
-        a = cos(x) + cos(y)
-        return a
-
-    f2 = epyccel(cos_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.cos_phrase_i_i
     x = randint(1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), cos_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -669,14 +568,10 @@ def test_cos_phrase_i_i(language):
     assert isclose(f2(x, -y), cos_phrase_i_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_cos_phrase_r_r(language):
-    def cos_phrase_r_r(x: "float", y: "float"):
-        from numpy import cos
+def test_cos_phrase_r_r(epyc_numpy_funcs_mod):
+    cos_phrase_r_r = numpy_funcs.cos_phrase_r_r
 
-        a = cos(x) + cos(y)
-        return a
-
-    f2 = epyccel(cos_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.cos_phrase_r_r
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), cos_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -685,14 +580,10 @@ def test_cos_phrase_r_r(language):
     assert isclose(f2(x, -y), cos_phrase_r_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_cos_phrase_i_r(language):
-    def cos_phrase_i_r(x: "int", y: "float"):
-        from numpy import cos
+def test_cos_phrase_i_r(epyc_numpy_funcs_mod):
+    cos_phrase_i_r = numpy_funcs.cos_phrase_i_r
 
-        a = cos(x) + cos(y)
-        return a
-
-    f2 = epyccel(cos_phrase_i_r, language=language)
+    f2 = epyc_numpy_funcs_mod.cos_phrase_i_r
     x = randint(1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), cos_phrase_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -701,14 +592,10 @@ def test_cos_phrase_i_r(language):
     assert isclose(f2(x, -y), cos_phrase_i_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_cos_phrase_r_i(language):
-    def cos_phrase_r_i(x: "float", y: "int"):
-        from numpy import cos
+def test_cos_phrase_r_i(epyc_numpy_funcs_mod):
+    cos_phrase_r_i = numpy_funcs.cos_phrase_r_i
 
-        a = cos(x) + cos(y)
-        return a
-
-    f2 = epyccel(cos_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.cos_phrase_r_i
     x = uniform(high=1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), cos_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -718,40 +605,30 @@ def test_cos_phrase_r_i(language):
 
 
 # --------------------------------- tan function ------------------------------#
-def test_tan_call_i(language):
-    def tan_call_i(x: "int"):
-        from numpy import tan
+def test_tan_call_i(epyc_numpy_funcs_mod):
+    tan_call_i = numpy_funcs.tan_call_i
 
-        return tan(x)
-
-    f1 = epyccel(tan_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.tan_call_i
     x = randint(1e6)
     assert isclose(f1(x), tan_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), tan_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), tan_call_i(x))
 
 
-def test_tan_call_r(language):
-    def tan_call_r(x: "float"):
-        from numpy import tan
+def test_tan_call_r(epyc_numpy_funcs_mod):
+    tan_call_r = numpy_funcs.tan_call_r
 
-        return tan(x)
-
-    f1 = epyccel(tan_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.tan_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), tan_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), tan_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), tan_call_r(x))
 
 
-def test_tan_phrase_i_i(language):
-    def tan_phrase_i_i(x: "int", y: "int"):
-        from numpy import tan
+def test_tan_phrase_i_i(epyc_numpy_funcs_mod):
+    tan_phrase_i_i = numpy_funcs.tan_phrase_i_i
 
-        a = tan(x) + tan(y)
-        return a
-
-    f2 = epyccel(tan_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.tan_phrase_i_i
     x = randint(1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), tan_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -760,14 +637,10 @@ def test_tan_phrase_i_i(language):
     assert isclose(f2(x, -y), tan_phrase_i_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_tan_phrase_r_r(language):
-    def tan_phrase_r_r(x: "float", y: "float"):
-        from numpy import tan
+def test_tan_phrase_r_r(epyc_numpy_funcs_mod):
+    tan_phrase_r_r = numpy_funcs.tan_phrase_r_r
 
-        a = tan(x) + tan(y)
-        return a
-
-    f2 = epyccel(tan_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.tan_phrase_r_r
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), tan_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -776,14 +649,10 @@ def test_tan_phrase_r_r(language):
     assert isclose(f2(x, -y), tan_phrase_r_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_tan_phrase_i_r(language):
-    def tan_phrase_i_r(x: "int", y: "float"):
-        from numpy import tan
+def test_tan_phrase_i_r(epyc_numpy_funcs_mod):
+    tan_phrase_i_r = numpy_funcs.tan_phrase_i_r
 
-        a = tan(x) + tan(y)
-        return a
-
-    f2 = epyccel(tan_phrase_i_r, language=language)
+    f2 = epyc_numpy_funcs_mod.tan_phrase_i_r
     x = randint(1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), tan_phrase_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -792,14 +661,10 @@ def test_tan_phrase_i_r(language):
     assert isclose(f2(x, -y), tan_phrase_i_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_tan_phrase_r_i(language):
-    def tan_phrase_r_i(x: "float", y: "int"):
-        from numpy import tan
+def test_tan_phrase_r_i(epyc_numpy_funcs_mod):
+    tan_phrase_r_i = numpy_funcs.tan_phrase_r_i
 
-        a = tan(x) + tan(y)
-        return a
-
-    f2 = epyccel(tan_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.tan_phrase_r_i
     x = uniform(high=1e6)
     y = randint(1e6)
     assert isclose(f2(x, y), tan_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -809,40 +674,30 @@ def test_tan_phrase_r_i(language):
 
 
 # --------------------------------- exp function ------------------------------#
-def test_exp_call_i(language):
-    def exp_call_i(x: "int"):
-        from numpy import exp
+def test_exp_call_i(epyc_numpy_funcs_mod):
+    exp_call_i = numpy_funcs.exp_call_i
 
-        return exp(x)
-
-    f1 = epyccel(exp_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.exp_call_i
     x = randint(1e2)
     assert isclose(f1(x), exp_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), exp_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), exp_call_i(x))
 
 
-def test_exp_call_r(language):
-    def exp_call_r(x: "float"):
-        from numpy import exp
+def test_exp_call_r(epyc_numpy_funcs_mod):
+    exp_call_r = numpy_funcs.exp_call_r
 
-        return exp(x)
-
-    f1 = epyccel(exp_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.exp_call_r
     x = uniform(high=1e2)
     assert isclose(f1(x), exp_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), exp_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), exp_call_r(x))
 
 
-def test_exp_phrase_i_i(language):
-    def exp_phrase_i_i(x: "int", y: "int"):
-        from numpy import exp
+def test_exp_phrase_i_i(epyc_numpy_funcs_mod):
+    exp_phrase_i_i = numpy_funcs.exp_phrase_i_i
 
-        a = exp(x) + exp(y)
-        return a
-
-    f2 = epyccel(exp_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.exp_phrase_i_i
     x = randint(1e2)
     y = randint(1e2)
     assert isclose(f2(x, y), exp_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -851,14 +706,10 @@ def test_exp_phrase_i_i(language):
     assert isclose(f2(x, -y), exp_phrase_i_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_exp_phrase_r_r(language):
-    def exp_phrase_r_r(x: "float", y: "float"):
-        from numpy import exp
+def test_exp_phrase_r_r(epyc_numpy_funcs_mod):
+    exp_phrase_r_r = numpy_funcs.exp_phrase_r_r
 
-        a = exp(x) + exp(y)
-        return a
-
-    f2 = epyccel(exp_phrase_r_r, language=language)
+    f2 = epyc_numpy_funcs_mod.exp_phrase_r_r
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     assert isclose(f2(x, y), exp_phrase_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -867,14 +718,10 @@ def test_exp_phrase_r_r(language):
     assert isclose(f2(x, -y), exp_phrase_r_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_exp_phrase_i_r(language):
-    def exp_phrase_i_r(x: "int", y: "float"):
-        from numpy import exp
+def test_exp_phrase_i_r(epyc_numpy_funcs_mod):
+    exp_phrase_i_r = numpy_funcs.exp_phrase_i_r
 
-        a = exp(x) + exp(y)
-        return a
-
-    f2 = epyccel(exp_phrase_i_r, language=language)
+    f2 = epyc_numpy_funcs_mod.exp_phrase_i_r
     x = randint(1e2)
     y = uniform(high=1e2)
     assert isclose(f2(x, y), exp_phrase_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -883,14 +730,10 @@ def test_exp_phrase_i_r(language):
     assert isclose(f2(x, -y), exp_phrase_i_r(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_exp_phrase_r_i(language):
-    def exp_phrase_r_i(x: "float", y: "int"):
-        from numpy import exp
+def test_exp_phrase_r_i(epyc_numpy_funcs_mod):
+    exp_phrase_r_i = numpy_funcs.exp_phrase_r_i
 
-        a = exp(x) + exp(y)
-        return a
-
-    f2 = epyccel(exp_phrase_r_i, language=language)
+    f2 = epyc_numpy_funcs_mod.exp_phrase_r_i
     x = uniform(high=1e2)
     y = randint(1e2)
     assert isclose(f2(x, y), exp_phrase_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -900,101 +743,76 @@ def test_exp_phrase_r_i(language):
 
 
 # --------------------------------- expm1 function ------------------------------#
-def test_expm1_call_i(language):
-    def expm1_call_i(x: "int"):
-        from numpy import expm1
+def test_expm1_call_i(epyc_numpy_funcs_mod):
+    expm1_call_i = numpy_funcs.expm1_call_i
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_i
     x = randint(100)
     assert isclose(f1(x), expm1_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_i(x))
 
 
-def test_expm1_call_f(language):
-    def expm1_call_f(x: "float"):
-        from numpy import expm1
+def test_expm1_call_f(epyc_numpy_funcs_mod):
+    expm1_call_f = numpy_funcs.expm1_call_f
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_f, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_f
     x = uniform(high=100)
     assert isclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_f(x))
 
 
-def test_expm1_call_c(language):
-    def expm1_call_c(x: complex):
-        from numpy import expm1
+def test_expm1_call_c(epyc_numpy_funcs_mod):
+    expm1_call_c = numpy_funcs.expm1_call_c
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_c, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_c
     x = uniform(high=100) + uniform(high=100) * 1j
     assert isclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), expm1_call_c(x))
 
 
-def test_expm1_call_f_array(language):
-    def expm1_call_f(x: "float[:]"):
-        from numpy import expm1
+def test_expm1_call_f_array(epyc_numpy_funcs_mod):
+    expm1_call_f = numpy_funcs.expm1_call_f_array
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_f, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_f_array
     x = uniform(high=100, size=5)
     assert np.allclose(f1(x), expm1_call_f(x), rtol=RTOL, atol=ATOL)
     assert np.allclose(f1(-x), expm1_call_f(-x), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_call_c_array(language):
-    def expm1_call_c(x: "complex[:]"):
-        from numpy import expm1
+def test_expm1_call_c_array(epyc_numpy_funcs_mod):
+    expm1_call_c = numpy_funcs.expm1_call_c_array
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_c, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_c_array
     x = uniform(high=100, size=5) + uniform(high=100, size=5) * 1j
     assert np.allclose(f1(x), expm1_call_c(x), rtol=RTOL, atol=ATOL)
     assert np.allclose(f1(-x), expm1_call_c(-x), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_call_cast_f(language):
-    def expm1_call_f(x: "float32"):
-        from numpy import expm1
+def test_expm1_call_cast_f(epyc_numpy_funcs_mod):
+    expm1_call_f = numpy_funcs.expm1_call_cast_f
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_f, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_cast_f
     x = np.float32(uniform(high=30))
     assert isclose(f1(x), expm1_call_f(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), expm1_call_f(x))
 
 
-def test_expm1_call_cast_c(language):
-    def expm1_call_c(x: "complex64"):
-        from numpy import expm1
+def test_expm1_call_cast_c(epyc_numpy_funcs_mod):
+    expm1_call_c = numpy_funcs.expm1_call_cast_c
 
-        return expm1(x)
-
-    f1 = epyccel(expm1_call_c, language=language)
+    f1 = epyc_numpy_funcs_mod.expm1_call_cast_c
     x = np.complex64(uniform(high=15) + uniform(high=15) * 1j)
     assert isclose(f1(x), expm1_call_c(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), expm1_call_c(x))
 
 
-def test_expm1_phrase_i_i(language):
-    def expm1_phrase_i_i(x: "int", y: "int"):
-        from numpy import expm1
+def test_expm1_phrase_i_i(epyc_numpy_funcs_mod):
+    expm1_phrase_i_i = numpy_funcs.expm1_phrase_i_i
 
-        a = expm1(x) + expm1(y)
-        return a
-
-    f2 = epyccel(expm1_phrase_i_i, language=language)
+    f2 = epyc_numpy_funcs_mod.expm1_phrase_i_i
     x = randint(100)
     y = randint(100)
     assert isclose(f2(x, y), expm1_phrase_i_i(x, y), rtol=RTOL, atol=ATOL)
@@ -1003,14 +821,10 @@ def test_expm1_phrase_i_i(language):
     assert isclose(f2(x, -y), expm1_phrase_i_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_phrase_f_f(language):
-    def expm1_phrase_f_f(x: "float", y: "float"):
-        from numpy import expm1
+def test_expm1_phrase_f_f(epyc_numpy_funcs_mod):
+    expm1_phrase_f_f = numpy_funcs.expm1_phrase_f_f
 
-        a = expm1(x) + expm1(y)
-        return a
-
-    f2 = epyccel(expm1_phrase_f_f, language=language)
+    f2 = epyc_numpy_funcs_mod.expm1_phrase_f_f
     x = uniform(high=100)
     y = uniform(high=100)
     assert isclose(f2(x, y), expm1_phrase_f_f(x, y), rtol=RTOL, atol=ATOL)
@@ -1019,14 +833,10 @@ def test_expm1_phrase_f_f(language):
     assert isclose(f2(x, -y), expm1_phrase_f_f(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_phrase_i_f(language):
-    def expm1_phrase_i_f(x: "int", y: "float"):
-        from numpy import expm1
+def test_expm1_phrase_i_f(epyc_numpy_funcs_mod):
+    expm1_phrase_i_f = numpy_funcs.expm1_phrase_i_f
 
-        a = expm1(x) + expm1(y)
-        return a
-
-    f2 = epyccel(expm1_phrase_i_f, language=language)
+    f2 = epyc_numpy_funcs_mod.expm1_phrase_i_f
     x = randint(100)
     y = uniform(high=100)
     assert isclose(f2(x, y), expm1_phrase_i_f(x, y), rtol=RTOL, atol=ATOL)
@@ -1035,14 +845,10 @@ def test_expm1_phrase_i_f(language):
     assert isclose(f2(x, -y), expm1_phrase_i_f(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_phrase_f_i(language):
-    def expm1_phrase_f_i(x: "float", y: "int"):
-        from numpy import expm1
+def test_expm1_phrase_f_i(epyc_numpy_funcs_mod):
+    expm1_phrase_f_i = numpy_funcs.expm1_phrase_f_i
 
-        a = expm1(x) + expm1(y)
-        return a
-
-    f2 = epyccel(expm1_phrase_f_i, language=language)
+    f2 = epyc_numpy_funcs_mod.expm1_phrase_f_i
     x = uniform(high=100)
     y = randint(100)
     assert isclose(f2(x, y), expm1_phrase_f_i(x, y), rtol=RTOL, atol=ATOL)
@@ -1051,14 +857,10 @@ def test_expm1_phrase_f_i(language):
     assert isclose(f2(x, -y), expm1_phrase_f_i(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_expm1_phrase_i_c(language):
-    def expm1_phrase_i_c(x: int, y: complex):
-        from numpy import expm1
+def test_expm1_phrase_i_c(epyc_numpy_funcs_mod):
+    expm1_phrase_i_c = numpy_funcs.expm1_phrase_i_c
 
-        a = expm1(x) + expm1(y)
-        return a
-
-    f2 = epyccel(expm1_phrase_i_c, language=language)
+    f2 = epyc_numpy_funcs_mod.expm1_phrase_i_c
     x = randint(100)
     y = uniform(high=100) + uniform(high=100) * 1j
     assert isclose(f2(x, y), expm1_phrase_i_c(x, y), rtol=RTOL, atol=ATOL)
@@ -1068,78 +870,58 @@ def test_expm1_phrase_i_c(language):
 
 
 # --------------------------------- log function ------------------------------#
-def test_log_call_i(language):
-    def log_call_i(x: "int"):
-        from numpy import log
+def test_log_call_i(epyc_numpy_funcs_mod):
+    log_call_i = numpy_funcs.log_call_i
 
-        return log(x)
-
-    f1 = epyccel(log_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.log_call_i
     x = randint(low=sys.float_info.min, high=1e6)
     assert isclose(f1(x), log_call_i(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), log_call_i(x))
 
 
-def test_log_call_r(language):
-    def log_call_r(x: "float"):
-        from numpy import log
+def test_log_call_r(epyc_numpy_funcs_mod):
+    log_call_r = numpy_funcs.log_call_r
 
-        return log(x)
-
-    f1 = epyccel(log_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.log_call_r
     x = uniform(low=sys.float_info.min, high=max_float)
     assert isclose(f1(x), log_call_r(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), log_call_r(x))
 
 
-def test_log_phrase(language):
-    def log_phrase(x: "float", y: "float"):
-        from numpy import log
+def test_log_phrase(epyc_numpy_funcs_mod):
+    log_phrase = numpy_funcs.log_phrase
 
-        a = log(x) + log(y)
-        return a
-
-    f2 = epyccel(log_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.log_phrase
     x = uniform(low=sys.float_info.min, high=1e6)
     y = uniform(low=sys.float_info.min, high=1e6)
     assert isclose(f2(x, y), log_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 # ----------------------------- arcsin function -------------------------------#
-def test_arcsin_call_i(language):
-    def arcsin_call_i(x: "int"):
-        from numpy import arcsin
+def test_arcsin_call_i(epyc_numpy_funcs_mod):
+    arcsin_call_i = numpy_funcs.arcsin_call_i
 
-        return arcsin(x)
-
-    f1 = epyccel(arcsin_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.arcsin_call_i
     x = randint(2)
     assert isclose(f1(x), arcsin_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arcsin_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arcsin_call_i(x))
 
 
-def test_arcsin_call_r(language):
-    def arcsin_call_r(x: "float"):
-        from numpy import arcsin
+def test_arcsin_call_r(epyc_numpy_funcs_mod):
+    arcsin_call_r = numpy_funcs.arcsin_call_r
 
-        return arcsin(x)
-
-    f1 = epyccel(arcsin_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.arcsin_call_r
     x = rand()
     assert isclose(f1(x), arcsin_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arcsin_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arcsin_call_r(x))
 
 
-def test_arcsin_phrase(language):
-    def arcsin_phrase(x: "float", y: "float"):
-        from numpy import arcsin
+def test_arcsin_phrase(epyc_numpy_funcs_mod):
+    arcsin_phrase = numpy_funcs.arcsin_phrase
 
-        a = arcsin(x) + arcsin(y)
-        return a
-
-    f2 = epyccel(arcsin_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.arcsin_phrase
     x = rand()
     y = rand()
     assert isclose(f2(x, y), arcsin_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1151,40 +933,30 @@ def test_arcsin_phrase(language):
 # ----------------------------- arccos function -------------------------------#
 
 
-def test_arccos_call_i(language):
-    def arccos_call_i(x: "int"):
-        from numpy import arccos
+def test_arccos_call_i(epyc_numpy_funcs_mod):
+    arccos_call_i = numpy_funcs.arccos_call_i
 
-        return arccos(x)
-
-    f1 = epyccel(arccos_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.arccos_call_i
     x = randint(2)
     assert isclose(f1(x), arccos_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arccos_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arccos_call_i(x))
 
 
-def test_arccos_call_r(language):
-    def arccos_call_r(x: "float"):
-        from numpy import arccos
+def test_arccos_call_r(epyc_numpy_funcs_mod):
+    arccos_call_r = numpy_funcs.arccos_call_r
 
-        return arccos(x)
-
-    f1 = epyccel(arccos_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.arccos_call_r
     x = rand()
     assert isclose(f1(x), arccos_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arccos_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arccos_call_r(x))
 
 
-def test_arccos_phrase(language):
-    def arccos_phrase(x: "float", y: "float"):
-        from numpy import arccos
+def test_arccos_phrase(epyc_numpy_funcs_mod):
+    arccos_phrase = numpy_funcs.arccos_phrase
 
-        a = arccos(x) + arccos(y)
-        return a
-
-    f2 = epyccel(arccos_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.arccos_phrase
     x = rand()
     y = rand()
     assert isclose(f2(x, y), arccos_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1194,40 +966,30 @@ def test_arccos_phrase(language):
 
 
 # ----------------------------- arctan function -------------------------------#
-def test_arctan_call_i(language):
-    def arctan_call_i(x: "int"):
-        from numpy import arctan
+def test_arctan_call_i(epyc_numpy_funcs_mod):
+    arctan_call_i = numpy_funcs.arctan_call_i
 
-        return arctan(x)
-
-    f1 = epyccel(arctan_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan_call_i
     x = randint(1e6)
     assert isclose(f1(x), arctan_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arctan_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arctan_call_i(x))
 
 
-def test_arctan_call_r(language):
-    def arctan_call_r(x: "float"):
-        from numpy import arctan
+def test_arctan_call_r(epyc_numpy_funcs_mod):
+    arctan_call_r = numpy_funcs.arctan_call_r
 
-        return arctan(x)
-
-    f1 = epyccel(arctan_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), arctan_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), arctan_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), arctan_call_r(x))
 
 
-def test_arctan_phrase(language):
-    def arctan_phrase(x: "float", y: "float"):
-        from numpy import arctan
+def test_arctan_phrase(epyc_numpy_funcs_mod):
+    arctan_phrase = numpy_funcs.arctan_phrase
 
-        a = arctan(x) + arctan(y)
-        return a
-
-    f2 = epyccel(arctan_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.arctan_phrase
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), arctan_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1237,40 +999,30 @@ def test_arctan_phrase(language):
 
 
 # ------------------------------- sinh function -------------------------------#
-def test_sinh_call_i(language):
-    def sinh_call_i(x: "int"):
-        from numpy import sinh
+def test_sinh_call_i(epyc_numpy_funcs_mod):
+    sinh_call_i = numpy_funcs.sinh_call_i
 
-        return sinh(x)
-
-    f1 = epyccel(sinh_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.sinh_call_i
     x = randint(100)
     assert isclose(f1(x), sinh_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), sinh_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sinh_call_i(x))
 
 
-def test_sinh_call_r(language):
-    def sinh_call_r(x: "float"):
-        from numpy import sinh
+def test_sinh_call_r(epyc_numpy_funcs_mod):
+    sinh_call_r = numpy_funcs.sinh_call_r
 
-        return sinh(x)
-
-    f1 = epyccel(sinh_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.sinh_call_r
     x = uniform(high=1e2)
     assert isclose(f1(x), sinh_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), sinh_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sinh_call_r(x))
 
 
-def test_sinh_phrase(language):
-    def sinh_phrase(x: "float", y: "float"):
-        from numpy import sinh
+def test_sinh_phrase(epyc_numpy_funcs_mod):
+    sinh_phrase = numpy_funcs.sinh_phrase
 
-        a = sinh(x) + sinh(y)
-        return a
-
-    f2 = epyccel(sinh_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.sinh_phrase
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     assert isclose(f2(x, y), sinh_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1280,40 +1032,30 @@ def test_sinh_phrase(language):
 
 
 # ------------------------------- cosh function -------------------------------#
-def test_cosh_call_i(language):
-    def cosh_call_i(x: "int"):
-        from numpy import cosh
+def test_cosh_call_i(epyc_numpy_funcs_mod):
+    cosh_call_i = numpy_funcs.cosh_call_i
 
-        return cosh(x)
-
-    f1 = epyccel(cosh_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.cosh_call_i
     x = randint(100)
     assert isclose(f1(x), cosh_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), cosh_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), cosh_call_i(x))
 
 
-def test_cosh_call_r(language):
-    def cosh_call_r(x: "float"):
-        from numpy import cosh
+def test_cosh_call_r(epyc_numpy_funcs_mod):
+    cosh_call_r = numpy_funcs.cosh_call_r
 
-        return cosh(x)
-
-    f1 = epyccel(cosh_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.cosh_call_r
     x = uniform(high=1e2)
     assert isclose(f1(x), cosh_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), cosh_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), cosh_call_r(x))
 
 
-def test_cosh_phrase(language):
-    def cosh_phrase(x: "float", y: "float"):
-        from numpy import cosh
+def test_cosh_phrase(epyc_numpy_funcs_mod):
+    cosh_phrase = numpy_funcs.cosh_phrase
 
-        a = cosh(x) + cosh(y)
-        return a
-
-    f2 = epyccel(cosh_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.cosh_phrase
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     assert isclose(f2(x, y), cosh_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1323,40 +1065,30 @@ def test_cosh_phrase(language):
 
 
 # ------------------------------- tanh function -------------------------------#
-def test_tanh_call_i(language):
-    def tanh_call_i(x: "int"):
-        from numpy import tanh
+def test_tanh_call_i(epyc_numpy_funcs_mod):
+    tanh_call_i = numpy_funcs.tanh_call_i
 
-        return tanh(x)
-
-    f1 = epyccel(tanh_call_i, language=language)
+    f1 = epyc_numpy_funcs_mod.tanh_call_i
     x = randint(100)
     assert isclose(f1(x), tanh_call_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), tanh_call_i(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), tanh_call_i(x))
 
 
-def test_tanh_call_r(language):
-    def tanh_call_r(x: "float"):
-        from numpy import tanh
+def test_tanh_call_r(epyc_numpy_funcs_mod):
+    tanh_call_r = numpy_funcs.tanh_call_r
 
-        return tanh(x)
-
-    f1 = epyccel(tanh_call_r, language=language)
+    f1 = epyc_numpy_funcs_mod.tanh_call_r
     x = uniform(high=1e2)
     assert isclose(f1(x), tanh_call_r(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), tanh_call_r(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), tanh_call_r(x))
 
 
-def test_tanh_phrase(language):
-    def tanh_phrase(x: "float", y: "float"):
-        from numpy import tanh
+def test_tanh_phrase(epyc_numpy_funcs_mod):
+    tanh_phrase = numpy_funcs.tanh_phrase
 
-        a = tanh(x) + tanh(y)
-        return a
-
-    f2 = epyccel(tanh_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.tanh_phrase
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     assert isclose(f2(x, y), tanh_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1366,13 +1098,10 @@ def test_tanh_phrase(language):
 
 
 # ------------------------------ arctan2 function -----------------------------#
-def test_arctan2_call_i_i(language):
-    def arctan2_call(x: "int", y: "int"):
-        from numpy import arctan2
+def test_arctan2_call_i_i(epyc_numpy_funcs_mod):
+    arctan2_call = numpy_funcs.arctan2_call_i_i
 
-        return arctan2(x, y)
-
-    f1 = epyccel(arctan2_call, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan2_call_i_i
     x = randint(100)
     y = randint(100)
     assert isclose(f1(x, y), arctan2_call(x, y), rtol=RTOL, atol=ATOL)
@@ -1382,13 +1111,10 @@ def test_arctan2_call_i_i(language):
     assert matching_types(f1(x, y), arctan2_call(x, y))
 
 
-def test_arctan2_call_i_r(language):
-    def arctan2_call(x: "int", y: "float"):
-        from numpy import arctan2
+def test_arctan2_call_i_r(epyc_numpy_funcs_mod):
+    arctan2_call = numpy_funcs.arctan2_call_i_r
 
-        return arctan2(x, y)
-
-    f1 = epyccel(arctan2_call, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan2_call_i_r
     x = randint(100)
     y = uniform(high=1e2)
     assert isclose(f1(x, y), arctan2_call(x, y), rtol=RTOL, atol=ATOL)
@@ -1398,13 +1124,10 @@ def test_arctan2_call_i_r(language):
     assert matching_types(f1(x, y), arctan2_call(x, y))
 
 
-def test_arctan2_call_r_i(language):
-    def arctan2_call(x: "float", y: "int"):
-        from numpy import arctan2
+def test_arctan2_call_r_i(epyc_numpy_funcs_mod):
+    arctan2_call = numpy_funcs.arctan2_call_r_i
 
-        return arctan2(x, y)
-
-    f1 = epyccel(arctan2_call, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan2_call_r_i
     x = uniform(high=1e2)
     y = randint(100)
     assert isclose(f1(x, y), arctan2_call(x, y), rtol=RTOL, atol=ATOL)
@@ -1414,13 +1137,10 @@ def test_arctan2_call_r_i(language):
     assert matching_types(f1(x, y), arctan2_call(x, y))
 
 
-def test_arctan2_call_r_r(language):
-    def arctan2_call(x: "float", y: "float"):
-        from numpy import arctan2
+def test_arctan2_call_r_r(epyc_numpy_funcs_mod):
+    arctan2_call = numpy_funcs.arctan2_call_r_r
 
-        return arctan2(x, y)
-
-    f1 = epyccel(arctan2_call, language=language)
+    f1 = epyc_numpy_funcs_mod.arctan2_call_r_r
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     assert isclose(f1(x, y), arctan2_call(x, y), rtol=RTOL, atol=ATOL)
@@ -1430,14 +1150,10 @@ def test_arctan2_call_r_r(language):
     assert matching_types(f1(x, y), arctan2_call(x, y))
 
 
-def test_arctan2_phrase(language):
-    def arctan2_phrase(x: "float", y: "float", z: "float"):
-        from numpy import arctan2
+def test_arctan2_phrase(epyc_numpy_funcs_mod):
+    arctan2_phrase = numpy_funcs.arctan2_phrase
 
-        a = arctan2(x, y) + arctan2(x, z)
-        return a
-
-    f2 = epyccel(arctan2_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.arctan2_phrase
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     z = uniform(high=1e2)
@@ -1452,91 +1168,66 @@ def test_arctan2_phrase(language):
 
 
 # -------------------------------- sqrt function ------------------------------#
-def test_sqrt_call(language):
-    def sqrt_call(x: "float"):
-        from numpy import sqrt
+def test_sqrt_call(epyc_numpy_funcs_mod):
+    sqrt_call = numpy_funcs.sqrt_call
 
-        return sqrt(x)
-
-    f1 = epyccel(sqrt_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sqrt_call
     x = rand()
     assert isclose(f1(x), sqrt_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_sqrt_phrase(language):
-    def sqrt_phrase(x: "float", y: "float"):
-        from numpy import sqrt
+def test_sqrt_phrase(epyc_numpy_funcs_mod):
+    sqrt_phrase = numpy_funcs.sqrt_phrase
 
-        a = sqrt(x) * sqrt(y)
-        return a
-
-    f2 = epyccel(sqrt_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.sqrt_phrase
     x = rand()
     y = rand()
     assert isclose(f2(x, y), sqrt_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_sqrt_return_type_r(language):
-    def sqrt_return_type_real(x: "float"):
-        from numpy import sqrt
+def test_sqrt_return_type_r(epyc_numpy_funcs_mod):
+    sqrt_return_type_real = numpy_funcs.sqrt_return_type_r
 
-        a = sqrt(x)
-        return a
-
-    f1 = epyccel(sqrt_return_type_real, language=language)
+    f1 = epyc_numpy_funcs_mod.sqrt_return_type_r
     x = rand()
     assert isclose(f1(x), sqrt_return_type_real(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sqrt_return_type_real(x))
 
 
-def test_sqrt_return_type_c(language):
-    def sqrt_return_type_comp(x: "complex"):
-        from numpy import sqrt
+def test_sqrt_return_type_c(epyc_numpy_funcs_mod):
+    sqrt_return_type_comp = numpy_funcs.sqrt_return_type_c
 
-        a = sqrt(x)
-        return a
-
-    f1 = epyccel(sqrt_return_type_comp, language=language)
+    f1 = epyc_numpy_funcs_mod.sqrt_return_type_c
     x = rand() + 1j * rand()
     assert isclose(f1(x), sqrt_return_type_comp(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sqrt_return_type_comp(x))
 
 
 # -------------------------------- floor function -----------------------------#
-def test_floor_call_i(language):
-    def floor_call(x: "int"):
-        from numpy import floor
+def test_floor_call_i(epyc_numpy_funcs_mod):
+    floor_call = numpy_funcs.floor_call_i
 
-        return floor(x)
-
-    f1 = epyccel(floor_call, language=language)
+    f1 = epyc_numpy_funcs_mod.floor_call_i
     x = randint(1e6)
     assert isclose(f1(x), floor_call(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), floor_call(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), floor_call(x))
 
 
-def test_floor_call_r(language):
-    def floor_call(x: "float"):
-        from numpy import floor
+def test_floor_call_r(epyc_numpy_funcs_mod):
+    floor_call = numpy_funcs.floor_call_r
 
-        return floor(x)
-
-    f1 = epyccel(floor_call, language=language)
+    f1 = epyc_numpy_funcs_mod.floor_call_r
     x = uniform(high=1e6)
     assert isclose(f1(x), floor_call(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), floor_call(-x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), floor_call(x))
 
 
-def test_floor_phrase(language):
-    def floor_phrase(x: "float", y: "float"):
-        from numpy import floor
+def test_floor_phrase(epyc_numpy_funcs_mod):
+    floor_phrase = numpy_funcs.floor_phrase
 
-        a = floor(x) * floor(y)
-        return a
-
-    f2 = epyccel(floor_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.floor_phrase
     x = uniform(high=1e6)
     y = uniform(high=1e6)
     assert isclose(f2(x, y), floor_phrase(x, y), rtol=RTOL, atol=ATOL)
@@ -1545,29 +1236,16 @@ def test_floor_phrase(language):
     assert isclose(f2(x, -y), floor_phrase(x, -y), rtol=RTOL, atol=ATOL)
 
 
-def test_shape_indexed(language):
-    def test_shape_1d(f: "int[:]"):
-        from numpy import shape
-
-        return shape(f)[0]
-
-    def test_shape_2d(f: "int[:,:]"):
-        from numpy import shape
-
-        a = shape(f)
-        return a[0], a[1]
-
-    def test_shape_2d_f(f: "int[:,:](order=F)"):
-        from numpy import shape
-
-        a = shape(f)
-        return a[0], a[1]
+def test_shape_indexed(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_indexed__test_shape_1d
+    test_shape_2d = numpy_funcs.shape_indexed__test_shape_2d
+    test_shape_2d_f = numpy_funcs.shape_indexed__test_shape_2d_f
 
     from numpy import empty
 
-    f1 = epyccel(test_shape_1d, language=language)
-    f2 = epyccel(test_shape_2d, language=language)
-    f3 = epyccel(test_shape_2d_f, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_indexed__test_shape_1d
+    f2 = epyc_numpy_funcs_mod.shape_indexed__test_shape_2d
+    f3 = epyc_numpy_funcs_mod.shape_indexed__test_shape_2d_f
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1580,18 +1258,14 @@ def test_shape_indexed(language):
     assert f3(x3[0, :, :].T) == test_shape_2d_f(x3[0, :, :].T)
 
 
-def test_shape_property(language):
-    def test_shape_1d(f: "int[:]"):
-        return f.shape[0]
-
-    def test_shape_2d(f: "int[:,:]"):
-        a = f.shape
-        return a[0], a[1]
+def test_shape_property(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_property__test_shape_1d
+    test_shape_2d = numpy_funcs.shape_property__test_shape_2d
 
     from numpy import empty
 
-    f1 = epyccel(test_shape_1d, language=language)
-    f2 = epyccel(test_shape_2d, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_property__test_shape_1d
+    f2 = epyc_numpy_funcs_mod.shape_property__test_shape_2d
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1601,24 +1275,10 @@ def test_shape_property(language):
     assert f2(x2) == test_shape_2d(x2)
 
 
-def test_shape_tuple_output(language):
-    def test_shape_1d(f: "int[:]"):
-        from numpy import shape
-
-        s = shape(f)
-        return s[0]
-
-    def test_shape_1d_tuple(f: "int[:]"):
-        from numpy import shape
-
-        (s,) = shape(f)
-        return s
-
-    def test_shape_2d(f: "int[:,:]"):
-        from numpy import shape
-
-        a, b = shape(f)
-        return a, b
+def test_shape_tuple_output(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_tuple_output__test_shape_1d
+    test_shape_1d_tuple = numpy_funcs.shape_tuple_output__test_shape_1d_tuple
+    test_shape_2d = numpy_funcs.shape_tuple_output__test_shape_2d
 
     from numpy import empty
 
@@ -1627,31 +1287,22 @@ def test_shape_tuple_output(language):
     n3 = randint(1, 20)
     x1 = empty(n1, dtype=int)
     x2 = empty((n2, n3), dtype=int)
-    f1 = epyccel(test_shape_1d, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_tuple_output__test_shape_1d
     assert f1(x1) == test_shape_1d(x1)
-    f1_t = epyccel(test_shape_1d_tuple, language=language)
+    f1_t = epyc_numpy_funcs_mod.shape_tuple_output__test_shape_1d_tuple
     assert f1_t(x1) == test_shape_1d_tuple(x1)
-    f2 = epyccel(test_shape_2d, language=language)
+    f2 = epyc_numpy_funcs_mod.shape_tuple_output__test_shape_2d
     assert f2(x2) == test_shape_2d(x2)
 
 
-def test_shape_real(language):
-    def test_shape_1d(f: "float[:]"):
-        from numpy import shape
-
-        b = shape(f)
-        return b[0]
-
-    def test_shape_2d(f: "float[:,:]"):
-        from numpy import shape
-
-        a = shape(f)
-        return a[0], a[1]
+def test_shape_real(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_real__test_shape_1d
+    test_shape_2d = numpy_funcs.shape_real__test_shape_2d
 
     from numpy import empty
 
-    f1 = epyccel(test_shape_1d, language=language)
-    f2 = epyccel(test_shape_2d, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_real__test_shape_1d
+    f2 = epyc_numpy_funcs_mod.shape_real__test_shape_2d
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1661,21 +1312,12 @@ def test_shape_real(language):
     assert f2(x2) == test_shape_2d(x2)
 
 
-def test_shape_int(language):
-    def test_shape_1d(f: "int[:]"):
-        from numpy import shape
+def test_shape_int(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_int__test_shape_1d
+    test_shape_2d = numpy_funcs.shape_int__test_shape_2d
 
-        b = shape(f)
-        return b[0]
-
-    def test_shape_2d(f: "int[:,:]"):
-        from numpy import shape
-
-        a = shape(f)
-        return a[0], a[1]
-
-    f1 = epyccel(test_shape_1d, language=language)
-    f2 = epyccel(test_shape_2d, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_int__test_shape_1d
+    f2 = epyc_numpy_funcs_mod.shape_int__test_shape_2d
 
     from numpy import empty
 
@@ -1688,23 +1330,14 @@ def test_shape_int(language):
     assert f2(x2) == test_shape_2d(x2)
 
 
-def test_shape_bool(language):
-    def test_shape_1d(f: "bool[:]"):
-        from numpy import shape
-
-        b = shape(f)
-        return b[0]
-
-    def test_shape_2d(f: "bool[:,:]"):
-        from numpy import shape
-
-        a = shape(f)
-        return a[0], a[1]
+def test_shape_bool(epyc_numpy_funcs_mod):
+    test_shape_1d = numpy_funcs.shape_bool__test_shape_1d
+    test_shape_2d = numpy_funcs.shape_bool__test_shape_2d
 
     from numpy import empty
 
-    f1 = epyccel(test_shape_1d, language=language)
-    f2 = epyccel(test_shape_2d, language=language)
+    f1 = epyc_numpy_funcs_mod.shape_bool__test_shape_1d
+    f2 = epyc_numpy_funcs_mod.shape_bool__test_shape_2d
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1714,77 +1347,41 @@ def test_shape_bool(language):
     assert f2(x2) == test_shape_2d(x2)
 
 
-def test_full_basic_int(language):
-    def create_full_shape_1d(n: "int"):
-        from numpy import full, shape
-
-        a = full(n, 4)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_full_shape_2d(n: "int"):
-        from numpy import full, shape
-
-        a = full((n, n), 4)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_val(val: "int"):
-        from numpy import full
-
-        a = full(3, val)
-        return a[0], a[1], a[2]
-
-    def create_full_arg_names(val: "int"):
-        from numpy import full
-
-        a = full(fill_value=val, shape=(2, 3))
-        return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
+def test_full_basic_int(epyc_numpy_funcs_mod):
+    create_full_shape_1d = numpy_funcs.full_basic_int__create_full_shape_1d
+    create_full_shape_2d = numpy_funcs.full_basic_int__create_full_shape_2d
+    create_full_val = numpy_funcs.full_basic_int__create_full_val
+    create_full_arg_names = numpy_funcs.full_basic_int__create_full_arg_names
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_full_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.full_basic_int__create_full_shape_1d
     assert f_shape_1d(size) == create_full_shape_1d(size)
 
-    f_shape_2d = epyccel(create_full_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.full_basic_int__create_full_shape_2d
     assert f_shape_2d(size) == create_full_shape_2d(size)
 
-    f_val = epyccel(create_full_val, language=language)
+    f_val = epyc_numpy_funcs_mod.full_basic_int__create_full_val
     assert f_val(size) == create_full_val(size)
     assert matching_types(f_val(size)[0], create_full_val(size)[0])
 
-    f_arg_names = epyccel(create_full_arg_names, language=language)
+    f_arg_names = epyc_numpy_funcs_mod.full_basic_int__create_full_arg_names
     assert f_arg_names(size) == create_full_arg_names(size)
     assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
 
-def test_size(language):
-    def test_size_1d(f: "int[:]"):
-        from numpy import size
-
-        return size(f)
-
-    def test_size_2d(f: "int[:,:]"):
-        from numpy import size
-
-        return size(f)
-
-    def test_size_axis_variable_2d(f: "int[:,:]", axis: "int"):
-        from numpy import size
-
-        return size(f, axis)
-
-    def test_size_axis_literal_3d(f: "int[:,:,:]"):
-        from numpy import size
-
-        return size(f, 2)
+def test_size(epyc_numpy_funcs_mod):
+    test_size_1d = numpy_funcs.size__test_size_1d
+    test_size_2d = numpy_funcs.size__test_size_2d
+    test_size_axis_variable_2d = numpy_funcs.size__test_size_axis_variable_2d
+    test_size_axis_literal_3d = numpy_funcs.size__test_size_axis_literal_3d
 
     from numpy import empty
 
-    f1 = epyccel(test_size_1d, language=language)
-    f2 = epyccel(test_size_2d, language=language)
-    f3 = epyccel(test_size_axis_variable_2d, language=language)
-    f4 = epyccel(test_size_axis_literal_3d, language=language)
+    f1 = epyc_numpy_funcs_mod.size__test_size_1d
+    f2 = epyc_numpy_funcs_mod.size__test_size_2d
+    f3 = epyc_numpy_funcs_mod.size__test_size_axis_variable_2d
+    f4 = epyc_numpy_funcs_mod.size__test_size_axis_literal_3d
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1799,25 +1396,18 @@ def test_size(language):
     assert f4(x4) == test_size_axis_literal_3d(x4)
 
 
-def test_size_property(language):
-    def test_size_1d(f: "int[:]"):
-        return f.size
-
-    def test_size_2d(f: "int[:,:]"):
-        return f.size
-
-    def test_size_3d(f: "int[:,:,:]"):
-        return f.size
-
-    def test_slice_size_2d(f: "int[:,:,:]"):
-        return f[0, :, :].size
+def test_size_property(epyc_numpy_funcs_mod):
+    test_size_1d = numpy_funcs.size_property__test_size_1d
+    test_size_2d = numpy_funcs.size_property__test_size_2d
+    test_size_3d = numpy_funcs.size_property__test_size_3d
+    test_slice_size_2d = numpy_funcs.size_property__test_slice_size_2d
 
     from numpy import empty
 
-    f1 = epyccel(test_size_1d, language=language)
-    f2 = epyccel(test_size_2d, language=language)
-    f3 = epyccel(test_size_3d, language=language)
-    f4 = epyccel(test_slice_size_2d, language=language)
+    f1 = epyc_numpy_funcs_mod.size_property__test_size_1d
+    f2 = epyc_numpy_funcs_mod.size_property__test_size_2d
+    f3 = epyc_numpy_funcs_mod.size_property__test_size_3d
+    f4 = epyc_numpy_funcs_mod.size_property__test_slice_size_2d
     n1 = randint(1, 20)
     n2 = randint(1, 20)
     n3 = randint(1, 20)
@@ -1830,184 +1420,96 @@ def test_size_property(language):
     assert f4(x3) == test_slice_size_2d(x3)
 
 
-def test_full_basic_real(language):
-    def create_full_shape_1d(n: "int"):
-        from numpy import full, shape
-
-        a = full(n, 4)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_full_shape_2d(n: "int"):
-        from numpy import full, shape
-
-        a = full((n, n), 4)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_val(val: "float"):
-        from numpy import full
-
-        a = full(3, val)
-        return a[0], a[1], a[2]
-
-    def create_full_arg_names(val: "float"):
-        from numpy import full
-
-        a = full(fill_value=val, shape=(2, 3))
-        return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
+def test_full_basic_real(epyc_numpy_funcs_mod):
+    create_full_shape_1d = numpy_funcs.full_basic_real__create_full_shape_1d
+    create_full_shape_2d = numpy_funcs.full_basic_real__create_full_shape_2d
+    create_full_val = numpy_funcs.full_basic_real__create_full_val
+    create_full_arg_names = numpy_funcs.full_basic_real__create_full_arg_names
 
     size = randint(1, 10)
     val = rand() * 5
 
-    f_shape_1d = epyccel(create_full_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.full_basic_real__create_full_shape_1d
     assert f_shape_1d(size) == create_full_shape_1d(size)
 
-    f_shape_2d = epyccel(create_full_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.full_basic_real__create_full_shape_2d
     assert f_shape_2d(size) == create_full_shape_2d(size)
 
-    f_val = epyccel(create_full_val, language=language)
+    f_val = epyc_numpy_funcs_mod.full_basic_real__create_full_val
     assert f_val(val) == create_full_val(val)
     assert matching_types(f_val(val)[0], create_full_val(val)[0])
 
-    f_arg_names = epyccel(create_full_arg_names, language=language)
+    f_arg_names = epyc_numpy_funcs_mod.full_basic_real__create_full_arg_names
     assert f_arg_names(val) == create_full_arg_names(val)
     assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
 
-def test_full_basic_bool(language):
-    def create_full_shape_1d(n: "int"):
-        from numpy import full, shape
-
-        a = full(n, 4)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_full_shape_2d(n: "int"):
-        from numpy import full, shape
-
-        a = full((n, n), 4)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_val(val: "bool"):
-        from numpy import full
-
-        a = full(3, val)
-        return a[0], a[1], a[2]
-
-    def create_full_arg_names(val: "bool"):
-        from numpy import full
-
-        a = full(fill_value=val, shape=(2, 3))
-        return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
+def test_full_basic_bool(epyc_numpy_funcs_mod):
+    create_full_shape_1d = numpy_funcs.full_basic_bool__create_full_shape_1d
+    create_full_shape_2d = numpy_funcs.full_basic_bool__create_full_shape_2d
+    create_full_val = numpy_funcs.full_basic_bool__create_full_val
+    create_full_arg_names = numpy_funcs.full_basic_bool__create_full_arg_names
 
     size = randint(1, 10)
     val = bool(randint(2))
 
-    f_shape_1d = epyccel(create_full_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.full_basic_bool__create_full_shape_1d
     assert f_shape_1d(size) == create_full_shape_1d(size)
 
-    f_shape_2d = epyccel(create_full_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.full_basic_bool__create_full_shape_2d
     assert f_shape_2d(size) == create_full_shape_2d(size)
 
-    f_val = epyccel(create_full_val, language=language)
+    f_val = epyc_numpy_funcs_mod.full_basic_bool__create_full_val
     assert f_val(val) == create_full_val(val)
     assert matching_types(f_val(val)[0], create_full_val(val)[0])
 
-    f_arg_names = epyccel(create_full_arg_names, language=language)
+    f_arg_names = epyc_numpy_funcs_mod.full_basic_bool__create_full_arg_names
     assert f_arg_names(val) == create_full_arg_names(val)
     assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
 
-def test_full_order(language):
-    def create_full_shape_C(n: "int", m: "int"):
-        from numpy import full, shape
-
-        a = full((n, m), 4, order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_shape_F(n: "int", m: "int"):
-        from numpy import full, shape
-
-        a = full((n, m), 4, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_full_order(epyc_numpy_funcs_mod):
+    create_full_shape_C = numpy_funcs.full_order__create_full_shape_C
+    create_full_shape_F = numpy_funcs.full_order__create_full_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_full_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.full_order__create_full_shape_C
     assert f_shape_C(size_1, size_2) == create_full_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_full_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.full_order__create_full_shape_F
     assert f_shape_F(size_1, size_2) == create_full_shape_F(size_1, size_2)
 
 
-def test_full_dtype(language):
-    def create_full_val_int_int(val: "int"):
-        from numpy import full
-
-        a = full(3, val, int)
-        return a[0]
-
-    def create_full_val_int_float(val: "int"):
-        from numpy import full
-
-        a = full(3, val, float)
-        return a[0]
-
-    def create_full_val_int_complex(val: "int"):
-        from numpy import full
-
-        a = full(3, val, complex)
-        return a[0]
-
-    def create_full_val_real_int32(val: "float"):
-        from numpy import full, int32
-
-        a = full(3, val, int32)
-        return a[0]
-
-    def create_full_val_real_float32(val: "float"):
-        from numpy import float32, full
-
-        a = full(3, val, float32)
-        return a[0]
-
-    def create_full_val_real_float64(val: "float"):
-        from numpy import float64, full
-
-        a = full(3, val, float64)
-        return a[0]
-
-    def create_full_val_real_complex64(val: "float"):
-        from numpy import complex64, full
-
-        a = full(3, val, complex64)
-        return a[0]
-
-    def create_full_val_real_complex128(val: "float"):
-        from numpy import complex128, full
-
-        a = full(3, val, complex128)
-        return a[0]
+def test_full_dtype(epyc_numpy_funcs_mod):
+    create_full_val_int_int = numpy_funcs.full_dtype__create_full_val_int_int
+    create_full_val_int_float = numpy_funcs.full_dtype__create_full_val_int_float
+    create_full_val_int_complex = numpy_funcs.full_dtype__create_full_val_int_complex
+    create_full_val_real_int32 = numpy_funcs.full_dtype__create_full_val_real_int32
+    create_full_val_real_float32 = numpy_funcs.full_dtype__create_full_val_real_float32
+    create_full_val_real_float64 = numpy_funcs.full_dtype__create_full_val_real_float64
+    create_full_val_real_complex64 = (
+        numpy_funcs.full_dtype__create_full_val_real_complex64
+    )
+    create_full_val_real_complex128 = (
+        numpy_funcs.full_dtype__create_full_val_real_complex128
+    )
 
     val_int = randint(100)
     val_float = rand() * 100
 
-    f_int_int = epyccel(create_full_val_int_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.full_dtype__create_full_val_int_int
     assert f_int_int(val_int) == create_full_val_int_int(val_int)
     assert matching_types(f_int_int(val_int), create_full_val_int_int(val_int))
 
-    f_int_float = epyccel(create_full_val_int_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.full_dtype__create_full_val_int_float
     assert isclose(
         f_int_float(val_int), create_full_val_int_float(val_int), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_int_float(val_int), create_full_val_int_float(val_int))
 
-    f_int_complex = epyccel(create_full_val_int_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.full_dtype__create_full_val_int_complex
     assert isclose(
         f_int_complex(val_int),
         create_full_val_int_complex(val_int),
@@ -2016,13 +1518,13 @@ def test_full_dtype(language):
     )
     assert matching_types(f_int_complex(val_int), create_full_val_int_complex(val_int))
 
-    f_real_int32 = epyccel(create_full_val_real_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.full_dtype__create_full_val_real_int32
     assert f_real_int32(val_float) == create_full_val_real_int32(val_float)
     assert matching_types(
         f_real_int32(val_float), create_full_val_real_int32(val_float)
     )
 
-    f_real_float32 = epyccel(create_full_val_real_float32, language=language)
+    f_real_float32 = epyc_numpy_funcs_mod.full_dtype__create_full_val_real_float32
     assert isclose(
         f_real_float32(val_float),
         create_full_val_real_float32(val_float),
@@ -2033,7 +1535,7 @@ def test_full_dtype(language):
         f_real_float32(val_float), create_full_val_real_float32(val_float)
     )
 
-    f_real_float64 = epyccel(create_full_val_real_float64, language=language)
+    f_real_float64 = epyc_numpy_funcs_mod.full_dtype__create_full_val_real_float64
     assert isclose(
         f_real_float64(val_float),
         create_full_val_real_float64(val_float),
@@ -2044,7 +1546,7 @@ def test_full_dtype(language):
         f_real_float64(val_float), create_full_val_real_float64(val_float)
     )
 
-    f_real_complex64 = epyccel(create_full_val_real_complex64, language=language)
+    f_real_complex64 = epyc_numpy_funcs_mod.full_dtype__create_full_val_real_complex64
     assert isclose(
         f_real_complex64(val_float),
         create_full_val_real_complex64(val_float),
@@ -2055,7 +1557,7 @@ def test_full_dtype(language):
         f_real_complex64(val_float), create_full_val_real_complex64(val_float)
     )
 
-    f_real_complex128 = epyccel(create_full_val_real_complex128, language=language)
+    f_real_complex128 = epyc_numpy_funcs_mod.full_dtype__create_full_val_real_complex128
     assert isclose(
         f_real_complex128(val_float),
         create_full_val_real_complex128(val_float),
@@ -2067,12 +1569,8 @@ def test_full_dtype(language):
     )
 
 
-def test_full_dtype_auto(language):
-    def create_full_val_auto(val: T):
-        from numpy import full
-
-        a = full(3, val)
-        return a[0]
+def test_full_dtype_auto(epyc_numpy_funcs_mod):
+    create_full_val_auto = numpy_funcs.full_dtype_auto
 
     integer32 = randint(low=min_int32, high=max_int32, dtype=np.int32)
     integer = int(integer32)
@@ -2085,795 +1583,419 @@ def test_full_dtype_auto(language):
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
 
-    f_int = epyccel(create_full_val_auto, language=language)
+    f_int = epyc_numpy_funcs_mod.full_dtype_auto
     assert f_int(integer) == create_full_val_auto(integer)
     assert matching_types(f_int(integer), create_full_val_auto(integer))
 
-    f_float = epyccel(create_full_val_auto, language=language)
+    f_float = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(f_float(fl), create_full_val_auto(fl), rtol=RTOL, atol=ATOL)
     assert matching_types(f_float(fl), create_full_val_auto(fl))
 
-    f_complex = epyccel(create_full_val_auto, language=language)
+    f_complex = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(f_complex(cmplx), create_full_val_auto(cmplx), rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex(cmplx), create_full_val_auto(cmplx))
 
-    f_int32 = epyccel(create_full_val_auto, language=language)
+    f_int32 = epyc_numpy_funcs_mod.full_dtype_auto
     assert f_int32(integer32) == create_full_val_auto(integer32)
     assert matching_types(f_int32(integer32), create_full_val_auto(integer32))
 
-    f_float32 = epyccel(create_full_val_auto, language=language)
+    f_float32 = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(f_float32(fl32), create_full_val_auto(fl32), rtol=RTOL, atol=ATOL)
     assert matching_types(f_float32(fl32), create_full_val_auto(fl32))
 
-    f_float64 = epyccel(create_full_val_auto, language=language)
+    f_float64 = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(f_float64(fl64), create_full_val_auto(fl64), rtol=RTOL, atol=ATOL)
     assert matching_types(f_float64(fl64), create_full_val_auto(fl64))
 
-    f_complex64 = epyccel(create_full_val_auto, language=language)
+    f_complex64 = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(
         f_complex64(cmplx64), create_full_val_auto(cmplx64), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_complex64(cmplx64), create_full_val_auto(cmplx64))
 
-    f_complex128 = epyccel(create_full_val_auto, language=language)
+    f_complex128 = epyc_numpy_funcs_mod.full_dtype_auto
     assert isclose(
         f_complex128(cmplx128), create_full_val_auto(cmplx128), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_complex128(cmplx128), create_full_val_auto(cmplx128))
 
 
-def test_full_combined_args(language):
-    def create_full_1_shape():
-        from numpy import full, shape
+def test_full_combined_args(epyc_numpy_funcs_mod):
+    create_full_1_shape = numpy_funcs.full_combined_args__create_full_1_shape
+    create_full_1_val = numpy_funcs.full_combined_args__create_full_1_val
+    create_full_2_shape = numpy_funcs.full_combined_args__create_full_2_shape
+    create_full_2_val = numpy_funcs.full_combined_args__create_full_2_val
+    create_full_3_shape = numpy_funcs.full_combined_args__create_full_3_shape
+    create_full_3_val = numpy_funcs.full_combined_args__create_full_3_val
 
-        a = full((2, 1), 4.0, int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_1_val():
-        from numpy import full
-
-        a = full((2, 1), 4.0, int, "F")
-        return a[0, 0]
-
-    def create_full_2_shape():
-        from numpy import full, shape
-
-        a = full((4, 2), dtype=float, fill_value=1)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_2_val():
-        from numpy import full
-
-        a = full((4, 2), dtype=float, fill_value=1)
-        return a[0, 0]
-
-    def create_full_3_shape():
-        from numpy import full, shape
-
-        a = full(order="F", shape=(4, 2), dtype=complex, fill_value=1)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_3_val():
-        from numpy import full
-
-        a = full(order="F", shape=(4, 2), dtype=complex, fill_value=1)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_full_1_shape, language=language)
-    f1_val = epyccel(create_full_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.full_combined_args__create_full_1_shape
+    f1_val = epyc_numpy_funcs_mod.full_combined_args__create_full_1_val
     assert f1_shape() == create_full_1_shape()
     assert f1_val() == create_full_1_val()
     assert matching_types(f1_val(), create_full_1_val())
 
-    f2_shape = epyccel(create_full_2_shape, language=language)
-    f2_val = epyccel(create_full_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.full_combined_args__create_full_2_shape
+    f2_val = epyc_numpy_funcs_mod.full_combined_args__create_full_2_val
     assert f2_shape() == create_full_2_shape()
     assert isclose(f2_val(), create_full_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_full_2_val())
 
-    f3_shape = epyccel(create_full_3_shape, language=language)
-    f3_val = epyccel(create_full_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.full_combined_args__create_full_3_shape
+    f3_val = epyc_numpy_funcs_mod.full_combined_args__create_full_3_val
     assert f3_shape() == create_full_3_shape()
     assert isclose(f3_val(), create_full_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_full_3_val())
 
 
-def test_empty_basic(language):
-    def create_empty_shape_1d(n: "int"):
-        from numpy import empty, shape
-
-        a = empty(n)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_empty_shape_2d(n: "int"):
-        from numpy import empty, shape
-
-        a = empty((n, n))
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_empty_basic(epyc_numpy_funcs_mod):
+    create_empty_shape_1d = numpy_funcs.empty_basic__create_empty_shape_1d
+    create_empty_shape_2d = numpy_funcs.empty_basic__create_empty_shape_2d
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_empty_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.empty_basic__create_empty_shape_1d
     assert f_shape_1d(size) == create_empty_shape_1d(size)
 
-    f_shape_2d = epyccel(create_empty_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.empty_basic__create_empty_shape_2d
     assert f_shape_2d(size) == create_empty_shape_2d(size)
 
 
-def test_empty_order(language):
-    def create_empty_shape_C(n: "int", m: "int"):
-        from numpy import empty, shape
-
-        a = empty((n, m), order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_shape_F(n: "int", m: "int"):
-        from numpy import empty, shape
-
-        p = (n, m)
-        a = empty(p, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1], len(p), p[0], p[1]
+def test_empty_order(epyc_numpy_funcs_mod):
+    create_empty_shape_C = numpy_funcs.empty_order__create_empty_shape_C
+    create_empty_shape_F = numpy_funcs.empty_order__create_empty_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_empty_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.empty_order__create_empty_shape_C
     assert f_shape_C(size_1, size_2) == create_empty_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_empty_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.empty_order__create_empty_shape_F
     assert f_shape_F(size_1, size_2) == create_empty_shape_F(size_1, size_2)
 
 
-def test_empty_dtype(language):
-    def create_empty_val_int():
-        from numpy import empty
+def test_empty_dtype(epyc_numpy_funcs_mod):
+    create_empty_val_int = numpy_funcs.empty_dtype__create_empty_val_int
+    create_empty_val_float = numpy_funcs.empty_dtype__create_empty_val_float
+    create_empty_val_complex = numpy_funcs.empty_dtype__create_empty_val_complex
+    create_empty_val_int32 = numpy_funcs.empty_dtype__create_empty_val_int32
+    create_empty_val_float32 = numpy_funcs.empty_dtype__create_empty_val_float32
+    create_empty_val_float64 = numpy_funcs.empty_dtype__create_empty_val_float64
+    create_empty_val_complex64 = numpy_funcs.empty_dtype__create_empty_val_complex64
+    create_empty_val_complex128 = numpy_funcs.empty_dtype__create_empty_val_complex128
 
-        a = empty(3, int)
-        return a[0]
-
-    def create_empty_val_float():
-        from numpy import empty
-
-        a = empty(3, float)
-        return a[0]
-
-    def create_empty_val_complex():
-        from numpy import empty
-
-        a = empty(3, complex)
-        return a[0]
-
-    def create_empty_val_int32():
-        from numpy import empty, int32
-
-        a = empty(3, int32)
-        return a[0]
-
-    def create_empty_val_float32():
-        from numpy import empty, float32
-
-        a = empty(3, float32)
-        return a[0]
-
-    def create_empty_val_float64():
-        from numpy import empty, float64
-
-        a = empty(3, float64)
-        return a[0]
-
-    def create_empty_val_complex64():
-        from numpy import complex64, empty
-
-        a = empty(3, complex64)
-        return a[0]
-
-    def create_empty_val_complex128():
-        from numpy import complex128, empty
-
-        a = empty(3, complex128)
-        return a[0]
-
-    f_int_int = epyccel(create_empty_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_int
     assert matching_types(f_int_int(), create_empty_val_int())
 
-    f_int_float = epyccel(create_empty_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_float
     assert matching_types(f_int_float(), create_empty_val_float())
 
-    f_int_complex = epyccel(create_empty_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_complex
     assert matching_types(f_int_complex(), create_empty_val_complex())
 
-    f_real_int32 = epyccel(create_empty_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_int32
     assert matching_types(f_real_int32(), create_empty_val_int32())
 
-    f_real_float32 = epyccel(create_empty_val_float32, language=language)
+    f_real_float32 = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_float32
     assert matching_types(f_real_float32(), create_empty_val_float32())
 
-    f_real_float64 = epyccel(create_empty_val_float64, language=language)
+    f_real_float64 = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_float64
     assert matching_types(f_real_float64(), create_empty_val_float64())
 
-    f_real_complex64 = epyccel(create_empty_val_complex64, language=language)
+    f_real_complex64 = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_complex64
     assert matching_types(f_real_complex64(), create_empty_val_complex64())
 
-    f_real_complex128 = epyccel(create_empty_val_complex128, language=language)
+    f_real_complex128 = epyc_numpy_funcs_mod.empty_dtype__create_empty_val_complex128
     assert matching_types(f_real_complex128(), create_empty_val_complex128())
 
 
-def test_empty_combined_args(language):
-    def create_empty_1_shape():
-        from numpy import empty, shape
+def test_empty_combined_args(epyc_numpy_funcs_mod):
+    create_empty_1_shape = numpy_funcs.empty_combined_args__create_empty_1_shape
+    create_empty_1_val = numpy_funcs.empty_combined_args__create_empty_1_val
+    create_empty_2_shape = numpy_funcs.empty_combined_args__create_empty_2_shape
+    create_empty_2_val = numpy_funcs.empty_combined_args__create_empty_2_val
+    create_empty_3_shape = numpy_funcs.empty_combined_args__create_empty_3_shape
+    create_empty_3_val = numpy_funcs.empty_combined_args__create_empty_3_val
 
-        a = empty((2, 1), int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_1_val():
-        from numpy import empty
-
-        a = empty((2, 1), int, "F")
-        return a[0, 0]
-
-    def create_empty_2_shape():
-        from numpy import empty, shape
-
-        a = empty((4, 2), dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_2_val():
-        from numpy import empty
-
-        a = empty((4, 2), dtype=float)
-        return a[0, 0]
-
-    def create_empty_3_shape():
-        from numpy import empty, shape
-
-        a = empty(order="F", shape=(4, 2), dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_3_val():
-        from numpy import empty
-
-        a = empty(order="F", shape=(4, 2), dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_empty_1_shape, language=language)
-    f1_val = epyccel(create_empty_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.empty_combined_args__create_empty_1_shape
+    f1_val = epyc_numpy_funcs_mod.empty_combined_args__create_empty_1_val
     assert f1_shape() == create_empty_1_shape()
     assert matching_types(f1_val(), create_empty_1_val())
 
-    f2_shape = epyccel(create_empty_2_shape, language=language)
-    f2_val = epyccel(create_empty_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.empty_combined_args__create_empty_2_shape
+    f2_val = epyc_numpy_funcs_mod.empty_combined_args__create_empty_2_val
     assert f2_shape() == create_empty_2_shape()
     assert matching_types(f2_val(), create_empty_2_val())
 
-    f3_shape = epyccel(create_empty_3_shape, language=language)
-    f3_val = epyccel(create_empty_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.empty_combined_args__create_empty_3_shape
+    f3_val = epyc_numpy_funcs_mod.empty_combined_args__create_empty_3_val
     assert f3_shape() == create_empty_3_shape()
     assert matching_types(f3_val(), create_empty_3_val())
 
 
-def test_ones_basic(language):
-    def create_ones_shape_1d(n: "int"):
-        from numpy import ones, shape
-
-        a = ones(n)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_ones_shape_2d(n: "int"):
-        from numpy import ones, shape
-
-        a = ones((n, n))
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_ones_basic(epyc_numpy_funcs_mod):
+    create_ones_shape_1d = numpy_funcs.ones_basic__create_ones_shape_1d
+    create_ones_shape_2d = numpy_funcs.ones_basic__create_ones_shape_2d
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_ones_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.ones_basic__create_ones_shape_1d
     assert f_shape_1d(size) == create_ones_shape_1d(size)
 
-    f_shape_2d = epyccel(create_ones_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.ones_basic__create_ones_shape_2d
     assert f_shape_2d(size) == create_ones_shape_2d(size)
 
 
-def test_ones_order(language):
-    def create_ones_shape_C(n: "int", m: "int"):
-        from numpy import ones, shape
-
-        a = ones((n, m), order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_shape_F(n: "int", m: "int"):
-        from numpy import ones, shape
-
-        a = ones((n, m), order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_ones_order(epyc_numpy_funcs_mod):
+    create_ones_shape_C = numpy_funcs.ones_order__create_ones_shape_C
+    create_ones_shape_F = numpy_funcs.ones_order__create_ones_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_ones_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.ones_order__create_ones_shape_C
     assert f_shape_C(size_1, size_2) == create_ones_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_ones_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.ones_order__create_ones_shape_F
     assert f_shape_F(size_1, size_2) == create_ones_shape_F(size_1, size_2)
 
 
-def test_ones_dtype(language):
-    def create_ones_val_int():
-        from numpy import ones
+def test_ones_dtype(epyc_numpy_funcs_mod):
+    create_ones_val_int = numpy_funcs.ones_dtype__create_ones_val_int
+    create_ones_val_float = numpy_funcs.ones_dtype__create_ones_val_float
+    create_ones_val_complex = numpy_funcs.ones_dtype__create_ones_val_complex
+    create_ones_val_int32 = numpy_funcs.ones_dtype__create_ones_val_int32
+    create_ones_val_float32 = numpy_funcs.ones_dtype__create_ones_val_float32
+    create_ones_val_float64 = numpy_funcs.ones_dtype__create_ones_val_float64
+    create_ones_val_complex64 = numpy_funcs.ones_dtype__create_ones_val_complex64
+    create_ones_val_complex128 = numpy_funcs.ones_dtype__create_ones_val_complex128
 
-        a = ones(3, int)
-        return a[0]
-
-    def create_ones_val_float():
-        from numpy import ones
-
-        a = ones(3, float)
-        return a[0]
-
-    def create_ones_val_complex():
-        from numpy import ones
-
-        a = ones(3, complex)
-        return a[0]
-
-    def create_ones_val_int32():
-        from numpy import int32, ones
-
-        a = ones(3, int32)
-        return a[0]
-
-    def create_ones_val_float32():
-        from numpy import float32, ones
-
-        a = ones(3, float32)
-        return a[0]
-
-    def create_ones_val_float64():
-        from numpy import float64, ones
-
-        a = ones(3, float64)
-        return a[0]
-
-    def create_ones_val_complex64():
-        from numpy import complex64, ones
-
-        a = ones(3, complex64)
-        return a[0]
-
-    def create_ones_val_complex128():
-        from numpy import complex128, ones
-
-        a = ones(3, complex128)
-        return a[0]
-
-    f_int_int = epyccel(create_ones_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_int
     assert f_int_int() == create_ones_val_int()
     assert matching_types(f_int_int(), create_ones_val_int())
 
-    f_int_float = epyccel(create_ones_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_float
     assert isclose(f_int_float(), create_ones_val_float(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(), create_ones_val_float())
 
-    f_int_complex = epyccel(create_ones_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_complex
     assert isclose(f_int_complex(), create_ones_val_complex(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_complex(), create_ones_val_complex())
 
-    f_real_int32 = epyccel(create_ones_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_int32
     assert f_real_int32() == create_ones_val_int32()
     assert matching_types(f_real_int32(), create_ones_val_int32())
 
-    f_real_float32 = epyccel(create_ones_val_float32, language=language)
+    f_real_float32 = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_float32
     assert isclose(f_real_float32(), create_ones_val_float32(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float32(), create_ones_val_float32())
 
-    f_real_float64 = epyccel(create_ones_val_float64, language=language)
+    f_real_float64 = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_float64
     assert isclose(f_real_float64(), create_ones_val_float64(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float64(), create_ones_val_float64())
 
-    f_real_complex64 = epyccel(create_ones_val_complex64, language=language)
+    f_real_complex64 = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_complex64
     assert isclose(
         f_real_complex64(), create_ones_val_complex64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex64(), create_ones_val_complex64())
 
-    f_real_complex128 = epyccel(create_ones_val_complex128, language=language)
+    f_real_complex128 = epyc_numpy_funcs_mod.ones_dtype__create_ones_val_complex128
     assert isclose(
         f_real_complex128(), create_ones_val_complex128(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex128(), create_ones_val_complex128())
 
 
-def test_ones_combined_args(language):
-    def create_ones_1_shape():
-        from numpy import ones, shape
+def test_ones_combined_args(epyc_numpy_funcs_mod):
+    create_ones_1_shape = numpy_funcs.ones_combined_args__create_ones_1_shape
+    create_ones_1_val = numpy_funcs.ones_combined_args__create_ones_1_val
+    create_ones_2_shape = numpy_funcs.ones_combined_args__create_ones_2_shape
+    create_ones_2_val = numpy_funcs.ones_combined_args__create_ones_2_val
+    create_ones_3_shape = numpy_funcs.ones_combined_args__create_ones_3_shape
+    create_ones_3_val = numpy_funcs.ones_combined_args__create_ones_3_val
 
-        a = ones((2, 1), int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_1_val():
-        from numpy import ones
-
-        a = ones((2, 1), int, "F")
-        return a[0, 0]
-
-    def create_ones_2_shape():
-        from numpy import ones, shape
-
-        a = ones((4, 2), dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_2_val():
-        from numpy import ones
-
-        a = ones((4, 2), dtype=float)
-        return a[0, 0]
-
-    def create_ones_3_shape():
-        from numpy import ones, shape
-
-        a = ones(order="F", shape=(4, 2), dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_3_val():
-        from numpy import ones
-
-        a = ones(order="F", shape=(4, 2), dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_ones_1_shape, language=language)
-    f1_val = epyccel(create_ones_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.ones_combined_args__create_ones_1_shape
+    f1_val = epyc_numpy_funcs_mod.ones_combined_args__create_ones_1_val
     assert f1_shape() == create_ones_1_shape()
     assert f1_val() == create_ones_1_val()
     assert matching_types(f1_val(), create_ones_1_val())
 
-    f2_shape = epyccel(create_ones_2_shape, language=language)
-    f2_val = epyccel(create_ones_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.ones_combined_args__create_ones_2_shape
+    f2_val = epyc_numpy_funcs_mod.ones_combined_args__create_ones_2_val
     assert f2_shape() == create_ones_2_shape()
     assert isclose(f2_val(), create_ones_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_ones_2_val())
 
-    f3_shape = epyccel(create_ones_3_shape, language=language)
-    f3_val = epyccel(create_ones_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.ones_combined_args__create_ones_3_shape
+    f3_val = epyc_numpy_funcs_mod.ones_combined_args__create_ones_3_val
     assert f3_shape() == create_ones_3_shape()
     assert isclose(f3_val(), create_ones_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_ones_3_val())
 
 
-def test_ones_in_expression(language):
-    def ones_plus_scalar():
-        from numpy import ones
+def test_ones_in_expression(epyc_numpy_funcs_mod):
+    ones_plus_scalar = numpy_funcs.ones_in_expression__ones_plus_scalar
+    ones_times_scalar = numpy_funcs.ones_in_expression__ones_times_scalar
 
-        a = ones(3, dtype=int) + 2
-        return a.sum()
-
-    def ones_times_scalar():
-        from numpy import ones
-
-        a = ones(4) * 3.0
-        return a.sum()
-
-    f1 = epyccel(ones_plus_scalar, language=language)
+    f1 = epyc_numpy_funcs_mod.ones_in_expression__ones_plus_scalar
     assert f1() == ones_plus_scalar()
 
-    f2 = epyccel(ones_times_scalar, language=language)
+    f2 = epyc_numpy_funcs_mod.ones_in_expression__ones_times_scalar
     assert isclose(f2(), ones_times_scalar(), rtol=RTOL, atol=ATOL)
 
 
-def test_zeros_basic(language):
-    def create_zeros_shape_1d(n: "int"):
-        from numpy import shape, zeros
-
-        a = zeros(n)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_zeros_shape_2d(n: "int"):
-        from numpy import shape, zeros
-
-        a = zeros((n, n))
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_zeros_basic(epyc_numpy_funcs_mod):
+    create_zeros_shape_1d = numpy_funcs.zeros_basic__create_zeros_shape_1d
+    create_zeros_shape_2d = numpy_funcs.zeros_basic__create_zeros_shape_2d
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_zeros_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.zeros_basic__create_zeros_shape_1d
     assert f_shape_1d(size) == create_zeros_shape_1d(size)
 
-    f_shape_2d = epyccel(create_zeros_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.zeros_basic__create_zeros_shape_2d
     assert f_shape_2d(size) == create_zeros_shape_2d(size)
 
 
-def test_zeros_order(language):
-    def create_zeros_shape_C(n: "int", m: "int"):
-        from numpy import shape, zeros
-
-        a = zeros((n, m), order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_shape_F(n: "int", m: "int"):
-        from numpy import shape, zeros
-
-        a = zeros((n, m), order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_zeros_order(epyc_numpy_funcs_mod):
+    create_zeros_shape_C = numpy_funcs.zeros_order__create_zeros_shape_C
+    create_zeros_shape_F = numpy_funcs.zeros_order__create_zeros_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_zeros_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.zeros_order__create_zeros_shape_C
     assert f_shape_C(size_1, size_2) == create_zeros_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_zeros_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.zeros_order__create_zeros_shape_F
     assert f_shape_F(size_1, size_2) == create_zeros_shape_F(size_1, size_2)
 
 
-def test_zeros_dtype(language):
-    def create_zeros_val_int():
-        from numpy import zeros
+def test_zeros_dtype(epyc_numpy_funcs_mod):
+    create_zeros_val_int = numpy_funcs.zeros_dtype__create_zeros_val_int
+    create_zeros_val_float = numpy_funcs.zeros_dtype__create_zeros_val_float
+    create_zeros_val_complex = numpy_funcs.zeros_dtype__create_zeros_val_complex
+    create_zeros_val_int32 = numpy_funcs.zeros_dtype__create_zeros_val_int32
+    create_zeros_val_float32 = numpy_funcs.zeros_dtype__create_zeros_val_float32
+    create_zeros_val_float64 = numpy_funcs.zeros_dtype__create_zeros_val_float64
+    create_zeros_val_complex64 = numpy_funcs.zeros_dtype__create_zeros_val_complex64
+    create_zeros_val_complex128 = numpy_funcs.zeros_dtype__create_zeros_val_complex128
 
-        a = zeros(3, int)
-        return a[0]
-
-    def create_zeros_val_float():
-        from numpy import zeros
-
-        a = zeros(3, float)
-        return a[0]
-
-    def create_zeros_val_complex():
-        from numpy import zeros
-
-        a = zeros(3, complex)
-        return a[0]
-
-    def create_zeros_val_int32():
-        from numpy import int32, zeros
-
-        a = zeros(3, int32)
-        return a[0]
-
-    def create_zeros_val_float32():
-        from numpy import float32, zeros
-
-        a = zeros(3, float32)
-        return a[0]
-
-    def create_zeros_val_float64():
-        from numpy import float64, zeros
-
-        a = zeros(3, float64)
-        return a[0]
-
-    def create_zeros_val_complex64():
-        from numpy import complex64, zeros
-
-        a = zeros(3, complex64)
-        return a[0]
-
-    def create_zeros_val_complex128():
-        from numpy import complex128, zeros
-
-        a = zeros(3, complex128)
-        return a[0]
-
-    f_int_int = epyccel(create_zeros_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_int
     assert f_int_int() == create_zeros_val_int()
     assert matching_types(f_int_int(), create_zeros_val_int())
 
-    f_int_float = epyccel(create_zeros_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_float
     assert isclose(f_int_float(), create_zeros_val_float(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(), create_zeros_val_float())
 
-    f_int_complex = epyccel(create_zeros_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_complex
     assert isclose(f_int_complex(), create_zeros_val_complex(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_complex(), create_zeros_val_complex())
 
-    f_real_int32 = epyccel(create_zeros_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_int32
     assert f_real_int32() == create_zeros_val_int32()
     assert matching_types(f_real_int32(), create_zeros_val_int32())
 
-    f_real_float32 = epyccel(create_zeros_val_float32, language=language)
+    f_real_float32 = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_float32
     assert isclose(f_real_float32(), create_zeros_val_float32(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float32(), create_zeros_val_float32())
 
-    f_real_float64 = epyccel(create_zeros_val_float64, language=language)
+    f_real_float64 = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_float64
     assert isclose(f_real_float64(), create_zeros_val_float64(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_real_float64(), create_zeros_val_float64())
 
-    f_real_complex64 = epyccel(create_zeros_val_complex64, language=language)
+    f_real_complex64 = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_complex64
     assert isclose(
         f_real_complex64(), create_zeros_val_complex64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex64(), create_zeros_val_complex64())
 
-    f_real_complex128 = epyccel(create_zeros_val_complex128, language=language)
+    f_real_complex128 = epyc_numpy_funcs_mod.zeros_dtype__create_zeros_val_complex128
     assert isclose(
         f_real_complex128(), create_zeros_val_complex128(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex128(), create_zeros_val_complex128())
 
 
-def test_zeros_combined_args(language):
-    def create_zeros_1_shape():
-        from numpy import shape, zeros
+def test_zeros_combined_args(epyc_numpy_funcs_mod):
+    create_zeros_1_shape = numpy_funcs.zeros_combined_args__create_zeros_1_shape
+    create_zeros_1_val = numpy_funcs.zeros_combined_args__create_zeros_1_val
+    create_zeros_2_shape = numpy_funcs.zeros_combined_args__create_zeros_2_shape
+    create_zeros_2_val = numpy_funcs.zeros_combined_args__create_zeros_2_val
+    create_zeros_3_shape = numpy_funcs.zeros_combined_args__create_zeros_3_shape
+    create_zeros_3_val = numpy_funcs.zeros_combined_args__create_zeros_3_val
 
-        a = zeros((2, 1), int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_1_val():
-        from numpy import zeros
-
-        a = zeros((2, 1), int, "F")
-        return a[0, 0]
-
-    def create_zeros_2_shape():
-        from numpy import shape, zeros
-
-        a = zeros((4, 2), dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_2_val():
-        from numpy import zeros
-
-        a = zeros((4, 2), dtype=float)
-        return a[0, 0]
-
-    def create_zeros_3_shape():
-        from numpy import shape, zeros
-
-        a = zeros(order="F", shape=(4, 2), dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_3_val():
-        from numpy import zeros
-
-        a = zeros(order="F", shape=(4, 2), dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_zeros_1_shape, language=language)
-    f1_val = epyccel(create_zeros_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_1_shape
+    f1_val = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_1_val
     assert f1_shape() == create_zeros_1_shape()
     assert f1_val() == create_zeros_1_val()
     assert matching_types(f1_val(), create_zeros_1_val())
 
-    f2_shape = epyccel(create_zeros_2_shape, language=language)
-    f2_val = epyccel(create_zeros_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_2_shape
+    f2_val = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_2_val
     assert f2_shape() == create_zeros_2_shape()
     assert isclose(f2_val(), create_zeros_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_zeros_2_val())
 
-    f3_shape = epyccel(create_zeros_3_shape, language=language)
-    f3_val = epyccel(create_zeros_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_3_shape
+    f3_val = epyc_numpy_funcs_mod.zeros_combined_args__create_zeros_3_val
     assert f3_shape() == create_zeros_3_shape()
     assert isclose(f3_val(), create_zeros_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_3_val())
 
 
-def test_zeros_in_expression(language):
-    def zeros_plus_scalar():
-        from numpy import zeros
+def test_zeros_in_expression(epyc_numpy_funcs_mod):
+    zeros_plus_scalar = numpy_funcs.zeros_in_expression__zeros_plus_scalar
+    zeros_times_scalar = numpy_funcs.zeros_in_expression__zeros_times_scalar
+    zeros_2d_plus_scalar = numpy_funcs.zeros_in_expression__zeros_2d_plus_scalar
+    zeros_plus_ones = numpy_funcs.zeros_in_expression__zeros_plus_ones
 
-        a = zeros(3, dtype=int) + 2
-        return a.sum()
-
-    def zeros_times_scalar():
-        from numpy import zeros
-
-        a = zeros(4) * 3.0
-        return a.sum()
-
-    def zeros_2d_plus_scalar():
-        from numpy import zeros
-
-        a = zeros((2, 3), dtype=int) + 1
-        return a.sum()
-
-    def zeros_plus_ones():
-        from numpy import ones, zeros
-
-        a = zeros(3) + ones(3)
-        return a.sum()
-
-    f1 = epyccel(zeros_plus_scalar, language=language)
+    f1 = epyc_numpy_funcs_mod.zeros_in_expression__zeros_plus_scalar
     assert f1() == zeros_plus_scalar()
 
-    f2 = epyccel(zeros_times_scalar, language=language)
+    f2 = epyc_numpy_funcs_mod.zeros_in_expression__zeros_times_scalar
     assert isclose(f2(), zeros_times_scalar(), rtol=RTOL, atol=ATOL)
 
-    f3 = epyccel(zeros_2d_plus_scalar, language=language)
+    f3 = epyc_numpy_funcs_mod.zeros_in_expression__zeros_2d_plus_scalar
     assert f3() == zeros_2d_plus_scalar()
 
-    f4 = epyccel(zeros_plus_ones, language=language)
+    f4 = epyc_numpy_funcs_mod.zeros_in_expression__zeros_plus_ones
     assert isclose(f4(), zeros_plus_ones(), rtol=RTOL, atol=ATOL)
 
 
-def test_array(language):
-    def create_array_list_val():
-        from numpy import array
+def test_array(epyc_numpy_funcs_mod):
+    create_array_list_shape = numpy_funcs.array__create_array_list_shape
+    create_array_list_val = numpy_funcs.array__create_array_list_val
+    create_array_tuple_shape = numpy_funcs.array__create_array_tuple_shape
+    create_array_tuple_val = numpy_funcs.array__create_array_tuple_val
+    create_array_tuple_ref = numpy_funcs.array__create_array_tuple_ref
 
-        a = array([[1, 2, 3], [4, 5, 6]])
-        return a[0, 0]
-
-    def create_array_list_shape():
-        from numpy import array, shape
-
-        a = array([[1, 2, 3], [4, 5, 6]])
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_array_tuple_val():
-        from numpy import array
-
-        a = array(((1, 2, 3), (4, 5, 6)))
-        return a[0, 0]
-
-    def create_array_tuple_shape():
-        from numpy import array, shape
-
-        a = array(((1, 2, 3), (4, 5, 6)))
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_array_tuple_ref(a: "int[:,:]"):
-        from numpy import array
-
-        b = (a[0, :], a[1, :])
-        c = array(b)
-        return c
-
-    f1_shape = epyccel(create_array_list_shape, language=language)
-    f1_val = epyccel(create_array_list_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.array__create_array_list_shape
+    f1_val = epyc_numpy_funcs_mod.array__create_array_list_val
     assert f1_shape() == create_array_list_shape()
     assert f1_val() == create_array_list_val()
     assert matching_types(f1_val(), create_array_list_val())
-    f2_shape = epyccel(create_array_tuple_shape, language=language)
-    f2_val = epyccel(create_array_tuple_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.array__create_array_tuple_shape
+    f2_val = epyc_numpy_funcs_mod.array__create_array_tuple_val
     assert f2_shape() == create_array_tuple_shape()
     assert f2_val() == create_array_tuple_val()
     assert matching_types(f2_val(), create_array_tuple_val())
-    array_tuple_ref = epyccel(create_array_tuple_ref, language=language)
+    array_tuple_ref = epyc_numpy_funcs_mod.array__create_array_tuple_ref
     tmp_arr = np.ones((3, 4), dtype=int)
     assert np.allclose(array_tuple_ref(tmp_arr), create_array_tuple_ref(tmp_arr))
 
 
-def test_array_in_expression(language):
-    def create_array_list_val():
-        from numpy import array
+def test_array_in_expression(epyc_numpy_funcs_mod):
+    create_array_list_val = numpy_funcs.array_in_expression
 
-        a = array([[1, 2, 3], [4, 5, 6]]) * 2
-        return a
-
-    f1_val = epyccel(create_array_list_val, language=language)
+    f1_val = epyc_numpy_funcs_mod.array_in_expression
     assert np.array_equal(f1_val(), create_array_list_val())
 
 
-def test_array_new_dtype(language):
-    def create_float_array_tuple_ref(a: "int[:,:]"):
-        from numpy import array
-
-        b = (a[0, :], a[1, :])
-        c = array(b, dtype=float)
-        return c
+def test_array_new_dtype(epyc_numpy_funcs_mod):
+    create_float_array_tuple_ref = numpy_funcs.array_new_dtype
 
     def create_bool_array_tuple_ref(a: "int[:,:]"):
         from numpy import array
@@ -2882,13 +2004,13 @@ def test_array_new_dtype(language):
         c = array(b, dtype=bool)
         return c
 
-    array_float_tuple_ref = epyccel(create_float_array_tuple_ref, language=language)
+    array_float_tuple_ref = epyc_numpy_funcs_mod.array_new_dtype
     tmp_arr = np.ones((3, 4), dtype=int)
     assert np.allclose(
         array_float_tuple_ref(tmp_arr), create_float_array_tuple_ref(tmp_arr)
     )
 
-    array_bool_tuple_ref = epyccel(create_float_array_tuple_ref, language=language)
+    array_bool_tuple_ref = epyc_numpy_funcs_mod.array_new_dtype
     tmp_arr = np.ones((3, 4), dtype=int)
     assert np.allclose(
         array_bool_tuple_ref(tmp_arr), create_bool_array_tuple_ref(tmp_arr)
@@ -3186,89 +2308,68 @@ def test_randint_dtype(language):
     assert len(set(y)) > 1
 
 
-def test_sum_bool(language):
-    def sum_call(x: "bool[:]"):
-        from numpy import sum as np_sum
+def test_sum_bool(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_bool
 
-        return np_sum(x)
-
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_bool
     x = randint(1, size=10, dtype=bool)
     assert f1(x) == sum_call(x)
 
 
-def test_sum_int(language):
-    def sum_call(x: "int[:]"):
-        from numpy import sum as np_sum
+def test_sum_int(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_int
 
-        return np_sum(x)
-
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_int
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 
-def test_sum_override_builtin(language):
-    def sum_call(x: "int[:]"):
-        from numpy import sum
+def test_sum_override_builtin(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_override_builtin
 
-        return sum(x)
-
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_override_builtin
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 
-def test_sum_real(language):
-    def sum_call(x: "float[:]"):
-        from numpy import sum as np_sum
+def test_sum_real(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_real
 
-        return np_sum(x)
-
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_real
     x = rand(10)
     assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_sum_type(language):
-    def sum_call(x: "float32[:]"):
-        from numpy import sum as np_sum
+def test_sum_type(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_type
 
-        return np_sum(x)
-
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_type
     x = rand(10).astype(np.float32)
     assert isclose(f1(x), sum_call(x), rtol=RTOL32, atol=ATOL32)
     assert matching_types(f1(x), sum_call(x))
 
 
-def test_sum_phrase(language):
-    def sum_phrase(x: "float[:]", y: "float[:]"):
-        from numpy import sum as np_sum
+def test_sum_phrase(epyc_numpy_funcs_mod):
+    sum_phrase = numpy_funcs.sum_phrase
 
-        a = np_sum(x) * np_sum(y)
-        return a
-
-    f2 = epyccel(sum_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.sum_phrase
     x = rand(10)
     y = rand(15)
     assert isclose(f2(x, y), sum_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_sum_property(language):
-    def sum_call(x: "int[:]"):
-        return x.sum()
+def test_sum_property(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_property
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_property
     x = randint(99, size=10)
     assert f1(x) == sum_call(x)
 
 
-def test_sum_3d(language):
-    def sum_call(x: "float[:,:,:]"):
-        return np.sum(x)
+def test_sum_3d(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_3d
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_3d
     x = rand(4, 5, 6)
     assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
@@ -3292,31 +2393,28 @@ def test_sum_slice_in_if(language):
     assert f1(x) == sum_call(x)
 
 
-def test_sum_dtype(language):
-    def sum_call(x: "int[:]"):
-        return np.sum(x, dtype=float)
+def test_sum_dtype(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_dtype
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_dtype
     x = randint(99, size=10)
     assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sum_call(x))
 
 
-def test_sum_dtype_2(language):
-    def sum_call(x: "float[:,:]"):
-        return np.sum(x, dtype=int)
+def test_sum_dtype_2(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_dtype_2
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_dtype_2
     x = rand(6, 4)
     assert np.array_equal(f1(x), sum_call(x))
     assert matching_types(f1(x), sum_call(x))
 
 
-def test_sum_axis_2d(language):
-    def sum_call(x: "int[:,:]"):
-        return np.sum(x, axis=1)
+def test_sum_axis_2d(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_axis_2d
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_axis_2d
     x = randint(99, size=(5, 7))
 
     f_x_pycc = f1(x)
@@ -3324,22 +2422,20 @@ def test_sum_axis_2d(language):
     assert np.array_equal(f_x_pycc, f_x_pyth)
 
 
-def test_sum_keepdims(language):
-    def sum_call(x: "float[:,:]"):
-        return np.sum(x, axis=1, keepdims=True)
+def test_sum_keepdims(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_keepdims
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_keepdims
     x = rand(6, 4)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.allclose(f_x_pycc, f_x_pyth, rtol=RTOL, atol=ATOL)
 
 
-def test_sum_initial(language):
-    def sum_call(x: "int[:]"):
-        return np.sum(x, initial=10)
+def test_sum_initial(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_initial
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_initial
     x = randint(99, size=10)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
@@ -3347,100 +2443,78 @@ def test_sum_initial(language):
     assert matching_types(f_x_pycc, f_x_pyth)
 
 
-def test_sum_axis_keepdims_initial(language):
-    def sum_call(x: "int[:,:]"):
-        return np.sum(x, axis=0, keepdims=True, initial=5)
+def test_sum_axis_keepdims_initial(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_axis_keepdims_initial
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_axis_keepdims_initial
     x = randint(99, size=(4, 6))
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.array_equal(f_x_pycc, f_x_pyth)
 
 
-def test_sum_dtype_axis(language):
-    def sum_call(x: "int[:,:]"):
-        return np.sum(x, axis=1, dtype=float)
+def test_sum_dtype_axis(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_dtype_axis
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_dtype_axis
     x = randint(99, size=(3, 8))
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.array_equal(f_x_pycc, f_x_pyth)
 
 
-def test_sum_3d_multi_axis(language):
-    def sum_call(x: "float[:,:,:]"):
-        return np.sum(x, axis=(1, 2))
+def test_sum_3d_multi_axis(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_3d_multi_axis
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_3d_multi_axis
     x = rand(4, 5, 6)
     assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_sum_out_axis_2d(language):
-    def sum_call(x: "int[:,:]"):
-        out = np.empty(x.shape[0], dtype=x.dtype)
-        np.sum(x, axis=1, out=out)
-        return out
+def test_sum_out_axis_2d(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_out_axis_2d
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_out_axis_2d
     x = randint(99, size=(5, 7))
     assert np.array_equal(f1(x), sum_call(x))
 
 
-def test_sum_out_axis_keepdims(language):
-    def sum_call(x: "float[:,:]"):
-        out = np.empty((x.shape[0], 1), dtype=x.dtype)
-        np.sum(x, axis=1, keepdims=True, out=out)
-        return out
+def test_sum_out_axis_keepdims(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_out_axis_keepdims
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_out_axis_keepdims
     x = rand(6, 4)
     assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_sum_out_reference(language):
-    def sum_call(x: "float[:,:]"):
-        out = np.empty((x.shape[0], 1), dtype=x.dtype)
-        y = np.sum(x, axis=1, keepdims=True, out=out)
-        out[1, 0] = -out[1, 0]
-        return out[0, 0], y[0, 0], out[1, 0], y[1, 0]
+def test_sum_out_reference(epyc_numpy_funcs_mod):
+    sum_call = numpy_funcs.sum_out_reference
 
-    f1 = epyccel(sum_call, language=language)
+    f1 = epyc_numpy_funcs_mod.sum_out_reference
     x = rand(6, 4)
     assert np.allclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_min_int(language):
-    def min_call(x: "int[:]"):
-        from numpy import amin
+def test_min_int(epyc_numpy_funcs_mod):
+    min_call = numpy_funcs.min_int
 
-        return amin(x)
-
-    f1 = epyccel(min_call, language=language)
+    f1 = epyc_numpy_funcs_mod.min_int
     x = randint(99, size=10)
     assert f1(x) == min_call(x)
 
 
-def test_min_real(language):
-    def min_call(x: "float[:]"):
-        from numpy import amin
+def test_min_real(epyc_numpy_funcs_mod):
+    min_call = numpy_funcs.min_real
 
-        return amin(x)
-
-    f1 = epyccel(min_call, language=language)
+    f1 = epyc_numpy_funcs_mod.min_real
     x = rand(10)
     assert np.array_equal(f1(x), min_call(x))
 
 
-def test_min_complex(language):
-    def min_call(x: "complex128[:]"):
-        from numpy import amin
+def test_min_complex(epyc_numpy_funcs_mod):
+    min_call = numpy_funcs.min_complex
 
-        return amin(x)
-
-    f1 = epyccel(min_call, language=language)
+    f1 = epyc_numpy_funcs_mod.min_complex
     x = randn(10) + 1j * randn(10)
     assert np.array_equal(f1(x), min_call(x))
     x = randn(10) + 1j
@@ -3449,68 +2523,51 @@ def test_min_complex(language):
     assert np.array_equal(f1(x), min_call(x))
 
 
-def test_min_bool(language):
-    def min_call(x: "bool[:]"):
-        from numpy import amin
+def test_min_bool(epyc_numpy_funcs_mod):
+    min_call = numpy_funcs.min_bool
 
-        return amin(x)
-
-    f1 = epyccel(min_call, language=language)
+    f1 = epyc_numpy_funcs_mod.min_bool
     x = np.array([True, False, True, False])  # Generating a boolean array
     assert f1(x) == min_call(x)
 
 
-def test_min_phrase(language):
-    def min_phrase(x: "float[:]", y: "float[:]"):
-        from numpy import amin
+def test_min_phrase(epyc_numpy_funcs_mod):
+    min_phrase = numpy_funcs.min_phrase
 
-        a = amin(x) * amin(y)
-        return a
-
-    f2 = epyccel(min_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.min_phrase
     x = rand(10)
     y = rand(15)
     assert np.array_equal(f2(x, y), min_phrase(x, y))
 
 
-def test_min_property(language):
-    def min_call(x: "int[:]"):
-        return x.min()
+def test_min_property(epyc_numpy_funcs_mod):
+    min_call = numpy_funcs.min_property
 
-    f1 = epyccel(min_call, language=language)
+    f1 = epyc_numpy_funcs_mod.min_property
     x = randint(99, size=10)
     assert f1(x) == min_call(x)
 
 
-def test_amin_1d(language):
-    def amin_call(x: "int[:]"):
-        from numpy import amin
+def test_amin_1d(epyc_numpy_funcs_mod):
+    amin_call = numpy_funcs.amin_1d
 
-        return amin(x)
-
-    f1 = epyccel(amin_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amin_1d
     x = randint(99, size=10)
     assert f1(x) == amin_call(x)
 
 
-def test_amin_axis(language):
-    def amin_call(x: "int[:,:]"):
-        from numpy import amin
+def test_amin_axis(epyc_numpy_funcs_mod):
+    amin_call = numpy_funcs.amin_axis
 
-        return amin(x, axis=1)
-
-    f1 = epyccel(amin_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amin_axis
     x = randint(99, size=(6, 8))
     assert np.array_equal(f1(x), amin_call(x))
 
 
-def test_amin_keepdims(language):
-    def amin_call(x: "float[:,:]"):
-        from numpy import amin
+def test_amin_keepdims(epyc_numpy_funcs_mod):
+    amin_call = numpy_funcs.amin_keepdims
 
-        return amin(x, axis=1, keepdims=True)
-
-    f1 = epyccel(amin_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amin_keepdims
     x = rand(5, 7)
     res_ref = amin_call(x)
     res_cc = f1(x)
@@ -3518,22 +2575,18 @@ def test_amin_keepdims(language):
     assert res_cc.shape == res_ref.shape
 
 
-def test_amin_initial(language):
-    def amin_call(x: "int[:]"):
-        from numpy import amin
+def test_amin_initial(epyc_numpy_funcs_mod):
+    amin_call = numpy_funcs.amin_initial
 
-        return amin(x, initial=50)
-
-    f1 = epyccel(amin_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amin_initial
     x = randint(99, size=10)
     assert f1(x) == amin_call(x)
 
 
-def test_amin_out_axis(language):
-    def amin_call(x: "int[:,:]", out: "int[:]"):
-        np.amin(x, axis=1, out=out)
+def test_amin_out_axis(epyc_numpy_funcs_mod):
+    amin_call = numpy_funcs.amin_out_axis
 
-    f1 = epyccel(amin_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amin_out_axis
     x = randint(99, size=(6, 8))
     y_epyc = np.empty(6, dtype=int)
     y_pyth = np.empty(6, dtype=int)
@@ -3542,35 +2595,26 @@ def test_amin_out_axis(language):
     assert np.array_equal(y_epyc, y_pyth)
 
 
-def test_max_int(language):
-    def max_call(x: "int[:]"):
-        from numpy import amax
+def test_max_int(epyc_numpy_funcs_mod):
+    max_call = numpy_funcs.max_int
 
-        return amax(x)
-
-    f1 = epyccel(max_call, language=language)
+    f1 = epyc_numpy_funcs_mod.max_int
     x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
 
-def test_max_real(language):
-    def max_call(x: "float[:]"):
-        from numpy import amax
+def test_max_real(epyc_numpy_funcs_mod):
+    max_call = numpy_funcs.max_real
 
-        return amax(x)
-
-    f1 = epyccel(max_call, language=language)
+    f1 = epyc_numpy_funcs_mod.max_real
     x = rand(10)
     assert np.array_equal(f1(x), max_call(x))
 
 
-def test_max_complex(language):
-    def max_call(x: "complex128[:]"):
-        from numpy import amax
+def test_max_complex(epyc_numpy_funcs_mod):
+    max_call = numpy_funcs.max_complex
 
-        return amax(x)
-
-    f1 = epyccel(max_call, language=language)
+    f1 = epyc_numpy_funcs_mod.max_complex
     x = randn(10) + 1j * randn(10)
     assert np.array_equal(f1(x), max_call(x))
     x = randn(10) + 1j
@@ -3579,68 +2623,51 @@ def test_max_complex(language):
     assert np.array_equal(f1(x), max_call(x))
 
 
-def test_max_bool(language):
-    def max_call(x: "bool[:]"):
-        from numpy import amax
+def test_max_bool(epyc_numpy_funcs_mod):
+    max_call = numpy_funcs.max_bool
 
-        return amax(x)
-
-    f1 = epyccel(max_call, language=language)
+    f1 = epyc_numpy_funcs_mod.max_bool
     x = np.array([True, False, True, False])  # Generating a boolean array
     assert f1(x) == max_call(x)
 
 
-def test_max_phrase(language):
-    def max_phrase(x: "float[:]", y: "float[:]"):
-        from numpy import amax
+def test_max_phrase(epyc_numpy_funcs_mod):
+    max_phrase = numpy_funcs.max_phrase
 
-        a = amax(x) * amax(y)
-        return a
-
-    f2 = epyccel(max_phrase, language=language)
+    f2 = epyc_numpy_funcs_mod.max_phrase
     x = rand(10)
     y = rand(15)
     assert np.array_equal(f2(x, y), max_phrase(x, y))
 
 
-def test_max_property(language):
-    def max_call(x: "int[:]"):
-        return x.max()
+def test_max_property(epyc_numpy_funcs_mod):
+    max_call = numpy_funcs.max_property
 
-    f1 = epyccel(max_call, language=language)
+    f1 = epyc_numpy_funcs_mod.max_property
     x = randint(99, size=10)
     assert f1(x) == max_call(x)
 
 
-def test_amax_1d(language):
-    def amax_call(x: "int[:]"):
-        from numpy import amax
+def test_amax_1d(epyc_numpy_funcs_mod):
+    amax_call = numpy_funcs.amax_1d
 
-        return amax(x)
-
-    f1 = epyccel(amax_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amax_1d
     x = randint(99, size=10)
     assert f1(x) == amax_call(x)
 
 
-def test_amax_axis(language):
-    def amax_call(x: "int[:,:]"):
-        from numpy import amax
+def test_amax_axis(epyc_numpy_funcs_mod):
+    amax_call = numpy_funcs.amax_axis
 
-        return amax(x, axis=0)
-
-    f1 = epyccel(amax_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amax_axis
     x = randint(99, size=(6, 8))
     assert np.array_equal(f1(x), amax_call(x))
 
 
-def test_amax_keepdims(language):
-    def amax_call(x: "float[:,:]"):
-        from numpy import amax
+def test_amax_keepdims(epyc_numpy_funcs_mod):
+    amax_call = numpy_funcs.amax_keepdims
 
-        return amax(x, axis=0, keepdims=True)
-
-    f1 = epyccel(amax_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amax_keepdims
     x = rand(5, 7)
     res_ref = amax_call(x)
     res_cc = f1(x)
@@ -3648,22 +2675,18 @@ def test_amax_keepdims(language):
     assert res_cc.shape == res_ref.shape
 
 
-def test_amax_initial(language):
-    def amax_call(x: "int[:]"):
-        from numpy import amax
+def test_amax_initial(epyc_numpy_funcs_mod):
+    amax_call = numpy_funcs.amax_initial
 
-        return amax(x, initial=10)
-
-    f1 = epyccel(amax_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amax_initial
     x = randint(99, size=10)
     assert f1(x) == amax_call(x)
 
 
-def test_amax_out_axis(language):
-    def amax_call(x: "int[:,:]", out: "int[:]"):
-        np.amax(x, axis=1, out=out)
+def test_amax_out_axis(epyc_numpy_funcs_mod):
+    amax_call = numpy_funcs.amax_out_axis
 
-    f1 = epyccel(amax_call, language=language)
+    f1 = epyc_numpy_funcs_mod.amax_out_axis
     x = randint(99, size=(6, 8))
     y_epyc = np.empty(6, dtype=int)
     y_pyth = np.empty(6, dtype=int)
@@ -3672,99 +2695,61 @@ def test_amax_out_axis(language):
     assert np.array_equal(y_epyc, y_pyth)
 
 
-def test_full_like_basic_int(language):
-    def create_full_like_shape_1d(n: "int"):
-        from numpy import array, full_like, shape
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, n, int, "F")
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_full_like_shape_2d(n: "int"):
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, n, int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_val(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, int, "F")
-        return a[0], a[1], a[2]
-
-    def create_full_like_arg_names(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, val, int, "F", shape=(2, 3))
-        return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
+def test_full_like_basic_int(epyc_numpy_funcs_mod):
+    create_full_like_shape_1d = (
+        numpy_funcs.full_like_basic_int__create_full_like_shape_1d
+    )
+    create_full_like_shape_2d = (
+        numpy_funcs.full_like_basic_int__create_full_like_shape_2d
+    )
+    create_full_like_val = numpy_funcs.full_like_basic_int__create_full_like_val
+    create_full_like_arg_names = (
+        numpy_funcs.full_like_basic_int__create_full_like_arg_names
+    )
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_full_like_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_shape_1d
     assert f_shape_1d(size) == create_full_like_shape_1d(size)
 
-    f_shape_2d = epyccel(create_full_like_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_shape_2d
     assert f_shape_2d(size) == create_full_like_shape_2d(size)
 
-    f_val = epyccel(create_full_like_val, language=language)
+    f_val = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_val
     assert f_val(size) == create_full_like_val(size)
     assert matching_types(f_val(size)[0], create_full_like_val(size)[0])
 
-    f_arg_names = epyccel(create_full_like_arg_names, language=language)
+    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_arg_names
     assert f_arg_names(size) == create_full_like_arg_names(size)
     assert matching_types(f_arg_names(size)[0], create_full_like_arg_names(size)[0])
 
 
-def test_full_like_basic_real(language):
-    def create_full_like_shape_1d(n: "float"):
-        from numpy import array, full_like, shape
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, n, float, "F")
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_full_like_shape_2d(n: "float"):
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, n, float, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_val(val: "float"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, float, "F")
-        return a[0], a[1], a[2]
-
-    def create_full_like_arg_names(val: "float"):
-        from numpy import array, full_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, val, float, "F", shape=(2, 3))
-        return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
+def test_full_like_basic_real(epyc_numpy_funcs_mod):
+    create_full_like_shape_1d = (
+        numpy_funcs.full_like_basic_real__create_full_like_shape_1d
+    )
+    create_full_like_shape_2d = (
+        numpy_funcs.full_like_basic_real__create_full_like_shape_2d
+    )
+    create_full_like_val = numpy_funcs.full_like_basic_real__create_full_like_val
+    create_full_like_arg_names = (
+        numpy_funcs.full_like_basic_real__create_full_like_arg_names
+    )
 
     size = uniform(10)
     val = rand() * 5
 
-    f_shape_1d = epyccel(create_full_like_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_shape_1d
     assert f_shape_1d(size) == create_full_like_shape_1d(size)
 
-    f_shape_2d = epyccel(create_full_like_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_shape_2d
     assert f_shape_2d(size) == create_full_like_shape_2d(size)
 
-    f_val = epyccel(create_full_like_val, language=language)
+    f_val = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_val
     assert f_val(val) == create_full_like_val(val)
     assert matching_types(f_val(val)[0], create_full_like_val(val)[0])
 
-    f_arg_names = epyccel(create_full_like_arg_names, language=language)
+    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_arg_names
     assert f_arg_names(val) == create_full_like_arg_names(val)
     assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
@@ -3829,29 +2814,16 @@ def test_full_like_basic_bool(language):
     assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
 
-def test_full_like_order(language):
-    def create_full_like_shape_C(n: "int"):
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, 4, order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_shape_F(n: "int"):
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, 4, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_full_like_order(epyc_numpy_funcs_mod):
+    create_full_like_shape_C = numpy_funcs.full_like_order__create_full_like_shape_C
+    create_full_like_shape_F = numpy_funcs.full_like_order__create_full_like_shape_F
 
     size = randint(1, 10)
 
-    f_shape_C = epyccel(create_full_like_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.full_like_order__create_full_like_shape_C
     assert f_shape_C(size) == create_full_like_shape_C(size)
 
-    f_shape_F = epyccel(create_full_like_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.full_like_order__create_full_like_shape_F
     assert f_shape_F(size) == create_full_like_shape_F(size)
 
 
@@ -4148,596 +3120,390 @@ def test_full_like_dtype(language):
     )
 
 
-def test_full_like_combined_args(language):
-    def create_full_like_1_shape():
-        from numpy import array, full_like, shape
+def test_full_like_combined_args(epyc_numpy_funcs_mod):
+    create_full_like_1_shape = (
+        numpy_funcs.full_like_combined_args__create_full_like_1_shape
+    )
+    create_full_like_1_val = numpy_funcs.full_like_combined_args__create_full_like_1_val
+    create_full_like_2_shape = (
+        numpy_funcs.full_like_combined_args__create_full_like_2_shape
+    )
+    create_full_like_2_val = numpy_funcs.full_like_combined_args__create_full_like_2_val
+    create_full_like_3_shape = (
+        numpy_funcs.full_like_combined_args__create_full_like_3_shape
+    )
+    create_full_like_3_val = numpy_funcs.full_like_combined_args__create_full_like_3_val
 
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, 5, int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_1_val():
-        from numpy import array, full_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, 4.0, int, "F")
-        return a[0, 0]
-
-    def create_full_like_2_shape():
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, dtype=float, fill_value=1)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_2_val():
-        from numpy import array, full_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, dtype=float, fill_value=1)
-        return a[0, 0]
-
-    def create_full_like_3_shape():
-        from numpy import array, full_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, order="F", shape=(4, 2), dtype=complex, fill_value=1)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_full_like_3_val():
-        from numpy import array, full_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = full_like(arr, order="F", shape=(4, 2), dtype=complex, fill_value=1)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_full_like_1_shape, language=language)
-    f1_val = epyccel(create_full_like_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_1_shape
+    f1_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_1_val
     assert f1_shape() == create_full_like_1_shape()
     assert f1_val() == create_full_like_1_val()
     assert matching_types(f1_val(), create_full_like_1_val())
 
-    f2_shape = epyccel(create_full_like_2_shape, language=language)
-    f2_val = epyccel(create_full_like_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_2_shape
+    f2_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_2_val
     assert f2_shape() == create_full_like_2_shape()
     assert isclose(f2_val(), create_full_like_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_full_like_2_val())
 
-    f3_shape = epyccel(create_full_like_3_shape, language=language)
-    f3_val = epyccel(create_full_like_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_3_shape
+    f3_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_3_val
     assert f3_shape() == create_full_like_3_shape()
     assert isclose(f3_val(), create_full_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_full_like_3_val())
 
 
-def test_empty_like_basic(language):
-    def create_empty_like_shape_1d(n: "int"):
-        from numpy import array, empty_like, shape
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, int)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_empty_like_shape_2d(n: "int"):
-        from numpy import array, empty_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, int)
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_empty_like_basic(epyc_numpy_funcs_mod):
+    create_empty_like_shape_1d = (
+        numpy_funcs.empty_like_basic__create_empty_like_shape_1d
+    )
+    create_empty_like_shape_2d = (
+        numpy_funcs.empty_like_basic__create_empty_like_shape_2d
+    )
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_empty_like_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.empty_like_basic__create_empty_like_shape_1d
     assert f_shape_1d(size) == create_empty_like_shape_1d(size)
 
-    f_shape_2d = epyccel(create_empty_like_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.empty_like_basic__create_empty_like_shape_2d
     assert f_shape_2d(size) == create_empty_like_shape_2d(size)
 
 
-def test_empty_like_order(language):
-    def create_empty_like_shape_C(n: "int", m: "int"):
-        from numpy import array, empty_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, int, order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_like_shape_F(n: "int", m: "int"):
-        from numpy import array, empty_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, int, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_empty_like_order(epyc_numpy_funcs_mod):
+    create_empty_like_shape_C = numpy_funcs.empty_like_order__create_empty_like_shape_C
+    create_empty_like_shape_F = numpy_funcs.empty_like_order__create_empty_like_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_empty_like_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.empty_like_order__create_empty_like_shape_C
     assert f_shape_C(size_1, size_2) == create_empty_like_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_empty_like_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.empty_like_order__create_empty_like_shape_F
     assert f_shape_F(size_1, size_2) == create_empty_like_shape_F(size_1, size_2)
 
 
-def test_empty_like_dtype(language):
+def test_empty_like_dtype(epyc_numpy_funcs_mod):
 
-    def create_empty_like_val_int_auto():
-        from numpy import array, empty_like
+    create_empty_like_val_int_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_int_auto
+    )
+    create_empty_like_val_int = numpy_funcs.empty_like_dtype__create_empty_like_val_int
+    create_empty_like_val_float_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float_auto
+    )
+    create_empty_like_val_float = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float
+    )
+    create_empty_like_val_complex_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex_auto
+    )
+    create_empty_like_val_complex = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex
+    )
+    create_empty_like_val_int32_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_int32_auto
+    )
+    create_empty_like_val_int32 = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_int32
+    )
+    create_empty_like_val_float32_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float32_auto
+    )
+    create_empty_like_val_float32 = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float32
+    )
+    create_empty_like_val_float64_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float64_auto
+    )
+    create_empty_like_val_float64 = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_float64
+    )
+    create_empty_like_val_complex64_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex64_auto
+    )
+    create_empty_like_val_complex64 = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex64
+    )
+    create_empty_like_val_complex128_auto = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex128_auto
+    )
+    create_empty_like_val_complex128 = (
+        numpy_funcs.empty_like_dtype__create_empty_like_val_complex128
+    )
 
-        arr = array([5, 1, 8, 0, 9], dtype=int)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_int():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, int)
-        return a[0]
-
-    def create_empty_like_val_float_auto():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=float)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_float():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=float)
-        return a[0]
-
-    def create_empty_like_val_complex_auto():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_complex():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=complex)
-        return a[0]
-
-    def create_empty_like_val_int32_auto():
-        from numpy import array, empty_like, int32
-
-        arr = array([5, 1, 8, 0, 9], dtype=int32)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_int32():
-        from numpy import array, empty_like, int32
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=int32)
-        return a[0]
-
-    def create_empty_like_val_float32_auto():
-        from numpy import array, empty_like
-
-        arr = array([5, 1, 8, 0, 9], dtype="float32")
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_float32():
-        from numpy import array, empty_like, float32
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=float32)
-        return a[0]
-
-    def create_empty_like_val_float64_auto():
-        from numpy import array, empty_like, float64
-
-        arr = array([5, 1, 8, 0, 9], dtype=float64)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_float64():
-        from numpy import array, empty_like, float64
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=float64)
-        return a[0]
-
-    def create_empty_like_val_complex64_auto():
-        from numpy import array, complex64, empty_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex64)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_complex64():
-        from numpy import array, complex64, empty_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=complex64)
-        return a[0]
-
-    def create_empty_like_val_complex128_auto():
-        from numpy import array, complex128, empty_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex128)
-        a = empty_like(arr)
-        return a[0]
-
-    def create_empty_like_val_complex128():
-        from numpy import array, complex128, empty_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = empty_like(arr, dtype=complex128)
-        return a[0]
-
-    f_int_auto = epyccel(create_empty_like_val_int_auto, language=language)
+    f_int_auto = epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_int_auto
     assert matching_types(f_int_auto(), create_empty_like_val_int_auto())
 
-    f_int_int = epyccel(create_empty_like_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_int
     assert matching_types(f_int_int(), create_empty_like_val_int())
 
-    f_float_auto = epyccel(create_empty_like_val_float_auto, language=language)
+    f_float_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float_auto
+    )
     assert matching_types(f_float_auto(), create_empty_like_val_float_auto())
 
-    f_int_float = epyccel(create_empty_like_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float
     assert matching_types(f_int_float(), create_empty_like_val_float())
 
-    f_complex_auto = epyccel(create_empty_like_val_complex_auto, language=language)
+    f_complex_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex_auto
+    )
     assert matching_types(f_complex_auto(), create_empty_like_val_complex_auto())
 
-    f_int_complex = epyccel(create_empty_like_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex
     assert matching_types(f_int_complex(), create_empty_like_val_complex())
 
-    f_int32_auto = epyccel(create_empty_like_val_int32_auto, language=language)
+    f_int32_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_int32_auto
+    )
     assert matching_types(f_int32_auto(), create_empty_like_val_int32_auto())
 
-    f_real_int32 = epyccel(create_empty_like_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_int32
     assert matching_types(f_real_int32(), create_empty_like_val_int32())
 
-    f_float32_auto = epyccel(create_empty_like_val_float32_auto, language=language)
+    f_float32_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float32_auto
+    )
     assert matching_types(f_float32_auto(), create_empty_like_val_float32_auto())
 
-    f_real_float32 = epyccel(create_empty_like_val_float32, language=language)
+    f_real_float32 = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float32
+    )
     assert matching_types(f_real_float32(), create_empty_like_val_float32())
 
-    f_float64_auto = epyccel(create_empty_like_val_float64_auto, language=language)
+    f_float64_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float64_auto
+    )
     assert matching_types(f_float64_auto(), create_empty_like_val_float64_auto())
 
-    f_real_float64 = epyccel(create_empty_like_val_float64, language=language)
+    f_real_float64 = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_float64
+    )
     assert matching_types(f_real_float64(), create_empty_like_val_float64())
 
-    f_complex64_auto = epyccel(create_empty_like_val_complex64_auto, language=language)
+    f_complex64_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex64_auto
+    )
 
     assert matching_types(f_complex64_auto(), create_empty_like_val_complex64_auto())
 
-    f_real_complex64 = epyccel(create_empty_like_val_complex64, language=language)
+    f_real_complex64 = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex64
+    )
     assert matching_types(f_real_complex64(), create_empty_like_val_complex64())
 
-    f_complex128_auto = epyccel(
-        create_empty_like_val_complex128_auto, language=language
+    f_complex128_auto = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex128_auto
     )
     assert matching_types(f_complex128_auto(), create_empty_like_val_complex128_auto())
 
-    f_real_complex128 = epyccel(create_empty_like_val_complex128, language=language)
+    f_real_complex128 = (
+        epyc_numpy_funcs_mod.empty_like_dtype__create_empty_like_val_complex128
+    )
     assert matching_types(f_real_complex128(), create_empty_like_val_complex128())
 
 
-def test_empty_like_combined_args(language):
+def test_empty_like_combined_args(epyc_numpy_funcs_mod):
 
-    def create_empty_like_1_shape():
-        from numpy import array, empty_like, shape
+    create_empty_like_1_shape = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_1_shape
+    )
+    create_empty_like_1_val = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_1_val
+    )
+    create_empty_like_2_shape = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_2_shape
+    )
+    create_empty_like_2_val = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_2_val
+    )
+    create_empty_like_3_shape = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_3_shape
+    )
+    create_empty_like_3_val = (
+        numpy_funcs.empty_like_combined_args__create_empty_like_3_val
+    )
 
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, dtype=int, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_like_1_val():
-        from numpy import array, empty_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, dtype=int, order="F")
-        return a[0, 0]
-
-    def create_empty_like_2_shape():
-        from numpy import array, empty_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_like_2_val():
-        from numpy import array, empty_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, dtype=float)
-        return a[0, 0]
-
-    def create_empty_like_3_shape():
-        from numpy import array, empty_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_empty_like_3_val():
-        from numpy import array, empty_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_empty_like_1_shape, language=language)
-    f1_val = epyccel(create_empty_like_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_1_shape
+    f1_val = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_1_val
     assert f1_shape() == create_empty_like_1_shape()
     assert matching_types(f1_val(), create_empty_like_1_val())
 
-    f2_shape = epyccel(create_empty_like_2_shape, language=language)
-    f2_val = epyccel(create_empty_like_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_2_shape
+    f2_val = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_2_val
     assert f2_shape() == create_empty_like_2_shape()
     assert matching_types(f2_val(), create_empty_like_2_val())
 
-    f3_shape = epyccel(create_empty_like_3_shape, language=language)
-    f3_val = epyccel(create_empty_like_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_3_shape
+    f3_val = epyc_numpy_funcs_mod.empty_like_combined_args__create_empty_like_3_val
     assert f3_shape() == create_empty_like_3_shape()
     assert matching_types(f3_val(), create_empty_like_3_val())
 
 
-def test_ones_like_basic(language):
-    def create_ones_like_shape_1d(n: "int"):
-        from numpy import array, ones_like, shape
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_ones_like_shape_2d(n: "int"):
-        from numpy import array, ones_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr)
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_ones_like_basic(epyc_numpy_funcs_mod):
+    create_ones_like_shape_1d = numpy_funcs.ones_like_basic__create_ones_like_shape_1d
+    create_ones_like_shape_2d = numpy_funcs.ones_like_basic__create_ones_like_shape_2d
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_ones_like_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.ones_like_basic__create_ones_like_shape_1d
     assert f_shape_1d(size) == create_ones_like_shape_1d(size)
 
-    f_shape_2d = epyccel(create_ones_like_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.ones_like_basic__create_ones_like_shape_2d
     assert f_shape_2d(size) == create_ones_like_shape_2d(size)
 
 
-def test_ones_like_order(language):
-    def create_ones_like_shape_C(n: "int", m: "int"):
-        from numpy import array, ones_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_like_shape_F(n: "int", m: "int"):
-        from numpy import array, ones_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_ones_like_order(epyc_numpy_funcs_mod):
+    create_ones_like_shape_C = numpy_funcs.ones_like_order__create_ones_like_shape_C
+    create_ones_like_shape_F = numpy_funcs.ones_like_order__create_ones_like_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_ones_like_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.ones_like_order__create_ones_like_shape_C
     assert f_shape_C(size_1, size_2) == create_ones_like_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_ones_like_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.ones_like_order__create_ones_like_shape_F
     assert f_shape_F(size_1, size_2) == create_ones_like_shape_F(size_1, size_2)
 
 
-def test_ones_like_dtype(language):
+def test_ones_like_dtype(epyc_numpy_funcs_mod):
 
-    def create_ones_like_val_int_auto():
-        from numpy import array, ones_like
+    create_ones_like_val_int = numpy_funcs.ones_like_dtype__create_ones_like_val_int
+    create_ones_like_val_float = numpy_funcs.ones_like_dtype__create_ones_like_val_float
+    create_ones_like_val_complex = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex
+    )
+    create_ones_like_val_int32 = numpy_funcs.ones_like_dtype__create_ones_like_val_int32
+    create_ones_like_val_float32 = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_float32
+    )
+    create_ones_like_val_float64 = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_float64
+    )
+    create_ones_like_val_complex64 = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex64
+    )
+    create_ones_like_val_complex128 = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex128
+    )
+    create_ones_like_val_int_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_int_auto
+    )
+    create_ones_like_val_float_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_float_auto
+    )
+    create_ones_like_val_complex_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex_auto
+    )
+    create_ones_like_val_int32_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_int32_auto
+    )
+    create_ones_like_val_float32_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_float32_auto
+    )
+    create_ones_like_val_float64_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_float64_auto
+    )
+    create_ones_like_val_complex64_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex64_auto
+    )
+    create_ones_like_val_complex128_auto = (
+        numpy_funcs.ones_like_dtype__create_ones_like_val_complex128_auto
+    )
 
-        arr = array([5, 1, 8, 0, 9], int)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_int():
-        from numpy import array, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, int)
-        return a[0]
-
-    def create_ones_like_val_float_auto():
-        from numpy import array, ones_like
-
-        arr = array([5, 1, 8, 0, 9], float)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_float():
-        from numpy import array, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, float)
-        return a[0]
-
-    def create_ones_like_val_complex_auto():
-        from numpy import array, ones_like
-
-        arr = array([5, 1, 8, 0, 9], complex)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_complex():
-        from numpy import array, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, complex)
-        return a[0]
-
-    def create_ones_like_val_int32_auto():
-        from numpy import array, int32, ones_like
-
-        arr = array([5, 1, 8, 0, 9], int32)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_int32():
-        from numpy import array, int32, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, int32)
-        return a[0]
-
-    def create_ones_like_val_float32_auto():
-        from numpy import array, float32, ones_like
-
-        arr = array([5, 1, 8, 0, 9], float32)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_float32():
-        from numpy import array, float32, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, float32)
-        return a[0]
-
-    def create_ones_like_val_float64_auto():
-        from numpy import array, float64, ones_like
-
-        arr = array([5, 1, 8, 0, 9], float64)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_float64():
-        from numpy import array, float64, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, float64)
-        return a[0]
-
-    def create_ones_like_val_complex64_auto():
-        from numpy import array, complex64, ones_like
-
-        arr = array([5, 1, 8, 0, 9], complex64)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_complex64():
-        from numpy import array, complex64, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, complex64)
-        return a[0]
-
-    def create_ones_like_val_complex128_auto():
-        from numpy import array, complex128, ones_like
-
-        arr = array([5, 1, 8, 0, 9], complex128)
-        a = ones_like(arr)
-        return a[0]
-
-    def create_ones_like_val_complex128():
-        from numpy import array, complex128, ones_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = ones_like(arr, complex128)
-        return a[0]
-
-    f_int_int = epyccel(create_ones_like_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_int
     assert f_int_int() == create_ones_like_val_int()
     assert matching_types(f_int_int(), create_ones_like_val_int())
 
-    f_int_float = epyccel(create_ones_like_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float
     assert isclose(f_int_float(), create_ones_like_val_float(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(), create_ones_like_val_float())
 
-    f_int_complex = epyccel(create_ones_like_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex
     assert isclose(
         f_int_complex(), create_ones_like_val_complex(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_int_complex(), create_ones_like_val_complex())
 
-    f_real_int32 = epyccel(create_ones_like_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_int32
     assert f_real_int32() == create_ones_like_val_int32()
     assert matching_types(f_real_int32(), create_ones_like_val_int32())
 
-    f_real_float32 = epyccel(create_ones_like_val_float32, language=language)
+    f_real_float32 = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float32
     assert isclose(
         f_real_float32(), create_ones_like_val_float32(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float32(), create_ones_like_val_float32())
 
-    f_real_float64 = epyccel(create_ones_like_val_float64, language=language)
+    f_real_float64 = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float64
     assert isclose(
         f_real_float64(), create_ones_like_val_float64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float64(), create_ones_like_val_float64())
 
-    f_real_complex64 = epyccel(create_ones_like_val_complex64, language=language)
+    f_real_complex64 = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex64
+    )
     assert isclose(
         f_real_complex64(), create_ones_like_val_complex64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex64(), create_ones_like_val_complex64())
 
-    f_real_complex128 = epyccel(create_ones_like_val_complex128, language=language)
+    f_real_complex128 = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex128
+    )
     assert isclose(
         f_real_complex128(), create_ones_like_val_complex128(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex128(), create_ones_like_val_complex128())
 
-    f_int_int_auto = epyccel(create_ones_like_val_int_auto, language=language)
+    f_int_int_auto = epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_int_auto
     assert f_int_int_auto() == create_ones_like_val_int_auto()
     assert matching_types(f_int_int_auto(), create_ones_like_val_int_auto())
 
-    f_int_float_auto = epyccel(create_ones_like_val_float_auto, language=language)
+    f_int_float_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float_auto
+    )
     assert isclose(
         f_int_float_auto(), create_ones_like_val_float_auto(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_int_float_auto(), create_ones_like_val_float_auto())
 
-    f_int_complex_auto = epyccel(create_ones_like_val_complex_auto, language=language)
+    f_int_complex_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex_auto
+    )
     assert isclose(
         f_int_complex_auto(), create_ones_like_val_complex_auto(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_int_complex_auto(), create_ones_like_val_complex_auto())
 
-    f_real_int32_auto = epyccel(create_ones_like_val_int32_auto, language=language)
+    f_real_int32_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_int32_auto
+    )
     assert f_real_int32_auto() == create_ones_like_val_int32_auto()
     assert matching_types(f_real_int32_auto(), create_ones_like_val_int32_auto())
 
-    f_real_float32_auto = epyccel(create_ones_like_val_float32_auto, language=language)
+    f_real_float32_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float32_auto
+    )
     assert isclose(
         f_real_float32_auto(), create_ones_like_val_float32_auto(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float32_auto(), create_ones_like_val_float32_auto())
 
-    f_real_float64_auto = epyccel(create_ones_like_val_float64_auto, language=language)
+    f_real_float64_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_float64_auto
+    )
     assert isclose(
         f_real_float64_auto(), create_ones_like_val_float64_auto(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float64_auto(), create_ones_like_val_float64_auto())
 
-    f_real_complex64_auto = epyccel(
-        create_ones_like_val_complex64_auto, language=language
+    f_real_complex64_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex64_auto
     )
     assert isclose(
         f_real_complex64_auto(),
@@ -4749,8 +3515,8 @@ def test_ones_like_dtype(language):
         f_real_complex64_auto(), create_ones_like_val_complex64_auto()
     )
 
-    f_real_complex128_auto = epyccel(
-        create_ones_like_val_complex128_auto, language=language
+    f_real_complex128_auto = (
+        epyc_numpy_funcs_mod.ones_like_dtype__create_ones_like_val_complex128_auto
     )
     assert isclose(
         f_real_complex128_auto(),
@@ -4763,384 +3529,258 @@ def test_ones_like_dtype(language):
     )
 
 
-def test_ones_like_combined_args(language):
+def test_ones_like_combined_args(epyc_numpy_funcs_mod):
 
-    def create_ones_like_1_shape():
-        from numpy import array, ones_like, shape
+    create_ones_like_1_shape = (
+        numpy_funcs.ones_like_combined_args__create_ones_like_1_shape
+    )
+    create_ones_like_1_val = numpy_funcs.ones_like_combined_args__create_ones_like_1_val
+    create_ones_like_2_shape = (
+        numpy_funcs.ones_like_combined_args__create_ones_like_2_shape
+    )
+    create_ones_like_2_val = numpy_funcs.ones_like_combined_args__create_ones_like_2_val
+    create_ones_like_3_shape = (
+        numpy_funcs.ones_like_combined_args__create_ones_like_3_shape
+    )
+    create_ones_like_3_val = numpy_funcs.ones_like_combined_args__create_ones_like_3_val
 
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_like_1_val():
-        from numpy import array, ones_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, int, "F")
-        return a[0, 0]
-
-    def create_ones_like_2_shape():
-        from numpy import array, ones_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_like_2_val():
-        from numpy import array, ones_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, dtype=float)
-        return a[0, 0]
-
-    def create_ones_like_3_shape():
-        from numpy import array, ones_like, shape
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, shape=(4, 2), order="F", dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_ones_like_3_val():
-        from numpy import array, ones_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = ones_like(arr, shape=(4, 2), order="F", dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_ones_like_1_shape, language=language)
-    f1_val = epyccel(create_ones_like_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_1_shape
+    f1_val = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_1_val
     assert f1_shape() == create_ones_like_1_shape()
     assert f1_val() == create_ones_like_1_val()
     assert matching_types(f1_val(), create_ones_like_1_val())
 
-    f2_shape = epyccel(create_ones_like_2_shape, language=language)
-    f2_val = epyccel(create_ones_like_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_2_shape
+    f2_val = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_2_val
     assert f2_shape() == create_ones_like_2_shape()
     assert isclose(f2_val(), create_ones_like_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_ones_like_2_val())
 
-    f3_shape = epyccel(create_ones_like_3_shape, language=language)
-    f3_val = epyccel(create_ones_like_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_3_shape
+    f3_val = epyc_numpy_funcs_mod.ones_like_combined_args__create_ones_like_3_val
     assert f3_shape() == create_ones_like_3_shape()
     assert isclose(f3_val(), create_ones_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_ones_like_3_val())
 
 
-def test_zeros_like_basic(language):
-    def create_zeros_like_shape_1d(n: "int"):
-        from numpy import array, shape, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, int)
-        s = shape(a)
-        return len(s), s[0]
-
-    def create_zeros_like_shape_2d(n: "int"):
-        from numpy import array, shape, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, int)
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_zeros_like_basic(epyc_numpy_funcs_mod):
+    create_zeros_like_shape_1d = (
+        numpy_funcs.zeros_like_basic__create_zeros_like_shape_1d
+    )
+    create_zeros_like_shape_2d = (
+        numpy_funcs.zeros_like_basic__create_zeros_like_shape_2d
+    )
 
     size = randint(1, 10)
 
-    f_shape_1d = epyccel(create_zeros_like_shape_1d, language=language)
+    f_shape_1d = epyc_numpy_funcs_mod.zeros_like_basic__create_zeros_like_shape_1d
     assert f_shape_1d(size) == create_zeros_like_shape_1d(size)
 
-    f_shape_2d = epyccel(create_zeros_like_shape_2d, language=language)
+    f_shape_2d = epyc_numpy_funcs_mod.zeros_like_basic__create_zeros_like_shape_2d
     assert f_shape_2d(size) == create_zeros_like_shape_2d(size)
 
 
-def test_zeros_like_order(language):
-    def create_zeros_like_shape_C(n: "int", m: "int"):
-        from numpy import array, shape, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, order="C")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_like_shape_F(n: "int", m: "int"):
-        from numpy import array, shape, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, order="F")
-        s = shape(a)
-        return len(s), s[0], s[1]
+def test_zeros_like_order(epyc_numpy_funcs_mod):
+    create_zeros_like_shape_C = numpy_funcs.zeros_like_order__create_zeros_like_shape_C
+    create_zeros_like_shape_F = numpy_funcs.zeros_like_order__create_zeros_like_shape_F
 
     size_1 = randint(1, 10)
     size_2 = randint(1, 10)
 
-    f_shape_C = epyccel(create_zeros_like_shape_C, language=language)
+    f_shape_C = epyc_numpy_funcs_mod.zeros_like_order__create_zeros_like_shape_C
     assert f_shape_C(size_1, size_2) == create_zeros_like_shape_C(size_1, size_2)
 
-    f_shape_F = epyccel(create_zeros_like_shape_F, language=language)
+    f_shape_F = epyc_numpy_funcs_mod.zeros_like_order__create_zeros_like_shape_F
     assert f_shape_F(size_1, size_2) == create_zeros_like_shape_F(size_1, size_2)
 
 
-def test_zeros_like_dtype(language):
+def test_zeros_like_dtype(epyc_numpy_funcs_mod):
 
-    def create_zeros_like_val_int():
-        from numpy import array, zeros_like
+    create_zeros_like_val_int = numpy_funcs.zeros_like_dtype__create_zeros_like_val_int
+    create_zeros_like_val_float = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_float
+    )
+    create_zeros_like_val_complex = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_complex
+    )
+    create_zeros_like_val_int32 = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_int32
+    )
+    create_zeros_like_val_float32 = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_float32
+    )
+    create_zeros_like_val_float64 = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_float64
+    )
+    create_zeros_like_val_complex64 = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_complex64
+    )
+    create_zeros_like_val_complex128 = (
+        numpy_funcs.zeros_like_dtype__create_zeros_like_val_complex128
+    )
 
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, int)
-        return a[0]
-
-    def create_zeros_like_val_float():
-        from numpy import array, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, float)
-        return a[0]
-
-    def create_zeros_like_val_complex():
-        from numpy import array, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, complex)
-        return a[0]
-
-    def create_zeros_like_val_int32():
-        from numpy import array, int32, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, int32)
-        return a[0]
-
-    def create_zeros_like_val_float32():
-        from numpy import array, float32, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, float32)
-        return a[0]
-
-    def create_zeros_like_val_float64():
-        from numpy import array, float64, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, float64)
-        return a[0]
-
-    def create_zeros_like_val_complex64():
-        from numpy import array, complex64, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, complex64)
-        return a[0]
-
-    def create_zeros_like_val_complex128():
-        from numpy import array, complex128, zeros_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = zeros_like(arr, complex128)
-        return a[0]
-
-    f_int_int = epyccel(create_zeros_like_val_int, language=language)
+    f_int_int = epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_int
     assert f_int_int() == create_zeros_like_val_int()
     assert matching_types(f_int_int(), create_zeros_like_val_int())
 
-    f_int_float = epyccel(create_zeros_like_val_float, language=language)
+    f_int_float = epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_float
     assert isclose(f_int_float(), create_zeros_like_val_float(), rtol=RTOL, atol=ATOL)
     assert matching_types(f_int_float(), create_zeros_like_val_float())
 
-    f_int_complex = epyccel(create_zeros_like_val_complex, language=language)
+    f_int_complex = epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_complex
     assert isclose(
         f_int_complex(), create_zeros_like_val_complex(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_int_complex(), create_zeros_like_val_complex())
 
-    f_real_int32 = epyccel(create_zeros_like_val_int32, language=language)
+    f_real_int32 = epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_int32
     assert f_real_int32() == create_zeros_like_val_int32()
     assert matching_types(f_real_int32(), create_zeros_like_val_int32())
 
-    f_real_float32 = epyccel(create_zeros_like_val_float32, language=language)
+    f_real_float32 = (
+        epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_float32
+    )
     assert isclose(
         f_real_float32(), create_zeros_like_val_float32(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float32(), create_zeros_like_val_float32())
 
-    f_real_float64 = epyccel(create_zeros_like_val_float64, language=language)
+    f_real_float64 = (
+        epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_float64
+    )
     assert isclose(
         f_real_float64(), create_zeros_like_val_float64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_float64(), create_zeros_like_val_float64())
 
-    f_real_complex64 = epyccel(create_zeros_like_val_complex64, language=language)
+    f_real_complex64 = (
+        epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_complex64
+    )
     assert isclose(
         f_real_complex64(), create_zeros_like_val_complex64(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex64(), create_zeros_like_val_complex64())
 
-    f_real_complex128 = epyccel(create_zeros_like_val_complex128, language=language)
+    f_real_complex128 = (
+        epyc_numpy_funcs_mod.zeros_like_dtype__create_zeros_like_val_complex128
+    )
     assert isclose(
         f_real_complex128(), create_zeros_like_val_complex128(), rtol=RTOL, atol=ATOL
     )
     assert matching_types(f_real_complex128(), create_zeros_like_val_complex128())
 
 
-def test_zeros_like_dtype_auto(language):
+def test_zeros_like_dtype_auto(epyc_numpy_funcs_mod):
 
-    def create_zeros_like_val_int_auto():
-        from numpy import array, zeros_like
+    create_zeros_like_val_int_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_int
+    )
+    create_zeros_like_val_float_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_float
+    )
+    create_zeros_like_val_complex_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_complex
+    )
+    create_zeros_like_val_int32_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_int32
+    )
+    create_zeros_like_val_float32_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_float32
+    )
+    create_zeros_like_val_float64_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_float64
+    )
+    create_zeros_like_val_complex64_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_complex64
+    )
+    create_zeros_like_val_complex128_auto = (
+        numpy_funcs.zeros_like_dtype_auto__create_val_complex128
+    )
 
-        arr = array([5, 1, 8, 0, 9], dtype=int)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_float_auto():
-        from numpy import array, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=float)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_complex_auto():
-        from numpy import array, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_int32_auto():
-        from numpy import array, int32, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=int32)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_float32_auto():
-        from numpy import array, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype="float32")
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_float64_auto():
-        from numpy import array, float64, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=float64)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_complex64_auto():
-        from numpy import array, complex64, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex64)
-        a = zeros_like(arr)
-        return a[0]
-
-    def create_zeros_like_val_complex128_auto():
-        from numpy import array, complex128, zeros_like
-
-        arr = array([5, 1, 8, 0, 9], dtype=complex128)
-        a = zeros_like(arr)
-        return a[0]
-
-    f_int_auto = epyccel(create_zeros_like_val_int_auto, language=language)
+    f_int_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_int
+    )
     assert matching_types(f_int_auto(), create_zeros_like_val_int_auto())
 
-    f_float_auto = epyccel(create_zeros_like_val_float_auto, language=language)
+    f_float_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_float
+    )
     assert matching_types(f_float_auto(), create_zeros_like_val_float_auto())
 
-    f_complex_auto = epyccel(create_zeros_like_val_complex_auto, language=language)
+    f_complex_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_complex
+    )
     assert matching_types(f_complex_auto(), create_zeros_like_val_complex_auto())
 
-    f_int32_auto = epyccel(create_zeros_like_val_int32_auto, language=language)
+    f_int32_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_int32
+    )
     assert matching_types(f_int32_auto(), create_zeros_like_val_int32_auto())
 
-    f_float32_auto = epyccel(create_zeros_like_val_float32_auto, language=language)
+    f_float32_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_float32
+    )
     assert matching_types(f_float32_auto(), create_zeros_like_val_float32_auto())
 
-    f_float64_auto = epyccel(create_zeros_like_val_float64_auto, language=language)
+    f_float64_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_float64
+    )
     assert matching_types(f_float64_auto(), create_zeros_like_val_float64_auto())
 
-    f_complex64_auto = epyccel(create_zeros_like_val_complex64_auto, language=language)
+    f_complex64_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_complex64
+    )
     assert matching_types(f_complex64_auto(), create_zeros_like_val_complex64_auto())
 
-    f_complex128_auto = epyccel(
-        create_zeros_like_val_complex128_auto, language=language
+    f_complex128_auto = (
+        epyc_numpy_funcs_mod.zeros_like_dtype_auto__create_val_complex128
     )
     assert matching_types(f_complex128_auto(), create_zeros_like_val_complex128_auto())
 
 
-def test_zeros_like_combined_args(language):
+def test_zeros_like_combined_args(epyc_numpy_funcs_mod):
 
-    def create_zeros_like_1_shape():
-        from numpy import array, shape, zeros_like
+    create_zeros_like_1_shape = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_1_shape
+    )
+    create_zeros_like_1_val = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_1_val
+    )
+    create_zeros_like_2_shape = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_2_shape
+    )
+    create_zeros_like_2_val = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_2_val
+    )
+    create_zeros_like_3_shape = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_3_shape
+    )
+    create_zeros_like_3_val = (
+        numpy_funcs.zeros_like_combined_args__create_zeros_like_3_val
+    )
 
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, int, "F")
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_like_1_val():
-        from numpy import array, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, int, "F")
-        return a[0, 0]
-
-    def create_zeros_like_2_shape():
-        from numpy import array, shape, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, dtype=float)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_like_2_val():
-        from numpy import array, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, dtype=float)
-        return a[0, 0]
-
-    def create_zeros_like_3_shape():
-        from numpy import array, shape, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, shape=(4, 2), order="F", dtype=complex)
-        s = shape(a)
-        return len(s), s[0], s[1]
-
-    def create_zeros_like_3_val():
-        from numpy import array, zeros_like
-
-        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-        a = zeros_like(arr, shape=(4, 2), order="F", dtype=complex)
-        return a[0, 0]
-
-    f1_shape = epyccel(create_zeros_like_1_shape, language=language)
-    f1_val = epyccel(create_zeros_like_1_val, language=language)
+    f1_shape = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_1_shape
+    f1_val = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_1_val
     assert f1_shape() == create_zeros_like_1_shape()
     assert f1_val() == create_zeros_like_1_val()
     assert matching_types(f1_val(), create_zeros_like_1_val())
 
-    f2_shape = epyccel(create_zeros_like_2_shape, language=language)
-    f2_val = epyccel(create_zeros_like_2_val, language=language)
+    f2_shape = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_2_shape
+    f2_val = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_2_val
     assert f2_shape() == create_zeros_like_2_shape()
     assert isclose(f2_val(), create_zeros_like_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_zeros_like_2_val())
 
-    f3_shape = epyccel(create_zeros_like_3_shape, language=language)
-    f3_val = epyccel(create_zeros_like_3_val, language=language)
+    f3_shape = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_3_shape
+    f3_val = epyc_numpy_funcs_mod.zeros_like_combined_args__create_zeros_like_3_val
     assert f3_shape() == create_zeros_like_3_shape()
     assert isclose(f3_val(), create_zeros_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_zeros_like_3_val())
 
 
-def test_numpy_real_scalar(language):
+def test_numpy_real_scalar(epyc_numpy_funcs_mod):
 
-    def get_real(a: C):
-        from numpy import real
-
-        b = real(a)
-        return b
+    get_real = numpy_funcs.numpy_real_scalar
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5166,7 +3806,7 @@ def test_numpy_real_scalar(language):
     cmplx64 = np.complex64(cmplx_from_float32)
     cmplx128 = np.complex128(cmplx_from_float64)
 
-    epyccel_func = epyccel(get_real, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_real_scalar
 
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_real(True)
@@ -5241,14 +3881,9 @@ def test_numpy_real_scalar(language):
     assert matching_types(f_complex64_output, test_complex64_output)
 
 
-def test_numpy_real_array_like_1d(language):
+def test_numpy_real_array_like_1d(epyc_numpy_funcs_mod):
 
-    def get_real(arr: "C[:]"):
-        from numpy import real, shape
-
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    get_real = numpy_funcs.numpy_real_array_like_1d
 
     size = 5
 
@@ -5277,7 +3912,7 @@ def test_numpy_real_array_like_1d(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(get_real, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_real_array_like_1d
 
     assert epyccel_func(bl) == get_real(bl)
     assert epyccel_func(integer8) == get_real(integer8)
@@ -5292,14 +3927,9 @@ def test_numpy_real_array_like_1d(language):
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
 
-def test_numpy_real_array_like_2d(language):
+def test_numpy_real_array_like_2d(epyc_numpy_funcs_mod):
 
-    def get_real(arr: "C[:,:]"):
-        from numpy import real, shape
-
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0, 1], a[1, 0]
+    get_real = numpy_funcs.numpy_real_array_like_2d
 
     size = (2, 5)
 
@@ -5328,7 +3958,7 @@ def test_numpy_real_array_like_2d(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(get_real, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_real_array_like_2d
 
     assert epyccel_func(bl) == get_real(bl)
     assert epyccel_func(integer8) == get_real(integer8)
@@ -5343,13 +3973,9 @@ def test_numpy_real_array_like_2d(language):
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
 
-def test_numpy_imag_scalar(language):
+def test_numpy_imag_scalar(epyc_numpy_funcs_mod):
 
-    def get_imag(a: C):
-        from numpy import imag
-
-        b = imag(a)
-        return b
+    get_imag = numpy_funcs.numpy_imag_scalar
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5375,7 +4001,7 @@ def test_numpy_imag_scalar(language):
     cmplx64 = np.complex64(cmplx_from_float32)
     cmplx128 = np.complex128(cmplx_from_float64)
 
-    epyccel_func = epyccel(get_imag, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_imag_scalar
 
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_imag(True)
@@ -5450,14 +4076,9 @@ def test_numpy_imag_scalar(language):
     assert matching_types(f_complex64_output, test_complex64_output)
 
 
-def test_numpy_imag_array_like_1d(language):
+def test_numpy_imag_array_like_1d(epyc_numpy_funcs_mod):
 
-    def get_imag(arr: "C[:]"):
-        from numpy import imag, shape
-
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    get_imag = numpy_funcs.numpy_imag_array_like_1d
 
     size = 5
 
@@ -5486,7 +4107,7 @@ def test_numpy_imag_array_like_1d(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(get_imag, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_imag_array_like_1d
 
     assert epyccel_func(bl) == get_imag(bl)
     assert epyccel_func(integer8) == get_imag(integer8)
@@ -5501,14 +4122,9 @@ def test_numpy_imag_array_like_1d(language):
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
 
-def test_numpy_imag_array_like_2d(language):
+def test_numpy_imag_array_like_2d(epyc_numpy_funcs_mod):
 
-    def get_imag(arr: "C[:,:]"):
-        from numpy import imag, shape
-
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0, 1], a[1, 0]
+    get_imag = numpy_funcs.numpy_imag_array_like_2d
 
     size = (2, 5)
 
@@ -5537,7 +4153,7 @@ def test_numpy_imag_array_like_2d(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(get_imag, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_imag_array_like_2d
 
     assert epyccel_func(bl) == get_imag(bl)
     assert epyccel_func(integer8) == get_imag(integer8)
@@ -5755,16 +4371,11 @@ def test_numpy_mod_array_like_2d(language):
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Rounding errors. See #1669",
 )
-def test_numpy_mod_mixed_order(language):
+def test_numpy_mod_mixed_order(epyc_numpy_funcs_mod):
 
-    def get_mod(arr1: "float[:,:]", arr2: "float[:,:](order=F)"):
-        from numpy import mod, shape
+    get_mod = numpy_funcs.numpy_mod_mixed_order
 
-        a = mod(arr1, arr2)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0, 1], a[1, 0]
-
-    epyccel_func = epyccel(get_mod, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_mod_mixed_order
 
     fl1 = uniform(min_float / 2, max_float / 2, size=(2, 5))
     fl2 = uniform(min_float / 2, max_float / 2, size=(5, 2)).T
@@ -6088,13 +4699,9 @@ def test_numpy_prod_array_like_2d(language):
     assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_norm_scalar(language):
+def test_numpy_norm_scalar(epyc_numpy_funcs_mod):
 
-    def get_norm(a: C):
-        from numpy.linalg import norm
-
-        b = norm(a)
-        return b
+    get_norm = numpy_funcs.numpy_norm_scalar
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -6134,7 +4741,7 @@ def test_numpy_norm_scalar(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_scalar
 
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_norm(True)
@@ -6211,13 +4818,9 @@ def test_numpy_norm_scalar(language):
     assert matching_types(f_complex128_output, test_complex128_output)
 
 
-def test_numpy_norm_scalar_expr(language):
+def test_numpy_norm_scalar_expr(epyc_numpy_funcs_mod):
 
-    def get_norm(a: C):
-        from numpy.linalg import norm
-
-        b = norm(a) + 22
-        return b
+    get_norm = numpy_funcs.numpy_norm_scalar_expr
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -6257,7 +4860,7 @@ def test_numpy_norm_scalar_expr(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_scalar_expr
 
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_norm(True)
@@ -6334,13 +4937,9 @@ def test_numpy_norm_scalar_expr(language):
     assert matching_types(f_complex128_output, test_complex128_output)
 
 
-def test_numpy_norm_array_like_1d(language):
+def test_numpy_norm_array_like_1d(epyc_numpy_funcs_mod):
 
-    def get_norm(arr: "C[:]"):
-        from numpy.linalg import norm
-
-        a = norm(arr)
-        return a
+    get_norm = numpy_funcs.numpy_norm_array_like_1d
 
     size = 5
 
@@ -6400,7 +4999,7 @@ def test_numpy_norm_array_like_1d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_array_like_1d
 
     assert np.isclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
@@ -6423,13 +5022,9 @@ def test_numpy_norm_array_like_1d(language):
     assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_norm_array_like_2d(language):
+def test_numpy_norm_array_like_2d(epyc_numpy_funcs_mod):
 
-    def get_norm(arr: "C[:,:]"):
-        from numpy.linalg import norm
-
-        a = norm(arr)
-        return a
+    get_norm = numpy_funcs.numpy_norm_array_like_2d
 
     size = (2, 5)
 
@@ -6489,7 +5084,7 @@ def test_numpy_norm_array_like_2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_array_like_2d
 
     assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
@@ -6512,17 +5107,9 @@ def test_numpy_norm_array_like_2d(language):
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_norm_array_like_2d_fortran_order(language):
+def test_numpy_norm_array_like_2d_fortran_order(epyc_numpy_funcs_mod):
 
-    def get_norm(arr: "C[:,:](order=F)"):
-        from numpy import shape
-        from numpy.linalg import norm
-
-        a = norm(arr, axis=0)
-        b = norm(arr, axis=1)
-        sa = shape(a)
-        sb = shape(b)
-        return len(sb), sb[0], len(sa), sa[0], a[0], b[0]
+    get_norm = numpy_funcs.numpy_norm_array_like_2d_fortran_order
 
     size = (2, 5)
 
@@ -6582,7 +5169,7 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_array_like_2d_fortran_order
 
     # re-ordering to Fortran order
     bl = np.ndarray(size, buffer=bl, order="F", dtype=bool)
@@ -6618,13 +5205,9 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_norm_array_like_3d(language):
+def test_numpy_norm_array_like_3d(epyc_numpy_funcs_mod):
 
-    def get_norm(arr: "C[:,:,:]"):
-        from numpy.linalg import norm
-
-        a = norm(arr)
-        return a
+    get_norm = numpy_funcs.numpy_norm_array_like_3d
 
     size = (2, 5, 5)
 
@@ -6684,7 +5267,7 @@ def test_numpy_norm_array_like_3d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_array_like_3d
 
     assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
@@ -6707,19 +5290,9 @@ def test_numpy_norm_array_like_3d(language):
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_norm_array_like_3d_fortran_order(language):
+def test_numpy_norm_array_like_3d_fortran_order(epyc_numpy_funcs_mod):
 
-    def get_norm(arr: "C[:,:,:](order=F)"):
-        from numpy import shape
-        from numpy.linalg import norm
-
-        a = norm(arr, axis=0)
-        b = norm(arr, axis=1)
-        c = norm(arr, axis=2)
-        sa = shape(a)
-        sb = shape(b)
-        sc = shape(c)
-        return len(sc), sc[0], len(sb), sb[0], len(sa), sa[0], a[0][0], b[0][0], c[0][0]
+    get_norm = numpy_funcs.numpy_norm_array_like_3d_fortran_order
 
     size = (2, 5, 5)
 
@@ -6779,7 +5352,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_norm, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_norm_array_like_3d_fortran_order
 
     # re-ordering to Fortran order
     bl = np.ndarray(size, buffer=bl, order="F", dtype=bool)
@@ -6839,24 +5412,18 @@ def test_norm_vector_ord_complex(language, order):
     assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_norm_axis_2d(language):
-    def norm_call(x: "float[:,:]"):
-        from numpy.linalg import norm
+def test_norm_axis_2d(epyc_numpy_funcs_mod):
+    norm_call = numpy_funcs.norm_axis_2d
 
-        return norm(x, axis=(1,))
-
-    f1 = epyccel(norm_call, language=language)
+    f1 = epyc_numpy_funcs_mod.norm_axis_2d
     x = rand(5, 7)
     assert np.allclose(f1(x), norm_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_norm_axis_keepdims(language):
-    def norm_call(x: "float[:,:]"):
-        from numpy.linalg import norm
+def test_norm_axis_keepdims(epyc_numpy_funcs_mod):
+    norm_call = numpy_funcs.norm_axis_keepdims
 
-        return norm(x, axis=1, keepdims=True)
-
-    f1 = epyccel(norm_call, language=language)
+    f1 = epyc_numpy_funcs_mod.norm_axis_keepdims
     x = rand(6, 4)
     res_ref = norm_call(x)
     res_cc = f1(x)
@@ -6868,13 +5435,9 @@ def test_norm_axis_keepdims(language):
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Boolean conversion. See #1670",
 )
-def test_numpy_matmul_array_like_1d(language):
+def test_numpy_matmul_array_like_1d(epyc_numpy_funcs_mod):
 
-    def get_matmul(arr: "T[:]"):
-        from numpy import matmul
-
-        a = matmul(arr, arr)
-        return a
+    get_matmul = numpy_funcs.numpy_matmul_array_like_1d
 
     size = 5
 
@@ -6924,7 +5487,7 @@ def test_numpy_matmul_array_like_1d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(cmplx128_from_float64)
 
-    epyccel_func = epyccel(get_matmul, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_matmul_array_like_1d
 
     assert np.array_equal(epyccel_func(integer), get_matmul(integer))
     assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
@@ -6936,14 +5499,9 @@ def test_numpy_matmul_array_like_1d(language):
     assert isclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_matmul_array_like_2x2d(language):
+def test_numpy_matmul_array_like_2x2d(epyc_numpy_funcs_mod):
 
-    def get_matmul(arr: "T[:,:]"):
-        from numpy import matmul, shape
-
-        a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0, 1], a[1, 0]
+    get_matmul = numpy_funcs.numpy_matmul_array_like_2x2d
 
     size = (2, 2)
 
@@ -6989,7 +5547,7 @@ def test_numpy_matmul_array_like_2x2d(language):
     cmplx64 = np.full(size, np.complex64(integer + integer * 1j))
     cmplx128 = np.full(size, integer + integer * 1j)
 
-    epyccel_func = epyccel(get_matmul, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_matmul_array_like_2x2d
 
     assert np.allclose(epyccel_func(integer), get_matmul(integer), rtol=RTOL, atol=ATOL)
     assert np.allclose(
@@ -7009,13 +5567,10 @@ def test_numpy_matmul_array_like_2x2d(language):
     )
 
 
-def test_matmul_4d_multi_batch(language):
-    def matmul_call(a: "float[:,:,:,:]", b: "float[:,:,:,:]"):
-        from numpy import matmul
+def test_matmul_4d_multi_batch(epyc_numpy_funcs_mod):
+    matmul_call = numpy_funcs.matmul_4d_multi_batch
 
-        return matmul(a, b)
-
-    f1 = epyccel(matmul_call, language=language)
+    f1 = epyc_numpy_funcs_mod.matmul_4d_multi_batch
 
     # Two batch dimensions
     a = rand(2, 3, 4, 6)
@@ -7028,13 +5583,10 @@ def test_matmul_4d_multi_batch(language):
     assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
 
 
-def test_matmul_3d_broadcast_batch(language):
-    def matmul_call(a: "float[:,:,:]", b: "float[:,:]"):
-        from numpy import matmul
+def test_matmul_3d_broadcast_batch(epyc_numpy_funcs_mod):
+    matmul_call = numpy_funcs.matmul_3d_broadcast_batch
 
-        return matmul(a, b)
-
-    f1 = epyccel(matmul_call, language=language)
+    f1 = epyc_numpy_funcs_mod.matmul_3d_broadcast_batch
 
     # a has batch dimension, b is shared
     a = rand(5, 4, 3)
@@ -7047,14 +5599,9 @@ def test_matmul_3d_broadcast_batch(language):
     assert np.allclose(res_pycc, res_ref, rtol=RTOL, atol=ATOL)
 
 
-def test_numpy_where_array_like_1d_with_condition(language):
+def test_numpy_where_array_like_1d_with_condition(epyc_numpy_funcs_mod):
 
-    def get_chosen_elements(arr: "F[:]"):
-        from numpy import shape, where
-
-        a = where(arr > 0, arr, arr * 2)
-        s = shape(a)
-        return len(s), s[0], a[1], a[0]
+    get_chosen_elements = numpy_funcs.numpy_where_array_like_1d_with_condition
 
     size = 5
 
@@ -7071,7 +5618,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
-    epyccel_func = epyccel(get_chosen_elements, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_where_array_like_1d_with_condition
 
     assert epyccel_func(bl) == get_chosen_elements(bl)
     assert epyccel_func(integer8) == get_chosen_elements(integer8)
@@ -7129,14 +5676,9 @@ def test_numpy_where_array_like_1d_1_arg(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 
-def test_numpy_where_array_like_2d_with_condition(language):
+def test_numpy_where_array_like_2d_with_condition(epyc_numpy_funcs_mod):
 
-    def get_chosen_elements(arr: "F[:,:]"):
-        from numpy import shape, where
-
-        a = where(arr < 0, arr, arr + 1)
-        s = shape(a)
-        return len(s), s[0], a[0, 0], a[0, 1], a[1, 0], a[1, 1]
+    get_chosen_elements = numpy_funcs.numpy_where_array_like_2d_with_condition
 
     size = (2, 5)
 
@@ -7153,7 +5695,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
-    epyccel_func = epyccel(get_chosen_elements, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_where_array_like_2d_with_condition
 
     assert epyccel_func(bl) == get_chosen_elements(bl)
     assert epyccel_func(integer8) == get_chosen_elements(integer8)
@@ -7166,13 +5708,8 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 
-def test_numpy_where_complex(language):
-    def where_wrapper(arr1: "CNT[:]", arr2: "CNT[:]", cond: "bool[:]"):
-        from numpy import shape, where
-
-        a = where(cond, arr1, arr2)
-        s = shape(a)
-        return len(s), s[0], a[1], a[0]
+def test_numpy_where_complex(epyc_numpy_funcs_mod):
+    where_wrapper = numpy_funcs.numpy_where_complex
 
     size = 7
 
@@ -7199,7 +5736,7 @@ def test_numpy_where_complex(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(where_wrapper, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_where_complex
 
     assert epyccel_func(cmplx64_1, cmplx64_2, cond) == where_wrapper(
         cmplx64_1, cmplx64_2, cond
@@ -7209,17 +5746,8 @@ def test_numpy_where_complex(language):
     )
 
 
-def test_where_combined_types(language):
-    def where_wrapper(
-        cond: "bool[:]",
-        arr1: "int32[:] | float64[:] | complex128[:]",
-        arr2: "int64[:] | float32[:]",
-    ):
-        from numpy import shape, where
-
-        a = where(cond, arr1, arr2)
-        s = shape(a)
-        return len(s), s[0], a[1], a[0]
+def test_where_combined_types(epyc_numpy_funcs_mod):
+    where_wrapper = numpy_funcs.where_combined_types
 
     size = 6
 
@@ -7237,7 +5765,7 @@ def test_where_combined_types(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
     )
 
-    epyccel_func = epyccel(where_wrapper, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.where_combined_types
 
     res_pyc = epyccel_func(cond, integer32, integer64)
     res_pyt = where_wrapper(cond, integer32, integer64)
@@ -7257,39 +5785,14 @@ def test_where_combined_types(language):
     assert matching_types(res_pyc, res_pyt)
 
 
-def test_numpy_linspace_scalar(language):
+def test_numpy_linspace_scalar(epyc_numpy_funcs_mod):
+    get_linspace = numpy_funcs.numpy_linspace_scalar__get_linspace
+    test_linspace_type = numpy_funcs.numpy_linspace_scalar__test_linspace_type
+    test_linspace_type2 = numpy_funcs.numpy_linspace_scalar__test_linspace_type2
+    test_linspace_int = numpy_funcs.numpy_linspace_scalar__test_linspace_int
+    test_linspace = numpy_funcs.numpy_linspace_scalar__test_linspace
+    test_linspace2 = numpy_funcs.numpy_linspace_scalar__test_linspace2
     from numpy import linspace
-
-    def get_linspace(start: S, steps: int, num: int):
-        stop = start + steps
-        b = linspace(start, stop, num)
-        return b
-
-    def test_linspace(start: "complex64", end: "complex64"):
-        x = linspace(start, end, 5)
-        return x[0], x[1], x[2], x[3], x[4]
-
-    def test_linspace2(start: "complex128", end: "complex128"):
-        x = linspace(start, end, 5)
-        return x[0], x[1], x[2], x[3], x[4]
-
-    def test_linspace_type(start: "int", end: "int", result: "int64[:]"):
-        x = linspace(start + 4, end, 15, dtype=np.int64)
-        ret = 1
-        for i in range(len(x)):
-            if x[i] != result[i]:
-                ret = 0
-        return ret, x[int(len(x) / 2)]
-
-    def test_linspace_type2(start: "int", end: "int", result: "complex128[:]"):
-        x = linspace(start, end * 2, 15, dtype="complex128")
-        for i in range(len(x)):
-            result[i] = x[i]
-
-    FI = TypeVar("FI", float, int)
-
-    def test_linspace_int(start: FI, end: FI, step: int, endpoint: bool):
-        return np.linspace(start, end, step, endpoint, dtype=np.int32)
 
     integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -7302,10 +5805,10 @@ def test_numpy_linspace_scalar(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 200, max_float64 / 200)
 
-    epyccel_func = epyccel(get_linspace, language=language)
-    epyccel_func_type = epyccel(test_linspace_type, language=language)
-    epyccel_func_type2 = epyccel(test_linspace_type2, language=language)
-    epyccel_func_int = epyccel(test_linspace_int, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_linspace_scalar__get_linspace
+    epyccel_func_type = epyc_numpy_funcs_mod.numpy_linspace_scalar__test_linspace_type
+    epyccel_func_type2 = epyc_numpy_funcs_mod.numpy_linspace_scalar__test_linspace_type2
+    epyccel_func_int = epyc_numpy_funcs_mod.numpy_linspace_scalar__test_linspace_int
 
     x = linspace(0 + 4, 10, 15, dtype=np.int64)
     ret, ele = epyccel_func_type(0, 10, x)
@@ -7407,8 +5910,8 @@ def test_numpy_linspace_scalar(language):
         test_linspace_int(-393.0, 5.0, 7, False),
     )
 
-    epyccel_func1 = epyccel(test_linspace, language=language)
-    epyccel_func2 = epyccel(test_linspace2, language=language)
+    epyccel_func1 = epyc_numpy_funcs_mod.numpy_linspace_scalar__test_linspace
+    epyccel_func2 = epyc_numpy_funcs_mod.numpy_linspace_scalar__test_linspace2
     assert np.allclose(
         epyccel_func1(np.complex64(3 + 6j), np.complex64(5 + 1j)),
         test_linspace(np.complex64(3 + 6j), np.complex64(5 + 1j)),
@@ -7440,39 +5943,11 @@ def test_numpy_linspace_scalar(language):
         assert matching_types(pyc, pyt)
 
 
-def test_numpy_linspace_array_like_1d(language):
+def test_numpy_linspace_array_like_1d(epyc_numpy_funcs_mod):
+    test_linspace = numpy_funcs.numpy_linspace_array_like_1d__test_linspace
+    test_linspace2 = numpy_funcs.numpy_linspace_array_like_1d__test_linspace2
+    test_linspace_dtype = numpy_funcs.numpy_linspace_array_like_1d__test_linspace_dtype
     from numpy import linspace
-
-    def test_linspace(start: "S[:]", stop: int, endpoint: bool):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        return a
-
-    def test_linspace2(
-        start: "complex128[:]", stop: "int", out: "complex128[:,:]", endpoint: "bool"
-    ):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                out[i][j] = a[i][j]
-
-    def test_linspace_dtype(start: "int[:] | float64[:]", stop: int, endpoint: bool):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(
-            start,
-            stop,
-            numberOfSamplesToGenerate,
-            endpoint=(endpoint == True),
-            dtype=np.int32,
-        )
-        return a
 
     size = 5
     integer8 = randint(min_int8 / 2, max_int8 / 2, size=size, dtype=np.int8)
@@ -7483,10 +5958,12 @@ def test_numpy_linspace_array_like_1d(language):
 
     fl32 = np.array([1.5, 2.2, 3.3, 4.4, 5.5], dtype=np.float32)
 
-    epyccel_func = epyccel(test_linspace, language=language)
-    epyccel_func2 = epyccel(test_linspace2, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_linspace_array_like_1d__test_linspace
+    epyccel_func2 = epyc_numpy_funcs_mod.numpy_linspace_array_like_1d__test_linspace2
 
-    epyccel_func_dtype = epyccel(test_linspace_dtype, language=language)
+    epyccel_func_dtype = (
+        epyc_numpy_funcs_mod.numpy_linspace_array_like_1d__test_linspace_dtype
+    )
 
     arr = linspace(integer, 5, 7)
     out = epyccel_func(integer, 5, True)
@@ -7575,57 +6052,12 @@ def test_numpy_linspace_array_like_1d(language):
     # assert np.allclose(arr, out)
 
 
-def test_numpy_linspace_array_like_2d(language):
+def test_numpy_linspace_array_like_2d(epyc_numpy_funcs_mod):
+    test_linspace = numpy_funcs.numpy_linspace_array_like_2d__test_linspace
+    test_linspace3 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace3
+    test_linspace2 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace2
+    test_linspace4 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace4
     from numpy import linspace
-
-    def test_linspace(start: "S[:,:]", stop: int, endpoint: bool):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        return a
-
-    def test_linspace3(
-        start: "complex128[:,:]",
-        stop: "int",
-        out: "complex128[:,:,:]",
-        endpoint: "bool",
-    ):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                for k in range(len(out[i][j])):
-                    out[i][j][k] = a[i][j][k]
-
-    def test_linspace2(
-        start: "int[:,:]", stop: "int[:,:]", out: "float[:,:,:]", endpoint: "bool"
-    ):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                for k in range(len(out[i][j])):
-                    out[i][j][k] = a[i][j][k]
-
-    def test_linspace4(
-        start: "complex128[:,:]",
-        stop: "complex128[:,:]",
-        out: "complex128[:,:,:]",
-        endpoint: "bool",
-    ):
-        from numpy import linspace
-
-        numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-        for i in range(len(out)):
-            for j in range(len(out[i])):
-                for k in range(len(out[i][j])):
-                    out[i][j][k] = a[i][j][k]
 
     size = (2, 5)
 
@@ -7639,10 +6071,10 @@ def test_numpy_linspace_array_like_2d(language):
     )
     cmplx = (np.random.random((2, 5)) * 75) + (np.random.random((2, 5)) * 50) * 1j
 
-    epyccel_func = epyccel(test_linspace, language=language)
-    epyccel_func3 = epyccel(test_linspace3, language=language)
-    epyccel_func2 = epyccel(test_linspace2, language=language)
-    epyccel_func4 = epyccel(test_linspace4, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_linspace_array_like_2d__test_linspace
+    epyccel_func3 = epyc_numpy_funcs_mod.numpy_linspace_array_like_2d__test_linspace3
+    epyccel_func2 = epyc_numpy_funcs_mod.numpy_linspace_array_like_2d__test_linspace2
+    epyccel_func4 = epyc_numpy_funcs_mod.numpy_linspace_array_like_2d__test_linspace4
 
     arr = linspace(integer, 5, 7)
     out = epyccel_func(integer, 5, True)
@@ -8134,13 +6566,9 @@ def test_nonzero(language):
     assert epyccel_func(fl64) == nonzero_func(fl64)
 
 
-def test_dtype(language):
+def test_dtype(epyc_numpy_funcs_mod):
 
-    def func(a: "F[:]"):
-        from numpy import zeros
-
-        b = zeros(5, dtype=a.dtype)
-        return b[0]
+    func = numpy_funcs.dtype
 
     bl = np.array([True, False, True, False, True])
     integer8 = np.array([6, 1, 8, 2, 3], dtype=np.int8)
@@ -8153,7 +6581,7 @@ def test_dtype(language):
     fl32 = np.array([6, 22, 1, 8, 2, 3], dtype=np.float32)
     fl64 = np.array([6, 22, 1, 8, 2, 3], dtype=np.float64)
 
-    epyccel_func = epyccel(func, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.dtype
 
     assert matching_types(epyccel_func(bl), func(bl))
     assert matching_types(epyccel_func(integer8), func(integer8))
@@ -8166,30 +6594,11 @@ def test_dtype(language):
     assert matching_types(epyccel_func(fl64), func(fl64))
 
 
-def test_result_type(language):
-    def int_vs_int_array():
-        import numpy as np
-
-        b = np.zeros(5, dtype=np.result_type(3, np.arange(7, dtype=np.int32)))
-        return b[0]
-
-    def type_comparison():
-        import numpy as np
-
-        b = np.zeros(5, dtype=np.result_type(np.int32, np.int16))
-        return b[0]
-
-    def type_comparison2():
-        import numpy as np
-
-        b = np.zeros(5, dtype=np.result_type(np.int32, np.complex64))
-        return b[0]
-
-    def value_types():
-        import numpy as np
-
-        b = np.zeros(5, dtype=np.result_type(3.0, -2))
-        return b[0]
+def test_result_type(epyc_numpy_funcs_mod):
+    int_vs_int_array = numpy_funcs.result_type__int_vs_int_array
+    type_comparison = numpy_funcs.result_type__type_comparison
+    type_comparison2 = numpy_funcs.result_type__type_comparison2
+    value_types = numpy_funcs.result_type__value_types
 
     def pass_through_type():
         import numpy as np
@@ -8205,10 +6614,10 @@ def test_result_type(language):
         c = np.zeros(5, dtype=np.result_type(a + b))
         return c[0]
 
-    epyccel_int_vs_int_array = epyccel(int_vs_int_array, language=language)
-    epyccel_type_comparison = epyccel(type_comparison, language=language)
-    epyccel_type_comparison2 = epyccel(type_comparison2, language=language)
-    epyccel_value_types = epyccel(value_types, language=language)
+    epyccel_int_vs_int_array = epyc_numpy_funcs_mod.result_type__int_vs_int_array
+    epyccel_type_comparison = epyc_numpy_funcs_mod.result_type__type_comparison
+    epyccel_type_comparison2 = epyc_numpy_funcs_mod.result_type__type_comparison2
+    epyccel_value_types = epyc_numpy_funcs_mod.result_type__value_types
 
     assert matching_types(epyccel_int_vs_int_array(), int_vs_int_array())
     assert matching_types(epyccel_type_comparison(), type_comparison())
@@ -8398,186 +6807,149 @@ def test_true_divide(language):
         assert basic_division(f, 0) == epyccel_basic_division(f, 0)
 
 
-def test_cross_1d(language):
-    def cross_call(x: "float[:]", y: "float[:]"):
-        return np.cross(x, y)
+def test_cross_1d(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_1d
 
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_1d
     x = rand(3)
     y = rand(3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_cross_1d_expr(language):
-    def cross_call(x: "float[:]", y: "float[:]"):
-        return np.cross(x, y) + 2
+def test_cross_1d_expr(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_1d_expr
 
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_1d_expr
     x = rand(3)
     y = rand(3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_cross_2d_axis(language):
-    def cross_call(x: "float[:,:]", y: "float[:,:]"):
-        return np.cross(a=x, b=y, axis=1)
+def test_cross_2d_axis(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_2d_axis
 
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_2d_axis
     x = rand(5, 3)
     y = rand(5, 3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
 
-def test_cross_mixed_dimensions(language):
-    def cross_call(x: "int[:,:]"):
-        y = np.array(x[0:1, :])
-        return np.cross(x, y)
+def test_cross_mixed_dimensions(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_mixed_dimensions
 
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_mixed_dimensions
     x = np.array(rand(4, 3) * 10, dtype=int)
     assert np.allclose(f1(x), cross_call(x), rtol=RTOL, atol=ATOL)
 
 
-def test_linalg_cross_1d(language):
-    def cross_call(x: "float[:]", y: "float[:]"):
-        import numpy as np  # pylint: disable=reimported
+def test_linalg_cross_1d(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.linalg_cross_1d
 
-        return np.linalg.cross(x, y)
-
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.linalg_cross_1d
     x = rand(3)
     y = rand(3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_linalg_cross_1d_mixed_types(language):
-    def cross_call(x: "float[:]", y: "int[:]"):
-        return np.linalg.cross(x, y)
+def test_linalg_cross_1d_mixed_types(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.linalg_cross_1d_mixed_types
 
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.linalg_cross_1d_mixed_types
     x = rand(3)
     y = np.array(rand(3) * 10, dtype=int)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_linalg_cross_axis(language):
-    def cross_call(x: "float[:,:]", y: "float[:,:]"):
-        from numpy.linalg import cross
+def test_linalg_cross_axis(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.linalg_cross_axis
 
-        return cross(x, y, axis=1)
-
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.linalg_cross_axis
     x = rand(2, 3)
     y = rand(2, 3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_cross_axisa_axisb(language):
-    def cross_call(x: "float[:,:]", y: "float[:,:]"):
-        from numpy import cross
+def test_cross_axisa_axisb(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_axisa_axisb
 
-        return cross(x, y, axisa=1, axisb=1)
-
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_axisa_axisb
     x = rand(5, 3)
     y = rand(5, 3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
 
-def test_cross_axisc(language):
-    def cross_call(x: "float[:,:]", y: "float[:,:]"):
-        from numpy import cross
+def test_cross_axisc(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_axisc
 
-        return cross(x, y, axisc=1)
-
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_axisc
     x = rand(5, 3)
     y = rand(5, 3)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
 
-def test_cross_axisa_axisb_axisc(language):
-    def cross_call(x: "float[:,:,:]", y: "float[:,:,:]"):
-        from numpy import cross
+def test_cross_axisa_axisb_axisc(epyc_numpy_funcs_mod):
+    cross_call = numpy_funcs.cross_axisa_axisb_axisc
 
-        return cross(x, y, axisa=2, axisb=1, axisc=2)
-
-    f1 = epyccel(cross_call, language=language)
+    f1 = epyc_numpy_funcs_mod.cross_axisa_axisb_axisc
     x = rand(4, 5, 3)
     y = rand(4, 3, 5)
     assert np.allclose(f1(x, y), cross_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == cross_call(x, y).shape
 
 
-def test_vecdot_1d_real(language):
-    def vecdot_call(x: "float[:]", y: "float[:]"):
-        from numpy import vecdot
+def test_vecdot_1d_real(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_1d_real
 
-        return vecdot(x, y)
-
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_1d_real
     x = rand(10)
     y = rand(10)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_vecdot_1d_complex(language):
-    def vecdot_call(x: "complex[:]", y: "complex[:]"):
-        from numpy import vecdot
+def test_vecdot_1d_complex(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_1d_complex
 
-        return vecdot(x, y)
-
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_1d_complex
     x = rand(8) + 1j * rand(8)
     y = rand(8) + 1j * rand(8)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_vecdot_axis_2d(language):
-    def vecdot_call(x: "float[:,:]", y: "float[:,:]"):
-        from numpy import vecdot
+def test_vecdot_axis_2d(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_axis_2d
 
-        return vecdot(x, y, axis=1)
-
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_axis_2d
     x = rand(6, 5)
     y = rand(6, 5)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
     assert f1(x, y).shape == vecdot_call(x, y).shape
 
 
-def test_vecdot_mixed_dimensions(language):
-    def vecdot_call(x: "float[:,:]", y: "float[:]"):
-        from numpy import vecdot
+def test_vecdot_mixed_dimensions(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_mixed_dimensions
 
-        return vecdot(x, y)
-
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_mixed_dimensions
     x = rand(4, 7)
     y = rand(7)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_vecdot_out_axis_2d(language):
-    def vecdot_call(x: "float[:,:]", y: "float[:,:]"):
-        out = np.empty(x.shape[0], dtype=x.dtype)
-        np.vecdot(x, y, axis=1, out=out)
-        return out
+def test_vecdot_out_axis_2d(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_out_axis_2d
 
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_out_axis_2d
     x = rand(5, 7)
     y = rand(5, 7)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_vecdot_3d_axis_order(language):
-    def vecdot_call(x: "float[:,:,:]", y: "float[:,:,:]"):
-        return np.vecdot(x, y, axis=2)
+def test_vecdot_3d_axis_order(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_3d_axis_order
 
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_3d_axis_order
     x = rand(4, 5, 6)
     y = rand(4, 5, 6)
     res_ref = vecdot_call(x, y)
@@ -8589,23 +6961,19 @@ def test_vecdot_3d_axis_order(language):
     assert res_cc.flags["F_CONTIGUOUS"] == res_ref.flags["F_CONTIGUOUS"]
 
 
-def test_vecdot_mixed_dimensions_expression(language):
-    def vecdot_call(x: "float[:,:]", y: "float[:]"):
-        from numpy import vecdot
+def test_vecdot_mixed_dimensions_expression(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_mixed_dimensions_expression
 
-        return vecdot(x, y) + 3.5
-
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_mixed_dimensions_expression
     x = rand(4, 7)
     y = rand(7)
     assert np.allclose(f1(x, y), vecdot_call(x, y), rtol=RTOL, atol=ATOL)
 
 
-def test_vecdot_3d_axis_order_expression(language):
-    def vecdot_call(x: "float[:,:,:]", y: "float[:,:,:]"):
-        return np.vecdot(x, y, axis=2) - 7.2
+def test_vecdot_3d_axis_order_expression(epyc_numpy_funcs_mod):
+    vecdot_call = numpy_funcs.vecdot_3d_axis_order_expression
 
-    f1 = epyccel(vecdot_call, language=language)
+    f1 = epyc_numpy_funcs_mod.vecdot_3d_axis_order_expression
     x = rand(4, 5, 6)
     y = rand(4, 5, 6)
     res_ref = vecdot_call(x, y)
