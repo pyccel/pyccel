@@ -1,19 +1,26 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 # coding: utf-8
 from typing import TypeVar
 
 import numpy as np
 
 from pyccel import epyccel
+from modules import epyccel_default_args
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_epyccel_default_args_mod(language):
+    return epyccel_module_with_fallback(epyccel_default_args, language)
+
+
 
 
 # ------------------------------------------------------------------------------
-def test_f1(language):
-    def f1(x: "int" = 1):
-        y = x - 1
-        return y
-
-    f = epyccel(f1, language=language)
+def test_f1(epyc_epyccel_default_args_mod):
+    f1 = epyccel_default_args.f1
+    f = epyc_epyccel_default_args_mod.f1
 
     # ...
     assert f(2) == f1(2)
@@ -22,13 +29,9 @@ def test_f1(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f2(language):
-    def f5(x: "float [:]", m1: "int" = 2):
-        x[:] = 0.0
-        for i in range(0, m1):
-            x[i] = i * 1.0
-
-    f = epyccel(f5, language=language)
+def test_f2(epyc_epyccel_default_args_mod):
+    f5 = epyccel_default_args.f2
+    f = epyc_epyccel_default_args_mod.f2
 
     # ...
     m1 = 3
@@ -50,11 +53,9 @@ def test_f2(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f3(language):
-    def f3(x: "float" = 1.5, y: "float" = 2.5):
-        return x + y
-
-    f = epyccel(f3, language=language)
+def test_f3(epyc_epyccel_default_args_mod):
+    f3 = epyccel_default_args.f3
+    f = epyc_epyccel_default_args_mod.f3
 
     # ...
     assert f(19.2, 6.7) == f3(19.2, 6.7)
@@ -65,14 +66,9 @@ def test_f3(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f4(language):
-    def f4(x: "bool" = True):
-        if x:
-            return 1
-        else:
-            return 2
-
-    f = epyccel(f4, language=language)
+def test_f4(epyc_epyccel_default_args_mod):
+    f4 = epyccel_default_args.f4
+    f = epyc_epyccel_default_args_mod.f4
 
     # ...
     assert f(True) == f4(True)
@@ -82,12 +78,9 @@ def test_f4(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f5(language):
-    def f5(x: "complex" = 1j):
-        y = x - 1
-        return y
-
-    f = epyccel(f5, language=language)
+def test_f5(epyc_epyccel_default_args_mod):
+    f5 = epyccel_default_args.f5_f5
+    f = epyc_epyccel_default_args_mod.f5_f5
 
     # ...
     assert f(2.9 + 3j) == f5(2.9 + 3j)
@@ -106,16 +99,9 @@ def test_changed_precision_arguments(language):
 
 
 # ------------------------------------------------------------------------------
-def test_default_interface_value(language):
-    T = TypeVar("T", float, complex)
-
-    def max_abs(a: T, b: T = 3.0) -> float:
-        if b is None:
-            return abs(a)
-        else:
-            return max(abs(a), abs(b))
-
-    f = epyccel(max_abs, language=language)
+def test_default_interface_value(epyc_epyccel_default_args_mod):
+    max_abs = epyccel_default_args.max_abs
+    f = epyc_epyccel_default_args_mod.max_abs
 
     # ...
     assert f(2.9) == max_abs(2.9)
