@@ -7,52 +7,34 @@ import pytest
 
 from pyccel import epyccel
 from pyccel.decorators import inline, private
+from modules import epyccel_decorators
+from utilities import epyccel_module_with_fallback
 
 
-@pytest.mark.parametrize(
-    "lang",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=pytest.mark.c),
-    ),
-)
-def test_private(lang):
-    @private
-    def f():
-        print("hidden")
+@pytest.fixture(scope="module")
+def epyc_epyccel_decorators_mod(language):
+    return epyccel_module_with_fallback(epyccel_decorators, language)
 
+
+
+
+@pytest.mark.skipif_by_language(True, language="python", reason="Can't hide functions in Python")
+def test_private(epyc_epyccel_decorators_mod):
     # Attribute error when extracting f from module
     with pytest.raises(AttributeError):
-        epyccel(f, language=lang)
+        g = epyc_epyccel_decorators_mod.hidden
 
 
-def test_inline_1_out(language):
-    def f():
-        @inline
-        def cube(s: int):
-            return s * s * s
-
-        a = cube(3)
-        b = cube(8 + 3)
-        c = cube((b - a) // 20)
-        d = cube(a)
-        return a, b, c, d
-
-    g = epyccel(f, language=language)
+def test_inline_1_out(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_1_out
+    g = epyc_epyccel_decorators_mod.inline_1_out
 
     assert f() == g()
 
 
-def test_inline_0_out(language):
-    def f(x: "int[:]"):
-        @inline
-        def set_3(s: "int[:]", i: int):
-            s[i] = 3
-
-        set_3(x, 0)
-        set_3(x, 1)
-
-    g = epyccel(f, language=language)
+def test_inline_0_out(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_0_out
+    g = epyc_epyccel_decorators_mod.inline_0_out
 
     x = np.ones(4, dtype=int)
     y = np.ones(4, dtype=int)
@@ -63,171 +45,65 @@ def test_inline_0_out(language):
     assert all(x == y)
 
 
-def test_inline_local(language):
-    def f():
-        @inline
-        def power_4(s: int):
-            x = s * s
-            return x * x
-
-        a = power_4(3)
-        b = power_4(8 + 3)
-        c = power_4((b - a) // 2000)
-        g = 4
-        d = power_4(g)
-        return a, b, c, d
-
-    g = epyccel(f, language=language)
+def test_inline_local(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_local
+    g = epyc_epyccel_decorators_mod.inline_local
 
     assert f() == g()
 
 
-def test_inline_local_name_clash(language):
-    def f():
-        @inline
-        def power_4(s: int):
-            x = s * s
-            return x * x
-
-        a = power_4(3)
-        b = power_4(8 + 3)
-        c = power_4((b - a) // 2000)
-        x = 2
-        d = power_4(x)
-        return a, b, c, d, x
-
-    g = epyccel(f, language=language)
+def test_inline_local_name_clash(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_local_name_clash
+    g = epyc_epyccel_decorators_mod.inline_local_name_clash
 
     assert f() == g()
 
 
-def test_inline_optional(language):
-    def f():
-        @inline
-        def get_val(x: int = None, y: int = None):
-            if x is None:
-                a = 3
-            else:
-                a = x
-            if y is not None:
-                b = 4
-            else:
-                b = 5
-            return a + b
-
-        a = get_val(2, 7)
-        b = get_val()
-        c = get_val(6)
-        d = get_val(y=0)
-        return a, b, c, d
-
-    g = epyccel(f, language=language)
+def test_inline_optional(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_optional
+    g = epyc_epyccel_decorators_mod.inline_optional
 
     assert f() == g()
 
 
-def test_inline_array(language):
-    def f():
-        from numpy import empty
-
-        @inline
-        def fill_array(a: "float[:]"):
-            for i in range(a.shape[0]):
-                a[i] = 3.14
-
-        arr = empty(4)
-        fill_array(arr)
-        return arr[0], arr[-1]
-
-    g = epyccel(f, language=language)
+def test_inline_array(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_array
+    g = epyc_epyccel_decorators_mod.inline_array
 
     assert f() == g()
 
 
-def test_nested_inline_call(language):
-    def f():
-        @inline
-        def get_val(x: int = None, y: int = None):
-            if x is None:
-                a = 3
-            else:
-                a = x
-            if y is not None:
-                b = 4
-            else:
-                b = 5
-            return a + b
-
-        a = get_val(get_val(2) + 3, 7)
-        return a
-
-    g = epyccel(f, language=language)
+def test_nested_inline_call(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.nested_inline_call
+    g = epyc_epyccel_decorators_mod.nested_inline_call
 
     assert f() == g()
 
 
-def test_inline_return(language):
-    def f():
-        @inline
-        def tmp():
-            a = 1
-            return a
-
-        b = tmp()
-        c = tmp()
-        d = tmp() + 3
-        e = tmp() * 4
-        return b, c, d, e
-
-    g = epyccel(f, language=language)
+def test_inline_return(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_return
+    g = epyc_epyccel_decorators_mod.inline_return
 
     assert f() == g()
 
 
-def test_inline_multiple_results(language):
-    def f():
-        @inline
-        def get_2_vals(a: int):
-            return a * 2, a - 5
-
-        get_2_vals(5)
-        x = get_2_vals(7)
-        y0, y1 = get_2_vals(3)
-        return x, y0, y1
-
-    g = epyccel(f, language=language)
+def test_inline_multiple_results(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_multiple_results
+    g = epyc_epyccel_decorators_mod.inline_multiple_results
 
     assert f() == g()
 
 
-def test_inline_literal_return(language):
-    def f():
-        @inline
-        def tmp():
-            return 2
-
-        b = tmp()
-        c = tmp()
-        d = tmp() + 3
-        e = tmp() * 4
-        return b, c, d, e
-
-    g = epyccel(f, language=language)
+def test_inline_literal_return(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_literal_return
+    g = epyc_epyccel_decorators_mod.inline_literal_return
 
     assert f() == g()
 
 
-def test_inline_array_return(language):
-    def f():
-        @inline
-        def tmp():
-            return np.ones(2, dtype=int)
-
-        b = tmp()
-        c = np.sum(tmp())
-        return b, c
-
-    g = epyccel(f, language=language)
+def test_inline_array_return(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_array_return
+    g = epyc_epyccel_decorators_mod.inline_array_return
 
     out_pyth = f()
     out_pycc = g()
@@ -235,94 +111,44 @@ def test_inline_array_return(language):
     assert out_pyth[1] == out_pycc[1]
 
 
-def test_inline_multiple_return(language):
-    def f():
-        @inline
-        def tmp():
-            a = 1
-            b = 4
-            return a, b
-
-        b, c = tmp()
-        d, e = tmp()
-        return b, c, d, e
-
-    g = epyccel(f, language=language)
+def test_inline_multiple_return(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_multiple_return
+    g = epyc_epyccel_decorators_mod.inline_multiple_return
 
     assert f() == g()
 
 
-def test_inline_homogeneous_tuple_result(language):
-    def f():
-        @inline
-        def get_2_vals(a: int):
-            b = (a * 2, a - 5)
-            return b
-
-        get_2_vals(5)
-        x = get_2_vals(7)
-        y0, y1 = get_2_vals(3)
-        return x, y0, y1
-
-    g = epyccel(f, language=language)
+def test_inline_homogeneous_tuple_result(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_homogeneous_tuple_result
+    g = epyc_epyccel_decorators_mod.inline_homogeneous_tuple_result
 
     assert f() == g()
 
 
-def test_inline_inhomogeneous_tuple_result(language):
-    def f():
-        @inline
-        def get_2_vals(a: int):
-            b: tuple[int, int] = (a * 2, a - 5)
-            return b
-
-        get_2_vals(5)
-        x = get_2_vals(7)
-        y0, y1 = get_2_vals(3)
-        return x, y0, y1
-
-    g = epyccel(f, language=language)
+def test_inline_inhomogeneous_tuple_result(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inline_inhomogeneous_tuple_result
+    g = epyc_epyccel_decorators_mod.inline_inhomogeneous_tuple_result
 
     assert f() == g()
 
 
-def test_inhomogeneous_tuple_in_inline(language):
-    def f():
-        @inline
-        def tmp():
-            a = (1, False)
-            return a[0] + 2
-
-        b = tmp()
-        return b
-
-    g = epyccel(f, language=language)
+def test_inhomogeneous_tuple_in_inline(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.inhomogeneous_tuple_in_inline
+    g = epyc_epyccel_decorators_mod.inhomogeneous_tuple_in_inline
 
     assert f() == g()
 
 
-def test_multi_level_inhomogeneous_tuple_in_inline(language):
-    def f():
-        @inline
-        def tmp():
-            a = ((1, False), 3.0)
-            return a[0][0] + 2
-
-        b = tmp()
-        return b
-
-    g = epyccel(f, language=language)
+def test_multi_level_inhomogeneous_tuple_in_inline(epyc_epyccel_decorators_mod):
+    f = epyccel_decorators.multi_level
+    g = epyc_epyccel_decorators_mod.multi_level
 
     assert f() == g()
 
 
-def test_indexed_template(language):
-    T = TypeVar("T", "float[:]", "complex[:]")
-
-    def my_sum(v: Final[T]):
-        return v.sum()
-
-    pyccel_sum = epyccel(my_sum, language=language)
+def test_indexed_template(epyc_epyccel_decorators_mod):
+    my_sum = epyccel_decorators.my_sum
+    pyccel_sum = epyc_epyccel_decorators_mod.my_sum
 
     x = np.ones(4, dtype=float)
 
