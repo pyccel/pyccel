@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 import os
 import sys
 
@@ -6,6 +7,15 @@ from numpy import allclose
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
+from modules import epyccel_mod
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_modulo_mod(language):
+    return epyccel_module_with_fallback(epyccel_mod, language)
+
+
 
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
@@ -20,11 +30,9 @@ else:
     ATOL = 1e-15
 
 
-def test_modulo_int_int(language):
-    def modulo_i_i(x: int, y: int):
-        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
-
-    f = epyccel(modulo_i_i, language=language)
+def test_modulo_int_int(epyc_modulo_mod):
+    modulo_i_i = epyccel_mod.modulo_i_i
+    f = epyc_modulo_mod.modulo_i_i
     x = randint(0, 1e6)
     y = randint(1, 1e6)
 
@@ -34,11 +42,9 @@ def test_modulo_int_int(language):
     assert isinstance(f_output, type(modulo_i_i_output))
 
 
-def test_modulo_real_real(language):
-    def modulo_r_r(x: "float", y: "float"):
-        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
-
-    f = epyccel(modulo_r_r, language=language)
+def test_modulo_real_real(epyc_modulo_mod):
+    modulo_r_r = epyccel_mod.modulo_r_r
+    f = epyc_modulo_mod.modulo_r_r
     x = uniform(low=0, high=1e6)
     y = uniform(low=1, high=1e2)
 
@@ -48,11 +54,9 @@ def test_modulo_real_real(language):
     assert isinstance(f_output, type(modulo_r_r_output))
 
 
-def test_modulo_real_int(language):
-    def modulo_r_i(x: "float", y: "int"):
-        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
-
-    f = epyccel(modulo_r_i, language=language)
+def test_modulo_real_int(epyc_modulo_mod):
+    modulo_r_i = epyccel_mod.modulo_r_i
+    f = epyc_modulo_mod.modulo_r_i
     x = uniform(low=0, high=1e6)
     y = randint(low=1, high=1e6)
 
@@ -62,11 +66,9 @@ def test_modulo_real_int(language):
     assert isinstance(f_output, type(modulo_r_i_output))
 
 
-def test_modulo_int_real(language):
-    def modulo_i_r(x: "int", y: "float"):
-        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
-
-    f = epyccel(modulo_i_r, language=language)
+def test_modulo_int_real(epyc_modulo_mod):
+    modulo_i_r = epyccel_mod.modulo_i_r
+    f = epyc_modulo_mod.modulo_i_r
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e2)
 
@@ -76,23 +78,9 @@ def test_modulo_int_real(language):
     assert isinstance(f_output, type(modulo_i_r_output))
 
 
-def test_modulo_multiple(language):
-    def modulo_multiple(x: "int", y: "float", z: "int"):
-        return (
-            x % y % z,
-            -x % y % z,
-            -x % -y % z,
-            -x % -y % -z,
-            x % -y % z,
-            x % -y % -z,
-            x % y % -z,
-            -x % y % -z,
-            -y % y % y,
-            y % -y % y,
-            y % y % -y,
-        )
-
-    f = epyccel(modulo_multiple, language=language)
+def test_modulo_multiple(epyc_modulo_mod):
+    modulo_multiple = epyccel_mod.modulo_multiple
+    f = epyc_modulo_mod.modulo_multiple
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e4)
     z = randint(low=1, high=1e2)
