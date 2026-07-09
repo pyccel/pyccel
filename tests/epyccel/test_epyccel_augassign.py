@@ -1,22 +1,31 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 import modules.augassign as mod
 import numpy as np
 from numpy.random import random
 
 from pyccel import epyccel
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_mod_mod(language):
+    return epyccel_module_with_fallback(mod, language)
+
+
 
 # += tests
 RTOL = 1e-12
 ATOL = 1e-16
 
 
-def test_augassign_add_1d(language):
+def test_augassign_add_1d(epyc_mod_mod):
     f_int = mod.augassign_add_1d_int
     f_float = mod.augassign_add_1d_float
     f_complex = mod.augassign_add_1d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_add_1d_int
+    f_float_epyc = epyc_mod_mod.augassign_add_1d_float
+    f_complex_epyc = epyc_mod_mod.augassign_add_1d_complex
 
     x1_int = np.zeros(5, dtype=int)
     x1_float = np.zeros(5, dtype=float)
@@ -37,13 +46,13 @@ def test_augassign_add_1d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_add_2d(language):
+def test_augassign_add_2d(epyc_mod_mod):
     f_int = mod.augassign_add_2d_int
     f_float = mod.augassign_add_2d_float
     f_complex = mod.augassign_add_2d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_add_2d_int
+    f_float_epyc = epyc_mod_mod.augassign_add_2d_float
+    f_complex_epyc = epyc_mod_mod.augassign_add_2d_complex
 
     x1_int = np.zeros((5, 5), dtype=int)
     x1_float = np.zeros((5, 5), dtype=float)
@@ -64,9 +73,9 @@ def test_augassign_add_2d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_add_sum_scalar(language):
+def test_augassign_add_sum_scalar(epyc_mod_mod):
     func = mod.augassign_add_sum_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_sum_scalar
 
     a = 10
     b = np.array([1, 2, 3, 4, 5], dtype=np.int64)
@@ -77,9 +86,9 @@ def test_augassign_add_sum_scalar(language):
     assert result == result_epyc
 
 
-def test_augassign_add_sum_array(language):
+def test_augassign_add_sum_array(epyc_mod_mod):
     func = mod.augassign_add_sum_array
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_sum_array
 
     a1 = np.array([[10, 20], [30, 40]], dtype=np.int64)
     a2 = a1.copy()
@@ -91,9 +100,9 @@ def test_augassign_add_sum_array(language):
     assert np.array_equal(a1, a2)
 
 
-def test_augassign_add_min_scalar(language):
+def test_augassign_add_min_scalar(epyc_mod_mod):
     func = mod.augassign_add_min_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_min_scalar
 
     a = 10
     b = np.array([5, 2, 8, 1, 9], dtype=np.int64)
@@ -104,9 +113,9 @@ def test_augassign_add_min_scalar(language):
     assert result == result_epyc
 
 
-def test_augassign_add_min_array(language):
+def test_augassign_add_min_array(epyc_mod_mod):
     func = mod.augassign_add_min_array
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_min_array
 
     a1 = np.array([[10, 20], [30, 40]], dtype=np.int64)
     a2 = a1.copy()
@@ -118,9 +127,9 @@ def test_augassign_add_min_array(language):
     assert np.array_equal(a1, a2)
 
 
-def test_augassign_add_norm_scalar(language):
+def test_augassign_add_norm_scalar(epyc_mod_mod):
     func = mod.augassign_add_norm_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_norm_scalar
 
     a = 10.0
     b = np.array([3.0, 4.0], dtype=np.float64)
@@ -131,9 +140,9 @@ def test_augassign_add_norm_scalar(language):
     assert np.isclose(result, result_epyc, rtol=RTOL, atol=ATOL)
 
 
-def test_augassign_add_norm_ord1_scalar(language):
+def test_augassign_add_norm_ord1_scalar(epyc_mod_mod):
     func = mod.augassign_add_norm_ord1_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_add_norm_ord1_scalar
 
     a = 10.0
     b = np.array([3.0, -4.0], dtype=np.float64)
@@ -147,13 +156,13 @@ def test_augassign_add_norm_ord1_scalar(language):
 # -= tests
 
 
-def test_augassign_sub_1d(language):
+def test_augassign_sub_1d(epyc_mod_mod):
     f_int = mod.augassign_sub_1d_int
     f_float = mod.augassign_sub_1d_float
     f_complex = mod.augassign_sub_1d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_sub_1d_int
+    f_float_epyc = epyc_mod_mod.augassign_sub_1d_float
+    f_complex_epyc = epyc_mod_mod.augassign_sub_1d_complex
 
     x1_int = np.zeros(5, dtype=int)
     x1_float = np.zeros(5, dtype=float)
@@ -174,13 +183,13 @@ def test_augassign_sub_1d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_sub_2d(language):
+def test_augassign_sub_2d(epyc_mod_mod):
     f_int = mod.augassign_sub_2d_int
     f_float = mod.augassign_sub_2d_float
     f_complex = mod.augassign_sub_2d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_sub_2d_int
+    f_float_epyc = epyc_mod_mod.augassign_sub_2d_float
+    f_complex_epyc = epyc_mod_mod.augassign_sub_2d_complex
 
     x1_int = np.zeros((5, 5), dtype=int)
     x1_float = np.zeros((5, 5), dtype=float)
@@ -201,9 +210,9 @@ def test_augassign_sub_2d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_sub_sum_scalar(language):
+def test_augassign_sub_sum_scalar(epyc_mod_mod):
     func = mod.augassign_sub_sum_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_sub_sum_scalar
 
     a = 100
     b = np.array([1, 2, 3], dtype=np.int64)
@@ -214,9 +223,9 @@ def test_augassign_sub_sum_scalar(language):
     assert result == result_epyc
 
 
-def test_augassign_sub_max_scalar(language):
+def test_augassign_sub_max_scalar(epyc_mod_mod):
     func = mod.augassign_sub_max_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_sub_max_scalar
 
     a = 100
     b = np.array([5, 2, 8, 1, 9], dtype=np.int64)
@@ -227,9 +236,9 @@ def test_augassign_sub_max_scalar(language):
     assert result == result_epyc
 
 
-def test_augassign_sub_max_array(language):
+def test_augassign_sub_max_array(epyc_mod_mod):
     func = mod.augassign_sub_max_array
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_sub_max_array
 
     a1 = np.array([[10, 20], [30, 40]], dtype=np.int64)
     a2 = a1.copy()
@@ -244,13 +253,13 @@ def test_augassign_sub_max_array(language):
 # *= tests
 
 
-def test_augassign_mul_1d(language):
+def test_augassign_mul_1d(epyc_mod_mod):
     f_int = mod.augassign_mul_1d_int
     f_float = mod.augassign_mul_1d_float
     f_complex = mod.augassign_mul_1d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_mul_1d_int
+    f_float_epyc = epyc_mod_mod.augassign_mul_1d_float
+    f_complex_epyc = epyc_mod_mod.augassign_mul_1d_complex
 
     x1_int = np.zeros(5, dtype=int)
     x1_float = np.zeros(5, dtype=float)
@@ -271,13 +280,13 @@ def test_augassign_mul_1d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_mul_2d(language):
+def test_augassign_mul_2d(epyc_mod_mod):
     f_int = mod.augassign_mul_2d_int
     f_float = mod.augassign_mul_2d_float
     f_complex = mod.augassign_mul_2d_complex
-    f_int_epyc = epyccel(f_int, language=language)
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_int_epyc = epyc_mod_mod.augassign_mul_2d_int
+    f_float_epyc = epyc_mod_mod.augassign_mul_2d_float
+    f_complex_epyc = epyc_mod_mod.augassign_mul_2d_complex
 
     x1_int = np.zeros((5, 5), dtype=int)
     x1_float = np.zeros((5, 5), dtype=float)
@@ -298,9 +307,9 @@ def test_augassign_mul_2d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_mul_sum_scalar(language):
+def test_augassign_mul_sum_scalar(epyc_mod_mod):
     func = mod.augassign_mul_sum_scalar
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_mul_sum_scalar
 
     a = 10
     b = np.array([1, 2, 3], dtype=np.int64)
@@ -314,11 +323,11 @@ def test_augassign_mul_sum_scalar(language):
 # /= tests
 
 
-def test_augassign_div_1d(language):
+def test_augassign_div_1d(epyc_mod_mod):
     f_float = mod.augassign_div_1d_float
     f_complex = mod.augassign_div_1d_complex
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_float_epyc = epyc_mod_mod.augassign_div_1d_float
+    f_complex_epyc = epyc_mod_mod.augassign_div_1d_complex
 
     x1_float = np.zeros(5, dtype=float)
     x1_complex = np.zeros(5, dtype=complex)
@@ -334,11 +343,11 @@ def test_augassign_div_1d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_div_2d(language):
+def test_augassign_div_2d(epyc_mod_mod):
     f_float = mod.augassign_div_2d_float
     f_complex = mod.augassign_div_2d_complex
-    f_float_epyc = epyccel(f_float, language=language)
-    f_complex_epyc = epyccel(f_complex, language=language)
+    f_float_epyc = epyc_mod_mod.augassign_div_2d_float
+    f_complex_epyc = epyc_mod_mod.augassign_div_2d_complex
 
     x1_float = np.zeros((5, 5), dtype=float)
     x1_complex = np.zeros((5, 5), dtype=complex)
@@ -354,9 +363,9 @@ def test_augassign_div_2d(language):
     assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
-def test_augassign_func(language):
+def test_augassign_func(epyc_mod_mod):
     func = mod.augassign_func
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_func
 
     x = random() * 100 + 20
     y = random() * 100
@@ -368,9 +377,9 @@ def test_augassign_func(language):
     assert isinstance(z, type(z_epyc))
 
 
-def test_augassign_array_func(language):
+def test_augassign_array_func(epyc_mod_mod):
     func = mod.augassign_array_func
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_array_func
 
     x = random(10) * 100 + 20
     y = random(10) * 100
@@ -382,9 +391,9 @@ def test_augassign_array_func(language):
     assert np.allclose(x, x_epyc, rtol=RTOL, atol=ATOL)
 
 
-def test_augassign_floor_div(language):
+def test_augassign_floor_div(epyc_mod_mod):
     func = mod.augassign_floor_div
-    func_epyc = epyccel(func, language=language)
+    func_epyc = epyc_mod_mod.augassign_floor_div
 
     x1_float = random((5,)) * 10
     x2_float = x1_float.copy()
