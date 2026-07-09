@@ -1,5 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 from pyccel import epyccel
+from modules import docstrings
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_docstrings_mod(language):
+    return epyccel_module_with_fallback(docstrings, language)
+
+
 
 
 def pad_docstrings(python_doc, pyccel_doc):
@@ -20,69 +30,32 @@ def pad_docstrings(python_doc, pyccel_doc):
     return python_doc, pyccel_doc
 
 
-def test_1_line_docstring(language):
-    def f():
-        """short doc string"""
-        return 1
-
-    g = epyccel(f, language=language)
+def test_1_line_docstring(epyc_docstrings_mod):
+    f = docstrings.n1_line_docstring
+    g = epyc_docstrings_mod.n1_line_docstring
     assert f.__doc__.strip() == g.__doc__.strip()
 
 
-def test_multiline_line_docstring(language):
-    def f():
-        """
-        Big beautiful doc string
-
-        Parameters
-        ----------
-
-        Results
-        -------
-        1 : int
-            no description
-        """
-        return 1
-
-    g = epyccel(f, language=language)
+def test_multiline_line_docstring(epyc_docstrings_mod):
+    f = docstrings.multiline_line_docstring
+    g = epyc_docstrings_mod.multiline_line_docstring
 
     python_doc, pyccel_doc = pad_docstrings(f.__doc__, g.__doc__)
 
     assert python_doc == pyccel_doc
 
 
-def test_class_docstring(language):
-    class A:
-        """
-        Empty class
-        """
-
-        def __init__(self: "A"):
-            pass
-
-    B = epyccel(A, language=language)
+def test_class_docstring(epyc_docstrings_mod):
+    A = docstrings.MyClass
+    B = epyc_docstrings_mod.MyClass
 
     python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
     assert python_doc == pyccel_doc
 
 
-def test_property_docstring(language):
-    class MyA:
-        """
-        Class containing x
-        """
-
-        def __init__(self: "MyA", x: int):
-            self._x = x
-
-        @property
-        def x(self):
-            """
-            This is a property it cannot be set.
-            """
-            return self._x
-
-    B = epyccel(MyA, language=language)
+def test_property_docstring(epyc_docstrings_mod):
+    MyA = docstrings.MyClassProperty
+    B = epyc_docstrings_mod.MyClassProperty
 
     print(MyA.__doc__, B.__doc__)
 
