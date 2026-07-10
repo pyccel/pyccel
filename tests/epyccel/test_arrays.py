@@ -2136,9 +2136,14 @@ def test_array_float_2d_2d_matmul_F_F_F_F(epyc_arrays_mod):
         pytest.param("python", marks=pytest.mark.python),
     ],
 )
-def test_array_float_2d_2d_matmul_mixorder(epyc_arrays_mod):
-    f1 = arrays.array_float_2d_2d_matmul_mixorder
-    f2 = epyc_arrays_mod.array_float_2d_2d_matmul_mixorder
+def test_array_float_2d_2d_matmul_mixorder(language):
+    def array_float_2d_2d_matmul_mixorder(
+        A: "float[:,:]", B: "float[:,:](order=F)", out: "float[:,:]"
+    ):
+        out[:, :] = np.matmul(A, B)
+
+    f1 = array_float_2d_2d_matmul_mixorder
+    f2 = epyccel(f1, language=language)
     A1 = np.arange(1, 7, dtype=float).reshape([3, 2])
     A2 = np.copy(A1)
     B1 = np.arange(42, 48, dtype=float).reshape([2, 3], order="F")
@@ -4709,9 +4714,13 @@ def test_array_view_steps_F_2D_3(epyc_arrays_mod):
         ),
     ),
 )
-def test_array_ndmin_1(epyc_arrays_mod):
-    f1 = arrays.array_ndmin_1
-    f2 = epyc_arrays_mod.array_ndmin_1
+def test_array_ndmin_1(language):
+    def array_ndmin_1(x: T):
+        y = np.array(x, ndmin=1)
+        return y
+
+    f1 = array_ndmin_1
+    f2 = epyccel(f1, language=language)
 
     a = arrays.a_1d
     b = arrays.a_2d_c
@@ -4749,9 +4758,13 @@ def test_array_ndmin_1(epyc_arrays_mod):
         ),
     ),
 )
-def test_array_ndmin_2(epyc_arrays_mod):
-    f1 = arrays.array_ndmin_2
-    f2 = epyc_arrays_mod.array_ndmin_2
+def test_array_ndmin_2(language):
+    def array_ndmin_2(x: T):
+        y = np.array(x, ndmin=2)
+        return y
+
+    f1 = array_ndmin_2
+    f2 = epyccel(f1, language=language)
 
     a = arrays.a_1d
     b = arrays.a_2d_c
@@ -4789,9 +4802,13 @@ def test_array_ndmin_2(epyc_arrays_mod):
         ),
     ),
 )
-def test_array_ndmin_4(epyc_arrays_mod):
-    f1 = arrays.array_ndmin_4
-    f2 = epyc_arrays_mod.array_ndmin_4
+def test_array_ndmin_4(language):
+    def array_ndmin_4(x: T):
+        y = np.array(x, ndmin=4)
+        return y
+
+    f1 = array_ndmin_4
+    f2 = epyccel(f1, language=language)
 
     a = arrays.a_1d
     b = arrays.a_2d_c
@@ -4829,9 +4846,13 @@ def test_array_ndmin_4(epyc_arrays_mod):
         ),
     ),
 )
-def test_array_ndmin_2_order(epyc_arrays_mod):
-    f1 = arrays.array_ndmin_2_order
-    f2 = epyc_arrays_mod.array_ndmin_2_order
+def test_array_ndmin_2_order(language):
+    def array_ndmin_2_order(x: T):
+        y = np.array(x, ndmin=2, order="F")
+        return y
+
+    f1 = array_ndmin_2_order
+    f2 = epyccel(f1, language=language)
 
     a = arrays.a_1d
     b = arrays.a_2d_c
