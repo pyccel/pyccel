@@ -2,7 +2,6 @@
 from typing import TypeVar
 
 import numpy as np
-from numpy import cross as np_cross
 
 F = TypeVar(
     "F", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"
@@ -1684,7 +1683,7 @@ def amax_out_axis(x: "int[:,:]", out: "int[:]"):
     np.amax(x, axis=1, out=out)
 
 
-def full_like_basic_int__create_full_like_shape_1d(n: "int"):
+def full_like_basic_int__create_shape_1d(n: "int"):
     from numpy import array, full_like, shape
 
     arr = array([5, 1, 8, 0, 9])
@@ -1693,7 +1692,7 @@ def full_like_basic_int__create_full_like_shape_1d(n: "int"):
     return len(s), s[0]
 
 
-def full_like_basic_int__create_full_like_shape_2d(n: "int"):
+def full_like_basic_int__create_shape_2d(n: "int"):
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1702,7 +1701,7 @@ def full_like_basic_int__create_full_like_shape_2d(n: "int"):
     return len(s), s[0], s[1]
 
 
-def full_like_basic_int__create_full_like_val(val: "int"):
+def full_like_basic_int__create_val(val: "int"):
     from numpy import array, full_like
 
     arr = array([5, 1, 8, 0, 9])
@@ -1710,7 +1709,7 @@ def full_like_basic_int__create_full_like_val(val: "int"):
     return a[0], a[1], a[2]
 
 
-def full_like_basic_int__create_full_like_arg_names(val: "int"):
+def full_like_basic_int__create_arg_names(val: "int"):
     from numpy import array, full_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1718,7 +1717,7 @@ def full_like_basic_int__create_full_like_arg_names(val: "int"):
     return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
 
 
-def full_like_basic_real__create_full_like_shape_1d(n: "float"):
+def full_like_basic_real__create_shape_1d(n: "float"):
     from numpy import array, full_like, shape
 
     arr = array([5, 1, 8, 0, 9])
@@ -1727,7 +1726,7 @@ def full_like_basic_real__create_full_like_shape_1d(n: "float"):
     return len(s), s[0]
 
 
-def full_like_basic_real__create_full_like_shape_2d(n: "float"):
+def full_like_basic_real__create_shape_2d(n: "float"):
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1736,7 +1735,7 @@ def full_like_basic_real__create_full_like_shape_2d(n: "float"):
     return len(s), s[0], s[1]
 
 
-def full_like_basic_real__create_full_like_val(val: "float"):
+def full_like_basic_real__create_val(val: "float"):
     from numpy import array, full_like
 
     arr = array([5, 1, 8, 0, 9])
@@ -1744,7 +1743,7 @@ def full_like_basic_real__create_full_like_val(val: "float"):
     return a[0], a[1], a[2]
 
 
-def full_like_basic_real__create_full_like_arg_names(val: "float"):
+def full_like_basic_real__create_arg_names(val: "float"):
     from numpy import array, full_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1752,7 +1751,7 @@ def full_like_basic_real__create_full_like_arg_names(val: "float"):
     return a[0, 0], a[0, 1], a[0, 2], a[1, 0], a[1, 1], a[1, 2]
 
 
-def full_like_order__create_full_like_shape_C(n: "int"):
+def full_like_order__create_shape_C(n: "int"):
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1761,7 +1760,7 @@ def full_like_order__create_full_like_shape_C(n: "int"):
     return len(s), s[0], s[1]
 
 
-def full_like_order__create_full_like_shape_F(n: "int"):
+def full_like_order__create_shape_F(n: "int"):
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1769,8 +1768,119 @@ def full_like_order__create_full_like_shape_F(n: "int"):
     s = shape(a)
     return len(s), s[0], s[1]
 
+def full_like_dtype__create_val_int_int_auto(val: "int"):
+    from numpy import array, full_like
 
-def full_like_combined_args__create_full_like_1_shape():
+    arr = array([5, 1, 8, 0, 9], int)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_int_int(val: "int"):
+    from numpy import array, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, int)
+    return a[0]
+
+def full_like_dtype__create_val_int_float_auto(val: "int"):
+    from numpy import array, full_like
+
+    arr = array([5, 1, 8, 0, 9], float)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_int_float(val: "int"):
+    from numpy import array, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, float)
+    return a[0]
+
+def full_like_dtype__create_val_int_complex_auto(val: "int"):
+    from numpy import array, full_like
+
+    arr = array([5, 1, 8, 0, 9], complex)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_int_complex(val: "int"):
+    from numpy import array, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, complex)
+    return a[0]
+
+def full_like_dtype__create_val_real_int32_auto(val: "float"):
+    from numpy import array, full_like, int32
+
+    arr = array([5, 1, 8, 0, 9], int32)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_real_int32(val: "float"):
+    from numpy import array, full_like, int32
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, int32)
+    return a[0]
+
+def full_like_dtype__create_val_real_float32_auto(val: "float"):
+    from numpy import array, float32, full_like
+
+    arr = array([5, 1, 8, 0, 9], float32)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_real_float32(val: "float"):
+    from numpy import array, float32, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, float32)
+    return a[0]
+
+def full_like_dtype__create_val_real_float64_auto(val: "float"):
+    from numpy import array, float64, full_like
+
+    arr = array([5, 1, 8, 0, 9], float64)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_real_float64(val: "float"):
+    from numpy import array, float64, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, float64)
+    return a[0]
+
+def full_like_dtype__create_val_real_complex64_auto(val: "float"):
+    from numpy import array, complex64, full_like
+
+    arr = array([5, 1, 8, 0, 9], complex64)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_real_complex64(val: "float"):
+    from numpy import array, complex64, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, complex64)
+    return a[0]
+
+def full_like_dtype__create_val_real_complex128_auto(val: "float"):
+    from numpy import array, complex128, full_like
+
+    arr = array([5, 1, 8, 0, 9], complex128)
+    a = full_like(arr, val)
+    return a[0]
+
+def full_like_dtype__create_val_real_complex128(val: "float"):
+    from numpy import array, complex128, full_like
+
+    arr = array([5, 1, 8, 0, 9])
+    a = full_like(arr, val, complex128)
+    return a[0]
+
+def full_like_combined_args__create_1_shape():
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1779,7 +1889,7 @@ def full_like_combined_args__create_full_like_1_shape():
     return len(s), s[0], s[1]
 
 
-def full_like_combined_args__create_full_like_1_val():
+def full_like_combined_args__create_1_val():
     from numpy import array, full_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1787,7 +1897,7 @@ def full_like_combined_args__create_full_like_1_val():
     return a[0, 0]
 
 
-def full_like_combined_args__create_full_like_2_shape():
+def full_like_combined_args__create_2_shape():
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1796,7 +1906,7 @@ def full_like_combined_args__create_full_like_2_shape():
     return len(s), s[0], s[1]
 
 
-def full_like_combined_args__create_full_like_2_val():
+def full_like_combined_args__create_2_val():
     from numpy import array, full_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1804,7 +1914,7 @@ def full_like_combined_args__create_full_like_2_val():
     return a[0, 0]
 
 
-def full_like_combined_args__create_full_like_3_shape():
+def full_like_combined_args__create_3_shape():
     from numpy import array, full_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -1813,7 +1923,7 @@ def full_like_combined_args__create_full_like_3_shape():
     return len(s), s[0], s[1]
 
 
-def full_like_combined_args__create_full_like_3_val():
+def full_like_combined_args__create_3_val():
     from numpy import array, full_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
@@ -2512,6 +2622,28 @@ def numpy_imag_array_like_2d(arr: "C[:,:]"):
     return len(s), s[0], s[1], a[0, 1], a[1, 0]
 
 
+def numpy_mod_scalar(a: F):
+    from numpy import mod
+
+    b = mod(a, a)
+    return b
+
+
+def numpy_mod_array_like_1d(arr: "F[:]"):
+    from numpy import mod, shape
+
+    a = mod(arr, arr)
+    s = shape(a)
+    return len(s), s[0], a[0]
+
+def numpy_mod_array_like_2d(arr: "F[:,:]"):
+    from numpy import mod, shape
+
+    a = mod(arr, arr)
+    s = shape(a)
+    return len(s), s[0], s[1], a[0, 1], a[1, 0]
+
+
 def numpy_mod_mixed_order(arr1: "float[:,:]", arr2: "float[:,:](order=F)"):
     from numpy import mod, shape
 
@@ -2803,22 +2935,38 @@ def result_type__value_types():
     b = np.zeros(5, dtype=np.result_type(3.0, -2))
     return b[0]
 
+test_copy__X = TypeVar("X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
+
+def test_copy__copy_array(a: test_copy__X):
+    b = a.copy()
+    return b
+
+test_copy__Y = TypeVar("Y", "float[:,:]", "complex[:,:,:](order=F)")
+
+def test_copy__copy_array_to_F(a: test_copy__Y):
+    b = a.copy(order="F")
+    return b
+
+def test_copy__copy_array_to_C(a: test_copy__Y):
+    b = a.copy(order="C")
+    return b
+
 
 def cross_1d(x: "float[:]", y: "float[:]"):
-    return np_cross(x, y)
+    return np.cross(x, y)
 
 
 def cross_1d_expr(x: "float[:]", y: "float[:]"):
-    return np_cross(x, y) + 2
+    return np.cross(x, y) + 2
 
 
 def cross_2d_axis(x: "float[:,:]", y: "float[:,:]"):
-    return np_cross(a=x, b=y, axis=1)
+    return np.cross(a=x, b=y, axis=1)
 
 
 def cross_mixed_dimensions(x: "int[:,:]"):
     y = np.array(x[0:1, :])
-    return np_cross(x, y)
+    return np.cross(x, y)
 
 
 def linalg_cross_1d(x: "float[:]", y: "float[:]"):
@@ -2834,15 +2982,15 @@ def linalg_cross_axis(x: "float[:,:]", y: "float[:,:]"):
 
 
 def cross_axisa_axisb(x: "float[:,:]", y: "float[:,:]"):
-    return np_cross(x, y, axisa=1, axisb=1)
+    return np.cross(x, y, axisa=1, axisb=1)
 
 
 def cross_axisc(x: "float[:,:]", y: "float[:,:]"):
-    return np_cross(x, y, axisc=1)
+    return np.cross(x, y, axisc=1)
 
 
 def cross_axisa_axisb_axisc(x: "float[:,:,:]", y: "float[:,:,:]"):
-    return np_cross(x, y, axisa=2, axisb=1, axisc=2)
+    return np.cross(x, y, axisa=2, axisb=1, axisc=2)
 
 
 def vecdot_1d_real(x: "float[:]", y: "float[:]"):

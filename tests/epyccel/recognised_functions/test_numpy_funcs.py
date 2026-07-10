@@ -2697,59 +2697,59 @@ def test_amax_out_axis(epyc_numpy_funcs_mod):
 
 def test_full_like_basic_int(epyc_numpy_funcs_mod):
     create_full_like_shape_1d = (
-        numpy_funcs.full_like_basic_int__create_full_like_shape_1d
+        numpy_funcs.full_like_basic_int__create_shape_1d
     )
     create_full_like_shape_2d = (
-        numpy_funcs.full_like_basic_int__create_full_like_shape_2d
+        numpy_funcs.full_like_basic_int__create_shape_2d
     )
-    create_full_like_val = numpy_funcs.full_like_basic_int__create_full_like_val
+    create_full_like_val = numpy_funcs.full_like_basic_int__create_val
     create_full_like_arg_names = (
-        numpy_funcs.full_like_basic_int__create_full_like_arg_names
+        numpy_funcs.full_like_basic_int__create_arg_names
     )
 
     size = randint(1, 10)
 
-    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_shape_1d
+    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_int__create_shape_1d
     assert f_shape_1d(size) == create_full_like_shape_1d(size)
 
-    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_shape_2d
+    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_int__create_shape_2d
     assert f_shape_2d(size) == create_full_like_shape_2d(size)
 
-    f_val = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_val
+    f_val = epyc_numpy_funcs_mod.full_like_basic_int__create_val
     assert f_val(size) == create_full_like_val(size)
     assert matching_types(f_val(size)[0], create_full_like_val(size)[0])
 
-    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_int__create_full_like_arg_names
+    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_int__create_arg_names
     assert f_arg_names(size) == create_full_like_arg_names(size)
     assert matching_types(f_arg_names(size)[0], create_full_like_arg_names(size)[0])
 
 
 def test_full_like_basic_real(epyc_numpy_funcs_mod):
     create_full_like_shape_1d = (
-        numpy_funcs.full_like_basic_real__create_full_like_shape_1d
+        numpy_funcs.full_like_basic_real__create_shape_1d
     )
     create_full_like_shape_2d = (
-        numpy_funcs.full_like_basic_real__create_full_like_shape_2d
+        numpy_funcs.full_like_basic_real__create_shape_2d
     )
-    create_full_like_val = numpy_funcs.full_like_basic_real__create_full_like_val
+    create_full_like_val = numpy_funcs.full_like_basic_real__create_val
     create_full_like_arg_names = (
-        numpy_funcs.full_like_basic_real__create_full_like_arg_names
+        numpy_funcs.full_like_basic_real__create_arg_names
     )
 
     size = uniform(10)
     val = rand() * 5
 
-    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_shape_1d
+    f_shape_1d = epyc_numpy_funcs_mod.full_like_basic_real__create_shape_1d
     assert f_shape_1d(size) == create_full_like_shape_1d(size)
 
-    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_shape_2d
+    f_shape_2d = epyc_numpy_funcs_mod.full_like_basic_real__create_shape_2d
     assert f_shape_2d(size) == create_full_like_shape_2d(size)
 
-    f_val = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_val
+    f_val = epyc_numpy_funcs_mod.full_like_basic_real__create_val
     assert f_val(val) == create_full_like_val(val)
     assert matching_types(f_val(val)[0], create_full_like_val(val)[0])
 
-    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_real__create_full_like_arg_names
+    f_arg_names = epyc_numpy_funcs_mod.full_like_basic_real__create_arg_names
     assert f_arg_names(val) == create_full_like_arg_names(val)
     assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
@@ -2815,147 +2815,30 @@ def test_full_like_basic_bool(language):
 
 
 def test_full_like_order(epyc_numpy_funcs_mod):
-    create_full_like_shape_C = numpy_funcs.full_like_order__create_full_like_shape_C
-    create_full_like_shape_F = numpy_funcs.full_like_order__create_full_like_shape_F
+    create_full_like_shape_C = numpy_funcs.full_like_order__create_shape_C
+    create_full_like_shape_F = numpy_funcs.full_like_order__create_shape_F
 
     size = randint(1, 10)
 
-    f_shape_C = epyc_numpy_funcs_mod.full_like_order__create_full_like_shape_C
+    f_shape_C = epyc_numpy_funcs_mod.full_like_order__create_shape_C
     assert f_shape_C(size) == create_full_like_shape_C(size)
 
-    f_shape_F = epyc_numpy_funcs_mod.full_like_order__create_full_like_shape_F
+    f_shape_F = epyc_numpy_funcs_mod.full_like_order__create_shape_F
     assert f_shape_F(size) == create_full_like_shape_F(size)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=[pytest.mark.c]),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_full_like_dtype(language):
-    def create_full_like_val_int_int_auto(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9], int)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_int_int(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, int)
-        return a[0]
-
-    def create_full_like_val_int_float_auto(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9], float)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_int_float(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, float)
-        return a[0]
-
-    def create_full_like_val_int_complex_auto(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9], complex)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_int_complex(val: "int"):
-        from numpy import array, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, complex)
-        return a[0]
-
-    def create_full_like_val_real_int32_auto(val: "float"):
-        from numpy import array, full_like, int32
-
-        arr = array([5, 1, 8, 0, 9], int32)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_real_int32(val: "float"):
-        from numpy import array, full_like, int32
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, int32)
-        return a[0]
-
-    def create_full_like_val_real_float32_auto(val: "float"):
-        from numpy import array, float32, full_like
-
-        arr = array([5, 1, 8, 0, 9], float32)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_real_float32(val: "float"):
-        from numpy import array, float32, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, float32)
-        return a[0]
-
-    def create_full_like_val_real_float64_auto(val: "float"):
-        from numpy import array, float64, full_like
-
-        arr = array([5, 1, 8, 0, 9], float64)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_real_float64(val: "float"):
-        from numpy import array, float64, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, float64)
-        return a[0]
-
-    def create_full_like_val_real_complex64_auto(val: "float"):
-        from numpy import array, complex64, full_like
-
-        arr = array([5, 1, 8, 0, 9], complex64)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_real_complex64(val: "float"):
-        from numpy import array, complex64, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, complex64)
-        return a[0]
-
-    def create_full_like_val_real_complex128_auto(val: "float"):
-        from numpy import array, complex128, full_like
-
-        arr = array([5, 1, 8, 0, 9], complex128)
-        a = full_like(arr, val)
-        return a[0]
-
-    def create_full_like_val_real_complex128(val: "float"):
-        from numpy import array, complex128, full_like
-
-        arr = array([5, 1, 8, 0, 9])
-        a = full_like(arr, val, complex128)
-        return a[0]
+def test_full_like_dtype(epyc_numpy_funcs_mod):
 
     val_int = randint(100)
     val_float = rand() * 100
 
-    f_int_int = epyccel(create_full_like_val_int_int, language=language)
+    create_full_like_val_int_int = numpy_funcs.full_like_dtype__create_val_int_int
+    f_int_int = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_int
     assert f_int_int(val_int) == create_full_like_val_int_int(val_int)
     assert matching_types(f_int_int(val_int), create_full_like_val_int_int(val_int))
 
-    f_int_float = epyccel(create_full_like_val_int_float, language=language)
+    create_full_like_val_int_float = numpy_funcs.full_like_dtype__create_val_int_float
+    f_int_float = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_float
     assert isclose(
         f_int_float(val_int),
         create_full_like_val_int_float(val_int),
@@ -2964,7 +2847,8 @@ def test_full_like_dtype(language):
     )
     assert matching_types(f_int_float(val_int), create_full_like_val_int_float(val_int))
 
-    f_int_complex = epyccel(create_full_like_val_int_complex, language=language)
+    create_full_like_val_int_complex = numpy_funcs.full_like_dtype__create_val_int_complex
+    f_int_complex = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_complex
     assert isclose(
         f_int_complex(val_int),
         create_full_like_val_int_complex(val_int),
@@ -2975,13 +2859,15 @@ def test_full_like_dtype(language):
         f_int_complex(val_int), create_full_like_val_int_complex(val_int)
     )
 
-    f_real_int32 = epyccel(create_full_like_val_real_int32, language=language)
+    create_full_like_val_real_int32 = numpy_funcs.full_like_dtype__create_val_real_int32
+    f_real_int32 = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_int32
     assert f_real_int32(val_float) == create_full_like_val_real_int32(val_float)
     assert matching_types(
         f_real_int32(val_float), create_full_like_val_real_int32(val_float)
     )
 
-    f_real_float32 = epyccel(create_full_like_val_real_float32, language=language)
+    create_full_like_val_real_float32 = numpy_funcs.full_like_dtype__create_val_real_float32
+    f_real_float32 = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_float32
     assert isclose(
         f_real_float32(val_float),
         create_full_like_val_real_float32(val_float),
@@ -2992,7 +2878,8 @@ def test_full_like_dtype(language):
         f_real_float32(val_float), create_full_like_val_real_float32(val_float)
     )
 
-    f_real_float64 = epyccel(create_full_like_val_real_float64, language=language)
+    create_full_like_val_real_float64 = numpy_funcs.full_like_dtype__create_val_real_float64
+    f_real_float64 = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_float64
     assert isclose(
         f_real_float64(val_float),
         create_full_like_val_real_float64(val_float),
@@ -3003,7 +2890,8 @@ def test_full_like_dtype(language):
         f_real_float64(val_float), create_full_like_val_real_float64(val_float)
     )
 
-    f_real_complex64 = epyccel(create_full_like_val_real_complex64, language=language)
+    create_full_like_val_real_complex64 = numpy_funcs.full_like_dtype__create_val_real_complex64
+    f_real_complex64 = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_complex64
     assert isclose(
         f_real_complex64(val_float),
         create_full_like_val_real_complex64(val_float),
@@ -3014,7 +2902,8 @@ def test_full_like_dtype(language):
         f_real_complex64(val_float), create_full_like_val_real_complex64(val_float)
     )
 
-    f_real_complex128 = epyccel(create_full_like_val_real_complex128, language=language)
+    create_full_like_val_real_complex128 = numpy_funcs.full_like_dtype__create_val_real_complex128
+    f_real_complex128 = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_complex128
     assert isclose(
         f_real_complex128(val_float),
         create_full_like_val_real_complex128(val_float),
@@ -3025,13 +2914,15 @@ def test_full_like_dtype(language):
         f_real_complex128(val_float), create_full_like_val_real_complex128(val_float)
     )
 
-    f_int_int_auto = epyccel(create_full_like_val_int_int_auto, language=language)
+    create_full_like_val_int_int_auto = numpy_funcs.full_like_dtype__create_val_int_int_auto
+    f_int_int_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_int_auto
     assert f_int_int_auto(val_int) == create_full_like_val_int_int_auto(val_int)
     assert matching_types(
         f_int_int(val_int), create_full_like_val_int_int_auto(val_int)
     )
 
-    f_int_float_auto = epyccel(create_full_like_val_int_float_auto, language=language)
+    create_full_like_val_int_float_auto = numpy_funcs.full_like_dtype__create_val_int_float_auto
+    f_int_float_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_float_auto
     assert isclose(
         f_int_float_auto(val_int),
         create_full_like_val_int_float_auto(val_int),
@@ -3042,9 +2933,8 @@ def test_full_like_dtype(language):
         f_int_float_auto(val_int), create_full_like_val_int_float_auto(val_int)
     )
 
-    f_int_complex_auto = epyccel(
-        create_full_like_val_int_complex_auto, language=language
-    )
+    create_full_like_val_int_complex_auto = numpy_funcs.full_like_dtype__create_val_int_complex_auto
+    f_int_complex_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_int_complex_auto
     assert isclose(
         f_int_complex_auto(val_int),
         create_full_like_val_int_complex_auto(val_int),
@@ -3055,7 +2945,8 @@ def test_full_like_dtype(language):
         f_int_complex_auto(val_int), create_full_like_val_int_complex_auto(val_int)
     )
 
-    f_real_int32_auto = epyccel(create_full_like_val_real_int32_auto, language=language)
+    create_full_like_val_real_int32_auto = numpy_funcs.full_like_dtype__create_val_real_int32_auto
+    f_real_int32_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_int32_auto
     assert f_real_int32_auto(val_float) == create_full_like_val_real_int32_auto(
         val_float
     )
@@ -3063,9 +2954,8 @@ def test_full_like_dtype(language):
         f_real_int32_auto(val_float), create_full_like_val_real_int32_auto(val_float)
     )
 
-    f_real_float32_auto = epyccel(
-        create_full_like_val_real_float32_auto, language=language
-    )
+    create_full_like_val_real_float32_auto = numpy_funcs.full_like_dtype__create_val_real_float32_auto
+    f_real_float32_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_float32_auto
     assert isclose(
         f_real_float32_auto(val_float),
         create_full_like_val_real_float32_auto(val_float),
@@ -3077,9 +2967,8 @@ def test_full_like_dtype(language):
         create_full_like_val_real_float32_auto(val_float),
     )
 
-    f_real_float64_auto = epyccel(
-        create_full_like_val_real_float64_auto, language=language
-    )
+    create_full_like_val_real_float64_auto = numpy_funcs.full_like_dtype__create_val_real_float64_auto
+    f_real_float64_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_float64_auto
     assert isclose(
         f_real_float64_auto(val_float),
         create_full_like_val_real_float64_auto(val_float),
@@ -3091,9 +2980,8 @@ def test_full_like_dtype(language):
         create_full_like_val_real_float64_auto(val_float),
     )
 
-    f_real_complex64_auto = epyccel(
-        create_full_like_val_real_complex64_auto, language=language
-    )
+    create_full_like_val_real_complex64_auto = numpy_funcs.full_like_dtype__create_val_real_float64_auto
+    f_real_complex64_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_float64_auto
     assert isclose(
         f_real_complex64_auto(val_float),
         create_full_like_val_real_complex64_auto(val_float),
@@ -3105,9 +2993,8 @@ def test_full_like_dtype(language):
         create_full_like_val_real_complex64_auto(val_float),
     )
 
-    f_real_complex128_auto = epyccel(
-        create_full_like_val_real_complex128_auto, language=language
-    )
+    create_full_like_val_real_complex128_auto = numpy_funcs.full_like_dtype__create_val_real_complex128_auto
+    f_real_complex128_auto = epyc_numpy_funcs_mod.full_like_dtype__create_val_real_complex128_auto
     assert isclose(
         f_real_complex128_auto(val_float),
         create_full_like_val_real_complex128_auto(val_float),
@@ -3122,32 +3009,32 @@ def test_full_like_dtype(language):
 
 def test_full_like_combined_args(epyc_numpy_funcs_mod):
     create_full_like_1_shape = (
-        numpy_funcs.full_like_combined_args__create_full_like_1_shape
+        numpy_funcs.full_like_combined_args__create_1_shape
     )
-    create_full_like_1_val = numpy_funcs.full_like_combined_args__create_full_like_1_val
+    create_full_like_1_val = numpy_funcs.full_like_combined_args__create_1_val
     create_full_like_2_shape = (
-        numpy_funcs.full_like_combined_args__create_full_like_2_shape
+        numpy_funcs.full_like_combined_args__create_2_shape
     )
-    create_full_like_2_val = numpy_funcs.full_like_combined_args__create_full_like_2_val
+    create_full_like_2_val = numpy_funcs.full_like_combined_args__create_2_val
     create_full_like_3_shape = (
-        numpy_funcs.full_like_combined_args__create_full_like_3_shape
+        numpy_funcs.full_like_combined_args__create_3_shape
     )
-    create_full_like_3_val = numpy_funcs.full_like_combined_args__create_full_like_3_val
+    create_full_like_3_val = numpy_funcs.full_like_combined_args__create_3_val
 
-    f1_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_1_shape
-    f1_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_1_val
+    f1_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_1_shape
+    f1_val = epyc_numpy_funcs_mod.full_like_combined_args__create_1_val
     assert f1_shape() == create_full_like_1_shape()
     assert f1_val() == create_full_like_1_val()
     assert matching_types(f1_val(), create_full_like_1_val())
 
-    f2_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_2_shape
-    f2_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_2_val
+    f2_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_2_shape
+    f2_val = epyc_numpy_funcs_mod.full_like_combined_args__create_2_val
     assert f2_shape() == create_full_like_2_shape()
     assert isclose(f2_val(), create_full_like_2_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f2_val(), create_full_like_2_val())
 
-    f3_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_3_shape
-    f3_val = epyc_numpy_funcs_mod.full_like_combined_args__create_full_like_3_val
+    f3_shape = epyc_numpy_funcs_mod.full_like_combined_args__create_3_shape
+    f3_val = epyc_numpy_funcs_mod.full_like_combined_args__create_3_val
     assert f3_shape() == create_full_like_3_shape()
     assert isclose(f3_val(), create_full_like_3_val(), rtol=RTOL, atol=ATOL)
     assert matching_types(f3_val(), create_full_like_3_val())
@@ -4168,39 +4055,21 @@ def test_numpy_imag_array_like_2d(epyc_numpy_funcs_mod):
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=pytest.mark.c),
-        pytest.param(
+@pytest.mark.skipif_by_language(True, language=
             "python",
-            marks=[
-                pytest.mark.skip(
                     reason=(
                         "mod has special treatment for bool so it "
                         "cannot be used in a translated interface in python"
                     )
-                ),
-                pytest.mark.python,
-            ],
-        ),
-    ),
 )
 # Not all the arguments supported
 @pytest.mark.xfail(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Rounding errors. See #1669",
 )
-def test_numpy_mod_scalar(language):
-
-    def get_mod(a: F):
-        from numpy import mod
-
-        b = mod(a, a)
-        return b
-
-    epyccel_func = epyccel(get_mod, language=language)
+def test_numpy_mod_scalar(epyc_numpy_funcs_mod):
+    get_mod = numpy_funcs.numpy_mod_scalar
+    epyccel_func = epyc_numpy_funcs_mod.numpy_mod_scalar
 
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_mod(True)
@@ -4247,41 +4116,23 @@ def test_numpy_mod_scalar(language):
     assert matching_types(f_fl64_output, test_float64_output)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=[pytest.mark.fortran]),
-        pytest.param("c", marks=pytest.mark.c),
-        pytest.param(
+@pytest.mark.skipif_by_language(True, language=
             "python",
-            marks=[
-                pytest.mark.skip(
                     reason=(
                         "mod has special treatment for bool so it "
                         "cannot be used in a translated interface in python"
                     )
-                ),
-                pytest.mark.python,
-            ],
-        ),
-    ),
 )
 @pytest.mark.xfail(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Rounding errors. See #1669",
 )
-def test_numpy_mod_array_like_1d(language):
-
-    def get_mod(arr: "F[:]"):
-        from numpy import mod, shape
-
-        a = mod(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+def test_numpy_mod_array_like_1d(epyc_numpy_funcs_mod):
+    get_mod = numpy_funcs.numpy_mod_array_like_1d
 
     size = 5
 
-    epyccel_func = epyccel(get_mod, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_mod_array_like_1d
 
     bl = np.full(size, True, dtype=bool)
     assert epyccel_func(bl) == get_mod(bl)
@@ -4307,41 +4158,23 @@ def test_numpy_mod_array_like_1d(language):
     assert epyccel_func(fl64) == get_mod(fl64)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=[pytest.mark.fortran]),
-        pytest.param("c", marks=pytest.mark.c),
-        pytest.param(
+@pytest.mark.skipif_by_language(True, language=
             "python",
-            marks=[
-                pytest.mark.skip(
                     reason=(
                         "mod has special treatment for bool so it "
                         "cannot be used in a translated interface in python"
                     )
-                ),
-                pytest.mark.python,
-            ],
-        ),
-    ),
 )
 @pytest.mark.xfail(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Rounding errors. See #1669",
 )
-def test_numpy_mod_array_like_2d(language):
-
-    def get_mod(arr: "F[:,:]"):
-        from numpy import mod, shape
-
-        a = mod(arr, arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0, 1], a[1, 0]
+def test_numpy_mod_array_like_2d(epyc_numpy_funcs_mod):
+    get_mod = numpy_funcs.numpy_mod_array_like_2d
 
     size = (2, 5)
 
-    epyccel_func = epyccel(get_mod, language=language)
+    epyccel_func = epyc_numpy_funcs_mod.numpy_mod_array_like_2d
 
     bl = np.full(size, True, dtype=bool)
     assert epyccel_func(bl) == get_mod(bl)
@@ -6625,36 +6458,17 @@ def test_result_type(epyc_numpy_funcs_mod):
     assert matching_types(epyccel_value_types(), value_types())
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=pytest.mark.c),
-        pytest.param(
+@pytest.mark.skipif_by_language(True, language=
             "python",
-            marks=[
-                pytest.mark.skip("Template causes problems with order"),
-                pytest.mark.python,
-            ],
-        ),
-    ),
+                    reason=(
+                        "Template causes problems with order"
+                    )
 )
-def test_copy(language):
-    X = TypeVar("X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
+def test_copy(epyc_numpy_funcs_mod):
 
-    def copy_array(a: X):
-        b = a.copy()
-        return b
-
-    Y = TypeVar("Y", "float[:,:]", "complex[:,:,:](order=F)")
-
-    def copy_array_to_F(a: Y):
-        b = a.copy(order="F")
-        return b
-
-    def copy_array_to_C(a: Y):
-        b = a.copy(order="C")
-        return b
+    copy_array = numpy_funcs.test_copy__copy_array
+    copy_array_to_F = numpy_funcs.test_copy__copy_array_to_F
+    copy_array_to_C = numpy_funcs.test_copy__copy_array_to_C
 
     arr_1d = randint(min_int, max_int, size=5)
     arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3, 4))
@@ -6664,17 +6478,18 @@ def test_copy(language):
     ).T
 
     funcs = [
-        (f.__name__, f, epyccel(f, language=language))
-        for f in (copy_array, copy_array_to_F, copy_array_to_C)
+        (numpy_funcs.test_copy__copy_array, epyc_numpy_funcs_mod.test_copy__copy_array),
+        (numpy_funcs.test_copy__copy_array_to_F, epyc_numpy_funcs_mod.test_copy__copy_array_to_F),
+        (numpy_funcs.test_copy__copy_array_to_C, epyc_numpy_funcs_mod.test_copy__copy_array_to_C),
     ]
 
-    _, f, epyc_f = funcs[0]
+    f, epyc_f = funcs[0]
     res_1d_pyt = f(arr_1d)
     res_1d_pyc = epyc_f(arr_1d)
     assert np.array_equal(res_1d_pyt, res_1d_pyc)
     assert res_1d_pyt.dtype is res_1d_pyc.dtype
 
-    for _, f, epyc_f in funcs:
+    for f, epyc_f in funcs:
         res_2d_pyt = f(arr_2d)
         res_2d_pyc = epyc_f(arr_2d)
         assert np.array_equal(res_2d_pyt, res_2d_pyc)
