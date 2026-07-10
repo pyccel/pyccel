@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 import os
 
 import numpy as np
@@ -7,12 +8,13 @@ from modules import arrays
 from numpy import finfo, iinfo
 from numpy.random import randint, uniform
 from utilities import epyccel_module_with_fallback
+from limits import RTOL, ATOL
 
 from pyccel import epyccel
 
-RTOL = 1e-12
-ATOL = 1e-16
-
+T = TypeVar(
+    "T", "int[:]", "int[:,:]", "int[:,:,:]", "int[:,:](order=F)", "int[:,:,:](order=F)"
+)
 
 @pytest.fixture(scope="module")
 def epyc_arrays_mod(language):
