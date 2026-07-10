@@ -1,23 +1,32 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import pytest
 
 import modules.numpy_sign as mod
 import numpy as np
-from recognised_functions.test_numpy_funcs import ATOL, ATOL32, RTOL, RTOL32
+from limits import ATOL, ATOL32, RTOL, RTOL32
 
 from pyccel import epyccel
+from utilities import epyccel_module_with_fallback
 
 
-def test_sign_complex(language):
+@pytest.fixture(scope="module")
+def epyc_mod(language):
+    return epyccel_module_with_fallback(mod, language)
+
+
+
+
+def test_sign_complex(epyc_mod):
     f_nul = mod.complex_nul
     f_pos = mod.complex_pos
     f_neg = mod.complex_neg
     f_pos_neg = mod.complex_pos_neg
     f_neg_pos = mod.complex_neg_pos
-    f_nul_epyc = epyccel(f_nul, language=language)
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language=language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language=language)
+    f_nul_epyc = epyc_mod.complex_nul
+    f_pos_epyc = epyc_mod.complex_pos
+    f_neg_epyc = epyc_mod.complex_neg
+    f_pos_neg_epyc = epyc_mod.complex_pos_neg
+    f_neg_pos_epyc = epyc_mod.complex_neg_pos
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -47,17 +56,17 @@ def test_sign_complex(language):
     )
 
 
-def test_sign_complex64(language):
+def test_sign_complex64(epyc_mod):
     f_nul = mod.complex64_nul
     f_pos = mod.complex64_pos
     f_neg = mod.complex64_neg
     f_pos_neg = mod.complex64_pos_neg
     f_neg_pos = mod.complex64_neg_pos
-    f_nul_epyc = epyccel(f_nul, language=language)
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language=language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language=language)
+    f_nul_epyc = epyc_mod.complex64_nul
+    f_pos_epyc = epyc_mod.complex64_pos
+    f_neg_epyc = epyc_mod.complex64_neg
+    f_pos_neg_epyc = epyc_mod.complex64_pos_neg
+    f_neg_pos_epyc = epyc_mod.complex64_neg_pos
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -87,17 +96,17 @@ def test_sign_complex64(language):
     )
 
 
-def test_sign_complex128(language):
+def test_sign_complex128(epyc_mod):
     f_nul = mod.complex128_nul
     f_pos = mod.complex128_pos
     f_neg = mod.complex128_neg
     f_pos_neg = mod.complex128_pos_neg
     f_neg_pos = mod.complex128_neg_pos
-    f_nul_epyc = epyccel(f_nul, language=language)
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language=language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language=language)
+    f_nul_epyc = epyc_mod.complex128_nul
+    f_pos_epyc = epyc_mod.complex128_pos
+    f_neg_epyc = epyc_mod.complex128_neg
+    f_pos_neg_epyc = epyc_mod.complex128_pos_neg
+    f_neg_pos_epyc = epyc_mod.complex128_neg_pos
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -127,11 +136,11 @@ def test_sign_complex128(language):
     )
 
 
-def test_sign_int16(language):
+def test_sign_int16(epyc_mod):
     f_pos = mod.int16_pos
     f_neg = mod.int16_neg
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
+    f_pos_epyc = epyc_mod.int16_pos
+    f_neg_epyc = epyc_mod.int16_neg
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -140,11 +149,11 @@ def test_sign_int16(language):
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 
-def test_sign_int32(language):
+def test_sign_int32(epyc_mod):
     f_pos = mod.int32_pos
     f_neg = mod.int32_neg
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
+    f_pos_epyc = epyc_mod.int32_pos
+    f_neg_epyc = epyc_mod.int32_neg
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -153,11 +162,11 @@ def test_sign_int32(language):
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 
-def test_sign_int64(language):
+def test_sign_int64(epyc_mod):
     f_pos = mod.int64_pos
     f_neg = mod.int64_neg
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
+    f_pos_epyc = epyc_mod.int64_pos
+    f_neg_epyc = epyc_mod.int64_neg
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -166,13 +175,13 @@ def test_sign_int64(language):
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 
-def test_sign_float(language):
+def test_sign_float(epyc_mod):
     f_pos = mod.float_pos
     f_neg = mod.float_neg
     f_nul = mod.float_nul
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_nul_epyc = epyccel(f_nul, language=language)
+    f_pos_epyc = epyc_mod.float_pos
+    f_neg_epyc = epyc_mod.float_neg
+    f_nul_epyc = epyc_mod.float_nul
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -183,11 +192,11 @@ def test_sign_float(language):
     assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
 
 
-def test_sign_float64(language):
+def test_sign_float64(epyc_mod):
     f_pos = mod.float64_pos
     f_neg = mod.float64_neg
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
+    f_pos_epyc = epyc_mod.float64_pos
+    f_neg_epyc = epyc_mod.float64_neg
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -196,17 +205,17 @@ def test_sign_float64(language):
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 
-def test_sign_literal_complex(language):
+def test_sign_literal_complex(epyc_mod):
     f_pos = mod.literal_complex_pos
     f_neg = mod.literal_complex_neg
     f_nul = mod.literal_complex_nul_nul
     f_nul_imag = mod.literal_complex_nul_imag
     f_real_nul = mod.literal_complex_real_nul
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_nul_epyc = epyccel(f_nul, language=language)
-    f_nul_imag_epyc = epyccel(f_nul_imag, language=language)
-    f_real_nul_epyc = epyccel(f_real_nul, language=language)
+    f_pos_epyc = epyc_mod.literal_complex_pos
+    f_neg_epyc = epyc_mod.literal_complex_neg
+    f_nul_epyc = epyc_mod.literal_complex_nul_nul
+    f_nul_imag_epyc = epyc_mod.literal_complex_nul_imag
+    f_real_nul_epyc = epyc_mod.literal_complex_real_nul
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -236,13 +245,13 @@ def test_sign_literal_complex(language):
     )
 
 
-def test_sign_literal_int(language):
+def test_sign_literal_int(epyc_mod):
     f_pos = mod.literal_int_pos
     f_neg = mod.literal_int_neg
     f_nul = mod.literal_int_nul
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_nul_epyc = epyccel(f_nul, language=language)
+    f_pos_epyc = epyc_mod.literal_int_pos
+    f_neg_epyc = epyc_mod.literal_int_neg
+    f_nul_epyc = epyc_mod.literal_int_nul
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -253,13 +262,13 @@ def test_sign_literal_int(language):
     assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
 
 
-def test_sign_literal_float(language):
+def test_sign_literal_float(epyc_mod):
     f_pos = mod.literal_float_pos
     f_neg = mod.literal_float_neg
     f_nul = mod.literal_float_nul
-    f_pos_epyc = epyccel(f_pos, language=language)
-    f_neg_epyc = epyccel(f_neg, language=language)
-    f_nul_epyc = epyccel(f_nul, language=language)
+    f_pos_epyc = epyc_mod.literal_float_pos
+    f_neg_epyc = epyc_mod.literal_float_neg
+    f_nul_epyc = epyc_mod.literal_float_nul
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -273,15 +282,15 @@ def test_sign_literal_float(language):
 # Tests on arrays
 
 
-def test_sign_array_1d_int(language):
+def test_sign_array_1d_int(epyc_mod):
     f_int8 = mod.array_1d_int8
     f_int16 = mod.array_1d_int16
     f_int32 = mod.array_1d_int32
     f_int64 = mod.array_1d_int64
-    f_int8_epyc = epyccel(f_int8, language=language)
-    f_int16_epyc = epyccel(f_int16, language=language)
-    f_int32_epyc = epyccel(f_int32, language=language)
-    f_int64_epyc = epyccel(f_int64, language=language)
+    f_int8_epyc = epyc_mod.array_1d_int8
+    f_int16_epyc = epyc_mod.array_1d_int16
+    f_int32_epyc = epyc_mod.array_1d_int32
+    f_int64_epyc = epyc_mod.array_1d_int64
 
     arr8 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int8)
     arr16 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int16)
@@ -299,15 +308,15 @@ def test_sign_array_1d_int(language):
     assert np.array_equal(x_int64, y_int64) and x_int64.dtype == y_int64.dtype
 
 
-def test_sign_array_2d_int(language):
+def test_sign_array_2d_int(epyc_mod):
     f_int8 = mod.array_2d_int8
     f_int16 = mod.array_2d_int16
     f_int32 = mod.array_2d_int32
     f_int64 = mod.array_2d_int64
-    f_int8_epyc = epyccel(f_int8, language=language)
-    f_int16_epyc = epyccel(f_int16, language=language)
-    f_int32_epyc = epyccel(f_int32, language=language)
-    f_int64_epyc = epyccel(f_int64, language=language)
+    f_int8_epyc = epyc_mod.array_2d_int8
+    f_int16_epyc = epyc_mod.array_2d_int16
+    f_int32_epyc = epyc_mod.array_2d_int32
+    f_int64_epyc = epyc_mod.array_2d_int64
 
     arr8 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int8)
     arr16 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int16)
@@ -325,11 +334,11 @@ def test_sign_array_2d_int(language):
     assert np.array_equal(x_int64, y_int64) and x_int64.dtype == y_int64.dtype
 
 
-def test_sign_array_1d_float(language):
+def test_sign_array_1d_float(epyc_mod):
     f_float32 = mod.array_1d_float32
     f_float64 = mod.array_1d_float64
-    f_float32_epyc = epyccel(f_float32, language=language)
-    f_float64_epyc = epyccel(f_float64, language=language)
+    f_float32_epyc = epyc_mod.array_1d_float32
+    f_float64_epyc = epyc_mod.array_1d_float64
 
     arr32 = np.array([2.0, 0.0, -0.0, -1.3, 3.7, 0.42], dtype=np.float32)
     arr64 = np.array([2.0, 0.0, -0.0, -1.3, 3.7, 0.42], dtype=np.float64)
@@ -341,11 +350,11 @@ def test_sign_array_1d_float(language):
     assert np.array_equal(x_float64, y_float64) and x_float64.dtype == y_float64.dtype
 
 
-def test_sign_array_2d_float(language):
+def test_sign_array_2d_float(epyc_mod):
     f_float32 = mod.array_2d_float32
     f_float64 = mod.array_2d_float64
-    f_float32_epyc = epyccel(f_float32, language=language)
-    f_float64_epyc = epyccel(f_float64, language=language)
+    f_float32_epyc = epyc_mod.array_2d_float32
+    f_float64_epyc = epyc_mod.array_2d_float64
 
     arr32 = np.array([[2.0, 0.0], [-0.0, -1.3], [3.7, 0.42]], dtype=np.float32)
     arr64 = np.array([[2.0, 0.0], [-0.0, -1.3], [3.7, 0.42]], dtype=np.float64)
@@ -357,11 +366,11 @@ def test_sign_array_2d_float(language):
     assert np.array_equal(x_float64, y_float64) and x_float64.dtype == y_float64.dtype
 
 
-def test_sign_array_1d_complex(language):
+def test_sign_array_1d_complex(epyc_mod):
     f_complex64 = mod.array_1d_complex64
     f_complex128 = mod.array_1d_complex128
-    f_complex64_epyc = epyccel(f_complex64, language=language)
-    f_complex128_epyc = epyccel(f_complex128, language=language)
+    f_complex64_epyc = epyc_mod.array_1d_complex64
+    f_complex128_epyc = epyc_mod.array_1d_complex128
 
     arr64 = np.array(
         [0.0 + 0j, 0.0j, 1.0 + 2.0j, -1.0 + 2.0j, 1.0 - 2.0j, -1.0 - 2.0j, 2.0j, -2.0j],
@@ -385,11 +394,11 @@ def test_sign_array_1d_complex(language):
     )
 
 
-def test_sign_array_2d_complex(language):
+def test_sign_array_2d_complex(epyc_mod):
     f_complex64 = mod.array_2d_complex64
     f_complex128 = mod.array_2d_complex128
-    f_complex64_epyc = epyccel(f_complex64, language=language)
-    f_complex128_epyc = epyccel(f_complex128, language=language)
+    f_complex64_epyc = epyc_mod.array_2d_complex64
+    f_complex128_epyc = epyc_mod.array_2d_complex128
 
     arr64 = np.array(
         [
