@@ -5,24 +5,33 @@ from modules import multi_rank
 from numpy.random import rand, randint
 
 from pyccel import epyccel
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_multi_rank_mod(language):
+    return epyccel_module_with_fallback(multi_rank, language)
+
+
 
 
 @pytest.mark.parametrize(
-    "f1",
+    "f1_name",
     [
-        multi_rank.add_mixed_order,
-        multi_rank.mul_mixed_order,
-        multi_rank.sub_mixed_order,
-        multi_rank.div_mixed_order,
-        multi_rank.augadd_mixed_order,
-        multi_rank.augmul_mixed_order,
-        multi_rank.augsub_mixed_order,
-        multi_rank.augdiv_mixed_order,
-        multi_rank.add_mixed_order_ellipsis,
+        'add_mixed_order',
+        'mul_mixed_order',
+        'sub_mixed_order',
+        'div_mixed_order',
+        'augadd_mixed_order',
+        'augmul_mixed_order',
+        'augsub_mixed_order',
+        'augdiv_mixed_order',
+        'add_mixed_order_ellipsis',
     ],
 )
-def test_add_mixed_order(f1, language):
-    f2 = epyccel(f1, language=language)
+def test_add_mixed_order(f1_name, epyc_multi_rank_mod):
+    f1 = getattr(multi_rank, f1_name)
+    f2 = getattr(epyc_multi_rank_mod, f1_name)
 
     x1 = np.array(np.int64(rand(4, 5)) * 100, dtype=float)
     x2 = np.copy(x1)
@@ -36,9 +45,9 @@ def test_add_mixed_order(f1, language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_C(language):
+def test_mul_by_vector_C(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_C
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_C
 
     x1 = np.array(rand(4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -52,9 +61,9 @@ def test_mul_by_vector_C(language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_F(language):
+def test_mul_by_vector_F(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_F
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_F
 
     x1 = np.array(rand(4, 5) * 10, dtype=int, order="F")
     x2 = np.copy(x1)
@@ -68,9 +77,9 @@ def test_mul_by_vector_F(language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_dim_1_C_C(language):
+def test_mul_by_vector_dim_1_C_C(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_dim_1_C_C
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_dim_1_C_C
 
     x1 = np.array(rand(3, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -81,9 +90,9 @@ def test_mul_by_vector_dim_1_C_C(language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_dim_1_C_F(language):
+def test_mul_by_vector_dim_1_C_F(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_dim_1_C_F
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_dim_1_C_F
 
     x1 = np.array(rand(3, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -94,9 +103,9 @@ def test_mul_by_vector_dim_1_C_F(language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_dim_1_F_C(language):
+def test_mul_by_vector_dim_1_F_C(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_dim_1_F_C
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_dim_1_F_C
 
     x1 = np.array(rand(3, 5) * 10, dtype=int, order="F")
     x2 = np.copy(x1)
@@ -107,9 +116,9 @@ def test_mul_by_vector_dim_1_F_C(language):
     assert np.array_equal(x1, x2)
 
 
-def test_mul_by_vector_dim_1_F_F(language):
+def test_mul_by_vector_dim_1_F_F(epyc_multi_rank_mod):
     f1 = multi_rank.mul_by_vector_dim_1_F_F
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.mul_by_vector_dim_1_F_F
 
     x1 = np.array(rand(3, 5) * 10, dtype=int, order="F")
     x2 = np.copy(x1)
@@ -120,9 +129,9 @@ def test_mul_by_vector_dim_1_F_F(language):
     assert np.array_equal(x1, x2)
 
 
-def test_multi_dim_sum(language):
+def test_multi_dim_sum(epyc_multi_rank_mod):
     f1 = multi_rank.multi_dim_sum
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.multi_dim_sum
 
     dims = [randint(1, 10) for _ in range(3)]
     x1 = np.array(rand(*dims) * 10, dtype=int)
@@ -146,9 +155,9 @@ def test_multi_dim_sum(language):
 # The remaining tests use np.sum
 
 
-def test_multi_dim_sum_ones(language):
+def test_multi_dim_sum_ones(epyc_multi_rank_mod):
     f1 = multi_rank.multi_dim_sum_ones
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.multi_dim_sum_ones
 
     dims = [randint(1, 10) for _ in range(3)]
     x1 = np.array(rand(*dims) * 10, dtype=int)
@@ -163,23 +172,9 @@ def test_multi_dim_sum_ones(language):
     assert np.array_equal(pyccel_result, python_result)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_multi_expression_assign(language):
+def test_multi_expression_assign(epyc_multi_rank_mod):
     f1 = multi_rank.multi_expression_assign
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.multi_expression_assign
 
     x1 = np.array(rand(4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -193,23 +188,9 @@ def test_multi_expression_assign(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_multi_expression_augassign(language):
+def test_multi_expression_augassign(epyc_multi_rank_mod):
     f1 = multi_rank.multi_expression_augassign
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.multi_expression_augassign
 
     x1 = np.array(rand(4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -223,23 +204,9 @@ def test_multi_expression_augassign(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_grouped_expressions(language):
+def test_grouped_expressions(epyc_multi_rank_mod):
     f1 = multi_rank.grouped_expressions
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.grouped_expressions
 
     x1 = np.array(rand(4, 5) * 10, dtype=int, order="F")
     x2 = np.copy(x1)
@@ -256,23 +223,9 @@ def test_grouped_expressions(language):
     assert np.array_equal(x1, x2)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(reason="Missing dummy for sum. See #2520"),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_grouped_expressions2(language):
+def test_grouped_expressions2(epyc_multi_rank_mod):
     f1 = multi_rank.grouped_expressions2
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.grouped_expressions2
 
     x1 = np.array(rand(3, 4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -289,9 +242,9 @@ def test_grouped_expressions2(language):
     assert np.array_equal(x1, x2)
 
 
-def test_dependencies(language):
+def test_dependencies(epyc_multi_rank_mod):
     f1 = multi_rank.dependencies
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.dependencies
 
     x1 = np.array(rand(4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
@@ -305,9 +258,9 @@ def test_dependencies(language):
     assert np.array_equal(x1, x2)
 
 
-def test_auto_dependencies(language):
+def test_auto_dependencies(epyc_multi_rank_mod):
     f1 = multi_rank.auto_dependencies
-    f2 = epyccel(f1, language=language)
+    f2 = epyc_multi_rank_mod.auto_dependencies
 
     x1 = np.array(rand(4, 5) * 10, dtype=int)
     x2 = np.copy(x1)
