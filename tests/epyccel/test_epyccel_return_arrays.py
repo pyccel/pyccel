@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
+import pytest
 
 import numpy as np
 from numpy.random import randint, uniform
-from recognised_functions.test_numpy_funcs import (
+from limits import (
     max_float,
     max_float32,
     max_float64,
@@ -23,45 +23,18 @@ from recognised_functions.test_numpy_funcs import (
 )
 
 from pyccel import epyccel
-
-T = TypeVar(
-    "T",
-    "bool",
-    "int",
-    "int8",
-    "int16",
-    "int32",
-    "int64",
-    "float",
-    "float32",
-    "float64",
-    "complex64",
-    "complex128",
-)
-NumType = TypeVar(
-    "NumType",
-    "int",
-    "int8",
-    "int16",
-    "int32",
-    "int64",
-    "float",
-    "float32",
-    "float64",
-    "complex64",
-    "complex128",
-)
-FArrays = TypeVar("FArrays", "float[:,:,:](order=F)", "float[:,:](order=F)")
-CArrays = TypeVar("CArrays", "float[:,:,:](order=C)", "float[:,:](order=C)")
+from modules import epyccel_return_arrays
+from utilities import epyccel_module_with_fallback
 
 
-def test_single_return(language):
-    def return_array(a: "T", b: "T"):
-        from numpy import array
+@pytest.fixture(scope="module")
+def epyc_epyccel_return_arrays_mod(language):
+    return epyccel_module_with_fallback(epyccel_return_arrays, language)
 
-        x = array([a, b], dtype=type(a))
-        return x
 
+
+def test_single_return(epyc_epyccel_return_arrays_mod):
+    return_array = epyccel_return_arrays.return_array
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -85,7 +58,7 @@ def test_single_return(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_array
 
     f_bl_true_output = epyccel_func(True, True)
     test_bool_true_output = return_array(True, True)
@@ -160,14 +133,8 @@ def test_single_return(language):
     assert f_cmplx128_output.dtype == test_cmplx128_output.dtype
 
 
-def test_multi_returns(language):
-    def return_array(a: "T", b: "T"):
-        from numpy import array
-
-        x = array([a, b], dtype=type(a))
-        y = array([a, b], dtype=type(a))
-        return x, y
-
+def test_multi_returns(epyc_epyccel_return_arrays_mod):
+    return_array = epyccel_return_arrays.multi_returns
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -191,7 +158,7 @@ def test_multi_returns(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.multi_returns
 
     f_bl_true_output = epyccel_func(True, True)
     test_bool_true_output = return_array(True, True)
@@ -266,15 +233,9 @@ def test_multi_returns(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_return_array_array_op(language):
+def test_return_array_array_op(epyc_epyccel_return_arrays_mod):
 
-    def return_array(a: "NumType", b: "NumType"):
-        from numpy import array
-
-        x = array([a, b], dtype=type(a))
-        y = array([a, b], dtype=type(a))
-        return x + y
-
+    return_array = epyccel_return_arrays.return_array_array_op
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -298,7 +259,7 @@ def test_return_array_array_op(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_array_array_op
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output = return_array(integer, integer)
@@ -361,15 +322,9 @@ def test_return_array_array_op(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_return_multi_array_array_op(language):
+def test_return_multi_array_array_op(epyc_epyccel_return_arrays_mod):
 
-    def return_array(a: "NumType", b: "NumType"):
-        from numpy import array
-
-        x = array([a, b], dtype=type(a))
-        y = array([a, b], dtype=type(a))
-        return x + y, x - y
-
+    return_array = epyccel_return_arrays.return_multi_array_array_op
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -393,7 +348,7 @@ def test_return_multi_array_array_op(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_multi_array_array_op
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output = return_array(integer, integer)
@@ -456,14 +411,9 @@ def test_return_multi_array_array_op(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_return_array_scalar_op(language):
+def test_return_array_scalar_op(epyc_epyccel_return_arrays_mod):
 
-    def return_array_scalar_op(a: NumType):
-        from numpy import ones
-
-        x = ones(5, dtype=type(a))
-        return x * a
-
+    return_array_scalar_op = epyccel_return_arrays.return_array_scalar_op
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -487,7 +437,7 @@ def test_return_array_scalar_op(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_array_scalar_op, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_array_scalar_op
 
     f_integer_output = epyccel_func(integer)
     test_int_output = return_array_scalar_op(integer)
@@ -550,15 +500,9 @@ def test_return_array_scalar_op(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_multi_return_array_scalar_op(language):
+def test_multi_return_array_scalar_op(epyc_epyccel_return_arrays_mod):
 
-    def return_multi_array_scalar_op(a: NumType):
-        from numpy import ones
-
-        x = ones(5, dtype=type(a))
-        y = ones(5, dtype=type(a))
-        return x * a, y * a
-
+    return_multi_array_scalar_op = epyccel_return_arrays.return_multi_array_scalar_op
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -582,7 +526,7 @@ def test_multi_return_array_scalar_op(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_multi_array_scalar_op, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_multi_array_scalar_op
 
     f_integer_output = epyccel_func(integer)
     test_int_output = return_multi_array_scalar_op(integer)
@@ -645,14 +589,9 @@ def test_multi_return_array_scalar_op(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_multi_return_array_array_op(language):
+def test_multi_return_array_array_op(epyc_epyccel_return_arrays_mod):
 
-    def return_array_arg_array_op(a: "NumType[:]"):
-        from numpy import ones
-
-        x = ones(7)
-        return x * a
-
+    return_array_arg_array_op = epyccel_return_arrays.return_array_arg_array_op
     arr_integer8 = np.ones(7, dtype=np.int8)
     arr_integer16 = np.ones(7, dtype=np.int16)
     arr_integer = np.ones(7, dtype=int)
@@ -668,7 +607,7 @@ def test_multi_return_array_array_op(language):
     cmplx64 = np.ones(7, dtype=np.float32) + np.ones(7, dtype=np.float32) * 1j
     cmplx128 = np.ones(7, dtype=np.float64) + np.ones(7, dtype=np.float64) * 1j
 
-    epyccel_func = epyccel(return_array_arg_array_op, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_array_arg_array_op
 
     f_integer_output = epyccel_func(arr_integer)
     test_int_output = return_array_arg_array_op(arr_integer)
@@ -731,18 +670,9 @@ def test_multi_return_array_array_op(language):
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 
-def test_return_arrays_in_expression(language):
-    def return_arrays_in_expression():
-        def single_return():
-            from numpy import array
-
-            return array([1, 2, 3, 4])
-
-        b = single_return() + 1
-
-        return b
-
-    epyccel_function = epyccel(return_arrays_in_expression, language=language)
+def test_return_arrays_in_expression(epyc_epyccel_return_arrays_mod):
+    return_arrays_in_expression = epyccel_return_arrays.return_arrays_in_expression
+    epyccel_function = epyc_epyccel_return_arrays_mod.return_arrays_in_expression
 
     epyccel_function_output = epyccel_function()
     return_arrays_in_expression_output = return_arrays_in_expression()
@@ -751,18 +681,9 @@ def test_return_arrays_in_expression(language):
     assert epyccel_function_output.dtype == return_arrays_in_expression_output.dtype
 
 
-def test_return_arrays_in_expression2(language):
-    def return_arrays_in_expression2(n: int):
-        def single_return(n: int):
-            from numpy import ones
-
-            return ones(n)
-
-        b = single_return(n) + 1
-
-        return b
-
-    epyccel_function = epyccel(return_arrays_in_expression2, language=language)
+def test_return_arrays_in_expression2(epyc_epyccel_return_arrays_mod):
+    return_arrays_in_expression2 = epyccel_return_arrays.return_arrays_in_expression2
+    epyccel_function = epyc_epyccel_return_arrays_mod.return_arrays_in_expression2
 
     n = randint(5)
 
@@ -773,13 +694,8 @@ def test_return_arrays_in_expression2(language):
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
 
 
-def test_c_array_return(language):
-    def return_c_array(b: NumType):
-        from numpy import array
-
-        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b))
-        return a
-
+def test_c_array_return(epyc_epyccel_return_arrays_mod):
+    return_c_array = epyccel_return_arrays.return_c_array
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -803,7 +719,7 @@ def test_c_array_return(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_c_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_c_array
 
     for arg in (
         integer8,
@@ -825,13 +741,8 @@ def test_c_array_return(language):
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
 
-def test_f_array_return(language):
-    def return_f_array(b: NumType):
-        from numpy import array
-
-        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order="F")
-        return a
-
+def test_f_array_return(epyc_epyccel_return_arrays_mod):
+    return_f_array = epyccel_return_arrays.return_f_array
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -855,7 +766,7 @@ def test_f_array_return(language):
         + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     )
 
-    epyccel_func = epyccel(return_f_array, language=language)
+    epyccel_func = epyc_epyccel_return_arrays_mod.return_f_array
 
     for arg in (
         integer8,
@@ -877,14 +788,9 @@ def test_f_array_return(language):
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
 
-def test_copy_f_to_f(language):
-    def copy_f_to_f(b: FArrays):
-        from numpy import array
-
-        a = array(b, order="F")
-        return a
-
-    epyccel_func = epyccel(copy_f_to_f, language=language)
+def test_copy_f_to_f(epyc_epyccel_return_arrays_mod):
+    copy_f_to_f = epyccel_return_arrays.copy_f_to_f
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_f_to_f
     fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
     fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
@@ -898,14 +804,9 @@ def test_copy_f_to_f(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_copy_f_to_c(language):
-    def copy_f_to_c(b: FArrays):
-        from numpy import array
-
-        a = array(b, order="C")
-        return a
-
-    epyccel_func = epyccel(copy_f_to_c, language=language)
+def test_copy_f_to_c(epyc_epyccel_return_arrays_mod):
+    copy_f_to_c = epyccel_return_arrays.copy_f_to_c
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_f_to_c
     fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
     fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
@@ -919,14 +820,9 @@ def test_copy_f_to_c(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_copy_c_to_c(language):
-    def copy_c_to_c(b: CArrays):
-        from numpy import array
-
-        a = array(b, order="C")
-        return a
-
-    epyccel_func = epyccel(copy_c_to_c, language=language)
+def test_copy_c_to_c(epyc_epyccel_return_arrays_mod):
+    copy_c_to_c = epyccel_return_arrays.copy_c_to_c
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_c_to_c
     fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
     fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
@@ -940,14 +836,9 @@ def test_copy_c_to_c(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_copy_c_to_f(language):
-    def copy_c_to_f(b: CArrays):
-        from numpy import array
-
-        a = array(b, order="F")
-        return a
-
-    epyccel_func = epyccel(copy_c_to_f, language=language)
+def test_copy_c_to_f(epyc_epyccel_return_arrays_mod):
+    copy_c_to_f = epyccel_return_arrays.copy_c_to_f
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_c_to_f
     fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
     fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
@@ -961,14 +852,9 @@ def test_copy_c_to_f(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_copy_c_to_default(language):
-    def copy_c_to_default(b: CArrays):
-        from numpy import array
-
-        a = array(b)
-        return a
-
-    epyccel_func = epyccel(copy_c_to_default, language=language)
+def test_copy_c_to_default(epyc_epyccel_return_arrays_mod):
+    copy_c_to_default = epyccel_return_arrays.copy_c_to_default
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_c_to_default
     fl_3d = uniform(min_float / 2, max_float / 2, (2, 3, 4))
     fl_2d = uniform(min_float / 2, max_float / 2, (3, 4))
 
@@ -982,14 +868,9 @@ def test_copy_c_to_default(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_copy_f_to_default(language):
-    def copy_f_to_default(b: FArrays):
-        from numpy import array
-
-        a = array(b)
-        return a
-
-    epyccel_func = epyccel(copy_f_to_default, language=language)
+def test_copy_f_to_default(epyc_epyccel_return_arrays_mod):
+    copy_f_to_default = epyccel_return_arrays.copy_f_to_default
+    epyccel_func = epyc_epyccel_return_arrays_mod.copy_f_to_default
     fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2, 3, 4)), order="F")
     fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3, 4)), order="F")
 
@@ -1003,11 +884,9 @@ def test_copy_f_to_default(language):
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_annotated_return(language):
-    def annotated_return(b: "float[:,:]", c: "float[:,:]") -> "float[:,:]":
-        return b + c
-
-    epyccel_func = epyccel(annotated_return, language=language)
+def test_annotated_return(epyc_epyccel_return_arrays_mod):
+    annotated_return = epyccel_return_arrays.annotated_return
+    epyccel_func = epyc_epyccel_return_arrays_mod.annotated_return
     fl_b = np.array(uniform(min_float / 2, max_float / 2, (3, 4)))
     fl_c = np.array(uniform(min_float / 2, max_float / 2, (3, 4)))
 
@@ -1020,17 +899,9 @@ def test_annotated_return(language):
     assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
 
-def test_unknown_size_array(language):
-    def unknown_size(b: bool):
-        from numpy import ones, zeros
-
-        if b:
-            a = ones(3)
-        else:
-            a = zeros(4)
-        return a
-
-    epyccel_func = epyccel(unknown_size, language=language)
+def test_unknown_size_array(epyc_epyccel_return_arrays_mod):
+    unknown_size = epyccel_return_arrays.unknown_size
+    epyccel_func = epyc_epyccel_return_arrays_mod.unknown_size
 
     assert np.array_equal(epyccel_func(True), unknown_size(True))
     assert np.array_equal(epyccel_func(False), unknown_size(False))
