@@ -15,10 +15,10 @@ class LazyPerFunctionEpyccel:
     test(s) that use it, rather than every test sharing the module.
     """
 
-    def __init__(self, pymod, language, epyccel_kwargs):
+    def __init__(self, pymod, language, epyccel_kwargs = None):
         self._pymod = pymod
         self._language = language
-        self._epyccel_kwargs = epyccel_kwargs
+        self._epyccel_kwargs = epyccel_kwargs or {}
         self._cache = {}
 
     def __getattr__(self, name):
