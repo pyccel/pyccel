@@ -5,9 +5,23 @@ import pytest
 from modules import strings_module
 
 from pyccel import epyccel
+from modules import strings
+from utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_strings_mod(language):
+    return epyccel_module_with_fallback(strings, language)
+
+
+@pytest.fixture(scope="module")
+def epyc_strings_module(language):
+    return epyccel_module_with_fallback(strings_module, language)
+
+
 
 string_funcs = [
-    getattr(strings_module, f)
+    f
     for f in strings_module.__all__
     if inspect.isfunction(getattr(strings_module, f))
 ]
@@ -20,12 +34,12 @@ failing_tests = {
 
 
 @pytest.mark.parametrize("test_func", string_funcs)
-def test_strings(test_func, language):
-    if test_func.__name__ in failing_tests and language == "c":
-        pytest.xfail(failing_tests[test_func.__name__])
+def test_strings(test_func, epyc_strings_module):
+    if test_func in failing_tests and epyc_strings_module.language == "c":
+        pytest.xfail(failing_tests[test_func])
 
-    f1 = test_func
-    f2 = epyccel(f1, language=language)
+    f1 = getattr(strings_module, test_func)
+    f2 = getattr(epyc_strings_module, test_func)
 
     python_out = f1()
     pyccel_out = f2()
@@ -34,44 +48,24 @@ def test_strings(test_func, language):
     assert python_out == pyccel_out
 
 
-def test_string_compare(language):
-    def str_comp():
-        a = "hello"
-        if a == "world":
-            return 1
-        elif a != "boo":
-            return 2
-        elif a == "hello":
-            return 3
-        else:
-            return 4
-
-    f = epyccel(str_comp, language=language)
+def test_string_compare(epyc_strings_mod):
+    str_comp = strings.str_comp
+    f = epyc_strings_mod.str_comp
 
     assert str_comp() == f()
 
 
-def test_string_argument(language):
-    def str_option_test(option: str):
-        if option == "do this":
-            return 1.0
-        else:
-            return 2.0
-
-    f = epyccel(str_option_test, language=language)
+def test_string_argument(epyc_strings_mod):
+    str_option_test = strings.str_option_test
+    f = epyc_strings_mod.str_option_test
 
     assert str_option_test("do this") == f("do this")
     assert str_option_test("do that") == f("do that")
 
 
-def test_string_argument_optional(language):
-    def str_option_test(option: str = None):
-        if option is not None and option == "do this":
-            return 1.0
-        else:
-            return 2.0
-
-    f = epyccel(str_option_test, language=language)
+def test_string_argument_optional(epyc_strings_mod):
+    str_option_test = strings.string_argument_optional_str_option_test
+    f = epyc_strings_mod.string_argument_optional_str_option_test
 
     assert str_option_test("do this") == f("do this")
     assert str_option_test("do that") == f("do that")
