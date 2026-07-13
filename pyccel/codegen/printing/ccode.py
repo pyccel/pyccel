@@ -155,6 +155,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.parser.scope import Scope
 
 errors = Errors()
 
@@ -1213,10 +1214,19 @@ class CCodePrinter(CodePrinter):
             func_blocks.append("")
             for method in classDef.methods:
                 if method.is_semantic:
-                    func_blocks[-1] += f"{self.function_signature(method)};\n"
+                    sig = self.function_signature(method)
+                    func_blocks[-1] += f"{sig};\n"
+                    if method.cls_name is not None:
+                        fp_sig = sig.replace(
+                            f" {method.name}(", f" (*{method.cls_name})(", 1
+                        )
+                        classes += f"    {fp_sig};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    func_blocks[-1] += f"{self.function_signature(func)};\n"
+                    sig = self.function_signature(func)
+                    func_blocks[-1] += f"{sig};\n"
+                    fp_sig = sig.replace(f" {func.name}(", f" (*{func.cls_name})(", 1)
+                    classes += f"    {fp_sig};\n"
             classes += "};\n"
         func_blocks.append(
             "".join(
@@ -1251,6 +1261,11 @@ class CCodePrinter(CodePrinter):
         imports = self.sort_imports(imports)
         imports = "".join(self._print(i) for i in imports)
 
+        if expr.module.docstring:
+            docstring = self._print(expr.module.docstring)
+        else:
+            docstring = ""
+
         self._in_header = False
         self.exit_scope()
         body = "\n".join(
@@ -1258,13 +1273,19 @@ class CCodePrinter(CodePrinter):
             for info_block in (imports, global_variables, classes, funcs)
             if info_block
         )
-        return f"#ifndef {name.upper()}_H\n \
-                #define {name.upper()}_H\n\n \
-                {body}\n \
-                #endif // {name}_H\n"
+        return "\n".join(
+            (
+                f"#ifndef {name.upper()}_H",
+                f"#define {name.upper()}_H",
+                docstring,
+                body,
+                f"#endif // {name}_H\n",
+            )
+        )
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
+
         body = "\n".join(self._print(i) for i in expr.body)
 
         global_variables = "".join([self._print(d) for d in expr.declarations])
@@ -1276,6 +1297,10 @@ class CCodePrinter(CodePrinter):
         imports = self._print(imports)
 
         code = "\n".join((imports, global_variables, body))
+
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+            code = f"{docstring}\n{code}"
 
         self.exit_scope()
         return code
@@ -3165,13 +3190,25 @@ class CCodePrinter(CodePrinter):
                 args.append(ObjectAddress(v))
 
         self._temporary_args = []
+
+        if func.cls_name:
+            self_arg = args[0]
+            if isinstance(self_arg, ObjectAddress):
+                self_arg = self_arg.obj
+            if self.is_c_pointer(self_arg):
+                name = f"{self._print(ObjectAddress(self_arg))}->{func.cls_name}"
+            else:
+                name = f"{self._print(self_arg)}.{func.cls_name}"
+        else:
+            name = func.name
+
         args = ", ".join(
             self._print(ai)
             for a in args
             for ai in self.scope.collect_all_tuple_elements(a)
         )
 
-        call_code = f"{func.name}({args})"
+        call_code = f"{name}({args})"
         if func.results.var is not Nil() and not isinstance(
             func.results.var.class_type, InhomogeneousTupleType
         ):
@@ -3754,20 +3791,22 @@ class CCodePrinter(CodePrinter):
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
+        ln = max(len(i) for i in txts) + 2
         if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
             "/*"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "*/\n"
+            + "\n"
         )
-        ln = len(top) - 4
-        bottom = "/*" + "_" * ln + "*/\n"
+        ln = len(top) - 2
+        bottom = " *" + "_" * ln + "*/\n"
 
-        txts = ["/*" + t + " " * (ln - len(t)) + "*/\n" for t in txts]
+        txts = [" * " + t + "\n" for t in txts]
 
         body = "".join(i for i in txts)
 
@@ -3877,13 +3916,55 @@ class CCodePrinter(CodePrinter):
         return "".join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
-        methods = "".join(self._print(method) for method in expr.methods)
+        empty_scope = Scope(
+            name="tmp",
+            scope_type="class",
+            used_symbols=expr.scope.local_used_symbols.copy(),
+            original_symbols=expr.scope.python_names.copy(),
+        )
+
+        # Generate safe C names for function pointer members and store on cls_name
+        virtual_methods = []
+        for method in expr.methods:
+            if method.is_semantic:
+                python_name = expr.scope.get_python_name(method.name)
+                if python_name not in ("__init__", "__del__"):
+                    empty_scope.remove_symbol(python_name)
+                    method.cls_name = empty_scope.get_new_name(
+                        python_name, object_type="variable"
+                    )
+                    virtual_methods.append(method)
+        for interface in expr.interfaces:
+            for i, func in enumerate(interface.functions):
+                python_name = expr.scope.get_python_name(func.name)
+                empty_scope.remove_symbol(python_name)
+                func.cls_name = empty_scope.get_new_name(
+                    f"{python_name}_{i:0=4d}", object_type="variable"
+                )
+                virtual_methods.append(func)
+
+        # Print __init__ with injected function pointer assignments
+        init_method = expr.get_method("__init__")
+        init_printed = self._print(init_method)
+        if virtual_methods:
+            init_lines = init_printed.split("\n")
+            self_name = init_method.arguments[0].var.name
+            virtual_methods.sort(key=lambda m: m.cls_name)
+            fp_assignments = "    // Save virtual function addresses\n" + "".join(
+                f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
+            )
+            insert_pos = init_lines.index("{") + 1
+            init_lines.insert(insert_pos, fp_assignments)
+            init_printed = "\n".join(init_lines)
+
+        methods = init_printed + "".join(
+            self._print(method) for method in expr.methods if method is not init_method
+        )
         interfaces = "".join(
             self._print(function)
             for interface in expr.interfaces
             for function in interface.functions
         )
-
         return methods + interfaces
 
     # ================== Tuple methods =================
@@ -4183,8 +4264,6 @@ class CCodePrinter(CodePrinter):
             return "".join(code_lines)
 
         tab = " " * self._default_settings["tabwidth"]
-
-        code = [line.lstrip(" \t") for line in code]
 
         increase = [int(line.endswith("{\n")) for line in code]
         decrease = [int(any(map(line.startswith, "}\n"))) for line in code]

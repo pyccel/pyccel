@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
+-   #2621 : Add support for module docstrings.
 -   #2611 : Add a plugin framework.
 
 ### Fixed
@@ -16,12 +17,15 @@ All notable changes to this project will be documented in this file.
 -   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
 -   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
 -   #2618 : Fix unnecessary slicing returning the whole array.
+-   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
 
 ### Changed
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
 -   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
+-   #2620 : Improve formatting of comment blocks in Fortran and C.
 -   \[DEVELOPER\] Require black formatting.
+-   #2606 : Make class methods non-final by default.
 
 ### Deprecated
 
