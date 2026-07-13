@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
+from typing import TypeVar, TypeAlias
 
 Z1 = TypeVar("Z1", int, float)
 Z2 = TypeVar("Z2", int, float)
@@ -11,17 +11,17 @@ IT = TypeVar("IT", "int", "int32", "int8", "int16", "int64")
 FT = TypeVar("FT", "float", "float32", "float64")
 FT2 = TypeVar("FT2", "float", "float64")
 CT = TypeVar("CT", "complex", "complex64", "complex128")
-B = bool
-I = int
-C = complex
-IA = TypeVar("IA", "int", "int[:]")
+B : TypeAlias = bool
+I : TypeAlias = int
+C : TypeAlias = complex
+#IA = TypeVar("IA", "int", "int[:]")
 T1 = TypeVar("T1", complex, int)
 T2 = TypeVar("T2", int, "float64")
 T3 = TypeVar("T3", "int16", bool)
 T4 = TypeVar("T4", "int64", "int32", "int16", "float", "complex", "float32")
 T5 = TypeVar("T5", "int", "int32")
 T6 = TypeVar("T6", "int64[:]", "float[:]", "complex[:]")
-T7 = TypeVar("T7", "int", "float[:]", "complex[:, :]")
+#T7 = TypeVar("T7", "int", "float[:]", "complex[:, :]")
 
 
 def tmplt_1(x: Z1, y: Z1):
@@ -162,9 +162,9 @@ def zeros_type(a: Z1):
     return x[0]
 
 
-def scalar_or_array(a: IA):
-    return a + 2
-
-
-def add_scalars_or_arrays(a: T7, b: T7):
-    return a + b + 1
+#def scalar_or_array(a: IA):
+#    return a + 2
+#
+#
+#def add_scalars_or_arrays(a: T7, b: T7):
+#    return a + b + 1
