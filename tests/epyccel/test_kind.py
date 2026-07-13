@@ -2,32 +2,29 @@
 import pytest
 
 from pyccel import epyccel
+from modules import kind
+from utilities import epyccel_module_with_fallback
 
 
-def test_or_boolean(language):
-    def or_bool(a: "bool", b: "bool"):
-        c = False
-        if a:
-            c = True
-        if b:
-            c = True
-        return c
+@pytest.fixture(scope="module")
+def epyc_kind_mod(language):
+    return epyccel_module_with_fallback(kind, language)
 
-    epyc_or_bool = epyccel(or_bool, language=language)
+
+
+
+def test_or_boolean(epyc_kind_mod):
+    or_bool = kind.or_bool
+    epyc_or_bool = epyc_kind_mod.or_bool
 
     assert epyc_or_bool(True, True) == or_bool(True, True)
     assert epyc_or_bool(True, False) == or_bool(True, False)
     assert epyc_or_bool(False, False) == or_bool(False, False)
 
 
-def test_real_greater_bool(language):
-    def real_greater_bool(x0: "float", x1: "float"):
-        greater = False
-        if x0 > x1:
-            greater = True
-        return greater
-
-    epyc_real_greater_bool = epyccel(real_greater_bool, language=language)
+def test_real_greater_bool(epyc_kind_mod):
+    real_greater_bool = kind.real_greater_bool
+    epyc_real_greater_bool = epyc_kind_mod.real_greater_bool
 
     assert real_greater_bool(1.0, 2.0) == epyc_real_greater_bool(1.0, 2.0)
     assert real_greater_bool(1.5, 1.2) == epyc_real_greater_bool(1.5, 1.2)
@@ -49,30 +46,21 @@ def test_input_output_matching_types(language):
     assert add_real(1.0, 2.0) == epyc_add_real(1.0, 2.0)
 
 
-def test_output_types_1(language):
-    def cast_to_int(a: "float"):
-        b = int(a)
-        return b
-
-    f = epyccel(cast_to_int, language=language)
+def test_output_types_1(epyc_kind_mod):
+    cast_to_int = kind.cast_to_int
+    f = epyc_kind_mod.cast_to_int
     assert type(cast_to_int(5.2)) == type(
         f(5.2)
     )  # pylint: disable=unidiomatic-typecheck
 
 
-def test_output_types_2(language):
-    def cast_to_float(a: "int"):
-        b = float(a)
-        return b
-
-    f = epyccel(cast_to_float, language=language)
+def test_output_types_2(epyc_kind_mod):
+    cast_to_float = kind.cast_to_float
+    f = epyc_kind_mod.cast_to_float
     assert type(cast_to_float(5)) == type(f(5))  # pylint: disable=unidiomatic-typecheck
 
 
-def test_output_types_3(language):
-    def cast_to_bool(a: "int"):
-        b = bool(a)
-        return b
-
-    f = epyccel(cast_to_bool, language=language)
+def test_output_types_3(epyc_kind_mod):
+    cast_to_bool = kind.cast_to_bool
+    f = epyc_kind_mod.cast_to_bool
     assert cast_to_bool(1) == f(1)
