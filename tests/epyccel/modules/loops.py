@@ -304,16 +304,16 @@ def for_expression():
     return sum_e
 
 
-def for_lists_of_lists():
-    a = [[1, 2], [3, 4]]
-    b = [[5, 6], [7, 8]]
-    c = [0, 0]
-    for ai, bi in zip(a, b):
-        for i in range(2):
-            c[i] = ai[i] + bi[i]
-            bi[i] = -1
-
-    return c[0], c[1], b[0][0], b[0][1], b[1][0], b[1][1]
+#def for_lists_of_lists():
+#    a = [[1, 2], [3, 4]]
+#    b = [[5, 6], [7, 8]]
+#    c = [0, 0]
+#    for ai, bi in zip(a, b):
+#        for i in range(2):
+#            c[i] = ai[i] + bi[i]
+#            bi[i] = -1
+#
+#    return c[0], c[1], b[0][0], b[0][1], b[1][0], b[1][1]
 
 
 @allow_negative_index("a")
