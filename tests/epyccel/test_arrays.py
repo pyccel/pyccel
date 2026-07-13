@@ -3588,20 +3588,8 @@ def test_array_2d_F_slice_stride_19(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c", 
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_F_slice_stride_20(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3611,20 +3599,8 @@ def test_array_2d_F_slice_stride_20(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_F_slice_stride_21(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3634,20 +3610,8 @@ def test_array_2d_F_slice_stride_21(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_F_slice_stride_22(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3657,20 +3621,8 @@ def test_array_2d_F_slice_stride_22(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_F_slice_stride_23(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3693,20 +3645,8 @@ def test_array_2d_C_slice_stride_1(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_2(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3716,20 +3656,8 @@ def test_array_2d_C_slice_stride_2(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_3(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3747,20 +3675,8 @@ def test_array_2d_C_slice_stride_4(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_5(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3778,20 +3694,8 @@ def test_array_2d_C_slice_stride_6(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_7(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3809,20 +3713,8 @@ def test_array_2d_C_slice_stride_8(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_9(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3832,20 +3724,8 @@ def test_array_2d_C_slice_stride_9(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_10(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3855,20 +3735,8 @@ def test_array_2d_C_slice_stride_10(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_11(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3878,20 +3746,8 @@ def test_array_2d_C_slice_stride_11(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_12(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3901,20 +3757,8 @@ def test_array_2d_C_slice_stride_12(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_13(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3924,20 +3768,8 @@ def test_array_2d_C_slice_stride_13(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_14(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3947,20 +3779,8 @@ def test_array_2d_C_slice_stride_14(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_15(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3970,20 +3790,8 @@ def test_array_2d_C_slice_stride_15(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_16(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3993,20 +3801,8 @@ def test_array_2d_C_slice_stride_16(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_17(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4016,20 +3812,8 @@ def test_array_2d_C_slice_stride_17(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_18(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4039,20 +3823,8 @@ def test_array_2d_C_slice_stride_18(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_19(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4062,20 +3834,8 @@ def test_array_2d_C_slice_stride_19(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_20(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4085,20 +3845,8 @@ def test_array_2d_C_slice_stride_20(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_21(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4108,20 +3856,8 @@ def test_array_2d_C_slice_stride_21(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_22(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -4131,20 +3867,8 @@ def test_array_2d_C_slice_stride_22(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.parametrize(
-    "language",
-    [
-        pytest.param(
-            "c",
-            marks=[
-                pytest.mark.skip(
+@pytest.mark.skipif_by_language(True, "c",
                     reason="Negative strides in slices are not handled in C. See #1311"
-                ),
-                pytest.mark.c,
-            ],
-        ),
-        pytest.param("fortran", marks=pytest.mark.fortran),
-    ],
 )
 def test_array_2d_C_slice_stride_23(epyc_arrays_mod):
     a = arrays.a_2d_c
