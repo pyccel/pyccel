@@ -335,11 +335,7 @@ def test_array_int_1d_initialization_1(epyc_arrays_mod):
 
 
 @pytest.mark.skipif_by_language(True,
-    language="c",
-                    reason="Array initialisation from non-literal list not yet supported."
-)
-@pytest.mark.skipif_by_language(True,
-    language="fortran",
+    language=("fortran", "c"),
                     reason="Array initialisation from non-literal list not yet supported."
 )
 def test_array_int_1d_initialization_2(epyc_arrays_mod):
@@ -3821,11 +3817,8 @@ def test_array_float_nested_C_array_initialization_3(epyc_arrays_mod):
 # ==============================================================================
 # NUMPY SUM
 # ==============================================================================
-@pytest.mark.skipif_by_language(True, language="fortran",
-                    reason="Lists of lists are not yet supported in Fortran, related issue #2210"
-)
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Lists of lists are not yet supported in C, related issue #2210"
+@pytest.mark.skipif_by_language(True, language=("fortran","c"),
+                    reason="Lists of lists are not yet supported in Fortran or C, related issue #2210"
 )
 def test_arr_bool_sum(epyc_arrays_mod):
     f1 = arrays.arr_bool_sum
@@ -8958,10 +8951,7 @@ def test_iterate_slice(epyc_arrays_mod):
     assert f1(i) == f2(i)
 
 
-@pytest.mark.skipif_by_language(True, language="fortran",
-                    reason=("Cannot return a non-contiguous slice. See #1796")
-)
-@pytest.mark.skipif_by_language(True, language="c",
+@pytest.mark.skipif_by_language(True, language=("fortran","c"),
                     reason=("Cannot return a non-contiguous slice. See #1796")
 )
 def test_unpacking(epyc_arrays_mod):
