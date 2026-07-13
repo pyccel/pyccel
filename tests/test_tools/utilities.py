@@ -29,6 +29,10 @@ class LazyPerFunctionEpyccel:
             )
         return self._cache[name]
 
+    @property
+    def language(self):
+        return self._language
+
 
 # ==============================================================================
 def epyccel_module_with_fallback(pymod, language, **kwargs):
@@ -41,6 +45,8 @@ def epyccel_module_with_fallback(pymod, language, **kwargs):
     functions on first access.
     """
     try:
-        return epyccel(pymod, language=language, **kwargs)
+        mod = epyccel(pymod, language=language, **kwargs)
     except (PyccelError, ImportError):
         return LazyPerFunctionEpyccel(pymod, language, **kwargs)
+    mod.language = language
+    return mod
