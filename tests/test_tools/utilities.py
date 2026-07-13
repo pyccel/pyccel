@@ -46,7 +46,7 @@ def epyccel_module_with_fallback(pymod, language, **kwargs):
     """
     try:
         mod = epyccel(pymod, language=language, **kwargs)
-    except (PyccelError, ImportError):
+    except (PyccelError, ImportError, RuntimeError):
         return LazyPerFunctionEpyccel(pymod, language, **kwargs)
     mod.language = language
     return mod
