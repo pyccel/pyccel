@@ -2966,8 +2966,11 @@ class CToPythonWrapper(Wrapper):
                     t,
                     struct_name,
                     type_name,
-                    Scope(name=name, scope_type="class",
-                          name_clash_checker=name_clash_checkers["c"]),
+                    Scope(
+                        name=name,
+                        scope_type="class",
+                        name_clash_checker=name_clash_checkers["c"],
+                    ),
                     class_type=dtype,
                 )
                 self._python_object_map[t] = wrapped_class
@@ -2977,8 +2980,11 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f"{expr.source}_wrapper"
-            mod_spoof_scope = Scope(name=expr.source_module.name, scope_type="module",
-                                     name_clash_checker=name_clash_checkers["c"])
+            mod_spoof_scope = Scope(
+                name=expr.source_module.name,
+                scope_type="module",
+                name_clash_checker=name_clash_checkers["c"],
+            )
             mod_import_func = FunctionDef(
                 mod_spoof_scope.get_new_name("import"),
                 (),

@@ -201,8 +201,10 @@ class Parser:
             print(">> Parsing :: ", self._filename)
 
         parser = SyntaxParser(
-            self._filename, verbose=verbose, context_dict=self._context_dict,
-            name_clash_checker = self._name_clash_checker
+            self._filename,
+            verbose=verbose,
+            context_dict=self._context_dict,
+            name_clash_checker=self._name_clash_checker,
         )
         self.syntax_parser = parser
 

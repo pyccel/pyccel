@@ -108,7 +108,7 @@ class Scope:
         symbolic_aliases=None,
         scope_type,
         name_clash_checker,
-        allow_loop_scoping = False
+        allow_loop_scoping=False,
     ):
 
         assert (name is None) != (not is_loop)
@@ -182,8 +182,13 @@ class Scope:
         if ps is not self:
             raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
-        child = Scope(name=name, **kwargs, parent_scope=self, scope_type=scope_type,
-                      name_clash_checker = self._name_clash_checker)
+        child = Scope(
+            name=name,
+            **kwargs,
+            parent_scope=self,
+            scope_type=scope_type,
+            name_clash_checker=self._name_clash_checker,
+        )
 
         self.add_son(name, child)
 

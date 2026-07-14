@@ -213,8 +213,9 @@ class SyntaxParser(BasicParser):
 
             scope_name = inputs.stem
 
-        self._scope = Scope(name=scope_name, scope_type="module",
-                            name_clash_checker = name_clash_checker)
+        self._scope = Scope(
+            name=scope_name, scope_type="module", name_clash_checker=name_clash_checker
+        )
 
         self._code = code
         self._context = []

@@ -658,8 +658,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module",
-                            name_clash_checker=name_clash_checkers["fortran"]),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -773,8 +776,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module",
-                            name_clash_checker=name_clash_checkers["fortran"]),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
