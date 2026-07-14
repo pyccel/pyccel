@@ -358,6 +358,7 @@ class Parser:
                     stashed_filename,
                     output_folder=q_output_folder,
                     original_filename=filename,
+                    name_clash_checker=self._name_clash_checker,
                 )
             q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)
             d_parsers_by_filename[filename] = q

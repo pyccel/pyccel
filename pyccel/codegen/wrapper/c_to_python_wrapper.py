@@ -183,6 +183,7 @@ from pyccel.ast.operators import (
 from pyccel.ast.variable import DottedVariable, IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 from .wrapper import Wrapper
@@ -1751,6 +1752,7 @@ class CToPythonWrapper(Wrapper):
             used_symbols=scope.local_used_symbols.copy(),
             original_symbols=scope.python_names.copy(),
             scope_type="module",
+            name_clash_checker=name_clash_checkers["c"],
         )
         self.scope = mod_scope
 
@@ -2952,6 +2954,7 @@ class CToPythonWrapper(Wrapper):
                         used_symbols=expr.source_module.scope.local_used_symbols.copy(),
                         original_symbols=expr.source_module.scope.python_names.copy(),
                         scope_type="module",
+                        name_clash_checker=name_clash_checkers["c"],
                     )
                 name = t.scope.get_python_name(t.name)
                 struct_name = import_scope.get_new_name(f"Py{name}Object")
@@ -2963,7 +2966,8 @@ class CToPythonWrapper(Wrapper):
                     t,
                     struct_name,
                     type_name,
-                    Scope(name=name, scope_type="class"),
+                    Scope(name=name, scope_type="class",
+                          name_clash_checker=name_clash_checkers["c"]),
                     class_type=dtype,
                 )
                 self._python_object_map[t] = wrapped_class
@@ -2973,7 +2977,8 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f"{expr.source}_wrapper"
-            mod_spoof_scope = Scope(name=expr.source_module.name, scope_type="module")
+            mod_spoof_scope = Scope(name=expr.source_module.name, scope_type="module",
+                                     name_clash_checker=name_clash_checkers["c"])
             mod_import_func = FunctionDef(
                 mod_spoof_scope.get_new_name("import"),
                 (),

@@ -384,6 +384,7 @@ class Scope:
             is_loop=True,
             parent_scope=self,
             scope_type="loop",
+            name_clash_checker=self._name_clash_checker,
         )
         self.add_loop(new_scope)
         return new_scope
