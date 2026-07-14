@@ -4,7 +4,7 @@ from typing import TypeVar
 import numpy as np
 import pytest
 from epyccel_utilities import matching_types
-from numpy.random import uniform, randint
+from numpy.random import randint, uniform
 from tolerances import (
     ATOL,
     ATOL32,
