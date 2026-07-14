@@ -66,7 +66,7 @@ class Scope:
         The type of the scope being created [module, function, class, loop, program].
 
     name_clash_checker : LanguageNameClashChecker
-        The class which allows new names to be defined, preventing clashes with existing
+        The object which allows new names to be defined, preventing clashes with existing
         names and language-specific keywords.
 
     allow_loop_scoping : bool, default=False
