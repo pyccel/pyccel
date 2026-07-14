@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 
+from epyccel_utilities import epyccel_test
 from modules import base
-from utilities import epyccel_test
 
 
 def test_is_false(language):

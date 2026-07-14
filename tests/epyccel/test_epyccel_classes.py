@@ -2,11 +2,9 @@
 import modules.expose_classes as mod
 import numpy as np
 import pytest
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = 2e-14
-ATOL = 1e-15
 
 
 @pytest.fixture(scope="module")

@@ -2,12 +2,9 @@
 import modules.augassign as mod
 import numpy as np
 from numpy.random import random
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-# += tests
-RTOL = 1e-12
-ATOL = 1e-16
 
 
 def test_augassign_add_1d(language):

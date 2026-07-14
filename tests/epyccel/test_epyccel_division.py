@@ -1,11 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import isclose
 from numpy.random import randint, uniform
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = 2e-14
-ATOL = 1e-15
 
 # -------------------- simple division ---------------------- #
 

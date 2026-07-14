@@ -5,11 +5,14 @@ import numpy as np
 import pytest
 from numpy.random import uniform
 from test_numpy_funcs import (
+    matching_types,
+    randint,
+)
+from tolerances import (
     ATOL,
     ATOL32,
     RTOL,
     RTOL32,
-    matching_types,
     max_float,
     max_float32,
     max_float64,
@@ -26,7 +29,6 @@ from test_numpy_funcs import (
     min_int16,
     min_int32,
     min_int64,
-    randint,
 )
 
 from pyccel import epyccel

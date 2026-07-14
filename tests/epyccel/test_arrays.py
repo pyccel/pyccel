@@ -4,13 +4,11 @@ import os
 import numpy as np
 import pytest
 from modules import arrays
-from numpy import finfo, iinfo
+from numpy import iinfo
 from numpy.random import randint, uniform
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = 1e-12
-ATOL = 1e-16
 
 
 def check_array_equal(a, b):

@@ -1,17 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
 from typing import TypeVar
 
 from numpy import isclose
 from numpy.random import rand, randint, uniform
+from tolerances import ATOL, RTOL, min_abs_float
 
 from pyccel import epyccel
-
-RTOL = 2e-14
-ATOL = 1e-15
-
-# this smallest positive float number
-min_float = sys.float_info.min
 
 T = TypeVar("T", int, float)
 
@@ -36,7 +30,7 @@ def test_pow_real_real(language):
         return x**y
 
     f = epyccel(pow_r_r, language=language)
-    x = uniform(low=min_float, high=50)
+    x = uniform(low=min_abs_float, high=50)
     y = uniform(high=5)
 
     assert isclose(f(x, y), pow_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -49,7 +43,7 @@ def test_pow_real_int(language):
         return x**y
 
     f = epyccel(pow_r_i, language=language)
-    x = uniform(low=min_float, high=50)
+    x = uniform(low=min_abs_float, high=50)
     y = randint(5)
 
     assert isclose(f(x, y), pow_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -144,7 +138,7 @@ def test_pow_chain(language):
     def chain_pow3(x: float, y: float, z: float):
         return x ** (y**z)
 
-    x = uniform(low=min_float, high=10)
+    x = uniform(low=min_abs_float, high=10)
     y = uniform(high=5)
     z = uniform(high=1.0)
 

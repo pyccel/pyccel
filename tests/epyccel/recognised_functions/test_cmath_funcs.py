@@ -7,11 +7,9 @@ from typing import TypeVar
 import pytest
 from numpy import isclose
 from numpy.random import rand, uniform
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = sys.float_info.epsilon * 1000
-ATOL = sys.float_info.epsilon * 100
 
 max_float = 3.40282e5  # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float

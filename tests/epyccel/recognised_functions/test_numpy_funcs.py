@@ -5,35 +5,33 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from numpy import finfo, iinfo, isclose
+from numpy import isclose
 from numpy.random import rand, randn, uniform
+from tolerances import (
+    ATOL,
+    ATOL32,
+    RTOL,
+    RTOL32,
+    max_float,
+    max_float32,
+    max_float64,
+    max_int,
+    max_int8,
+    max_int16,
+    max_int32,
+    max_int64,
+    min_abs_float,
+    min_float,
+    min_float32,
+    min_float64,
+    min_int,
+    min_int8,
+    min_int16,
+    min_int32,
+    min_int64,
+)
 
 from pyccel import epyccel
-
-min_int8 = iinfo("int8").min
-max_int8 = iinfo("int8").max
-
-min_int16 = iinfo("int16").min
-max_int16 = iinfo("int16").max
-
-# Use int32 for Windows compatibility
-min_int = iinfo(np.int32).min
-max_int = iinfo(np.int32).max
-
-min_int32 = iinfo("int32").min
-max_int32 = iinfo("int32").max
-
-min_int64 = iinfo("int64").min
-max_int64 = iinfo("int64").max
-
-min_float = finfo("float").min
-max_float = finfo("float").max
-
-min_float32 = finfo("float32").min / 2
-max_float32 = finfo("float32").max / 2
-
-min_float64 = finfo("float64").min / 2
-max_float64 = finfo("float64").max / 2
 
 default_numpy_int = np.array([1]).dtype
 
@@ -83,18 +81,6 @@ def randint(*args, **kwargs):
 #    diag
 #    cross
 #    # ---
-
-# Relative and absolute tolerances for array comparisons in the form
-# numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
-if sys.platform == "win32":
-    RTOL = 1e-13
-    ATOL = 1e-14
-else:
-    RTOL = 2e-14
-    ATOL = 1e-15
-
-RTOL32 = 1e-5
-ATOL32 = 1e-6
 
 
 def matching_types(pyccel_result, python_result):
@@ -1075,7 +1061,7 @@ def test_log_call_i(language):
         return log(x)
 
     f1 = epyccel(log_call_i, language=language)
-    x = randint(low=sys.float_info.min, high=1e6)
+    x = randint(low=1, high=1e6)
     assert isclose(f1(x), log_call_i(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), log_call_i(x))
 
@@ -1087,7 +1073,7 @@ def test_log_call_r(language):
         return log(x)
 
     f1 = epyccel(log_call_r, language=language)
-    x = uniform(low=sys.float_info.min, high=max_float)
+    x = uniform(low=min_abs_float, high=max_float)
     assert isclose(f1(x), log_call_r(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), log_call_r(x))
 
@@ -1100,8 +1086,8 @@ def test_log_phrase(language):
         return a
 
     f2 = epyccel(log_phrase, language=language)
-    x = uniform(low=sys.float_info.min, high=1e6)
-    y = uniform(low=sys.float_info.min, high=1e6)
+    x = uniform(low=min_abs_float, high=1e6)
+    y = uniform(low=min_abs_float, high=1e6)
     assert isclose(f2(x, y), log_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 

@@ -4,11 +4,9 @@ from typing import TypeVar
 import numpy as np
 from numpy import isclose
 from numpy.random import randint
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = 1e-12
-ATOL = 1e-16
 
 T = TypeVar("T", "int[:]", "float[:]", "complex[:]")
 

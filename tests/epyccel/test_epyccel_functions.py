@@ -6,11 +6,9 @@ from typing import Final, TypeVar
 import numpy as np
 import pytest
 from numpy.random import randint
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
-RTOL = 2e-14
-ATOL = 1e-15
 
 
 def test_func_no_args_1(language):
