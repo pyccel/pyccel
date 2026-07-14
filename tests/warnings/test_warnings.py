@@ -13,6 +13,7 @@ from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
 
 from pyccel import epyccel
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
 
@@ -49,7 +50,8 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd())
+    pyccel = Parser(f, output_folder=os.getcwd(),
+                    name_clash_checker=name_clash_checkers["python"])
     pyccel.parse(verbose=0)
 
     pyccel.annotate(verbose=0)

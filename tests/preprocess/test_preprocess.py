@@ -6,6 +6,7 @@ import os
 import pytest
 
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -18,7 +19,8 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.language_agnostic
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
-    pyccel = Parser(f, output_folder=os.getcwd())
+    pyccel = Parser(f, output_folder=os.getcwd(),
+                    name_clash_checker=name_clash_checkers["python"])
     pyccel.parse(verbose=0)
     print(pyccel.fst)
 
