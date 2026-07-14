@@ -29,7 +29,6 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
-from pyccel.parser.scope import Scope
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj

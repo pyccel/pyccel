@@ -21,7 +21,6 @@ from pyccel.ast.variable import (
     Variable,
 )
 from pyccel.errors.errors import Errors
-from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
 from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
