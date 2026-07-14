@@ -46,6 +46,10 @@ class Parser:
         filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
         auto-generated to describe the prototypes of the methods).
 
+    name_clash_checker : LanguageNameClashChecker
+        The class which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
     **kwargs : dict
         Any keyword arguments for BasicParser.
     """

@@ -65,6 +65,15 @@ class Scope:
 
     scope_type : str
         The type of the scope being created [module, function, class, loop, program].
+
+    name_clash_checker : LanguageNameClashChecker
+        The class which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
+    allow_loop_scoping : bool, default=False
+        Indicates whether variables are allowed to be defined local to a loop scope.
+        This is forbidden in Python and Fortran, but can be useful for temporary
+        variables added for other languages.
     """
 
     __slots__ = (

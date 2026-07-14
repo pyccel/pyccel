@@ -190,6 +190,10 @@ class SyntaxParser(BasicParser):
         A dictionary describing any variables in the context where the translated
         objected was defined.
 
+    name_clash_checker : LanguageNameClashChecker
+        The class which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
