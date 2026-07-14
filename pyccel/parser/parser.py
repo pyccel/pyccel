@@ -50,8 +50,8 @@ class Parser:
         The class which allows new names to be defined, preventing clashes with existing
         names and language-specific keywords.
 
-    **kwargs : dict
-        Any keyword arguments for BasicParser.
+   **kwargs : dict
+       Any additional keyword arguments for BasicParser.
     """
 
     def __init__(
