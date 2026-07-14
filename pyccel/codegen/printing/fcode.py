@@ -10,7 +10,6 @@ www.fortran90.org as much as possible."""
 import ast
 import re
 import string
-import sys
 from collections import OrderedDict
 from itertools import chain
 

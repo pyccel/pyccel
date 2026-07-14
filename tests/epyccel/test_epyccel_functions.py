@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-import sys
 from typing import Final, TypeVar
 
 import numpy as np

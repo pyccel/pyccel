@@ -10,7 +10,6 @@ strings of C code.
 
 import ast
 import functools
-import sys
 from itertools import chain, product
 
 import numpy as np
