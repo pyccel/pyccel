@@ -23,8 +23,9 @@ All notable changes to this project will be documented in this file.
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
 -   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
 -   #2620 : Improve formatting of comment blocks in Fortran and C.
--   \[DEVELOPER\] Require black formatting.
 -   #2606 : Make class methods non-final by default.
+-   \[DEVELOPER\] Require black formatting.
+-   \[DEVELOPER\] Reorganise tests by introducing `test_utils` folder to reduce code duplication.
 
 ### Deprecated
 
