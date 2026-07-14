@@ -67,8 +67,6 @@ class Scope:
         The type of the scope being created [module, function, class, loop, program].
     """
 
-    allow_loop_scoping = False
-    name_clash_checker = PythonNameClashChecker()
     __slots__ = (
         "_name",
         "_imports",
@@ -84,6 +82,8 @@ class Scope:
         "_dotted_symbols",
         "_symbol_prefix",
         "_scope_type",
+        "_name_clash_checker",
+        "_allow_loop_scoping",
     )
 
     categories = (
@@ -107,10 +107,14 @@ class Scope:
         original_symbols=None,
         symbolic_aliases=None,
         scope_type,
+        name_clash_checker,
+        allow_loop_scoping = False
     ):
 
         assert (name is None) != (not is_loop)
         assert scope_type in ("module", "function", "class", "loop", "program")
+
+        self._name_clash_checker = name_clash_checker
 
         self._name = name
         self._scope_type = scope_type
@@ -148,6 +152,7 @@ class Scope:
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
+        self._allow_loop_scoping = allow_loop_scoping
 
         self._dotted_symbols = []
 
@@ -177,7 +182,8 @@ class Scope:
         if ps is not self:
             raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
-        child = Scope(name=name, **kwargs, parent_scope=self, scope_type=scope_type)
+        child = Scope(name=name, **kwargs, parent_scope=self, scope_type=scope_type,
+                      name_clash_checker = self._name_clash_checker)
 
         self.add_son(name, child)
 
@@ -410,7 +416,7 @@ class Scope:
         if name is None:
             name = self.get_python_name(var.name)
 
-        if not self.allow_loop_scoping and self.is_loop:
+        if not self._allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals["variables"]:
@@ -598,10 +604,10 @@ class Scope:
             self._dotted_symbols.append(symbol)
             return symbol
         else:
-            if not self.allow_loop_scoping and self.is_loop:
+            if not self._allow_loop_scoping and self.is_loop:
                 return self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
-                collisionless_name = self.name_clash_checker.get_collisionless_name(
+                collisionless_name = self._name_clash_checker.get_collisionless_name(
                     symbol,
                     self.all_used_symbols,
                     prefix=self._symbol_prefix,
@@ -635,12 +641,12 @@ class Scope:
         if isinstance(python_symbol, AnnotatedPyccelSymbol):
             python_symbol = python_symbol.name
 
-        if not self.allow_loop_scoping and self.is_loop:
+        if not self._allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_low_level_symbol(python_symbol, low_level_symbol)
 
         assert python_symbol not in self._used_symbols
 
-        if self.name_clash_checker.has_clash(low_level_symbol, self.all_used_symbols):
+        if self._name_clash_checker.has_clash(low_level_symbol, self.all_used_symbols):
             errors.report(
                 "Low-level name conflicts with name already in use.",
                 severity="error",
@@ -680,7 +686,7 @@ class Scope:
         alias : pyccel.ast.basic.Basic
             The object which will be represented by the symbol.
         """
-        if not self.allow_loop_scoping and self.is_loop:
+        if not self._allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbolic_alias(symbol, alias)
         else:
             symbolic_aliases = self._locals["symbolic_aliases"]
@@ -801,7 +807,7 @@ class Scope:
             self.local_used_symbols.values(),
             prefix=prefix,
             counter=counter,
-            name_clash_checker=self.name_clash_checker,
+            name_clash_checker=self._name_clash_checker,
         )
 
         chosen_new_symbol = PyccelSymbol(new_name, is_temp=True)
@@ -840,7 +846,7 @@ class Scope:
         PyccelSymbol
             The new name which will be printed in the code.
         """
-        if current_name is not None and not self.name_clash_checker.has_clash(
+        if current_name is not None and not self._name_clash_checker.has_clash(
             current_name, self.all_python_symbols
         ):
             new_name = PyccelSymbol(current_name, is_temp=is_temp)
@@ -854,7 +860,7 @@ class Scope:
                 self.all_used_symbols,
                 prefix=current_name,
                 counter=self._dummy_counter,
-                name_clash_checker=self.name_clash_checker,
+                name_clash_checker=self._name_clash_checker,
             )
         else:
             if is_temp is None:
@@ -864,7 +870,7 @@ class Scope:
                 self.all_used_symbols, prefix=current_name
             )
 
-        collisionless_name = self.name_clash_checker.get_collisionless_name(
+        collisionless_name = self._name_clash_checker.get_collisionless_name(
             new_name,
             self.all_used_symbols,
             prefix=self._symbol_prefix,
