@@ -39,11 +39,6 @@ def epyc_numpy_types_mod(language):
     return epyccel_module_with_fallback(numpy_types, language)
 
 
-numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split(".")) >= (
-    1,
-    24,
-    0,
-)
 T = TypeVar(
     "T", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"
 )
@@ -130,96 +125,6 @@ def test_numpy_scalar_promotion(epyc_numpy_types_mod):
         assert isinstance(pyccel_result, type(python_result))
 
 
-@pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
-def test_numpy_bool_scalar(epyc_numpy_types_mod):
-    def get_bool(a: T):
-        from numpy import bool as NumpyBool
-
-        b = NumpyBool(a)
-        return b
-
-    get_bool = numpy_types.get_bool
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
-    epyccel_func = epyc_numpy_types_mod.get_bool
-
-    f_bl_true_output = epyccel_func(True)
-    test_bool_true_output = get_bool(True)
-
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_bool(False)
-
-    assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
-
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
-
-    f_integer_output = epyccel_func(integer)
-    test_int_output = get_bool(integer)
-
-    assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output)
-
-    f_integer8_output = epyccel_func(integer8)
-    test_int8_output = get_bool(integer8)
-
-    assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output)
-
-    f_integer16_output = epyccel_func(integer16)
-    test_int16_output = get_bool(integer16)
-
-    assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output)
-
-    f_integer32_output = epyccel_func(integer32)
-    test_int32_output = get_bool(integer32)
-
-    assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output)
-
-    f_integer64_output = epyccel_func(integer64)
-    test_int64_output = get_bool(integer64)
-
-    assert f_integer64_output == test_int64_output
-    assert matching_types(f_integer64_output, test_int64_output)
-
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_bool(fl)
-
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
-
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_bool(fl32)
-
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_bool(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
-
-
-def get_int(a: T):
-    from numpy import int as Numpyint
-
-    b = Numpyint(a)
-    return b
-
-
 def get_int64(a: T):
     from numpy import int64
 
@@ -248,21 +153,12 @@ def get_int8(a: T):
     return b
 
 
-if numpy_basic_types_deprecated:
-    int_functions_and_boundaries = [
-        (get_int64, min_int64, max_int64),
-        (get_int32, min_int32, max_int32),
-        (get_int16, min_int16, max_int16),
-        (get_int8, min_int8, max_int8),
-    ]
-else:
-    int_functions_and_boundaries = [
-        (get_int, min_int, max_int),
-        (get_int64, min_int64, max_int64),
-        (get_int32, min_int32, max_int32),
-        (get_int16, min_int16, max_int16),
-        (get_int8, min_int8, max_int8),
-    ]
+int_functions_and_boundaries = [
+    (get_int64, min_int64, max_int64),
+    (get_int32, min_int32, max_int32),
+    (get_int16, min_int16, max_int16),
+    (get_int8, min_int8, max_int8),
+]
 
 
 @pytest.mark.parametrize("function_boundaries", int_functions_and_boundaries)
@@ -505,13 +401,6 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
     assert epyccel_func(fl32) == get_int(fl32)
 
 
-def get_float(a: T):
-    from numpy import float as NumpyFloat
-
-    b = NumpyFloat(a)
-    return b
-
-
 def get_float64(a: T):
     from numpy import float64
 
@@ -526,10 +415,7 @@ def get_float32(a: T):
     return b
 
 
-if numpy_basic_types_deprecated:
-    float_functions = [get_float64, get_float32]
-else:
-    float_functions = [get_float64, get_float32, get_float]
+float_functions = [get_float64, get_float32]
 
 
 @pytest.mark.parametrize("get_float", float_functions)

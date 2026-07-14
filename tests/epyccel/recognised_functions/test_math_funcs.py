@@ -582,7 +582,6 @@ def test_ldexp_return_type(epyc_math_funcs_mod):  # ldexp
 @pytest.mark.skipif_by_language(
     True, language="fortran", reason="remainder not implemented"
 )
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 def test_remainder_call(epyc_math_funcs_mod):  # remainder
     remainder_call = math_funcs.remainder_call
     f1 = epyc_math_funcs_mod.remainder_call
@@ -600,7 +599,6 @@ def test_remainder_call(epyc_math_funcs_mod):  # remainder
 @pytest.mark.skipif_by_language(
     True, language="fortran", reason="remainder not implemented"
 )
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 def test_remainder_return_type(epyc_math_funcs_mod):  # remainder
     remainder_type = math_funcs.remainder_type
     f1 = epyc_math_funcs_mod.remainder_type

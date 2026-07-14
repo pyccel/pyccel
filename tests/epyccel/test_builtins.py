@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
-
 import numpy as np
 import pytest
 from modules import builtins
@@ -728,9 +726,6 @@ def test_isinstance_tuple(epyc_builtins_mod):
     assert f(1 + 2j) == isinstance_test(6.5 + 8.3j)
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10"
-)
 def test_isinstance_union(language):
     def isinstance_test(
         a: bool | int | float | complex,
