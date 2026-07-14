@@ -82,13 +82,12 @@ class PyBindCodePrinter(CppCodePrinter):
             )
             docstring = f"{mod_code}.doc() = {docstring_code};"
 
-        parts = [
-            f"PYBIND11_MODULE({expr.name}, {mod_code})\n",
-            "{\n",
-            docstring,
-            self._print(expr.body),
-            "}\n",
-        ]
-
-        code = "".join(p for p in parts if p)
-        return code
+        return "".join(
+            [
+                f"PYBIND11_MODULE({expr.name}, {mod_code})\n",
+                "{\n",
+                docstring,
+                self._print(expr.body),
+                "}\n",
+            ]
+        )
