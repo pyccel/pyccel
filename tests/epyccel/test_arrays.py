@@ -4874,21 +4874,11 @@ def test_dtype_conversion_to_bool_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -4897,18 +4887,12 @@ def test_dtype_conversion_to_bool_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language, verbose=2)
@@ -4941,21 +4925,11 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -4964,18 +4938,12 @@ def test_dtype_conversion_to_int8_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language, verbose=2)
@@ -5008,21 +4976,11 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5031,18 +4989,12 @@ def test_dtype_conversion_to_int16_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language, verbose=2)
@@ -5075,21 +5027,11 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5098,18 +5040,12 @@ def test_dtype_conversion_to_int32_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language, verbose=2)
@@ -5142,21 +5078,11 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5165,18 +5091,12 @@ def test_dtype_conversion_to_int64_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language, verbose=2)
@@ -5208,21 +5128,11 @@ def test_dtype_conversion_to_float32_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl64 = uniform(min_float64, max_float64, size=size)
@@ -5231,18 +5141,12 @@ def test_dtype_conversion_to_float32_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5270,21 +5174,11 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5293,18 +5187,12 @@ def test_dtype_conversion_to_float64_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5334,21 +5222,11 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
     size = (2, 2)
 
     bl = randint(0, 2, size=size, dtype=bool)
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5357,18 +5235,12 @@ def test_dtype_conversion_to_complex64_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language, verbose=2)
@@ -5391,21 +5263,11 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5414,18 +5276,12 @@ def test_dtype_conversion_to_complex128_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5460,21 +5316,11 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5483,18 +5329,12 @@ def test_dtype_conversion_to_pyint_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language, verbose=2)
@@ -5526,21 +5366,11 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 
     bl = randint(0, 2, size=size, dtype=bool)
 
-    integer = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer8 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer16 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer32 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer64 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer8 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer16 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer32 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer64 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size=size)
     fl32 = uniform(min_float32, max_float32, size=size)
@@ -5549,18 +5379,12 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 
     cmplx128_from_float32 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5593,55 +5417,25 @@ def test_dtype_conversion_to_pyfloat_from_other_types(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -5664,51 +5458,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5777,55 +5553,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -5848,51 +5594,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -5961,55 +5689,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6032,51 +5730,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -6145,55 +5825,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6216,51 +5866,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -6329,55 +5961,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6400,51 +6002,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -6512,55 +6096,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6583,51 +6137,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -6691,55 +6227,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6762,51 +6268,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -6873,55 +6361,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -6944,51 +6402,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7047,55 +6487,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -7118,51 +6528,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7233,55 +6625,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -7304,51 +6666,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7417,55 +6761,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -7488,51 +6802,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7603,55 +6899,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -7674,51 +6940,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7789,55 +7037,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -7860,51 +7078,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -7975,55 +7175,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8046,51 +7216,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -8165,55 +7317,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8236,51 +7358,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -8355,55 +7459,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8426,51 +7500,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -8544,55 +7600,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8615,51 +7641,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -8727,55 +7735,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8798,51 +7776,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -8913,55 +7873,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -8984,51 +7914,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -9093,55 +8005,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -9164,51 +8046,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -9283,55 +8147,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -9354,51 +8188,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
@@ -9473,55 +8289,25 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
 def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     size = (1, 2)
 
-    integer_1 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_2 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
-    integer_3 = np.array(
-        randint(low=min_int32, high=max_int32, size=size), dtype=int
-    )
+    integer_1 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_2 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
+    integer_3 = np.array(randint(low=min_int32, high=max_int32, size=size), dtype=int)
 
-    integer8_1 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_2 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
-    integer8_3 = randint(
-        low=min_int8, high=max_int8, size=size, dtype=np.int8
-    )
+    integer8_1 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_2 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
+    integer8_3 = randint(low=min_int8, high=max_int8, size=size, dtype=np.int8)
 
-    integer16_1 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_2 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
-    integer16_3 = randint(
-        low=min_int16, high=max_int16, size=size, dtype=np.int16
-    )
+    integer16_1 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_2 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
+    integer16_3 = randint(low=min_int16, high=max_int16, size=size, dtype=np.int16)
 
-    integer32_1 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_2 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
-    integer32_3 = randint(
-        low=min_int32, high=max_int32, size=size, dtype=np.int32
-    )
+    integer32_1 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_2 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
+    integer32_3 = randint(low=min_int32, high=max_int32, size=size, dtype=np.int32)
 
-    integer64_1 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_2 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
-    integer64_3 = randint(
-        low=min_int64, high=max_int64, size=size, dtype=np.int64
-    )
+    integer64_1 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_2 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
+    integer64_3 = randint(low=min_int64, high=max_int64, size=size, dtype=np.int64)
 
     fl_1 = uniform(min_float / 2, max_float / 2, size=size)
     fl_2 = uniform(min_float / 2, max_float / 2, size=size)
@@ -9544,51 +8330,33 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
 
     cmplx128_from_float32_1 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_2 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
     cmplx128_from_float32_3 = (
         uniform(low=min_float32, high=max_float32, size=size)
-        + uniform(
-            low=min_float32, high=max_float32, size=size
-        )
-        * 1j
+        + uniform(low=min_float32, high=max_float32, size=size) * 1j
     )
 
     cmplx64_1 = np.complex64(cmplx128_from_float32_1)
     cmplx128_1 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_2 = np.complex64(cmplx128_from_float32_2)
     cmplx128_2 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     cmplx64_3 = np.complex64(cmplx128_from_float32_3)
     cmplx128_3 = (
         uniform(low=min_float64, high=max_float64, size=size)
-        + uniform(
-            low=min_float64, high=max_float64, size=size
-        )
-        * 1j
+        + uniform(low=min_float64, high=max_float64, size=size) * 1j
     )
 
     epyccel_func = epyccel(
