@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from epyccel_utilities import matching_types
 from numpy import isclose
-from numpy.random import rand, randn, uniform
+from numpy.random import rand, randn, uniform, randint
 from tolerances import (
     ATOL,
     ATOL32,
@@ -67,15 +67,6 @@ T = TypeVar(
     "complex128",
 )
 S = TypeVar("S", int, "int8", "int16", "int32", "int64", "float", "float32", "float64")
-
-
-def randint(*args, **kwargs):
-    if "dtype" in kwargs:
-        return np.random.randint(*args, **kwargs)
-    elif "size" in kwargs or len(args) > 2:
-        return np.random.randint(*args, **kwargs, dtype=default_numpy_int)
-    else:
-        return np.random.randint(*args, **kwargs, dtype=int)
 
 
 # Functions still to be tested:
