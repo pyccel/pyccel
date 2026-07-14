@@ -1773,18 +1773,3 @@ class SyntaxParser(BasicParser):
             VariableTypeAnnotation(FinalType.get_new(TypeAlias()))
         )
         return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
-
-
-# ==============================================================================
-
-
-if __name__ == "__main__":
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError("Expecting an argument for filename")
-
-    parser = SyntaxParser(filename)
-    print(parser.ast)
