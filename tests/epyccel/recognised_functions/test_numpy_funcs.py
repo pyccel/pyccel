@@ -5,34 +5,33 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from epyccel_utilities import matching_types
 from numpy import isclose
-from numpy.random import rand, randn, uniform, randint
+from numpy.random import rand, randint, randn, uniform
+from tolerances import (
+    ATOL,
+    ATOL32,
+    RTOL,
+    RTOL32,
+    max_float,
+    max_float32,
+    max_float64,
+    max_int,
+    max_int8,
+    max_int16,
+    max_int32,
+    max_int64,
+    min_float,
+    min_float32,
+    min_float64,
+    min_int,
+    min_int8,
+    min_int16,
+    min_int32,
+    min_int64,
+)
 
 from pyccel import epyccel
-
-from tolerances import (
-min_int8,
-max_int8,
-min_int16,
-max_int16,
-min_int,
-max_int,
-min_int32,
-max_int32,
-min_int64,
-max_int64,
-min_float,
-max_float,
-min_float32,
-max_float32,
-min_float64,
-max_float64,
-RTOL,
-ATOL,
-RTOL32,
-ATOL32,
-)
-from epyccel_utilities import matching_types
 
 F = TypeVar(
     "F", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"
@@ -67,11 +66,11 @@ T = TypeVar(
 S = TypeVar("S", int, "int8", "int16", "int32", "int64", "float", "float32", "float64")
 
 
-
 # Functions still to be tested:
 #    diag
 #    cross
 #    # ---
+
 
 # -------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
