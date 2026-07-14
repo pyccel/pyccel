@@ -392,10 +392,6 @@ def test_decorator_f22(language):
     assert f(np.complex128(1 + 2.2j)) == f22(np.complex128(1 + 2.2j))
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10),
-    reason="PEP604 (writing union types as X | Y) implemented in Python 3.10",
-)
 def test_union_type(language):
     def square(a: int | float):  # pylint: disable=unsupported-binary-operation
         return a * a
