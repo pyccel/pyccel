@@ -3044,10 +3044,10 @@ def test_randint_basic(language):
         return np.random.randint(-10, 10)
 
     def create_val(high: "int"):
-        return np.random.randint(high, dtype=int)
+        return np.random.randint(high)
 
     def create_val_low(low: "int", high: "int"):
-        return np.random.randint(low, high, dtype=int)
+        return np.random.randint(low, high)
 
     f0 = epyccel(create_rand, language=language)
     y = [f0() for i in range(10)]
@@ -3084,11 +3084,11 @@ def test_randint_basic(language):
 )
 def test_randint_expr(language):
     def create_val(high: "int"):
-        x = 2 * np.random.randint(high, dtype=int)
+        x = 2 * np.random.randint(high)
         return x
 
     def create_val_low(low: "int", high: "int"):
-        x = 2 * np.random.randint(low, high, dtype=int)
+        x = 2 * np.random.randint(low, high)
         return x
 
     f1 = epyccel(create_val, language=language)
