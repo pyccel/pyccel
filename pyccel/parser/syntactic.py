@@ -191,7 +191,7 @@ class SyntaxParser(BasicParser):
         objected was defined.
 
     name_clash_checker : LanguageNameClashChecker
-        The class which allows new names to be defined, preventing clashes with existing
+        The object which allows new names to be defined, preventing clashes with existing
         names and language-specific keywords.
 
     **kwargs : dict
