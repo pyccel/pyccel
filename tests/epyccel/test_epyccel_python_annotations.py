@@ -1,18 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import numpy as np
+import pytest
 from modules import python_annotations
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_python_annotations_mod(language):
     return epyccel_module_with_fallback(python_annotations, language)
-
-
 
 
 def test_array_int32_1d_scalar_add(epyc_python_annotations_mod):

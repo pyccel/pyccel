@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
+from modules import arrays_multiple_assignments
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.decorators import stack_array
@@ -13,15 +15,11 @@ from pyccel.errors.messages import (
     STACK_ARRAY_UNKNOWN_SHAPE,
     TARGET_ALREADY_IN_USE,
 )
-from modules import arrays_multiple_assignments
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_arrays_multiple_assignments_mod(language):
     return epyccel_module_with_fallback(arrays_multiple_assignments, language)
-
-
 
 
 # ==============================================================================

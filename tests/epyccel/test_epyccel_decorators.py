@@ -4,11 +4,11 @@ from typing import Final, TypeVar
 
 import numpy as np
 import pytest
+from modules import epyccel_decorators
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.decorators import inline, private
-from modules import epyccel_decorators
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -16,9 +16,9 @@ def epyc_epyccel_decorators_mod(language):
     return epyccel_module_with_fallback(epyccel_decorators, language)
 
 
-
-
-@pytest.mark.skipif_by_language(True, language="python", reason="Can't hide functions in Python")
+@pytest.mark.skipif_by_language(
+    True, language="python", reason="Can't hide functions in Python"
+)
 def test_private(epyc_epyccel_decorators_mod):
     # Attribute error when extracting f from module
     with pytest.raises(AttributeError):

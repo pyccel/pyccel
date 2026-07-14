@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import numpy as np
-
+import pytest
 from modules import base
 from utilities import epyccel_module_with_fallback
 

@@ -7,11 +7,11 @@ Once headers are deprecated this file can be removed.
 from typing import Annotated, Final
 
 import pytest
+from modules import epyccel_variable_annotations
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.errors.errors import Errors, PyccelSemanticError
-from modules import epyccel_variable_annotations
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -503,6 +503,7 @@ def test_unknown_annotation(language):
     def unknown_annotation():
         a: Annotated[int, ">10"] = 15
         return a
+
     errors = Errors()
 
     epyc_unknown_annotation = epyccel(unknown_annotation, language=language)

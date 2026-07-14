@@ -1,17 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
-
-from pyccel import epyccel
 from modules import epyccel_compile_time_if
 from utilities import epyccel_module_with_fallback
+
+from pyccel import epyccel
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_compile_time_if_mod(language):
     return epyccel_module_with_fallback(epyccel_compile_time_if, language)
-
-
 
 
 def test_rank_differentiation_1(epyc_epyccel_compile_time_if_mod):

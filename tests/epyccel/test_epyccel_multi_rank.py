@@ -3,9 +3,9 @@ import numpy as np
 import pytest
 from modules import multi_rank
 from numpy.random import rand, randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -13,20 +13,18 @@ def epyc_multi_rank_mod(language):
     return epyccel_module_with_fallback(multi_rank, language)
 
 
-
-
 @pytest.mark.parametrize(
     "f1_name",
     [
-        'add_mixed_order',
-        'mul_mixed_order',
-        'sub_mixed_order',
-        'div_mixed_order',
-        'augadd_mixed_order',
-        'augmul_mixed_order',
-        'augsub_mixed_order',
-        'augdiv_mixed_order',
-        'add_mixed_order_ellipsis',
+        "add_mixed_order",
+        "mul_mixed_order",
+        "sub_mixed_order",
+        "div_mixed_order",
+        "augadd_mixed_order",
+        "augmul_mixed_order",
+        "augsub_mixed_order",
+        "augdiv_mixed_order",
+        "add_mixed_order_ellipsis",
     ],
 )
 def test_add_mixed_order(f1_name, epyc_multi_rank_mod):

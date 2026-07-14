@@ -1,20 +1,19 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import os
 import sys
 
+import pytest
+from modules import epyccel_mod
 from numpy import allclose
 from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_mod
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_modulo_mod(language):
     return epyccel_module_with_fallback(epyccel_mod, language)
-
 
 
 # Relative and absolute tolerances for array comparisons in the form

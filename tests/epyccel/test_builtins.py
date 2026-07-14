@@ -3,18 +3,17 @@ import sys
 
 import numpy as np
 import pytest
+from modules import builtins
 from numpy import finfo, iinfo
 from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import builtins
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_builtins_mod(language):
     return epyccel_module_with_fallback(builtins, language)
-
 
 
 ATOL = 1e-15
@@ -358,7 +357,7 @@ def test_sum_matching_types(language):
 )
 def test_sum_expr(language):
     def f(x: builtins.T, y: builtins.T):
-        return sum((x, y)) + 3 
+        return sum((x, y)) + 3
 
     epyc_f = epyccel(f, language=language)
 

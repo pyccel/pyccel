@@ -1,20 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
 import os
+from typing import TypeVar
 
 import numpy as np
 import pytest
+from limits import ATOL, RTOL
 from modules import arrays
 from numpy import finfo, iinfo
 from numpy.random import randint, uniform
 from utilities import epyccel_module_with_fallback
-from limits import RTOL, ATOL
 
 from pyccel import epyccel
 
 T = TypeVar(
     "T", "int[:]", "int[:,:]", "int[:,:,:]", "int[:,:](order=F)", "int[:,:,:](order=F)"
 )
+
 
 @pytest.fixture(scope="module")
 def epyc_arrays_mod(language):
@@ -334,9 +335,10 @@ def test_array_int_1d_initialization_1(epyc_arrays_mod):
     assert f1() == f2()
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language=("fortran", "c"),
-                    reason="Array initialisation from non-literal list not yet supported."
+    reason="Array initialisation from non-literal list not yet supported.",
 )
 def test_array_int_1d_initialization_2(epyc_arrays_mod):
 
@@ -1935,9 +1937,10 @@ def test_multiple_stack_array_2(epyc_arrays_mod):
     assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Stack arrays are deallocated as cspan only stores a pointer"
+    reason="Stack arrays are deallocated as cspan only stores a pointer",
 )
 def test_return_stack_array(epyc_arrays_mod):
     f1 = arrays.return_stack_array
@@ -1985,10 +1988,7 @@ def test_multiple_2d_stack_array_2(epyc_arrays_mod):
 # ==============================================================================
 # TEST: Product and matrix multiplication
 # ==============================================================================
-@pytest.mark.skipif_by_language(True,
-    language="c",
-                    reason="prod not implemented in c"
-)
+@pytest.mark.skipif_by_language(True, language="c", reason="prod not implemented in c")
 def test_array_float_1d_1d_prod(epyc_arrays_mod):
     f1 = arrays.array_float_1d_1d_prod
     f2 = epyc_arrays_mod.array_float_1d_1d_prod
@@ -2255,9 +2255,8 @@ def test_f_order_argument_negative_index(epyc_arrays_mod):
 # ==============================================================================
 
 
-@pytest.mark.skipif_by_language(True,
-    language="c",
-                    reason="randint not implemented in c"
+@pytest.mark.skipif_by_language(
+    True, language="c", reason="randint not implemented in c"
 )
 def test_array_random_size(epyc_arrays_mod):
     f1 = arrays.array_random_size
@@ -2788,9 +2787,10 @@ def test_array_1d_slice_stride_1(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_2(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2808,9 +2808,10 @@ def test_array_1d_slice_stride_3(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_4(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2828,9 +2829,10 @@ def test_array_1d_slice_stride_5(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_6(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2848,9 +2850,10 @@ def test_array_1d_slice_stride_7(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_8(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2868,9 +2871,10 @@ def test_array_1d_slice_stride_9(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_10(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2888,9 +2892,10 @@ def test_array_1d_slice_stride_11(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_12(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2908,9 +2913,10 @@ def test_array_1d_slice_stride_13(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_14(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2920,9 +2926,10 @@ def test_array_1d_slice_stride_14(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_15(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2940,9 +2947,10 @@ def test_array_1d_slice_stride_16(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_17(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2952,9 +2960,10 @@ def test_array_1d_slice_stride_17(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_18(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2972,9 +2981,10 @@ def test_array_1d_slice_stride_19(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_20(epyc_arrays_mod):
     a = arrays.a_1d
@@ -2984,9 +2994,10 @@ def test_array_1d_slice_stride_20(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_21(epyc_arrays_mod):
     a = arrays.a_1d
@@ -3004,9 +3015,10 @@ def test_array_1d_slice_stride_22(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_1d_slice_stride_23(epyc_arrays_mod):
     a = arrays.a_1d
@@ -3029,9 +3041,10 @@ def test_array_2d_F_slice_stride_1(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_2(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3041,9 +3054,10 @@ def test_array_2d_F_slice_stride_2(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_3(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3061,9 +3075,10 @@ def test_array_2d_F_slice_stride_4(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_5(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3081,9 +3096,10 @@ def test_array_2d_F_slice_stride_6(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_7(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3101,9 +3117,10 @@ def test_array_2d_F_slice_stride_8(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_9(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3113,9 +3130,10 @@ def test_array_2d_F_slice_stride_9(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_10(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3125,9 +3143,10 @@ def test_array_2d_F_slice_stride_10(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_11(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3137,9 +3156,10 @@ def test_array_2d_F_slice_stride_11(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_12(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3149,9 +3169,10 @@ def test_array_2d_F_slice_stride_12(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_13(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3161,9 +3182,10 @@ def test_array_2d_F_slice_stride_13(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_14(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3173,9 +3195,10 @@ def test_array_2d_F_slice_stride_14(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_15(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3185,9 +3208,10 @@ def test_array_2d_F_slice_stride_15(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_16(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3197,9 +3221,10 @@ def test_array_2d_F_slice_stride_16(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_17(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3209,9 +3234,10 @@ def test_array_2d_F_slice_stride_17(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_18(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3221,9 +3247,10 @@ def test_array_2d_F_slice_stride_18(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True,
+@pytest.mark.skipif_by_language(
+    True,
     language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_19(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3233,8 +3260,10 @@ def test_array_2d_F_slice_stride_19(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c", 
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_20(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3244,8 +3273,10 @@ def test_array_2d_F_slice_stride_20(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_21(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3255,8 +3286,10 @@ def test_array_2d_F_slice_stride_21(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_22(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3266,8 +3299,10 @@ def test_array_2d_F_slice_stride_22(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_F_slice_stride_23(epyc_arrays_mod):
     a = arrays.a_2d_f
@@ -3290,8 +3325,10 @@ def test_array_2d_C_slice_stride_1(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_2(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3301,8 +3338,10 @@ def test_array_2d_C_slice_stride_2(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_3(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3320,8 +3359,10 @@ def test_array_2d_C_slice_stride_4(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_5(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3339,8 +3380,10 @@ def test_array_2d_C_slice_stride_6(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_7(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3358,8 +3401,10 @@ def test_array_2d_C_slice_stride_8(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_9(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3369,8 +3414,10 @@ def test_array_2d_C_slice_stride_9(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_10(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3380,8 +3427,10 @@ def test_array_2d_C_slice_stride_10(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_11(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3391,8 +3440,10 @@ def test_array_2d_C_slice_stride_11(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_12(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3402,8 +3453,10 @@ def test_array_2d_C_slice_stride_12(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_13(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3413,8 +3466,10 @@ def test_array_2d_C_slice_stride_13(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_14(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3424,8 +3479,10 @@ def test_array_2d_C_slice_stride_14(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_15(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3435,8 +3492,10 @@ def test_array_2d_C_slice_stride_15(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_16(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3446,8 +3505,10 @@ def test_array_2d_C_slice_stride_16(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_17(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3457,8 +3518,10 @@ def test_array_2d_C_slice_stride_17(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_18(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3468,8 +3531,10 @@ def test_array_2d_C_slice_stride_18(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_19(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3479,8 +3544,10 @@ def test_array_2d_C_slice_stride_19(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_20(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3490,8 +3557,10 @@ def test_array_2d_C_slice_stride_20(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_21(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3501,8 +3570,10 @@ def test_array_2d_C_slice_stride_21(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_22(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3512,8 +3583,10 @@ def test_array_2d_C_slice_stride_22(epyc_arrays_mod):
     assert f1(a) == f2(a)
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_array_2d_C_slice_stride_23(epyc_arrays_mod):
     a = arrays.a_2d_c
@@ -3649,8 +3722,10 @@ def test_arrs_1d_int64_index(epyc_arrays_mod):
     assert f1() == f2()
 
 
-@pytest.mark.skipif_by_language(True, language="c",
-                    reason="Negative strides in slices are not handled in C. See #1311"
+@pytest.mark.skipif_by_language(
+    True,
+    language="c",
+    reason="Negative strides in slices are not handled in C. See #1311",
 )
 def test_arrs_1d_negative_index_negative_step(epyc_arrays_mod):
     f1 = arrays.arrs_1d_negative_index_negative_step
@@ -3817,8 +3892,10 @@ def test_array_float_nested_C_array_initialization_3(epyc_arrays_mod):
 # ==============================================================================
 # NUMPY SUM
 # ==============================================================================
-@pytest.mark.skipif_by_language(True, language=("fortran","c"),
-                    reason="Lists of lists are not yet supported in Fortran or C, related issue #2210"
+@pytest.mark.skipif_by_language(
+    True,
+    language=("fortran", "c"),
+    reason="Lists of lists are not yet supported in Fortran or C, related issue #2210",
 )
 def test_arr_bool_sum(epyc_arrays_mod):
     f1 = arrays.arr_bool_sum
@@ -6911,9 +6988,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(epyc_arrays_mod):
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -7095,9 +7170,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -7279,9 +7352,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -7467,9 +7538,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -7655,9 +7724,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -7842,9 +7909,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8023,9 +8088,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(
 @pytest.mark.filterwarnings(
     "ignore:Casting complex values to real discards the imaginary part"
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8207,9 +8270,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8385,9 +8446,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(
     )
 
 
-def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8573,9 +8632,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8761,9 +8818,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(
     reason="flang v>20 handles overflows differently",
     language="fortran",
 )
-def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(
-    epyc_arrays_mod
-):
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(epyc_arrays_mod):
     size = (1, 2)
 
     integer_1 = np.array(
@@ -8951,8 +9006,10 @@ def test_iterate_slice(epyc_arrays_mod):
     assert f1(i) == f2(i)
 
 
-@pytest.mark.skipif_by_language(True, language=("fortran","c"),
-                    reason=("Cannot return a non-contiguous slice. See #1796")
+@pytest.mark.skipif_by_language(
+    True,
+    language=("fortran", "c"),
+    reason=("Cannot return a non-contiguous slice. See #1796"),
 )
 def test_unpacking(epyc_arrays_mod):
     f1 = arrays.unpack_array

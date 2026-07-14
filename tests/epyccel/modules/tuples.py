@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
+
 from pyccel.decorators import pure
 
-
 T = TypeVar("T", int, float)
+
 
 def homogeneous_tuple_int():
     ai = (1, 4, 5)
@@ -21,8 +22,6 @@ def homogeneous_tuple_float():
     ai = (1.5, 4.3, 5.2, 7.2, 9.999)
     i = 1
     return ai[0], ai[i], ai[2], ai[3], ai[4]
-
-
 
 
 def homogeneous_tuple_math():
@@ -487,8 +486,6 @@ def tuple_homogeneous_float():
     return a[0], a[i], a[2], a[3], a[4], len(a)
 
 
-
-
 def tuple_homogeneous_math():
     a = tuple((4 + 5, 3 * 9, 2**3))
     i = 1
@@ -583,20 +580,26 @@ def return_empty_int_tuple() -> tuple[int, ...]:
 def return_annotated_empty_tuple() -> tuple[()]:
     return ()
 
+
 def homogeneous_tuples_of_bools_as_args(a: "tuple[bool,...]"):
     return len(a), a[0], a[1], a[2]
+
 
 def homogeneous_tuples_of_ints_as_args(a: "tuple[int,...]"):
     return len(a), a[0], a[1], a[2]
 
+
 def homogeneous_tuples_of_floats_as_args(a: "tuple[float,...]"):
     return len(a), a[0], a[1], a[2]
+
 
 def homogeneous_tuples_of_complexes_as_args(a: "tuple[complex,...]"):
     return len(a), a[0], a[1], a[2]
 
+
 def homogeneous_tuples_of_numpy_ints_as_args(a: "tuple[int8,...]"):
     return len(a), a[0], a[1], a[2]
+
 
 def homogeneous_tuples_template_args(a: tuple[T, ...]):
     return len(a), a[0], a[1], a[2]
@@ -605,4 +608,3 @@ def homogeneous_tuples_template_args(a: tuple[T, ...]):
 def homogeneous_tuples_result() -> "tuple[int, ...]":
     a = (1, 2, 3, 4, 5)
     return a
-

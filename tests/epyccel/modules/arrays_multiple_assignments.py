@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import stack_array
 
+
 @stack_array("y")
 def no_reallocation():
     import numpy as np
@@ -13,6 +14,7 @@ def no_reallocation():
 
     return x.sum() + y.sum()
 
+
 def creation_in_if_heap(c: "float"):
     import numpy as np
 
@@ -21,6 +23,7 @@ def creation_in_if_heap(c: "float"):
     else:
         x = np.ones(7, dtype=int)
     return x.sum()
+
 
 def creation_in_if_heap_shape(c: "float"):
     import numpy as np
@@ -32,6 +35,7 @@ def creation_in_if_heap_shape(c: "float"):
 
     y = x[1:-1]
     return y.sum()
+
 
 @stack_array("x")
 def stack_array_if(b: bool):

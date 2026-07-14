@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+
 def mod_eq_pow(a: int, m: int, n: int):
     return a % m == n**2
 

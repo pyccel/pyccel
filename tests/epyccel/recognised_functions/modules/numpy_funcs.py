@@ -1768,12 +1768,14 @@ def full_like_order__create_shape_F(n: "int"):
     s = shape(a)
     return len(s), s[0], s[1]
 
+
 def full_like_dtype__create_val_int_int_auto(val: "int"):
     from numpy import array, full_like
 
     arr = array([5, 1, 8, 0, 9], int)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_int_int(val: "int"):
     from numpy import array, full_like
@@ -1782,12 +1784,14 @@ def full_like_dtype__create_val_int_int(val: "int"):
     a = full_like(arr, val, int)
     return a[0]
 
+
 def full_like_dtype__create_val_int_float_auto(val: "int"):
     from numpy import array, full_like
 
     arr = array([5, 1, 8, 0, 9], float)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_int_float(val: "int"):
     from numpy import array, full_like
@@ -1796,12 +1800,14 @@ def full_like_dtype__create_val_int_float(val: "int"):
     a = full_like(arr, val, float)
     return a[0]
 
+
 def full_like_dtype__create_val_int_complex_auto(val: "int"):
     from numpy import array, full_like
 
     arr = array([5, 1, 8, 0, 9], complex)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_int_complex(val: "int"):
     from numpy import array, full_like
@@ -1810,12 +1816,14 @@ def full_like_dtype__create_val_int_complex(val: "int"):
     a = full_like(arr, val, complex)
     return a[0]
 
+
 def full_like_dtype__create_val_real_int32_auto(val: "float"):
     from numpy import array, full_like, int32
 
     arr = array([5, 1, 8, 0, 9], int32)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_real_int32(val: "float"):
     from numpy import array, full_like, int32
@@ -1824,12 +1832,14 @@ def full_like_dtype__create_val_real_int32(val: "float"):
     a = full_like(arr, val, int32)
     return a[0]
 
+
 def full_like_dtype__create_val_real_float32_auto(val: "float"):
     from numpy import array, float32, full_like
 
     arr = array([5, 1, 8, 0, 9], float32)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_real_float32(val: "float"):
     from numpy import array, float32, full_like
@@ -1838,12 +1848,14 @@ def full_like_dtype__create_val_real_float32(val: "float"):
     a = full_like(arr, val, float32)
     return a[0]
 
+
 def full_like_dtype__create_val_real_float64_auto(val: "float"):
     from numpy import array, float64, full_like
 
     arr = array([5, 1, 8, 0, 9], float64)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_real_float64(val: "float"):
     from numpy import array, float64, full_like
@@ -1852,12 +1864,14 @@ def full_like_dtype__create_val_real_float64(val: "float"):
     a = full_like(arr, val, float64)
     return a[0]
 
+
 def full_like_dtype__create_val_real_complex64_auto(val: "float"):
     from numpy import array, complex64, full_like
 
     arr = array([5, 1, 8, 0, 9], complex64)
     a = full_like(arr, val)
     return a[0]
+
 
 def full_like_dtype__create_val_real_complex64(val: "float"):
     from numpy import array, complex64, full_like
@@ -1866,6 +1880,7 @@ def full_like_dtype__create_val_real_complex64(val: "float"):
     a = full_like(arr, val, complex64)
     return a[0]
 
+
 def full_like_dtype__create_val_real_complex128_auto(val: "float"):
     from numpy import array, complex128, full_like
 
@@ -1873,12 +1888,14 @@ def full_like_dtype__create_val_real_complex128_auto(val: "float"):
     a = full_like(arr, val)
     return a[0]
 
+
 def full_like_dtype__create_val_real_complex128(val: "float"):
     from numpy import array, complex128, full_like
 
     arr = array([5, 1, 8, 0, 9])
     a = full_like(arr, val, complex128)
     return a[0]
+
 
 def full_like_combined_args__create_1_shape():
     from numpy import array, full_like, shape
@@ -2636,6 +2653,7 @@ def numpy_mod_array_like_1d(arr: "F[:]"):
     s = shape(a)
     return len(s), s[0], a[0]
 
+
 def numpy_mod_array_like_2d(arr: "F[:,:]"):
     from numpy import mod, shape
 
@@ -2935,17 +2953,22 @@ def result_type__value_types():
     b = np.zeros(5, dtype=np.result_type(3.0, -2))
     return b[0]
 
+
 test_copy__X = TypeVar("X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
+
 
 def test_copy__copy_array(a: test_copy__X):
     b = a.copy()
     return b
 
+
 test_copy__Y = TypeVar("Y", "float[:,:]", "complex[:,:,:](order=F)")
+
 
 def test_copy__copy_array_to_F(a: test_copy__Y):
     b = a.copy(order="F")
     return b
+
 
 def test_copy__copy_array_to_C(a: test_copy__Y):
     b = a.copy(order="C")

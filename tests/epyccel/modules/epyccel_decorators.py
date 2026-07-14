@@ -1,11 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import inline, private
-from typing import TypeVar, Final
+from typing import Final, TypeVar
+
 import numpy as np
+
+from pyccel.decorators import inline, private
+
 
 @private
 def hidden():
     print("hidden")
+
 
 def inline_1_out():
     @inline
@@ -18,6 +22,7 @@ def inline_1_out():
     d = cube(a)
     return a, b, c, d
 
+
 def inline_0_out(x: "int[:]"):
     @inline
     def set_3(s: "int[:]", i: int):
@@ -25,6 +30,7 @@ def inline_0_out(x: "int[:]"):
 
     set_3(x, 0)
     set_3(x, 1)
+
 
 def inline_local():
     @inline
@@ -39,6 +45,7 @@ def inline_local():
     d = power_4(g)
     return a, b, c, d
 
+
 def inline_local_name_clash():
     @inline
     def power_4(s: int):
@@ -51,6 +58,7 @@ def inline_local_name_clash():
     x = 2
     d = power_4(x)
     return a, b, c, d, x
+
 
 def inline_optional():
     @inline
@@ -71,6 +79,7 @@ def inline_optional():
     d = get_val(y=0)
     return a, b, c, d
 
+
 def inline_array():
     from numpy import empty
 
@@ -82,6 +91,7 @@ def inline_array():
     arr = empty(4)
     fill_array(arr)
     return arr[0], arr[-1]
+
 
 def nested_inline_call():
     @inline
@@ -99,6 +109,7 @@ def nested_inline_call():
     a = get_val(get_val(2) + 3, 7)
     return a
 
+
 def inline_return():
     @inline
     def tmp():
@@ -111,6 +122,7 @@ def inline_return():
     e = tmp() * 4
     return b, c, d, e
 
+
 def inline_multiple_results():
     @inline
     def get_2_vals(a: int):
@@ -120,6 +132,7 @@ def inline_multiple_results():
     x = get_2_vals(7)
     y0, y1 = get_2_vals(3)
     return x, y0, y1
+
 
 def inline_literal_return():
     @inline
@@ -132,6 +145,7 @@ def inline_literal_return():
     e = tmp() * 4
     return b, c, d, e
 
+
 def inline_array_return():
     @inline
     def tmp():
@@ -140,6 +154,7 @@ def inline_array_return():
     b = tmp()
     c = np.sum(tmp())
     return b, c
+
 
 def inline_multiple_return():
     @inline
@@ -152,6 +167,7 @@ def inline_multiple_return():
     d, e = tmp()
     return b, c, d, e
 
+
 def inline_homogeneous_tuple_result():
     @inline
     def get_2_vals(a: int):
@@ -162,6 +178,7 @@ def inline_homogeneous_tuple_result():
     x = get_2_vals(7)
     y0, y1 = get_2_vals(3)
     return x, y0, y1
+
 
 def inline_inhomogeneous_tuple_result():
     @inline
@@ -174,6 +191,7 @@ def inline_inhomogeneous_tuple_result():
     y0, y1 = get_2_vals(3)
     return x, y0, y1
 
+
 def inhomogeneous_tuple_in_inline():
     @inline
     def tmp():
@@ -182,6 +200,7 @@ def inhomogeneous_tuple_in_inline():
 
     b = tmp()
     return b
+
 
 def multi_level():
     @inline
@@ -192,8 +211,9 @@ def multi_level():
     b = tmp()
     return b
 
+
 T_my_sum = TypeVar("T_my_sum", "float[:]", "complex[:]")
+
 
 def my_sum(v: Final[T_my_sum]):
     return v.sum()
-

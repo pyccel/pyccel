@@ -1,18 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
+from modules import epyccel_transpose
 from numpy import array, array_equal, empty
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_transpose
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_transpose_mod(language):
     return epyccel_module_with_fallback(epyccel_transpose, language)
-
-
 
 
 def test_transpose_shape(epyc_epyccel_transpose_mod):

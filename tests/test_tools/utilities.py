@@ -15,7 +15,7 @@ class LazyPerFunctionEpyccel:
     test(s) that use it, rather than every test sharing the module.
     """
 
-    def __init__(self, pymod, language, epyccel_kwargs = None):
+    def __init__(self, pymod, language, epyccel_kwargs=None):
         self._pymod = pymod
         self._language = language
         self._epyccel_kwargs = epyccel_kwargs or {}
@@ -24,8 +24,9 @@ class LazyPerFunctionEpyccel:
     def __getattr__(self, name):
         if name not in self._cache:
             self._cache[name] = epyccel(
-                getattr(self._pymod, name), language=self._language,
-                **self._epyccel_kwargs
+                getattr(self._pymod, name),
+                language=self._language,
+                **self._epyccel_kwargs,
             )
         return self._cache[name]
 

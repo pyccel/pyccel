@@ -1,9 +1,8 @@
 # pylint: missing-module-docstring
 import sys
-from numpy import finfo, iinfo
+
 import numpy as np
-
-
+from numpy import finfo, iinfo
 
 min_int8 = iinfo("int8").min
 max_int8 = iinfo("int8").max

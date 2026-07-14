@@ -2,15 +2,14 @@
 import numpy as np
 import pytest
 from modules import loops
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_loops_mod(language):
     return epyccel_module_with_fallback(loops, language)
-
 
 
 # ==============================================================================

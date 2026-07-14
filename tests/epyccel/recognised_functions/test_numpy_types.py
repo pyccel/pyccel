@@ -3,6 +3,7 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from modules import numpy_types
 from numpy.random import uniform
 from test_numpy_funcs import (
     ATOL,
@@ -28,16 +29,14 @@ from test_numpy_funcs import (
     min_int64,
     randint,
 )
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import numpy_types
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_numpy_types_mod(language):
     return epyccel_module_with_fallback(numpy_types, language)
-
 
 
 numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split(".")) >= (

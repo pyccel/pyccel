@@ -1,21 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import TypeVar
+
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 import numpy as np
 import pytest
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 IA = TypeVar("IA", "int", "int[:]")
 T7 = TypeVar("T7", "int", "float[:]", "complex[:, :]")
 
+
 @pytest.fixture(scope="module")
 def epyc_mod2_mod(language):
     return epyccel_module_with_fallback(mod2, language)
-
-
 
 
 @pytest.fixture(scope="module")
@@ -482,9 +482,8 @@ def test_dup_header(epyc_mod2_mod):
     assert f1(0.0) == f2(0.0)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="python",
-                reason="Multiple dispatch required. See #885"
+@pytest.mark.skipif_by_language(
+    True, language="python", reason="Multiple dispatch required. See #885"
 )
 def test_zeros_types(epyc_mod2_mod):
     f1 = epyc_mod2_mod.zeros_type

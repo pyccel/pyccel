@@ -91,7 +91,9 @@ def skipif_by_language(request):
         reason = mark.kwargs["reason"]
 
         assert isinstance(condition, bool), preamble + "condition must be bool"
-        assert isinstance(language, (str, tuple)), preamble + "language must be str or tuple of str"
+        assert isinstance(language, (str, tuple)), (
+            preamble + "language must be str or tuple of str"
+        )
         assert isinstance(reason, str), preamble + "reason must be str"
 
         assert "language" in request.fixturenames, (

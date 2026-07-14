@@ -1,16 +1,17 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
-
-from pyccel import epyccel
 from modules import return_module
 from utilities import epyccel_module_with_fallback
+
+from pyccel import epyccel
 
 
 @pytest.fixture(scope="module")
 def epyc_return_mod(language):
-    return epyccel_module_with_fallback(return_module, language, flags="-Werror  -Wunused-variable")
-
+    return epyccel_module_with_fallback(
+        return_module, language, flags="-Werror  -Wunused-variable"
+    )
 
 
 # Most of the tests are currently skipped for LLVM because

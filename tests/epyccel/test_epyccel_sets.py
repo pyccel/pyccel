@@ -1,16 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-
-from pyccel import epyccel
 from modules import epyccel_sets
 from utilities import epyccel_module_with_fallback
+
+from pyccel import epyccel
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_sets_mod(language):
     return epyccel_module_with_fallback(epyccel_sets, language)
-
-
 
 
 @pytest.fixture(

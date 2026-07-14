@@ -5,18 +5,17 @@ from cmath import infj, nanj, pi
 from typing import TypeVar
 
 import pytest
+from modules import cmath_funcs
 from numpy import isclose
 from numpy.random import rand, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import cmath_funcs
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_cmath_funcs_mod(language):
     return epyccel_module_with_fallback(cmath_funcs, language)
-
 
 
 RTOL = sys.float_info.epsilon * 1000
@@ -242,7 +241,7 @@ def test_tanh_phrase(epyc_cmath_funcs_mod):
 def test_isfinite_call(language):  # isfinite
     def isfinite_call(x: T):
         from cmath import isfinite
-        
+
         return isfinite(x)
 
     f1 = epyccel(isfinite_call, language=language)
@@ -420,9 +419,8 @@ def test_atanh_phrase(epyc_cmath_funcs_mod):
 # ------------------------------- Polar functions ------------------------------#
 
 
-@pytest.mark.skipif_by_language(True,
-    language="python",
-                    reason="Printed code differs between types. See #1334"
+@pytest.mark.skipif_by_language(
+    True, language="python", reason="Printed code differs between types. See #1334"
 )
 def test_phase_call(epyc_cmath_funcs_mod):
     phase_call = cmath_funcs.phase_call

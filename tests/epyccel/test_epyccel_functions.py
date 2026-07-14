@@ -5,17 +5,16 @@ from typing import Final, TypeVar
 
 import numpy as np
 import pytest
+from modules import epyccel_functions
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_functions
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_functions_mod(language):
     return epyccel_module_with_fallback(epyccel_functions, language)
-
 
 
 RTOL = 2e-14
@@ -345,9 +344,13 @@ def test_wrong_known_argument_type_in_interface(epyc_epyccel_functions_mod):
 
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
-def test_wrong_known_argument_type_in_interface_with_default(epyc_epyccel_functions_mod):
+def test_wrong_known_argument_type_in_interface_with_default(
+    epyc_epyccel_functions_mod,
+):
     f = epyccel_functions.wrong_known_argument_type_in_interface_with_default
-    epyc_f = epyc_epyccel_functions_mod.wrong_known_argument_type_in_interface_with_default
+    epyc_f = (
+        epyc_epyccel_functions_mod.wrong_known_argument_type_in_interface_with_default
+    )
 
     test_arg = 4.5
     with pytest.raises(TypeError) as err:

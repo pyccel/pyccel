@@ -5,15 +5,14 @@ import modules.complex_func as mod
 import numpy as np
 import pytest
 from numpy.random import rand, randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_mod(language):
     return epyccel_module_with_fallback(mod, language)
-
 
 
 # ==============================================================================
@@ -33,11 +32,11 @@ deprecation_reason = "Since Python 3.14 complex() requires real arguments"
 @pytest.mark.parametrize(
     "f_name",
     [
-        'create_complex_literal__int_int',
-        'create_complex_literal__int_float',
-        'create_complex_literal__float_int',
-        'create_complex_literal__float_float',
-        'cast_complex_literal',
+        "create_complex_literal__int_int",
+        "create_complex_literal__int_float",
+        "create_complex_literal__float_int",
+        "create_complex_literal__float_float",
+        "cast_complex_literal",
     ],
 )
 def test_create_complex_literal(f_name, epyc_mod):
@@ -50,11 +49,11 @@ def test_create_complex_literal(f_name, epyc_mod):
 @pytest.mark.parametrize(
     "f_name",
     [
-        'create_complex_literal__int_complex',
-        'create_complex_literal__float_complex',
-        'create_complex_literal__complex_int',
-        'create_complex_literal__complex_float',
-        'create_complex_literal__complex_complex',
+        "create_complex_literal__int_complex",
+        "create_complex_literal__float_complex",
+        "create_complex_literal__complex_int",
+        "create_complex_literal__complex_float",
+        "create_complex_literal__complex_complex",
     ],
 )
 def test_create_complex_literal_old(f_name, epyc_mod):

@@ -870,22 +870,22 @@ def multiple_2d_stack_array_2():
 # TEST: Array with ndmin argument
 # ==============================================================================
 # C/F Template makes interface ambiguous
-#def array_ndmin_1(x: T):
+# def array_ndmin_1(x: T):
 #    y = np.array(x, ndmin=1)
 #    return y
 #
 #
-#def array_ndmin_2(x: T):
+# def array_ndmin_2(x: T):
 #    y = np.array(x, ndmin=2)
 #    return y
 #
 #
-#def array_ndmin_4(x: T):
+# def array_ndmin_4(x: T):
 #    y = np.array(x, ndmin=4)
 #    return y
 #
 #
-#def array_ndmin_2_order(x: T):
+# def array_ndmin_2_order(x: T):
 #    y = np.array(x, ndmin=2, order="F")
 #    return y
 
@@ -929,9 +929,9 @@ def array_float_2d_2d_matmul_F_F(
 
 
 # Mixed order, not supported currently, see #244
-#def array_float_2d_2d_matmul_mixorder(
+# def array_float_2d_2d_matmul_mixorder(
 #    A: "float[:,:]", B: "float[:,:](order=F)", out: "float[:,:]"
-#):
+# ):
 #    out[:, :] = np.matmul(A, B)
 
 

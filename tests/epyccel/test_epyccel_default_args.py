@@ -1,20 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 # coding: utf-8
 from typing import TypeVar
 
 import numpy as np
-
-from pyccel import epyccel
+import pytest
 from modules import epyccel_default_args
 from utilities import epyccel_module_with_fallback
+
+from pyccel import epyccel
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_default_args_mod(language):
     return epyccel_module_with_fallback(epyccel_default_args, language)
-
-
 
 
 # ------------------------------------------------------------------------------

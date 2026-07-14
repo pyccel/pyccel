@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import numpy as np
-from utilities import epyccel_module_with_fallback
+import pytest
 from modules import compare_expressions
+from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

@@ -1,8 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+
 def n1_line_docstring():
     """short doc string"""
     return 1
+
 
 def multiline_line_docstring():
     """
@@ -18,6 +20,7 @@ def multiline_line_docstring():
     """
     return 1
 
+
 class MyClass:
     """
     Empty class
@@ -25,6 +28,7 @@ class MyClass:
 
     def __init__(self: "MyClass"):
         pass
+
 
 class MyClassProperty:
     """

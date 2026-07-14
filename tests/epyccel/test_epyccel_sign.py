@@ -1,19 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
-
 import modules.numpy_sign as mod
 import numpy as np
+import pytest
 from limits import ATOL, ATOL32, RTOL, RTOL32
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_mod(language):
     return epyccel_module_with_fallback(mod, language)
-
-
 
 
 def test_sign_complex(epyc_mod):

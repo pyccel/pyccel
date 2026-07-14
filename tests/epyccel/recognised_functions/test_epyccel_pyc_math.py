@@ -1,17 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
+from limits import ATOL, RTOL
+from modules import epyccel_pyc_math
 from numpy import isclose
 from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_pyc_math
-from limits import RTOL, ATOL
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_pyc_math_mod(language):
     return epyccel_module_with_fallback(epyccel_pyc_math, language)
+
 
 # -----------------------------------------------------------------------------
 

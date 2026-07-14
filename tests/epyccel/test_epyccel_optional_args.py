@@ -2,17 +2,16 @@
 
 import numpy as np
 import pytest
+from limits import ATOL, RTOL
+from modules import epyccel_optional_args
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_optional_args
-from limits import RTOL, ATOL
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_optional_args_mod(language):
     return epyccel_module_with_fallback(epyccel_optional_args, language)
-
 
 
 # ------------------------------------------------------------------------------
@@ -107,30 +106,62 @@ def test_f6(language):
 
 # ------------------------------------------------------------------------------
 def test_f7(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_1(3) == epyc_epyccel_optional_args_mod.call_optional_1(3)
-    assert epyccel_optional_args.call_optional_2()  == epyc_epyccel_optional_args_mod.call_optional_2()
-    assert epyccel_optional_args.call_optional_3(3) == epyc_epyccel_optional_args_mod.call_optional_3(3)
+    assert epyccel_optional_args.call_optional_1(
+        3
+    ) == epyc_epyccel_optional_args_mod.call_optional_1(3)
+    assert (
+        epyccel_optional_args.call_optional_2()
+        == epyc_epyccel_optional_args_mod.call_optional_2()
+    )
+    assert epyccel_optional_args.call_optional_3(
+        3
+    ) == epyc_epyccel_optional_args_mod.call_optional_3(3)
 
 
 # ------------------------------------------------------------------------------
 def test_f9(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_4(3) == epyc_epyccel_optional_args_mod.call_optional_4(3)
-    assert epyccel_optional_args.call_optional_5(3) == epyc_epyccel_optional_args_mod.call_optional_5(3)
-    assert epyccel_optional_args.call_optional_6() == epyc_epyccel_optional_args_mod.call_optional_6()
-    assert epyccel_optional_args.call_optional_7() == epyc_epyccel_optional_args_mod.call_optional_7()
-    assert epyccel_optional_args.call_optional_8() == epyc_epyccel_optional_args_mod.call_optional_8()
+    assert epyccel_optional_args.call_optional_4(
+        3
+    ) == epyc_epyccel_optional_args_mod.call_optional_4(3)
+    assert epyccel_optional_args.call_optional_5(
+        3
+    ) == epyc_epyccel_optional_args_mod.call_optional_5(3)
+    assert (
+        epyccel_optional_args.call_optional_6()
+        == epyc_epyccel_optional_args_mod.call_optional_6()
+    )
+    assert (
+        epyccel_optional_args.call_optional_7()
+        == epyc_epyccel_optional_args_mod.call_optional_7()
+    )
+    assert (
+        epyccel_optional_args.call_optional_8()
+        == epyc_epyccel_optional_args_mod.call_optional_8()
+    )
 
 
 # ------------------------------------------------------------------------------
 def test_f10(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_9() == epyc_epyccel_optional_args_mod.call_optional_9()
-    assert epyccel_optional_args.call_optional_10() == epyc_epyccel_optional_args_mod.call_optional_10()
+    assert (
+        epyccel_optional_args.call_optional_9()
+        == epyc_epyccel_optional_args_mod.call_optional_9()
+    )
+    assert (
+        epyccel_optional_args.call_optional_10()
+        == epyc_epyccel_optional_args_mod.call_optional_10()
+    )
 
 
 # ------------------------------------------------------------------------------
 def test_f11(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_11() == epyc_epyccel_optional_args_mod.call_optional_11()
-    assert epyccel_optional_args.call_optional_12() == epyc_epyccel_optional_args_mod.call_optional_12()
+    assert (
+        epyccel_optional_args.call_optional_11()
+        == epyc_epyccel_optional_args_mod.call_optional_11()
+    )
+    assert (
+        epyccel_optional_args.call_optional_12()
+        == epyc_epyccel_optional_args_mod.call_optional_12()
+    )
 
 
 # ------------------------------------------------------------------------------

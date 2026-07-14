@@ -57,7 +57,6 @@ def functional_for_2d_dependant_range_3():
     return len(a), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]
 
 
-
 def functional_for_2d_range_const():
     a = [20 for _ in range(3) for _ in range(2)]
     return len(a), a[0], a[1], a[2], a[3], a[4], a[5]

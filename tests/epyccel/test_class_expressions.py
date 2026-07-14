@@ -1,18 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import numpy as np
+import pytest
+from modules import class_expressions
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import class_expressions
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_class_expressions_mod(language):
     return epyccel_module_with_fallback(class_expressions, language)
-
-
 
 
 def test_complex_imag(epyc_class_expressions_mod):

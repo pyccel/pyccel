@@ -1,19 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import sys
 
+import pytest
+from modules import epyccel_pow
 from numpy import isclose
 from numpy.random import rand, randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_pow
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_pow_mod(language):
     return epyccel_module_with_fallback(epyccel_pow, language)
-
 
 
 RTOL = 2e-14
@@ -128,7 +127,7 @@ def test_pow_chain(epyc_epyccel_pow_mod):
     y = uniform(high=5)
     z = uniform(high=1.0)
 
-    for c_name in ('chain_pow1', 'chain_pow2', 'chain_pow3'):
+    for c_name in ("chain_pow1", "chain_pow2", "chain_pow3"):
         c = getattr(epyccel_pow, c_name)
         f = getattr(epyc_epyccel_pow_mod, c_name)
         assert isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL)

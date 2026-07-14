@@ -1,19 +1,23 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+
 def f1(x: "int" = None):
     if x is None:
         return 5
     return x + 5
+
 
 def f2(x: "float" = None):
     if x is None:
         return 2.5
     return x + 2.5
 
+
 def f3(x: "complex" = None):
     if x is None:
         return complex(2, 5.2)
     return x + complex(2.5, 2)
+
 
 def f4(x: "bool" = None):
     if x is None:
@@ -111,12 +115,12 @@ def f12(x: "int[:]", y: "int[:]" = None):
     else:
         x[:] = x // y
 
+
 def f13(x: "int32[:,:](order=F)", y: "int32[:,:](order=F)" = None):
     if y is None:
         x[:] *= 2
     else:
         x[:] = x // y
-
 
 
 def f14(x: "int" = None, y: "int" = None):

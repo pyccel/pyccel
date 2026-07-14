@@ -2,11 +2,10 @@
 import inspect
 
 import pytest
-from modules import strings_module
+from modules import strings, strings_module
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import strings
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -19,11 +18,8 @@ def epyc_strings_module(language):
     return epyccel_module_with_fallback(strings_module, language)
 
 
-
 string_funcs = [
-    f
-    for f in strings_module.__all__
-    if inspect.isfunction(getattr(strings_module, f))
+    f for f in strings_module.__all__ if inspect.isfunction(getattr(strings_module, f))
 ]
 
 failing_tests = {

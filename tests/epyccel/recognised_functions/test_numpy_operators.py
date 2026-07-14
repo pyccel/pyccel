@@ -3,11 +3,11 @@ import os
 
 import numpy as np
 import pytest
+from modules import numpy_operators
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import numpy_operators
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -15,8 +15,8 @@ def epyc_numpy_operators_mod(language):
     return epyccel_module_with_fallback(numpy_operators, language)
 
 
-
 int_types = (bool, np.int8, np.int64)
+
 
 def test_numpy_bit_and(epyc_numpy_operators_mod):
     f = numpy_operators.numpy_bit_and_1

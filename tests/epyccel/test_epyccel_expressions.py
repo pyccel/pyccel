@@ -1,18 +1,17 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 import numpy as np
+import pytest
+from modules import epyccel_expressions
 from numpy import iinfo
 from numpy.random import rand, randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_expressions
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_expressions_mod(language):
     return epyccel_module_with_fallback(epyccel_expressions, language)
-
 
 
 # Use int32 for Windows compatibility

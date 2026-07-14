@@ -1,8 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
-
 import numpy as np
-from numpy.random import randint, uniform
+import pytest
 from limits import (
     max_float,
     max_float32,
@@ -21,16 +19,16 @@ from limits import (
     min_int32,
     min_int64,
 )
+from modules import epyccel_return_arrays
+from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_return_arrays
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_return_arrays_mod(language):
     return epyccel_module_with_fallback(epyccel_return_arrays, language)
-
 
 
 def test_single_return(epyc_epyccel_return_arrays_mod):

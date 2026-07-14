@@ -3,18 +3,16 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from modules import epyccel_generators
 from numpy.random import randint
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_generators
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_generators_mod(language):
     return epyccel_module_with_fallback(epyccel_generators, language)
-
-
 
 
 def test_sum_range(epyc_epyccel_generators_mod):

@@ -5,19 +5,18 @@ from math import inf, modf, nan
 from typing import TypeVar
 
 import pytest
+from limits import ATOL, RTOL
+from modules import math_funcs
 from numpy import isclose
 from numpy.random import rand, randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import math_funcs
-from limits import RTOL, ATOL
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_math_funcs_mod(language):
     return epyccel_module_with_fallback(math_funcs, language)
-
 
 
 max_float = 3.40282e5  # maximum positive float
@@ -479,8 +478,9 @@ def test_copysign_return_type_4(epyc_math_funcs_mod):  # copysign
 
 
 # ----------------------------- isfinite function -----------------------------#
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="isfinite not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="isfinite not implemented"
+)
 @pytest.mark.skipif(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="Nan not correctly passed to intel function",
@@ -501,8 +501,9 @@ def test_isfinite_call(epyc_math_funcs_mod):  # isfinite
 
 
 # ------------------------------- isinf function ------------------------------#
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="isinf not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="isinf not implemented"
+)
 def test_isinf_call(epyc_math_funcs_mod):  # isinf
     isinf_call = math_funcs.isinf_call
     f1 = epyc_math_funcs_mod.isinf_call
@@ -537,8 +538,9 @@ def test_isnan_call(epyc_math_funcs_mod):  # isnan
 
 
 # ------------------------------- ldexp function ------------------------------#
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="ldexp not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="ldexp not implemented"
+)
 def test_ldexp_call(epyc_math_funcs_mod):  # ldexp
     ldexp_call = math_funcs.ldexp_call
     f1 = epyc_math_funcs_mod.ldexp_call
@@ -555,8 +557,9 @@ def test_ldexp_call(epyc_math_funcs_mod):  # ldexp
     assert isclose(ldexp_call(-x, -exp), f1(-x, -exp), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="ldexp not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="ldexp not implemented"
+)
 def test_ldexp_return_type(epyc_math_funcs_mod):  # ldexp
     ldexp_type = math_funcs.ldexp_type
     f1 = epyc_math_funcs_mod.ldexp_type
@@ -576,8 +579,9 @@ def test_ldexp_return_type(epyc_math_funcs_mod):  # ldexp
 # --------------------------- remainder function ------------------------------#
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="remainder not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="remainder not implemented"
+)
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 def test_remainder_call(epyc_math_funcs_mod):  # remainder
     remainder_call = math_funcs.remainder_call
@@ -593,8 +597,9 @@ def test_remainder_call(epyc_math_funcs_mod):  # remainder
     assert isclose(remainder_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="remainder not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="remainder not implemented"
+)
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 def test_remainder_return_type(epyc_math_funcs_mod):  # remainder
     remainder_type = math_funcs.remainder_type
@@ -647,8 +652,9 @@ def test_trunc_return_type(epyc_math_funcs_mod):  # trunc
 
 
 # --------------------------- expm1 function ------------------------------#
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="expm1 not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="expm1 not implemented"
+)
 def test_expm1_call(epyc_math_funcs_mod):  # expm1
     expm1_call = math_funcs.expm1_call
     f1 = epyc_math_funcs_mod.expm1_call
@@ -656,8 +662,9 @@ def test_expm1_call(epyc_math_funcs_mod):  # expm1
     assert isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="expm1 not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="expm1 not implemented"
+)
 def test_expm1_call_special_case(epyc_math_funcs_mod):  # expm1
     # should give result accurate to full precision better than exp()
     expm1_call = math_funcs.expm1_call_special_case
@@ -666,8 +673,9 @@ def test_expm1_call_special_case(epyc_math_funcs_mod):  # expm1
     assert isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="expm1 not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="expm1 not implemented"
+)
 def test_expm1_phrase(epyc_math_funcs_mod):  # expm1
     expm1_phrase = math_funcs.expm1_phrase
     f2 = epyc_math_funcs_mod.expm1_phrase
@@ -676,8 +684,9 @@ def test_expm1_phrase(epyc_math_funcs_mod):  # expm1
     assert isclose(f2(x, y), expm1_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="expm1 not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="expm1 not implemented"
+)
 def test_expm1_return_type(epyc_math_funcs_mod):  # expm1 # expm1
     expm1_type = math_funcs.expm1_type
     f1 = epyc_math_funcs_mod.expm1_type
@@ -690,8 +699,9 @@ def test_expm1_return_type(epyc_math_funcs_mod):  # expm1 # expm1
 # --------------------------- log1p function ------------------------------#
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="log1p not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="log1p not implemented"
+)
 def test_log1p_call(epyc_math_funcs_mod):
     log1p_call = math_funcs.log1p_call
     f1 = epyc_math_funcs_mod.log1p_call
@@ -700,8 +710,9 @@ def test_log1p_call(epyc_math_funcs_mod):
     assert isinstance(f1(x), type(log1p_call(x)))
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="log1p not implemented")
+@pytest.mark.skipif_by_language(
+    True, language="fortran", reason="log1p not implemented"
+)
 def test_log1p_phrase(epyc_math_funcs_mod):
     log1p_phrase = math_funcs.log1p_phrase
     f2 = epyc_math_funcs_mod.log1p_phrase
@@ -711,8 +722,7 @@ def test_log1p_phrase(epyc_math_funcs_mod):
 
 
 # --------------------------- log2 function ------------------------------#
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="log2 not implemented")
+@pytest.mark.skipif_by_language(True, language="fortran", reason="log2 not implemented")
 def test_log2_call(epyc_math_funcs_mod):
     log2_call = math_funcs.log2_call
     f1 = epyc_math_funcs_mod.log2_call
@@ -723,8 +733,7 @@ def test_log2_call(epyc_math_funcs_mod):
     assert isinstance(f1(x), type(log2_call(x)))
 
 
-@pytest.mark.skipif_by_language(True,
-    language="fortran",reason="log2 not implemented")
+@pytest.mark.skipif_by_language(True, language="fortran", reason="log2 not implemented")
 def test_log2_phrase(epyc_math_funcs_mod):
     log2_phrase = math_funcs.log2_phrase
     f2 = epyc_math_funcs_mod.log2_phrase

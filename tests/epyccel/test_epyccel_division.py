@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
+from modules import epyccel_division, epyccel_floor_division
 from numpy import isclose
 from numpy.random import randint, uniform
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
-from modules import epyccel_division, epyccel_floor_division
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
@@ -15,8 +15,9 @@ def epyc_epyccel_division_mod(language):
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_floor_division_mod(language):
-    return epyccel_module_with_fallback(epyccel_floor_division, language, flags = "-Werror -Wconversion")
-
+    return epyccel_module_with_fallback(
+        epyccel_floor_division, language, flags="-Werror -Wconversion"
+    )
 
 
 RTOL = 2e-14

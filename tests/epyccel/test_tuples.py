@@ -2,16 +2,16 @@
 import numpy as np
 import pytest
 from modules import tuples as tuples_module
+from utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.errors.errors import PyccelError
-
-from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
 def epyc_tuples_mod(language):
     return epyccel_module_with_fallback(tuples_module, language)
+
 
 no_arg_tuple_funcs = (
     "homogeneous_tuple_int",
@@ -132,9 +132,7 @@ def test_tuples(test_func, epyc_tuples_mod):
     compare_python_pyccel(python_out, pyccel_out)
 
 
-@pytest.mark.parametrize(
-    "test_func", ['tuple_unpacking_3', 'tuple_unpacking_4']
-)
+@pytest.mark.parametrize("test_func", ["tuple_unpacking_3", "tuple_unpacking_4"])
 def test_tuples_with_2d_args(test_func, epyc_tuples_mod):
     f1 = getattr(tuples_module, test_func)
     f2 = getattr(epyc_tuples_mod, test_func)
@@ -146,21 +144,25 @@ def test_tuples_with_2d_args(test_func, epyc_tuples_mod):
     f2(pyccel_x)
     np.allclose(python_x, pyccel_x)
 
+
 @pytest.mark.parametrize(
     "language",
     [
-        pytest.param("c", marks=[
-            pytest.mark.c,
-            pytest.mark.skip(
-                reason="Can't save a list of strings (#459)",
-                )
-            ]),
+        pytest.param(
+            "c",
+            marks=[
+                pytest.mark.c,
+                pytest.mark.skip(
+                    reason="Can't save a list of strings (#459)",
+                ),
+            ],
+        ),
         pytest.param(
             "fortran",
             marks=[
                 pytest.mark.fortran,
                 pytest.mark.skip(
-                reason="Can't save a list of strings (#459)",
+                    reason="Can't save a list of strings (#459)",
                 ),
             ],
         ),
@@ -184,18 +186,21 @@ def test_homogeneous_tuple_string(language):
 @pytest.mark.parametrize(
     "language",
     [
-        pytest.param("c", marks=[
-            pytest.mark.c,
-            pytest.mark.skip(
-                reason="Can't save a list of strings (#459)",
-                )
-            ]),
+        pytest.param(
+            "c",
+            marks=[
+                pytest.mark.c,
+                pytest.mark.skip(
+                    reason="Can't save a list of strings (#459)",
+                ),
+            ],
+        ),
         pytest.param(
             "fortran",
             marks=[
                 pytest.mark.fortran,
                 pytest.mark.skip(
-                reason="Can't save a list of strings (#459)",
+                    reason="Can't save a list of strings (#459)",
                 ),
             ],
         ),
@@ -215,8 +220,9 @@ def test_tuple_homogeneous_string(language):
     pyccel_out = f2()
     compare_python_pyccel(python_out, pyccel_out)
 
+
 @pytest.mark.skip(reason="Can't iterate over an inhomogeneous tuple")
-def test_tuple_visitation_inhomogeneous(language): 
+def test_tuple_visitation_inhomogeneous(language):
     def tuple_visitation_inhomogeneous():
         ai = (1, 3.5, False)
         for a in ai:
@@ -228,6 +234,7 @@ def test_tuple_visitation_inhomogeneous(language):
     python_out = f1()
     pyccel_out = f2()
     compare_python_pyccel(python_out, pyccel_out)
+
 
 def test_homogeneous_tuples_of_bools_as_args(epyc_tuples_mod):
     my_tuple = tuples_module.homogeneous_tuples_of_bools_as_args
