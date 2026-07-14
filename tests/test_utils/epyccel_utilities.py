@@ -74,3 +74,24 @@ def epyccel_module_with_fallback(pymod, language, **kwargs):
         return LazyPerFunctionEpyccel(pymod, language, kwargs)
     mod.language = language
     return mod
+
+
+# ==============================================================================
+def compare_epyccel(f, language, *args):
+    """
+    Pyccelize `f`, call both versions with `args`, and assert the outputs match.
+    """
+    f2 = epyccel(f, language=language)
+    out1 = f(*args)
+    out2 = f2(*args)
+    assert all(r1 == r2 for r1, r2 in zip(out1, out2))
+
+
+# ==============================================================================
+def matching_types(pyccel_result, python_result):
+    """Returns True if the types match, False otherwise"""
+    if type(pyccel_result) is type(python_result):
+        return True
+    return (
+        isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
+    ) or (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))

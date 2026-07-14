@@ -5,6 +5,7 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from epyccel_utilities import matching_types
 from numpy import isclose
 from numpy.random import rand, randn, uniform
 from tolerances import (
@@ -81,15 +82,6 @@ def randint(*args, **kwargs):
 #    diag
 #    cross
 #    # ---
-
-
-def matching_types(pyccel_result, python_result):
-    """Returns True if the types match, False otherwise"""
-    if type(pyccel_result) is type(python_result):
-        return True
-    return (
-        isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
-    ) or (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
 
 
 # -------------------------------- Fabs function ------------------------------#

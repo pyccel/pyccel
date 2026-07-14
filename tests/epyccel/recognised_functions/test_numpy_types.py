@@ -3,9 +3,9 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from epyccel_utilities import matching_types
 from numpy.random import uniform
 from test_numpy_funcs import (
-    matching_types,
     randint,
 )
 from tolerances import (
