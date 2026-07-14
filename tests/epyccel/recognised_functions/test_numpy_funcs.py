@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from epyccel_utilities import matching_types
 from numpy import isclose
-from numpy.random import rand, randn, uniform, randint
+from numpy.random import rand, randint, randn, uniform
 from tolerances import (
     ATOL,
     ATOL32,
