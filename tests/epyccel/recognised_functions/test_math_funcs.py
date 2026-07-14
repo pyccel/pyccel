@@ -803,7 +803,6 @@ def test_ldexp_return_type(language):  # ldexp
 # --------------------------- remainder function ------------------------------#
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize(
     "language",
     (
@@ -836,7 +835,6 @@ def test_remainder_call(language):  # remainder
     assert isclose(remainder_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize(
     "language",
     (
