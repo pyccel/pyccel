@@ -7281,7 +7281,6 @@ def test_numpy_linspace_scalar(language):
     out = np.empty_like(x)
     epyccel_func_type2(0, 10, out)
     assert np.allclose(x, out)
-    arr = np.zeros
     x = randint(1, 60, dtype=int)
     assert np.allclose(
         epyccel_func(integer8, x, 30),
