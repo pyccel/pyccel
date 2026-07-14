@@ -5,37 +5,34 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from numpy import finfo, iinfo, isclose
-from numpy.random import rand, randn, uniform
+from numpy import isclose
+from numpy.random import rand, randn, uniform, randint
 
 from pyccel import epyccel
 
-min_int8 = iinfo("int8").min
-max_int8 = iinfo("int8").max
-
-min_int16 = iinfo("int16").min
-max_int16 = iinfo("int16").max
-
-# Use int32 for Windows compatibility
-min_int = iinfo(np.int32).min
-max_int = iinfo(np.int32).max
-
-min_int32 = iinfo("int32").min
-max_int32 = iinfo("int32").max
-
-min_int64 = iinfo("int64").min
-max_int64 = iinfo("int64").max
-
-min_float = finfo("float").min
-max_float = finfo("float").max
-
-min_float32 = finfo("float32").min / 2
-max_float32 = finfo("float32").max / 2
-
-min_float64 = finfo("float64").min / 2
-max_float64 = finfo("float64").max / 2
-
-default_numpy_int = np.array([1]).dtype
+from tolerances import (
+min_int8,
+max_int8,
+min_int16,
+max_int16,
+min_int,
+max_int,
+min_int32,
+max_int32,
+min_int64,
+max_int64,
+min_float,
+max_float,
+min_float32,
+max_float32,
+min_float64,
+max_float64,
+RTOL,
+ATOL,
+RTOL32,
+ATOL32,
+)
+from epyccel_utilities import matching_types
 
 F = TypeVar(
     "F", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"
@@ -70,41 +67,11 @@ T = TypeVar(
 S = TypeVar("S", int, "int8", "int16", "int32", "int64", "float", "float32", "float64")
 
 
-def randint(*args, **kwargs):
-    if "dtype" in kwargs:
-        return np.random.randint(*args, **kwargs)
-    elif "size" in kwargs or len(args) > 2:
-        return np.random.randint(*args, **kwargs, dtype=default_numpy_int)
-    else:
-        return np.random.randint(*args, **kwargs, dtype=int)
-
 
 # Functions still to be tested:
 #    diag
 #    cross
 #    # ---
-
-# Relative and absolute tolerances for array comparisons in the form
-# numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
-if sys.platform == "win32":
-    RTOL = 1e-13
-    ATOL = 1e-14
-else:
-    RTOL = 2e-14
-    ATOL = 1e-15
-
-RTOL32 = 1e-5
-ATOL32 = 1e-6
-
-
-def matching_types(pyccel_result, python_result):
-    """Returns True if the types match, False otherwise"""
-    if type(pyccel_result) is type(python_result):
-        return True
-    return (
-        isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
-    ) or (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
-
 
 # -------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
