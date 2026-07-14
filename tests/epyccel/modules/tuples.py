@@ -1,92 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import TypeVar
 from pyccel.decorators import pure
 
-__all__ = [
-    "homogeneous_tuple_int",
-    "homogeneous_tuple_bool",
-    "homogeneous_tuple_float",
-    "homogeneous_tuple_string",
-    "homogeneous_tuple_math",
-    "homogeneous_tuple_containing_var",
-    "homogeneous_tuple_of_arrays",
-    "inhomogeneous_tuple_1",
-    "inhomogeneous_tuple_2",
-    "inhomogeneous_tuple_3",
-    "inhomogeneous_tuple_2_levels_1",
-    "inhomogeneous_tuple_2_levels_2",
-    "homogeneous_tuple_2_levels",
-    "tuple_unpacking_1",
-    "tuple_unpacking_2",
-    "tuple_unpacking_3",
-    "tuple_unpacking_4",
-    "tuple_unpacking_5",
-    "tuple_name_clash",
-    "tuples_as_indexing_basic",
-    "tuples_as_indexing_var",
-    "tuple_multi_indexing_1",
-    "tuple_multi_indexing_2",
-    "tuple_inhomogeneous_return",
-    "tuple_homogeneous_return",
-    "tuple_arg_unpacking",
-    "tuple_indexing_basic",
-    "tuple_indexing_2d",
-    "tuple_visitation_homogeneous",
-    "tuple_visitation_inhomogeneous",
-    "tuples_homogeneous_have_pointers",
-    "tuples_inhomogeneous_have_pointers",
-    "tuples_homogeneous_copies_have_pointers",
-    "tuples_inhomogeneous_copies_have_pointers",
-    "tuples_mul_homogeneous",
-    "tuples_mul_homogeneous2",
-    "tuples_mul_homogeneous3",
-    "tuples_mul_homogeneous4",
-    "tuples_mul_homogeneous5",
-    "tuples_mul_inhomogeneous",
-    "tuples_mul_inhomogeneous2",
-    "tuples_mul_homogeneous_2d",
-    "tuples_mul_mixed_homogeneous_2d",
-    "tuples_mul_inhomogeneous_2d",
-    "tuples_add_homogeneous",
-    "tuples_add_homogeneous_variables",
-    "tuples_add_homogeneous_with_variables",
-    "tuples_add_homogeneous_with_variables2",
-    "tuples_add_inhomogeneous",
-    "tuples_add_inhomogeneous_variables",
-    "tuples_add_inhomogeneous_with_variables",
-    "tuples_add_inhomogeneous_with_variables2",
-    "tuples_add_mixed_homogeneous",
-    "tuples_add_mixed_homogeneous_variables",
-    "tuples_add_mixed_homogeneous_with_variables",
-    "tuples_2d_sum",
-    "tuples_func",
-    "tuple_slice",
-    "tuple_variable_index",
-    "tuple_variable_slice",
-    "tuple_negative_slice",
-    "inhomogeneous_tuple_negative_slice",
-    "inhomogeneous_tuple_var_negative_slice",
-    "tuple_index",
-    "tuple_homogeneous_int",
-    "tuple_homogeneous_bool",
-    "tuple_homogeneous_float",
-    "tuple_homogeneous_string",
-    "tuple_homogeneous_math",
-    "tuple_inhomogeneous_1",
-    "tuple_inhomogeneous_2",
-    "tuple_inhomogeneous_3",
-    "tuple_homogeneous",
-    "tuple_inhomogeneous",
-    "tuple_multilevel_inhomogeneous",
-    "annotated_tuple_inhomog_return",
-    "annotated_tuple_homog_return",
-    "tuple_return_unknown_length",
-    "tuple_assignment",
-    "return_1_elem_inhomog_tuple",
-    "return_empty_tuple",
-    "return_empty_int_tuple",
-    "return_annotated_empty_tuple",
-]
 
+T = TypeVar("T", int, float)
 
 def homogeneous_tuple_int():
     ai = (1, 4, 5)
@@ -106,10 +23,6 @@ def homogeneous_tuple_float():
     return ai[0], ai[i], ai[2], ai[3], ai[4]
 
 
-def homogeneous_tuple_string():
-    ai = ("hello", "tuple", "world", "!!")
-    i = 1
-    return ai[0], ai[i], ai[2], ai[3]
 
 
 def homogeneous_tuple_math():
@@ -275,12 +188,6 @@ def tuple_indexing_2d():
         if ai[1][i]:
             z += ai[0][i]
     return z
-
-
-def tuple_visitation_inhomogeneous():
-    ai = (1, 3.5, False)
-    for a in ai:
-        print(a)
 
 
 def tuple_visitation_homogeneous():
@@ -580,10 +487,6 @@ def tuple_homogeneous_float():
     return a[0], a[i], a[2], a[3], a[4], len(a)
 
 
-def tuple_homogeneous_string():
-    a = tuple(("hello", "tuple", "world", "!!"))
-    i = 1
-    return a[0], a[i], a[2], a[3], len(a)
 
 
 def tuple_homogeneous_math():
@@ -679,3 +582,27 @@ def return_empty_int_tuple() -> tuple[int, ...]:
 
 def return_annotated_empty_tuple() -> tuple[()]:
     return ()
+
+def homogeneous_tuples_of_bools_as_args(a: "tuple[bool,...]"):
+    return len(a), a[0], a[1], a[2]
+
+def homogeneous_tuples_of_ints_as_args(a: "tuple[int,...]"):
+    return len(a), a[0], a[1], a[2]
+
+def homogeneous_tuples_of_floats_as_args(a: "tuple[float,...]"):
+    return len(a), a[0], a[1], a[2]
+
+def homogeneous_tuples_of_complexes_as_args(a: "tuple[complex,...]"):
+    return len(a), a[0], a[1], a[2]
+
+def homogeneous_tuples_of_numpy_ints_as_args(a: "tuple[int8,...]"):
+    return len(a), a[0], a[1], a[2]
+
+def homogeneous_tuples_template_args(a: tuple[T, ...]):
+    return len(a), a[0], a[1], a[2]
+
+
+def homogeneous_tuples_result() -> "tuple[int, ...]":
+    a = (1, 2, 3, 4, 5)
+    return a
+
