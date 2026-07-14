@@ -4,93 +4,75 @@ import numpy as np
 import pytest
 
 from pyccel import epyccel
-
-RTOL = 2e-14
-ATOL = 1e-15
+from modules import epyccel_optional_args
+from limits import RTOL, ATOL
+from utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
-def Module_5(language):
-    import modules.Module_5 as mod
+def epyc_epyccel_optional_args_mod(language):
+    return epyccel_module_with_fallback(epyccel_optional_args, language)
 
-    modnew = epyccel(mod, language=language)
-    return mod, modnew
 
 
 # ------------------------------------------------------------------------------
-def test_f1(language):
-    def f1(x: "int" = None):
-        if x is None:
-            return 5
-        return x + 5
-
-    f = epyccel(f1, language=language)
+def test_f1(epyc_epyccel_optional_args_mod):
+    f1 = epyccel_optional_args.f1
+    f = epyc_epyccel_optional_args_mod.f1
 
     # ...
     assert f(2) == f1(2)
     assert f() == f1()
     assert f(None) == f1(None)
     assert f(0) == f1(0)
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f2(language):
-    def f2(x: "float" = None):
-        if x is None:
-            return 2.5
-        return x + 2.5
-
-    f = epyccel(f2, language=language)
+def test_f2(epyc_epyccel_optional_args_mod):
+    f2 = epyccel_optional_args.f2
+    f = epyc_epyccel_optional_args_mod.f2
 
     # ...
     assert np.isclose(f(2.0), f2(2.0), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f2(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f2(None), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f3(language):
-    def f3(x: "complex" = None):
-        if x is None:
-            return complex(2, 5.2)
-        return x + complex(2.5, 2)
-
-    f = epyccel(f3, language=language)
+def test_f3(epyc_epyccel_optional_args_mod):
+    f3 = epyccel_optional_args.f3
+    f = epyc_epyccel_optional_args_mod.f3
 
     # ...
     assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f3(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f3(None), rtol=RTOL, atol=ATOL)
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f4(language):
-    def f4(x: "bool" = None):
-        if x is None:
-            return True
-        return False
-
-    f = epyccel(f4, language=language)
+def test_f4(epyc_epyccel_optional_args_mod):
+    f4 = epyccel_optional_args.f4
+    f = epyc_epyccel_optional_args_mod.f4
 
     # ...
     assert f(True) == f4(True)
     assert f() == f4()
     assert f(None) == f4(None)
     assert f(False) == f4(False)
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
@@ -124,54 +106,37 @@ def test_f6(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f7(Module_5):
-    mod, modnew = Module_5
-
-    # ...
-    assert mod.call_optional_1(3) == modnew.call_optional_1(3)
-    assert mod.call_optional_2() == modnew.call_optional_2()
-    assert mod.call_optional_3(3) == modnew.call_optional_3(3)
+def test_f7(epyc_epyccel_optional_args_mod):
+    assert epyccel_optional_args.call_optional_1(3) == epyc_epyccel_optional_args_mod.call_optional_1(3)
+    assert epyccel_optional_args.call_optional_2()  == epyc_epyccel_optional_args_mod.call_optional_2()
+    assert epyccel_optional_args.call_optional_3(3) == epyc_epyccel_optional_args_mod.call_optional_3(3)
 
 
 # ------------------------------------------------------------------------------
-def test_f9(Module_5):
-    mod, modnew = Module_5
-
-    # ...
-    assert mod.call_optional_4(3) == modnew.call_optional_4(3)
-    assert mod.call_optional_5(3) == modnew.call_optional_5(3)
-    assert mod.call_optional_6() == modnew.call_optional_6()
-    assert mod.call_optional_7() == modnew.call_optional_7()
-    assert mod.call_optional_8() == modnew.call_optional_8()
+def test_f9(epyc_epyccel_optional_args_mod):
+    assert epyccel_optional_args.call_optional_4(3) == epyc_epyccel_optional_args_mod.call_optional_4(3)
+    assert epyccel_optional_args.call_optional_5(3) == epyc_epyccel_optional_args_mod.call_optional_5(3)
+    assert epyccel_optional_args.call_optional_6() == epyc_epyccel_optional_args_mod.call_optional_6()
+    assert epyccel_optional_args.call_optional_7() == epyc_epyccel_optional_args_mod.call_optional_7()
+    assert epyccel_optional_args.call_optional_8() == epyc_epyccel_optional_args_mod.call_optional_8()
 
 
 # ------------------------------------------------------------------------------
-def test_f10(Module_5):
-    mod, modnew = Module_5
-
-    # ...
-    assert mod.call_optional_9() == modnew.call_optional_9()
-    assert mod.call_optional_10() == modnew.call_optional_10()
+def test_f10(epyc_epyccel_optional_args_mod):
+    assert epyccel_optional_args.call_optional_9() == epyc_epyccel_optional_args_mod.call_optional_9()
+    assert epyccel_optional_args.call_optional_10() == epyc_epyccel_optional_args_mod.call_optional_10()
 
 
 # ------------------------------------------------------------------------------
-def test_f11(Module_5):
-    mod, modnew = Module_5
-
-    # ...
-    assert mod.call_optional_11() == modnew.call_optional_11()
-    assert mod.call_optional_12() == modnew.call_optional_12()
+def test_f11(epyc_epyccel_optional_args_mod):
+    assert epyccel_optional_args.call_optional_11() == epyc_epyccel_optional_args_mod.call_optional_11()
+    assert epyccel_optional_args.call_optional_12() == epyc_epyccel_optional_args_mod.call_optional_12()
 
 
 # ------------------------------------------------------------------------------
-def test_optional_args_1d(language):
-    def f12(x: "int[:]", y: "int[:]" = None):
-        if y is None:
-            x[:] *= 2
-        else:
-            x[:] = x // y
-
-    f = epyccel(f12, language=language)
+def test_optional_args_1d(epyc_epyccel_optional_args_mod):
+    f12 = epyccel_optional_args.f12
+    f = epyc_epyccel_optional_args_mod.f12
 
     x1 = np.array([1, 2, 3], dtype=int)
     x2 = np.copy(x1)
@@ -181,20 +146,15 @@ def test_optional_args_1d(language):
     # ...
     assert np.array_equal(x1, x2)
 
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(x1, 3)
 
 
 # ------------------------------------------------------------------------------
-def test_optional_2d_F(language):
-    def f13(x: "int32[:,:](order=F)", y: "int32[:,:](order=F)" = None):
-        if y is None:
-            x[:] *= 2
-        else:
-            x[:] = x // y
-
-    f = epyccel(f13, language=language)
+def test_optional_2d_F(epyc_epyccel_optional_args_mod):
+    f13 = epyccel_optional_args.f13
+    f = epyc_epyccel_optional_args_mod.f13
 
     x1 = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.int32, order="F")
     x2 = np.copy(x1)
@@ -204,7 +164,7 @@ def test_optional_2d_F(language):
     # ...
     assert np.array_equal(x1, x2)
 
-    if language != "python":
+    if epyc_epyccel_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(x1, 3.5)
 
@@ -212,17 +172,9 @@ def test_optional_2d_F(language):
 # ------------------------------------------------------------------------------
 
 
-def test_f14(language):
-    def f14(x: "int" = None, y: "int" = None):
-        if x is None:
-            x = 3
-        if y is not None:
-            y = 4
-        else:
-            y = 5
-        return x + y
-
-    f = epyccel(f14, language=language)
+def test_f14(epyc_epyccel_optional_args_mod):
+    f14 = epyccel_optional_args.f14
+    f = epyc_epyccel_optional_args_mod.f14
 
     # ...
     assert f(2, 7) == f14(2, 7)

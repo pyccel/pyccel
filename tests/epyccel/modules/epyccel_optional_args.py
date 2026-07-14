@@ -1,5 +1,25 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+def f1(x: "int" = None):
+    if x is None:
+        return 5
+    return x + 5
+
+def f2(x: "float" = None):
+    if x is None:
+        return 2.5
+    return x + 2.5
+
+def f3(x: "complex" = None):
+    if x is None:
+        return complex(2, 5.2)
+    return x + complex(2.5, 2)
+
+def f4(x: "bool" = None):
+    if x is None:
+        return True
+    return False
+
 
 def nothing(x: "int" = None):
     if x is None:
@@ -83,3 +103,27 @@ def call_optional_12():
     for i in range(0, nothing(3)):  # pylint: disable=unused-variable
         a = a + nothing(3)
     return a
+
+
+def f12(x: "int[:]", y: "int[:]" = None):
+    if y is None:
+        x[:] *= 2
+    else:
+        x[:] = x // y
+
+def f13(x: "int32[:,:](order=F)", y: "int32[:,:](order=F)" = None):
+    if y is None:
+        x[:] *= 2
+    else:
+        x[:] = x // y
+
+
+
+def f14(x: "int" = None, y: "int" = None):
+    if x is None:
+        x = 3
+    if y is not None:
+        y = 4
+    else:
+        y = 5
+    return x + y
