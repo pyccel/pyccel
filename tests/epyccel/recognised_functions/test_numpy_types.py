@@ -158,8 +158,6 @@ def test_numpy_scalar_promotion(language):
         assert isinstance(pyccel_result, type(python_result))
 
 
-
-
 def get_int64(a: T):
     from numpy import int64
 
