@@ -57,6 +57,7 @@ class Parser:
         output_folder,
         context_dict=None,
         original_filename=None,
+        name_clash_checker,
         **kwargs,
     ):
 
@@ -77,6 +78,8 @@ class Parser:
         self._compile_obj = None
 
         self._context_dict = context_dict
+
+        self._name_clash_checker = name_clash_checker
 
         self._original_filename = Path(original_filename or filename)
 
@@ -198,7 +201,8 @@ class Parser:
             print(">> Parsing :: ", self._filename)
 
         parser = SyntaxParser(
-            self._filename, verbose=verbose, context_dict=self._context_dict
+            self._filename, verbose=verbose, context_dict=self._context_dict,
+            name_clash_checker = self._name_clash_checker
         )
         self.syntax_parser = parser
 

@@ -194,11 +194,12 @@ class SyntaxParser(BasicParser):
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, *, context_dict=None, **kwargs):
+    def __init__(self, inputs, *, context_dict=None, name_clash_checker, **kwargs):
         BasicParser.__init__(self, **kwargs)
 
         # check if inputs is a file
         code = inputs
+        scope_name = ""
         if os.path.isfile(inputs):
 
             self._filename = inputs
@@ -210,9 +211,10 @@ class SyntaxParser(BasicParser):
             with open(inputs, "r", encoding="utf-8") as file:
                 code = file.read()
 
-            self._scope = Scope(name=inputs.stem, scope_type="module")
-        else:
-            self._scope = Scope(name="", scope_type="module")
+            scope_name = inputs.stem
+
+        self._scope = Scope(name=scope_name, scope_type="module",
+                            name_clash_checker = name_clash_checker)
 
         self._code = code
         self._context = []
