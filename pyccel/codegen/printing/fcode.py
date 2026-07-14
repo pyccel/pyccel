@@ -10,7 +10,6 @@ www.fortran90.org as much as possible."""
 import ast
 import re
 import string
-import sys
 from collections import OrderedDict
 from itertools import chain
 
@@ -3455,12 +3454,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Assert(self, expr):
         if isinstance(expr.test, LiteralTrue):
-            if sys.version_info < (3, 9):
-                return ""
-            else:
-                return (
-                    "!" + ast.unparse(expr.python_ast) + "\n"
-                )  # pylint: disable=no-member
+            return "!" + ast.unparse(expr.python_ast) + "\n"
         test_code = self._print(expr.test)
         return f"if ( .not. ({test_code})) then\n" "stop 1\n" "end if\n"
 
