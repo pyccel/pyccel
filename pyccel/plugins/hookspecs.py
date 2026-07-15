@@ -46,6 +46,7 @@ def add_cli_options(parser: argparse.ArgumentParser, cli_tool: str):
     """
 
 
+@hookspec
 def read_cli_arguments(kwargs: dict):
     """
     Read any arguments from the kwargs dictionary.
