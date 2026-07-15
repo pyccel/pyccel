@@ -80,6 +80,9 @@ def handle_plugin_arguments(plugin_manager, kwargs):
     any options.
     Plugin flags are removed from kwargs to ensure that the rest of the code
     doesn't see plugin arguments.
+    The flags are provided either via the CLI interface (via the options provided
+    by get_plugin_cli_options), or via epyccel arguments (but the user has to
+    know what arguments are available).
 
     Parameters
     ----------
