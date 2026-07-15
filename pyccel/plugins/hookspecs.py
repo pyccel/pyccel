@@ -142,6 +142,7 @@ def get_codegen_class(language: str):
     type
         The code-generation class for the requested language or None if this
         plugin doesn't implement the requested language.
+        This should be a sub-class of `pyccel.codegen.printing.codeprinter.CodePrinter`.
     """
 
 
@@ -192,6 +193,7 @@ def get_wrapper_codegen_class(language: str):
     type
         The code-generation class for the requested language or None if this
         plugin doesn't implement the requested language.
+        This should be a sub-class of `pyccel.codegen.printing.codeprinter.CodePrinter`.
     """
 
 
@@ -242,6 +244,7 @@ def get_wrapper_class(start_language: str) -> Optional[tuple[type, str]]:
     wrapper_class : type
         The wrapper class for the requested language set or None if this
         plugin doesn't implement the requested language translation.
+        This should be a sub-class of `pyccel.codegen.wrapper.wrapper.Wrapper`.
     target_language : str
         The target language of the wrapper (e.g. 'python').
     """
@@ -299,6 +302,7 @@ def get_build_generation_class(build_gen_method: str):
     type
         The build-generation class for the requested method or None if this
         plugin doesn't implement the requested method.
+        This should be a sub-class of `pyccel.codegen.build_generation.build_gen.BuildSystemHandler`.
     """
 
 
