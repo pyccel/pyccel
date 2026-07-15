@@ -1900,10 +1900,7 @@ def test_line_annotation_plugin(language):
         "-t --line_annotation --language=" + language + f" --output={output_folder}"
     )
 
-    try:
-        os.rmdir(output_folder)
-    except OSError:
-        pass
+    shutil.rmtree(output_folder, ignore_errors=True)
 
     compile_pyccel(folder, "funcs.py", pyccel_commands)
 
