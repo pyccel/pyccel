@@ -72,7 +72,7 @@ def get_extra_accelerators() -> Iterable[str]:
     These accelerators affect the compilation of the code and should appear
     in the compiler configurations.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Returns
     -------
@@ -92,7 +92,7 @@ def get_updated_syntactic_methods() -> Iterable[FunctionType]:
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Returns
     -------
@@ -111,7 +111,7 @@ def get_updated_semantic_methods() -> Iterable[FunctionType]:
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Returns
     -------
@@ -128,7 +128,7 @@ def get_codegen_class(language: str):
     Return a code-generation class which handles translation to the specified
     language. This method can be used to add support for a new language.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -154,7 +154,7 @@ def get_updated_codegen_methods(language: str) -> Iterable[FunctionType]:
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -176,7 +176,7 @@ def get_wrapper_codegen_class(language: str):
     Return a code-generation class which handles translation to the specified
     language. This method can be used to add support for a new language.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -202,7 +202,7 @@ def get_updated_wrapper_codegen_methods(language: str) -> Iterable[FunctionType]
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -224,7 +224,7 @@ def get_wrapper_class(start_language: str) -> Optional[tuple[type, str]]:
     Return a wrapper class which converts code from start_language to
     target_language. This method can be used to add support for a new language.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -255,7 +255,7 @@ def get_updated_wrapper_methods(
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -279,7 +279,7 @@ def get_build_generation_class(build_gen_method: str):
     Return a build-generation class which handles building with the specified
     framework. This method can be used to add support for a new build framework.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
@@ -307,7 +307,7 @@ def get_updated_build_generation_methods(
     its first argument. The name of the method will remain the same once it
     is added to the class.
 
-    This hook is optional. It should only be implemented if it is needed for the implementation.
+    This hook is optional. It should only be implemented if the plugin needs it.
 
     Parameters
     ----------
