@@ -9,7 +9,7 @@ Available hooks are declared in [`pyccel/plugins/hookspecs.py`](../pyccel/plugin
 ## Writing a plugin
 
 1. Create a module that imports `hookimpl` from `pyccel.plugins` and decorates each hook implementation with it.
-2. Publish it as a Python package with the entry-point group `pyccel`.
+2. Publish it as a Python package with the entry-point `pyccel` (see pluggy docs for more information).
 
 ## Built-in plugins
 
