@@ -110,9 +110,9 @@ def get_syntactic_class(plugin_manager):
     Return a syntactic parser subclass augmented with methods from active plugins.
 
     For each plugin that implements `get_updated_syntactic_methods`, a new
-    subclass of BaseClass (SyntaxParser) is created with the plugin's methods
-    injected. Plugins are applied in registration order, so later plugins can
-    override earlier ones.
+    subclass of SyntaxParser is created with the plugin's methods injected.
+    Plugins are applied in registration order, so later plugins can override
+    earlier ones.
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ def get_syntactic_class(plugin_manager):
     Returns
     -------
     type
-        A (possibly new) class derived from BaseClass augmented with the plugin methods.
+        A (possibly new) class derived from SyntaxParser augmented with the plugin methods.
     """
     BaseClass = SyntaxParser
     for plugin in plugin_manager.get_plugins():
@@ -146,9 +146,9 @@ def get_semantic_class(plugin_manager):
     Return a semantic parser subclass augmented with methods from active plugins.
 
     For each plugin that implements `get_updated_semantic_methods`, a new
-    subclass of BaseClass (SemanticParser) is created with the plugin's methods
-    injected.  Plugins are applied in registration order, so later plugins can
-    override earlier ones.
+    subclass of SemanticParser is created with the plugin's methods injected.
+    Plugins are applied in registration order, so later plugins can override
+    earlier ones.
 
     Parameters
     ----------
@@ -212,14 +212,16 @@ def get_codegen_class(plugin_manager, BaseClass, language):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = plugin.get_codegen_class(language)
+                NewBaseClass = plugin.get_codegen_class(language)
             except AttributeError:
                 continue
             else:
                 # Stop searching for a codegen class at the first plugin providing one
                 break
+    else:
+        NewBaseClass = BaseClass
 
-    if BaseClass is None:
+    if NewBaseClass is None:
         raise ValueError(f"{language} language is not available")
 
     for plugin in plugin_manager.get_plugins():
@@ -229,13 +231,13 @@ def get_codegen_class(plugin_manager, BaseClass, language):
         except AttributeError:
             continue
 
-        BaseClass = type(
-            name + BaseClass.__name__,
-            (BaseClass,),
+        NewBaseClass = type(
+            name + NewBaseClass.__name__,
+            (NewBaseClass,),
             {m.__name__: m for m in new_methods},
         )
 
-    return BaseClass
+    return NewBaseClass
 
 
 def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language):
@@ -266,7 +268,7 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
 
     Returns
     -------
-    BaseClass : type
+    NewBaseClass : type
         A (possibly new) class derived from BaseClass augmented with the plugin methods.
     target_language : str
         The target language of the wrapper (e.g. 'python'). This is equal to the input
@@ -281,14 +283,16 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass, target_language = plugin.get_wrapper_class(start_language)
+                NewBaseClass, target_language = plugin.get_wrapper_class(start_language)
             except (AttributeError, TypeError):
                 continue
             else:
                 # Stop searching for a wrapper class at the first plugin providing one
                 break
+    else:
+        NewBaseClass = BaseClass
 
-    if BaseClass is None:
+    if NewBaseClass is None:
         raise ValueError(
             f"Wrapping from {start_language} to {target_language} is not available"
         )
@@ -302,13 +306,13 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
         except AttributeError:
             continue
 
-        BaseClass = type(
-            name + BaseClass.__name__,
-            (BaseClass,),
+        NewBaseClass = type(
+            name + NewBaseClass.__name__,
+            (NewBaseClass,),
             {m.__name__: m for m in new_methods},
         )
 
-    return BaseClass, target_language
+    return NewBaseClass, target_language
 
 
 def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
@@ -346,14 +350,16 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = plugin.get_wrapper_codegen_class(language)
+                NewBaseClass = plugin.get_wrapper_codegen_class(language)
             except AttributeError:
                 continue
             else:
                 # Stop searching for a wrapper codegen class at the first plugin providing one
                 break
+    else:
+        NewBaseClass = BaseClass
 
-    if BaseClass is None:
+    if NewBaseClass is None:
         raise ValueError(f"{language} language is not available")
 
     for plugin in plugin_manager.get_plugins():
@@ -363,13 +369,13 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
         except AttributeError:
             continue
 
-        BaseClass = type(
-            name + BaseClass.__name__,
-            (BaseClass,),
+        NewBaseClass = type(
+            name + NewBaseClass.__name__,
+            (NewBaseClass,),
             {m.__name__: m for m in new_methods},
         )
 
-    return BaseClass
+    return NewBaseClass
 
 
 def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
@@ -407,14 +413,16 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
     if BaseClass is None:
         for plugin in plugin_manager.get_plugins():
             try:
-                BaseClass = plugin.get_build_generation_class(build_gen_method)
+                NewBaseClass = plugin.get_build_generation_class(build_gen_method)
             except AttributeError:
                 continue
             else:
                 # Stop searching for a build generation class at the first plugin providing one
                 break
+    else:
+        NewBaseClass = BaseClass
 
-    if BaseClass is None:
+    if NewBaseClass is None:
         raise ValueError(f"{build_gen_method} build generation method is not available")
 
     for plugin in plugin_manager.get_plugins():
@@ -424,10 +432,10 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
         except AttributeError:
             continue
 
-        BaseClass = type(
-            name + BaseClass.__name__,
-            (BaseClass,),
+        NewBaseClass = type(
+            name + NewBaseClass.__name__,
+            (NewBaseClass,),
             {m.__name__: m for m in new_methods},
         )
 
-    return BaseClass
+    return NewBaseClass
