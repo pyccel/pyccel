@@ -3170,7 +3170,7 @@ def test_sum_int(language):
         return np_sum(x)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 
@@ -3181,7 +3181,7 @@ def test_sum_override_builtin(language):
         return sum(x)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 
@@ -3226,7 +3226,7 @@ def test_sum_property(language):
         return x.sum()
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 
@@ -3254,7 +3254,7 @@ def test_sum_slice_in_if(language):
             return np_sum(x[n:m])
 
     f1 = epyccel(sum_call, language=language, flags="-Werror=uninitialized")
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == sum_call(x)
 
 
@@ -3263,7 +3263,7 @@ def test_sum_dtype(language):
         return np.sum(x, dtype=float)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sum_call(x))
 
@@ -3283,7 +3283,7 @@ def test_sum_axis_2d(language):
         return np.sum(x, axis=1)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=(5, 7))
+    x = randint(99, size=(5, 7), dtype=int)
 
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
@@ -3306,7 +3306,7 @@ def test_sum_initial(language):
         return np.sum(x, initial=10)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert f_x_pycc == f_x_pyth
@@ -3318,7 +3318,7 @@ def test_sum_axis_keepdims_initial(language):
         return np.sum(x, axis=0, keepdims=True, initial=5)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=(4, 6))
+    x = randint(99, size=(4, 6), dtype=int)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.array_equal(f_x_pycc, f_x_pyth)
@@ -3329,7 +3329,7 @@ def test_sum_dtype_axis(language):
         return np.sum(x, axis=1, dtype=float)
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=(3, 8))
+    x = randint(99, size=(3, 8), dtype=int)
     f_x_pycc = f1(x)
     f_x_pyth = sum_call(x)
     assert np.array_equal(f_x_pycc, f_x_pyth)
@@ -3351,7 +3351,7 @@ def test_sum_out_axis_2d(language):
         return out
 
     f1 = epyccel(sum_call, language=language)
-    x = randint(99, size=(5, 7))
+    x = randint(99, size=(5, 7), dtype=int)
     assert np.array_equal(f1(x), sum_call(x))
 
 
@@ -3385,7 +3385,7 @@ def test_min_int(language):
         return amin(x)
 
     f1 = epyccel(min_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == min_call(x)
 
 
@@ -3444,7 +3444,7 @@ def test_min_property(language):
         return x.min()
 
     f1 = epyccel(min_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == min_call(x)
 
 
@@ -3455,7 +3455,7 @@ def test_amin_1d(language):
         return amin(x)
 
     f1 = epyccel(amin_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == amin_call(x)
 
 
@@ -3466,7 +3466,7 @@ def test_amin_axis(language):
         return amin(x, axis=1)
 
     f1 = epyccel(amin_call, language=language)
-    x = randint(99, size=(6, 8))
+    x = randint(99, size=(6, 8), dtype=int)
     assert np.array_equal(f1(x), amin_call(x))
 
 
@@ -3491,7 +3491,7 @@ def test_amin_initial(language):
         return amin(x, initial=50)
 
     f1 = epyccel(amin_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == amin_call(x)
 
 
@@ -3500,7 +3500,7 @@ def test_amin_out_axis(language):
         np.amin(x, axis=1, out=out)
 
     f1 = epyccel(amin_call, language=language)
-    x = randint(99, size=(6, 8))
+    x = randint(99, size=(6, 8), dtype=int)
     y_epyc = np.empty(6, dtype=int)
     y_pyth = np.empty(6, dtype=int)
     f1(x, y_epyc)
@@ -3515,7 +3515,7 @@ def test_max_int(language):
         return amax(x)
 
     f1 = epyccel(max_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == max_call(x)
 
 
@@ -3574,7 +3574,7 @@ def test_max_property(language):
         return x.max()
 
     f1 = epyccel(max_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == max_call(x)
 
 
@@ -3585,7 +3585,7 @@ def test_amax_1d(language):
         return amax(x)
 
     f1 = epyccel(amax_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == amax_call(x)
 
 
@@ -3596,7 +3596,7 @@ def test_amax_axis(language):
         return amax(x, axis=0)
 
     f1 = epyccel(amax_call, language=language)
-    x = randint(99, size=(6, 8))
+    x = randint(99, size=(6, 8), dtype=int)
     assert np.array_equal(f1(x), amax_call(x))
 
 
@@ -3621,7 +3621,7 @@ def test_amax_initial(language):
         return amax(x, initial=10)
 
     f1 = epyccel(amax_call, language=language)
-    x = randint(99, size=10)
+    x = randint(99, size=10, dtype=int)
     assert f1(x) == amax_call(x)
 
 
@@ -3630,7 +3630,7 @@ def test_amax_out_axis(language):
         np.amax(x, axis=1, out=out)
 
     f1 = epyccel(amax_call, language=language)
-    x = randint(99, size=(6, 8))
+    x = randint(99, size=(6, 8), dtype=int)
     y_epyc = np.empty(6, dtype=int)
     y_pyth = np.empty(6, dtype=int)
     f1(x, y_epyc)
@@ -7442,7 +7442,7 @@ def test_numpy_linspace_array_like_1d(language):
     size = 5
     integer8 = randint(min_int8 / 2, max_int8 / 2, size=size, dtype=np.int8)
     integer16 = randint(min_int16 / 2, max_int16 / 2, size=size, dtype=np.int16)
-    integer = randint(-10000, 10000, size=size)
+    integer = randint(-10000, 10000, size=size, dtype=int)
     integer32 = randint(min_int32 / 2, max_int32 / 2, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
