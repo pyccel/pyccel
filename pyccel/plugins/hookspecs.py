@@ -127,6 +127,8 @@ def get_codegen_class(language: str):
 
     Return a code-generation class which handles translation to the specified
     language. This method can be used to add support for a new language.
+    It will only be called for languages which are not already implemented by
+    Pyccel. To extend an existing Codegen class, use get_updated_codegen_methods.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -175,6 +177,8 @@ def get_wrapper_codegen_class(language: str):
 
     Return a code-generation class which handles translation to the specified
     language. This method can be used to add support for a new language.
+    It will only be called for languages which are not already implemented by
+    Pyccel. To extend an existing Codegen class, use get_updated_wrapper_codegen_methods.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -223,6 +227,8 @@ def get_wrapper_class(start_language: str) -> Optional[tuple[type, str]]:
 
     Return a wrapper class which converts code from start_language to
     target_language. This method can be used to add support for a new language.
+    It will only be called for languages which are not already implemented by
+    Pyccel. To extend an existing Codegen class, use get_updated_wrapper_methods.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -278,6 +284,8 @@ def get_build_generation_class(build_gen_method: str):
 
     Return a build-generation class which handles building with the specified
     framework. This method can be used to add support for a new build framework.
+    It will only be called for build methods which are not already implemented by
+    Pyccel. To extend an existing Codegen class, use get_updated_build_generation_methods.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
