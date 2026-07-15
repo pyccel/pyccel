@@ -33,7 +33,7 @@ def test_symbolic(f, language):
     pyccel = Parser(
         f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers[language]
     )
-    pyccel.parse()
+    pyccel.parse(verbose=0)
 
     settings = {}
     ast = pyccel.annotate(**settings)

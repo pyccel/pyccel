@@ -61,7 +61,7 @@ def test_parse(f):
     errors = Errors()
     errors.reset()
 
-    with open(f) as infile:
+    with open(f, encoding="utf-8") as infile:
         orig = infile.read().strip()
 
     pyccel = SyntaxParser(
