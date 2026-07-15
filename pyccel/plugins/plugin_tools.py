@@ -280,7 +280,9 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
                 BaseClass, target_language = plugin.get_wrapper_class(start_language)
             except (AttributeError, TypeError):
                 continue
-            break
+            else:
+                # Stop searching for a wrapper class at the first plugin providing one
+                break
 
     if BaseClass is None:
         raise ValueError(
@@ -343,7 +345,9 @@ def get_wrapper_codegen_class(plugin_manager, BaseClass, language):
                 BaseClass = plugin.get_wrapper_codegen_class(language)
             except AttributeError:
                 continue
-            break
+            else:
+                # Stop searching for a wrapper codegen class at the first plugin providing one
+                break
 
     if BaseClass is None:
         raise ValueError(f"{language} language is not available")
@@ -402,7 +406,9 @@ def get_build_generation_class(plugin_manager, BaseClass, build_gen_method):
                 BaseClass = plugin.get_build_generation_class(build_gen_method)
             except AttributeError:
                 continue
-            break
+            else:
+                # Stop searching for a build generation class at the first plugin providing one
+                break
 
     if BaseClass is None:
         raise ValueError(f"{build_gen_method} build generation method is not available")
