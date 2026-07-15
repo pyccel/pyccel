@@ -190,15 +190,20 @@ class SyntaxParser(BasicParser):
         A dictionary describing any variables in the context where the translated
         objected was defined.
 
+    name_clash_checker : LanguageNameClashChecker
+        The object which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, *, context_dict=None, **kwargs):
+    def __init__(self, inputs, *, context_dict=None, name_clash_checker, **kwargs):
         BasicParser.__init__(self, **kwargs)
 
         # check if inputs is a file
         code = inputs
+        scope_name = ""
         if os.path.isfile(inputs):
 
             self._filename = inputs
@@ -210,9 +215,11 @@ class SyntaxParser(BasicParser):
             with open(inputs, "r", encoding="utf-8") as file:
                 code = file.read()
 
-            self._scope = Scope(name=inputs.stem, scope_type="module")
-        else:
-            self._scope = Scope(name="", scope_type="module")
+            scope_name = inputs.stem
+
+        self._scope = Scope(
+            name=scope_name, scope_type="module", name_clash_checker=name_clash_checker
+        )
 
         self._code = code
         self._context = []
@@ -1771,18 +1778,3 @@ class SyntaxParser(BasicParser):
             VariableTypeAnnotation(FinalType.get_new(TypeAlias()))
         )
         return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
-
-
-# ==============================================================================
-
-
-if __name__ == "__main__":
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError("Expecting an argument for filename")
-
-    parser = SyntaxParser(filename)
-    print(parser.ast)

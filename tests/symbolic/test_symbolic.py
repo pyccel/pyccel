@@ -13,6 +13,7 @@ from tolerances import ATOL, RTOL
 from pyccel import lambdify as pyc_lambdify
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -27,8 +28,10 @@ T = TypeVar("T", "float[:]", "float[:,:]")
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
 def test_symbolic(f, language):
 
-    pyccel = Parser(f, output_folder=os.getcwd())
-    pyccel.parse()
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers[language]
+    )
+    pyccel.parse(verbose=0)
 
     settings = {}
     ast = pyccel.annotate(**settings)

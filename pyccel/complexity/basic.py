@@ -12,6 +12,7 @@ or the memory/space complexity.
 
 import os
 
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
 __all__ = ["Complexity"]
@@ -32,7 +33,11 @@ class Complexity:
     """
 
     def __init__(self, filename_or_text):
-        pyccel = Parser(filename_or_text, output_folder=os.getcwd())
+        pyccel = Parser(
+            filename_or_text,
+            output_folder=os.getcwd(),
+            name_clash_checker=name_clash_checkers["python"],
+        )
         self._ast = pyccel.parse(verbose=0)
         self._ast = pyccel.annotate(verbose=0).ast
 

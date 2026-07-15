@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
 -   #2618 : Fix unnecessary slicing returning the whole array.
 -   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
+-   #2629 : Fix race condition due to class variables in `Scope`.
 
 ### Changed
 
