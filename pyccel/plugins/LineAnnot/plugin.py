@@ -39,6 +39,7 @@ def add_cli_options(parser, cli_tool):
     """
 
 
+@hookimpl
 def read_cli_arguments(kwargs: dict):
     """
     Read any arguments from the kwargs dictionary.
