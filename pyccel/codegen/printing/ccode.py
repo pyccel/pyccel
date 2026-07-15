@@ -10,7 +10,6 @@ strings of C code.
 
 import ast
 import functools
-import sys
 from itertools import chain, product
 
 import numpy as np
@@ -3773,12 +3772,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Assert(self, expr):
         if isinstance(expr.test, LiteralTrue):
-            if sys.version_info < (3, 9):
-                return ""
-            else:
-                return (
-                    "//" + ast.unparse(expr.python_ast) + "\n"
-                )  # pylint: disable=no-member
+            return "//" + ast.unparse(expr.python_ast) + "\n"
         condition = self._print(expr.test)
         self.add_import(c_imports["assert"])
         return f"assert({condition});\n"
