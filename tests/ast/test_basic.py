@@ -18,8 +18,11 @@ path_dir = os.path.join(base_dir, "scripts")
 
 
 def get_functions(filename):
-    pyccel = Parser(filename, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        filename,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+    )
     errors = Errors()
 
     ast = pyccel.parse(verbose=0)

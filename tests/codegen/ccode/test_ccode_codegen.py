@@ -39,8 +39,9 @@ def test_codegen(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["c"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["c"]
+    )
     ast = pyccel.parse(verbose=0)
 
     # Assert syntactic success

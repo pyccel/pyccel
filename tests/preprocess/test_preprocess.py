@@ -19,8 +19,9 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.language_agnostic
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     pyccel.parse(verbose=0)
     print(pyccel.fst)
 

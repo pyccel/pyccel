@@ -50,8 +50,9 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     pyccel.parse(verbose=0)
 
     pyccel.annotate(verbose=0)

@@ -24,8 +24,9 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     ast = pyccel.parse(verbose=0)
 
     ast = pyccel.annotate(verbose=0)

@@ -64,8 +64,9 @@ def test_parse(f):
     with open(f) as infile:
         orig = infile.read().strip()
 
-    pyccel = SyntaxParser(Path(f), verbose=0,
-                          name_clash_checker=name_clash_checkers["python"])
+    pyccel = SyntaxParser(
+        Path(f), verbose=0, name_clash_checker=name_clash_checkers["python"]
+    )
     unparser = Unparser()
     copy = unparser.visit(pyccel.fst)
 

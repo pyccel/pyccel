@@ -46,8 +46,9 @@ def test_syntax_blockers(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
 
     with pytest.raises(PyccelSyntaxError):
         pyccel.parse(verbose=0)
@@ -69,8 +70,9 @@ def test_syntax_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
 
     pyccel.parse(verbose=0)
 
@@ -93,8 +95,9 @@ def test_semantic_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["fortran"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+    )
     pyccel.parse(verbose=0)
 
     with pytest.raises(PyccelSemanticError):
@@ -119,8 +122,9 @@ def test_traceback():
     errors.reset()
     error_mode.set_mode("developer")
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     pyccel.parse(verbose=0)
 
     try:
@@ -151,8 +155,9 @@ def test_semantic_non_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     pyccel.parse(verbose=0)
 
     pyccel.annotate(verbose=0)
@@ -175,8 +180,9 @@ def test_semantic_non_blocking_developer_errors(f):
     errors.reset()
     error_mode.set_mode("developer")
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["python"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+    )
     pyccel.parse(verbose=0)
 
     with pytest.raises(PyccelSemanticError):
@@ -196,8 +202,9 @@ def test_codegen_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["fortran"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+    )
     pyccel.parse(verbose=0)
 
     ast = pyccel.annotate(verbose=0)
@@ -226,8 +233,9 @@ def test_codegen_non_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers["fortran"])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+    )
     pyccel.parse(verbose=0)
 
     ast = pyccel.annotate(verbose=0)

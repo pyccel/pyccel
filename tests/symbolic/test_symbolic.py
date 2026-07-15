@@ -30,8 +30,9 @@ T = TypeVar("T", "float[:]", "float[:,:]")
 @pytest.mark.skip(reason="Broken symbolic function support, see issue #330")
 def test_symbolic(f, language):
 
-    pyccel = Parser(f, output_folder=os.getcwd(),
-                    name_clash_checker=name_clash_checkers[language])
+    pyccel = Parser(
+        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers[language]
+    )
     pyccel.parse()
 
     settings = {}
