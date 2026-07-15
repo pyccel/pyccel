@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #2525 : Add preliminary support for C++ translations.
 -   #2621 : Add support for module docstrings.
 -   #2611 : Add a plugin framework.
+-   #2611 : Add `pluggy` as an installation dependency.
 
 ### Fixed
 
