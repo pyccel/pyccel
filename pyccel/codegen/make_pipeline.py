@@ -28,7 +28,6 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
-from pyccel.parser.scope import Scope
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.compilers import Compiler, get_condaless_search_path
@@ -144,9 +143,6 @@ def execute_pyccel_make(
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family, debug)
 
-    # Get compiler object
-    Scope.name_clash_checker = name_clash_checkers[language]
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
 
@@ -160,7 +156,14 @@ def execute_pyccel_make(
     cwd = os.getcwd()
     files = [f.relative_to(cwd) if f.is_absolute() else f for f in files]
 
-    parsers = {f: Parser(f.absolute(), output_folder=folder) for f in files}
+    parsers = {
+        f: Parser(
+            f.absolute(),
+            output_folder=folder,
+            name_clash_checker=name_clash_checkers[language],
+        )
+        for f in files
+    }
 
     to_remove = []
     for f, p in parsers.items():
