@@ -5904,7 +5904,9 @@ def test_numpy_prod_array_like_1d(language):
         size=size,
         dtype=np.int16,
     )
-    integer = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size=size, dtype=np.int64)
+    integer = randint(
+        max(min_int, -max_ok_int), min(max_ok_int, max_int), size=size, dtype=np.int64
+    )
     integer32 = randint(
         max(min_int32, -max_ok_int),
         min(max_ok_int, max_int32),
@@ -6004,7 +6006,9 @@ def test_numpy_prod_array_like_2d(language):
         size=size,
         dtype=np.int16,
     )
-    integer = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size=size, dtype=np.int64)
+    integer = randint(
+        max(min_int, -max_ok_int), min(max_ok_int, max_int), size=size, dtype=np.int64
+    )
     integer32 = randint(
         max(min_int32, -max_ok_int),
         min(max_ok_int, max_int32),
@@ -6919,7 +6923,9 @@ def test_numpy_matmul_array_like_2x2d(language):
         max_test = np.sqrt(abs(max_for_type) / size[0])
         return cast(min_test), cast(max_test)
 
-    integer = randint(*calculate_max_values(min_int, max_int), size=size, dtype=np.int64)
+    integer = randint(
+        *calculate_max_values(min_int, max_int), size=size, dtype=np.int64
+    )
     integer32 = randint(
         *calculate_max_values(min_int32, max_int32), size=size, dtype=np.int32
     )
@@ -8020,7 +8026,9 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
     integer16 = np.array(
         randint(min_int16, max_int16 - 1, size=size, dtype=np.int16), order="F"
     )
-    integer = np.array(randint(min_int, max_int - 1, size=size), order="F", dtype=np.int64)
+    integer = np.array(
+        randint(min_int, max_int - 1, size=size), order="F", dtype=np.int64
+    )
     integer32 = np.array(
         randint(min_int32, max_int32 - 1, size=size, dtype=np.int32), order="F"
     )
