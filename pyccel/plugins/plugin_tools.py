@@ -7,6 +7,8 @@ methods implemented as hooks in plugins.
 
 import pluggy
 
+from pyccel.parser.syntactic import SyntaxParser
+from pyccel.parser.semantic import SemanticParser
 from . import LineAnnot, hookspecs
 
 
@@ -103,7 +105,7 @@ def handle_plugin_arguments(plugin_manager, kwargs):
             kwargs.pop(name)
 
 
-def get_syntactic_class(plugin_manager, BaseClass):
+def get_syntactic_class(plugin_manager):
     """
     Return a syntactic parser subclass augmented with methods from active plugins.
 
@@ -116,14 +118,13 @@ def get_syntactic_class(plugin_manager, BaseClass):
     ----------
     plugin_manager : pluggy.PluginManager
         The plugin manager containing the registered plugins.
-    BaseClass : type
-        The base syntactic parser class to augment.
 
     Returns
     -------
     type
         A (possibly new) class derived from BaseClass augmented with the plugin methods.
     """
+    BaseClass = SyntaxParser
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:
@@ -140,7 +141,7 @@ def get_syntactic_class(plugin_manager, BaseClass):
     return BaseClass
 
 
-def get_semantic_class(plugin_manager, BaseClass):
+def get_semantic_class(plugin_manager):
     """
     Return a semantic parser subclass augmented with methods from active plugins.
 
@@ -153,14 +154,13 @@ def get_semantic_class(plugin_manager, BaseClass):
     ----------
     plugin_manager : pluggy.PluginManager
         The plugin manager containing the registered plugins.
-    BaseClass : type
-        The base semantic parser class to augment.
 
     Returns
     -------
     type
         A (possibly new) class derived from BaseClass augmented with the plugin methods.
     """
+    BaseClass = SemanticParser
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
         try:

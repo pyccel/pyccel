@@ -204,7 +204,7 @@ class Parser:
         if verbose:
             print(">> Parsing :: ", self._filename)
 
-        parser = get_syntactic_class(self._plugin_manager, SyntaxParser)(
+        parser = get_syntactic_class(self._plugin_manager)(
             self._filename, verbose=verbose, context_dict=self._context_dict
         )
         self.syntax_parser = parser
@@ -245,7 +245,7 @@ class Parser:
             print(">> Calculating semantic annotations :: ", self._filename)
 
         # Create a new semantic parser and store it in object
-        parser = get_semantic_class(self._plugin_manager, SemanticParser)(
+        parser = get_semantic_class(self._plugin_manager)(
             self._syntax_parser,
             d_parsers=self.d_parsers,
             parents=self.parents,
