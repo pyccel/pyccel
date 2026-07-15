@@ -2494,13 +2494,16 @@ class CCodePrinter(CodePrinter):
             variable.class_type,
             (HomogeneousListType, HomogeneousSetType, DictType, StringType),
         ):
+            shape = expr.shape[0]
             if expr.status in ("allocated", "unknown"):
                 free_code = f"{self._print(Deallocate(variable))}"
-            if expr.shape[0] is None:
+            if shape is None:
                 return free_code
             if expr.alloc_type == "function":
                 return free_code
-            size = self._print(expr.shape[0])
+            if not isinstance(shape, Literal):
+                shape = PythonMax(shape, LiteralInteger(0))
+            size = self._print(shape)
             variable_address = self._print(ObjectAddress(expr.variable))
             container_type = self.get_c_type(expr.variable.class_type)
             if expr.alloc_type == "reserve":
