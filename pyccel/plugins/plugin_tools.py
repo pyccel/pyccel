@@ -245,6 +245,8 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
     If BaseClass is `None`, the plugins are used to find an implementation of a
     wrapper class for the requested languages via the `get_wrapper_class`
     hook. A `ValueError` is raised if no base class can be found.
+    In this case the target_language will also be None, its value is ascertained from
+    `get_wrapper_class`.
 
     For each plugin that implements `get_updated_wrapper_methods`, a new
     subclass of BaseClass is created with the plugin's methods injected. Plugins
@@ -267,7 +269,9 @@ def get_wrapper_class(plugin_manager, BaseClass, start_language, target_language
     BaseClass : type
         A (possibly new) class derived from BaseClass augmented with the plugin methods.
     target_language : str
-        The target language of the wrapper (e.g. 'python').
+        The target language of the wrapper (e.g. 'python'). This is equal to the input
+        target language unless the input was None, then it is the target language of the
+        wrapper class returned by `get_wrapper_class`.
 
     Raises
     ------
