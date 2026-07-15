@@ -13,6 +13,7 @@ from pyccel.ast.cwrapper import PyccelPyObject, PyModInitFunc, PyModule
 from pyccel.ast.literals import Nil
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 from .wrapper import Wrapper
@@ -126,6 +127,7 @@ class CppToPythonWrapper(Wrapper):
             used_symbols=scope.local_used_symbols.copy(),
             original_symbols=scope.python_names.copy(),
             scope_type="module",
+            name_clash_checker=name_clash_checkers["c++"],
         )
         self.scope = mod_scope
 

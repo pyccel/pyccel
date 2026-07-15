@@ -162,6 +162,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 # TODO: add examples
@@ -657,7 +658,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -771,7 +776,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )

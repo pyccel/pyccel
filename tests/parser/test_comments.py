@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.syntactic import SyntaxParser
 
 
@@ -60,10 +61,12 @@ def test_parse(f):
     errors = Errors()
     errors.reset()
 
-    with open(f) as infile:
+    with open(f, encoding="utf-8") as infile:
         orig = infile.read().strip()
 
-    pyccel = SyntaxParser(Path(f), verbose=0)
+    pyccel = SyntaxParser(
+        Path(f), verbose=0, name_clash_checker=name_clash_checkers["python"]
+    )
     unparser = Unparser()
     copy = unparser.visit(pyccel.fst)
 
