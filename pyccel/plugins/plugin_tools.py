@@ -215,7 +215,9 @@ def get_codegen_class(plugin_manager, BaseClass, language):
                 BaseClass = plugin.get_codegen_class(language)
             except AttributeError:
                 continue
-            break
+            else:
+                # Stop searching for a codegen class at the first plugin providing one
+                break
 
     if BaseClass is None:
         raise ValueError(f"{language} language is not available")
