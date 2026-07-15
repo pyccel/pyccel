@@ -11,13 +11,10 @@ static inline i_key _c_MEMB(_pull_elem)(Self* self, intptr_t pop_idx) {
     _c_MEMB(_iter) itr = _c_MEMB(_advance)(_c_MEMB(_begin)(self), pop_idx);
 
     // If the element is found then remove it from the list
-    if (itr.ref) 
-    {
-        i_key value = *(itr.ref);
-        _c_MEMB(_erase_at)(self, itr); // Remove the element by value using "_erase_at".
-        return value;
-    }
-    return *(itr.ref); // Return the element that is being popped.
+    c_assert(itr.ref);
+    i_key value = *(itr.ref);
+    _c_MEMB(_erase_at)(self, itr); // Remove the element by value using "_erase_at".
+    return value;
 }
 
 
