@@ -8,7 +8,7 @@ import mappings
 import numpy as np
 import pytest
 import sympy as sp
-from tolerances import ATOL*100, RTOL*100
+from tolerances import ATOL, RTOL
 
 from pyccel import lambdify as pyc_lambdify
 from pyccel.codegen.codegen import Codegen
