@@ -89,8 +89,11 @@ def get_updated_syntactic_methods() -> Iterable[FunctionType]:
 
     The returned callables are injected into a dynamically created subclass
     of the base syntactic parser, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from `SyntaxParser` (or a
+    subclass), the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `SyntaxParser`
+    may have been modified by other plugins, and extra methods may have already been
+    added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -108,8 +111,11 @@ def get_updated_semantic_methods() -> Iterable[FunctionType]:
 
     The returned callables are injected into a dynamically created subclass
     of the base semantic parser, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from `SemanticParser` (or a
+    subclass), the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `SemanticParser`
+    may have been modified by other plugins, and extra methods may have already been
+    added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -154,8 +160,11 @@ def get_updated_codegen_methods(language: str) -> Iterable[FunctionType]:
     Return methods to be added to or to override methods in the code-generation class
     for language. The returned callables are injected into a dynamically created
     subclass of the base code-generation class, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from the `Codegen`
+    subclass, the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `Codegen` classes
+    may have been modified by other plugins, and extra methods may have already been
+    added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -205,8 +214,11 @@ def get_updated_wrapper_codegen_methods(language: str) -> Iterable[FunctionType]
     Return methods to be added to or to override methods in the code-generation class
     for language. The returned callables are injected into a dynamically created
     subclass of the base code-generation class, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from the `Codegen`
+    subclass, the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `Codegen` classes
+    may have been modified by other plugins, and extra methods may have already been
+    added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -261,8 +273,11 @@ def get_updated_wrapper_methods(
     which converts code from start_language to target_language.
     The returned callables are injected into a dynamically created
     subclass of the base wrapper class, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from the `Wrapper`
+    subclass, the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `Wrapper` classes
+    may have been modified by other plugins, and extra methods may have already been
+    added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
@@ -316,8 +331,11 @@ def get_updated_build_generation_methods(
     Return methods to be added to or to override methods in the build-generation
     class. The returned callables are injected into a dynamically created
     subclass of the base build generation class, so each callable must accept `self` as
-    its first argument. The name of the method will remain the same once it
-    is added to the class.
+    its first argument. If the name of the method matches one from the `BuildSystemHandler`
+    subclass, the original method is overwritten. Otherwise, the method is simply added
+    to the new subclass. Please bear in mind that methods appearing in `BuildSystemHandler`
+    classes may have been modified by other plugins, and extra methods may have already
+    been added to a subclass by other plugins.
 
     This hook is optional. It should only be implemented if the plugin needs it.
 
