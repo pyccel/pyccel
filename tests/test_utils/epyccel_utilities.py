@@ -53,7 +53,7 @@ class LazyPerFunctionEpyccel:
     @property
     def language(self):
         """
-        The language we are translating to.
+        str: The language we are translating to.
         """
         return self._language
 
