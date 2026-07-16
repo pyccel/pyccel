@@ -29,7 +29,6 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
-from pyccel.parser.scope import Scope
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj
@@ -214,8 +213,6 @@ def execute_pyccel(
         if not fname:
             return
 
-    Scope.name_clash_checker = name_clash_checkers[language]
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
@@ -223,6 +220,7 @@ def execute_pyccel(
         pymod_filepath,
         output_folder=folder,
         context_dict=context_dict,
+        name_clash_checker=name_clash_checkers[language],
         plugin_manager=plugin_manager,
     )
     parser.parse(verbose=verbose)

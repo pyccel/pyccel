@@ -47,11 +47,15 @@ class Parser:
         filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
         auto-generated to describe the prototypes of the methods).
 
+    name_clash_checker : LanguageNameClashChecker
+        The object which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
     plugin_manager : pluggy.PluginManager
         The plugin manager used to connect activated plugins.
 
     **kwargs : dict
-        Any keyword arguments for BasicParser.
+        Any additional keyword arguments for BasicParser.
     """
 
     def __init__(
@@ -61,6 +65,7 @@ class Parser:
         output_folder,
         context_dict=None,
         original_filename=None,
+        name_clash_checker,
         plugin_manager,
         **kwargs,
     ):
@@ -82,6 +87,8 @@ class Parser:
         self._compile_obj = None
 
         self._context_dict = context_dict
+
+        self._name_clash_checker = name_clash_checker
 
         self._original_filename = Path(original_filename or filename)
 
@@ -205,7 +212,10 @@ class Parser:
             print(">> Parsing :: ", self._filename)
 
         parser = get_syntactic_class(self._plugin_manager)(
-            self._filename, verbose=verbose, context_dict=self._context_dict
+            self._filename,
+            verbose=verbose,
+            context_dict=self._context_dict,
+            name_clash_checker=self._name_clash_checker,
         )
         self.syntax_parser = parser
 
@@ -361,6 +371,7 @@ class Parser:
                     stashed_filename,
                     output_folder=q_output_folder,
                     original_filename=filename,
+                    name_clash_checker=self._name_clash_checker,
                     plugin_manager=self._plugin_manager,
                 )
             q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)

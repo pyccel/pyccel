@@ -13,8 +13,6 @@ from pyccel.plugins.plugin_tools import get_wrapper_class, get_wrapper_codegen_c
 
 from ..ast.core import ModuleHeader
 from ..errors.errors import Errors
-from ..naming import name_clash_checkers
-from ..parser.scope import Scope
 from ..utilities.stage import PyccelStage
 from .codegen import _extension_registry, _header_extension_registry
 from .printing.cwrappercode import CWrapperCodePrinter
@@ -99,7 +97,6 @@ class Wrappergen:
         sharedlib_dirpath : str
             The folder where the generated .so file will be located.
         """
-        current_name_clash_checker = Scope.name_clash_checker
         ast = self._ast
         for Wrapper in self._wrapper_types:
             if self._verbose:
@@ -108,9 +105,6 @@ class Wrappergen:
                     self._name,
                 )
 
-            Scope.name_clash_checker = name_clash_checkers[
-                Wrapper.start_language.lower()
-            ]
             wrapper = Wrapper(sharedlib_dirpath, verbose=self._verbose)
 
             ast = wrapper.wrap(ast)
@@ -118,8 +112,6 @@ class Wrappergen:
 
             if errors.has_errors():
                 break
-
-        Scope.name_clash_checker = current_name_clash_checker
 
     def print(self, dirpath):
         """
