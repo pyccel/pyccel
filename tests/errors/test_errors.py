@@ -9,6 +9,7 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.codegen.codegen import Codegen
@@ -46,8 +47,13 @@ def test_syntax_blockers(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
 
     with pytest.raises(PyccelSyntaxError):
@@ -70,8 +76,13 @@ def test_syntax_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
 
     pyccel.parse(verbose=0)
@@ -95,8 +106,13 @@ def test_semantic_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -122,8 +138,13 @@ def test_traceback():
     errors.reset()
     error_mode.set_mode("developer")
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -155,8 +176,13 @@ def test_semantic_non_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -180,8 +206,13 @@ def test_semantic_non_blocking_developer_errors(f):
     errors.reset()
     error_mode.set_mode("developer")
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -202,8 +233,13 @@ def test_codegen_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -212,7 +248,7 @@ def test_codegen_blocking_errors(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, "fortran", verbose=0)
+    codegen = Codegen(ast, name, "fortran", verbose=0, plugin_manager=plugin_manager)
     with pytest.raises(PyccelCodegenError):
         codegen.printer.doprint(codegen.ast)
 
@@ -233,8 +269,13 @@ def test_codegen_non_blocking_errors(f):
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -243,7 +284,7 @@ def test_codegen_non_blocking_errors(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, "fortran", verbose=0)
+    codegen = Codegen(ast, name, "fortran", verbose=0, plugin_manager=plugin_manager)
     codegen.printer.doprint(codegen.ast)
 
     assert errors.has_errors()
@@ -260,11 +301,13 @@ def test_neat_errors_for_known_bugs(f):
     errors = Errors()
     errors.reset()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     with open(f, encoding="utf-8") as fl:
         expected_error_msg = fl.readlines()[0][1:].strip()
 
     with pytest.raises(PyccelError):
-        execute_pyccel(f)
+        execute_pyccel(f, plugin_manager=plugin_manager)
 
     assert errors.has_errors()
     messages = [

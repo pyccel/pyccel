@@ -6,6 +6,7 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.codegen.codegen import Codegen
@@ -39,8 +40,13 @@ def test_codegen(f):
     errors = Errors()
     errors.reset()
 
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["c"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["c"],
+        plugin_manager=plugin_manager,
     )
     ast = pyccel.parse(verbose=0)
 
@@ -55,7 +61,7 @@ def test_codegen(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, "c", verbose=0)
+    codegen = Codegen(ast, name, "c", verbose=0, plugin_manager=plugin_manager)
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success

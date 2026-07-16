@@ -175,7 +175,7 @@ def pyccel_config_export(filename, **kwargs):
     """
     from pyccel.codegen.pipeline import execute_pyccel
 
-    execute_pyccel("", compiler_export_file=filename, **kwargs)
+    execute_pyccel("", compiler_export_file=filename, plugin_manager=None, **kwargs)
 
 
 def check_config_paths(config, descriptor):

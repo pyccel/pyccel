@@ -12,6 +12,8 @@ or the memory/space complexity.
 
 import os
 
+import pluggy
+
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
@@ -37,6 +39,7 @@ class Complexity:
             filename_or_text,
             output_folder=os.getcwd(),
             name_clash_checker=name_clash_checkers["python"],
+            plugin_manager=pluggy.PluginManager("pyccel"),
         )
         self._ast = pyccel.parse(verbose=0)
         self._ast = pyccel.annotate(verbose=0).ast
