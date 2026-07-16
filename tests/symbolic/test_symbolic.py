@@ -15,7 +15,8 @@ from pyccel.errors.errors import Errors
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
-from tolerances import ATOL, RTOL
+RTOL = 1e-13
+ATOL = 1e-14
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, "scripts")
@@ -71,8 +72,8 @@ def test_lambdify(language):
             language=language,
         )
 
-        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL * 100, atol=ATOL * 100)
-        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL * 100, atol=ATOL * 100)
+        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
         pyc_x = pyc_lambdify(
             expr_x, {x: "T", y: "T"}, context_dict={"T": T}, language=language
@@ -81,20 +82,14 @@ def test_lambdify(language):
             expr_y, {x: "T", y: "T"}, context_dict={"T": T}, language=language
         )
 
-        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL * 100, atol=ATOL * 100)
-        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL * 100, atol=ATOL * 100)
+        assert np.allclose(sp_x(r, p), pyc_x(r, p), rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_y(r, p), pyc_y(r, p), rtol=RTOL, atol=ATOL)
 
         assert np.allclose(
-            sp_x(r[0, :], p[0, :]),
-            pyc_x(r[0, :], p[0, :]),
-            rtol=RTOL * 100,
-            atol=ATOL * 100,
+            sp_x(r[0, :], p[0, :]), pyc_x(r[0, :], p[0, :]), rtol=RTOL, atol=ATOL
         )
         assert np.allclose(
-            sp_y(r[0, :], p[0, :]),
-            pyc_y(r[0, :], p[0, :]),
-            rtol=RTOL * 100,
-            atol=ATOL * 100,
+            sp_y(r[0, :], p[0, :]), pyc_y(r[0, :], p[0, :]), rtol=RTOL, atol=ATOL
         )
 
 
@@ -134,8 +129,8 @@ def test_lambdify_out_arg(language):
         pyc_x(r, p, pyc_out_x)
         pyc_y(r, p, out=pyc_out_y)
 
-        assert np.allclose(sp_out_x, pyc_out_x, rtol=RTOL * 100, atol=ATOL * 100)
-        assert np.allclose(sp_out_y, pyc_out_y, rtol=RTOL * 100, atol=ATOL * 100)
+        assert np.allclose(sp_out_x, pyc_out_x, rtol=RTOL, atol=ATOL)
+        assert np.allclose(sp_out_y, pyc_out_y, rtol=RTOL, atol=ATOL)
 
 
 ######################
