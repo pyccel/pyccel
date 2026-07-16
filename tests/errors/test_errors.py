@@ -50,8 +50,10 @@ def test_syntax_blockers(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
 
     with pytest.raises(PyccelSyntaxError):
@@ -77,8 +79,10 @@ def test_syntax_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
 
     pyccel.parse(verbose=0)
@@ -105,8 +109,10 @@ def test_semantic_blocking_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -135,8 +141,10 @@ def test_traceback():
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -171,8 +179,10 @@ def test_semantic_non_blocking_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -199,8 +209,10 @@ def test_semantic_non_blocking_developer_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -224,8 +236,10 @@ def test_codegen_blocking_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 
@@ -258,8 +272,10 @@ def test_codegen_non_blocking_errors(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["fortran"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["fortran"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
 

@@ -23,8 +23,10 @@ def test_preprocess(f):
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
     print(pyccel.fst)
