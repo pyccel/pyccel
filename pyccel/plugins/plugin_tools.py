@@ -7,8 +7,9 @@ methods implemented as hooks in plugins.
 
 import pluggy
 
-from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic import SemanticParser
+from pyccel.parser.syntactic import SyntaxParser
+
 from . import LineAnnot, hookspecs
 
 
