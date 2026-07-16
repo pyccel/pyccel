@@ -19,6 +19,8 @@ path_dir = os.path.join(base_dir, "scripts")
 
 
 def get_functions(filename):
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
         filename,
         output_folder=os.getcwd(),
