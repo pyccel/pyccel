@@ -9,7 +9,6 @@ jobs:
 
     runs-on: windows-latest
     name: Unit tests
-    needs: Python_version_picker
 
     steps:
       - uses: actions/checkout@v7
