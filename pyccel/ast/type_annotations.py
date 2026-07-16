@@ -1,36 +1,42 @@
 # coding: utf-8
 
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
-""" Module containing all classes useful for type annotation.
-"""
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""Module containing all classes useful for type annotation."""
 
 from pyccel.utilities.stage import PyccelStage
 
 from .basic import PyccelAstNode
-
 from .bitwise_operators import PyccelBitOr
-
 from .core import FunctionDefArgument, FunctionDefResult
-
-from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, PythonNativeComplex
-from .datatypes import VoidType, GenericType, StringType, PyccelType
-
-from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
+from .datatypes import (
+    GenericType,
+    PyccelType,
+    PythonNativeBool,
+    PythonNativeComplex,
+    PythonNativeFloat,
+    PythonNativeInt,
+    StringType,
+    VoidType,
+)
+from .literals import LiteralString
+from .variable import AnnotatedPyccelSymbol, DottedName, IndexedElement
 
 __all__ = (
-        'FunctionTypeAnnotation',
-        'SyntacticTypeAnnotation',
-        'UnionTypeAnnotation',
-        'VariableTypeAnnotation',
-        'typenames_to_dtypes',
-        )
+    "FunctionTypeAnnotation",
+    "SyntacticTypeAnnotation",
+    "UnionTypeAnnotation",
+    "VariableTypeAnnotation",
+    "typenames_to_dtypes",
+)
 
 pyccel_stage = PyccelStage()
 
-#==============================================================================
+# ==============================================================================
+
 
 class VariableTypeAnnotation(PyccelAstNode):
     """
@@ -43,15 +49,13 @@ class VariableTypeAnnotation(PyccelAstNode):
     ----------
     class_type : PyccelType
         The requested Python type of the variable.
-
-    is_const : bool, default=False
-        True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_is_const')
+
+    __slots__ = ("_class_type",)
     _attribute_nodes = ()
-    def __init__(self, class_type : PyccelType, is_const : bool = False):
+
+    def __init__(self, class_type: PyccelType):
         self._class_type = class_type
-        self._is_const = is_const
 
         super().__init__()
 
@@ -76,22 +80,6 @@ class VariableTypeAnnotation(PyccelAstNode):
         """
         return self.class_type.rank
 
-    @property
-    def is_const(self):
-        """
-        Indicates whether the object will remain constant.
-
-        Returns a boolean which is false if the value of the object can be
-        modified, and true otherwise.
-        """
-        return self._is_const
-
-    @is_const.setter
-    def is_const(self, val):
-        if not isinstance(val, bool):
-            raise TypeError("Is const value should be a boolean")
-        self._is_const = val
-
     def __hash__(self):
         return hash(self.class_type)
 
@@ -105,7 +93,9 @@ class VariableTypeAnnotation(PyccelAstNode):
     def __repr__(self):
         return repr(self._class_type)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class FunctionTypeAnnotation(PyccelAstNode):
     """
@@ -130,15 +120,20 @@ class FunctionTypeAnnotation(PyccelAstNode):
     is_const : bool, default=True
         True if the function pointer cannot be modified, false otherwise.
     """
-    __slots__ = ('_args', '_result', '_is_const')
-    _attribute_nodes = ('_args', '_result', '_is_const')
 
-    def __init__(self, args, result, is_const = True):
-        if pyccel_stage == 'syntactic':
-            self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
-                            for i, a in enumerate(args)]
+    __slots__ = ("_args", "_result", "_is_const")
+    _attribute_nodes = ("_args", "_result", "_is_const")
+
+    def __init__(self, args, result, is_const=True):
+        if pyccel_stage == "syntactic":
+            self._args = [
+                FunctionDefArgument(AnnotatedPyccelSymbol("_", a), annotation=a)
+                for i, a in enumerate(args)
+            ]
             if result:
-                self._result = FunctionDefResult(AnnotatedPyccelSymbol('_', result), annotation = result)
+                self._result = FunctionDefResult(
+                    AnnotatedPyccelSymbol("_", result), annotation=result
+                )
             else:
                 self._result = FunctionDefResult(result)
         else:
@@ -172,7 +167,7 @@ class FunctionTypeAnnotation(PyccelAstNode):
         return self._result
 
     def __repr__(self):
-        return f'func({repr(self.args)}) -> {repr(self.results)}'
+        return f"func({repr(self.args)}) -> {repr(self.results)}"
 
     @property
     def is_const(self):
@@ -190,7 +185,9 @@ class FunctionTypeAnnotation(PyccelAstNode):
             raise TypeError("Is const value should be a boolean")
         self._is_const = val
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class UnionTypeAnnotation(PyccelAstNode):
     """
@@ -203,11 +200,16 @@ class UnionTypeAnnotation(PyccelAstNode):
     *type_annotations : tuple of VariableTypeAnnotation | FunctionTypeAnnotation
         The objects describing the possible type annotations.
     """
-    __slots__ = ('_type_annotations',)
-    _attribute_nodes = ('_type_annotations',)
+
+    __slots__ = ("_type_annotations",)
+    _attribute_nodes = ("_type_annotations",)
 
     def __init__(self, *type_annotations):
-        annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
+        annots = [
+            ti
+            for t in type_annotations
+            for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])
+        ]
         # Strip out repeats
         self._type_annotations = tuple({a: None for a in annots}.keys())
 
@@ -244,9 +246,11 @@ class UnionTypeAnnotation(PyccelAstNode):
         return self._type_annotations.__iter__()
 
     def __str__(self):
-        return '|'.join(str(t) for t in self._type_annotations)
+        return "|".join(str(t) for t in self._type_annotations)
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
@@ -259,30 +263,33 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : str | IndexedElement | DottedName
+    dtype : str | IndexedElement | DottedName | LiteralString
         The dtype named in the type annotation.
 
     order : str | None
         The order requested in the type annotation.
     """
-    __slots__ = ('_dtype', '_order')
-    _attribute_nodes = ('_dtype',)
 
-    def __new__(cls, dtype = None, order = None):
+    __slots__ = ("_dtype", "_order")
+    _attribute_nodes = ("_dtype",)
+
+    def __new__(cls, dtype=None, order=None):
         if isinstance(dtype, PyccelBitOr):
-            return UnionTypeAnnotation(*[SyntacticTypeAnnotation(d) for d in dtype.args])
+            return UnionTypeAnnotation(
+                *[SyntacticTypeAnnotation(d) for d in dtype.args]
+            )
         else:
             return super().__new__(cls)
 
-    def __init__(self, dtype, order = None):
-        if not isinstance(dtype, (str, DottedName, IndexedElement)):
+    def __init__(self, dtype, order=None):
+        if not isinstance(dtype, (str, DottedName, IndexedElement, LiteralString)):
             raise ValueError(f"Syntactic datatypes should be strings not {type(dtype)}")
         if not (order is None or isinstance(order, str)):
             raise ValueError("Order should be a string")
         self._dtype = dtype
         self._order = order
         super().__init__()
-        assert self.pyccel_staging == 'syntactic'
+        assert self.pyccel_staging == "syntactic"
 
     @property
     def dtype(self):
@@ -309,24 +316,25 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     def __eq__(self, o):
         if isinstance(o, SyntacticTypeAnnotation):
-            return self.dtype == o.dtype and \
-                    self.order == o.order
+            return self.dtype == o.dtype and self.order == o.order
         else:
             return False
 
     def __str__(self):
-        order_str = f'(order={self.order})' if self.order else ''
-        return f'{self.dtype}{order_str}'
+        order_str = f"(order={self.order})" if self.order else ""
+        return f"{self.dtype}{order_str}"
 
-#==============================================================================
 
-typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
-                        'double'  : PythonNativeFloat(),
-                        'complex' : PythonNativeComplex(),
-                        'int'     : PythonNativeInt(),
-                        'bool'    : PythonNativeBool(),
-                        'b1'      : PythonNativeBool(),
-                        'void'    : VoidType(),
-                        '*'       : GenericType(),
-                        'str'     : StringType(),
-                        }
+# ==============================================================================
+
+typenames_to_dtypes = {
+    "float": PythonNativeFloat(),
+    "double": PythonNativeFloat(),
+    "complex": PythonNativeComplex(),
+    "int": PythonNativeInt(),
+    "bool": PythonNativeBool(),
+    "b1": PythonNativeBool(),
+    "void": VoidType(),
+    "*": GenericType(),
+    "str": StringType(),
+}

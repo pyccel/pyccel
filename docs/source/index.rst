@@ -34,8 +34,16 @@ Welcome to Pyccel's documentation!
    docs/classes
    docs/containers
    docs/function-pointers-as-arguments
-   docs/header-files
+   docs/low-level-interface
    docs/openmp
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials:
+   :hidden:
+
+   tutorials
+
 
 .. toctree::
    :maxdepth: 2

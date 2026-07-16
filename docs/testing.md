@@ -2,7 +2,7 @@
 
 Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Adevel>
 
-To test your local Pyccel installation please use the command line tool `pyccel-test` which runs all unit tests using pytest under the hood. Alternatively, if you want to have more fine-grained control over which tests you run (e.g. for debugging your local modifications to Pyccel), you can call Pytest directly with the following instructions.
+To test your local Pyccel installation please use the command line tool `pyccel test` which runs all unit tests using pytest under the hood. Alternatively, if you want to have more fine-grained control over which tests you run (e.g. for debugging your local modifications to Pyccel), you can call Pytest directly with the following instructions.
 
 We download the source code for a specific release, and with it the tests
 

@@ -1,7 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure
 from project.folder1.mod1 import sum_to_n
 
+from pyccel.decorators import pure
+
+
 @pure
-def sum_to_n_squared(n : 'int'):
-    return sum_to_n(n)**2
+def sum_to_n_squared(n: "int"):
+    return sum_to_n(n) ** 2

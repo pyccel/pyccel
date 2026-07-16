@@ -8,7 +8,7 @@ rank = comm.Get_rank()
 size_ = comm.Get_size()
 
 n = 10
-x = zeros(n,'double')
+x = zeros(n, "double")
 
 if rank == 0:
     x[:] = 1.0

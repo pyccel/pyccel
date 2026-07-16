@@ -15,4 +15,4 @@ sum_value = 0
 
 sum_value = comm.allreduce(value, MPI.SUM)
 
-print('I, process ', root,', have the global sum value ', sum_value)
+print("I, process ", root, ", have the global sum value ", sum_value)

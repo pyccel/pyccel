@@ -1,43 +1,47 @@
-# coding: utf-8
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
+"""
+Module containing the base class `BasicStmt` for all statements in Pyccel.
+"""
 
 __all__ = ["BasicStmt"]
 
-class BasicStmt(object):
+
+class BasicStmt:
     """
     Base class for all objects in Pyccel.
+
+    Conventions:
+
+    1) Every extension class must provide the properties stmt_vars and
+    local_vars
+    2) stmt_vars describes the list of all variables that are
+    created by the statement.
+    3) local_vars describes the list of all local variables to the
+    statement, like the index of a For statement.
+    4) Every extension must implement the update function. This function is
+    called to prepare for the applied property (for example the expr
+    1) Every extension class must provide the properties stmt_vars and
+    local_vars.
+    2) stmt_vars describes the list of all variables that are
+    created by the statement.
+    3) local_vars describes the list of all local variables to the
+    statement, like the index of a For statement.
+    4) Every extension must implement the update function. This function is
+    called to prepare for the applied property (for example the expr
+    property).
+
+    Parameters
+    ----------
+    **kwargs
+        Additional unnecessary arguments provided by textx.
     """
 
     def __init__(self, **kwargs):
-        """
-        Constructor for the base class.
-
-        Conventions:
-
-        1) Every extension class must provide the properties stmt_vars and
-        local_vars
-        2) stmt_vars describes the list of all variables that are
-        created by the statement.
-        3) local_vars describes the list of all local variables to the
-        statement, like the index of a For statement.
-        4) Every extension must implement the update function. This function is
-        called to prepare for the applied property (for example the expr
-        property.)
-
-        Parameters
-        ==========
-        statements : list
-            list of statements from pyccel.types.ast
-        unallocated: dict
-            a dictionary containing all unallocated variables. later we will
-            have to traverse the AST and allocate them. a (`key`, `value`) of
-            unallocated is such that `key` is the variable name, and `value` are
-            some hints for the allocation.
-        """
-        self.statements  = []
+        self.statements = []
         self.unallocated = {}
 
     @property

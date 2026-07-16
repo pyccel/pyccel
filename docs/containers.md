@@ -28,7 +28,7 @@ Elements of a homogeneous tuple should have the same type, the same number of di
 
 Inhomogeneous tuples are handled symbolically. This means that an inhomogeneous tuple is treated as a collection of translatable objects. Each of these objects is then handled individually. In particular this means that tuples can only be indexed by compile-time constants.
 
-For example the following code:
+For example the following code (in file `mod.py`):
 
 ```python
 def f():
@@ -41,7 +41,7 @@ def f():
 is translated to the following C code:
 
 ```c
-double f(void)
+double mod__f(void)
 {
     int64_t a_0;
     bool a_1;
@@ -100,6 +100,7 @@ pyccel:
 ## Lists/Sets/Dictionaries
 
 Homogeneous lists, sets and dictionaries are implemented using external libraries. In C we rely on [STC](https://github.com/stclib/STC). In Fortran we rely on [gFTL](https://github.com/goddard-Fortran-Ecosystem/gFTL/).
+These packages are provided with Pyccel, but any version of these packages installed locally will take precedent.
 
 For example the following code:
 
@@ -115,7 +116,7 @@ def f():
 is translated to the following C code:
 
 ```c
-double f(void)
+double mod__f(void)
 {
     vec_int64_t my_list = {0};
     hset_int64_t my_set = {0};
@@ -175,7 +176,7 @@ The memory deallocation is not trivial in this case. As a result managed memory 
 The example above is translated to the following C code:
 
 ```c
-void f(void)
+void mod__f(void)
 {
     vec_vec_int64_t_mem b = {0};
     vec_int64_t_mem a_mem = vec_int64_t_mem_make(vec_int64_t_init());

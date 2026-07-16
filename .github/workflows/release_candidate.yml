@@ -1,0 +1,105 @@
+name: Release candidate
+
+on:
+  pull_request:
+    branches:
+    - 'main'
+
+jobs:
+  # Check that version information has been updated
+  versioning:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: "Get version from version file"
+        id: version
+        run: |
+          version=$(sed -n 's/__version__ = "\(.*\)"/\1/p' pyccel/version.py)
+          echo "VERSION=${version}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=v${version}" >> $GITHUB_OUTPUT
+          if git show-ref --tags ${TAG_NAME} --quiet
+          then
+            echo "A release with the tag ${TAG_NAME} already exists. Don't forget to update version.py"
+            exit 1
+          fi
+      - name: "Get version from CHANGELOG"
+        id: release_notes
+        run: |
+          start_line=$(grep "^## " CHANGELOG.md | head -1)
+          today=$(printf '%(%Y-%m-%d)T')
+          expected_start_line="## \[${{ steps.version.outputs.VERSION }}\] - ${today}"
+          if [[ "${start_line}" != "${expected_start_line}" ]]
+          then
+            echo "The most recent entry in the CHANGELOG doesn't match the expected format."
+            echo "Expected : ${expected_start_line}"
+            echo "Received : ${start_line}"
+            exit 1
+          fi
+
+  # Check that nothing has been changed on this branch without being tested on devel
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: |
+          changes=$(git diff origin/devel..HEAD --name-only)
+          # Check for changes in pyccel folder
+          pyccel_changed=0
+          pyccel_changes="$(! (echo $changes | grep "^pyccel/"))" || exit_code=$?
+          # Changes other than pyccel/version
+          pyccel_changed=0
+          pyccel_changes="$(! (echo $pyccel_changes | grep "^pyccel/version.py" -v))" || exit_code=$?
+          # Check for changes in tests folder
+          tests_changed=0
+          tests_changes="$(! (echo $changes | grep "^tests/"))" || exit_code=$?
+          # Check for changes in CI
+          ci_changed=0
+          ci_changes="$(! (echo $changes | grep "^.github/"))" || exit_code=$?
+          if [[ $pyccel_changed > 0 ]] || [[ $tests_changed > 0 ]] || [[ $ci_changed > 0 ]]
+          then
+            echo "Files have been changed that haven't been tested in the devel branch"
+            echo $pyccel_changes
+            echo $tests_changes
+            echo $ci_changes
+            exit 1
+          fi
+        shell: bash
+
+  markdown_lint:
+    uses: ./.github/workflows/markdown_lint.yml
+
+  pyccel_lint:
+    uses: ./.github/workflows/pyccel_lint.yml
+
+  pylint:
+    uses: ./.github/workflows/pylint.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  docs:
+    uses: ./.github/workflows/docs.yml
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+
+  spelling:
+    uses: ./.github/workflows/spelling.yml
+
+  sdist:
+    uses: ./.github/workflows/sdist.yml
+
+  check_install:
+    uses: ./.github/workflows/check_install.yml
+    with:
+      editable_string: ''
+
+  check_editable_install:
+    uses: ./.github/workflows/check_install.yml
+    with:
+      editable_string: '-e'
+
+  wheel:
+    uses: ./.github/workflows/wheel.yml

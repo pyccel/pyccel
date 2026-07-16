@@ -1,38 +1,43 @@
-# -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------------------#
-# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/devel/LICENSE for full license details.      #
-#------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------- #
+# This file is part of Pyccel which is released under MIT License. See the  #
+# LICENSE file or go to https://github.com/pyccel/pyccel/blob/devel/LICENSE #
+# for full license details.                                                 #
+# ------------------------------------------------------------------------- #
 """
 A module containing the Wrappergen class which is responsible for the generation of wrapper files.
 """
+
 from pathlib import Path
 
-from .codegen import _extension_registry, _header_extension_registry
-from .printing.fcode  import FCodePrinter
-from .printing.cwrappercode  import CWrapperCodePrinter
-from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
-from .wrapper.c_to_python_wrapper import CToPythonWrapper
+from pyccel.plugins.plugin_tools import get_wrapper_class, get_wrapper_codegen_class
+
 from ..ast.core import ModuleHeader
-from ..errors.errors                        import Errors
-from ..naming import name_clash_checkers
-from ..parser.scope import Scope
+from ..errors.errors import Errors
 from ..utilities.stage import PyccelStage
+from .codegen import _extension_registry, _header_extension_registry
+from .printing.cwrappercode import CWrapperCodePrinter
+from .printing.fcode import FCodePrinter
+from .printing.pybindcode import PyBindCodePrinter
+from .wrapper.c_to_python_wrapper import CToPythonWrapper
+from .wrapper.cpp_to_python_wrapper import CppToPythonWrapper
+from .wrapper.fortran_to_c_wrapper import FortranToCWrapper
 
 wrapper_registry = {
-        'fortran' : [FortranToCWrapper, CToPythonWrapper],
-        'c' : [CToPythonWrapper],
-        'python' : [],
-        }
+    "fortran": (FortranToCWrapper, "c"),
+    "c": (CToPythonWrapper, "python"),
+    "c++": (CppToPythonWrapper, "python"),
+}
 
 printer_registry = {
-        FortranToCWrapper : FCodePrinter,
-        CToPythonWrapper : CWrapperCodePrinter,
-        }
+    "fortran": FCodePrinter,
+    "c": CWrapperCodePrinter,
+    "c++": PyBindCodePrinter,
+}
 
 pyccel_stage = PyccelStage()
 
 errors = Errors()
+
 
 class Wrappergen:
     """
@@ -51,17 +56,33 @@ class Wrappergen:
         The language which the printer should print to.
     verbose : int
         The level of verbosity.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
-    def __init__(self, codegen, name, language, verbose):
-        pyccel_stage.set_stage('cwrapper')
-        self._ast      = codegen.ast
-        self._name     = name
+
+    def __init__(self, codegen, name, language, verbose, plugin_manager):
+        pyccel_stage.set_stage("cwrapper")
+        self._ast = codegen.ast
+        self._name = name
         self._language = language
-        self._verbose  = verbose
+        self._verbose = verbose
         self._wrapper_ast = []
 
-        self._wrapper_types = wrapper_registry[language]
-        self._printer_types = [printer_registry[w] for w in self._wrapper_types]
+        languages = []
+        self._wrapper_types = []
+        while language != "python":
+            start_language = language
+            languages.append(start_language)
+            wrapper_base_class, language = wrapper_registry.get(language, (None, None))
+            wrapper, language = get_wrapper_class(
+                plugin_manager, wrapper_base_class, start_language, language
+            )
+            self._wrapper_types.append(wrapper)
+
+        self._printer_types = [
+            get_wrapper_codegen_class(plugin_manager, printer_registry.get(l, None), l)
+            for l in languages
+        ]
         self._additional_imports = [{} for _ in self._wrapper_types]
 
     def wrap(self, sharedlib_dirpath):
@@ -76,22 +97,21 @@ class Wrappergen:
         sharedlib_dirpath : str
             The folder where the generated .so file will be located.
         """
-        current_name_clash_checker = Scope.name_clash_checker
         ast = self._ast
         for Wrapper in self._wrapper_types:
             if self._verbose:
-                print(f">> Building {Wrapper.start_language}-{Wrapper.target_language} interface :: ", self._name)
+                print(
+                    f">> Building {Wrapper.start_language}-{Wrapper.target_language} interface :: ",
+                    self._name,
+                )
 
-            Scope.name_clash_checker = name_clash_checkers[Wrapper.start_language.lower()]
-            wrapper = Wrapper(sharedlib_dirpath, verbose = self._verbose)
+            wrapper = Wrapper(sharedlib_dirpath, verbose=self._verbose)
 
             ast = wrapper.wrap(ast)
             self._wrapper_ast.append(ast)
 
             if errors.has_errors():
                 break
-
-        Scope.name_clash_checker = current_name_clash_checker
 
     def print(self, dirpath):
         """
@@ -111,29 +131,34 @@ class Wrappergen:
             to all files printed by this function as headers are excluded).
         """
         dirpath = Path(dirpath)
-        files = [dirpath / f'{ast.name}_wrapper.{_extension_registry[Wrapper.start_language.lower()]}'
-                 for ast, Wrapper in zip(self._wrapper_ast, self._wrapper_types)]
-        for i, (filepath, ast, Printer) in enumerate(zip(files, self._wrapper_ast, self._printer_types)):
+        files = [
+            dirpath
+            / f"{ast.name}_wrapper.{_extension_registry[Wrapper.start_language.lower()]}"
+            for ast, Wrapper in zip(self._wrapper_ast, self._wrapper_types)
+        ]
+        for i, (filepath, ast, Printer) in enumerate(
+            zip(files, self._wrapper_ast, self._printer_types)
+        ):
             header_ext = _header_extension_registry[Printer.language.lower()]
 
             if self._verbose:
-                print ('>>> Printing :: ', filepath)
+                print(">>> Printing :: ", filepath)
             printer = Printer(ast.name, verbose=self._verbose)
 
             # print module
             code = printer.doprint(ast)
 
-            with open(filepath, 'w', encoding="utf-8") as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(code)
 
             # print module header
             if header_ext is not None:
-                header_filename = dirpath / f'{ast.name}_wrapper.{header_ext}'
+                header_filename = dirpath / f"{ast.name}_wrapper.{header_ext}"
                 module_header = ModuleHeader(ast)
                 if self._verbose:
-                    print ('>>> Printing :: ', header_filename)
+                    print(">>> Printing :: ", header_filename)
                 code = printer.doprint(module_header)
-                with open(header_filename, 'w', encoding="utf-8") as f:
+                with open(header_filename, "w", encoding="utf-8") as f:
                     f.write(code)
 
             self._additional_imports[i] = printer.get_additional_imports().copy()

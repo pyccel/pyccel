@@ -13,4 +13,4 @@ else:
 sum_value = comm.reduce(value, MPI.SUM, root)
 
 if rank == 0:
-    print('I, process ', root,', have the global sum value ', sum_value)
+    print("I, process ", root, ", have the global sum value ", sum_value)

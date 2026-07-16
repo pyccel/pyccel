@@ -1,13 +1,16 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
+# <class 'pyccel.ast.core.Import'> not currently supported in classes
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring, unused-import
 
 # should not pass
 import foo.bar.baz as stuff
 import numpy as np
 
+
 def g():
     import blabla
 
-for i in [0,1,2]:
+
+for i in [0, 1, 2]:
     import inside_loop
 
 if True:
@@ -16,10 +19,12 @@ if True:
 while True:
     import inside_while
 
+
 class Point(object):
     import inside_class
 
     def __init__(self, x):
         self.x = x
+
 
 from foo import *

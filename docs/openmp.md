@@ -45,6 +45,8 @@ Please note that files using the OpenMP Runtime library routines will only work 
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
 
+OpenMP pragmas are recognised by comments beginning with `#$omp` (additional spaces are permitted as Python formatting tools tend to enforce their presence).
+
 ### Example
 
 The following example shows how `omp_set_num_threads` is used to set the number of threads to _4 threads_ and how `omp_get_num_threads` is used to get the number of threads in the current team within a parallel region; `omp_get_num_threads` will return _4 threads_.
@@ -67,7 +69,7 @@ Please note that the variable `result` is a shared variable; Pyccel considers al
 The output of this program is (you may get different result because of threads running at the same time):
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./prog_omp_test
 hello from thread number: 0
 hello from thread number: 2
@@ -124,7 +126,7 @@ print("hello from thread:", n)
 The output of this program is (you may get different result because of threads running at the same time):
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 hello from thread: 0
 hello from thread: 1
@@ -157,7 +159,7 @@ print(result)
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 893116
 ```
@@ -190,7 +192,7 @@ print("The best thread is number : ", omp_get_thread_num())
 The output of this program is (you may get different result because of threads running at the same time):
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 hello from thread number:            1
 The best thread is number :             1
@@ -228,7 +230,7 @@ print(sum)
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 893116
 ```
@@ -268,7 +270,7 @@ print(sum(arr_2))
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 1786232
 ```
@@ -300,7 +302,7 @@ print("result :", result)
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 result : 1
 ```
@@ -354,7 +356,7 @@ print("x2 : ", x2);
 The output of this program is (you may get a different output, but the sum must be the same for each thread):
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 x1 : 200
 x2 : 100
@@ -391,7 +393,7 @@ print("Result:", result)
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 Result: 893116
 ```
@@ -440,7 +442,7 @@ print(fib(10))
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 55
 ```
@@ -498,7 +500,7 @@ print("flag:", flag)
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 Thread 1 released
 flag: 2
@@ -582,7 +584,7 @@ for i in range(0, n):
 The output of this program is:
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 Team num : 0
 Team num : 0
@@ -650,7 +652,7 @@ print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 The output of this program is :
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 sum1 : 1, thread : 0
 sum2 : 6, thread : 0
@@ -685,7 +687,7 @@ print("result:", result)
 The output of this program is :
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 result: 28
 ```
@@ -720,7 +722,7 @@ for i in range(0, 8):
 The output of this program is :
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 z[ 0 ] : 3
 z[ 1 ] : 3
@@ -772,7 +774,7 @@ for i in range(0, 8):
 The output of this program is :
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 z[ 0 ] : 3
 z[ 1 ] : 3
@@ -892,7 +894,7 @@ print("result:",r)
 The output of this program is :
 
 ```shell
-❯ pyccel omp_test.py --openmp
+❯ pyccel compile omp_test.py --openmp
 ❯ ./omp_test
 result: 49995000
 ```

@@ -1,16 +1,17 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
+
 class Point(object):
-    def __init__(self, x : 'float[:]'):
+    def __init__(self, x: "float[:]"):
         self._X = 10
         self._x = x
 
     def __del__(self):
         pass
 
-    def translate(self, a : 'float[:]'):
-        self._x[:]   =  self._x + a
+    def translate(self, a: "float[:]"):
+        self._x[:] = self._x + a
 
     @property
     def x(self):

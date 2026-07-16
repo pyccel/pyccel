@@ -10,13 +10,16 @@ fail-under=10
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=pyccel/extensions
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
 ignore-patterns=.*.txt
 
-ignore-paths=obsolete/*
+ignore-paths=docs/tutorials/*,
+       tests/pyccel/scripts/runtest_stub.fortran.pyi,
+       tests/pyccel/scripts/runtest_stub.c.pyi,
+       tests/pyccel/scripts/runtest_stub.python.pyi
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -38,17 +41,13 @@ load-plugins=
 # Pickle collected data for later comparisons.
 persistent=yes
 
-# When enabled, pylint would attempt to guess common misconfiguration and emit
-# user-friendly hints instead of false-positive error messages.
-suggestion-mode=yes
-
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.9 # Set to last python which has not reached end-of-life
+py-version=3.10 # Set to last Python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 

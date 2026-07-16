@@ -1,8 +1,11 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.stdlib.internal.blas import daxpy
-from pyccel.stdlib.internal.blas import saxpy
+# Invalid header. Expected 'metavar'
+# pylint: disable=missing-function-docstring, missing-module-docstring, unused-import
+# TODO add saxpy test
+from numpy import zeros
 
-#$header interface axpy=daxpy|saxpy
+from pyccel.stdlib.internal.blas import daxpy, saxpy
+
+# $header interface axpy=daxpy|saxpy
 
 # > Usage:
 #
@@ -10,8 +13,6 @@ from pyccel.stdlib.internal.blas import saxpy
 #   gfortran test.f90 -lblas
 #   ./a.out
 
-# TODO add saxpy test
-from numpy import zeros
 
 def test_daxpy():
     n = 5
@@ -32,5 +33,6 @@ def test_daxpy():
     sy[3] = 6.0
 
     axpy(n, sa, sx, incx, sy, incy)
+
 
 test_daxpy()

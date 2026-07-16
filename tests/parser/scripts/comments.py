@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
+
 def f(a: int):
     # 1
     if a:
@@ -19,6 +20,7 @@ def f(a: int):
     c = b * 3
     # 9
     return c
+
 
 # example header1
 # example header2
@@ -48,7 +50,9 @@ def g(b: int):
             # 22
         # 23
     # 24
-#25
+
+
+# 25
 
 
 def h(d: int):

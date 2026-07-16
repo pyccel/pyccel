@@ -1,24 +1,26 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from typing import TypeVar
 
-T = TypeVar('T', int, float)
+T = TypeVar("T", int, float)
+
 
 class Point(object):
-    def __init__(self : 'Point', x : float, y : float):
+    def __init__(self: "Point", x: float, y: float):
         self.x = x
         self.y = y
 
-    def __del__(self : 'Point'):
+    def __del__(self: "Point"):
         pass
 
-    def translate(self : 'Point', a : T, b : T):
+    def translate(self: "Point", a: T, b: T):
         self.x = self.x + a
         self.y = self.y + b
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     p = Point(0.0, 0.0)
-    x=p.x
-    p.x=x
+    x = p.x
+    p.x = x
     a = p.x
     a = p.x - 2
     a = 2 * p.x - 2

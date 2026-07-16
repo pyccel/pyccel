@@ -1,46 +1,48 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import pure
 
+
 @pure
 def const_int_float():
     return 1, 3.4
 
+
 @pure
 def const_complex_bool_int():
-    return 1+2j, False, 8
+    return 1 + 2j, False, 8
 
 
 @pure
-def expr_complex_int_bool(n : 'int'):
-    return 0.5+n*1j, 2*n, n==3
+def expr_complex_int_bool(n: "int"):
+    return 0.5 + n * 1j, 2 * n, n == 3
 
 
-def f3(x  : 'float' =  1.5, y  : 'float' =  2.5):
-    return x+y, x-y
+def f3(x: "float" = 1.5, y: "float" = 2.5):
+    return x + y, x - y
 
 
 def print_multiple():
     print(f3())
 
 
-def f4(x : 'float', y  : 'float' =  2.5):
+def f4(x: "float", y: "float" = 2.5):
     x = x + y
-    return x+y, x-y
+    return x + y, x - y
 
 
-def print_func(x : int, y : int):
-    print(x,y)
+def print_func(x: int, y: int):
+    print(x, y)
 
 
 def test_issue910():
     x = 0
     y = 1
-    print_func(x,y)
-    return x,y
+    print_func(x, y)
+    return x, y
 
 
-if __name__ == '__main__':
-    a,b = const_int_float()
+if __name__ == "__main__":
+    a, b = const_int_float()
     print(a)
     print(b)
 
@@ -54,34 +56,34 @@ if __name__ == '__main__':
     print(g)
     print(h)
 
-    i,j = f3(19.2,6.7)
-    print(i,j)
-    i,j = f3(4.5)
-    print(i,j)
-    i,j = f3(y = 8.2)
-    print(i,j)
-    i,j = f3()
+    i, j = f3(19.2, 6.7)
+    print(i, j)
+    i, j = f3(4.5)
+    print(i, j)
+    i, j = f3(y=8.2)
+    print(i, j)
+    i, j = f3()
     print(i, j)
 
     print(f3())
 
     print_multiple()
 
-    #TODO remove comment when passing tuple as arguments is done in C
-    #print(min(f3()))
-    #print(max(f3()))
+    # TODO remove comment when passing tuple as arguments is done in C
+    # print(min(f3()))
+    # print(max(f3()))
 
     for k in range(2):
-        print(f4(i,j))
+        print(f4(i, j))
 
-    if (j>i):
-        print(f4(i,j))
+    if j > i:
+        print(f4(i, j))
 
     k = 1
-    while (k<3):
-        k=k+1
-        print(f4(i,j))
+    while k < 3:
+        k = k + 1
+        print(f4(i, j))
 
-    print(i,j)
+    print(i, j)
 
-    l,m = test_issue910()
+    l, m = test_issue910()

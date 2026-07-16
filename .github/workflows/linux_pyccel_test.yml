@@ -1,0 +1,80 @@
+name: Linux unit tests run through the 'pyccel test' command
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: false
+        type: string
+      force:
+        required: false
+        type: boolean
+        default: false
+  push:
+    branches: [devel, main]
+
+jobs:
+  matrix_prep:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - id: push-matrix
+      if: github.event_name == 'push'
+      run: |
+        echo "matrix=['3.10', '3.11', '3.12', '3.13', '3.14']" >> $GITHUB_ENV
+      shell: bash
+    - if: github.event_name != 'push'
+      run: |
+        VERSION="${{ inputs.python_version }}"
+        echo "matrix=['${VERSION:-3.11}']" >> $GITHUB_ENV
+      shell: bash
+    - id: set-matrix
+      run: |
+        echo "$matrix"
+        echo "matrix={\"python_version\": $matrix}" >> $GITHUB_OUTPUT
+      shell: bash
+
+  Linux:
+
+    runs-on: ubuntu-latest
+    name: Unit tests
+    needs: matrix_prep
+    strategy:
+      matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
+
+    steps:
+      - id: duplicate_check
+        if: inputs.force == false
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          # All of these options are optional, so you can remove them if you are happy with the defaults
+          skip_after_successful_duplicate: 'true'
+          paths: '["pyccel/stdlib/**", "pyccel/**/*.py", "tests/**/*.py", "pyccel/extensions/**", ".github/workflows/linux_pyccel_cmd.yml", ".github/actions/**"]'
+          paths_ignore: '["pyccel/version.py"]'
+          do_not_skip: '["push"]'
+
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install dependencies
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        uses: ./.github/actions/linux_install
+      - name: Install Pyccel with tests
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+        shell: bash
+      - name: Run tests with the 'pyccel test' command
+        if: steps.duplicate_check.outputs.should_skip != 'true'
+        id: pyccel-test
+        timeout-minutes: 60
+        run: |
+          pyccel test
+        shell: bash

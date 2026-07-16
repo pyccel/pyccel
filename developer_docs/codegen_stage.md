@@ -105,7 +105,7 @@ In C this means unravelling all vector expressions to operate on scalars.
 The Fortran language handles some vector expressions so in this case the unravelling is not always needed.
 Expressions must just be unrolled so that all expressions have the same number of dimensions.
 
-E.g:
+E.g. for a Python file `mod.py`:
 
 ```python
 def f(a : 'int[:,:]', b : 'int[:]'):
@@ -116,7 +116,7 @@ def f(a : 'int[:,:]', b : 'int[:]'):
 In C with full unravelling this becomes:
 
 ```c
-array_int64_2d f(array_int64_2d a, array_int64_1d b)
+array_int64_2d mod__f(array_int64_2d a, array_int64_1d b)
 {
     int64_t i;
     int64_t i_0001;
@@ -220,7 +220,7 @@ This dictionary maps optional arguments to local variables.
 This allows the above code to be translated to:
 
 ```c
-void f(int64_t *a)
+void mod__f(int64_t *a)
 {
     int64_t Dummy_0000;
     if (a == NULL)
@@ -238,11 +238,6 @@ In this way it has access to local memory without modifying the object passed in
 
 ### Nested objects
 
-Currently nested objects are not supported in C. This includes both nested functions and functions in classes, however we plan to support this soon.
-Several solutions were investigated in discussion #1149.
-The chosen solution is detailed in issue #1150.
-It was chosen as the simplest and fastest of the proposed solutions.
-
 When printing nested objects in C we prepend the name of the context to the function name in order to identify it.
 E.g:
 
@@ -255,16 +250,16 @@ def f():
 becomes:
 
 ```c
-void f() {
+void mod__f() {
 }
 
-void f__g() {
+void mod__f__g() {
 }
 ```
 
 Care must be taken regarding any variables local to the enclosing function which are used in the nested function.
 These variables are noted as global variables in the nested function, however as they are not entirely global they must be passed as arguments.
-If they are not modified then they can be passed as normal arguments, however if they are modified they must be passed as pointers and be saved in `CCodePrinter._additional_args` (see [Multiple returns](#multiple-returns)).
+As the variable is shared between the functions it is not annotated as constant in the nested functions, these arguments are therefore passed as pointers and saved in `CCodePrinter._additional_args` (see [Multiple returns](#multiple-returns)).
 
 ### Arrays
 

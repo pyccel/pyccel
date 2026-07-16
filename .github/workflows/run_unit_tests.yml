@@ -1,0 +1,87 @@
+name: Run unit tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which test suite to run'
+        required: true
+        type: choice
+        options:
+          - anaconda_linux
+          - anaconda_windows
+          - intel
+          - linux
+          - linux_pyccel_test
+          - llvm
+          - macosx
+          - windows
+        default: linux
+      python_version:
+        description: 'Python version to use (leave empty to use the default for the selected suite)'
+        required: false
+        type: string
+        default: ''
+      force:
+        description: 'Run without checking for a previous identical run'
+        required: false
+        type: boolean
+        default: true
+
+
+jobs:
+  anaconda_linux:
+    if: inputs.test_suite == 'anaconda_linux'
+    uses: ./.github/workflows/anaconda_linux.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  anaconda_windows:
+    if: inputs.test_suite == 'anaconda_windows'
+    uses: ./.github/workflows/anaconda_windows.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  intel:
+    if: inputs.test_suite == 'intel'
+    uses: ./.github/workflows/intel.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  linux:
+    if: inputs.test_suite == 'linux'
+    uses: ./.github/workflows/linux.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  linux_pyccel_test:
+    if: inputs.test_suite == 'linux_pyccel_test'
+    uses: ./.github/workflows/linux_pyccel_test.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  llvm:
+    if: inputs.test_suite == 'llvm'
+    uses: ./.github/workflows/llvm.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  macosx:
+    if: inputs.test_suite == 'macosx'
+    uses: ./.github/workflows/macosx.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}
+
+  windows:
+    if: inputs.test_suite == 'windows'
+    uses: ./.github/workflows/windows.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+      force: ${{ inputs.force }}

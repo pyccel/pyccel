@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling",]
-build-backend = "hatchling.build"
+requires = ["scikit-build-core >= 0.12", "meson"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyccel"
@@ -8,7 +8,7 @@ dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 authors = [
     { name = "Pyccel development team" },
 ]
@@ -17,11 +17,16 @@ keywords = [
 ]
 dependencies = [
     "filelock >= 3.4.0",
-    "numpy >= 1.16, != 2.0.*",
+    "numpy >= 2.1",
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "packaging",
+    "immutabledict >= 4.0.0",
+    "pybind11",
+    "ninja",
+    "meson",
+    "pluggy" #TODO: Version
 ]
 
 [project.optional-dependencies]
@@ -37,9 +42,7 @@ test = [
 ]
 
 [project.scripts]
-pyccel = "pyccel.commands.console:pyccel"
-pyccel-clean = "pyccel.commands.pyccel_clean:pyccel_clean_command"
-pyccel-test = "pyccel.commands.pyccel_test:pyccel_test_command"
+pyccel = "pyccel.commands.console:pyccel_command"
 
 [project.urls]
 Homepage = "https://github.com/pyccel/pyccel"
@@ -48,27 +51,61 @@ Source = "https://github.com/pyccel/pyccel"
 Tracker = "https://github.com/pyccel/pyccel/issues"
 Changelog = "https://github.com/pyccel/pyccel/blob/devel/CHANGELOG.md"
 
-[tool.hatch.version]
-path = "pyccel/version.py"
+[tool.scikit-build]
 
-[tool.hatch.build.targets.wheel]
-artifacts = [
-  "*.pyccel",
-  "pyccel/extensions/gFTL/install/GFTL-1.13/include/v2"
-]
-include = [
+# The minimum scikit-build version that we need to be compatible with
+minimum-version = "0.12.0"
+
+# The build type to use when building the project.
+cmake.build-type = "Release"
+
+# The source directory to use when building the project.
+cmake.source-dir = "pyccel"
+
+# Use Make as a fallback if a suitable Ninja executable is not found.
+ninja.make-fallback = true
+
+# The logging level to display.
+logging.level = "INFO"
+
+# Hook sdist build to insert gFTL compilation and avoid m4 requirement
+sdist.cmake = true
+
+sdist.inclusion-mode = "manual"
+
+sdist.include = [
+  "AUTHORS",
+  "CHANGELOG.md",
+  "CITATION.cff",
+  "LICENSE",
+  "pyproject.toml",
+  "README.md",
   "pyccel/**/*.py",
   "pyccel/**/*.pyi",
+  "pyccel/CMakeLists.txt",
   "pyccel/parser/grammar/*.tx",
   "pyccel/plugins/**/*.tx",
   "pyccel/stdlib/**/*.h",
   "pyccel/stdlib/**/*.c",
+  "pyccel/stdlib/**/*.hpp",
+  "pyccel/stdlib/**/*.cpp",
   "pyccel/stdlib/**/*.f90",
+  "pyccel/stdlib/**/*.F90",
   "pyccel/stdlib/**/*.inc",
+  "pyccel/stdlib/**/CMakeLists.txt",
+  "pyccel/stdlib/**/meson.build",
+  "pyccel/extensions/STC/docs",
   "pyccel/extensions/STC/include",
-  "pyccel/extensions/STC/src/*.c"
+  "pyccel/extensions/STC/src/*",
+  "pyccel/extensions/STC/tests/*",
+  "pyccel/extensions/STC/examples/*",
+  "pyccel/extensions/STC/Makefile",
+  "pyccel/extensions/STC/meson.build",
+  "pyccel/extensions/STC/meson_options.txt",
+  "pyccel/extensions/gftl_install"
 ]
 
-[tool.hatch.build.targets.wheel.hooks.custom]
-path = "install_scripts/hook.py"
-require-runtime-dependencies = true
+[tool.scikit-build.metadata.version]
+# Set version info
+provider = "scikit_build_core.metadata.regex"
+input = "pyccel/version.py"

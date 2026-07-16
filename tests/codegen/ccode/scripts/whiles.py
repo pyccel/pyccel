@@ -20,7 +20,7 @@ while (y < 3 and x > 2) or x > y:
 while x:
     x = x - 1
 
-while not(x):
+while not (x):
     x = x + 1
 
 while not x or x < 4:

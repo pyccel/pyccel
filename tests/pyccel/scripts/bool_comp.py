@@ -1,62 +1,72 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-def is_false(a : 'bool'):
+
+def is_false(a: "bool"):
     c = False
     if a is False:
         c = True
     return c
 
-def compare_is(a : 'bool', b : 'bool'):
+
+def compare_is(a: "bool", b: "bool"):
     c = False
     if a is b:
         c = True
     return c
 
-def not_true(a : 'bool'):
+
+def not_true(a: "bool"):
     c = False
     if a is not True:
         c = True
     return c
 
-def eq_false(a : 'bool'):
+
+def eq_false(a: "bool"):
     c = False
     if a == False:
         c = True
     return c
 
-def neq_true(a : 'bool'):
+
+def neq_true(a: "bool"):
     c = False
     if a != True:
         c = True
     return c
 
-def not_val(a : 'bool'):
+
+def not_val(a: "bool"):
     c = False
     if not a:
         c = True
     return c
 
-def is_nil(a  : 'bool' =  None):
+
+def is_nil(a: "bool" = None):
     c = False
     if a is None:
         c = True
     return c
 
-def is_not_nil(a  : 'bool' =  None):
+
+def is_not_nil(a: "bool" = None):
     c = False
     if a is not None:
         c = True
     return c
 
-def is_nil_default_arg(a  : 'bool' =  None):
+
+def is_nil_default_arg(a: "bool" = None):
     c = False
     if a is None:
         c = True
     return c
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(is_false(False))
-    print(compare_is(True,False))
+    print(compare_is(True, False))
     print(not_true(True))
     print(eq_false(True))
     print(neq_true(False))

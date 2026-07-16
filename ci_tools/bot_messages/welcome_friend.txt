@@ -1,3 +1,0 @@
-Hello again! Thank you for this new pull request :star_struck:.
-
-Please begin by requesting your checklist using the command `/bot checklist`

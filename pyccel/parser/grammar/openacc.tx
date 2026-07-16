@@ -7,7 +7,7 @@ Openacc:
   statements*=OpenaccStmt
 ;
 
-OpenaccStmt: '#$' 'acc' stmt=AccConstructOrDirective;
+OpenaccStmt: '#' '$' 'acc' stmt=AccConstructOrDirective;
 
 ////////////////////////////////////////////////////
 //         Constructs and Directives
