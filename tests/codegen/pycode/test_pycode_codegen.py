@@ -6,10 +6,12 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -22,8 +24,14 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.python
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
+    plugin_manager = pluggy.PluginManager("pyccel")
 
-    pyccel = Parser(f, output_folder=os.getcwd())
+    pyccel = Parser(
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
+    )
     ast = pyccel.parse(verbose=0)
 
     ast = pyccel.annotate(verbose=0)
@@ -31,7 +39,7 @@ def test_codegen(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, "python", verbose=0)
+    codegen = Codegen(ast, name, "python", verbose=0, plugin_manager=plugin_manager)
     codegen.printer.doprint(codegen.ast)
 
     # reset Errors singleton

@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 -   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
 -   #2621 : Add support for module docstrings.
+-   #2611 : Add a plugin framework.
+-   #2611 : Add `pluggy` as an installation dependency.
 
 ### Fixed
 
@@ -17,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
 -   #2618 : Fix unnecessary slicing returning the whole array.
 -   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
+-   #2629 : Fix race condition due to class variables in `Scope`.
 
 ### Changed
 

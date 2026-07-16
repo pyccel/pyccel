@@ -29,7 +29,6 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
-from pyccel.parser.scope import Scope
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj
@@ -50,6 +49,7 @@ __all__ = ["execute_pyccel"]
 def execute_pyccel(
     fname,
     *,
+    plugin_manager,
     syntax_only=False,
     semantic_only=False,
     convert_only=False,
@@ -84,6 +84,8 @@ def execute_pyccel(
     ----------
     fname : str
         Name of the Python file to be translated.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     syntax_only : bool, optional
         Indicates whether the pipeline should stop after the syntax stage. Default is False.
     semantic_only : bool, optional
@@ -211,12 +213,16 @@ def execute_pyccel(
         if not fname:
             return
 
-    Scope.name_clash_checker = name_clash_checkers[language]
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=folder, context_dict=context_dict)
+    parser = Parser(
+        pymod_filepath,
+        output_folder=folder,
+        context_dict=context_dict,
+        name_clash_checker=name_clash_checkers[language],
+        plugin_manager=plugin_manager,
+    )
     parser.parse(verbose=verbose)
     if errors.has_errors():
         raise PyccelSyntaxError("Syntax step failed")
@@ -246,7 +252,7 @@ def execute_pyccel(
     semantic_parser = parser.semantic_parser
     start_codegen = time.time()
     # Generate .f90 file
-    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    codegen = Codegen(semantic_parser, module_name, language, verbose, plugin_manager)
     fname = os.path.join(pyccel_dirpath, module_name)
     fname, prog_name = codegen.export(fname)
 
@@ -342,6 +348,7 @@ def execute_pyccel(
         compiler=compiler,
         sharedlib_modname=output_name,
         verbose=verbose,
+        plugin_manager=plugin_manager,
     )
 
     timers.update(shared_lib_timers)

@@ -8,11 +8,12 @@ Module describing the code-wrapping class : CppToPythonWrapper
 which creates an interface exposing C++ code to Python using pybind11.
 """
 
-from pyccel.ast.core import Import
+from pyccel.ast.core import CommentBlock, Import
 from pyccel.ast.cwrapper import PyccelPyObject, PyModInitFunc, PyModule
 from pyccel.ast.literals import Nil
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 from .wrapper import Wrapper
@@ -126,6 +127,7 @@ class CppToPythonWrapper(Wrapper):
             used_symbols=scope.local_used_symbols.copy(),
             original_symbols=scope.python_names.copy(),
             scope_type="module",
+            name_clash_checker=name_clash_checkers["c++"],
         )
         self.scope = mod_scope
 
@@ -143,10 +145,18 @@ class CppToPythonWrapper(Wrapper):
 
         imports = [Import(mod_scope.get_python_name(expr.name), expr)]
         original_mod_name = expr.scope.get_python_name(name)
+
+        docstring = (
+            next(d for d in expr.docstring.body if isinstance(d, CommentBlock))
+            if expr.docstring
+            else None
+        )
+
         return PyModule(
             original_mod_name,
             [],
             (),
+            docstring=docstring,
             imports=imports,
             interfaces=(),
             classes=(),

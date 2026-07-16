@@ -19,6 +19,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.codegen.printing.cppcode import CppCodePrinter
 from pyccel.codegen.printing.fcode import FCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
+from pyccel.plugins.plugin_tools import get_codegen_class
 from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {"fortran": "f90", "c": "c", "c++": "cpp", "python": "py"}
@@ -52,9 +53,11 @@ class Codegen:
         The language which the printer should print to.
     verbose : int
         The level of verbosity.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
 
-    def __init__(self, parser, name, language, verbose):
+    def __init__(self, parser, name, language, verbose, plugin_manager):
         pyccel_stage.set_stage("codegen")
         self._parser = parser
         self._ast = parser.ast
@@ -64,10 +67,10 @@ class Codegen:
         self._is_program = self.ast.program is not None
 
         # instantiate code_printer
-        try:
-            CodePrinterSubclass = printer_registry[language]
-        except KeyError as err:
-            raise ValueError(f"{language} language is not available") from err
+        self._plugin_manager = plugin_manager
+        CodePrinterSubclass = get_codegen_class(
+            self._plugin_manager, printer_registry.get(language, None), language
+        )
 
         self._printer = CodePrinterSubclass(self.parser.filename, verbose=self._verbose)
 
@@ -180,9 +183,14 @@ class Codegen:
 
         if self._verbose:
             print(">>> Printing :: ", pyi_filename)
-        code = printer_registry["python"](
-            self.parser.filename, verbose=self._verbose
-        ).doprint(module_header)
+
+        PythonPrinter = get_codegen_class(
+            self._plugin_manager, printer_registry["python"], "python"
+        )
+        code = PythonPrinter(self.parser.filename, verbose=self._verbose).doprint(
+            module_header
+        )
+
         if self._language != "python":
             printer_imports = ", ".join(self.get_printer_imports().keys())
             if printer_imports:

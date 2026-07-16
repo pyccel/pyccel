@@ -154,6 +154,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 errors = Errors()
@@ -3915,6 +3916,7 @@ class CCodePrinter(CodePrinter):
             scope_type="class",
             used_symbols=expr.scope.local_used_symbols.copy(),
             original_symbols=expr.scope.python_names.copy(),
+            name_clash_checker=name_clash_checkers["c"],
         )
 
         # Generate safe C names for function pointer members and store on cls_name

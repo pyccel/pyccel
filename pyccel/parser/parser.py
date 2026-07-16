@@ -17,6 +17,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 from pyccel.parser.base import get_filename_from_import
 from pyccel.parser.semantic import SemanticParser
 from pyccel.parser.syntactic import SyntaxParser
+from pyccel.plugins.plugin_tools import get_semantic_class, get_syntactic_class
 
 errors = Errors()
 
@@ -46,8 +47,15 @@ class Parser:
         filename is a .pyi file in a __pyccel__ folder (i.e. a .pyi file that was
         auto-generated to describe the prototypes of the methods).
 
+    name_clash_checker : LanguageNameClashChecker
+        The object which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
+
     **kwargs : dict
-        Any keyword arguments for BasicParser.
+        Any additional keyword arguments for BasicParser.
     """
 
     def __init__(
@@ -57,6 +65,8 @@ class Parser:
         output_folder,
         context_dict=None,
         original_filename=None,
+        name_clash_checker,
+        plugin_manager,
         **kwargs,
     ):
 
@@ -78,10 +88,14 @@ class Parser:
 
         self._context_dict = context_dict
 
+        self._name_clash_checker = name_clash_checker
+
         self._original_filename = Path(original_filename or filename)
 
         self._input_folder = self._original_filename.parent
         self._output_folder = output_folder
+
+        self._plugin_manager = plugin_manager
 
     @property
     def semantic_parser(self):
@@ -197,8 +211,11 @@ class Parser:
         if verbose:
             print(">> Parsing :: ", self._filename)
 
-        parser = SyntaxParser(
-            self._filename, verbose=verbose, context_dict=self._context_dict
+        parser = get_syntactic_class(self._plugin_manager)(
+            self._filename,
+            verbose=verbose,
+            context_dict=self._context_dict,
+            name_clash_checker=self._name_clash_checker,
         )
         self.syntax_parser = parser
 
@@ -238,7 +255,7 @@ class Parser:
             print(">> Calculating semantic annotations :: ", self._filename)
 
         # Create a new semantic parser and store it in object
-        parser = SemanticParser(
+        parser = get_semantic_class(self._plugin_manager)(
             self._syntax_parser,
             d_parsers=self.d_parsers,
             parents=self.parents,
@@ -354,6 +371,8 @@ class Parser:
                     stashed_filename,
                     output_folder=q_output_folder,
                     original_filename=filename,
+                    name_clash_checker=self._name_clash_checker,
+                    plugin_manager=self._plugin_manager,
                 )
             q.parse(d_parsers_by_filename=d_parsers_by_filename, verbose=verbose)
             d_parsers_by_filename[filename] = q

@@ -6,6 +6,7 @@
 """Functions for printing PyBind11 code."""
 
 from pyccel.ast.core import Import, Module, SeparatorComment
+from pyccel.ast.literals import LiteralString
 from pyccel.codegen.printing.cppcode import CppCodePrinter
 
 __all__ = ("PyBindCodePrinter",)
@@ -69,13 +70,24 @@ class PyBindCodePrinter(CppCodePrinter):
     def _print_PyModInitFunc(self, expr):
         my_vars = expr.scope.variables
         assert len(my_vars) == 1
-        mod = next(iter(my_vars.values()))
-        code = "".join(
-            (
-                f"PYBIND11_MODULE({expr.name}, {self._print(mod)})\n",
+        mod_var = next(iter(my_vars.values()))
+        mod_code = self._print(mod_var)
+
+        mod = expr.current_user_node
+
+        docstring = ""
+        if mod.docstring:
+            docstring_code = self._print(
+                LiteralString("\n".join(mod.docstring.comments))
+            )
+            docstring = f"{mod_code}.doc() = {docstring_code};"
+
+        return "".join(
+            [
+                f"PYBIND11_MODULE({expr.name}, {mod_code})\n",
                 "{\n",
+                docstring,
                 self._print(expr.body),
                 "}\n",
-            )
+            ]
         )
-        return code

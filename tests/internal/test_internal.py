@@ -6,6 +6,7 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.codegen.pipeline import execute_pyccel
@@ -27,21 +28,27 @@ def get_files_from_folder(foldername):
 @pytest.mark.external
 @pytest.mark.fortran
 def test_blas(f):
-    execute_pyccel(f, libs=["blas"])
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    execute_pyccel(f, libs=["blas"], plugin_manager=plugin_manager)
 
 
 @pytest.mark.parametrize("f", get_files_from_folder("lapack"))
 @pytest.mark.external
 @pytest.mark.fortran
 def test_lapack(f):
-    execute_pyccel(f, libs=["blas", "lapack"])
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    execute_pyccel(f, libs=["blas", "lapack"], plugin_manager=plugin_manager)
 
 
 @pytest.mark.parametrize("f", get_files_from_folder("mpi"))
 @pytest.mark.external
 @pytest.mark.fortran
 def test_mpi(f):
-    execute_pyccel(f, accelerators=["mpi"])
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    execute_pyccel(f, accelerators=["mpi"], plugin_manager=plugin_manager)
 
 
 @pytest.mark.parametrize("f", get_files_from_folder("openmp"))
@@ -54,13 +61,19 @@ def test_mpi(f):
 )
 @pytest.mark.external
 def test_openmp(f, language):
-    execute_pyccel(f, accelerators=["openmp"], language=language)
+    plugin_manager = pluggy.PluginManager("pyccel")
+
+    execute_pyccel(
+        f, accelerators=["openmp"], language=language, plugin_manager=plugin_manager
+    )
 
 
 # @pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 # @pytest.mark.external
 # def test_openacc():
-#    execute_pyccel(f, compiler='pgfortran', accelerator='openacc')
+#    plugin_manager = pluggy.PluginManager("pyccel")
+#
+#    execute_pyccel(f, compiler='pgfortran', accelerator='openacc', plugin_manager=plugin_manager)
 
 
 ######################
