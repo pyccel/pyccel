@@ -2040,7 +2040,7 @@ def test_full_dtype_auto(language):
         a = full(3, val)
         return a[0]
 
-    integer32 = randint(low=min_int32, high=max_int32)
+    integer32 = randint(low=min_int32, high=max_int32, dtype=np.int32)
     integer = int(integer32)
 
     fl = float(integer)
