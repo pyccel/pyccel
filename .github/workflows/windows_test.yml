@@ -1,0 +1,33 @@
+name: Windows unit tests
+
+on:
+  push:
+    branches: [ebourne_test_tidying]
+
+jobs:
+  Windows_test:
+
+    runs-on: windows-latest
+    name: Unit tests
+    needs: Python_version_picker
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
+      - name: NumPy install
+        run: |
+          pip install numpy
+        shell: bash
+      - name: NumPy test
+        run: |
+          import numpy as np
+          a = np.randint(low=4, high=10, size=(3,4), dtype=int)
+          b = np.array(np.randint(low=4, high=10, size=(3,4)), dtype=int)
+          print(a.dtype)
+          print(b.dtype)
+        shell: python
