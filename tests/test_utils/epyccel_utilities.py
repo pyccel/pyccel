@@ -84,7 +84,10 @@ def compare_epyccel(f, language, *args):
     f2 = epyccel(f, language=language)
     out1 = f(*args)
     out2 = f2(*args)
-    assert all(r1 == r2 for r1, r2 in zip(out1, out2))
+    if isinstance(out1, tuple):
+        assert all(np.equal(r1, r2).all() for r1, r2 in zip(out1, out2))
+    else:
+        assert np.equal(out1, out2).all()
 
 
 # ==============================================================================
