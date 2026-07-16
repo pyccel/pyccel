@@ -3,10 +3,11 @@ from typing import Final
 
 import numpy as np
 import pytest
-from epyccel_utilities import epyccel_module_with_fallback
 from modules import lists
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

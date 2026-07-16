@@ -5,9 +5,12 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from epyccel_utilities import matching_types
 from numpy import isclose
 from numpy.random import rand, randint, randn, uniform
+
+from pyccel import epyccel
+
+from epyccel_utilities import matching_types
 from tolerances import (
     ATOL,
     ATOL32,
@@ -30,8 +33,6 @@ from tolerances import (
     min_int32,
     min_int64,
 )
-
-from pyccel import epyccel
 
 F = TypeVar(
     "F", "bool", "int", "int8", "int16", "int32", "int64", "float", "float32", "float64"

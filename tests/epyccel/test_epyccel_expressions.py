@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import rand, randint
-from tolerances import max_int, min_int
 
 from pyccel import epyccel
+
+from tolerances import max_int, min_int
 
 
 def test_swap_basic(language):

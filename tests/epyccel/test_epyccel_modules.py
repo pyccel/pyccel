@@ -3,9 +3,10 @@ import sys
 
 import numpy as np
 import pytest
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 
 def test_module_1(language):

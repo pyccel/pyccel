@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import isclose
 from numpy.random import randint, uniform
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 # -----------------------------------------------------------------------------
 

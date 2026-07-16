@@ -8,13 +8,14 @@ import mappings
 import numpy as np
 import pytest
 import sympy as sp
-from tolerances import ATOL, RTOL
 
 from pyccel import lambdify as pyc_lambdify
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors import Errors
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
+
+from tolerances import ATOL, RTOL
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, "scripts")

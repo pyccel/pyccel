@@ -3,9 +3,10 @@ from typing import TypeVar
 
 from numpy import isclose
 from numpy.random import rand, randint, uniform
-from tolerances import ATOL, RTOL, min_abs_float
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL, min_abs_float
 
 T = TypeVar("T", int, float)
 

@@ -5,9 +5,10 @@ import modules.complex_func as mod
 import numpy as np
 import pytest
 from numpy.random import rand, randint
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 # Determine whether some unit tests should be skipped with Python >= 3.14 to
 # avoid annoying deprecation warnings dealing with the complex() constructor:

@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from epyccel_utilities import compare_epyccel
 from modules import functionals
 from numpy import arange, array
 from numpy.random import randint
+
+from epyccel_utilities import compare_epyccel
 
 
 def test_functional_for_1d_range(language):

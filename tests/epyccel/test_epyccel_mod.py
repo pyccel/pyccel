@@ -3,9 +3,10 @@ import os
 
 from numpy import allclose
 from numpy.random import randint, uniform
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Intel seems to use a different algorithm

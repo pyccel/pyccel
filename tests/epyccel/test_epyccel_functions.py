@@ -5,9 +5,10 @@ from typing import Final, TypeVar
 import numpy as np
 import pytest
 from numpy.random import randint
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 
 def test_func_no_args_1(language):

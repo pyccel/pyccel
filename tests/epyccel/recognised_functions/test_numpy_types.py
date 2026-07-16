@@ -3,8 +3,11 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from epyccel_utilities import matching_types
 from numpy.random import randint, uniform
+
+from pyccel import epyccel
+
+from epyccel_utilities import matching_types
 from tolerances import (
     ATOL,
     ATOL32,
@@ -27,8 +30,6 @@ from tolerances import (
     min_int32,
     min_int64,
 )
-
-from pyccel import epyccel
 
 NT1 = TypeVar("NT1", "int32", "int64", "float32", "float64", "complex64", "complex128")
 NT2 = TypeVar("NT2", "int32", "int64", "float32", "float64", "complex64", "complex128")

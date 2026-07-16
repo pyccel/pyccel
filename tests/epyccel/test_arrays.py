@@ -5,6 +5,9 @@ import numpy as np
 import pytest
 from modules import arrays
 from numpy.random import randint, uniform
+
+from pyccel import epyccel
+
 from tolerances import (
     ATOL,
     RTOL,
@@ -23,8 +26,6 @@ from tolerances import (
     min_int32,
     min_int64,
 )
-
-from pyccel import epyccel
 
 
 def check_array_equal(a, b):
