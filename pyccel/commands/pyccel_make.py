@@ -11,6 +11,12 @@ import argparse
 import glob
 from pathlib import Path
 
+from pyccel.plugins.plugin_tools import (
+    get_plugin_cli_options,
+    get_plugin_manager,
+    handle_plugin_arguments,
+)
+
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
@@ -196,6 +202,10 @@ def setup_pyccel_make_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, parser, "make")
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     add_common_settings(group)
@@ -208,7 +218,7 @@ def setup_pyccel_make_parser(parser):
     )
 
 
-def pyccel_make(*, language, **kwargs) -> None:
+def pyccel_make(*, language, plugin_manager, **kwargs) -> None:
     """
     Call the `pyccel make` pipeline.
 
@@ -218,10 +228,16 @@ def pyccel_make(*, language, **kwargs) -> None:
     ----------
     language : str
         The target language Pyccel is translating to.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     **kwargs : dict
         See execute_pyccel_make.
     """
 
     from pyccel.codegen.make_pipeline import execute_pyccel_make
 
-    execute_pyccel_make(language=language.lower(), **kwargs)
+    handle_plugin_arguments(plugin_manager, kwargs)
+
+    execute_pyccel_make(
+        language=language.lower(), plugin_manager=plugin_manager, **kwargs
+    )

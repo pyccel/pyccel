@@ -3,6 +3,7 @@
 
 import os
 
+import pluggy
 import pytest
 
 from pyccel.errors.errors import Errors
@@ -19,8 +20,13 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.language_agnostic
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     pyccel = Parser(
-        f, output_folder=os.getcwd(), name_clash_checker=name_clash_checkers["python"]
+        f,
+        output_folder=os.getcwd(),
+        name_clash_checker=name_clash_checkers["python"],
+        plugin_manager=plugin_manager,
     )
     pyccel.parse(verbose=0)
     print(pyccel.fst)

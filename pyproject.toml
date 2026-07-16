@@ -26,6 +26,7 @@ dependencies = [
     "pybind11",
     "ninja",
     "meson",
+    "pluggy" #TODO: Version
 ]
 
 [project.optional-dependencies]

@@ -28,6 +28,7 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
+from pyccel.plugins.plugin_tools import get_build_generation_class
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.compilers import Compiler, get_condaless_search_path
@@ -57,6 +58,7 @@ def execute_pyccel_make(
     accelerators,
     conda_warnings,
     build_code,
+    plugin_manager,
 ):
     """
     Run `pyccel make` on the provided files.
@@ -104,6 +106,8 @@ def execute_pyccel_make(
         Specify the level of Conda warnings to display (choices: off, basic, verbose).
     build_code : bool
         Indicates if the build commands should be run.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
     start = time.time()
     timers = {}
@@ -161,6 +165,7 @@ def execute_pyccel_make(
             f.absolute(),
             output_folder=folder,
             name_clash_checker=name_clash_checkers[language],
+            plugin_manager=plugin_manager,
         )
         for f in files
     }
@@ -210,7 +215,9 @@ def execute_pyccel_make(
         semantic_parser = p.semantic_parser
         start_codegen = time.time()
         # Generate low-level code file
-        codegen = Codegen(semantic_parser, f, language, verbose)
+        codegen = Codegen(
+            semantic_parser, f, language, verbose, plugin_manager=plugin_manager
+        )
         fname = (pyccel_dirpath / f).with_suffix("")
         output_dir = fname.parent
         os.makedirs(output_dir, exist_ok=True)
@@ -230,7 +237,9 @@ def execute_pyccel_make(
             shutil.copyfile(fname, new_location)
         else:
             start_wrapper_creation = time.time()
-            wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+            wrappergen = Wrappergen(
+                codegen, codegen.name, language, verbose, plugin_manager=plugin_manager
+            )
             wrappergen.wrap(str((base_dirpath / f).parent))
             timers["Wrapper creation"] += time.time() - start_wrapper_creation
 
@@ -293,7 +302,10 @@ def execute_pyccel_make(
         base_dirpath, targets.values(), printed_languages, stdlib_deps
     )
 
-    build_sys = build_system_handler[build_system](
+    BuildGenClass = get_build_generation_class(
+        plugin_manager, build_system_handler.get(build_system, None), build_system
+    )
+    build_sys = BuildGenClass(
         pyccel_dirpath,
         base_dirpath,
         folder,
