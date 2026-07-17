@@ -69,7 +69,7 @@ jobs:
           shell: gitbash
       - run: |
           pyccel compile decorators_elemental.py -vv
-        shell: gitbash
+        shell: 'gitbash -l -eo pipefail {0}'
         working-directory: ./tests/pyccel/scrpits
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
