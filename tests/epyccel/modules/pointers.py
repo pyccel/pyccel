@@ -50,6 +50,7 @@ def reassigned_pointer_shape():
     d = c * b
     return shape(d)[0], d[0], d[5]
 
+
 def return_ambiguous_pointer_to_argument(x: "int[:]"):
     y = x
     w = y

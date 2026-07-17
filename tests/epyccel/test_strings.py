@@ -11,6 +11,7 @@ from epyccel_utilities import epyccel_module_with_fallback
 def epyc_strings_module(language):
     return epyccel_module_with_fallback(strings_module, language)
 
+
 failing_tests = {
     "concatenate": "C does not support string concatenation",
     "concatenate_multiple": "C does not support string concatenation",
@@ -18,18 +19,21 @@ failing_tests = {
 }
 
 
-@pytest.mark.parametrize("test_func", [
-    "one_quote",
-    "two_quote",
-    "three_quote",
-    "return_literal",
-    "concatenate",
-    "concatenate_multiple",
-    "concatenate_expr",
-    "string_function_call",
-    "string_function_call_on_literal",
-    "string_function_return",
-])
+@pytest.mark.parametrize(
+    "test_func",
+    [
+        "one_quote",
+        "two_quote",
+        "three_quote",
+        "return_literal",
+        "concatenate",
+        "concatenate_multiple",
+        "concatenate_expr",
+        "string_function_call",
+        "string_function_call_on_literal",
+        "string_function_return",
+    ],
+)
 def test_strings(test_func, epyc_strings_module):
     if test_func in failing_tests and epyc_strings_module.language == "c":
         pytest.xfail(failing_tests[test_func])
