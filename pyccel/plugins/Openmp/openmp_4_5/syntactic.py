@@ -182,12 +182,12 @@ def _visit_OmpTxDirective(self, stmt):
         body = []
         end = None
         container = None
-        print(self._context[::-1])
         for el in self._context[::-1]:
-            if isinstance(el, list):
-                container = el[el.index(self._context[-2]) + 1:].copy()
+            if hasattr(el, 'body'):
+                container = el.body[el.body.index(self._context[-2]) + 1:].copy()
                 break
         for line in container:
+            # Visit lines belonging to container
             expr = self._visit(line)
             if isinstance(expr, OmpEndDirective) and stmt.name == expr.name:
                 end = expr
@@ -199,6 +199,7 @@ def _visit_OmpTxDirective(self, stmt):
                 symbol=stmt,
                 severity="fatal",
             )
+        # self._skip_stmts_count ensures that statements aren't visited twice
         self._skip_stmts_count = len(body) + 1
         body = CodeBlock(body=body)
         return OmpConstruct(start=directive, end=end, body=body)
