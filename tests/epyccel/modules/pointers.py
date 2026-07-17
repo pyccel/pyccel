@@ -1,11 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-__all__ = [
-    "slice_is_pointer_idx_0",
-    "array_copy_is_pointer",
-    "pointer_to_pointer_is_pointer",
-    "reassigned_pointer",
-    "reassigned_pointer_shape",
-]
 
 
 def slice_is_pointer_idx_0():
@@ -56,3 +49,8 @@ def reassigned_pointer_shape():
     c = a[1:]
     d = c * b
     return shape(d)[0], d[0], d[5]
+
+def return_ambiguous_pointer_to_argument(x: "int[:]"):
+    y = x
+    w = y
+    return w
