@@ -34,7 +34,6 @@ from tolerances import (
 from epyccel_utilities import epyccel_module_with_fallback
 
 
-
 @pytest.fixture(scope="module")
 def epyc_numpy_types_mod(language):
     return epyccel_module_with_fallback(numpy_types, language)

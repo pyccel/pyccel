@@ -20,6 +20,7 @@ from tolerances import ATOL, RTOL
 def epyc_cmath_funcs_mod(language):
     return epyccel_module_with_fallback(cmath_funcs, language)
 
+
 T = TypeVar("T", float, complex)
 
 max_float = 3.40282e5  # maximum positive float

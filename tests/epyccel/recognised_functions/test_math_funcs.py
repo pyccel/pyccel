@@ -15,6 +15,7 @@ from pyccel import epyccel
 
 from tolerances import ATOL, RTOL
 
+
 @pytest.fixture(scope="module")
 def epyc_math_funcs_mod(language):
     return epyccel_module_with_fallback(math_funcs, language)

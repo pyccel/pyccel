@@ -14,8 +14,6 @@ def epyc_epyccel_pow_mod(language):
     return epyccel_module_with_fallback(epyccel_pow, language)
 
 
-
-
 def test_pow_int_int(epyc_epyccel_pow_mod):
     f_call = epyccel_pow.f_call
     f = epyc_epyccel_pow_mod.f_call

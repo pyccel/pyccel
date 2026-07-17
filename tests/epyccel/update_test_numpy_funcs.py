@@ -17,6 +17,7 @@ A test is only migrated if:
 
 Run with `--dry-run` to only print what would change.
 """
+
 import argparse
 import ast
 import re
@@ -77,7 +78,9 @@ def has_parametrize(func):
 
 def annotation_names(fdef):
     names = set()
-    for a in list(fdef.args.args) + list(fdef.args.posonlyargs) + list(fdef.args.kwonlyargs):
+    for a in (
+        list(fdef.args.args) + list(fdef.args.posonlyargs) + list(fdef.args.kwonlyargs)
+    ):
         if isinstance(a.annotation, ast.Name):
             names.add(a.annotation.id)
     if isinstance(fdef.returns, ast.Name):
@@ -88,8 +91,14 @@ def annotation_names(fdef):
 def classify(func):
     """Return a dict describing how to migrate `func`, or raise Skip."""
     args = func.args
-    if (args.posonlyargs or args.kwonlyargs or args.vararg or args.kwarg
-            or args.defaults or args.kw_defaults):
+    if (
+        args.posonlyargs
+        or args.kwonlyargs
+        or args.vararg
+        or args.kwarg
+        or args.defaults
+        or args.kw_defaults
+    ):
         raise Skip("unexpected argument shape")
     if [a.arg for a in args.args] != ["language"]:
         raise Skip("arguments are not exactly (language,)")
@@ -101,16 +110,25 @@ def classify(func):
     language_kwarg_nodes = set()
     for call in all_epyccel_calls:
         for kw in call.keywords:
-            if kw.arg == "language" and isinstance(kw.value, ast.Name) and kw.value.id == "language":
+            if (
+                kw.arg == "language"
+                and isinstance(kw.value, ast.Name)
+                and kw.value.id == "language"
+            ):
                 language_kwarg_nodes.add(id(kw.value))
     for n in ast.walk(func):
-        if isinstance(n, ast.Name) and n.id == "language" and isinstance(n.ctx, ast.Load):
+        if (
+            isinstance(n, ast.Name)
+            and n.id == "language"
+            and isinstance(n.ctx, ast.Load)
+        ):
             if id(n) not in language_kwarg_nodes:
                 raise Skip("`language` used outside of epyccel(..., language=language)")
 
     # Every epyccel() call must be `var = epyccel(local_func, language=language[, verbose=...])`.
     assigns_with_epyccel = [
-        n for n in ast.walk(func)
+        n
+        for n in ast.walk(func)
         if isinstance(n, ast.Assign) and is_epyccel_call(n.value)
     ]
     if len(assigns_with_epyccel) != len(all_epyccel_calls):
@@ -159,7 +177,7 @@ def classify(func):
 
 def stripped_test_name(test_name):
     assert test_name.startswith("test_")
-    return test_name[len("test_"):]
+    return test_name[len("test_") :]
 
 
 def main():
@@ -172,14 +190,13 @@ def main():
     off = offsets(src)
 
     test_funcs = [
-        n for n in tree.body
+        n
+        for n in tree.body
         if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")
     ]
 
     # Global (module-level, outside any test) TypeVar definitions: always copied verbatim.
-    global_typevars = [
-        n for n in tree.body if is_typevar_assign(n)
-    ]
+    global_typevars = [n for n in tree.body if is_typevar_assign(n)]
     global_typevar_names = {n.targets[0].id for n in global_typevars}
 
     plans = []
@@ -207,8 +224,11 @@ def main():
             orig_name = t["def_node"].name
             new_name = f"{stripped}__{orig_name}" if multi else stripped
             if new_name in used_names:
-                print(f"ERROR: name collision hoisting '{orig_name}' from "
-                      f"'{func.name}' -> '{new_name}' already exists", file=sys.stderr)
+                print(
+                    f"ERROR: name collision hoisting '{orig_name}' from "
+                    f"'{func.name}' -> '{new_name}' already exists",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             used_names.add(new_name)
             t["new_name"] = new_name
@@ -218,11 +238,15 @@ def main():
         for plan in plans:
             func = plan["func"]
             for t in plan["targets"]:
-                print(f"  {func.name}: {t['def_node'].name} -> {MODULE_NAME}.{t['new_name']}")
+                print(
+                    f"  {func.name}: {t['def_node'].name} -> {MODULE_NAME}.{t['new_name']}"
+                )
         return
 
     # --- Build the hoisted module content -----------------------------------
-    module_lines = ["# pylint: disable=missing-function-docstring, missing-module-docstring\n"]
+    module_lines = [
+        "# pylint: disable=missing-function-docstring, missing-module-docstring\n"
+    ]
     module_lines.append("from typing import TypeVar\n\n")
     module_lines.append("import numpy as np\n\n")
     for n in global_typevars:
@@ -239,7 +263,9 @@ def main():
             def_node = t["def_node"]
             s, e = node_span(off, def_node)
             text = src[s:e]
-            text = re.sub(rf"^def {re.escape(def_node.name)}\(", f"def {t['new_name']}(", text)
+            text = re.sub(
+                rf"^def {re.escape(def_node.name)}\(", f"def {t['new_name']}(", text
+            )
             module_lines.append(text + "\n\n")
 
     # --- Build the edits to the test file ------------------------------------
@@ -255,7 +281,9 @@ def main():
         # 2) remove hoisted defs (+ preamble), replace epyccel() calls, insert rebinds
         rebind_lines = []
         for t in plan["targets"]:
-            block_start_node = t["preamble"] if t["preamble"] is not None else t["def_node"]
+            block_start_node = (
+                t["preamble"] if t["preamble"] is not None else t["def_node"]
+            )
             s, e = node_span(off, block_start_node)
             s2, e2 = node_span(off, t["def_node"])
             edits.append((s, e2, None))  # delete the block entirely
@@ -268,8 +296,12 @@ def main():
 
         body = func.body
         insert_idx = 0
-        if (body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant)
-                and isinstance(body[0].value.value, str)):
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
             insert_idx = 1
         insert_node = body[insert_idx]
         insert_off = off(insert_node.lineno, 0)
@@ -287,7 +319,7 @@ def main():
     fixture_block = (
         "\nfrom epyccel_utilities import epyccel_module_with_fallback\n"
         "from modules import numpy_funcs\n\n\n"
-        f"@pytest.fixture(scope=\"module\")\n"
+        f'@pytest.fixture(scope="module")\n'
         f"def {FIXTURE_NAME}(language):\n"
         f"    return epyccel_module_with_fallback(numpy_funcs, language)\n\n"
     )

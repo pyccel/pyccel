@@ -14,8 +14,6 @@ def epyc_mod_mod(language):
     return epyccel_module_with_fallback(mod, language)
 
 
-
-
 def test_augassign_add_1d(epyc_mod_mod):
     f_int = mod.augassign_add_1d_int
     f_float = mod.augassign_add_1d_float

@@ -8,6 +8,7 @@ from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
 
+
 @pytest.fixture(scope="module")
 def epyc_epyccel_division_mod(language):
     return epyccel_module_with_fallback(epyccel_division, language)
@@ -18,7 +19,6 @@ def epyc_epyccel_floor_division_mod(language):
     return epyccel_module_with_fallback(
         epyccel_floor_division, language, flags="-Werror -Wconversion"
     )
-
 
 
 # -------------------- simple division ---------------------- #

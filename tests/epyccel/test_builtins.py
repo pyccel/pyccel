@@ -9,11 +9,10 @@ from pyccel import epyccel
 
 from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
+
 @pytest.fixture(scope="module")
 def epyc_builtins_mod(language):
     return epyccel_module_with_fallback(builtins, language)
-
-
 
 
 def test_abs_i(epyc_builtins_mod):

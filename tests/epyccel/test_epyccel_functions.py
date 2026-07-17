@@ -17,8 +17,6 @@ def epyc_epyccel_functions_mod(language):
     return epyccel_module_with_fallback(epyccel_functions, language)
 
 
-
-
 def test_func_no_args_1(language):
     """test function with return value but no args"""
 

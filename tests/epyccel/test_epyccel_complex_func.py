@@ -10,6 +10,7 @@ from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
 
+
 @pytest.fixture(scope="module")
 def epyc_mod(language):
     return epyccel_module_with_fallback(mod, language)
