@@ -35,6 +35,14 @@ T = TypeVar(
 )
 S = TypeVar("S", int, "int8", "int16", "int32", "int64", "float", "float32", "float64")
 
+FI = TypeVar("FI", float, int)
+
+
+test_copy__X = TypeVar("test_copy__X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
+
+
+test_copy__Y = TypeVar("test_copy__Y", "float[:,:]", "complex[:,:,:](order=F)")
+
 
 def fabs_call_r(x: "float"):
     from numpy import fabs
@@ -1474,7 +1482,7 @@ def sum_int(x: "int[:]"):
 
 
 def sum_override_builtin(x: "int[:]"):
-    from numpy import sum
+    from numpy import sum #pylint: disable=redefined-builtin
 
     return sum(x)
 
@@ -2815,8 +2823,8 @@ def numpy_linspace_scalar__test_linspace_type(
 ):
     x = np.linspace(start + 4, end, 15, dtype=np.int64)
     ret = 1
-    for i in range(len(x)):
-        if x[i] != result[i]:
+    for xi in enumerate(x):
+        if xi != result[i]:
             ret = 0
     return ret, x[int(len(x) / 2)]
 
@@ -2825,11 +2833,9 @@ def numpy_linspace_scalar__test_linspace_type2(
     start: "int", end: "int", result: "complex128[:]"
 ):
     x = np.linspace(start, end * 2, 15, dtype="complex128")
-    for i in range(len(x)):
-        result[i] = x[i]
+    for i, xi in enumerate(x):
+        result[i] = xi
 
-
-FI = TypeVar("FI", float, int)
 
 
 def numpy_linspace_scalar__test_linspace_int(
@@ -2874,7 +2880,7 @@ def numpy_linspace_array_like_1d__test_linspace_dtype(
         start,
         stop,
         numberOfSamplesToGenerate,
-        endpoint=(endpoint == True),
+        endpoint=endpoint,
         dtype=np.int32,
     )
     return a
@@ -2954,15 +2960,9 @@ def result_type__value_types():
     return b[0]
 
 
-test_copy__X = TypeVar("X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
-
-
 def test_copy__copy_array(a: test_copy__X):
     b = a.copy()
     return b
-
-
-test_copy__Y = TypeVar("Y", "float[:,:]", "complex[:,:,:](order=F)")
 
 
 def test_copy__copy_array_to_F(a: test_copy__Y):

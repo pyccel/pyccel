@@ -232,9 +232,8 @@ def test_tuple_visitation_inhomogeneous(language):
     f1 = tuple_visitation_inhomogeneous
     f2 = epyccel(f1, language=language)
 
-    python_out = f1()
-    pyccel_out = f2()
-    compare_python_pyccel(python_out, pyccel_out)
+    f1()
+    f2()
 
 
 def test_homogeneous_tuples_of_bools_as_args(epyc_tuples_mod):

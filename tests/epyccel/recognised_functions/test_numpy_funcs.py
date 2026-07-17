@@ -5,6 +5,7 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
+from modules import numpy_funcs
 from numpy import isclose
 from numpy.random import rand, randint, randn, uniform
 

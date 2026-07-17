@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from typing import Final, TypeVar
 
 I = TypeVar("I", "int8", "int16", "int32", "int64")

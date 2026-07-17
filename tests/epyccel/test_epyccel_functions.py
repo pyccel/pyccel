@@ -314,7 +314,6 @@ def test_return_annotation(epyc_epyccel_functions_mod):
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
 def test_wrong_argument_type(epyc_epyccel_functions_mod):
-    f = epyccel_functions.wrong_argument_type
     epyc_f = epyc_epyccel_functions_mod.wrong_argument_type
     test_arg = 3.5
     with pytest.raises(TypeError) as err:
@@ -325,7 +324,6 @@ def test_wrong_argument_type(epyc_epyccel_functions_mod):
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
 def test_wrong_known_argument_type_in_interface(epyc_epyccel_functions_mod):
-    f = epyccel_functions.wrong_known_argument_type_in_interface
     epyc_f = epyc_epyccel_functions_mod.wrong_known_argument_type_in_interface
 
     test_arg = 4.5
@@ -339,7 +337,6 @@ def test_wrong_known_argument_type_in_interface(epyc_epyccel_functions_mod):
 def test_wrong_known_argument_type_in_interface_with_default(
     epyc_epyccel_functions_mod,
 ):
-    f = epyccel_functions.wrong_known_argument_type_in_interface_with_default
     epyc_f = (
         epyc_epyccel_functions_mod.wrong_known_argument_type_in_interface_with_default
     )
@@ -353,7 +350,6 @@ def test_wrong_known_argument_type_in_interface_with_default(
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
 def test_wrong_unknown_argument_type_in_interface(epyc_epyccel_functions_mod):
-    f = epyccel_functions.wrong_known_argument_type_in_interface
     epyc_f = epyc_epyccel_functions_mod.wrong_known_argument_type_in_interface
 
     test_arg = 3.5 + 1j
@@ -365,7 +361,6 @@ def test_wrong_unknown_argument_type_in_interface(epyc_epyccel_functions_mod):
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
 def test_wrong_argument_combination_in_interface(epyc_epyccel_functions_mod, language):
-    f = epyccel_functions.wrong_argument_combination_in_interface
     epyc_f = epyc_epyccel_functions_mod.wrong_argument_combination_in_interface
 
     with pytest.raises(TypeError):
