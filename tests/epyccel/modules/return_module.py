@@ -14,9 +14,9 @@ def divide_by(a: "float[:]", b: "float"):
         a[i] = ai / b
 
 
-def return_None(
+def return_None(  # pylint: disable=inconsistent-return-statements
     a: "float[:]", b: "float"
-):  # pylint: disable=inconsistent-return-statements
+):
     if abs(b) < 0.1:
         return None
     for i, ai in enumerate(a):
