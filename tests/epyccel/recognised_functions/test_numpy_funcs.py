@@ -5595,6 +5595,7 @@ def test_where_combined_types(epyc_numpy_funcs_mod):
 
 def test_numpy_linspace_scalar(epyc_numpy_funcs_mod):
     from numpy import linspace
+
     get_linspace = numpy_funcs.numpy_linspace_scalar__get_linspace
     test_linspace_int = numpy_funcs.numpy_linspace_scalar__test_linspace_int
     test_linspace = numpy_funcs.numpy_linspace_scalar__test_linspace
