@@ -8,8 +8,7 @@ from numpy.random import randint
 
 from pyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
+from tolerances import ATOL, RTOL
 
 
 def test_func_no_args_1(language):

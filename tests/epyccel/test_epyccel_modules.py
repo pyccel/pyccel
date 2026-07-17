@@ -6,8 +6,7 @@ import pytest
 
 from pyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
+from tolerances import ATOL, RTOL
 
 
 def test_module_1(language):

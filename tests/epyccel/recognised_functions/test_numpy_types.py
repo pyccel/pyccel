@@ -3,13 +3,16 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from numpy.random import uniform
-from test_numpy_funcs import (
+from numpy.random import randint, uniform
+
+from pyccel import epyccel
+
+from epyccel_utilities import matching_types
+from tolerances import (
     ATOL,
     ATOL32,
     RTOL,
     RTOL32,
-    matching_types,
     max_float,
     max_float32,
     max_float64,
@@ -26,10 +29,7 @@ from test_numpy_funcs import (
     min_int16,
     min_int32,
     min_int64,
-    randint,
 )
-
-from pyccel import epyccel
 
 NT1 = TypeVar("NT1", "int32", "int64", "float32", "float64", "complex64", "complex128")
 NT2 = TypeVar("NT2", "int32", "int64", "float32", "float64", "complex64", "complex128")

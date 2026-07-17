@@ -3,7 +3,10 @@ from typing import TypeVar
 
 import numpy as np
 from numpy.random import randint, uniform
-from recognised_functions.test_numpy_funcs import (
+
+from pyccel import epyccel
+
+from tolerances import (
     max_float,
     max_float32,
     max_float64,
@@ -21,8 +24,6 @@ from recognised_functions.test_numpy_funcs import (
     min_int32,
     min_int64,
 )
-
-from pyccel import epyccel
 
 T = TypeVar(
     "T",
