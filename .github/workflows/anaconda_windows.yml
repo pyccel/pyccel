@@ -69,6 +69,7 @@ jobs:
           shell: gitbash
       - run: |
           pyccel compile decorators_elemental.py -vv
+          ./decorators_elemental.exe
         shell: 'gitbash -l -eo pipefail {0}'
         working-directory: ./tests/pyccel/scripts
       - name: Fortran/C tests with pytest
