@@ -1,4 +1,4 @@
-# pylint: missing-module-docstring
+# pylint: disable=missing-module-docstring
 import sys
 
 import numpy as np
