@@ -2160,7 +2160,9 @@ def empty_like_combined_args__create_empty_like_3_shape():
     from numpy import array, empty_like, shape
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-    a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
+    a = empty_like(  # pylint:disable=unexpected-keyword-arg
+        arr, shape=(4, 2), order="F", dtype=complex
+    )
     s = shape(a)
     return len(s), s[0], s[1]
 
@@ -2169,7 +2171,9 @@ def empty_like_combined_args__create_empty_like_3_val():
     from numpy import array, empty_like
 
     arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
-    a = empty_like(arr, shape=(4, 2), order="F", dtype=complex)
+    a = empty_like(  # pylint:disable=unexpected-keyword-arg
+        arr, shape=(4, 2), order="F", dtype=complex
+    )
     return a[0, 0]
 
 
