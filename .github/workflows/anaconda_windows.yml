@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [devel, main]
+    branches: [devel, main, anaconda_windows_fortran]
 
 jobs:
   Python_version_picker:
@@ -67,6 +67,10 @@ jobs:
         with:
           mpi_type: msmpi
           shell: gitbash
+      - run:
+        pyccel compile decorators_elemental.py -vv
+        shell: bash
+        working-directory: ./tests/pyccel/scrpits
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
