@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 -   #2606 : Make class methods non-final by default.
 -   \[DEVELOPER\] Require black formatting.
 -   \[DEVELOPER\] Reorganise tests by introducing `test_utils` folder to reduce code duplication.
+-   \[DEVELOPER\] Reorganise tests to use `epyccel_module_with_fallback` function in order to speed up tests.
 
 ### Deprecated
 
