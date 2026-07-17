@@ -4,13 +4,12 @@ from typing import TypeVar
 
 import numpy as np
 import pytest
-from tolerances import ATOL, RTOL
 from modules import arrays
 from numpy.random import randint, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
+from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import (
     ATOL,
     RTOL,

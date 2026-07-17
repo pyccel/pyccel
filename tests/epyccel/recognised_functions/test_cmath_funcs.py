@@ -8,11 +8,10 @@ import pytest
 from modules import cmath_funcs
 from numpy import isclose
 from numpy.random import rand, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
-
+from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL
 
 

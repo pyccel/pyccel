@@ -3,10 +3,11 @@
 import pytest
 from modules import imports
 from numpy import ones
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.decorators import inline
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

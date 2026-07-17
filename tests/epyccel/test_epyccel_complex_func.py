@@ -5,10 +5,11 @@ import modules.complex_func as mod
 import numpy as np
 import pytest
 from numpy.random import rand, randint
-from epyccel_utilities import epyccel_module_with_fallback
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")

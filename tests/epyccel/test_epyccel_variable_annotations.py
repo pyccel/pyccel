@@ -8,10 +8,11 @@ from typing import Annotated, Final
 
 import pytest
 from modules import epyccel_variable_annotations
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 from pyccel.errors.errors import Errors, PyccelSemanticError
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

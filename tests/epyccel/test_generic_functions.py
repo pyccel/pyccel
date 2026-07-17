@@ -5,9 +5,10 @@ import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 import numpy as np
 import pytest
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 IA = TypeVar("IA", "int", "int[:]")
 T7 = TypeVar("T7", "int", "float[:]", "complex[:, :]")

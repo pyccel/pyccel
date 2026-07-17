@@ -9,9 +9,10 @@ import numpy as np
 import pytest
 from modules import array_as_func_args
 from numpy.random import randint, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 int_types = ["int8", "int16", "int32", "int64"]
 float_types = ["float32", "float64"]

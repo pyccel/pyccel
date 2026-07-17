@@ -8,7 +8,7 @@ from numpy.random import randint, uniform
 
 from pyccel import epyccel
 
-from epyccel_utilities import matching_types
+from epyccel_utilities import epyccel_module_with_fallback, matching_types
 from tolerances import (
     ATOL,
     ATOL32,
@@ -31,7 +31,6 @@ from tolerances import (
     min_int32,
     min_int64,
 )
-from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

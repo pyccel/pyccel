@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 from modules import base
+
 from epyccel_utilities import epyccel_module_with_fallback
 
 

@@ -6,10 +6,11 @@ import numpy as np
 import pytest
 from modules import epyccel_functions
 from numpy.random import randint
-from epyccel_utilities import epyccel_module_with_fallback
-from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")

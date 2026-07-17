@@ -7,11 +7,10 @@ import numpy as np
 import pytest
 from numpy import isclose
 from numpy.random import rand, randint, randn, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
-from epyccel_utilities import matching_types
+from epyccel_utilities import epyccel_module_with_fallback, matching_types
 from tolerances import (
     ATOL,
     ATOL32,

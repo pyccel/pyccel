@@ -5,9 +5,10 @@ from typing import TypeVar
 import numpy as np
 import pytest
 from modules import epyccel_default_args
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

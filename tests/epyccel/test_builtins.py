@@ -3,10 +3,10 @@ import numpy as np
 import pytest
 from modules import builtins
 from numpy.random import randint, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
+from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
 

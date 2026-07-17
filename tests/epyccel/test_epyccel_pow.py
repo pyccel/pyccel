@@ -3,10 +3,11 @@ import pytest
 from modules import epyccel_pow
 from numpy import isclose
 from numpy.random import rand, randint, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
-from tolerances import ATOL, RTOL, min_abs_float
 from pyccel import epyccel
+
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL, min_abs_float
 
 
 @pytest.fixture(scope="module")

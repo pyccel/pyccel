@@ -1,13 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from tolerances import ATOL, RTOL
 from modules import epyccel_pyc_math
 from numpy import isclose
 from numpy.random import randint, uniform
-from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
+from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL
 
 
