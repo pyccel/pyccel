@@ -21,7 +21,7 @@ def epyc_epyccel_decorators_mod(language):
 def test_private(epyc_epyccel_decorators_mod):
     # Attribute error when extracting f from module
     with pytest.raises(AttributeError):
-        epyc_epyccel_decorators_mod.hidden
+        epyc_epyccel_decorators_mod.hidden()
 
 
 def test_inline_1_out(epyc_epyccel_decorators_mod):

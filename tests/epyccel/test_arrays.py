@@ -2289,8 +2289,8 @@ def test_array_variable_size(epyc_arrays_mod):
     f2 = epyc_arrays_mod.array_variable_size
     n = randint(1, 10)
     m = randint(11, 20)
-    s1_1, s1_2 = f1()
-    s2_1, s2_2 = f2()
+    s1_1, s1_2 = f1(n, m)
+    s2_1, s2_2 = f2(n, m)
     assert s1_1 == s1_2
     assert s2_1 == s2_2
 

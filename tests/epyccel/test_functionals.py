@@ -128,7 +128,7 @@ def test_functional_for_2d_array_range(language):
     idx = randint(28)
     f2 = epyccel(functional_for_2d_array_range, language=language)
 
-    assert equal(functional_for_2d_array_range(idx), f2(idx)).all()
+    compare_epyccel(functional_for_2d_array_range, f2, idx)
 
 
 def test_functional_for_2d_range_const(epyc_functionals_mod):

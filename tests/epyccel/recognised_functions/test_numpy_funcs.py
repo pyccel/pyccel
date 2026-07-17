@@ -5461,8 +5461,6 @@ def test_numpy_where_array_like_1d_1_arg(language):
         s = shape(a)
         return len(s), s[1], a[0][1], a[0][0]
 
-    size = 5
-
     # Arrays must have at least 2 elements larger than 5 to avoid IndexError
     integer8 = np.array([6, 1, 8, 2, 3], dtype=np.int8)
     integer16 = np.array([6, 1, 8, 2, 3], dtype=np.int16)
@@ -5596,13 +5594,10 @@ def test_where_combined_types(epyc_numpy_funcs_mod):
 
 
 def test_numpy_linspace_scalar(epyc_numpy_funcs_mod):
+    from numpy import linspace
     get_linspace = numpy_funcs.numpy_linspace_scalar__get_linspace
-    test_linspace_type = numpy_funcs.numpy_linspace_scalar__test_linspace_type
-    test_linspace_type2 = numpy_funcs.numpy_linspace_scalar__test_linspace_type2
     test_linspace_int = numpy_funcs.numpy_linspace_scalar__test_linspace_int
     test_linspace = numpy_funcs.numpy_linspace_scalar__test_linspace
-    test_linspace2 = numpy_funcs.numpy_linspace_scalar__test_linspace2
-    from numpy import linspace
 
     integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5753,9 +5748,6 @@ def test_numpy_linspace_scalar(epyc_numpy_funcs_mod):
 
 
 def test_numpy_linspace_array_like_1d(epyc_numpy_funcs_mod):
-    test_linspace = numpy_funcs.numpy_linspace_array_like_1d__test_linspace
-    test_linspace2 = numpy_funcs.numpy_linspace_array_like_1d__test_linspace2
-    test_linspace_dtype = numpy_funcs.numpy_linspace_array_like_1d__test_linspace_dtype
     from numpy import linspace
 
     size = 5
@@ -5862,10 +5854,6 @@ def test_numpy_linspace_array_like_1d(epyc_numpy_funcs_mod):
 
 
 def test_numpy_linspace_array_like_2d(epyc_numpy_funcs_mod):
-    test_linspace = numpy_funcs.numpy_linspace_array_like_2d__test_linspace
-    test_linspace3 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace3
-    test_linspace2 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace2
-    test_linspace4 = numpy_funcs.numpy_linspace_array_like_2d__test_linspace4
     from numpy import linspace
 
     size = (2, 5)
@@ -6411,20 +6399,6 @@ def test_result_type(epyc_numpy_funcs_mod):
     type_comparison2 = numpy_funcs.result_type__type_comparison2
     value_types = numpy_funcs.result_type__value_types
 
-    def pass_through_type():
-        import numpy as np
-
-        b = np.zeros(5, dtype=np.result_type(np.float64))
-        return b[0]
-
-    def expression_type():
-        import numpy as np
-
-        a = np.array([6, 1, 8, 2, 3], dtype=np.int64)
-        b = np.array([6, 22, 1, 8, 2], dtype=np.float32)
-        c = np.zeros(5, dtype=np.result_type(a + b))
-        return c[0]
-
     epyccel_int_vs_int_array = epyc_numpy_funcs_mod.result_type__int_vs_int_array
     epyccel_type_comparison = epyc_numpy_funcs_mod.result_type__type_comparison
     epyccel_type_comparison2 = epyc_numpy_funcs_mod.result_type__type_comparison2
@@ -6440,10 +6414,6 @@ def test_result_type(epyc_numpy_funcs_mod):
     True, language="python", reason=("Template causes problems with order")
 )
 def test_copy(epyc_numpy_funcs_mod):
-
-    copy_array = numpy_funcs.test_copy__copy_array
-    copy_array_to_F = numpy_funcs.test_copy__copy_array_to_F
-    copy_array_to_C = numpy_funcs.test_copy__copy_array_to_C
 
     arr_1d = randint(min_int, max_int, size=5, dtype=np.int64)
     arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3, 4))
