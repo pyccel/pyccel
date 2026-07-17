@@ -2,7 +2,6 @@
 import os
 import sys
 from math import inf, modf, nan
-from typing import TypeVar
 
 import pytest
 from modules import math_funcs

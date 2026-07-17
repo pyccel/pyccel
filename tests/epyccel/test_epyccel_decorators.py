@@ -1,13 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-from typing import Final, TypeVar
 
 import numpy as np
 import pytest
 from modules import epyccel_decorators
 
 from pyccel import epyccel
-from pyccel.decorators import inline, private
 
 from epyccel_utilities import epyccel_module_with_fallback
 

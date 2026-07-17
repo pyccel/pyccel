@@ -4,7 +4,6 @@ from modules import epyccel_pow
 from numpy import isclose
 from numpy.random import rand, randint, uniform
 
-from pyccel import epyccel
 
 from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL, min_abs_float

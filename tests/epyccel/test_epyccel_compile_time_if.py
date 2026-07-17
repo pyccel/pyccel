@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 from modules import epyccel_compile_time_if
 
-from pyccel import epyccel
 
 from epyccel_utilities import epyccel_module_with_fallback
 

@@ -6,7 +6,6 @@ from modules import epyccel_mod
 from numpy import allclose
 from numpy.random import randint, uniform
 
-from pyccel import epyccel
 
 from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL

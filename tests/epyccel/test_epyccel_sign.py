@@ -3,7 +3,6 @@ import modules.numpy_sign as mod
 import numpy as np
 import pytest
 
-from pyccel import epyccel
 
 from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, ATOL32, RTOL, RTOL32
