@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
-from modules import builtins
+from modules import builtins_mod
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
@@ -12,11 +12,11 @@ from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
 @pytest.fixture(scope="module")
 def epyc_builtins_mod(language):
-    return epyccel_module_with_fallback(builtins, language)
+    return epyccel_module_with_fallback(builtins_mod, language)
 
 
 def test_abs_i(epyc_builtins_mod):
-    f1 = builtins.abs_i
+    f1 = builtins_mod.abs_i
     f2 = epyc_builtins_mod.abs_i
 
     negative_test = randint(min_int, 0)
@@ -28,7 +28,7 @@ def test_abs_i(epyc_builtins_mod):
 
 
 def test_abs_r(epyc_builtins_mod):
-    f1 = builtins.abs_r
+    f1 = builtins_mod.abs_r
     f2 = epyc_builtins_mod.abs_r
 
     negative_test = uniform(min_float, 0.0)
@@ -40,7 +40,7 @@ def test_abs_r(epyc_builtins_mod):
 
 
 def test_abs_c(epyc_builtins_mod):
-    f1 = builtins.abs_c
+    f1 = builtins_mod.abs_c
     f2 = epyc_builtins_mod.abs_c
 
     max_compl_abs = np.sqrt(max_float / 2)
@@ -63,7 +63,7 @@ def test_abs_c(epyc_builtins_mod):
 
 
 def test_min_2_args_i(epyc_builtins_mod):
-    f = builtins.min_2_args_i
+    f = builtins_mod.min_2_args_i
     epyc_f = epyc_builtins_mod.min_2_args_i
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
@@ -72,7 +72,7 @@ def test_min_2_args_i(epyc_builtins_mod):
 
 
 def test_min_2_args_i_adhoc(epyc_builtins_mod):
-    f = builtins.min_2_args_i_adhoc
+    f = builtins_mod.min_2_args_i_adhoc
     epyc_f = epyc_builtins_mod.min_2_args_i_adhoc
 
     int_arg = randint(min_int, max_int)
@@ -81,7 +81,7 @@ def test_min_2_args_i_adhoc(epyc_builtins_mod):
 
 
 def test_min_2_args_f_adhoc(epyc_builtins_mod):
-    f = builtins.min_2_args_f_adhoc
+    f = builtins_mod.min_2_args_f_adhoc
     epyc_f = epyc_builtins_mod.min_2_args_f_adhoc
 
     float_arg = uniform(min_float / 2, max_float / 2)
@@ -90,7 +90,7 @@ def test_min_2_args_f_adhoc(epyc_builtins_mod):
 
 
 def test_min_2_args_f(epyc_builtins_mod):
-    f = builtins.min_2_args_f
+    f = builtins_mod.min_2_args_f
     epyc_f = epyc_builtins_mod.min_2_args_f
 
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
@@ -99,7 +99,7 @@ def test_min_2_args_f(epyc_builtins_mod):
 
 
 def test_min_3_args(epyc_builtins_mod):
-    f = builtins.min_3_args
+    f = builtins_mod.min_3_args
     epyc_f = epyc_builtins_mod.min_3_args
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -110,7 +110,7 @@ def test_min_3_args(epyc_builtins_mod):
 
 
 def test_min_if(epyc_builtins_mod):
-    f = builtins.min_if
+    f = builtins_mod.min_if
     epyc_f = epyc_builtins_mod.min_if
 
     int_args = [randint(min_int // 3, max_int // 3) for _ in range(2)]
@@ -119,7 +119,7 @@ def test_min_if(epyc_builtins_mod):
 
 
 def test_min_in_min(epyc_builtins_mod):
-    f = builtins.min_in_min
+    f = builtins_mod.min_in_min
     epyc_f = epyc_builtins_mod.min_in_min
 
     int_args = [randint(min_int // 3, max_int // 3) for _ in range(2)]
@@ -128,7 +128,7 @@ def test_min_in_min(epyc_builtins_mod):
 
 
 def test_min_list(epyc_builtins_mod):
-    f = builtins.min_list
+    f = builtins_mod.min_list
     epyc_f = epyc_builtins_mod.min_list
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -139,7 +139,7 @@ def test_min_list(epyc_builtins_mod):
 
 
 def test_min_tuple(epyc_builtins_mod):
-    f = builtins.min_tuple
+    f = builtins_mod.min_tuple
     epyc_f = epyc_builtins_mod.min_tuple
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -150,7 +150,7 @@ def test_min_tuple(epyc_builtins_mod):
 
 
 def test_min_list_var(epyc_builtins_mod):
-    f = builtins.min_list_var
+    f = builtins_mod.min_list_var
     epyc_f = epyc_builtins_mod.min_list_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -161,7 +161,7 @@ def test_min_list_var(epyc_builtins_mod):
 
 
 def test_min_tuple_var(epyc_builtins_mod):
-    f = builtins.min_tuple_var
+    f = builtins_mod.min_tuple_var
     epyc_f = epyc_builtins_mod.min_tuple_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -172,7 +172,7 @@ def test_min_tuple_var(epyc_builtins_mod):
 
 
 def test_min_expr(epyc_builtins_mod):
-    f = builtins.min_expr
+    f = builtins_mod.min_expr
     epyc_f = epyc_builtins_mod.min_expr
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
@@ -183,7 +183,7 @@ def test_min_expr(epyc_builtins_mod):
 
 
 def test_min_temp_var_first_arg(epyc_builtins_mod):
-    f = builtins.min_temp_var_first_arg
+    f = builtins_mod.min_temp_var_first_arg
     epyc_f = epyc_builtins_mod.min_temp_var_first_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
@@ -192,7 +192,7 @@ def test_min_temp_var_first_arg(epyc_builtins_mod):
 
 
 def test_min_temp_var_second_arg(epyc_builtins_mod):
-    f = builtins.min_temp_var_second_arg
+    f = builtins_mod.min_temp_var_second_arg
     epyc_f = epyc_builtins_mod.min_temp_var_second_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
@@ -201,7 +201,7 @@ def test_min_temp_var_second_arg(epyc_builtins_mod):
 
 
 def test_max_2_args_i(epyc_builtins_mod):
-    f = builtins.max_2_args_i
+    f = builtins_mod.max_2_args_i
     epyc_f = epyc_builtins_mod.max_2_args_i
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
@@ -210,7 +210,7 @@ def test_max_2_args_i(epyc_builtins_mod):
 
 
 def test_max_2_args_f(epyc_builtins_mod):
-    f = builtins.max_2_args_f
+    f = builtins_mod.max_2_args_f
     epyc_f = epyc_builtins_mod.max_2_args_f
 
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
@@ -219,7 +219,7 @@ def test_max_2_args_f(epyc_builtins_mod):
 
 
 def test_max_3_args(epyc_builtins_mod):
-    f = builtins.max_3_args
+    f = builtins_mod.max_3_args
     epyc_f = epyc_builtins_mod.max_3_args
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -230,7 +230,7 @@ def test_max_3_args(epyc_builtins_mod):
 
 
 def test_max_list(epyc_builtins_mod):
-    f = builtins.max_list
+    f = builtins_mod.max_list
     epyc_f = epyc_builtins_mod.max_list
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -241,7 +241,7 @@ def test_max_list(epyc_builtins_mod):
 
 
 def test_max_tuple(epyc_builtins_mod):
-    f = builtins.max_tuple
+    f = builtins_mod.max_tuple
     epyc_f = epyc_builtins_mod.max_tuple
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -252,7 +252,7 @@ def test_max_tuple(epyc_builtins_mod):
 
 
 def test_max_list_var(epyc_builtins_mod):
-    f = builtins.max_list_var
+    f = builtins_mod.max_list_var
     epyc_f = epyc_builtins_mod.max_list_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -263,7 +263,7 @@ def test_max_list_var(epyc_builtins_mod):
 
 
 def test_max_tuple_var(epyc_builtins_mod):
-    f = builtins.max_tuple_var
+    f = builtins_mod.max_tuple_var
     epyc_f = epyc_builtins_mod.max_tuple_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
@@ -274,7 +274,7 @@ def test_max_tuple_var(epyc_builtins_mod):
 
 
 def test_max_expr(epyc_builtins_mod):
-    f = builtins.max_expr
+    f = builtins_mod.max_expr
     epyc_f = epyc_builtins_mod.max_expr
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
@@ -285,7 +285,7 @@ def test_max_expr(epyc_builtins_mod):
 
 
 def test_max_temp_var_first_arg(epyc_builtins_mod):
-    f = builtins.max_temp_var_first_arg
+    f = builtins_mod.max_temp_var_first_arg
     epyc_f = epyc_builtins_mod.max_temp_var_first_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
@@ -294,7 +294,7 @@ def test_max_temp_var_first_arg(epyc_builtins_mod):
 
 
 def test_max_temp_var_second_arg(epyc_builtins_mod):
-    f = builtins.max_temp_var_second_arg
+    f = builtins_mod.max_temp_var_second_arg
     epyc_f = epyc_builtins_mod.max_temp_var_second_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
@@ -314,7 +314,7 @@ def test_max_temp_var_second_arg(epyc_builtins_mod):
     ),
 )
 def test_sum_matching_types(language):
-    def f(x: builtins.T2, y: builtins.T2):
+    def f(x: builtins_mod.T2, y: builtins_mod.T2):
         return sum([x, y])
 
     epyc_f = epyccel(f, language=language)
@@ -344,7 +344,7 @@ def test_sum_matching_types(language):
     ),
 )
 def test_sum_expr(language):
-    def f(x: builtins.T, y: builtins.T):
+    def f(x: builtins_mod.T, y: builtins_mod.T):
         return sum((x, y)) + 3
 
     epyc_f = epyccel(f, language=language)
@@ -357,42 +357,42 @@ def test_sum_expr(language):
 
 
 def test_len_numpy(epyc_builtins_mod):
-    f = builtins.len_numpy
+    f = builtins_mod.len_numpy
     epyc_f = epyc_builtins_mod.len_numpy
 
     assert epyc_f() == f()
 
 
 def test_len_tuple(epyc_builtins_mod):
-    f = builtins.len_tuple
+    f = builtins_mod.len_tuple
     epyc_f = epyc_builtins_mod.len_tuple
 
     assert epyc_f() == f()
 
 
 def test_len_inhomog_tuple(epyc_builtins_mod):
-    f = builtins.len_inhomog_tuple
+    f = builtins_mod.len_inhomog_tuple
     epyc_f = epyc_builtins_mod.len_inhomog_tuple
 
     assert epyc_f() == f()
 
 
 def test_len_list_int(epyc_builtins_mod):
-    f = builtins.len_list_int
+    f = builtins_mod.len_list_int
     epyc_f = epyc_builtins_mod.len_list_int
 
     assert epyc_f() == f()
 
 
 def test_len_list_float(epyc_builtins_mod):
-    f = builtins.len_list_float
+    f = builtins_mod.len_list_float
     epyc_f = epyc_builtins_mod.len_list_float
 
     assert epyc_f() == f()
 
 
 def test_len_list_complex(epyc_builtins_mod):
-    f = builtins.len_list_complex
+    f = builtins_mod.len_list_complex
     epyc_f = epyc_builtins_mod.len_list_complex
 
     assert epyc_f() == f()
@@ -442,14 +442,14 @@ def test_len_dict_int_float(stc_language):
 
 
 def test_len_string(epyc_builtins_mod):
-    f = builtins.len_string
+    f = builtins_mod.len_string
     epyc_f = epyc_builtins_mod.len_string
 
     assert epyc_f() == f()
 
 
 def test_len_literal_string(epyc_builtins_mod):
-    f = builtins.len_literal_string
+    f = builtins_mod.len_literal_string
     epyc_f = epyc_builtins_mod.len_literal_string
 
     assert epyc_f() == f()
@@ -467,7 +467,7 @@ def test_len_multi_layer(stc_language):
 
 
 def test_round_int(epyc_builtins_mod):
-    round_int = builtins.round_int
+    round_int = builtins_mod.round_int
     f = epyc_builtins_mod.round_int
     x = randint(100) / 10
 
@@ -502,7 +502,7 @@ def test_round_int(epyc_builtins_mod):
 
 
 def test_negative_round_int(epyc_builtins_mod):
-    round_int = builtins.negative_round_int
+    round_int = builtins_mod.negative_round_int
     f = epyc_builtins_mod.negative_round_int
     x = -randint(100) / 10
 
@@ -537,7 +537,7 @@ def test_negative_round_int(epyc_builtins_mod):
 
 
 def test_round_ndigits(epyc_builtins_mod):
-    round_ndigits = builtins.round_ndigits
+    round_ndigits = builtins_mod.round_ndigits
     f = epyc_builtins_mod.round_ndigits
     x = randint(100) / 10
 
@@ -569,7 +569,7 @@ def test_round_ndigits(epyc_builtins_mod):
 
 
 def test_round_ndigits_half(epyc_builtins_mod):
-    round_ndigits = builtins.round_ndigits_half
+    round_ndigits = builtins_mod.round_ndigits_half
     f = epyc_builtins_mod.round_ndigits_half
     x = randint(100) / 10
 
@@ -601,7 +601,7 @@ def test_round_ndigits_half(epyc_builtins_mod):
 
 
 def test_round_ndigits_int(epyc_builtins_mod):
-    round_ndigits = builtins.round_ndigits_int
+    round_ndigits = builtins_mod.round_ndigits_int
     f = epyc_builtins_mod.round_ndigits_int
     x = randint(100) // 10
 
@@ -633,7 +633,7 @@ def test_round_ndigits_int(epyc_builtins_mod):
 
 
 def test_round_ndigits_bool(epyc_builtins_mod):
-    round_ndigits = builtins.round_ndigits_bool
+    round_ndigits = builtins_mod.round_ndigits_bool
     f = epyc_builtins_mod.round_ndigits_bool
 
     f_output = f()
@@ -643,7 +643,7 @@ def test_round_ndigits_bool(epyc_builtins_mod):
 
 
 def test_isinstance_native(epyc_builtins_mod):
-    isinstance_test = builtins.isinstance_test
+    isinstance_test = builtins_mod.isinstance_test
     f = epyc_builtins_mod.isinstance_test
     assert f(True) == isinstance_test(True)
     assert f(False) == isinstance_test(False)
@@ -698,7 +698,7 @@ def test_isinstance_containers(language):
 
 
 def test_isinstance_numpy(epyc_builtins_mod):
-    isinstance_test = builtins.isinstance_numpy
+    isinstance_test = builtins_mod.isinstance_numpy
     f = epyc_builtins_mod.isinstance_numpy
     assert f(np.int32(4)) == isinstance_test(np.int32(4))
     assert f(np.int64(4)) == isinstance_test(np.int64(4))
@@ -707,7 +707,7 @@ def test_isinstance_numpy(epyc_builtins_mod):
 
 
 def test_isinstance_tuple(epyc_builtins_mod):
-    isinstance_test = builtins.isinstance_tuple
+    isinstance_test = builtins_mod.isinstance_tuple
     f = epyc_builtins_mod.isinstance_tuple
     assert f(True) == isinstance_test(True)
     assert f(False) == isinstance_test(False)
