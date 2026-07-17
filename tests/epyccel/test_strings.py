@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import inspect
-
 import pytest
 from modules import strings_module
 

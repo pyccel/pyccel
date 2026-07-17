@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import inspect
-
 import numpy as np
 import pytest
 from modules import pointers as pointers_module
