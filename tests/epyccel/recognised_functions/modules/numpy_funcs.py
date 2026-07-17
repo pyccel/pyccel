@@ -2868,7 +2868,7 @@ def numpy_linspace_array_like_1d__test_linspace2(
 ):
     numberOfSamplesToGenerate = 7
     a = np.linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-    for i in range(len(out)): #pylint: disable=consider-using-enumerate
+    for i in range(len(out)):  # pylint: disable=consider-using-enumerate
         for j in range(len(out[i])):
             out[i][j] = a[i][j]
 
@@ -2903,7 +2903,7 @@ def numpy_linspace_array_like_2d__test_linspace3(
 ):
     numberOfSamplesToGenerate = 7
     a = np.linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-    for i in range(len(out)): #pylint: disable=consider-using-enumerate
+    for i in range(len(out)):  # pylint: disable=consider-using-enumerate
         for j in range(len(out[i])):
             for k in range(len(out[i][j])):
                 out[i][j][k] = a[i][j][k]
@@ -2914,7 +2914,7 @@ def numpy_linspace_array_like_2d__test_linspace2(
 ):
     numberOfSamplesToGenerate = 7
     a = np.linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-    for i in range(len(out)): #pylint: disable=consider-using-enumerate
+    for i in range(len(out)):  # pylint: disable=consider-using-enumerate
         for j in range(len(out[i])):
             for k in range(len(out[i][j])):
                 out[i][j][k] = a[i][j][k]
@@ -2928,7 +2928,7 @@ def numpy_linspace_array_like_2d__test_linspace4(
 ):
     numberOfSamplesToGenerate = 7
     a = np.linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
-    for i in range(len(out)): #pylint: disable=consider-using-enumerate
+    for i in range(len(out)):  # pylint: disable=consider-using-enumerate
         for j in range(len(out[i])):
             for k in range(len(out[i][j])):
                 out[i][j][k] = a[i][j][k]
