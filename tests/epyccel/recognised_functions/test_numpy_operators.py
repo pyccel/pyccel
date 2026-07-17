@@ -6,7 +6,6 @@ import pytest
 from modules import numpy_operators
 from numpy.random import randint
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 
 

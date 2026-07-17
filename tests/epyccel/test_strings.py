@@ -4,7 +4,6 @@ import inspect
 import pytest
 from modules import strings, strings_module
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 
 

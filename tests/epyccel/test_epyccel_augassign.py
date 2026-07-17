@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from numpy.random import random
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL
 

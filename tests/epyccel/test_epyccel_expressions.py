@@ -3,7 +3,6 @@ import pytest
 from modules import epyccel_expressions
 from numpy.random import rand, randint
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import max_int, min_int
 

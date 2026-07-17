@@ -4,7 +4,6 @@ import pytest
 from modules import types
 from numpy.random import randint, uniform
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 
 

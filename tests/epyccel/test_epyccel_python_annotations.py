@@ -4,7 +4,6 @@ import pytest
 from modules import python_annotations
 from numpy.random import randint
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 
 

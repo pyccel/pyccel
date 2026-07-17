@@ -4,7 +4,6 @@ import sys
 import pytest
 from modules import bitwise
 
-
 from epyccel_utilities import epyccel_module_with_fallback
 
 
