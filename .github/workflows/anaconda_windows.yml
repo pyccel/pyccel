@@ -67,8 +67,8 @@ jobs:
         with:
           mpi_type: msmpi
           shell: gitbash
-      - run:
-        pyccel compile decorators_elemental.py -vv
+      - run: |
+          pyccel compile decorators_elemental.py -vv
         shell: gitbash
         working-directory: ./tests/pyccel/scrpits
       - name: Fortran/C tests with pytest
