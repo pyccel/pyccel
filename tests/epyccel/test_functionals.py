@@ -6,20 +6,12 @@ from numpy.random import randint
 
 from pyccel import epyccel
 
-from epyccel_utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback, compare_epyccel
 
 
 @pytest.fixture(scope="module")
 def epyc_functionals_mod(language):
     return epyccel_module_with_fallback(functionals, language)
-
-
-def compare_epyccel(f_name, epyc_functionals_mod, *args):
-    f = getattr(functionals, f_name)
-    f2 = getattr(epyc_functionals_mod, f_name)
-    out1 = f(*args)
-    out2 = f2(*args)
-    assert equal(out1, out2).all()
 
 
 def test_functional_for_1d_range(epyc_functionals_mod):

@@ -2,15 +2,10 @@
 import pytest
 from modules import multiple_results
 
-from epyccel_utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback, compare_epyccel
 
 
 # ==============================================================================
-def compare_epyccel(f1, f2, *args):
-    out1 = f1(*args)
-    out2 = f2(*args)
-    assert all(r1 == r2 for r1, r2 in zip(out1, out2))
-
 
 @pytest.fixture(scope="module")
 def epyc_multiple_results_mod(language):

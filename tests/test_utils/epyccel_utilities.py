@@ -57,11 +57,10 @@ def epyccel_module_with_fallback(pymod, language, **kwargs):
 
 
 # ==============================================================================
-def compare_epyccel(f, language, *args):
+def compare_epyccel(f, f2, language, *args):
     """
     Pyccelize `f`, call both versions with `args`, and assert the outputs match.
     """
-    f2 = epyccel(f, language=language)
     out1 = f(*args)
     out2 = f2(*args)
     if isinstance(out1, tuple):
