@@ -139,7 +139,6 @@ from pyccel.parser.scope import Scope
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.headers import types_meta
 from pyccel.parser.syntax.openacc import parse as acc_parse
-from pyccel.parser.syntax.openmp import parse as omp_parse
 from pyccel.parser.utilities import get_default_path
 from pyccel.utilities.stage import PyccelStage
 
@@ -320,18 +319,7 @@ class SyntaxParser(BasicParser):
         txt = line[1:].lstrip()
         if txt.startswith("$"):
             env = txt[1:].lstrip()
-            if env.startswith("omp"):
-                expr = omp_parse(stmts=line)
-                try:
-                    expr = omp_parse(stmts=line)
-                except TextXSyntaxError as e:
-                    errors.report(
-                        f"Invalid OpenMP header. {e.message}",
-                        symbol=stmt,
-                        column=e.col,
-                        severity="fatal",
-                    )
-            elif env.startswith("acc"):
+            if env.startswith("acc"):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
