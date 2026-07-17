@@ -10,7 +10,7 @@ import pluggy
 from pyccel.parser.semantic import SemanticParser
 from pyccel.parser.syntactic import SyntaxParser
 
-from . import LineAnnot, hookspecs
+from . import LineAnnot, hookspecs, Openmp
 
 
 def get_plugin_manager():
@@ -36,7 +36,7 @@ def get_plugin_manager():
 
     # Register plugins provided inside Pyccel
     pm.register(LineAnnot.plugin, "line_annotation")
-    # pm.register(openmp, 'openmp')
+    pm.register(Openmp.plugin, 'openmp')
 
     return pm
 
@@ -67,7 +67,7 @@ def get_plugin_cli_options(plugin_manager, parser, cli_tool):
             help=plugin.get_description(),
         )
 
-        plugin.add_cli_options(parser=group, cli_tool=cli_tool)
+        plugin.add_cli_options(parser=parser, cli_tool=cli_tool)
 
     parser.set_defaults(plugin_manager=plugin_manager)
 
