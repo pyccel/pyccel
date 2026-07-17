@@ -38,7 +38,9 @@ S = TypeVar("S", int, "int8", "int16", "int32", "int64", "float", "float32", "fl
 FI = TypeVar("FI", float, int)
 
 
-test_copy__X = TypeVar("test_copy__X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)")
+test_copy__X = TypeVar(
+    "test_copy__X", "int[:]", "float[:,:]", "complex[:,:,:](order=F)"
+)
 
 
 test_copy__Y = TypeVar("test_copy__Y", "float[:,:]", "complex[:,:,:](order=F)")
@@ -1482,7 +1484,7 @@ def sum_int(x: "int[:]"):
 
 
 def sum_override_builtin(x: "int[:]"):
-    from numpy import sum #pylint: disable=redefined-builtin
+    from numpy import sum  # pylint: disable=redefined-builtin
 
     return sum(x)
 
@@ -2835,7 +2837,6 @@ def numpy_linspace_scalar__test_linspace_type2(
     x = np.linspace(start, end * 2, 15, dtype="complex128")
     for i, xi in enumerate(x):
         result[i] = xi
-
 
 
 def numpy_linspace_scalar__test_linspace_int(

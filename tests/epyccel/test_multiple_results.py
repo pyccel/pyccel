@@ -2,10 +2,10 @@
 import pytest
 from modules import multiple_results
 
-from epyccel_utilities import epyccel_module_with_fallback, compare_epyccel
-
+from epyccel_utilities import compare_epyccel, epyccel_module_with_fallback
 
 # ==============================================================================
+
 
 @pytest.fixture(scope="module")
 def epyc_multiple_results_mod(language):
