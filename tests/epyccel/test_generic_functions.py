@@ -5,7 +5,7 @@ import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 import numpy as np
 import pytest
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 

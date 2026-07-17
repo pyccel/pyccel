@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from modules import array_as_func_args
 from numpy.random import randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 

@@ -5,14 +5,15 @@ from math import inf, modf, nan
 from typing import TypeVar
 
 import pytest
-from limits import ATOL, RTOL
+from tolerances import ATOL, RTOL
 from modules import math_funcs
 from numpy import isclose
 from numpy.random import rand, randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
+from tolerances import ATOL, RTOL
 
 @pytest.fixture(scope="module")
 def epyc_math_funcs_mod(language):

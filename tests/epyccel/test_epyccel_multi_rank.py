@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from modules import multi_rank
 from numpy.random import rand, randint
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 

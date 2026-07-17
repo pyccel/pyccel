@@ -2,27 +2,18 @@
 import numpy as np
 import pytest
 from modules import builtins
-from numpy import finfo, iinfo
 from numpy.random import randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 
+from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
 @pytest.fixture(scope="module")
 def epyc_builtins_mod(language):
     return epyccel_module_with_fallback(builtins, language)
 
 
-ATOL = 1e-15
-RTOL = 2e-14
-
-# Use int32 for Windows compatibility
-min_int = iinfo(np.int32).min
-max_int = iinfo(np.int32).max
-
-min_float = finfo(float).min
-max_float = finfo(float).max
 
 
 def test_abs_i(epyc_builtins_mod):

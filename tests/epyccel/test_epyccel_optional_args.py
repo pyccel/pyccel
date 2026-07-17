@@ -2,11 +2,13 @@
 
 import numpy as np
 import pytest
-from limits import ATOL, RTOL
+from tolerances import ATOL, RTOL
 from modules import epyccel_optional_args
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")

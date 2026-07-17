@@ -1,12 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
-
 import pytest
 from modules import epyccel_pow
 from numpy import isclose
 from numpy.random import rand, randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
+from tolerances import ATOL, RTOL, min_abs_float
 from pyccel import epyccel
 
 
@@ -15,11 +14,6 @@ def epyc_epyccel_pow_mod(language):
     return epyccel_module_with_fallback(epyccel_pow, language)
 
 
-RTOL = 2e-14
-ATOL = 1e-15
-
-# this smallest positive float number
-min_float = sys.float_info.min
 
 
 def test_pow_int_int(epyc_epyccel_pow_mod):
@@ -38,7 +32,7 @@ def test_pow_int_int(epyc_epyccel_pow_mod):
 def test_pow_real_real(epyc_epyccel_pow_mod):
     pow_r_r = epyccel_pow.pow_r_r
     f = epyc_epyccel_pow_mod.pow_r_r
-    x = uniform(low=min_float, high=50)
+    x = uniform(low=min_abs_float, high=50)
     y = uniform(high=5)
 
     assert isclose(f(x, y), pow_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -49,7 +43,7 @@ def test_pow_real_real(epyc_epyccel_pow_mod):
 def test_pow_real_int(epyc_epyccel_pow_mod):
     pow_r_i = epyccel_pow.pow_r_i
     f = epyc_epyccel_pow_mod.pow_r_i
-    x = uniform(low=min_float, high=50)
+    x = uniform(low=min_abs_float, high=50)
     y = randint(5)
 
     assert isclose(f(x, y), pow_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -123,7 +117,7 @@ def test_pow_r_c(epyc_epyccel_pow_mod):
 
 
 def test_pow_chain(epyc_epyccel_pow_mod):
-    x = uniform(low=min_float, high=10)
+    x = uniform(low=min_abs_float, high=10)
     y = uniform(high=5)
     z = uniform(high=1.0)
 

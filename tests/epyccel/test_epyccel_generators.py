@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from modules import epyccel_generators
 from numpy.random import randint
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 

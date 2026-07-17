@@ -3,7 +3,8 @@ import modules.augassign as mod
 import numpy as np
 import pytest
 from numpy.random import random
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
 
@@ -13,9 +14,6 @@ def epyc_mod_mod(language):
     return epyccel_module_with_fallback(mod, language)
 
 
-# += tests
-RTOL = 1e-12
-ATOL = 1e-16
 
 
 def test_augassign_add_1d(epyc_mod_mod):

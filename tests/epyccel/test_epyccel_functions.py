@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from modules import epyccel_functions
 from numpy.random import randint
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
 
@@ -16,8 +17,6 @@ def epyc_epyccel_functions_mod(language):
     return epyccel_module_with_fallback(epyccel_functions, language)
 
 
-RTOL = 2e-14
-ATOL = 1e-15
 
 
 def test_func_no_args_1(language):

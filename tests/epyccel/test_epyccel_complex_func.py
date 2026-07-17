@@ -5,10 +5,10 @@ import modules.complex_func as mod
 import numpy as np
 import pytest
 from numpy.random import rand, randint
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
 
 @pytest.fixture(scope="module")
 def epyc_mod(language):
@@ -16,9 +16,6 @@ def epyc_mod(language):
 
 
 # ==============================================================================
-
-ATOL = 1e-15
-RTOL = 2e-14
 
 # Determine whether some unit tests should be skipped with Python >= 3.14 to
 # avoid annoying deprecation warnings dealing with the complex() constructor:

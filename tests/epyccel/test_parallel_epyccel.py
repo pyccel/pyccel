@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
-from limits import ATOL, RTOL
+from tolerances import ATOL, RTOL
 from mpi4py import MPI
 
 from pyccel import epyccel

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 from modules import compare_expressions
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")

@@ -3,10 +3,10 @@ import pytest
 from modules import epyccel_division, epyccel_floor_division
 from numpy import isclose
 from numpy.random import randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
-
 
 @pytest.fixture(scope="module")
 def epyc_epyccel_division_mod(language):
@@ -20,8 +20,6 @@ def epyc_epyccel_floor_division_mod(language):
     )
 
 
-RTOL = 2e-14
-ATOL = 1e-15
 
 # -------------------- simple division ---------------------- #
 

@@ -2,10 +2,11 @@
 import modules.numpy_sign as mod
 import numpy as np
 import pytest
-from limits import ATOL, ATOL32, RTOL, RTOL32
-from utilities import epyccel_module_with_fallback
+from tolerances import ATOL, ATOL32, RTOL, RTOL32
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
 
 
 @pytest.fixture(scope="module")

@@ -1,12 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from limits import ATOL, RTOL
+from tolerances import ATOL, RTOL
 from modules import epyccel_pyc_math
 from numpy import isclose
 from numpy.random import randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")

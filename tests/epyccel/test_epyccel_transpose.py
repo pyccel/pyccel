@@ -3,7 +3,7 @@ import pytest
 from modules import epyccel_transpose
 from numpy import array, array_equal, empty
 from numpy.random import randint
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
 

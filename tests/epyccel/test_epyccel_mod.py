@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
-import sys
 
 import pytest
 from modules import epyccel_mod
 from numpy import allclose
 from numpy.random import randint, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
+from tolerances import ATOL, RTOL
 
 from pyccel import epyccel
 
@@ -17,16 +17,10 @@ def epyc_modulo_mod(language):
 
 
 # Relative and absolute tolerances for array comparisons in the form
-# numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
-if sys.platform == "win32":
-    RTOL = 1e-13
-    ATOL = 1e-14
-elif os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU") == "intel":
+# numpy.isclose(a, b, rtol, atol). Intel seems to use a different algorithm
+if os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU") == "intel":
     RTOL = 1e-10
     ATOL = 1e-10
-else:
-    RTOL = 2e-14
-    ATOL = 1e-15
 
 
 def test_modulo_int_int(epyc_modulo_mod):

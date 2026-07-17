@@ -8,18 +8,17 @@ import pytest
 from modules import cmath_funcs
 from numpy import isclose
 from numpy.random import rand, uniform
-from utilities import epyccel_module_with_fallback
+from epyccel_utilities import epyccel_module_with_fallback
 
 from pyccel import epyccel
+
+
+from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")
 def epyc_cmath_funcs_mod(language):
     return epyccel_module_with_fallback(cmath_funcs, language)
-
-
-RTOL = sys.float_info.epsilon * 1000
-ATOL = sys.float_info.epsilon * 100
 
 T = TypeVar("T", float, complex)
 
