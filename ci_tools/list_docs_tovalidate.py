@@ -43,6 +43,11 @@ def should_ignore(name):
         name.endswith("_FunctionDefResult") or name.endswith("_FunctionDefArgument")
     ):
         return True
+    if ".plugins." in name and any(
+        classic_method in name
+        for classic_method in ("._visit_", "._print_", "._extract_")
+    ):
+        return True
     return False
 
 

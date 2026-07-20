@@ -10,8 +10,7 @@ from numpy.random import rand, randint, uniform
 
 from pyccel import epyccel
 
-RTOL = 1e-13
-ATOL = 1e-14
+from tolerances import ATOL, RTOL
 
 max_float = 3.40282e5  # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
@@ -805,7 +804,6 @@ def test_ldexp_return_type(language):  # ldexp
 # --------------------------- remainder function ------------------------------#
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize(
     "language",
     (
@@ -838,7 +836,6 @@ def test_remainder_call(language):  # remainder
     assert isclose(remainder_call(-x, y), f1(-x, y), rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize(
     "language",
     (

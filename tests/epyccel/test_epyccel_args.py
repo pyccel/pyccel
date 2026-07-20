@@ -29,7 +29,7 @@ def test_with_verbosity(language):
         gift = 10
         return gift
 
-    c_gift = epyccel(free_gift, verbose=3)
+    c_gift = epyccel(free_gift, verbose=3, language=language)
     assert c_gift() == free_gift()
     assert isinstance(c_gift(), type(free_gift()))
 

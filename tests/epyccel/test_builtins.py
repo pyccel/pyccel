@@ -1,23 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import sys
 from typing import TypeVar
 
 import numpy as np
 import pytest
-from numpy import finfo, iinfo
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
 
-ATOL = 1e-15
-RTOL = 2e-14
-
-# Use int32 for Windows compatibility
-min_int = iinfo(np.int32).min
-max_int = iinfo(np.int32).max
-
-min_float = finfo(float).min
-max_float = finfo(float).max
+from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
 T = TypeVar("T", int, float)
 T2 = TypeVar("T2", int, float, complex)
@@ -861,9 +851,6 @@ def test_isinstance_tuple(language):
     assert f(1 + 2j) == isinstance_test(6.5 + 8.3j)
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10), reason="Union of types implemented in Python 3.10"
-)
 def test_isinstance_union(language):
     def isinstance_test(
         a: bool | int | float | complex,

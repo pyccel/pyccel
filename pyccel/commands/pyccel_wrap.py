@@ -10,6 +10,12 @@ File containing the `pyccel wrap` command line interface.
 import argparse
 import pathlib
 
+from pyccel.plugins.plugin_tools import (
+    get_plugin_cli_options,
+    get_plugin_manager,
+    handle_plugin_arguments,
+)
+
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
@@ -84,6 +90,10 @@ def setup_pyccel_wrap_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, parser, "compile")
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     group.add_argument(
@@ -96,7 +106,7 @@ def setup_pyccel_wrap_parser(parser):
 
 
 # ==============================================================================
-def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
+def pyccel_wrap(*, filename, language, output, plugin_manager, **kwargs) -> None:
     """
     Call the `pyccel wrap` pipeline.
 
@@ -110,14 +120,22 @@ def pyccel_wrap(*, filename, language, output, **kwargs) -> None:
         The target language Pyccel is translating to.
     output : str
         Path to the working directory.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     **kwargs : dict
         See execute_pyccel_wrap.
     """
     # Imports
     from pyccel.codegen.wrap_pipeline import execute_pyccel_wrap
 
+    handle_plugin_arguments(plugin_manager, kwargs)
+
     # ...
 
     execute_pyccel_wrap(
-        filename, language=language.lower(), folder=output or filename.parent, **kwargs
+        filename,
+        language=language.lower(),
+        folder=output or filename.parent,
+        plugin_manager=plugin_manager,
+        **kwargs,
     )

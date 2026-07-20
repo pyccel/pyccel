@@ -71,6 +71,7 @@ from pyccel.ast.operators import PyccelAdd, PyccelIsNot, PyccelMul
 from pyccel.ast.variable import DottedVariable, IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 from .wrapper import Wrapper
@@ -203,6 +204,7 @@ class FortranToCWrapper(Wrapper):
             used_symbols=scope.local_used_symbols.copy(),
             original_symbols=scope.python_names.copy(),
             scope_type="module",
+            name_clash_checker=name_clash_checkers["fortran"],
         )
         name = mod_scope.get_new_name(f"bind_c_{expr.name}")
         self.scope = mod_scope

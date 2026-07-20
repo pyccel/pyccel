@@ -18,6 +18,7 @@ from filelock import FileLock, Timeout
 
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import Errors, ErrorsMode, PyccelError
+from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 from pyccel.utilities.stage import PyccelStage
 from pyccel.utilities.strings import random_string
 
@@ -223,6 +224,7 @@ def epyccel_seq(
     time_execution=False,
     conda_warnings="basic",
     context_dict=None,
+    **kwargs,
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -279,12 +281,18 @@ def epyccel_seq(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
+    **kwargs : dict
+        Additional keyword arguments forwarded to the plugin system via
+        ``handle_plugin_arguments``.
 
     Returns
     -------
     module | class | function
         Return accelerated Python module, class or function.
     """
+    plugin_manager = get_plugin_manager()
+    handle_plugin_arguments(plugin_manager, kwargs)
+
     # Check if function_class_or_module is a valid type
     allowed_types = (FunctionType, type, str, ModuleType)
     if not isinstance(function_class_or_module, allowed_types):
@@ -379,6 +387,7 @@ def epyccel_seq(
                 output_name=module_name,
                 conda_warnings=conda_warnings,
                 context_dict=context_dict,
+                plugin_manager=plugin_manager,
             )
         except PyccelError as err:
             raise err

@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
-import sys
 from typing import Final, TypeVar
 
 import numpy as np
@@ -9,8 +8,7 @@ from numpy.random import randint
 
 from pyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
+from tolerances import ATOL, RTOL
 
 
 def test_func_no_args_1(language):
@@ -392,10 +390,6 @@ def test_decorator_f22(language):
     assert f(np.complex128(1 + 2.2j)) == f22(np.complex128(1 + 2.2j))
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10),
-    reason="PEP604 (writing union types as X | Y) implemented in Python 3.10",
-)
 def test_union_type(language):
     def square(a: int | float):  # pylint: disable=unsupported-binary-operation
         return a * a

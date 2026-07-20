@@ -10,7 +10,6 @@ www.fortran90.org as much as possible."""
 import ast
 import re
 import string
-import sys
 from collections import OrderedDict
 from itertools import chain
 
@@ -165,6 +164,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 # TODO: add examples
@@ -660,7 +660,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -774,7 +778,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -3471,12 +3479,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Assert(self, expr):
         if isinstance(expr.test, LiteralTrue):
-            if sys.version_info < (3, 9):
-                return ""
-            else:
-                return (
-                    "!" + ast.unparse(expr.python_ast) + "\n"
-                )  # pylint: disable=no-member
+            return "!" + ast.unparse(expr.python_ast) + "\n"
         test_code = self._print(expr.test)
         return f"if ( .not. ({test_code})) then\n" "stop 1\n" "end if\n"
 

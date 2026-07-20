@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import numpy as np
+import pluggy
 import pytest
 from filelock import FileLock
 
@@ -1588,9 +1589,11 @@ def test_json_register(language):
 # ------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
 def test_reserved_file_name():
+    plugin_manager = pluggy.PluginManager("pyccel")
+
     with pytest.raises(ValueError) as exc_info:
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py"  # nosec B311
-        execute_pyccel(fname=libname)
+        execute_pyccel(fname=libname, plugin_manager=plugin_manager)
     assert (
         str(exc_info.value)
         == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
@@ -1659,6 +1662,8 @@ def test_time_execution_flag(language):
         f"--language={language}",
         "--time-execution",
     ]
+    if language == "python":
+        cmd.append(f"--output=__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}")
     with subprocess.Popen(
         cmd,
         universal_newlines=True,
@@ -1882,3 +1887,27 @@ def test_complex_numbers(language):
     pyccel_test(
         "scripts/complex_numbers.py", output_dtype=[complex] * 6, language=language
     )
+
+
+# ------------------------------------------------------------------------------
+def test_line_annotation_plugin(language):
+    test_file = get_abs_path("scripts/funcs.py")
+    folder = os.path.dirname(test_file)
+
+    # Choose an output folder that cannot contain translations of other files
+    output_folder = os.path.join(folder, "__pyccel__la__")
+
+    pyccel_commands = (
+        "-t --line_annotation --language=" + language + f" --output={output_folder}"
+    )
+
+    shutil.rmtree(output_folder, ignore_errors=True)
+
+    compile_pyccel(folder, "funcs.py", pyccel_commands)
+
+    for fi in os.listdir(output_folder):
+        _, ext = os.path.splitext(fi)
+        if ext in (".c", ".f90", ".py"):
+            with open(os.path.join(output_folder, fi), "r", encoding="utf-8") as file:
+                code = file.read()
+            assert test_file in code

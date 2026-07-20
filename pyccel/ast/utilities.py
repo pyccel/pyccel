@@ -108,10 +108,7 @@ builtin_import_registry = Module(
         Import("typing", typing_mod),
     ],
 )
-if sys.version_info < (3, 10):
-    from .builtin_imports import python_builtin_libs
-else:
-    python_builtin_libs = set(sys.stdlib_module_names)  # pylint: disable=no-member
+python_builtin_libs = set(sys.stdlib_module_names)
 
 recognised_libs = python_builtin_libs | builtin_import_registry.keys()
 

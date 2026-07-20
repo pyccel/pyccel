@@ -10,7 +10,6 @@ strings of C code.
 
 import ast
 import functools
-import sys
 from itertools import chain, product
 
 import numpy as np
@@ -155,6 +154,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 errors = Errors()
@@ -3806,12 +3806,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Assert(self, expr):
         if isinstance(expr.test, LiteralTrue):
-            if sys.version_info < (3, 9):
-                return ""
-            else:
-                return (
-                    "//" + ast.unparse(expr.python_ast) + "\n"
-                )  # pylint: disable=no-member
+            return "//" + ast.unparse(expr.python_ast) + "\n"
         condition = self._print(expr.test)
         self.add_import(c_imports["assert"])
         return f"assert({condition});\n"
@@ -3954,6 +3949,7 @@ class CCodePrinter(CodePrinter):
             scope_type="class",
             used_symbols=expr.scope.local_used_symbols.copy(),
             original_symbols=expr.scope.python_names.copy(),
+            name_clash_checker=name_clash_checkers["c"],
         )
 
         # Generate safe C names for function pointer members and store on cls_name
