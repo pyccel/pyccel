@@ -2660,6 +2660,11 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def is_virtual(self):
+        """
+        Indicates whether the function may point to a function in a sub-class.
+
+        Indicates whether the function may point to a function in a sub-class.
+        """
         return self._is_virtual
 
     @property
