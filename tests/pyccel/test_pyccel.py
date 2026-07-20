@@ -237,7 +237,7 @@ def compile_fortran_or_c(
     if is_mod:
         command.append(f"{root}.o")
     else:
-        command.append(str(Path(test_file).with_suffix("")))
+        command.append(get_exe(filename))
 
     if "module_output_flag" in compiler_info:
         command.append(compiler_info["module_output_flag"])
@@ -1783,7 +1783,7 @@ def test_inline_using_import(language):
 
         cwd = test_abspath.parent
         pyth_out = get_python_output(test_abspath, cwd)
-        lang_out = get_lang_output(test_abspath.with_suffix(""), language)
+        lang_out = get_lang_output(get_exe(test_abspath, language), language)
         compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 
