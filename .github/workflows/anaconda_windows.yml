@@ -58,9 +58,6 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
           python-version: ${{ needs.Python_version_picker.outputs.python_version }}
-      # Uncomment to examine DLL requirements with 'objdump -x FILE'
-      - name: Install mingw tools
-        uses: msys2/setup-msys2@v2
       - name: Install dependencies
         if: steps.duplicate_check.outputs.should_skip != 'true'
         uses: ./.github/actions/windows_install
