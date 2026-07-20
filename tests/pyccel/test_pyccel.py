@@ -22,12 +22,17 @@ from pyccel.compilers.default_compilers import available_compilers
 # UTILITIES
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-
 
 def get_abs_path(relative_path):
     base_dir = Path(__file__).resolve().parent
     return base_dir / relative_path
+
+
+# ------------------------------------------------------------------------------
+
+
+def get_thread_local_subdir(dirname=get_abs_path("")):
+    return dirname / f"__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}"
 
 
 # ------------------------------------------------------------------------------
@@ -40,36 +45,22 @@ def get_exe(filename, language=None):
     else:
         exefile1 = filename
 
-    exefile2 = filename.parent / exefile1.name
-
-    if exefile2.is_file():
-        return exefile2
-    else:
-        assert exefile1.is_file()
-        return exefile1
+    return exefile1
 
 
 # ------------------------------------------------------------------------------
 def insert_pyccel_folder(abs_path):
     abs_path = Path(abs_path)
-    return (
-        abs_path.parent
-        / ("__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", ""))
-        / abs_path.name
-    )
+    return get_thread_local_subdir(abs_path.parent) / abs_path.name
 
 
 # ------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd=None):
-    with subprocess.Popen(
-        [sys.executable, abs_path],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
-        cwd=cwd,
-    ) as p:
-        out, _ = p.communicate()
-        assert p.returncode == 0
-    return out
+    assert abs_path.is_absolute()
+    p = subprocess.run(
+        [sys.executable, abs_path], text=True, capture_output=True, check=True, cwd=cwd
+    )
+    return p.stdout
 
 
 # ------------------------------------------------------------------------------
@@ -237,7 +228,7 @@ def compile_fortran_or_c(
     if is_mod:
         command.append(f"{root}.o")
     else:
-        command.append(get_exe(filename))
+        command.append(get_exe(test_file))
 
     if "module_output_flag" in compiler_info:
         command.append(compiler_info["module_output_flag"])
@@ -640,7 +631,7 @@ def test_funcs(language):
 def test_capitalised_language(language):
     test_file = get_abs_path("scripts/runtest_funcs.py")
     cwd = test_file.parent
-    output_folder = "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
+    output_folder = get_thread_local_subdir()
     compile_pyccel(
         cwd, test_file, f"--language={language.capitalize()} --output={output_folder}"
     )
@@ -1513,7 +1504,7 @@ def test_json_register(language):
     config[language]["general_flags"] = ["--version"]
 
     current_config_folder = os.environ.get("PYCCEL_CONFIG_HOME", None)
-    os.environ["PYCCEL_CONFIG_HOME"] = get_abs_path(insert_pyccel_folder("."))
+    os.environ["PYCCEL_CONFIG_HOME"] = str(get_abs_path(insert_pyccel_folder(".")))
 
     # Check registration
     timing_json_path = f"{output_dir}/timing.json"
@@ -1645,7 +1636,7 @@ def test_time_execution_flag(language):
         "--time-execution",
     ]
     if language == "python":
-        cmd.append(f"--output=__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}")
+        cmd.append(f"--output={get_thread_local_subdir(cwd)}")
     with subprocess.Popen(
         cmd,
         universal_newlines=True,
@@ -1706,9 +1697,8 @@ def test_stubs(language):
             options=f"--language={language} --output=stub_test",
         )
         with open(
-            get_abs_path(
-                f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"
-            ),
+            get_thread_local_subdir(get_abs_path(f"scripts/stub_test/"))
+            / "runtest_stub.pyi",
             "r",
             encoding="utf-8",
         ) as f:
