@@ -127,7 +127,6 @@ def test_semantic_blocking_errors(f):
 
 
 @pytest.mark.language_agnostic
-@pytest.mark.xdist_incompatible
 def test_traceback():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     f = os.path.join(base_dir, "semantic/blocking/INHOMOG_LIST.py")
@@ -136,27 +135,30 @@ def test_traceback():
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    current_mode = error_mode.value
     error_mode.set_mode("developer")
 
-    plugin_manager = pluggy.PluginManager("pyccel")
-
-    pyccel = Parser(
-        f,
-        output_folder=os.getcwd(),
-        name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager,
-    )
-    pyccel.parse(verbose=0)
-
     try:
-        pyccel.annotate(verbose=0)
-    except PyccelSemanticError as e:
-        msg = str(e)
-        errors.report(msg, severity="error", traceback=e.__traceback__)
+        plugin_manager = pluggy.PluginManager("pyccel")
 
-    assert errors.has_blockers()
-    assert errors.num_messages() == 2
-    error_mode.set_mode("user")
+        pyccel = Parser(
+            f,
+            output_folder=os.getcwd(),
+            name_clash_checker=name_clash_checkers["python"],
+            plugin_manager=plugin_manager,
+        )
+        pyccel.parse(verbose=0)
+
+        try:
+            pyccel.annotate(verbose=0)
+        except PyccelSemanticError as e:
+            msg = str(e)
+            errors.report(msg, severity="error", traceback=e.__traceback__)
+
+        assert errors.has_blockers()
+        assert errors.num_messages() == 2
+    finally:
+        error_mode.set_mode(current_mode)
 
 
 semantic_non_blocking_errors_args = [
@@ -195,7 +197,6 @@ def test_semantic_non_blocking_errors(f):
     assert any(expected_error_msg in m for m in messages)
 
 
-@pytest.mark.xdist_incompatible
 @pytest.mark.language_agnostic
 @pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
 def test_semantic_non_blocking_developer_errors(f):
@@ -204,23 +205,26 @@ def test_semantic_non_blocking_developer_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    current_mode = error_mode.value
     error_mode.set_mode("developer")
 
-    plugin_manager = pluggy.PluginManager("pyccel")
+    try:
+        plugin_manager = pluggy.PluginManager("pyccel")
 
-    pyccel = Parser(
-        f,
-        output_folder=os.getcwd(),
-        name_clash_checker=name_clash_checkers["python"],
-        plugin_manager=plugin_manager,
-    )
-    pyccel.parse(verbose=0)
+        pyccel = Parser(
+            f,
+            output_folder=os.getcwd(),
+            name_clash_checker=name_clash_checkers["python"],
+            plugin_manager=plugin_manager,
+        )
+        pyccel.parse(verbose=0)
 
-    with pytest.raises(PyccelSemanticError):
-        pyccel.annotate(verbose=0)
+        with pytest.raises(PyccelSemanticError):
+            pyccel.annotate(verbose=0)
 
-    error_mode.set_mode("user")
-    assert errors.has_errors()
+        assert errors.has_errors()
+    finally:
+        error_mode.set_mode(current_mode)
 
 
 @pytest.mark.fortran
