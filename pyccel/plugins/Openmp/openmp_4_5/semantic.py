@@ -1,20 +1,18 @@
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.operators import PyccelMinus, PyccelAdd
+from pyccel.ast.operators import PyccelAdd, PyccelMinus
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
 from pyccel.plugins.Openmp.ast.omp import (
-    OmpDirective,
     OmpClause,
-    OmpEndDirective,
-    OmpConstruct,
-    OmpList,
-    OmpExpressionList,
-)
-from pyccel.plugins.Openmp.ast.omp import (
-    OmpScalarExpr,
-    OmpIntegerExpr,
     OmpConstantPositiveInteger,
+    OmpConstruct,
+    OmpDirective,
+    OmpEndDirective,
+    OmpExpressionList,
+    OmpIntegerExpr,
+    OmpList,
+    OmpScalarExpr,
 )
 
 errors = Errors()

@@ -3,8 +3,7 @@ Hook implementations for the OpenMP pyccel plugin.
 """
 
 from .. import hookimpl
-from . import openmp_4_5
-from . import openmp_5_0
+from . import openmp_4_5, openmp_5_0
 
 
 class OpenMPConfig:

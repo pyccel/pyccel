@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring, protected-access
-import os
 import inspect
+import os
 from unittest.mock import patch
 
 import pytest

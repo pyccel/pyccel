@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
+
 import pytest
 
-from pyccel.errors.errors import Errors
-from pyccel.parser.parser import Parser
 from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors import Errors, PyccelError
+from pyccel.parser.parser import Parser
 from pyccel.utilities.pluginmanager import PluginManager
-from pyccel.errors.errors import PyccelError
 
 
 def get_files_from_folder(folder_name):

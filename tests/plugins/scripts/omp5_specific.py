@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 def parallel_if(n: int):
     import numpy as np
-    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+
+    from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
 
     a = np.zeros(n)
     th_id, nthrds = np.int32(0), np.int32(0)

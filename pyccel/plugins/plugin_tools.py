@@ -10,7 +10,7 @@ import pluggy
 from pyccel.parser.semantic import SemanticParser
 from pyccel.parser.syntactic import SyntaxParser
 
-from . import LineAnnot, hookspecs, Openmp
+from . import LineAnnot, Openmp, hookspecs
 
 
 def get_plugin_manager():

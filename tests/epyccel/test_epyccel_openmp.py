@@ -2,12 +2,12 @@
 import multiprocessing
 import os
 import sys
-import pytest
-import numpy as np
-import modules.openmp as openmp
 
-from numpy import random
-from numpy import matmul
+import modules.openmp as openmp
+import numpy as np
+import pytest
+from numpy import matmul, random
+
 from pyccel import epyccel
 
 # ==============================================================================

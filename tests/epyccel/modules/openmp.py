@@ -79,14 +79,14 @@ def test_omp_in_parallel2():
 
 
 def test_omp_set_get_dynamic(dynamic_threads: "bool"):
-    from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
+    from pyccel.stdlib.internal.openmp import omp_get_dynamic, omp_set_dynamic
 
     omp_set_dynamic(dynamic_threads)
     return omp_get_dynamic()
 
 
 def test_omp_set_get_nested(nested: "bool"):
-    from pyccel.stdlib.internal.openmp import omp_set_nested, omp_get_nested
+    from pyccel.stdlib.internal.openmp import omp_get_nested, omp_set_nested
 
     omp_set_nested(nested)
     return omp_get_nested()
@@ -143,8 +143,8 @@ def test_omp_get_active_level():
 
 def test_omp_get_ancestor_thread_num():
     from pyccel.stdlib.internal.openmp import (
-        omp_get_ancestor_thread_num,
         omp_get_active_level,
+        omp_get_ancestor_thread_num,
     )
 
     # $ omp parallel
@@ -155,7 +155,7 @@ def test_omp_get_ancestor_thread_num():
 
 
 def test_omp_get_team_size():
-    from pyccel.stdlib.internal.openmp import omp_get_team_size, omp_get_active_level
+    from pyccel.stdlib.internal.openmp import omp_get_active_level, omp_get_team_size
 
     # $ omp parallel
     active_level = omp_get_active_level()
@@ -212,8 +212,10 @@ def test_omp_get_proc_bind():
 
 
 def test_omp_set_get_default_device(device_num: "int"):
-    from pyccel.stdlib.internal.openmp import omp_get_default_device
-    from pyccel.stdlib.internal.openmp import omp_set_default_device
+    from pyccel.stdlib.internal.openmp import (
+        omp_get_default_device,
+        omp_set_default_device,
+    )
 
     omp_set_default_device(device_num)
     default_device = omp_get_default_device()
@@ -287,7 +289,7 @@ def test_omp_get_set_schedule():
 
 
 def test_nowait_schedule(n: int):
-    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+    from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
 
     a = np.zeros(n)
     imin_res = np.empty(4)
@@ -620,7 +622,7 @@ def potential_internal_data_race_condition():
 
 
 def parallel_if(n: int):
-    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+    from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
 
     a = np.zeros(n)
     th_id, nthrds = np.int32(0), np.int32(0)
