@@ -7,19 +7,13 @@ to parse OpenMP directives found in comments into `OmpTxNode` AST nodes.
 """
 
 import ast
-import functools
-import re
 from os.path import dirname, join
 
 from textx import metamodel_for_language
 from textx.metamodel import metamodel_from_file
 
-from pyccel.ast.core import CodeBlock, EmptyNode, FunctionCall
-from pyccel.ast.datatypes import PythonNativeInt
-from pyccel.ast.operators import PyccelAdd, PyccelMinus
-from pyccel.ast.variable import Variable
+from pyccel.ast.core import CodeBlock, EmptyNode
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.plugins.Openmp.ast.omp import (
     OmpClause,

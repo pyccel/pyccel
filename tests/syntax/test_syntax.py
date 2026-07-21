@@ -3,7 +3,6 @@
 
 import os
 
-import pluggy
 import pytest
 
 from pyccel.errors.errors import Errors
