@@ -1,13 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import numpy as np
-from numpy import iinfo
 from numpy.random import rand, randint
 
 from pyccel import epyccel
 
-# Use int32 for Windows compatibility
-min_int = iinfo(np.int32).min
-max_int = iinfo(np.int32).max
+from tolerances import max_int, min_int
 
 
 def test_swap_basic(language):

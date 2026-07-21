@@ -7,8 +7,7 @@ from numpy.random import randint
 
 from pyccel import epyccel
 
-RTOL = 1e-12
-ATOL = 1e-16
+from tolerances import ATOL, RTOL
 
 T = TypeVar("T", "int[:]", "float[:]", "complex[:]")
 

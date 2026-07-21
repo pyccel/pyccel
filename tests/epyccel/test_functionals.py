@@ -1,17 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 from modules import functionals
-from numpy import arange, array, equal
+from numpy import arange, array
 from numpy.random import randint
 
-from pyccel import epyccel
-
-
-def compare_epyccel(f, language, *args):
-    f2 = epyccel(f, language=language)
-    out1 = f(*args)
-    out2 = f2(*args)
-    assert equal(out1, out2).all()
+from epyccel_utilities import compare_epyccel
 
 
 def test_functional_for_1d_range(language):

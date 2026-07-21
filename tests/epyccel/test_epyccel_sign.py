@@ -2,9 +2,10 @@
 
 import modules.numpy_sign as mod
 import numpy as np
-from recognised_functions.test_numpy_funcs import ATOL, ATOL32, RTOL, RTOL32
 
 from pyccel import epyccel
+
+from tolerances import ATOL, ATOL32, RTOL, RTOL32
 
 
 def test_sign_complex(language):

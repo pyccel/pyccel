@@ -8,10 +8,7 @@ from numpy.random import rand, randint
 
 from pyccel import epyccel
 
-# ==============================================================================
-
-ATOL = 1e-15
-RTOL = 2e-14
+from tolerances import ATOL, RTOL
 
 # Determine whether some unit tests should be skipped with Python >= 3.14 to
 # avoid annoying deprecation warnings dealing with the complex() constructor:
