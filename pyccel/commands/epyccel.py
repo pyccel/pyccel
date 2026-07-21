@@ -448,6 +448,7 @@ def epyccel(
     comm=None,
     root=0,
     bcast=True,
+    **kwargs
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -504,6 +505,8 @@ def epyccel(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
+    **kwargs : dict
+        Any additional arguments for plugins.
 
     Returns
     -------
@@ -577,6 +580,7 @@ def epyccel(
                     debug=debug,
                     conda_warnings=conda_warnings,
                     context_dict=context_dict,
+                    **kwargs,
                 )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
