@@ -3,10 +3,11 @@ import os
 
 import pytest
 
+from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 from pyccel.codegen.codegen import Codegen
+from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import Errors, PyccelError
 from pyccel.parser.parser import Parser
-from pyccel.utilities.pluginmanager import PluginManager
 
 
 def get_files_from_folder(folder_name):
@@ -20,20 +21,17 @@ def get_files_from_folder(folder_name):
 
 @pytest.mark.external
 @pytest.mark.parametrize("f", get_files_from_folder("blockers"))
-def test_blockers(f):
-    plugins = PluginManager()
-    plugins.set_options({"openmp": True})
+def test_blockers(f, language):
+    plugin_manager = get_plugin_manager()
+    handle_plugin_arguments(plugin_manager, {"openmp": True})
+
     errors = Errors()
     errors.reset()
 
     with pytest.raises(PyccelError):
-        pyccel = Parser(f, output_folder=os.getcwd())
-        ast = pyccel.parse(verbose=0)
-
-        ast = pyccel.annotate(verbose=0)
-
-        name = os.path.basename(f)
-        name = os.path.splitext(name)[0]
-
-        codegen = Codegen(ast, name, "fortran", verbose=0)
-        codegen.printer.doprint(codegen.ast)
+        execute_pyccel(
+                f,
+                verbose=0,
+                language=language,
+                plugin_manager=plugin_manager,
+            )
