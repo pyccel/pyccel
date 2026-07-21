@@ -12,6 +12,7 @@ class OpenMPConfig:
 
     A class to store the chosen configuration for the OpenMP plugin.
     """
+
     def __init__(self):
         self._version = None
 
