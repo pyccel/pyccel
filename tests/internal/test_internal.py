@@ -10,7 +10,7 @@ import pluggy
 import pytest
 
 from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.plugins.plugin_tools import get_plugin_manager
+from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 
 # Skip all tests if PYCCEL_DEFAULT_COMPILER=LLVM
 pytestmark = pytest.mark.skip_llvm
@@ -63,8 +63,9 @@ def test_mpi(f):
 @pytest.mark.external
 def test_openmp(f, language):
     plugin_manager = get_plugin_manager()
+    handle_plugin_arguments(plugin_manager, {"openmp": True})
 
-    execute_pyccel(f, openmp=True, language=language, plugin_manager=plugin_manager)
+    execute_pyccel(f, language=language, plugin_manager=plugin_manager)
 
 
 # @pytest.mark.parametrize("f", get_files_from_folder('openacc'))
