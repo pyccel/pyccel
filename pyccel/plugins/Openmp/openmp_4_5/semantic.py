@@ -1,3 +1,4 @@
+#pylint: disable=protected-access
 """
 Semantic-stage handling of OpenMP 4.5 directives.
 

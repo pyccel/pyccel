@@ -1,3 +1,4 @@
+#pylint: disable=protected-access
 """
 Syntactic-stage parsing of OpenMP 4.5 directives.
 

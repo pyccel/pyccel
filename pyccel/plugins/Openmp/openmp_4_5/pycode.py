@@ -1,3 +1,4 @@
+#pylint: disable=protected-access
 """
 Python code generation for OpenMP 4.5 constructs.
 
