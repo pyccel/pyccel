@@ -28,6 +28,8 @@ from pyccel.plugins.Openmp.ast.omp import (
     OmpTxNode,
 )
 
+errors = Errors()
+
 __all__ = (
     "__init__",
     "_helper_parse_expr",
@@ -145,7 +147,8 @@ def _treat_comment_line(self, line, expr):
     pyccel.plugins.Openmp.omp.OmpTxDirective : Class representing an OpenMP directive.
     pyccel.plugins.Openmp.omp.OmpTxEndDirective : Class representing an OpenMP end directive.
     """
-    if line.startswith("#$") and line[2:].lstrip().startswith("omp"):
+    txt = line[1:].lstrip()
+    if txt.startswith("$") and txt[1:].lstrip().startswith("omp"):
         from textx.exceptions import TextXError
 
         try:

@@ -1,5 +1,5 @@
 OmpStatement:
-  '#$' 'omp' statement=OmpDirective raw='' omp_version=OMP_VERSION
+  '#' '$' 'omp' statement=OmpDirective raw='' omp_version=OMP_VERSION
 ;
 
 OmpDirective:
