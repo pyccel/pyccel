@@ -96,13 +96,15 @@ def handle_plugin_arguments(plugin_manager, kwargs):
     """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
+        # Read CLI arguments even if the plugin is not used so spurious arguments are removed from kwargs
+        plugin.read_cli_arguments(kwargs)
+
         if name not in kwargs:
             plugin_manager.unregister(plugin)
         elif not kwargs[name]:
             plugin_manager.unregister(plugin)
             kwargs.pop(name)
         else:
-            plugin.read_cli_arguments(kwargs)
             kwargs.pop(name)
 
 
