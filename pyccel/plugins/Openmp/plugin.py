@@ -89,7 +89,7 @@ def read_cli_arguments(kwargs: dict):
     kwargs : dict
         The keyword arguments passed to the pipeline.
     """
-    openmp_config.version = kwargs.pop("omp_version")
+    openmp_config.version = kwargs.pop("omp_version", 4.5)
     kwargs.setdefault("accelerators", []).append("openmp")
 
 
