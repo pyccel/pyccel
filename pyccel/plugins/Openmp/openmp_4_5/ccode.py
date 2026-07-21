@@ -1,4 +1,4 @@
-#pylint: disable=protected-access
+# pylint: disable=protected-access
 """
 C code generation for OpenMP 4.5 constructs.
 

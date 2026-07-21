@@ -448,7 +448,7 @@ def epyccel(
     comm=None,
     root=0,
     bcast=True,
-    **kwargs
+    **kwargs,
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.

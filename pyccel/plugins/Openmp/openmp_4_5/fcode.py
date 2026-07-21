@@ -1,4 +1,4 @@
-#pylint: disable=protected-access
+# pylint: disable=protected-access
 """
 Fortran code generation for OpenMP 4.5 constructs.
 
@@ -7,6 +7,7 @@ Provides the mixin methods (added to the Fortran printer via
 directives, including a helper for constructs whose clauses must be moved
 from the start directive to the end directive.
 """
+
 import re
 
 __all__ = (
