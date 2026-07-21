@@ -158,7 +158,7 @@ FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = (
 )
 
 # other Pyccel messages
-PYCCEL_INVALID_HEADER = "Annotated comments must start with omp, acc or header"
+PYCCEL_INVALID_HEADER = "Annotated comments must start with acc or header"
 PYCCEL_UNFOUND_IMPORTED_MODULE = "Unable to import"
 FOUND_DUPLICATED_IMPORT = "Duplicated import "
 PYCCEL_UNEXPECTED_IMPORT = 'Pyccel has not correctly handled "import module" statement. Try again with "from module import function" syntax'
