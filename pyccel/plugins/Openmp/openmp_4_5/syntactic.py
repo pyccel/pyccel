@@ -173,7 +173,7 @@ def _treat_comment_line(self, line, expr):
             )
             return self._visit(directive)
         except TextXError as e:
-            errors.report(e.message, severity="fatal", symbol=expr)
+            raise errors.report(e.message, severity="fatal", symbol=expr)
     else:
         return super(type(self), self)._treat_comment_line(line, expr)
 
