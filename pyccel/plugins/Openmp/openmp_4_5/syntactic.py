@@ -92,7 +92,7 @@ def __init__(self, *args, **kwargs):
 
 def _helper_parse_expr(self, expr):
     """
-    Parses an expression and returns the equivalent node.
+    Parse an expression and returns the equivalent node.
 
     This method takes an OpenMP expression and converts it into a Python AST node
     using the extend_tree function. It performs validation to ensure the expression
@@ -131,8 +131,6 @@ def _treat_comment_line(self, line, expr):
 
     Parameters
     ----------
-    self : object
-        The parser self that is processing the code.
     line : str
         The comment line.
     expr : ast.Ast
@@ -189,8 +187,6 @@ def _visit(self, stmt):
 
     Parameters
     ----------
-    self : object
-        The parser self that is processing the code.
     stmt : ast.AST
         The statement to visit.
 

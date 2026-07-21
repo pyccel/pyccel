@@ -22,8 +22,7 @@ __all__ = (
 )
 
 
-@classmethod
-def _helper_delay_clauses_printing(cls, start, end, clauses):
+def _helper_delay_clauses_printing(self, start, end, clauses):
     """
     Transfer clauses of a directive to an OmpEndDirective for printing.
 
@@ -33,6 +32,8 @@ def _helper_delay_clauses_printing(cls, start, end, clauses):
 
     Parameters
     ----------
+    self : FCodePrinter
+        The printer subclass.
     start : OmpDirective
         The starting directive of an OpenMP construct.
     end : OmpEndDirective or None
