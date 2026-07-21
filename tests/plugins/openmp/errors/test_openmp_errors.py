@@ -30,8 +30,8 @@ def test_blockers(f, language):
 
     with pytest.raises(PyccelError):
         execute_pyccel(
-                f,
-                verbose=0,
-                language=language,
-                plugin_manager=plugin_manager,
-            )
+            f,
+            verbose=0,
+            language=language,
+            plugin_manager=plugin_manager,
+        )

@@ -906,7 +906,11 @@ def test_parallel_if(language):
 @pytest.mark.external
 def test_omp_ordered(language):
     f1 = epyccel(
-        openmp.stenc_2d, flags=get_wall_flag(language), openmp=True, language=language, debug=False
+        openmp.stenc_2d,
+        flags=get_wall_flag(language),
+        openmp=True,
+        language=language,
+        debug=False,
     )
     f2 = openmp.stenc_2d
     A = np.ones([3, 3], dtype=int)
