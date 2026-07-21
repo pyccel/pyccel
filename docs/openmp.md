@@ -12,7 +12,7 @@ Specify the OpenMP version during compilation using the `--omp-version` flag:
 --omp-version=5.0
 ```
 
-Or when using `epyccel`, configure OpenMP through the openmp parameter:
+Or when using `epyccel`, configure OpenMP through the `openmp` parameter:
 
 ```python
 openmp=True
