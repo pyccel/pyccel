@@ -109,6 +109,11 @@ def get_updated_syntactic_methods():
     Return methods to be added to or to override methods in the syntactic parser class.
 
     Return methods to be added to or to override methods in the syntactic parser class.
+
+    Returns
+    -------
+    Iterable[FunctionType]
+        Functions to be added or to override syntactic methods.
     """
     return [
         getattr(openmp_config.syntactic, n) for n in openmp_config.syntactic.__all__
@@ -121,6 +126,11 @@ def get_updated_semantic_methods():
     Return methods to be added to or to override methods in the semantic parser class.
 
     Return methods to be added to or to override methods in the semantic parser class.
+
+    Returns
+    -------
+    Iterable[FunctionType]
+        Functions to be added or to override semantic methods.
     """
     return [getattr(openmp_config.semantic, n) for n in openmp_config.semantic.__all__]
 
@@ -131,6 +141,16 @@ def get_updated_codegen_methods(language: str):
     Return methods to be added to or to override methods in the code-generation class.
 
     Return methods to be added to or to override methods in the code-generation class.
+
+    Parameters
+    ----------
+    language : str
+        The target language (e.g. 'c', 'fortran').
+
+    Returns
+    -------
+    Iterable[FunctionType]
+        Functions to be added or to override codegen methods.
     """
     if language == "fortran":
         return [getattr(openmp_config.fcode, n) for n in openmp_config.fcode.__all__]
