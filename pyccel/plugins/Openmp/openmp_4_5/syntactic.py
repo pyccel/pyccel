@@ -15,34 +15,49 @@ from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpList, \
-    OmpTxDirective, OmpTxEndDirective, OmpTxNode, OmpExpressionList
-from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
+from pyccel.plugins.Openmp.ast.omp import (
+    OmpDirective,
+    OmpClause,
+    OmpEndDirective,
+    OmpConstruct,
+    OmpList,
+    OmpTxDirective,
+    OmpTxEndDirective,
+    OmpTxNode,
+    OmpExpressionList,
+)
+from pyccel.plugins.Openmp.ast.omp import (
+    OmpScalarExpr,
+    OmpIntegerExpr,
+    OmpConstantPositiveInteger,
+)
 
-__all__ = ('__init__',
-           '_helper_parse_expr',
-           '_treat_comment_line',
-           '_visit',
-           '_visit_OmpTxDirective',
-           '_visit_for_directive',
-           '_visit_simd_directive',
-           '_visit_parallel_for_directive',
-           '_visit_parallel_for_simd_directive',
-           '_visit_target_teams_distribute_parallel_for_directive',
-           '_visit_OmpTxClause',
-           '_visit_OmpTxEndDirective',
-           '_visit_OmpTxScalarExpr',
-           '_visit_OmpTxIntegerExpr',
-           '_visit_OmpTxConstantPositiveInteger',
-           '_visit_OmpTxList',
-           '_visit_OmpTxExpressionList',
-           )
+__all__ = (
+    "__init__",
+    "_helper_parse_expr",
+    "_treat_comment_line",
+    "_visit",
+    "_visit_OmpTxDirective",
+    "_visit_for_directive",
+    "_visit_simd_directive",
+    "_visit_parallel_for_directive",
+    "_visit_parallel_for_simd_directive",
+    "_visit_target_teams_distribute_parallel_for_directive",
+    "_visit_OmpTxClause",
+    "_visit_OmpTxEndDirective",
+    "_visit_OmpTxScalarExpr",
+    "_visit_OmpTxIntegerExpr",
+    "_visit_OmpTxConstantPositiveInteger",
+    "_visit_OmpTxList",
+    "_visit_OmpTxExpressionList",
+)
+
 
 def __init__(self, *args, **kwargs):
     self._version = 4.5
     self._skip_stmts_count = 0
     cls = type(self)
-    if not hasattr(cls, '_omp_metamodel'):
+    if not hasattr(cls, "_omp_metamodel"):
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "../grammar/openmp.tx")
@@ -50,24 +65,30 @@ def __init__(self, *args, **kwargs):
         # object processors: are registered for particular classes (grammar rules)
         # and are called when the objects of the given class is instantiated.
         # The rules OMP_X_Y are used to insert the version of the syntax used
-        textx_mm = metamodel_for_language('textx')
+        textx_mm = metamodel_for_language("textx")
         grammar_model = textx_mm.grammar_model_from_file(grammar)
 
         def make_parent_processor(rule):
             """returns a processor that handles allowed parent directives"""
-            return lambda _: rule.name.replace('_PARENT', '').lower()
+            return lambda _: rule.name.replace("_PARENT", "").lower()
 
-        obj_processors = {r.name: make_parent_processor(r)
-                          for r in grammar_model.rules if r.name.endswith('_PARENT')}
-        obj_processors.update({
-            'OMP_4_5': lambda _: 4.5,
-            'OMP_5_0': lambda _: 5.0,
-            'OMP_5_1': lambda _: 5.1,
-            'TRUE': lambda _: True,
-            'OMP_VERSION': lambda _: self._version,
-        })
+        obj_processors = {
+            r.name: make_parent_processor(r)
+            for r in grammar_model.rules
+            if r.name.endswith("_PARENT")
+        }
+        obj_processors.update(
+            {
+                "OMP_4_5": lambda _: 4.5,
+                "OMP_5_0": lambda _: 5.0,
+                "OMP_5_1": lambda _: 5.1,
+                "TRUE": lambda _: True,
+                "OMP_VERSION": lambda _: self._version,
+            }
+        )
         cls._omp_metamodel.register_obj_processors(obj_processors)
     super(type(self), self).__init__(*args, **kwargs)
+
 
 def _helper_parse_expr(self, expr):
     """
@@ -89,9 +110,9 @@ def _helper_parse_expr(self, expr):
     """
     fst = extend_tree(expr.value)
     if (
-            not isinstance(fst, ast.Module)
-            or len(fst.body) != 1
-            or not isinstance(fst.body[0], ast.Expr)
+        not isinstance(fst, ast.Module)
+        or len(fst.body) != 1
+        or not isinstance(fst.body[0], ast.Expr)
     ):
         errors.report(
             "Invalid expression",
@@ -99,6 +120,7 @@ def _helper_parse_expr(self, expr):
             severity="fatal",
         )
     return fst.body[0].value
+
 
 def _treat_comment_line(self, line, expr):
     """
@@ -127,18 +149,34 @@ def _treat_comment_line(self, line, expr):
     pyccel.plugins.Openmp.omp.OmpTxDirective : Class representing an OpenMP directive.
     pyccel.plugins.Openmp.omp.OmpTxEndDirective : Class representing an OpenMP end directive.
     """
-    if line.startswith('#$') and line[2:].lstrip().startswith('omp'):
+    if line.startswith("#$") and line[2:].lstrip().startswith("omp"):
         from textx.exceptions import TextXError
+
         try:
             model = self._omp_metamodel.model_from_str(line)
-            directive = OmpTxEndDirective(model.statement, line, self._version, lineno=expr.lineno,
-                                          column=expr.col_offset) if model.statement.is_end_directive else OmpTxDirective(
-                model.statement, line, self._version, lineno=expr.lineno, column=expr.col_offset)
+            directive = (
+                OmpTxEndDirective(
+                    model.statement,
+                    line,
+                    self._version,
+                    lineno=expr.lineno,
+                    column=expr.col_offset,
+                )
+                if model.statement.is_end_directive
+                else OmpTxDirective(
+                    model.statement,
+                    line,
+                    self._version,
+                    lineno=expr.lineno,
+                    column=expr.col_offset,
+                )
+            )
             return self._visit(directive)
         except TextXError as e:
             errors.report(e.message, severity="fatal", symbol=expr)
     else:
         return super(type(self), self)._treat_comment_line(line, expr)
+
 
 def _visit(self, stmt):
     """
@@ -173,6 +211,7 @@ def _visit(self, stmt):
             res.set_current_ast(stmt.python_ast)
         return res
 
+
 def _visit_OmpTxDirective(self, stmt):
     if hasattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive"):
         return getattr(self, f"_visit_{stmt.name.replace(' ', '_')}_directive")(stmt)
@@ -183,8 +222,8 @@ def _visit_OmpTxDirective(self, stmt):
         end = None
         container = None
         for el in self._context[::-1]:
-            if hasattr(el, 'body'):
-                container = el.body[el.body.index(self._context[-2]) + 1:].copy()
+            if hasattr(el, "body"):
+                container = el.body[el.body.index(self._context[-2]) + 1 :].copy()
                 break
         for line in container:
             # Visit lines belonging to container
@@ -205,6 +244,7 @@ def _visit_OmpTxDirective(self, stmt):
         return OmpConstruct(start=directive, end=end, body=body)
     return directive
 
+
 def _visit_for_directive(self, stmt):
     loop = None
     for el in self._context[::-1]:
@@ -224,41 +264,52 @@ def _visit_for_directive(self, stmt):
     body = CodeBlock(body=[loop])
     return OmpConstruct(start=directive, end=None, body=body)
 
+
 def _visit_simd_directive(self, expr):
     return self._visit_for_directive(expr)
+
 
 def _visit_parallel_for_directive(self, expr):
     return self._visit_for_directive(expr)
 
+
 def _visit_parallel_for_simd_directive(self, expr):
     return self._visit_for_directive(expr)
 
+
 def _visit_target_teams_distribute_parallel_for_directive(self, expr):
     return self._visit_for_directive(expr)
+
 
 def _visit_OmpTxClause(self, expr):
     omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
     return OmpClause(omp_exprs=omp_exprs, **expr.get_fixed_state())
 
+
 def _visit_OmpTxEndDirective(self, expr):
     clauses = tuple(self._visit(clause) for clause in expr.clauses)
     return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
+
 
 def _visit_OmpTxScalarExpr(self, expr):
     fst = self._helper_parse_expr(expr)
     return OmpScalarExpr(value=self._visit(fst), **expr.get_fixed_state())
 
+
 def _visit_OmpTxIntegerExpr(self, expr):
     fst = self._helper_parse_expr(expr)
     return OmpIntegerExpr(value=self._visit(fst), **expr.get_fixed_state())
+
 
 def _visit_OmpTxConstantPositiveInteger(self, expr):
     fst = self._helper_parse_expr(expr)
     return OmpConstantPositiveInteger(value=self._visit(fst), **expr.get_fixed_state())
 
+
 def _visit_OmpTxList(self, expr):
     fst = self._helper_parse_expr(expr)
     return OmpList(value=self._visit(fst), **expr.get_fixed_state())
+
 
 def _visit_OmpTxExpressionList(self, expr):
     fst = self._helper_parse_expr(expr)

@@ -3,9 +3,19 @@ from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.operators import PyccelMinus, PyccelAdd
 from pyccel.ast.variable import Variable
 from pyccel.errors.errors import Errors
-from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpList, \
-    OmpExpressionList
-from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
+from pyccel.plugins.Openmp.ast.omp import (
+    OmpDirective,
+    OmpClause,
+    OmpEndDirective,
+    OmpConstruct,
+    OmpList,
+    OmpExpressionList,
+)
+from pyccel.plugins.Openmp.ast.omp import (
+    OmpScalarExpr,
+    OmpIntegerExpr,
+    OmpConstantPositiveInteger,
+)
 
 errors = Errors()
 
