@@ -1,3 +1,10 @@
+"""
+Fortran code generation for OpenMP 5.0 constructs.
+
+Currently re-exports the `openmp_4_5.fcode` mixin methods unchanged, as
+OpenMP 5.0 Fortran code generation has not yet diverged from 4.5.
+"""
+
 from ..openmp_4_5.fcode import (
     _helper_delay_clauses_printing,
     _print_end_section_directive,

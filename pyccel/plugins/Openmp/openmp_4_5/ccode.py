@@ -1,3 +1,11 @@
+"""
+C code generation for OpenMP 4.5 constructs.
+
+Provides the mixin methods (added to the C printer via
+`get_updated_codegen_methods`) that print OpenMP 4.5 AST nodes as `#pragma
+omp` directives.
+"""
+
 __all__ = (
     "_print_OmpConstruct",
     "_print_OmpDirective",

@@ -1,3 +1,12 @@
+"""
+Fortran code generation for OpenMP 4.5 constructs.
+
+Provides the mixin methods (added to the Fortran printer via
+`get_updated_codegen_methods`) that print OpenMP 4.5 AST nodes as `!$omp`
+directives, including a helper for constructs whose clauses must be moved
+from the start directive to the end directive.
+"""
+
 __all__ = (
     "_helper_delay_clauses_printing",
     "_print_OmpConstruct",

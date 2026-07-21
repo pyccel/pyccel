@@ -1,3 +1,10 @@
+"""
+Syntactic-stage parsing of OpenMP 5.0 directives.
+
+Currently re-exports the `openmp_4_5.syntactic` mixin methods unchanged, as
+OpenMP 5.0 parsing has not yet diverged from 4.5.
+"""
+
 from ..openmp_4_5.syntactic import (
     __init__,
     _helper_parse_expr,

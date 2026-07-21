@@ -1,3 +1,10 @@
+"""
+Semantic-stage handling of OpenMP 5.0 directives.
+
+Currently re-exports the `openmp_4_5.semantic` mixin methods unchanged, as
+OpenMP 5.0 semantic handling has not yet diverged from 4.5.
+"""
+
 from ..openmp_4_5.semantic import (
     _visit_for_construct,
     _visit_OmpClause,

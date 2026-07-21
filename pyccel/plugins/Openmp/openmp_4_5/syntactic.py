@@ -1,3 +1,11 @@
+"""
+Syntactic-stage parsing of OpenMP 4.5 directives.
+
+Provides the mixin methods (added to the syntactic parser via
+`get_updated_syntactic_methods`) that use the textx-based OpenMP 4.5 grammar
+to parse OpenMP directives found in comments into `OmpTxNode` AST nodes.
+"""
+
 import ast
 import functools
 import re

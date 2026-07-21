@@ -1,3 +1,11 @@
+"""
+Semantic-stage handling of OpenMP 4.5 directives.
+
+Provides the mixin methods (added to the semantic parser via
+`get_updated_semantic_methods`) that visit and annotate the syntactic OpenMP
+4.5 AST nodes produced by `openmp_4_5.syntactic`.
+"""
+
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.operators import PyccelAdd, PyccelMinus
