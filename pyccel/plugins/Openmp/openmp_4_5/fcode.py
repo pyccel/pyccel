@@ -1,3 +1,17 @@
+__all__ = (
+    "_helper_delay_clauses_printing",
+    "_print_OmpConstruct",
+    "_print_for_construct",
+    "_print_single_construct",
+    "_print_simd_construct",
+    "_print_parallel_for_construct",
+    "_print_parallel_for_simd_construct",
+    "_print_target_teams_distribute_parallel_for_construct",
+    "_print_OmpDirective",
+    "_print_OmpEndDirective",
+    "_print_end_section_directive",
+)
+
 
 @classmethod
 def _helper_delay_clauses_printing(cls, start, end, clauses):
@@ -33,64 +47,82 @@ def _helper_delay_clauses_printing(cls, start, end, clauses):
     >>> end = None
     >>> start_str, end_str = FCodePrinter._helper_delay_clauses_printing(start, end, ['nowait'])
     >>> print(start_str)
-    !$omp 
+    !$omp
     >>> print(end_str)
     !$omp end nowait
     """
     clauses = tuple(c for c in start.clauses if c.name in clauses)
     if clauses or end:
         if end:
-            end = f"!$omp end {end.name} {' '.join(c.raw for c in end.clauses + clauses)}"
+            end = (
+                f"!$omp end {end.name} {' '.join(c.raw for c in end.clauses + clauses)}"
+            )
         else:
             end = f"!$omp end {start.name} {' '.join(c.raw for c in clauses)}"
     start = start.raw
     for c in clauses:
-        start = start.replace(c.raw, '', 1)
+        start = start.replace(c.raw, "", 1)
     start = f"!$omp {start}\n"
     return start, end
 
+
 def _print_OmpConstruct(self, expr):
     if hasattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct"):
-        return getattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct")(expr)
+        return getattr(self, f"_print_{expr.start.name.replace(' ', '_')}_construct")(
+            expr
+        )
     body = self._print(expr.body)
     start = self._print(expr.start)
     end = self._print(expr.end)
     return f"{start}\n{body}\n{end}\n"
 
+
 def _print_for_construct(self, expr):
-    start, end = self._helper_delay_clauses_printing(expr.start, expr.end, ['nowait'])
-    start = re.sub(r'\bfor\b', 'do', start)
+    start, end = self._helper_delay_clauses_printing(expr.start, expr.end, ["nowait"])
+    start = re.sub(r"\bfor\b", "do", start)
     body = self._print(expr.body)
     if end:
-        end = re.sub(r'\bfor\b', 'do', end)
+        end = re.sub(r"\bfor\b", "do", end)
         return f"{start}\n{body}\n{end}\n"
     else:
         return f"{start}\n{body}\n"
 
+
 def _print_single_construct(self, expr):
-    start, end = self._helper_delay_clauses_printing(expr.start, expr.end, ['nowait', 'copyprivate'])
+    start, end = self._helper_delay_clauses_printing(
+        expr.start, expr.end, ["nowait", "copyprivate"]
+    )
     body = self._print(expr.body)
     return f"{start}\n{body}\n{end}\n"
+
 
 def _print_simd_construct(self, expr):
     return self._print_for_construct(expr)
 
+
 def _print_parallel_for_construct(self, expr):
     return self._print_for_construct(expr)
+
 
 def _print_parallel_for_simd_construct(self, expr):
     return self._print_for_construct(expr)
 
+
 def _print_target_teams_distribute_parallel_for_construct(self, expr):
     return self._print_for_construct(expr)
+
 
 def _print_OmpDirective(self, expr):
     return f"!$omp {expr.raw}\n"
 
+
 def _print_OmpEndDirective(self, expr):
     if hasattr(self, f"_print_end_{expr.name.replace(' ', '_')}_directive"):
-        return getattr(self, f"_print_end_{expr.name.replace(' ', '_')}_directive")(expr)
+        return getattr(self, f"_print_end_{expr.name.replace(' ', '_')}_directive")(
+            expr
+        )
     return f"!$omp end {expr.raw}\n"
+
 
 def _print_end_section_directive(self, expr):
     return ""

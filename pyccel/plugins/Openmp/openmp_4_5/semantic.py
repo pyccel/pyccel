@@ -1,34 +1,71 @@
+from pyccel.ast.core import FunctionCall
+from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.operators import PyccelMinus, PyccelAdd
+from pyccel.ast.variable import Variable
+from pyccel.errors.errors import Errors
+from pyccel.plugins.Openmp.omp import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpList, \
+    OmpExpressionList
+from pyccel.plugins.Openmp.omp import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger
+
+errors = Errors()
+
+__all__ = (
+    "_visit_OmpDirective",
+    "_visit_OmpConstruct",
+    "_visit_for_construct",
+    "_visit_simd_construct",
+    "_visit_parallel_for_simd_construct",
+    "_visit_parallel_for_construct",
+    "_visit_target_teams_distribute_parallel_for_construct",
+    "_visit_OmpEndDirective",
+    "_visit_OmpScalarExpr",
+    "_visit_OmpIntegerExpr",
+    "_visit_OmpConstantPositiveInteger",
+    "_visit_OmpList",
+    "_visit_OmpExpressionList",
+    "_visit_OmpClause",
+)
+
 
 def _visit_OmpDirective(self, expr):
     clauses = tuple(self._visit(clause) for clause in expr.clauses)
     directive = OmpDirective(clauses=clauses, **expr.get_fixed_state())
     return directive
 
+
 def _visit_OmpConstruct(self, expr):
     if hasattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct"):
-        return getattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(expr)
+        return getattr(self, f"_visit_{expr.start.name.replace(' ', '_')}_construct")(
+            expr
+        )
 
     body = self._visit(expr.body)
     start = self._visit(expr.start)
     end = self._visit(expr.end) if expr.end else None
     return OmpConstruct(start=start, end=end, body=body)
 
+
 def _visit_for_construct(self, expr):
     body = self._visit(expr.body)
     start = self._visit(expr.start)
     return OmpConstruct(start=start, end=None, body=body)
 
+
 def _visit_simd_construct(self, expr):
     return self._visit_for_construct(expr)
+
 
 def _visit_parallel_for_simd_construct(self, expr):
     return self._visit_for_construct(expr)
 
+
 def _visit_parallel_for_construct(self, expr):
     return self._visit_for_construct(expr)
 
+
 def _visit_target_teams_distribute_parallel_for_construct(self, expr):
     return self._visit_for_construct(expr)
+
 
 def _visit_OmpEndDirective(self, expr):
     if not isinstance(expr.current_user_node, OmpConstruct) and expr.is_construct:
@@ -40,11 +77,11 @@ def _visit_OmpEndDirective(self, expr):
     clauses = tuple(self._visit(clause) for clause in expr.clauses)
     return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
+
 def _visit_OmpScalarExpr(self, expr):
     value = self._visit(expr.value)
-    if (
-            not hasattr(value, "dtype")
-            or (isinstance(value, FunctionCall) and not value.funcdef.results)
+    if not hasattr(value, "dtype") or (
+        isinstance(value, FunctionCall) and not value.funcdef.results
     ):
         errors.report(
             "expression needs to be a scalar expression",
@@ -52,6 +89,7 @@ def _visit_OmpScalarExpr(self, expr):
             severity="fatal",
         )
     return OmpScalarExpr(value=value, **expr.get_fixed_state())
+
 
 def _visit_OmpIntegerExpr(self, expr):
     value = self._visit(expr.value)
@@ -63,9 +101,11 @@ def _visit_OmpIntegerExpr(self, expr):
         )
     return OmpIntegerExpr(value=value, **expr.get_fixed_state())
 
+
 def _visit_OmpConstantPositiveInteger(self, expr):
     value = self._visit(expr.value)
     return OmpConstantPositiveInteger(value=value, **expr.get_fixed_state())
+
 
 def _visit_OmpList(self, expr):
     items = tuple(self._visit(var) for var in expr.value)
@@ -78,16 +118,22 @@ def _visit_OmpList(self, expr):
             )
     return OmpList(value=items, **expr.get_fixed_state())
 
+
 def _visit_OmpExpressionList(self, expr):
     items = tuple(self._visit(var) for var in expr.value)
     for i in items:
-        if not isinstance(i, Variable) and not isinstance(i, PyccelMinus) and not isinstance(i, PyccelAdd):
+        if (
+            not isinstance(i, Variable)
+            and not isinstance(i, PyccelMinus)
+            and not isinstance(i, PyccelAdd)
+        ):
             errors.report(
                 "omp list must be a list of expressions",
                 symbol=expr,
                 severity="fatal",
             )
     return OmpExpressionList(value=items, **expr.get_fixed_state())
+
 
 def _visit_OmpClause(self, expr):
     omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
