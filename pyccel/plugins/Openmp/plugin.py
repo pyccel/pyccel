@@ -7,11 +7,21 @@ from . import openmp_4_5, openmp_5_0
 
 
 class OpenMPConfig:
+    """
+    A class to store the chosen configuration for the OpenMP plugin.
+
+    A class to store the chosen configuration for the OpenMP plugin.
+    """
     def __init__(self):
         self._version = None
 
     @property
     def version(self):
+        """
+        Get the OpenMP version.
+
+        Get the OpenMP version.
+        """
         return self._version
 
     @version.setter
@@ -37,26 +47,25 @@ openmp_config = OpenMPConfig()
 @hookimpl
 def get_description():
     """
-    Return a one-line description of the LineAnnot plugin for the CLI help text.
+    Return a one-line description of the OpenMP plugin for the CLI help text.
 
-    Return a one-line description of the LineAnnot plugin for the CLI help text.
+    Return a one-line description of the OpenMP plugin for the CLI help text.
 
     Returns
     -------
     str
         Human-readable description of what the plugin does.
     """
-    return "Add comments in generated code indicating which line in the Python file corresponds to the generated code."
+    return "A plugin to add support for OpenMP parallelisation via comments."
 
 
 @hookimpl
 def add_cli_options(parser, cli_tool):
     """
-    Add LineAnnot-specific CLI options to *parser*.
+    Add OpenMP-specific CLI options to *parser*.
 
-    The LineAnnot plugin requires no extra options beyond the ``--line_annotation``
-    flag added automatically by `plugin_tools.get_plugin_cli_options`, so
-    this hook is a no-op.
+    The OpenMP plugin has 1 argument `omp_version` which is only required
+    for the tools which eventually compile code.
 
     Parameters
     ----------
@@ -81,8 +90,8 @@ def read_cli_arguments(kwargs: dict):
     """
     Read any arguments from the kwargs dictionary.
 
-    The LineAnnot plugin has no specific arguments to read, so this hook is a
-    no-op.
+    Read the version from the kwargs dictionary and update the
+    accelerators.
 
     Parameters
     ----------
@@ -95,6 +104,11 @@ def read_cli_arguments(kwargs: dict):
 
 @hookimpl
 def get_updated_syntactic_methods():
+    """
+    Return methods to be added to or to override methods in the syntactic parser class.
+
+    Return methods to be added to or to override methods in the syntactic parser class.
+    """
     return [
         getattr(openmp_config.syntactic, n) for n in openmp_config.syntactic.__all__
     ]
@@ -102,11 +116,21 @@ def get_updated_syntactic_methods():
 
 @hookimpl
 def get_updated_semantic_methods():
+    """
+    Return methods to be added to or to override methods in the semantic parser class.
+
+    Return methods to be added to or to override methods in the semantic parser class.
+    """
     return [getattr(openmp_config.semantic, n) for n in openmp_config.semantic.__all__]
 
 
 @hookimpl
 def get_updated_codegen_methods(language: str):
+    """
+    Return methods to be added to or to override methods in the code-generation class.
+
+    Return methods to be added to or to override methods in the code-generation class.
+    """
     if language == "fortran":
         return [getattr(openmp_config.fcode, n) for n in openmp_config.fcode.__all__]
     elif language == "c":
