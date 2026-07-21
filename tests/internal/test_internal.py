@@ -63,9 +63,7 @@ def test_mpi(f):
 def test_openmp(f, language):
     execute_pyccel(f, openmp=True, language=language)
 
-    execute_pyccel(
-        f, openmp=True, language=language, plugin_manager=plugin_manager
-    )
+    execute_pyccel(f, openmp=True, language=language, plugin_manager=plugin_manager)
 
 
 # @pytest.mark.parametrize("f", get_files_from_folder('openacc'))

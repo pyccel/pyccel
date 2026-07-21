@@ -204,5 +204,5 @@ NON_LITERAL_KEEP_DIMS = (
 )
 NON_LITERAL_AXIS = "axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on"
 
-#openmp
+# openmp
 OMP_VERSION_NOT_SUPPORTED = "OpenMP {} is not supported. Defaulting to OpenMP {}."

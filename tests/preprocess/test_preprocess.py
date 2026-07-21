@@ -21,7 +21,7 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
     plugins = PluginManager()
-    plugins.set_options({'openmp':True, 'omp_version':4.5})
+    plugins.set_options({"openmp": True, "omp_version": 4.5})
     plugin_manager = pluggy.PluginManager("pyccel")
 
     pyccel = Parser(

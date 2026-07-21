@@ -1,7 +1,8 @@
-
-__all__ = ("_print_OmpConstruct",
-           "_print_OmpDirective",
-           "_print_OmpEndDirective",)
+__all__ = (
+    "_print_OmpConstruct",
+    "_print_OmpDirective",
+    "_print_OmpEndDirective",
+)
 
 
 def _print_OmpConstruct(self, expr):
@@ -11,8 +12,10 @@ def _print_OmpConstruct(self, expr):
     else:
         return f"{self._print(expr.start)}\n{body}\n"
 
+
 def _print_OmpDirective(self, expr):
     return f"#pragma omp {expr.raw}\n"
+
 
 def _print_OmpEndDirective(self, expr):
     if isinstance(expr.current_user_node, OmpConstruct):

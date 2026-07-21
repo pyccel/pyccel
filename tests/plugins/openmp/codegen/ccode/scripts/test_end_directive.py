@@ -1,12 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def declare_target(data : 'float[:]', n : 'int'):
+def declare_target(data: "float[:]", n: "int"):
     import numpy as np
-    #$ omp declare target
+
+    # $ omp declare target
     lookup_table = [1, 2, 3]
-    #$ omp end declare target
+    # $ omp end declare target
     result = np.zeros(n)
-    #$ omp target map(to: data) map(from: result)
+    # $ omp target map(to: data) map(from: result)
     for i in range(n):
         x = i % 3
         result[i] = data[i] * lookup_table[x]
-    #$ omp end target
+    # $ omp end target

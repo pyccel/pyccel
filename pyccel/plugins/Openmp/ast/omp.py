@@ -1,4 +1,5 @@
 """Classes and methods that handle supported Openmp objects"""
+
 import re
 from ast import AST
 
@@ -75,10 +76,10 @@ class OmpNode(PyccelAstNode):
     Parameters
     ----------
     raw : str
-        The raw syntax of the comment's section that represents the object, 
+        The raw syntax of the comment's section that represents the object,
         as provided in the source code.
     position : tuple
-        The start and end positions of the OpenMP syntax in the source code, 
+        The start and end positions of the OpenMP syntax in the source code,
         used to print errors.
 
     See Also
@@ -139,8 +140,8 @@ class OmpNode(PyccelAstNode):
         raw : Property that returns the raw syntax.
         """
         return {
-            'position': self.position,
-            'raw': self.raw,
+            "position": self.position,
+            "raw": self.raw,
         }
 
 
@@ -176,6 +177,7 @@ class OmpConstruct(OmpNode):
     >>> body = CodeBlock(body = [])
     >>> construct = OmpConstruct(start=start_directive, body=body, end=end_directive)
     """
+
     _attribute_nodes = ("_start", "_end", "_body")
 
     def __init__(self, start, body, end=None):
@@ -249,13 +251,13 @@ class OmpDirective(OmpNode):
 
     Examples
     --------
-    >>> directive = OmpDirective(name="parallel", clauses=(), is_construct=True, 
+    >>> directive = OmpDirective(name="parallel", clauses=(), is_construct=True,
     ...                         raw="omp parallel", position=(8, 21))
     """
+
     _attribute_nodes = ("_clauses",)
 
-    def __init__(self, name, clauses, is_construct, raw,
-                 position, **kwargs):
+    def __init__(self, name, clauses, is_construct, raw, position, **kwargs):
         self._name = name
         self._is_construct = is_construct
         self._clauses = clauses
@@ -315,7 +317,7 @@ class OmpDirective(OmpNode):
 
         Examples
         --------
-        >>> directive = OmpDirective(name="parallel", clauses=(), is_construct=True, 
+        >>> directive = OmpDirective(name="parallel", clauses=(), is_construct=True,
         ...                         raw="omp parallel", position=(8, 21))
         >>> state = directive.get_fixed_state()
         >>> state['name']
@@ -324,8 +326,8 @@ class OmpDirective(OmpNode):
         d_fixed = super().get_fixed_state()
         return {
             **d_fixed,
-            'name': self.name,
-            'is_construct': self.is_construct,
+            "name": self.name,
+            "is_construct": self.is_construct,
         }
 
 
@@ -449,7 +451,7 @@ class OmpClause(OmpNode):
 
         Examples
         --------
-        >>> clause = OmpClause(name="private", omp_exprs=(), 
+        >>> clause = OmpClause(name="private", omp_exprs=(),
         ...                   raw="private(x, y)", position=(4, 17))
         >>> state = clause.get_fixed_state()
         >>> state['name']
@@ -457,7 +459,7 @@ class OmpClause(OmpNode):
         """
         d_fixed = super().get_fixed_state()
         return {
-            'name': self.name,
+            "name": self.name,
             **d_fixed,
         }
 
@@ -730,12 +732,21 @@ class OmpTxNode(OmpNode):
 
     _attribute_nodes = ()
 
-    def __init__(self, tx_obj, comment, omp_version, lineno=None, column=None, version=None, deprecated=None,
-                 **kwargs):
+    def __init__(
+        self,
+        tx_obj,
+        comment,
+        omp_version,
+        lineno=None,
+        column=None,
+        version=None,
+        deprecated=None,
+        **kwargs,
+    ):
         self._parent = tx_obj.parent
         self._omp_version = omp_version
         position = (tx_obj._tx_position, tx_obj._tx_position_end)
-        raw = comment[position[0]:position[1]]
+        raw = comment[position[0] : position[1]]
 
         self._version = version or 0.0
         self._deprecated = deprecated or float("inf")
@@ -837,30 +848,53 @@ class OmpTxDirective(OmpTxNode, OmpDirective):
 
     _attribute_nodes = ("_clauses",)
 
-    def __init__(self, tx_directive, comment, omp_version, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name: getattr(tx_directive, attr_name) for attr_name in tx_directive._tx_attrs}
-        is_construct = d_attrs.get('is_construct')
+    def __init__(
+        self, tx_directive, comment, omp_version, lineno=None, column=None, **kwargs
+    ):
+        d_attrs = {
+            attr_name: getattr(tx_directive, attr_name)
+            for attr_name in tx_directive._tx_attrs
+        }
+        is_construct = d_attrs.get("is_construct")
         if is_construct is None:
             is_construct = False
         # Imposed by the grammar: clean up the tx directive object's clauses.
-        clauses = d_attrs.get('_tx_clauses', [])
+        clauses = d_attrs.get("_tx_clauses", [])
         # Get a list containing all the versions of the children omp objects,
         # necessary to calculate the directives versions.
-        version = d_attrs.get('VERSION')
-        version = max(filter(None, [*[c.VERSION for c in clauses if hasattr(c, 'VERSION')], version]), default=None)
-        name = d_attrs.get('name')
+        version = d_attrs.get("VERSION")
+        version = max(
+            filter(
+                None, [*[c.VERSION for c in clauses if hasattr(c, "VERSION")], version]
+            ),
+            default=None,
+        )
+        name = d_attrs.get("name")
         clauses = [c for c in clauses if c]
-        clauses = [c.clause if hasattr(c, 'clause') else c for c in clauses]
-        clauses = [OmpTxClause(c, comment, omp_version, lineno=lineno, column=column) for c in clauses]
+        clauses = [c.clause if hasattr(c, "clause") else c for c in clauses]
+        clauses = [
+            OmpTxClause(c, comment, omp_version, lineno=lineno, column=column)
+            for c in clauses
+        ]
 
-        super().__init__(tx_obj=tx_directive, comment=comment, omp_version=omp_version, lineno=lineno, column=column, name=name, clauses=clauses,
-                         is_construct=is_construct, version=version,
-                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
+        super().__init__(
+            tx_obj=tx_directive,
+            comment=comment,
+            omp_version=omp_version,
+            lineno=lineno,
+            column=column,
+            name=name,
+            clauses=clauses,
+            is_construct=is_construct,
+            version=version,
+            deprecated=d_attrs.get("DEPRECATED"),
+            **kwargs,
+        )
         self._raw = re.sub(r"#\s*\$\s*omp\s*(end)?", "", comment)
 
         # Invalid clauses are syntactically correct omp clauses, captured within the current directive, but are invalid
         # clauses in the context of the current directive
-        invalid_clauses = d_attrs.get('_invalid_clauses', [])
+        invalid_clauses = d_attrs.get("_invalid_clauses", [])
         if len(invalid_clauses):
             errors.report(
                 f"invalid clause `{invalid_clauses[0].name}` for `{name}` directive",
@@ -931,21 +965,44 @@ class OmpTxClause(OmpTxNode, OmpClause):
 
     _attribute_nodes = ("_omp_exprs",)
 
-    def __init__(self, tx_clause, comment, omp_version, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name: getattr(tx_clause, attr_name) for attr_name in tx_clause._tx_attrs}
-        omp_exprs = getattr(tx_clause, 'omp_exprs', tuple())
+    def __init__(
+        self, tx_clause, comment, omp_version, lineno=None, column=None, **kwargs
+    ):
+        d_attrs = {
+            attr_name: getattr(tx_clause, attr_name)
+            for attr_name in tx_clause._tx_attrs
+        }
+        omp_exprs = getattr(tx_clause, "omp_exprs", tuple())
         if not isinstance(omp_exprs, tuple):
             omp_exprs = (omp_exprs,) if omp_exprs else tuple()
         omp_exprs = tuple(
-            globals().get(ex.__class__.__name__)(ex, comment, omp_version, lineno=lineno, column=column) for ex in omp_exprs)
-        allowed_parents = d_attrs.get('allowed_parents', tuple())
-        allowed_parents = [set(attr.allowed_parents) for attr in [*d_attrs.values(), *omp_exprs] if
-                           hasattr(attr, 'allowed_parents')] + ([set(allowed_parents)] if len(allowed_parents) else [])
-        allowed_parents = set.intersection(*allowed_parents) if len(allowed_parents) > 0 else None
-        super().__init__(tx_obj=tx_clause, comment=comment, omp_version=omp_version, lineno=lineno, column=column, name=d_attrs.get('name'),
-                         omp_exprs=omp_exprs, version=d_attrs.get('VERSION'),
-                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
-        if hasattr(self.parent, 'clause'):
+            globals().get(ex.__class__.__name__)(
+                ex, comment, omp_version, lineno=lineno, column=column
+            )
+            for ex in omp_exprs
+        )
+        allowed_parents = d_attrs.get("allowed_parents", tuple())
+        allowed_parents = [
+            set(attr.allowed_parents)
+            for attr in [*d_attrs.values(), *omp_exprs]
+            if hasattr(attr, "allowed_parents")
+        ] + ([set(allowed_parents)] if len(allowed_parents) else [])
+        allowed_parents = (
+            set.intersection(*allowed_parents) if len(allowed_parents) > 0 else None
+        )
+        super().__init__(
+            tx_obj=tx_clause,
+            comment=comment,
+            omp_version=omp_version,
+            lineno=lineno,
+            column=column,
+            name=d_attrs.get("name"),
+            omp_exprs=omp_exprs,
+            version=d_attrs.get("VERSION"),
+            deprecated=d_attrs.get("DEPRECATED"),
+            **kwargs,
+        )
+        if hasattr(self.parent, "clause"):
             self._parent = self.parent.parent
 
         # check if the parent directive accepts the current clause.
@@ -991,10 +1048,23 @@ class OmpTxExpr(OmpTxNode, OmpExpr):
 
     _attribute_nodes = ()
 
-    def __init__(self, tx_obj, comment, omp_version, lineno=None, column=None, **kwargs):
-        d_attrs = {attr_name: getattr(tx_obj, attr_name) for attr_name in tx_obj._tx_attrs}
-        super().__init__(tx_obj=tx_obj, comment=comment, omp_version=omp_version, lineno=lineno, column=column, value=d_attrs.get('value'), version=d_attrs.get('VERSION'),
-                         deprecated=d_attrs.get('DEPRECATED'), **kwargs)
+    def __init__(
+        self, tx_obj, comment, omp_version, lineno=None, column=None, **kwargs
+    ):
+        d_attrs = {
+            attr_name: getattr(tx_obj, attr_name) for attr_name in tx_obj._tx_attrs
+        }
+        super().__init__(
+            tx_obj=tx_obj,
+            comment=comment,
+            omp_version=omp_version,
+            lineno=lineno,
+            column=column,
+            value=d_attrs.get("value"),
+            version=d_attrs.get("VERSION"),
+            deprecated=d_attrs.get("DEPRECATED"),
+            **kwargs,
+        )
 
 
 class OmpTxScalarExpr(OmpTxExpr, OmpScalarExpr):
@@ -1022,7 +1092,9 @@ class OmpTxScalarExpr(OmpTxExpr, OmpScalarExpr):
     """
 
     def __init__(self, tx_expr, comment, omp_version, **kwargs):
-        super().__init__(tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs)
+        super().__init__(
+            tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs
+        )
 
 
 class OmpTxConstantPositiveInteger(OmpTxExpr, OmpConstantPositiveInteger):
@@ -1050,7 +1122,9 @@ class OmpTxConstantPositiveInteger(OmpTxExpr, OmpConstantPositiveInteger):
     """
 
     def __init__(self, tx_expr, comment, omp_version, **kwargs):
-        super().__init__(tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs)
+        super().__init__(
+            tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs
+        )
 
 
 class OmpTxIntegerExpr(OmpTxExpr, OmpIntegerExpr):
@@ -1078,7 +1152,9 @@ class OmpTxIntegerExpr(OmpTxExpr, OmpIntegerExpr):
     """
 
     def __init__(self, tx_expr, comment, omp_version, **kwargs):
-        super().__init__(tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs)
+        super().__init__(
+            tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs
+        )
 
 
 class OmpTxList(OmpTxExpr, OmpList):
@@ -1106,7 +1182,9 @@ class OmpTxList(OmpTxExpr, OmpList):
     """
 
     def __init__(self, tx_expr, comment, omp_version, **kwargs):
-        super().__init__(tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs)
+        super().__init__(
+            tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs
+        )
 
 
 class OmpTxExpressionList(OmpTxExpr, OmpExpressionList):
@@ -1134,4 +1212,6 @@ class OmpTxExpressionList(OmpTxExpr, OmpExpressionList):
     """
 
     def __init__(self, tx_expr, comment, omp_version, **kwargs):
-        super().__init__(tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs)
+        super().__init__(
+            tx_obj=tx_expr, comment=comment, omp_version=omp_version, **kwargs
+        )

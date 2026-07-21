@@ -10,7 +10,7 @@ from pyccel.parser.parser import Parser
 from pyccel.utilities.pluginmanager import PluginManager
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
-path_dir = os.path.join(base_dir, 'scripts')
+path_dir = os.path.join(base_dir, "scripts")
 
 files = sorted(os.listdir(path_dir))
 files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
@@ -20,7 +20,7 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
     plugins = PluginManager()
-    plugins.set_options({'openmp': True})
+    plugins.set_options({"openmp": True})
     # reset Errors singleton
     errors = Errors()
     errors.reset()
@@ -39,7 +39,7 @@ def test_codegen(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name, 'c', verbose=0)
+    codegen = Codegen(ast, name, "c", verbose=0)
     codegen.printer.doprint(codegen.ast)
 
     # Assert codegen success

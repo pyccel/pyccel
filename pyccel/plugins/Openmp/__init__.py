@@ -7,4 +7,3 @@ in `pyccel.plugins.hookspecs`.
 """
 
 from . import plugin
-

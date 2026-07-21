@@ -24,7 +24,7 @@ def test_syntax(f):
     errors = Errors()
     errors.reset()
     extensions = PluginManager()
-    extensions.set_options({'openmp':True, 'omp_version':4.5})
+    extensions.set_options({"openmp": True, "omp_version": 4.5})
 
     plugin_manager = pluggy.PluginManager("pyccel")
 

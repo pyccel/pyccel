@@ -36,7 +36,7 @@ def get_plugin_manager():
 
     # Register plugins provided inside Pyccel
     pm.register(LineAnnot.plugin, "line_annotation")
-    pm.register(Openmp.plugin, 'openmp')
+    pm.register(Openmp.plugin, "openmp")
 
     return pm
 
