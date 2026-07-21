@@ -345,8 +345,6 @@ def epyccel_seq(
     accelerators = []
     if mpi:
         accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
     if openacc:
         accelerators.append("openacc")
     accelerators = tuple(accelerators)
