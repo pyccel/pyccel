@@ -3,11 +3,11 @@ import os
 
 import pytest
 
-from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 from pyccel.codegen.codegen import Codegen
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import Errors, PyccelError
 from pyccel.parser.parser import Parser
+from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 
 
 def get_files_from_folder(folder_name):
