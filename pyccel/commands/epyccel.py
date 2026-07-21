@@ -218,7 +218,6 @@ def epyccel_seq(
     libs=(),
     folder=None,
     mpi=False,
-    openmp=False,
     openacc=False,
     verbose=0,
     time_execution=False,
@@ -265,8 +264,6 @@ def epyccel_seq(
         Output folder for the compiled code.
     mpi : bool, default=False
         If True, use MPI for parallel execution.
-    openmp : bool, default=False
-        If True, use OpenMP for parallel execution.
     openacc : bool, default=False
         If True, use OpenACC for parallel execution.
     verbose : int, default=0
@@ -505,8 +502,6 @@ def epyccel(
         in the body of the function are made available, as well as any global objects.
         If the argument is provided then these objects will be treated as additional
         to the default arguments.
-    **kwargs : dict
-        Any additional arguments for plugins.
 
     Returns
     -------
@@ -521,6 +516,8 @@ def epyccel(
         MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True) (for parallel mode).
+    **kwargs : dict
+        Any additional arguments for plugins.
 
     See Also
     --------
