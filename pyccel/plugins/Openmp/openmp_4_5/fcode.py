@@ -7,6 +7,7 @@ Provides the mixin methods (added to the Fortran printer via
 directives, including a helper for constructs whose clauses must be moved
 from the start directive to the end directive.
 """
+import re
 
 __all__ = (
     "_helper_delay_clauses_printing",
