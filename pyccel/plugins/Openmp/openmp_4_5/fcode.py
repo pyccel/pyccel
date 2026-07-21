@@ -35,8 +35,6 @@ def _helper_delay_clauses_printing(self, start, end, clauses):
 
     Parameters
     ----------
-    self : FCodePrinter
-        The printer subclass.
     start : OmpDirective
         The starting directive of an OpenMP construct.
     end : OmpEndDirective or None
