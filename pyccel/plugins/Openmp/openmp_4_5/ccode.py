@@ -7,6 +7,8 @@ Provides the mixin methods (added to the C printer via
 omp` directives.
 """
 
+from pyccel.plugins.Openmp.ast.omp import OmpConstruct
+
 __all__ = (
     "_print_OmpConstruct",
     "_print_OmpDirective",
