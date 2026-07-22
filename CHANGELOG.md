@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #2621 : Add support for module docstrings.
 -   #2611 : Add a plugin framework.
 -   #2611 : Add `pluggy` as an installation dependency.
+-   #2632 : Allow `\\` to be used as a comment continuation character in OpenMP pragmas.
 
 ### Fixed
 

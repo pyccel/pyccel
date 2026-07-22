@@ -323,7 +323,7 @@ class SyntaxParser(BasicParser):
         if txt.startswith("$"):
             env = txt[1:].strip()
             if env.startswith("omp"):
-                if line.rstrip().endswith("&"):
+                if env.endswith("&") or env.endswith(r"\"):
                     if self._multiline_comment_in_progress:
                         self._multiline_comment_in_progress.append(env[3:-1])
                     else:
