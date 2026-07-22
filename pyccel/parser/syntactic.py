@@ -1672,15 +1672,6 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         return Assert(test)
 
-    def _visit_CommentMultiLine(self, stmt):
-
-        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split("\n")]
-
-        if len(exprs) == 1:
-            return exprs[0]
-        else:
-            return CodeBlock(exprs)
-
     def _visit_CommentLine(self, stmt):
         return self._treat_comment_line(stmt.s, stmt)
 
