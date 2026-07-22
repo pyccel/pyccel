@@ -32,6 +32,22 @@ class CommentLine(AST):
 
 
 def get_comments(code):
+    """
+    Find all one-line comments in the code.
+
+    Find all one-line comments in the code and save them in a CommentLine
+    object.
+
+    Parameters
+    ----------
+    code : str
+        The original code being parsed.
+
+    Results
+    -------
+    list[CommentLine]
+        The comments found in the code.
+    """
     lines = code.split("\n")
     comments = []
     lineno_comments = []
