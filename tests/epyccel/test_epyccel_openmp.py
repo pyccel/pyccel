@@ -725,6 +725,23 @@ def test_omp_long_line(language):
     assert f1(x1, x2, x3, x4, x5) == np.sum(x1 + x2 + x3 + x4 + x5)
 
 
+@pytest.mark.external
+def test_omp_long_multi_line(language):
+    flags = get_wall_flag(language)
+    f1 = epyccel(openmp.omp_long_multi_line, flags=flags, openmp=True, language=language)
+    set_num_threads = epyccel(
+        openmp.set_num_threads, flags=flags, openmp=True, language=language
+    )
+    set_num_threads(4)
+    x1 = np.array(random.randint(20, size=(5)), dtype=int)
+    x2 = np.array(random.randint(20, size=(5)), dtype=int)
+    x3 = np.array(random.randint(20, size=(5)), dtype=int)
+    x4 = np.array(random.randint(20, size=(5)), dtype=int)
+    x5 = np.array(random.randint(20, size=(5)), dtype=int)
+
+    assert f1(x1, x2, x3, x4, x5) == np.sum(x1 + x2 + x3 + x4 + x5)
+
+
 @pytest.mark.parametrize(
     "language",
     (
