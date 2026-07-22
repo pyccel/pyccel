@@ -606,7 +606,7 @@ def omp_long_multi_line(
     n4 = long_variable_4_oiweaxaijaqedqd34023423.shape[0]
     n5 = long_variable_5_oiwed423rnoic3242ewdx35.shape[0]
 
-    # $ omp parallel private(i1, i2, i3, i4, i5) &
+    # $ omp parallel private(i1, i2, i3, i4, i5) \
     # $ shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
 
     # $ omp for reduction (+:func_result)

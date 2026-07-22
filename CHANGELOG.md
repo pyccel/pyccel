@@ -33,6 +33,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #2632 : Deprecate the use of `&` as a comment continuation character in OpenMP pragmas.
+
 ### Removed
 
 -   #2522 : Remove use of `pyccel` without sub-command.
