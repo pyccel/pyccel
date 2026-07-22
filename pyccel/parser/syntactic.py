@@ -323,7 +323,7 @@ class SyntaxParser(BasicParser):
         if txt.startswith("$"):
             env = txt[1:].strip()
             if env.startswith("omp"):
-                if line.rstrip().endswith('&'):
+                if line.rstrip().endswith("&"):
                     if self._multiline_comment_in_progress:
                         self._multiline_comment_in_progress.append(env[3:-1])
                     else:
@@ -331,7 +331,9 @@ class SyntaxParser(BasicParser):
                     return EmptyNode()
                 else:
                     if self._multiline_comment_in_progress:
-                        to_parse = ' '.join(["#$", *self._multiline_comment_in_progress, env[3:]])
+                        to_parse = " ".join(
+                            ["#$", *self._multiline_comment_in_progress, env[3:]]
+                        )
                         self._multiline_comment_in_progress = []
                     else:
                         to_parse = line

@@ -41,7 +41,7 @@ def get_comments(code):
         c = line.strip()
         if c.startswith("#"):
             comments.append(CommentLine(c, index + 1, line.index("#")))
-            lineno_comments.append(index+1)
+            lineno_comments.append(index + 1)
         elif c.startswith("else"):
             if c[4:].strip().startswith(":"):
                 else_no.append(index + 1)

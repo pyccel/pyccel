@@ -728,7 +728,9 @@ def test_omp_long_line(language):
 @pytest.mark.external
 def test_omp_long_multi_line(language):
     flags = get_wall_flag(language)
-    f1 = epyccel(openmp.omp_long_multi_line, flags=flags, openmp=True, language=language)
+    f1 = epyccel(
+        openmp.omp_long_multi_line, flags=flags, openmp=True, language=language
+    )
     set_num_threads = epyccel(
         openmp.set_num_threads, flags=flags, openmp=True, language=language
     )
