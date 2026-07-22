@@ -165,7 +165,7 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
         dependencies,
         (),
         is_mod,
-        "-static-gfortran",
+        "-static-libgfortran",
     )
 
 
