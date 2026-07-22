@@ -43,7 +43,7 @@ def get_comments(code):
     code : str
         The original code being parsed.
 
-    Results
+    Returns
     -------
     list[CommentLine]
         The comments found in the code.
