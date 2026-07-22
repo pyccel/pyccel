@@ -57,7 +57,7 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
         input_folder / f"{stem}{low_level_suffix[language]}",
     ]
     if language == "fortran" and sys.platform == "win32":
-        cmd.append("-static-gfortran")
+        cmd.append("-static-libgfortran")
     subprocess.run(
         cmd,
         check=True,
