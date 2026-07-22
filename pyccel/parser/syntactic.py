@@ -325,8 +325,11 @@ class SyntaxParser(BasicParser):
             if env.startswith("omp"):
                 if env.endswith("&") or env.endswith("\\"):
                     if env.endswith("&"):
-                        errors.report("Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
-                                      severity="warning", symbol=stmt)
+                        errors.report(
+                            "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
+                            severity="warning",
+                            symbol=stmt,
+                        )
                     if self._multiline_comment_in_progress:
                         self._multiline_comment_in_progress.append(env[3:-1])
                     else:
