@@ -1599,7 +1599,7 @@ class SyntaxParser(BasicParser):
                 )
 
             scope = self.create_new_function_scope("__main__")
-            body = [self._visit(v) for v in stmt.body]
+            body = self._visit(stmt.body)
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]
