@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [devel, main]
+    branches: [devel, main, EmilyBourne-patch-2]
 
 jobs:
   Python_version_picker:
