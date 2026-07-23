@@ -250,6 +250,9 @@ def _visit_OmpTxDirective(self, stmt):
             if hasattr(el, "body"):
                 container = el.body[el.body.index(self._context[-2]) + 1 :].copy()
                 break
+            elif isinstance(el, list):
+                container = el[el.index(self._context[-2]) + 1 :].copy()
+                break
         for line in container:
             # Visit lines belonging to container
             expr = self._visit(line)
