@@ -148,7 +148,7 @@ def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
     """
     Call the pyccel pipeline.
 
-    Handle the deprecated --export-compiler-config command and call the pyccel pipeline.
+    Call the pyccel pipeline.
 
     Parameters
     ----------
