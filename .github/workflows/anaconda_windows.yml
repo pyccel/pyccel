@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [devel, main, EmilyBourne-patch-2]
+    branches: [devel, main]
 
 jobs:
   Python_version_picker:
@@ -67,11 +67,6 @@ jobs:
         with:
           mpi_type: msmpi
           shell: gitbash
-      - name: Pyccel make
-        run: |
-          pytest test_pyccel_make.py -vx -m fortran -k meson
-        working-directory: ./tests/pyccel
-        shell: 'gitbash -l -eo pipefail {0}'
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
