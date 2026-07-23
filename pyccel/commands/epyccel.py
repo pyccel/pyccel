@@ -241,8 +241,8 @@ def epyccel_seq(
         raise TypeError("> Expecting a FunctionType, type, str, or a ModuleType")
 
     # Check if compiler_family and compiler_config are mutually exclusive
-    compiler_family = kwargs.pop('compiler_family')
-    compiler_config = kwargs.pop('compiler_config')
+    compiler_family = kwargs.pop("compiler_family")
+    compiler_config = kwargs.pop("compiler_config")
     if None not in (compiler_family, compiler_config):
         raise TypeError(
             "> Only one of the parameters `compiler_family` or `compiler_config` may be provided"
@@ -255,7 +255,7 @@ def epyccel_seq(
         dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
-    folder = kwargs.pop('folder')
+    folder = kwargs.pop("folder")
     folder = dirpath if folder is None else os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
@@ -267,8 +267,8 @@ def epyccel_seq(
         code, collected_context_dict = get_source_code_and_context(
             function_class_or_module
         )
-        collected_context_dict.update(kwargs.get('context_dict', None) or {})
-        kwargs['context_dict'] = collected_context_dict
+        collected_context_dict.update(kwargs.get("context_dict", None) or {})
+        kwargs["context_dict"] = collected_context_dict
         module_name, module_lock = get_unique_name("mod", epyccel_dirpath)
 
     elif isinstance(function_class_or_module, str):
@@ -290,9 +290,9 @@ def epyccel_seq(
 
     # Store the accelerators options into a tuple of strings
     accelerators = []
-    if kwargs.pop('mpi'):
+    if kwargs.pop("mpi"):
         accelerators.append("mpi")
-    if kwargs.pop('openacc'):
+    if kwargs.pop("openacc"):
         accelerators.append("openacc")
     accelerators = tuple(accelerators)
 
@@ -317,7 +317,7 @@ def epyccel_seq(
                 compiler_family=compiler_family_or_config,
                 output_name=module_name,
                 plugin_manager=plugin_manager,
-                **kwargs
+                **kwargs,
             )
         except PyccelError as err:
             raise err
@@ -335,7 +335,7 @@ def epyccel_seq(
         package = importlib.import_module(module_name)
         sys.path.remove(epyccel_dirpath)
 
-        language = kwargs.pop('language', 'fortran')
+        language = kwargs.pop("language", "fortran")
         if language.lower() != "python":
             # Verify that we have imported the shared library, not the Python one
             loader = getattr(package, "__loader__", None)
