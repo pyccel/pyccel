@@ -87,6 +87,24 @@ def add_cli_options(parser, cli_tool):
 
 
 @hookimpl
+def remove_cli_arguments(kwargs: dict):
+    """
+    Remove any plugin-specific arguments from the kwargs dictionary.
+
+    Remove any arguments added via `add_cli_options` from the kwargs dictionary.
+    Any arguments relevant to the plugin should be removed from the kwargs so
+    the rest of the code cannot be influenced by the plugin. Beware kwargs can
+    also come from epyccel so default values may be missing.
+
+    Parameters
+    ----------
+    kwargs : dict
+        The keyword arguments passed to the pipeline.
+    """
+    kwargs.pop("omp_version", 4.5)
+
+
+@hookimpl
 def read_cli_arguments(kwargs: dict):
     """
     Read any arguments from the kwargs dictionary.

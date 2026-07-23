@@ -96,16 +96,16 @@ def handle_plugin_arguments(plugin_manager, kwargs):
     """
     for plugin in plugin_manager.get_plugins():
         name = plugin_manager.get_name(plugin)
-        # Read CLI arguments even if the plugin is not used so spurious arguments are removed from kwargs
-        plugin.read_cli_arguments(kwargs)
-
         if name not in kwargs:
             plugin_manager.unregister(plugin)
+            plugin.remove_cli_arguments(kwargs)
         elif not kwargs[name]:
             plugin_manager.unregister(plugin)
             kwargs.pop(name)
+            plugin.remove_cli_arguments(kwargs)
         else:
             kwargs.pop(name)
+            plugin.read_cli_arguments(kwargs)
 
 
 def get_syntactic_class(plugin_manager):
