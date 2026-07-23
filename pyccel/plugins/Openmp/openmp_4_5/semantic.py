@@ -7,7 +7,7 @@ Provides the mixin methods (added to the semantic parser via
 4.5 AST nodes produced by `openmp_4_5.syntactic`.
 """
 
-from pyccel.ast.core import FunctionCall, EmptyNode
+from pyccel.ast.core import EmptyNode, FunctionCall
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.operators import PyccelAdd, PyccelMinus
 from pyccel.ast.variable import Variable
