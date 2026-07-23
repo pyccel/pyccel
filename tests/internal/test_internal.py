@@ -65,7 +65,9 @@ def test_openmp(f, language):
     plugin_manager = get_plugin_manager()
     handle_plugin_arguments(plugin_manager, {"openmp": True})
 
-    execute_pyccel(f, language=language, plugin_manager=plugin_manager)
+    execute_pyccel(
+        f, language=language, plugin_manager=plugin_manager, accelerators=["openmp"]
+    )
 
 
 # @pytest.mark.parametrize("f", get_files_from_folder('openacc'))
