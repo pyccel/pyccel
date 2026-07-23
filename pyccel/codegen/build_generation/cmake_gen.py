@@ -343,6 +343,9 @@ class CMakeHandler(BuildSystemHandler):
         if sys.platform == "win32":
             setup_cmd.append("-G")
             setup_cmd.append("MinGW Makefiles")
+            setup_cmd.append(f"-DCMAKE_EXE_LINKER_FLAGS=-static-libgfortran")
+            setup_cmd.append(f"-DCMAKE_SHARED_LINKER_FLAGS=-static-libgfortran")
+
 
         env = os.environ.copy()
         env["CC"] = self._compiler.get_exec((), "c")
