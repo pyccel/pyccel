@@ -291,7 +291,7 @@ class MesonHandler(BuildSystemHandler):
         if self._verbose > 1:
             print(" ".join(setup_cmd))
         if sys.platform == "win32":
-            setup_cmd += [f"-Dfortran_link_args=[-static-libgfortran]"]
+            setup_cmd += ["-Dfortran_link_args=[-static-libgfortran]"]
 
         env = os.environ.copy()
         env["CC"] = self._compiler.get_exec((), "c")
