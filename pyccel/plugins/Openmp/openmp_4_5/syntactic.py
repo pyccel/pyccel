@@ -160,7 +160,7 @@ def _treat_comment_line(self, line, expr):
                 errors.report(
                     "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
                     severity="warning",
-                    symbol=stmt,
+                    symbol=expr,
                 )
             if self._multiline_directive_in_progress:
                 self._multiline_directive_in_progress.append(env[3:-1])
@@ -197,7 +197,7 @@ def _treat_comment_line(self, line, expr):
             except TextXSyntaxError as e:
                 errors.report(
                     f"Invalid OpenMP header. {e.message}",
-                    symbol=stmt,
+                    symbol=expr,
                     column=e.col,
                     severity="fatal",
                 )
