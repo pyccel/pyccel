@@ -11,7 +11,7 @@ import ast
 from os.path import dirname, join
 
 from textx import metamodel_for_language
-from textx.exceptions import TextXError
+from textx.exceptions import TextXSyntaxError
 from textx.metamodel import metamodel_from_file
 
 from pyccel.ast.core import CodeBlock, EmptyNode
