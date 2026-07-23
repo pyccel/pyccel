@@ -218,6 +218,11 @@ def epyccel_seq(
 
     Parameters
     ----------
+    function_class_or_module : function | class | module | str
+        Python function, class, or module to be accelerated.
+        If a string is passed then it is assumed to be the code from a module which
+        should be accelerated. The module must be capable of running as a standalone
+        file so it must include any necessary import statements.
     **kwargs : Any
         See epyccel for details. A general kwargs argument is used so all arguments
         are passed to handle_plugin_arguments and can therefore be modified there.
