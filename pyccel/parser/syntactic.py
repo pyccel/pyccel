@@ -231,6 +231,8 @@ class SyntaxParser(BasicParser):
         self._fst = tree
         self._in_lhs_assign = False
 
+        self._multiline_directive_in_progress = []
+
         self.parse()
 
     def parse(self):
@@ -319,18 +321,37 @@ class SyntaxParser(BasicParser):
         """
         txt = line[1:].lstrip()
         if txt.startswith("$"):
-            env = txt[1:].lstrip()
+            env = txt[1:].strip()
             if env.startswith("omp"):
-                expr = omp_parse(stmts=line)
-                try:
-                    expr = omp_parse(stmts=line)
-                except TextXSyntaxError as e:
-                    errors.report(
-                        f"Invalid OpenMP header. {e.message}",
-                        symbol=stmt,
-                        column=e.col,
-                        severity="fatal",
-                    )
+                if env.endswith("&") or env.endswith("\\"):
+                    if env.endswith("&"):
+                        errors.report(
+                            "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
+                            severity="warning",
+                            symbol=stmt,
+                        )
+                    if self._multiline_directive_in_progress:
+                        self._multiline_directive_in_progress.append(env[3:-1])
+                    else:
+                        self._multiline_directive_in_progress.append(env[:-1])
+                    return EmptyNode()
+                else:
+                    if self._multiline_directive_in_progress:
+                        to_parse = " ".join(
+                            ["#$", *self._multiline_directive_in_progress, env[3:]]
+                        )
+                        self._multiline_directive_in_progress = []
+                    else:
+                        to_parse = line
+                    try:
+                        expr = omp_parse(stmts=to_parse)
+                    except TextXSyntaxError as e:
+                        errors.report(
+                            f"Invalid OpenMP header. {e.message}",
+                            symbol=stmt,
+                            column=e.col,
+                            severity="fatal",
+                        )
             elif env.startswith("acc"):
                 try:
                     expr = acc_parse(stmts=line)
@@ -1690,15 +1711,6 @@ class SyntaxParser(BasicParser):
     def _visit_Assert(self, stmt):
         test = self._visit(stmt.test)
         return Assert(test)
-
-    def _visit_CommentMultiLine(self, stmt):
-
-        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split("\n")]
-
-        if len(exprs) == 1:
-            return exprs[0]
-        else:
-            return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
         return self._treat_comment_line(stmt.s, stmt)
