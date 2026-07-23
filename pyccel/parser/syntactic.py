@@ -231,7 +231,7 @@ class SyntaxParser(BasicParser):
         self._fst = tree
         self._in_lhs_assign = False
 
-        self._multiline_comment_in_progress = []
+        self._multiline_directive_in_progress = []
 
         self.parse()
 
@@ -330,17 +330,17 @@ class SyntaxParser(BasicParser):
                             severity="warning",
                             symbol=stmt,
                         )
-                    if self._multiline_comment_in_progress:
-                        self._multiline_comment_in_progress.append(env[3:-1])
+                    if self._multiline_directive_in_progress:
+                        self._multiline_directive_in_progress.append(env[3:-1])
                     else:
-                        self._multiline_comment_in_progress.append(env[:-1])
+                        self._multiline_directive_in_progress.append(env[:-1])
                     return EmptyNode()
                 else:
-                    if self._multiline_comment_in_progress:
+                    if self._multiline_directive_in_progress:
                         to_parse = " ".join(
-                            ["#$", *self._multiline_comment_in_progress, env[3:]]
+                            ["#$", *self._multiline_directive_in_progress, env[3:]]
                         )
-                        self._multiline_comment_in_progress = []
+                        self._multiline_directive_in_progress = []
                     else:
                         to_parse = line
                     try:
