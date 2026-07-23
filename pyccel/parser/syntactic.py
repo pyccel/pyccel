@@ -230,8 +230,6 @@ class SyntaxParser(BasicParser):
         self._fst = tree
         self._in_lhs_assign = False
 
-        self._multiline_directive_in_progress = []
-
         self.parse()
 
     def parse(self):

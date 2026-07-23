@@ -58,6 +58,8 @@ __all__ = (
 def __init__(self, *args, **kwargs):
     self._version = 4.5
     self._skip_stmts_count = 0
+    self._multiline_directive_in_progress = []
+
     cls = type(self)
     if not hasattr(cls, "_omp_metamodel"):
         this_folder = dirname(__file__)
@@ -89,6 +91,7 @@ def __init__(self, *args, **kwargs):
             }
         )
         cls._omp_metamodel.register_obj_processors(obj_processors)
+
     super(type(self), self).__init__(*args, **kwargs)
 
 
