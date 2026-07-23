@@ -578,12 +578,11 @@ class SyntaxParser(BasicParser):
         for obj in chain(ast_functions, ast_classes):
             self.scope.insert_symbol(PyccelSymbol(obj.name))
 
-        body = [
-            self._visit(v)
-            for v in stmt.body
-            if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
+        body_elements_to_visit = [
+            v for v in stmt.body if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
         ]
 
+        body = self._visit(body_elements_to_visit)
         body = [l for b in body for l in (b.body if isinstance(b, CodeBlock) else [b])]
 
         docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
