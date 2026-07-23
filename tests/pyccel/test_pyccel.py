@@ -165,7 +165,6 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
         dependencies,
         (),
         is_mod,
-        "-static-libgfortran",
     )
 
 
@@ -242,6 +241,9 @@ def compile_fortran_or_c(
             command.append(d[:-3] + ".o")
             command.append("-I" + os.path.dirname(d))
     command.append("-I" + base_dir)
+
+    if language == 'fortran' and sys.platform == "win32":
+        command.append("-static-libgfortran")
 
     command.append("-o")
     if is_mod:
