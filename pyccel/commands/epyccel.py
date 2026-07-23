@@ -571,6 +571,7 @@ def epyccel(
                 debug=debug,
                 conda_warnings=conda_warnings,
                 context_dict=context_dict,
+                **kwargs,
             )
         except PyccelError as e:
             raise type(e)(str(e)) from None
