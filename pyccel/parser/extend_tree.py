@@ -4,7 +4,7 @@
 # for full license details.                                                 #
 # ------------------------------------------------------------------------- #
 
-"""Extended AST with CommentLine and CommentMultiLine nodes
+"""Extended AST with CommentLine nodes
 ===========================================================
 
 """
@@ -31,11 +31,23 @@ class CommentLine(AST):
         self.col_offset = col_offset
 
 
-class CommentMultiLine(CommentLine):
-    """ "New AST node representing a multi-line comment"""
-
-
 def get_comments(code):
+    """
+    Find all one-line comments in the code.
+
+    Find all one-line comments in the code and save them in a CommentLine
+    object.
+
+    Parameters
+    ----------
+    code : str
+        The original code being parsed.
+
+    Returns
+    -------
+    list[CommentLine]
+        The comments found in the code.
+    """
     lines = code.split("\n")
     comments = []
     lineno_comments = []
@@ -44,42 +56,11 @@ def get_comments(code):
     for index, line in enumerate(lines):
         c = line.strip()
         if c.startswith("#"):
-            comments.append((c, index + 1, line.index("#")))
+            comments.append(CommentLine(c, index + 1, line.index("#")))
+            lineno_comments.append(index + 1)
         elif c.startswith("else"):
             if c[4:].strip().startswith(":"):
                 else_no.append(index + 1)
-
-    if comments:
-        new_comments = [[comments[0]]]
-        for index in range(1, len(comments)):
-            if (
-                comments[index][1] == comments[index - 1][1] + 1
-                and comments[index][2] == comments[index - 1][2]
-            ):
-                new_comments[-1].append(comments[index])
-            else:
-                new_comments.append([comments[index]])
-
-        comments = []
-        for comm in new_comments:
-            lineno_comments.append(comm[0][1])
-
-            if len(comm) == 1:
-                comments.append(CommentLine(*comm[0]))
-            elif len(comm) > 1:
-                lineno = comm[0][1]
-                col_offset = comm[0][2]
-                comm = [lc[0] for lc in comm]
-                txt = comm[0]
-                for i, s in enumerate(comm[1:]):
-                    s_prev = comm[i]
-                    if s_prev.startswith("#$") and s_prev.rstrip().endswith("&"):
-                        assert s.startswith("#$")
-                        txt = txt.rstrip()[:-1] + s[2:]
-                    else:
-                        txt = txt + "\n" + s
-
-                comments.append(CommentMultiLine(txt, lineno, col_offset))
 
     assert len(lineno_comments) == len(comments)
     return array(lineno_comments), array(comments), array(else_no)

@@ -12,6 +12,7 @@ from os.path import dirname, join
 
 from textx import metamodel_for_language
 from textx.metamodel import metamodel_from_file
+from textx.exceptions import TextXError
 
 from pyccel.ast.core import CodeBlock, EmptyNode
 from pyccel.errors.errors import Errors
@@ -149,31 +150,55 @@ def _treat_comment_line(self, line, expr):
     pyccel.plugins.Openmp.omp.OmpTxEndDirective : Class representing an OpenMP end directive.
     """
     txt = line[1:].lstrip()
-    if txt.startswith("$") and txt[1:].lstrip().startswith("omp"):
-        from textx.exceptions import TextXError
-
-        try:
-            model = self._omp_metamodel.model_from_str(line)
-            directive = (
-                OmpTxEndDirective(
-                    model.statement,
-                    line,
-                    self._version,
-                    lineno=expr.lineno,
-                    column=expr.col_offset,
+    env = txt[1:].strip()
+    if env.startswith("omp"):
+        if env.endswith("&") or env.endswith("\\"):
+            if env.endswith("&"):
+                errors.report(
+                    "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
+                    severity="warning",
+                    symbol=stmt,
                 )
-                if model.statement.is_end_directive
-                else OmpTxDirective(
-                    model.statement,
-                    line,
-                    self._version,
-                    lineno=expr.lineno,
-                    column=expr.col_offset,
+            if self._multiline_directive_in_progress:
+                self._multiline_directive_in_progress.append(env[3:-1])
+            else:
+                self._multiline_directive_in_progress.append(env[:-1])
+            return EmptyNode()
+        else:
+            if self._multiline_directive_in_progress:
+                to_parse = " ".join(
+                    ["#$", *self._multiline_directive_in_progress, env[3:]]
                 )
-            )
-            return self._visit(directive)
-        except TextXError as e:
-            raise errors.report(e.message, severity="fatal", symbol=expr)
+                self._multiline_directive_in_progress = []
+            else:
+                to_parse = line
+            try:
+                model = self._omp_metamodel.model_from_str(to_parse)
+                directive = (
+                    OmpTxEndDirective(
+                        model.statement,
+                        line,
+                        self._version,
+                        lineno=expr.lineno,
+                        column=expr.col_offset,
+                    )
+                    if model.statement.is_end_directive
+                    else OmpTxDirective(
+                        model.statement,
+                        line,
+                        self._version,
+                        lineno=expr.lineno,
+                        column=expr.col_offset,
+                    )
+                )
+            except TextXSyntaxError as e:
+                errors.report(
+                    f"Invalid OpenMP header. {e.message}",
+                    symbol=stmt,
+                    column=e.col,
+                    severity="fatal",
+                )
+        return self._visit(directive)
     else:
         return super(type(self), self)._treat_comment_line(line, expr)
 
