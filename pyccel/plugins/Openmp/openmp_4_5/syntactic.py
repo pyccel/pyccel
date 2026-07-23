@@ -247,10 +247,7 @@ def _visit_OmpTxDirective(self, stmt):
         end = None
         container = None
         for el in self._context[::-1]:
-            if hasattr(el, "body"):
-                container = el.body[el.body.index(self._context[-2]) + 1 :].copy()
-                break
-            elif isinstance(el, list):
+            if isinstance(el, list):
                 container = el[el.index(self._context[-2]) + 1 :].copy()
                 break
         for line in container:
