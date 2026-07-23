@@ -290,7 +290,7 @@ class MesonHandler(BuildSystemHandler):
         ]
         if self._verbose > 1:
             print(" ".join(setup_cmd))
-        if sys.platform == "win32":
+        if sys.platform == "win32" and self._compiler.compiler_family == "GNU":
             setup_cmd += ["-Dfortran_link_args=-static-libgfortran"]
 
         env = os.environ.copy()
