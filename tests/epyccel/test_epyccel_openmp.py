@@ -922,6 +922,11 @@ def test_parallel_if(language):
     assert (f1(11) == f2(11)).all()
 
 
+@pytest.mark.skipif_by_language(
+    os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU") == "LLVM",
+    reason="flang error: not yet implemented: OMPD_ordered",
+    language="fortran",
+)
 @pytest.mark.external
 def test_omp_ordered(language):
     f1 = epyccel(
