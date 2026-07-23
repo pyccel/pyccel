@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #2632 : Allow `\` to be used as a comment continuation character in OpenMP pragmas.
 -   #2338 : Support multiple OpenMP versions.
 -   #2338 : Separate OpenMP from Pyccel's core functionalities and connect it as a Plugin.
+-   #2338 : Add support for more OpenMP reduction operations.
 
 ### Fixed
 
@@ -36,6 +37,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 
 -   #2632 : Deprecate the use of `&` as a comment continuation character in OpenMP pragmas.
+-   #2338 : Deprecate the explicit `#$omp end for` directive.
 
 ### Removed
 

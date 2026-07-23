@@ -7,7 +7,7 @@ Provides the mixin methods (added to the semantic parser via
 4.5 AST nodes produced by `openmp_4_5.syntactic`.
 """
 
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall, EmptyNode
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.operators import PyccelAdd, PyccelMinus
 from pyccel.ast.variable import Variable
@@ -86,11 +86,19 @@ def _visit_target_teams_distribute_parallel_for_construct(self, expr):
 
 def _visit_OmpEndDirective(self, expr):
     if not isinstance(expr.current_user_node, OmpConstruct) and expr.is_construct:
-        errors.report(
-            f"End directive `{expr.name}` doesn't belong to any openmp construct",
-            symbol=expr,
-            severity="error",
-        )
+        if expr.name == "for":
+            errors.report(
+                "Support for `#$omp end for` is deprecated and will be removed in v2.5. The end directive is auto-inserted at the end of the for loop",
+                symbol=expr,
+                severity="warning",
+            )
+            return EmptyNode()
+        else:
+            errors.report(
+                f"End directive `{expr.name}` doesn't belong to any openmp construct",
+                symbol=expr,
+                severity="error",
+            )
     clauses = tuple(self._visit(clause) for clause in expr.clauses)
     return OmpEndDirective(clauses=clauses, **expr.get_fixed_state())
 
