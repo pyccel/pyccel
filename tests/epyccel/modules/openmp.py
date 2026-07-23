@@ -30,7 +30,6 @@ def f1(i: "int"):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
     out = -1
-    idx: np.int32
     # $ omp parallel private(idx)
     idx = omp_get_thread_num()
 
@@ -277,7 +276,6 @@ def test_omp_get_set_schedule():
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
 
     func_result = np.int32(0)
-    i: int  # pylint: disable=unused-variable
     # $ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))
     _, chunk_size = omp_get_schedule()
@@ -294,8 +292,6 @@ def test_nowait_schedule(n: int):
     a = np.zeros(n)
     imin_res = np.empty(4)
     imax_res = np.empty(4)
-    rank, nb_tasks = np.int32(0), np.int32(0)
-    i_min, i_max = 0, 0
 
     # $omp parallel private(rank,nb_tasks,i_min,i_max)
     rank = omp_get_thread_num()
@@ -378,7 +374,6 @@ def omp_nowait(x: "int[:]", y: "int[:]", z: "float[:]"):
 
 def omp_arraysum(x: "int[:]"):
     func_result = 0
-    i = 0
     # $ omp parallel private(i)
     # $ omp for reduction (+:func_result)
     for i in range(0, 5):
@@ -441,8 +436,6 @@ def omp_tasks(x: "int"):
     def fib(n: int) -> int:
         if n < 2:
             return n
-        i = 0
-        j = 0
         # $ omp task shared(i) firstprivate(n)
         i = fib(n - 1)
         # $ omp end task
@@ -577,7 +570,6 @@ def omp_long_line(
     n3 = long_variable_3_oiweqxhnoijaqed34023423.shape[0]
     n4 = long_variable_4_oiweaxaijaqedqd34023423.shape[0]
     n5 = long_variable_5_oiwed423rnoic3242ewdx35.shape[0]
-    i1, i2, i3, i4, i5 = 0, 0, 0, 0, 0
 
     # $ omp parallel private(i1, i2, i3, i4, i5) shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
 
@@ -666,8 +658,6 @@ def parallel_if(n: int):
     from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
 
     a = np.zeros(n)
-    th_id, nthrds = np.int32(0), np.int32(0)
-    l_start, l_end = 0, 0
 
     # $ omp parallel if(parallel:n > 10) private(th_id, nthrds, l_start, l_end) num_threads(4)
     th_id = omp_get_thread_num()
