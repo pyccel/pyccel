@@ -343,7 +343,7 @@ class CMakeHandler(BuildSystemHandler):
         if sys.platform == "win32":
             setup_cmd.append("-G")
             setup_cmd.append("MinGW Makefiles")
-           if self._compiler.compiler_family == "GNU":
+            if self._compiler.compiler_family == "GNU":
                 setup_cmd.append("-DCMAKE_EXE_LINKER_FLAGS=-static-libgfortran")
             setup_cmd.append("-DCMAKE_SHARED_LINKER_FLAGS=-static-libgfortran")
 
