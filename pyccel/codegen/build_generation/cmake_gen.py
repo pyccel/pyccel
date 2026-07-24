@@ -347,7 +347,6 @@ class CMakeHandler(BuildSystemHandler):
                 setup_cmd.append("-DCMAKE_EXE_LINKER_FLAGS=-static-libgfortran")
             setup_cmd.append("-DCMAKE_SHARED_LINKER_FLAGS=-static-libgfortran")
 
-
         env = os.environ.copy()
         env["CC"] = self._compiler.get_exec((), "c")
         env["FC"] = self._compiler.get_exec((), "fortran")

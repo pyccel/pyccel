@@ -158,13 +158,7 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
     compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
     compiler_info = available_compilers[compiler_family]["fortran"]
     compile_fortran_or_c(
-        compiler_info,
-        ".f90",
-        path_dir,
-        test_file,
-        dependencies,
-        (),
-        is_mod,
+        compiler_info, ".f90", path_dir, test_file, dependencies, (), is_mod
     )
 
 
