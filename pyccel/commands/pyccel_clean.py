@@ -64,10 +64,12 @@ def pyccel_clean(
             )
         return
 
+    pyccel_suffix = os.environ.get('PYTEST_XDIST_WORKER', '')
+
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir, f)
-        if f.startswith("__pyccel__") or f.startswith("__epyccel__"):
+        if f.startswith("__pyccel__"+pyccel_suffix) or f.startswith("__epyccel__"+pyccel_suffix):
             shutil.rmtree(file_name, ignore_errors=True)
         elif not os.path.isfile(file_name) and recursive:
             pyccel_clean(file_name, recursive, remove_shared_libs, remove_programs)
