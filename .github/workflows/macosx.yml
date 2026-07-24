@@ -10,6 +10,22 @@ on:
         required: false
         type: boolean
         default: false
+      run_fortran:
+        required: false
+        type: boolean
+        default: true
+      run_c:
+        required: false
+        type: boolean
+        default: true
+      run_cpp:
+        required: false
+        type: boolean
+        default: true
+      run_python:
+        required: false
+        type: boolean
+        default: true
   push:
     branches: [devel, main]
 
@@ -72,8 +88,12 @@ jobs:
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
+        with:
+          run_fortran: ${{ inputs.force || inputs.run_fortran }}
+          run_c: ${{ inputs.force || inputs.run_c }}
+          run_cpp: ${{ inputs.force || inputs.run_cpp }}
       - name: Python tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true'
+        if: steps.duplicate_check.outputs.should_skip != 'true' && (inputs.force || inputs.run_python)
         id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python

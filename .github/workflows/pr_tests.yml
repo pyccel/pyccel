@@ -50,22 +50,67 @@ jobs:
     needs: [check_description]
     uses: ./.github/workflows/spelling.yml
 
+  detect_languages:
+    needs: [check_description]
+    runs-on: ubuntu-latest
+    outputs:
+      run_fortran: ${{ steps.select.outputs.run_fortran }}
+      run_c: ${{ steps.select.outputs.run_c }}
+      run_cpp: ${{ steps.select.outputs.run_cpp }}
+      run_python: ${{ steps.select.outputs.run_python }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - id: select
+        run: python ci_tools/select_languages.py --base ${{ github.event.pull_request.base.sha }}
+        shell: bash
+
   linux:
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling, detect_languages]
     uses: ./.github/workflows/linux.yml
+    with:
+      run_fortran: ${{ needs.detect_languages.outputs.run_fortran }}
+      run_c: ${{ needs.detect_languages.outputs.run_c }}
+      run_cpp: ${{ needs.detect_languages.outputs.run_cpp }}
+      run_python: ${{ needs.detect_languages.outputs.run_python }}
 
   macosx:
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling, detect_languages]
     uses: ./.github/workflows/macosx.yml
+    with:
+      run_fortran: ${{ needs.detect_languages.outputs.run_fortran }}
+      run_c: ${{ needs.detect_languages.outputs.run_c }}
+      run_cpp: ${{ needs.detect_languages.outputs.run_cpp }}
+      run_python: ${{ needs.detect_languages.outputs.run_python }}
 
   windows:
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling, detect_languages]
     uses: ./.github/workflows/windows.yml
+    with:
+      run_fortran: ${{ needs.detect_languages.outputs.run_fortran }}
+      run_c: ${{ needs.detect_languages.outputs.run_c }}
+      run_cpp: ${{ needs.detect_languages.outputs.run_cpp }}
+      run_python: ${{ needs.detect_languages.outputs.run_python }}
 
   llvm:
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling, detect_languages]
     uses: ./.github/workflows/llvm.yml
+    with:
+      run_fortran: ${{ needs.detect_languages.outputs.run_fortran }}
+      run_c: ${{ needs.detect_languages.outputs.run_c }}
+      run_cpp: ${{ needs.detect_languages.outputs.run_cpp }}
+      run_python: ${{ needs.detect_languages.outputs.run_python }}
 
   intel:
-    needs: [pyccel_lint, pylint, docs, spelling]
+    needs: [pyccel_lint, pylint, docs, spelling, detect_languages]
     uses: ./.github/workflows/intel.yml
+    with:
+      run_fortran: ${{ needs.detect_languages.outputs.run_fortran }}
+      run_c: ${{ needs.detect_languages.outputs.run_c }}
+      run_cpp: ${{ needs.detect_languages.outputs.run_cpp }}
+      run_python: ${{ needs.detect_languages.outputs.run_python }}
