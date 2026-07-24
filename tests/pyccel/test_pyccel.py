@@ -36,6 +36,56 @@ def get_thread_local_subdir(dirname=get_abs_path("")):
 
 
 # ------------------------------------------------------------------------------
+def copy_to_isolated_dir(isolated_dir, base_dir, rel_path):
+    """
+    Copy a file into a shared isolated directory.
+
+    Copy the file at `rel_path` (relative to this file's folder) into
+    `isolated_dir`, preserving its path relative to `base_dir`. All files
+    belonging to the same test must be copied with the same `isolated_dir`/
+    `base_dir` pair so that they land next to each other and relative/package
+    imports between them keep working. Any `__init__.py` package markers
+    found between `base_dir` and `rel_path` are copied too.
+
+    Parameters
+    ----------
+    isolated_dir : Path
+        The directory (exclusive to the current test) into which files
+        should be copied.
+
+    base_dir : str/Path
+        The directory, relative to the folder containing this file, that
+        `rel_path` (and every other file copied alongside it) is nested
+        under. Used to compute the destination path inside `isolated_dir`.
+
+    rel_path : str/Path
+        The path of the file to copy, relative to the folder containing
+        this file.
+
+    Returns
+    -------
+    Path
+        The absolute path of the copy, inside `isolated_dir`.
+    """
+    rel_path = Path(rel_path)
+    base_dir = Path(base_dir)
+    rel_to_base = rel_path.relative_to(base_dir)
+
+    for ancestor in rel_to_base.parents:
+        src_init = get_abs_path(base_dir / ancestor / "__init__.py")
+        if src_init.is_file():
+            dst_init = isolated_dir / ancestor / "__init__.py"
+            if not dst_init.is_file():
+                dst_init.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(src_init, dst_init)
+
+    dst = isolated_dir / rel_to_base
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(get_abs_path(rel_path), dst)
+    return dst
+
+
+# ------------------------------------------------------------------------------
 def get_exe(filename, language=None):
     filename = Path(filename)
     if language != "python":
@@ -342,7 +392,6 @@ def pyccel_test(
     pyccel_commands="",
     output_dtype=float,
     language=None,
-    output_dir=None,
 ):
     """
     Run pyccel and compare the output to ensure that the results
@@ -379,43 +428,42 @@ def pyccel_test(
     language : str
                 The language pyccel should translate to
                 default = 'fortran'
-    output_dir : str
-                The folder in which the generated files should be
-                saved
     """
 
     test_file = Path(test_file)
     rel_test_dir = test_file.parent
 
     if cwd is None:
-        cwd = rel_test_dir
+        rel_cwd = rel_test_dir
+    else:
+        cwd = Path(cwd)
+        rel_cwd = cwd.relative_to(get_abs_path("")) if cwd.is_absolute() else cwd
 
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
-
-    pyth_out = get_python_output(test_file, cwd)
+    pyth_out = get_python_output(get_abs_path(test_file), get_abs_path(rel_cwd))
 
     if language:
         pyccel_commands += " --language=" + language
     else:
         language = "fortran"
 
-    if output_dir is None:
-        if language == "python":
-            output_dir = get_abs_path(rel_test_dir) / "__pyccel__"
+    isolated_dir = get_thread_local_subdir(dirname=get_abs_path(rel_test_dir))
+    test_file = copy_to_isolated_dir(isolated_dir, rel_test_dir, test_file)
+    cwd = isolated_dir / rel_cwd.relative_to(rel_test_dir)
+    output_dir = isolated_dir / "__pyccel__" if language == "python" else None
 
     if dependencies:
         if isinstance(dependencies, str):
             dependencies = [dependencies]
         for i, d in enumerate(dependencies):
-            dependencies[i] = get_abs_path(d)
+            d = Path(d)
             if output_dir:
-                rel_path = Path(d).parent.relative_to(rel_test_dir)
-                output = get_abs_path(output_dir / rel_path)
+                rel_path = d.parent.relative_to(rel_test_dir)
+                output = output_dir / rel_path
                 pyc_command = pyccel_commands + " --output={}".format(output)
             else:
                 pyc_command = pyccel_commands
+
+            dependencies[i] = copy_to_isolated_dir(isolated_dir, rel_test_dir, d)
 
             if not compile_with_pyccel:
                 compile_pyccel(cwd, dependencies[i], pyc_command + " -t")
