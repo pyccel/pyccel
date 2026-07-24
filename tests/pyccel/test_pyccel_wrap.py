@@ -48,15 +48,18 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
     """
     executable, _ = get_compiler_info(language)
     lib_suffix = ".dll" if sys.platform == "win32" else ".so"
+    cmd = [
+        executable,
+        "-shared",
+        "-fPIC",
+        "-o",
+        output_folder / f"lib{stem}{lib_suffix}",
+        input_folder / f"{stem}{low_level_suffix[language]}",
+    ]
+    if "gfortran" in executable and sys.platform == "win32":
+        cmd.append("-static-libgfortran")
     subprocess.run(
-        [
-            executable,
-            "-shared",
-            "-fPIC",
-            "-o",
-            output_folder / f"lib{stem}{lib_suffix}",
-            input_folder / f"{stem}{low_level_suffix[language]}",
-        ],
+        cmd,
         check=True,
         cwd=cwd,
     )
