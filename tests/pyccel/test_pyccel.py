@@ -1629,32 +1629,47 @@ def test_concatenation(language):
     ),
 )
 def test_class_imports(language):
-    cwd = get_abs_path("project_class_imports")
+    pyth_out = get_python_output(
+        get_abs_path("project_class_imports/runtest.py"),
+        get_abs_path("project_class_imports"),
+    )
 
-    test_file = get_abs_path("project_class_imports/runtest.py")
+    isolated_dir = get_thread_local_subdir(dirname=get_abs_path("project_class_imports"))
+    rel_test_dir = Path("project_class_imports")
+    cwd = isolated_dir
 
-    pyth_out = get_python_output(test_file, cwd)
+    # runtest.py unconditionally imports all three modules, so every source
+    # file must already be present (even before it is individually
+    # pyccelized) for any of the checks below to run.
+    test_file = copy_to_isolated_dir(
+        isolated_dir, rel_test_dir, "project_class_imports/runtest.py"
+    )
+    point_mod = copy_to_isolated_dir(
+        isolated_dir, rel_test_dir, "project_class_imports/project/basics/Point_mod.py"
+    )
+    line_mod = copy_to_isolated_dir(
+        isolated_dir, rel_test_dir, "project_class_imports/project/basics/Line_mod.py"
+    )
+    square_mod = copy_to_isolated_dir(
+        isolated_dir, rel_test_dir, "project_class_imports/project/shapes/Square_mod.py"
+    )
 
-    compile_file = get_abs_path("project_class_imports/project/basics/Point_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, point_mod, f"--language={language} --verbose")
 
     out1 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out1, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/project/basics/Line_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, line_mod, f"--language={language} --verbose")
 
     out2 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out2, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/project/shapes/Square_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, square_mod, f"--language={language} --verbose")
 
     out3 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out3, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/runtest.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, test_file, f"--language={language} --verbose")
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
