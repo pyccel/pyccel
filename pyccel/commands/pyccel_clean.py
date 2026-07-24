@@ -71,14 +71,15 @@ def pyccel_clean(
         file_name = os.path.join(path_dir, f)
         if f.startswith("__pyccel__"+pyccel_suffix) or f.startswith("__epyccel__"+pyccel_suffix):
             shutil.rmtree(file_name, ignore_errors=True)
-        elif not os.path.isfile(file_name) and recursive:
-            pyccel_clean(file_name, recursive, remove_shared_libs, remove_programs)
-        elif f.endswith(".pyccel"):
-            os.remove(file_name)
-        elif remove_shared_libs and f.endswith(ext_suffix):
-            os.remove(file_name)
-        elif remove_programs and os.access(file_name, os.X_OK):
-            os.remove(file_name)
+        elif not (f.startswith("__pyccel__") or f.startswith("__epyccel__")):
+            if not os.path.isfile(file_name) and recursive:
+                pyccel_clean(file_name, recursive, remove_shared_libs, remove_programs)
+            elif f.endswith(".pyccel"):
+                os.remove(file_name)
+            elif remove_shared_libs and f.endswith(ext_suffix):
+                os.remove(file_name)
+            elif remove_programs and os.access(file_name, os.X_OK):
+                os.remove(file_name)
 
 
 def setup_pyccel_clean_parser(parser):
