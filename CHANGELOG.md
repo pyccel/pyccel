@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #2621 : Add support for module docstrings.
 -   #2611 : Add a plugin framework.
 -   #2611 : Add `pluggy` as an installation dependency.
+-   #2632 : Allow `\` to be used as a comment continuation character in OpenMP pragmas.
 
 ### Fixed
 
@@ -27,11 +28,14 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
 -   #2620 : Improve formatting of comment blocks in Fortran and C.
 -   #2606 : Make class methods non-final by default.
+-   #2631 : Always link `libgfortran` statically on Windows.
 -   \[DEVELOPER\] Require black formatting.
 -   \[DEVELOPER\] Reorganise tests by introducing `test_utils` folder to reduce code duplication.
 -   \[DEVELOPER\] Reorganise tests to use `epyccel_module_with_fallback` function in order to speed up tests.
 
 ### Deprecated
+
+-   #2632 : Deprecate the use of `&` as a comment continuation character in OpenMP pragmas.
 
 ### Removed
 
@@ -40,6 +44,7 @@ All notable changes to this project will be documented in this file.
 -   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 -   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
 -   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
+-   \[DEVELOPER\] Removed unhelpful class `pyccel.parser.extend_tree.CommentMultiLine`.
 
 ## \[2.2.3\] - 2026-03-20
 
