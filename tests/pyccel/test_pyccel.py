@@ -153,17 +153,16 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
     compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
     compiler_info = available_compilers[compiler_family]["c"]
     compiler = compiler_info["exec"]
-    folder = Path(test_file).parent / "__pyccel__"
+    folder = get_thread_local_subdir(dirname=Path(test_file).parent)
     deps = []
     subfolders = [f for f in folder.iterdir() if f.is_dir()]
     for f in subfolders:
         for fi in f.iterdir():
             if fi.suffix == ".c":
                 deps.append(f / (fi.with_suffix(".py")))
-                with subprocess.Popen(
-                    [compiler, "-c", fi.name, "-o", fi.stem + ".o"], text=True, cwd=f
-                ) as p:
-                    p.wait()
+                subprocess.run(
+                    [compiler, "-c", fi.name, "-o", fi.stem + ".o"], cwd=f, check=True
+                )
     compile_fortran_or_c(
         compiler_info, ".c", path_dir, test_file, dependencies, deps, is_mod
     )
@@ -284,8 +283,7 @@ def compile_fortran_or_c(
         command.append(compiler_info["module_output_flag"])
         command.append(base_dir)
 
-    with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
-        p.wait()
+    subprocess.run(command, cwd=path_dir, check=True)
 
 
 # ------------------------------------------------------------------------------
@@ -294,12 +292,8 @@ def get_lang_output(abs_path, language):
     if language == "python":
         return get_python_output(abs_path)
     else:
-        p = subprocess.Popen(
-            ["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True
-        )
-        out, _ = p.communicate()
-        assert p.returncode == 0
-        return out
+        p = subprocess.run([abs_path], text=True, capture_output=True, check=True)
+        return p.stdout
 
 
 # ------------------------------------------------------------------------------
@@ -498,7 +492,6 @@ def pyccel_test(
 # ==============================================================================
 # UNIT TESTS
 # ==============================================================================
-@pytest.mark.xdist_incompatible
 def test_relative_imports_in_project(language):
 
     base_dir = Path(__file__).parent
@@ -514,7 +507,6 @@ def test_relative_imports_in_project(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_absolute_imports_in_project(language):
 
     base_dir = Path(__file__).parent
@@ -559,23 +551,22 @@ def test_rel_imports_python_accessible_folder(language):
         test_location = "__pyccel__.folder2.runtest_rel_imports"
     else:
         test_location = "scripts.folder2.runtest_rel_imports"
-    p = subprocess.Popen(
+    p = subprocess.run(
         [
             sys.executable,
             str(isolated_dir / "run_import_function.py"),
             test_location,
         ],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
+        capture_output=True,
+        check=True,
     )
-    fort_out, _ = p.communicate()
-    assert p.returncode == 0
+    fort_out = p.stdout
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_multi_imports_project(language):
 
     base_dir = Path(__file__).parent
@@ -595,7 +586,6 @@ def test_multi_imports_project(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_imports_compile(language):
     pyccel_test(
         "scripts/runtest_imports.py",
@@ -606,7 +596,6 @@ def test_imports_compile(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
     pyccel_test(
         "scripts/runtest_folder_imports.py",
@@ -617,13 +606,11 @@ def test_imports_in_folder(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_imports(language):
     pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py", language=language)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_folder_imports(language):
     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
@@ -660,31 +647,31 @@ def test_folder_imports(language):
         test_location = "__pyccel__.folder2.runtest_imports2"
     else:
         test_location = "scripts.folder2.runtest_imports2"
-    p = subprocess.Popen(
+    p = subprocess.run(
         [
             sys.executable,
             str(isolated_dir / "run_import_function.py"),
             test_location,
         ],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
+        capture_output=True,
+        check=True,
     )
-    fort_out, _ = p.communicate()
-    assert p.returncode == 0
+    fort_out = p.stdout
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language=language)
 
 
-@pytest.mark.xdist_incompatible
 def test_capitalised_language(language):
     isolated_dir = get_thread_local_subdir(dirname=get_abs_path("scripts"))
-    test_file = copy_to_isolated_dir(isolated_dir, "scripts", "scripts/runtest_funcs.py")
+    test_file = copy_to_isolated_dir(
+        isolated_dir, "scripts", "scripts/runtest_funcs.py"
+    )
     cwd = test_file.parent
     output_folder = isolated_dir / "__pyccel__"
     compile_pyccel(
@@ -759,7 +746,6 @@ def test_generic_functions():
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_default_arguments(language):
     pyccel_test(
         "scripts/runtest_default_args.py",
@@ -793,7 +779,6 @@ def test_default_arguments(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_pyccel_calling_directory(language):
     pyth_out = get_python_output(get_abs_path("scripts/runtest_funcs.py"))
 
@@ -863,7 +848,6 @@ def test_import_syntax(test_file, language):
         "scripts/runtest_import_mod_project_as.py",
     ],
 )
-@pytest.mark.xdist_incompatible
 def test_import_syntax_user_as(test_file, language):
     pyccel_test(
         test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
@@ -882,7 +866,6 @@ def test_import_syntax_user_as(test_file, language):
         "scripts/import_syntax/import_mod_as_user_func.py",
     ],
 )
-@pytest.mark.xdist_incompatible
 def test_import_syntax_user(test_file, language):
     pyccel_test(
         test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
@@ -890,7 +873,6 @@ def test_import_syntax_user(test_file, language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_import_collisions(language):
     pyccel_test(
         "scripts/import_syntax/collisions4.py",
@@ -903,7 +885,6 @@ def test_import_collisions(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_import_collisions_builtins(language):
     pyccel_test(
         "scripts/import_syntax/collisions6.py",
@@ -913,7 +894,6 @@ def test_import_collisions_builtins(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_class_import_as(language):
     pyccel_test(
         "scripts/import_syntax/from_cls_mod_import_as_user.py",
@@ -1212,7 +1192,6 @@ def test_class_inline_array(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize(
     "test_file",
     [
@@ -1341,12 +1320,11 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     abs_path = get_exe(abs_path, language)
     if language == "python":
         if cwd is None:
-            p = subprocess.Popen([sys.executable, abs_path])
+            p = subprocess.run([sys.executable, abs_path], check=False)
         else:
-            p = subprocess.Popen([sys.executable, abs_path], cwd=cwd)
+            p = subprocess.run([sys.executable, abs_path], cwd=cwd, check=False)
     else:
-        p = subprocess.Popen([abs_path])
-    p.communicate()
+        p = subprocess.run([abs_path], check=False)
     return p.returncode
 
 
@@ -1462,7 +1440,6 @@ def test_function(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
@@ -1473,7 +1450,6 @@ def test_inline(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
@@ -1518,7 +1494,6 @@ def test_json():
     assert dict_1 == dict_2
 
 
-@pytest.mark.xdist_incompatible
 @pytest.mark.language_agnostic
 def test_json_relative_path():
     isolated_dir = get_thread_local_subdir(dirname=get_abs_path("scripts"))
@@ -1545,7 +1520,6 @@ def test_json_relative_path():
         pytest.param("c", marks=pytest.mark.c),
     ),
 )
-@pytest.mark.xdist_incompatible
 def test_json_register(language):
     output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
     example_json_path = f"{output_dir}/test.json"
@@ -1654,7 +1628,6 @@ def test_concatenation(language):
         pytest.param("c", marks=pytest.mark.c),
     ),
 )
-@pytest.mark.xdist_incompatible
 def test_class_imports(language):
     cwd = get_abs_path("project_class_imports")
 
@@ -1690,7 +1663,9 @@ def test_class_imports(language):
 # ------------------------------------------------------------------------------
 def test_time_execution_flag(language):
     isolated_dir = get_thread_local_subdir(dirname=get_abs_path("scripts"))
-    test_file = copy_to_isolated_dir(isolated_dir, "scripts", "scripts/runtest_funcs.py")
+    test_file = copy_to_isolated_dir(
+        isolated_dir, "scripts", "scripts/runtest_funcs.py"
+    )
 
     cwd = isolated_dir
 
@@ -1814,14 +1789,13 @@ def test_varkwargs():
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
 def test_inline_using_import(language):
-    test_file = "scripts/inlining/runtest_inline_using_import.py"
+    test_file = Path("scripts/inlining/runtest_inline_using_import.py")
     pyccel_test(
         test_file,
         dependencies=[
@@ -1834,7 +1808,10 @@ def test_inline_using_import(language):
     )
 
     if language != "python":
-        test_abspath = get_abs_path(test_file)
+        test_abspath = (
+            get_thread_local_subdir(dirname=get_abs_path(Path(test_file).parent))
+            / test_file.name
+        )
 
         cwd = test_abspath.parent
         pyth_out = get_python_output(test_abspath, cwd)
@@ -1843,7 +1820,6 @@ def test_inline_using_import(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
@@ -1863,7 +1839,6 @@ def test_inline_using_import_2(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
@@ -1893,7 +1868,6 @@ def test_classes_array_property(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_classes_pointer_import(language):
     cwd = get_abs_path("scripts/classes")
     test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
