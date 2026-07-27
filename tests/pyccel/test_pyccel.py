@@ -88,19 +88,6 @@ def copy_to_isolated_dir(isolated_dir, base_dir, rel_path):
 
 
 # ------------------------------------------------------------------------------
-def get_exe(filename, language=None):
-    filename = Path(filename)
-    if language != "python":
-        exefile1 = filename.with_suffix("")
-        if sys.platform == "win32":
-            exefile1 = exefile1.with_suffix(".exe")
-    else:
-        exefile1 = filename
-
-    return exefile1
-
-
-# ------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd=None):
     assert abs_path.is_absolute()
     p = subprocess.run(
@@ -424,7 +411,7 @@ def compile_fortran_or_c(
         command.append(f"{root}.o")
         executable = None
     else:
-        executable = get_exe(test_file)
+        executable = test_file.with_suffix("")
         command.append(executable)
 
     if "module_output_flag" in compiler_info:
