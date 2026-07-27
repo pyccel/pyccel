@@ -386,6 +386,8 @@ def pyccel_test(
     pyccel_commands="",
     output_dtype=float,
     language=None,
+    *,
+    isolated_dir,
 ):
     """
     Run pyccel and compare the output to ensure that the results
@@ -422,6 +424,10 @@ def pyccel_test(
     language : str
                 The language pyccel should translate to
                 default = 'fortran'
+    isolated_dir : Path
+                The test-exclusive directory (typically pytest's
+                `tmp_path` fixture) into which test files are copied
+                and pyccel is run
     """
 
     test_file = Path(test_file)
@@ -440,7 +446,6 @@ def pyccel_test(
     else:
         language = "fortran"
 
-    isolated_dir = get_thread_local_subdir(dirname=get_abs_path(rel_test_dir))
     test_file = copy_to_isolated_dir(isolated_dir, rel_test_dir, test_file)
     cwd = isolated_dir / rel_cwd.relative_to(rel_test_dir)
     output_dir = isolated_dir / "__pyccel__" if language == "python" else None
@@ -492,7 +497,7 @@ def pyccel_test(
 # ==============================================================================
 # UNIT TESTS
 # ==============================================================================
-def test_relative_imports_in_project(language):
+def test_relative_imports_in_project(language, tmp_path):
 
     base_dir = Path(__file__).parent
     path_dir = base_dir / "project_rel_imports"
@@ -502,12 +507,16 @@ def test_relative_imports_in_project(language):
         "project_rel_imports/project/folder2/mod3.py",
     ]
     pyccel_test(
-        "project_rel_imports/runtest.py", dependencies, cwd=path_dir, language=language
+        "project_rel_imports/runtest.py",
+        dependencies,
+        cwd=path_dir,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_absolute_imports_in_project(language):
+def test_absolute_imports_in_project(language, tmp_path):
 
     base_dir = Path(__file__).parent
     path_dir = base_dir / "project_abs_imports"
@@ -517,7 +526,11 @@ def test_absolute_imports_in_project(language):
         "project_abs_imports/project/folder2/mod3.py",
     ]
     pyccel_test(
-        "project_abs_imports/runtest.py", dependencies, cwd=path_dir, language=language
+        "project_abs_imports/runtest.py",
+        dependencies,
+        cwd=path_dir,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -567,7 +580,7 @@ def test_rel_imports_python_accessible_folder(language):
 
 
 # ------------------------------------------------------------------------------
-def test_multi_imports_project(language):
+def test_multi_imports_project(language, tmp_path):
 
     base_dir = Path(__file__).parent
     path_dir = base_dir / "project_multi_imports"
@@ -582,32 +595,40 @@ def test_multi_imports_project(language):
         cwd=path_dir,
         language=language,
         output_dtype=str,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_imports_compile(language):
+def test_imports_compile(language, tmp_path):
     pyccel_test(
         "scripts/runtest_imports.py",
         "scripts/funcs.py",
         compile_with_pyccel=False,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_imports_in_folder(language):
+def test_imports_in_folder(language, tmp_path):
     pyccel_test(
         "scripts/runtest_folder_imports.py",
         "scripts/folder1/folder1_funcs.py",
         compile_with_pyccel=False,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_imports(language):
-    pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py", language=language)
+def test_imports(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_imports.py",
+        "scripts/funcs.py",
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -663,8 +684,8 @@ def test_folder_imports(language):
 
 
 # ------------------------------------------------------------------------------
-def test_funcs(language):
-    pyccel_test("scripts/runtest_funcs.py", language=language)
+def test_funcs(language, tmp_path):
+    pyccel_test("scripts/runtest_funcs.py", language=language, isolated_dir=tmp_path)
 
 
 def test_capitalised_language(language):
@@ -681,17 +702,24 @@ def test_capitalised_language(language):
 
 # ------------------------------------------------------------------------------
 # Enumerate not supported in c
-def test_inout_func(language):
-    pyccel_test("scripts/runtest_inoutfunc.py", language=language)
+def test_inout_func(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_inoutfunc.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_bool(language):
-    pyccel_test("scripts/bool_comp.py", output_dtype=bool, language=language)
+def test_bool(language, tmp_path):
+    pyccel_test(
+        "scripts/bool_comp.py",
+        output_dtype=bool,
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_expressions(experimental_language):
+def test_expressions(experimental_language, tmp_path):
     types = (
         [float, complex, int, float, float, int]
         + [float] * 3
@@ -711,13 +739,16 @@ def test_expressions(experimental_language):
         + [bool] * 9
     )
     pyccel_test(
-        "scripts/expressions.py", language=experimental_language, output_dtype=types
+        "scripts/expressions.py",
+        language=experimental_language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
 @pytest.mark.fortran
-def test_generic_functions():
+def test_generic_functions(tmp_path):
     # Only testing Fortran for simple compilation outside of Pyccel
     pyccel_test(
         "scripts/runtest_generic_functions.py",
@@ -742,11 +773,12 @@ def test_generic_functions():
             int,
             int,
         ],
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_default_arguments(language):
+def test_default_arguments(language, tmp_path):
     pyccel_test(
         "scripts/runtest_default_args.py",
         dependencies="scripts/default_args_mod.py",
@@ -775,6 +807,7 @@ def test_default_arguments(language):
             float,
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -797,8 +830,10 @@ def test_pyccel_calling_directory(language):
 
 
 # ------------------------------------------------------------------------------
-def test_in_specified(language):
-    pyccel_test("scripts/runtest_degree_in.py", language=language)
+def test_in_specified(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_degree_in.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -814,8 +849,8 @@ def test_in_specified(language):
         "scripts/hope_benchmarks/simplify.py",
     ],
 )
-def test_hope_benchmarks(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_hope_benchmarks(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
@@ -834,8 +869,8 @@ def test_hope_benchmarks(test_file, language):
         "scripts/import_syntax/collisions5.py",
     ],
 )
-def test_import_syntax(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_import_syntax(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
@@ -848,9 +883,12 @@ def test_import_syntax(test_file, language):
         "scripts/runtest_import_mod_project_as.py",
     ],
 )
-def test_import_syntax_user_as(test_file, language):
+def test_import_syntax_user_as(test_file, language, tmp_path):
     pyccel_test(
-        test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
+        test_file,
+        dependencies="scripts/import_syntax/user_mod.py",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -866,14 +904,17 @@ def test_import_syntax_user_as(test_file, language):
         "scripts/import_syntax/import_mod_as_user_func.py",
     ],
 )
-def test_import_syntax_user(test_file, language):
+def test_import_syntax_user(test_file, language, tmp_path):
     pyccel_test(
-        test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
+        test_file,
+        dependencies="scripts/import_syntax/user_mod.py",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_import_collisions(language):
+def test_import_collisions(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/collisions4.py",
         dependencies=[
@@ -881,24 +922,27 @@ def test_import_collisions(language):
             "scripts/import_syntax/user_mod2.py",
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_import_collisions_builtins(language):
+def test_import_collisions_builtins(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/collisions6.py",
         dependencies=["scripts/import_syntax/user_mod_builtin_conflict.py"],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_class_import_as(language):
+def test_class_import_as(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/from_cls_mod_import_as_user.py",
         dependencies=["scripts/import_syntax/user_cls_mod.py"],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -928,12 +972,14 @@ def test_numpy_kernels_compile(language):
         pytest.param("python", marks=pytest.mark.python),
     ),
 )
-def test_randint_size_program(language):
-    pyccel_test("scripts/numpy/randint_size.py", language=language)
+def test_randint_size_program(language, tmp_path):
+    pyccel_test(
+        "scripts/numpy/randint_size.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_multiple_results(language):
+def test_multiple_results(language, tmp_path):
     pyccel_test(
         "scripts/runtest_multiple_results.py",
         output_dtype=[
@@ -971,19 +1017,25 @@ def test_multiple_results(language):
             int,
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_elemental(language):
-    pyccel_test("scripts/decorators_elemental.py", language=language)
+def test_elemental(language, tmp_path):
+    pyccel_test(
+        "scripts/decorators_elemental.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_strings(experimental_language):
+def test_print_strings(experimental_language, tmp_path):
     types = str
     pyccel_test(
-        "scripts/print_strings.py", language=experimental_language, output_dtype=types
+        "scripts/print_strings.py",
+        language=experimental_language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1002,29 +1054,40 @@ def test_print_strings(experimental_language):
         ),
     ),
 )
-def test_print_nan(language):
+def test_print_nan(language, tmp_path):
     types = str
-    pyccel_test("scripts/print_nan.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_nan.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_integers(language):
+def test_print_integers(language, tmp_path):
     types = str
-    pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_integers.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_sp_and_end(experimental_language):
+def test_print_sp_and_end(experimental_language, tmp_path):
     types = str
     pyccel_test(
         "scripts/print_sp_and_end.py",
         language=experimental_language,
         output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_c_arrays(language):
+def test_c_arrays(language, tmp_path):
     types = (
         [int] * 15
         + [float] * 5
@@ -1039,7 +1102,12 @@ def test_c_arrays(language):
         + [float] * 2 * 3
         + [int] * 3
     )
-    pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/c_arrays.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1057,7 +1125,7 @@ def test_c_arrays(language):
         ),
     ),
 )
-def test_arrays_view(language):
+def test_arrays_view(language, tmp_path):
     types = (
         [int] * 10
         + [int] * 10
@@ -1080,13 +1148,19 @@ def test_arrays_view(language):
             language=language,
             output_dtype=types,
             pyccel_commands="--no-debug",
+            isolated_dir=tmp_path,
         )
     else:
-        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
+        pyccel_test(
+            "scripts/arrays_view.py",
+            language=language,
+            output_dtype=types,
+            isolated_dir=tmp_path,
+        )
 
 
 # ------------------------------------------------------------------------------
-def test_return_numpy_arrays(language):
+def test_return_numpy_arrays(language, tmp_path):
     types = [int] * 4  # 4 ints for a
     types += [int] * 2  # 2 ints for b
     types += [float] * 2  # 2 floats for c
@@ -1096,11 +1170,16 @@ def test_return_numpy_arrays(language):
     types += [int] * 5  # 5 ints for g
     types += [int] * 4  # 4 ints for k
     types += [float] * 48  # 48 floats for x
-    pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/return_numpy_arrays.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_array_binary_op(language):
+def test_array_binary_op(language, tmp_path):
     types = [int] * 4
     types += [int, float, int, int]
     types += [int] * 4
@@ -1111,7 +1190,10 @@ def test_array_binary_op(language):
     types += [int, float, int, int]
     types += [int] * 8
     pyccel_test(
-        "scripts/array_binary_operation.py", language=language, output_dtype=types
+        "scripts/array_binary_operation.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1137,22 +1219,26 @@ def test_array_binary_op(language):
         "scripts/classes/class_pointer_2.py",
     ],
 )
-def test_classes(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_classes(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
-def test_class_magic(language):
+def test_class_magic(language, tmp_path):
     pyccel_test(
         "scripts/classes/class_magic.py",
         language=language,
         output_dtype=[int] * 6 + [bool] * 2 + [int],
+        isolated_dir=tmp_path,
     )
 
 
-def test_tuples_in_classes(language):
+def test_tuples_in_classes(language, tmp_path):
     test_file = "scripts/classes/tuples_in_classes.py"
     pyccel_test(
-        test_file, language=language, output_dtype=[float, float, float, bool, bool]
+        test_file,
+        language=language,
+        output_dtype=[float, float, float, bool, bool],
+        isolated_dir=tmp_path,
     )
 
 
@@ -1182,12 +1268,13 @@ def test_classes_type_print(language):
     assert rx.search(lang_out)
 
 
-def test_class_inline_array(language):
+def test_class_inline_array(language, tmp_path):
     pyccel_test(
         "scripts/classes/class_inline.py",
         dependencies=["scripts/classes/importable.py"],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1198,8 +1285,8 @@ def test_class_inline_array(language):
         "scripts/classes/generic_methods.py",
     ],
 )
-def test_interfaces_in_classes(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_interfaces_in_classes(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
@@ -1242,11 +1329,12 @@ def test_lapack(test_file):
 
 
 # ------------------------------------------------------------------------------
-def test_type_print(experimental_language):
+def test_type_print(experimental_language, tmp_path):
     pyccel_test(
         "scripts/runtest_type_print.py",
         language=experimental_language,
         output_dtype=str,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1428,25 +1516,22 @@ def test_module_init_collisions(language):
 
 
 @pytest.mark.fortran
-def test_function_aliasing():
-    pyccel_test("scripts/runtest_function_alias.py", language="fortran")
+def test_function_aliasing(tmp_path):
+    pyccel_test(
+        "scripts/runtest_function_alias.py", language="fortran", isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
 
 
-def test_function(language):
-    pyccel_test("scripts/functions.py", language=language, output_dtype=str)
-
-
-# ------------------------------------------------------------------------------
-@pytest.mark.skipif_by_language(
-    os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
-    reason="1671",
-    language="fortran",
-)
-def test_inline(language):
-    pyccel_test("scripts/decorators_inline.py", language=language)
+def test_function(language, tmp_path):
+    pyccel_test(
+        "scripts/functions.py",
+        language=language,
+        output_dtype=str,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1455,11 +1540,24 @@ def test_inline(language):
     reason="1671",
     language="fortran",
 )
-def test_inline_import(language):
+def test_inline(language, tmp_path):
+    pyccel_test(
+        "scripts/decorators_inline.py", language=language, isolated_dir=tmp_path
+    )
+
+
+# ------------------------------------------------------------------------------
+@pytest.mark.skipif_by_language(
+    os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
+    reason="1671",
+    language="fortran",
+)
+def test_inline_import(language, tmp_path):
     pyccel_test(
         "scripts/runtest_decorators_inline.py",
         dependencies=("scripts/decorators_inline.py"),
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1614,9 +1712,12 @@ def test_reserved_file_name():
 
 # ------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatenation(language):
+def test_concatenation(language, tmp_path):
     pyccel_test(
-        "scripts/concatenation.py", language=language, output_dtype=[int] * 15 + [str]
+        "scripts/concatenation.py",
+        language=language,
+        output_dtype=[int] * 15 + [str],
+        isolated_dir=tmp_path,
     )
 
 
@@ -1634,7 +1735,9 @@ def test_class_imports(language):
         get_abs_path("project_class_imports"),
     )
 
-    isolated_dir = get_thread_local_subdir(dirname=get_abs_path("project_class_imports"))
+    isolated_dir = get_thread_local_subdir(
+        dirname=get_abs_path("project_class_imports")
+    )
     rel_test_dir = Path("project_class_imports")
     cwd = isolated_dir
 
@@ -1764,43 +1867,60 @@ def test_stubs(language):
 
 
 # ------------------------------------------------------------------------------
-def test_builtin_container_print(language):
+def test_builtin_container_print(language, tmp_path):
     pyccel_test(
-        "scripts/print_builtin_containers.py", output_dtype=str, language=language
+        "scripts/print_builtin_containers.py",
+        output_dtype=str,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_pyccel_generated_compilation_dependency(language):
+def test_pyccel_generated_compilation_dependency(language, tmp_path):
     pyccel_test(
         "scripts/runtest_pyccel_generated_compilation_dependency.py",
         dependencies=["scripts/pyccel_generated_compilation_dependency.py"],
         output_dtype=int,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_generated_name_collision(language):
+def test_generated_name_collision(language, tmp_path):
     pyccel_test(
-        "scripts/GENERATED_NAME_COLLISION.py", output_dtype=int, language=language
+        "scripts/GENERATED_NAME_COLLISION.py",
+        output_dtype=int,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_array_tuple_shape(language):
-    pyccel_test("scripts/array_tuple_shape.py", output_dtype=int, language=language)
+def test_array_tuple_shape(language, tmp_path):
+    pyccel_test(
+        "scripts/array_tuple_shape.py",
+        output_dtype=int,
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_varargs(language):
-    pyccel_test("scripts/runtest_varargs.py", language=language)
+def test_varargs(language, tmp_path):
+    pyccel_test("scripts/runtest_varargs.py", language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
 @pytest.mark.python
-def test_varkwargs():
-    pyccel_test("scripts/runtest_varkwargs.py", language="python", output_dtype=str)
+def test_varkwargs(tmp_path):
+    pyccel_test(
+        "scripts/runtest_varkwargs.py",
+        language="python",
+        output_dtype=str,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1809,7 +1929,7 @@ def test_varkwargs():
     reason="1671",
     language="fortran",
 )
-def test_inline_using_import(language):
+def test_inline_using_import(language, tmp_path):
     test_file = Path("scripts/inlining/runtest_inline_using_import.py")
     pyccel_test(
         test_file,
@@ -1820,13 +1940,11 @@ def test_inline_using_import(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
     if language != "python":
-        test_abspath = (
-            get_thread_local_subdir(dirname=get_abs_path(Path(test_file).parent))
-            / test_file.name
-        )
+        test_abspath = tmp_path / test_file.name
 
         cwd = test_abspath.parent
         pyth_out = get_python_output(test_abspath, cwd)
@@ -1840,7 +1958,7 @@ def test_inline_using_import(language):
     reason="1671",
     language="fortran",
 )
-def test_inline_using_import_2(language):
+def test_inline_using_import_2(language, tmp_path):
     pyccel_test(
         "scripts/inlining/runtest_inline_using_import_2.py",
         dependencies=[
@@ -1850,6 +1968,7 @@ def test_inline_using_import_2(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1859,7 +1978,7 @@ def test_inline_using_import_2(language):
     reason="1671",
     language="fortran",
 )
-def test_inline_using_named_import(language):
+def test_inline_using_named_import(language, tmp_path):
     pyccel_test(
         "scripts/inlining/runtest_inline_using_named_import.py",
         dependencies=[
@@ -1869,16 +1988,18 @@ def test_inline_using_named_import(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_classes_array_property(language):
+def test_classes_array_property(language, tmp_path):
     pyccel_test(
         "scripts/classes/runtest_classes_array_property.py",
         dependencies=["scripts/classes/classes_array_property.py"],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1902,16 +2023,22 @@ def test_classes_pointer_import(language):
 
 
 # ------------------------------------------------------------------------------
-def test_functional_statements(language):
+def test_functional_statements(language, tmp_path):
     pyccel_test(
-        "scripts/functional_statements.py", output_dtype=[int] * 9, language=language
+        "scripts/functional_statements.py",
+        output_dtype=[int] * 9,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_complex_numbers(language):
+def test_complex_numbers(language, tmp_path):
     pyccel_test(
-        "scripts/complex_numbers.py", output_dtype=[complex] * 6, language=language
+        "scripts/complex_numbers.py",
+        output_dtype=[complex] * 6,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
