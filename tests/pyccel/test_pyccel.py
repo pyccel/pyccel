@@ -1414,7 +1414,7 @@ def test_lapack(tmp_path):
     # pyccel_test(test_file)
 
     # TODO: Remove the rest of the function when dgetri can be expressed with scipy
-    test_file, = copy_to_isolated_dir(tmp_path, ["scripts/lapack_subroutine.py"])
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/lapack_subroutine.py"])
 
     cwd = test_file.parent
 
