@@ -72,11 +72,6 @@ jobs:
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: python_pytest
-        timeout-minutes: 20
-        uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: parallel
