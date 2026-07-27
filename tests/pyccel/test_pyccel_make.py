@@ -25,7 +25,7 @@ def build_system(request):
 
 # ------------------------------------------------------------------------------
 def pyccel_make_test(
-    main_file, folder, language, build_system, args, output_dtype=float
+    main_file, folder, language, build_system, args, output_dtype=float, *, tmp_path
 ):
     """
     Test the pyccel make command.
@@ -46,7 +46,13 @@ def pyccel_make_test(
     output_dtype : type/list of types, default=float
         The types expected as output of the program.
         If one argument is provided then all types are assumed to be the same.
+    tmp_path : Path
+        The test-exclusive directory (typically pytest's `tmp_path` fixture)
+        into which `folder` is copied so `pyccel make` doesn't run on the
+        shared, real project folder.
     """
+    folder = shutil.copytree(folder, tmp_path / folder.name)
+
     python_output = get_python_output(folder / main_file, cwd=folder)
 
     p = subprocess.run(
@@ -85,20 +91,19 @@ def pyccel_make_test(
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_abs_imports(language, build_system):
+def test_project_abs_imports(language, build_system, tmp_path):
     pyccel_make_test(
         "runtest.py",
         current_folder / "project_abs_imports",
         language,
         build_system,
         ["-g", "**/*.py"],
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_class_imports(language, build_system):
+def test_project_class_imports(language, build_system, tmp_path):
     # Failing due to repeated renaming
     pyccel_make_test(
         "runtest.py",
@@ -106,12 +111,12 @@ def test_project_class_imports(language, build_system):
         language,
         build_system,
         ["-g", "**/*.py"],
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_multi_imports(language, build_system):
+def test_project_multi_imports(language, build_system, tmp_path):
     pyccel_make_test(
         "file4.py",
         current_folder / "project_multi_imports",
@@ -119,37 +124,37 @@ def test_project_multi_imports(language, build_system):
         build_system,
         ["-f", "file1.py", "file2.py", "file3.py", "file4.py"],
         output_dtype=str,
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_rel_imports(language, build_system):
+def test_project_rel_imports(language, build_system, tmp_path):
     pyccel_make_test(
         "runtest.py",
         current_folder / "project_rel_imports",
         language,
         build_system,
         ["-g", "**/*.py"],
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_containers(language, build_system):
+def test_project_containers(language, build_system, tmp_path):
     pyccel_make_test(
         "runtest.py",
         current_folder / "project_containers",
         language,
         build_system,
-        ["-d", str(current_folder / "project_containers" / "files.txt")],
+        ["-d", "files.txt"],
         output_dtype=int,
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_project_stdlib(language, build_system):
+def test_project_stdlib(language, build_system, tmp_path):
     pyccel_make_test(
         "runtest.py",
         current_folder / "project_stdlib",
@@ -157,16 +162,16 @@ def test_project_stdlib(language, build_system):
         build_system,
         ["-f", "factorial_mod.py", "runtest.py"],
         output_dtype=float,
+        tmp_path=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize(
     "extra_flag",
     ["--mpi", "--openmp", "--time-execution", "--verbose", "--developer-mode", "-vv"],
 )
-def test_flags(language, build_system, extra_flag):
+def test_flags(language, build_system, extra_flag, tmp_path):
     if extra_flag == "--mpi" and sys.platform == "win32":
         return pytest.skip(reason="Meson does not correctly handle spaces in paths")
 
@@ -177,16 +182,17 @@ def test_flags(language, build_system, extra_flag):
         build_system,
         ["-f", "file1.py", "file2.py", "file3.py", "file4.py", extra_flag],
         output_dtype=str,
+        tmp_path=tmp_path,
     )
 
     return None
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_output_flag(language, build_system):
-    main_file = "file4.py"
+def test_output_flag(language, build_system, tmp_path):
     folder = current_folder / "project_multi_imports"
+    folder = shutil.copytree(folder, tmp_path / folder.name)
+    main_file = "file4.py"
     args = [
         "-f",
         "file1.py",
@@ -235,7 +241,9 @@ def test_output_flag(language, build_system):
         pytest.param("c", marks=pytest.mark.c),
     ),
 )
-def test_circular_dependencies(language, build_system):
+def test_circular_dependencies(language, build_system, tmp_path):
+    folder = current_folder / "project_circular_imports"
+    folder = shutil.copytree(folder, tmp_path / folder.name)
     p = subprocess.run(
         [
             shutil.which("pyccel"),
@@ -248,7 +256,7 @@ def test_circular_dependencies(language, build_system):
             f"--language={language}",
             f"--build-system={build_system}",
         ],
-        cwd=current_folder / "project_circular_imports",
+        cwd=folder,
         check=False,
         capture_output=True,
         text=True,
