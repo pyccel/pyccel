@@ -103,12 +103,6 @@ def get_exe(filename, language=None):
 
 
 # ------------------------------------------------------------------------------
-def insert_pyccel_folder(abs_path):
-    abs_path = Path(abs_path)
-    return get_thread_local_subdir(abs_path.parent) / abs_path.name
-
-
-# ------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd=None):
     assert abs_path.is_absolute()
     p = subprocess.run(
@@ -1666,7 +1660,7 @@ def test_inline_import(language, tmp_path):
 # ------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
 def test_json():
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
+    output_dir = get_abs_path("scripts/") / "__pyccel__"
     cmd = [
         shutil.which("pyccel"),
         "config",
@@ -1721,7 +1715,7 @@ def test_json_relative_path():
     ),
 )
 def test_json_register(language):
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
+    output_dir = get_thread_local_subdir(get_abs_path("scripts/"))
     example_json_path = f"{output_dir}/test.json"
     cmd = [shutil.which("pyccel"), "config", "export", example_json_path]
     subprocess.run(cmd, check=True)
@@ -1743,7 +1737,7 @@ def test_json_register(language):
     config[language]["general_flags"] = ["--version"]
 
     current_config_folder = os.environ.get("PYCCEL_CONFIG_HOME", None)
-    os.environ["PYCCEL_CONFIG_HOME"] = str(get_abs_path(insert_pyccel_folder(".")))
+    os.environ["PYCCEL_CONFIG_HOME"] = str(get_thread_local_subdir(get_abs_path(".")))
 
     # Check registration
     timing_json_path = f"{output_dir}/timing.json"
