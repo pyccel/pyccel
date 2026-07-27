@@ -1717,7 +1717,7 @@ def test_json():
         "intel",
     ]
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test.json"), "r", encoding="utf-8") as f:
+    with open(output_dir / "test.json", "r", encoding="utf-8") as f:
         dict_1 = json.load(f)
     assert dict_1["c"]["exec"] == "icx"
     cmd = [
@@ -1729,7 +1729,7 @@ def test_json():
         f"{output_dir}/test.json",
     ]
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test2.json"), "r", encoding="utf-8") as f:
+    with open(output_dir / "test2.json", "r", encoding="utf-8") as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
