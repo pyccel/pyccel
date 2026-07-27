@@ -22,6 +22,10 @@ from pyccel.compilers.default_compilers import available_compilers
 # UTILITIES
 # ==============================================================================
 
+expected_extensions = {"fortran": ".f90",
+                       "c": ".c",
+                       "python": ".py"}
+
 
 def get_abs_path(relative_path):
     base_dir = Path(__file__).resolve().parent
@@ -115,14 +119,75 @@ def get_python_output(abs_path, cwd=None):
 
 # ------------------------------------------------------------------------------
 def compile_pyccel(path_dir, test_file, options=""):
+    """
+    Run `pyccel compile` on a file.
+
+    Run `pyccel compile` on a file. When `options` requests a translate-only
+    run (`-t`), verbose output is requested from pyccel so the paths of the
+    files it generated can be recovered from stdout (see
+    `parse_generated_module_file`), instead of having to be guessed by the
+    caller.
+
+    Parameters
+    ----------
+    path_dir : str
+        The directory pyccel should be run from.
+
+    test_file : str
+        The file which should be compiled.
+
+    options : str
+        Any additional command-line options to pass to pyccel.
+
+    Returns
+    -------
+    str or None
+        The captured stdout of the `pyccel compile` command if it was a
+        translate-only (`-t`) run, otherwise None.
+    """
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
+    translate_only = "-t" in options.split()
+    if translate_only:
+        options += " -v"
     cmd = [shutil.which("pyccel"), "compile", test_file]
     if options != "":
         cmd += options.strip().split()
-    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
-    p.wait()
+    p = subprocess.run(cmd, cwd=path_dir, text=True, capture_output=translate_only)
     assert p.returncode == 0
+    return p.stdout if translate_only else None
+
+
+# ------------------------------------------------------------------------------
+def parse_generated_module_file(output, extension):
+    """
+    Get the path of the generated module file from a verbose pyccel output.
+
+    Parse the stdout of a translate-only, verbose (`-v`) `pyccel compile` run
+    (see `compile_pyccel`) and return the path of the generated module source
+    file with the given extension, i.e. the file pyccel printed that does not
+    have a `prog_` prefix. Header/stub files and, if present, the separate
+    program-driver file are ignored.
+
+    Parameters
+    ----------
+    output : str
+        The captured stdout of a translate-only, verbose `pyccel compile` run.
+
+    extension : str
+        The extension of the generated file to find (e.g. `.f90`/`.c`).
+
+    Returns
+    -------
+    Path
+        The path of the generated module file.
+    """
+    for line in output.splitlines():
+        if line.startswith(">>> Printing ::"):
+            path = Path(line.split("::", 1)[1].strip())
+            if path.suffix == extension and not path.name.startswith("prog_"):
+                return path
+    raise AssertionError(f"No generated {extension} file found in pyccel output")
 
 
 # ------------------------------------------------------------------------------
@@ -485,6 +550,7 @@ def pyccel_test(
     cwd = isolated_dir / rel_cwd.relative_to(rel_test_dir)
     output_dir = isolated_dir / "__pyccel__" if language == "python" else None
 
+    generated_dependencies = []
     if dependencies:
         if isinstance(dependencies, str):
             dependencies = [dependencies]
@@ -500,17 +566,13 @@ def pyccel_test(
             dependencies[i] = copy_to_isolated_dir(isolated_dir, rel_test_dir, d)
 
             if not compile_with_pyccel:
-                compile_pyccel(cwd, dependencies[i], pyc_command + " -t")
+                dep_output = compile_pyccel(cwd, dependencies[i], pyc_command + " -t")
+                generated_dep = parse_generated_module_file(dep_output, expected_extensions[language])
                 if language == "fortran":
-                    generated_dep = insert_pyccel_folder(dependencies[i]).with_suffix(
-                        ".f90"
-                    )
                     compile_fortran(cwd, dependencies[i], generated_dep, [], is_mod=True)
                 elif language == "c":
-                    generated_dep = insert_pyccel_folder(dependencies[i]).with_suffix(
-                        ".c"
-                    )
                     compile_c(cwd, dependencies[i], generated_dep, [], is_mod=True)
+                generated_dependencies.append(generated_dep)
             else:
                 compile_pyccel(cwd, dependencies[i], pyc_command)
 
@@ -523,20 +585,11 @@ def pyccel_test(
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
-        compile_pyccel(cwd, test_file, pyccel_commands + " -t")
-        if not dependencies:
-            dependencies = []
+        test_output = compile_pyccel(cwd, test_file, pyccel_commands + " -t")
+        generated_file = parse_generated_module_file(test_output, expected_extensions[language])
         if language == "fortran":
-            generated_file = insert_pyccel_folder(output_test_file).with_suffix(".f90")
-            generated_dependencies = [
-                insert_pyccel_folder(d).with_suffix(".f90") for d in dependencies
-            ]
             compile_fortran(cwd, output_test_file, generated_file, generated_dependencies)
         elif language == "c":
-            generated_file = insert_pyccel_folder(output_test_file).with_suffix(".c")
-            generated_dependencies = [
-                insert_pyccel_folder(d).with_suffix(".c") for d in dependencies
-            ]
             compile_c(cwd, output_test_file, generated_file, generated_dependencies)
 
     lang_out = get_lang_output(output_test_file, language)
