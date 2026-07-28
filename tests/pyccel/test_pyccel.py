@@ -622,6 +622,10 @@ def pyccel_test(
             test_exe = compile_c(
                 cwd, output_test_file, generated_file, generated_dependencies
             )
+        elif language == "python":
+            test_exe = output_test_file
+        else:
+            raise RuntimeError("Testing unknown language")
 
     lang_out = get_lang_output(test_exe, language)
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
