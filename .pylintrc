@@ -105,7 +105,8 @@ disable=invalid-name,
         isinstance-second-argument-not-valid-type, # prevents doing isinstance(a, acceptable_iterable_types)
         syntax-error, # Ignore syntax errors (usually from testing future Python versions). If the file doesn't run this will be obvious in the tests
         invalid-getnewargs-ex-returned, # Raises false positive. See https://github.com/pylint-dev/pylint/issues/10208
-        wrong-import-order # This is handled by isort
+        wrong-import-order, # This is handled by isort
+        unbalanced-tuple-unpacking # If the file doesn't run this will be obvious in the tests
         
 
 # Enable the message, report, category or checker with the given id(s). You can
