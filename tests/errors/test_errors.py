@@ -161,12 +161,7 @@ def test_traceback():
         error_mode.set_mode(current_mode)
 
 
-semantic_non_blocking_errors_args = [
-    f for f in get_files_from_folder("semantic/non_blocking")
-]
-
-
-@pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
+@pytest.mark.parametrize("f", get_files_from_folder("semantic/non_blocking"))
 @pytest.mark.language_agnostic
 def test_semantic_non_blocking_errors(f):
     print(f"> testing {f}")
