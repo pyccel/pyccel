@@ -124,7 +124,6 @@ def pytest_runtest_teardown(item, nextitem):
         comm.Barrier()
         if comm.rank == 0:
             pyccel_clean(path_dir, remove_shared_libs=True)
-            pass
         comm.Barrier()
 
 
@@ -153,7 +152,6 @@ def pytest_sessionstart(session):
     marks = [m.name for m in session.own_markers]
     if "mpi" not in marks:
         pyccel_clean(path_dir)
-        pass
 
 
 def pytest_runtest_setup(item):
