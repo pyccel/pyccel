@@ -12,7 +12,6 @@ from pathlib import Path
 import numpy as np
 import pluggy
 import pytest
-from filelock import FileLock
 
 from pyccel.ast.utilities import python_builtin_libs
 from pyccel.codegen.pipeline import execute_pyccel
