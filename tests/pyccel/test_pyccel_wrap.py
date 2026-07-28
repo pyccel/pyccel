@@ -147,7 +147,6 @@ def check_pyccel_wrap_and_call_translation(
 # --------------------------------------------------------------------------------------------------
 #                                  Tests
 # --------------------------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_function(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
         "functions", "runtest_functions", language, isolated_dir=tmp_path
@@ -222,7 +221,6 @@ def test_class_final_fortran_keyword(tmp_path):
 # Flag tests
 
 
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize(
     "extra_flag",
     ["--mpi", "--openmp", "--time-execution", "--verbose", "--developer-mode"],
@@ -234,7 +232,6 @@ def test_accelerator_flags(language, extra_flag, tmp_path):
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
-@pytest.mark.xdist_incompatible
 def test_convert_only(language, tmp_path):
     folder = f"wrap_scripts/{language}_tests"
     files = [
