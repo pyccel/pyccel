@@ -115,7 +115,6 @@ def pytest_runtest_teardown(item, nextitem):
     path_dir = os.path.dirname(os.path.realpath(item.fspath))
     move_coverage(path_dir)
 
-    config = item.config
     marks = [m.name for m in item.own_markers]
     if "mpi" not in marks:
         pyccel_clean(path_dir, remove_shared_libs=True)
@@ -148,7 +147,6 @@ def pytest_sessionstart(session):
     # Clean path before beginning but never delete anything in parallel mode
     path_dir = os.path.dirname(os.path.realpath(__file__))
 
-    config = session.config
     marks = [m.name for m in session.own_markers]
     if "mpi" not in marks:
         pyccel_clean(path_dir)
