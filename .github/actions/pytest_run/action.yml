@@ -4,8 +4,8 @@ inputs:
     description: 'Specifies the shell command (different for anaconda)'
     required: false
     default: 'bash'
-  pytest_mark:
-    description: 'Mark expression to exclude additional tests'
+  pytest_flags:
+    description: 'Extra pytest flags'
     required: false
     default: ''
 
@@ -72,27 +72,18 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./pyccel/extensions/STC
     - name: Test
-      run: python -m pytest -n auto -rX ${FLAGS} -m "not (parallel or xdist_incompatible) ${{ inputs.pytest_mark }}" 2>&1 | tee outfile.out
+      run: python -m pytest -n auto -rX ${FLAGS} "${{ inputs.pytest_flags }}" 2>&1 | tee outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest
-    - name: Test multi-file translations
-      run: |
-         python -m pytest -rX ${FLAGS} -m "xdist_incompatible and not parallel ${{ inputs.pytest_mark }}" 2>&1 | tee xdist_incompatible_outfile.out
-         pyccel clean -s
-      shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests
-      id: pytest_xdist_incompatible
     - name: Final step
       if: always()
       id: status
       run:
         python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests \
-                       "Language-agnostic tests:${{ steps.pytest_language_agnostic.outcome }}:tests/lang_outfile.out" \
                        "Tests with STC/gFTL uninstalled:${{ steps.pytest_dependencies.outcome }}:tests/install_outfile.out" \
                        "Verification of stdlib update:${{ steps.pytest_stdlib_update.outcome }}:tests/stdlib_update_outfile.out" \
-                       "Tests:${{ steps.pytest.outcome }}:tests/outfile.out" \
-                       "Non-parallelisable tests:${{ steps.pytest_xdist_incompatible.outcome }}:tests/xdist_incompatible_outfile.out" \
+                       "Tests:${{ steps.pytest.outcome }}:tests/outfile.out"
                       
       shell: ${{ inputs.shell_cmd }}
 

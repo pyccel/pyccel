@@ -74,4 +74,4 @@ jobs:
         uses: ./.github/actions/pytest_run
         with:
           shell_cmd: 'gitbash -l -eo pipefail {0}'
-          pytest_mark: 'and not external'
+          pytest_mark: '-m "not external"'
