@@ -71,7 +71,7 @@ def compile_pyccel(path_dir, test_file, options=""):
     Run `pyccel compile` on a file with verbose output requested, so the
     paths of the files pyccel generated, and the executable it produced
     (for a full compile), can be recovered from stdout instead of having to
-    be guessed by the caller. See `parse_generated_module_file` and
+    be guessed by the caller. See `parse_generated_file` and
     `parse_generated_executable`.
 
     Parameters
@@ -101,7 +101,7 @@ def compile_pyccel(path_dir, test_file, options=""):
 
 
 # ------------------------------------------------------------------------------
-def parse_generated_module_file(output, extension):
+def parse_generated_file(output, extension):
     """
     Get the path of the generated module file from a verbose pyccel output.
 
@@ -592,7 +592,7 @@ def pyccel_test(
 
             if not compile_with_pyccel:
                 dep_output = compile_pyccel(cwd, d, pyc_command + " -t")
-                generated_dep = parse_generated_module_file(
+                generated_dep = parse_generated_file(
                     dep_output, expected_extensions[language]
                 )
                 if language == "fortran":
@@ -614,7 +614,7 @@ def pyccel_test(
         test_exe = parse_generated_executable(full_output, language)
     else:
         test_output = compile_pyccel(cwd, test_file, pyccel_commands + " -t")
-        generated_file = parse_generated_module_file(
+        generated_file = parse_generated_file(
             test_output, expected_extensions[language]
         )
         if language == "fortran":
@@ -1900,7 +1900,7 @@ def test_stubs(language, tmp_path):
         options=f"--language={language} -t",
     )
     with open(
-        parse_generated_module_file(pyc_output, ".pyi"),
+        parse_generated_file(pyc_output, ".pyi"),
         "r",
         encoding="utf-8",
     ) as f:
