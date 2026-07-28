@@ -784,7 +784,7 @@ def test_folder_imports(language, tmp_path):
     )
     path_dir = tmp_path / "scripts"
 
-    language_opt = "--language={}".format(language)
+    language_opt = f"--language={language}"
     pyccel_opt = language_opt
     if language == "python":
         pyccel_opt = language_opt + f" --output={tmp_path / '__pyccel__' / 'folder1'}"
