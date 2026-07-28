@@ -372,6 +372,9 @@ def compile_fortran_or_c(
             command.append("-I" + str(Path(d).parent))
     command.append("-I" + str(base_dir))
 
+    if "gfortran" in compiler and sys.platform == "win32":
+        command.append("-static-libgfortran")
+
     command.append("-o")
     if is_mod:
         command.append(f"{root}.o")
