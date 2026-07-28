@@ -96,8 +96,7 @@ def compile_pyccel(path_dir, test_file, options=""):
     cmd = [shutil.which("pyccel"), "compile", test_file]
     if options != "":
         cmd += options.strip().split()
-    p = subprocess.run(cmd, cwd=path_dir, text=True, capture_output=True)
-    assert p.returncode == 0
+    p = subprocess.run(cmd, cwd=path_dir, text=True, capture_output=True, check=True)
     return p.stdout
 
 
@@ -551,13 +550,6 @@ def pyccel_test(
                 The test-exclusive directory (typically pytest's
                 `tmp_path` fixture) into which test files are copied
                 and pyccel is run
-
-    Returns
-    -------
-    Path
-                The path of the file that was run to obtain the
-                language output (the executable, or the translated
-                `.py` file when `language == 'python'`).
     """
 
     if dependencies is None:
@@ -616,25 +608,23 @@ def pyccel_test(
 
     if compile_with_pyccel:
         full_output = compile_pyccel(cwd, test_file, pyccel_commands)
-        output_test_file = parse_generated_executable(full_output, language)
+        test_exe = parse_generated_executable(full_output, language)
     else:
         test_output = compile_pyccel(cwd, test_file, pyccel_commands + " -t")
         generated_file = parse_generated_module_file(
             test_output, expected_extensions[language]
         )
         if language == "fortran":
-            output_test_file = compile_fortran(
+            test_exe = compile_fortran(
                 cwd, output_test_file, generated_file, generated_dependencies
             )
         elif language == "c":
-            output_test_file = compile_c(
+            test_exe = compile_c(
                 cwd, output_test_file, generated_file, generated_dependencies
             )
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
-
-    return output_test_file
 
 
 # ==============================================================================
@@ -1377,9 +1367,9 @@ def test_classes_type_print(language, tmp_path):
         pyccel_commands += f" --output={cwd / '__pyccel__'}"
 
     output = compile_pyccel(cwd, test_file, pyccel_commands)
-    output_test_file = parse_generated_executable(output, language)
+    test_exe = parse_generated_executable(output, language)
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
 
     rx = re.compile(r"\bA\b")
     assert rx.search(lang_out)
@@ -1457,9 +1447,9 @@ def test_container_type_print(language, tmp_path):
         pyccel_commands += f" --output={cwd / '__pyccel__'}"
 
     output = compile_pyccel(cwd, test_file, pyccel_commands)
-    output_test_file = parse_generated_executable(output, language)
+    test_exe = parse_generated_executable(output, language)
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
 
     rx = re.compile(r"\bnumpy.ndarray\b")
     assert rx.search(lang_out)
@@ -1521,8 +1511,8 @@ def test_assert(language, test_file, tmp_path):
     pyccel_commands += " --debug"
 
     output = compile_pyccel(cwd, test_file, pyccel_commands)
-    output_test_file = parse_generated_executable(output, language)
-    lang_out = get_lang_exit_value(output_test_file, language)
+    test_exe = parse_generated_executable(output, language)
+    lang_out = get_lang_exit_value(test_exe, language)
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 
@@ -1976,7 +1966,7 @@ def test_varkwargs(tmp_path):
     language="fortran",
 )
 def test_inline_using_import(language, tmp_path):
-    executable = pyccel_test(
+    pyccel_test(
         "scripts/inlining/runtest_inline_using_import.py",
         dependencies=[
             "scripts/inlining/my_func.py",
