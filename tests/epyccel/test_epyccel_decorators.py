@@ -14,6 +14,7 @@ from pyccel.decorators import inline, private
     (
         pytest.param("fortran", marks=pytest.mark.fortran),
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
     ),
 )
 def test_private(lang):

@@ -8,108 +8,124 @@ from pyccel import epyccel
 # flang-new does not support most -W* flags, except -Werror
 
 
-def test_single_return_var_assign(language):
+def test_single_return_var_assign(experimental_language):
     def single_return_var_assign():
         y = 3
         return y
 
-    epyc_single_return_var_assign = epyccel(single_return_var_assign, language=language)
+    epyc_single_return_var_assign = epyccel(
+        single_return_var_assign, language=experimental_language
+    )
     assert epyc_single_return_var_assign() == single_return_var_assign()
 
 
 @pytest.mark.skip_llvm
-def test_assign_vars_return(language):
+def test_assign_vars_return(experimental_language):
     def assign_vars_return(a: "int", b: "int"):
         c = a + b
         d = a - b
         return c + d
 
     epyc_assign_vars_return = epyccel(
-        assign_vars_return, language=language, flags="-Werror  -Wunused-variable"
+        assign_vars_return,
+        language=experimental_language,
+        flags="-Werror  -Wunused-variable",
     )
     assert epyc_assign_vars_return(3, 4) == assign_vars_return(3, 4)
 
 
 @pytest.mark.skip_llvm
-def test_sum_in_single_return(language):
+def test_sum_in_single_return(experimental_language):
     def sum_in_single_return(a: "int", b: "int"):
         c = a + b
         return c
 
     epyc_sum_in_single_return = epyccel(
-        sum_in_single_return, language=language, flags="-Werror -Wunused-variable"
+        sum_in_single_return,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_sum_in_single_return(7, 2) == sum_in_single_return(7, 2)
 
 
 @pytest.mark.skip_llvm
-def test_return_expr(language):
+def test_return_expr(experimental_language):
     def return_expr(x: "int", y: "int"):
         return x + y
 
     epyc_return_expr = epyccel(
-        return_expr, language=language, flags="-Werror -Wunused-variable"
+        return_expr, language=experimental_language, flags="-Werror -Wunused-variable"
     )
     assert epyc_return_expr(7, 2) == return_expr(7, 2)
 
 
 @pytest.mark.skip_llvm
-def test_return_single_var(language):
+def test_return_single_var(experimental_language):
     def return_single_var(x: "int"):
         return x
 
     epyc_return_single_var = epyccel(
-        return_single_var, language=language, flags="-Werror -Wunused-variable"
+        return_single_var,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_return_single_var(7) == return_single_var(7)
 
 
 @pytest.mark.skip_llvm
-def test_return_scalare(language):
+def test_return_scalare(experimental_language):
     def return_scalare():
         return 5
 
     epyc_return_scalare = epyccel(
-        return_scalare, language=language, flags="-Werror -Wunused-variable"
+        return_scalare,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_return_scalare() == return_scalare()
 
 
 @pytest.mark.skip_llvm
-def test_multi_return_scalare(language):
+def test_multi_return_scalare(experimental_language):
     def multi_return_scalare():
         return 5, 7
 
     epyc_multi_return_scalare = epyccel(
-        multi_return_scalare, language=language, flags="-Werror -Wunused-variable"
+        multi_return_scalare,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_multi_return_scalare() == multi_return_scalare()
 
 
 @pytest.mark.skip_llvm
-def test_multi_return_vars(language):
+def test_multi_return_vars(experimental_language):
     def multi_return_vars(a: "int", b: "int"):
         return a, b
 
     epyc_multi_return_vars = epyccel(
-        multi_return_vars, language=language, flags="-Werror -Wunused-variable"
+        multi_return_vars,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_multi_return_vars(7, 2) == multi_return_vars(7, 2)
 
 
 @pytest.mark.skip_llvm
-def test_multi_return_vars_expr(language):
+def test_multi_return_vars_expr(experimental_language):
     def multi_return_vars_expr(a: "int", b: "int"):
         return (a - b), (a + b)
 
     epyc_multi_return_vars_expr = epyccel(
-        multi_return_vars_expr, language=language, flags="-Werror -Wunused-variable"
+        multi_return_vars_expr,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_multi_return_vars_expr(7, 2) == multi_return_vars_expr(7, 2)
 
 
 @pytest.mark.skip_llvm
-def test_scalare_multi_return_stmts(language):
+def test_scalare_multi_return_stmts(experimental_language):
     def scalare_multi_return_stmts(a: "int"):
         a = 7
         if a:
@@ -120,7 +136,9 @@ def test_scalare_multi_return_stmts(language):
         return a
 
     epyc_scalare_multi_return_stmts = epyccel(
-        scalare_multi_return_stmts, language=language, flags="-Werror -Wunused-variable"
+        scalare_multi_return_stmts,
+        language=experimental_language,
+        flags="-Werror -Wunused-variable",
     )
     assert epyc_scalare_multi_return_stmts(7) == scalare_multi_return_stmts(7)
 

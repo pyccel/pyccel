@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 -   #2611 : Add a plugin framework.
 -   #2611 : Add `pluggy` as an installation dependency.
 -   #2632 : Allow `\` to be used as a comment continuation character in OpenMP pragmas.
+-   #2537 : Add support for C++ functions.
+-   #2537 : Add C++ support for scalar casting.
+-   #2537 : Add C++ support for `is`/`is not` operator.
+-   #2537 : Add C++ support for mathematical constants.
 
 ### Fixed
 

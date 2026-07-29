@@ -70,7 +70,7 @@ jobs:
       - name: Fortran/C tests with pytest
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
-        timeout-minutes: 60
+        timeout-minutes: 120
         uses: ./.github/actions/pytest_run
         with:
           shell_cmd: 'gitbash -l -eo pipefail {0}'

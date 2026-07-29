@@ -29,6 +29,7 @@ class CppNameClashChecker(LanguageNameClashChecker):
             "const",
             "continue",
             "default",
+            "do",
             "double",
             "else",
             "enum",

@@ -7,23 +7,39 @@
 
 from itertools import chain
 
-from pyccel.ast.core import AsName, Declare, Import, Module
+from pyccel.ast.builtins import DtypePrecisionToCastFunction
+from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.core import (
+    AsName,
+    Assign,
+    Declare,
+    For,
+    FunctionDef,
+    If,
+    Import,
+    Module,
+    While,
+)
 from pyccel.ast.datatypes import (
     FinalType,
+    InhomogeneousTupleType,
     PrimitiveBooleanType,
     PrimitiveComplexType,
     PrimitiveFloatingPointType,
     PrimitiveIntegerType,
+    PythonNativeBool,
     PythonNativeFloat,
     StringType,
 )
 from pyccel.ast.literals import LiteralString, LiteralTrue, Nil
+from pyccel.ast.low_level_tools import UnpackManagedMemory
+from pyccel.ast.mathext import math_constants
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import DottedName, Variable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.errors.messages import PYCCEL_RESTRICTION_IS_ISNOT, PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -33,10 +49,11 @@ cpp_imports = {
         "cassert",
         "complex",
         "cmath",
+        "cstdint",
         "iostream",
         "pyc_math_cpp",
-        "cstdint",
         "string",
+        "tuple",
     ]
 }
 
@@ -121,9 +138,10 @@ math_function_to_cpp = {
 cpp_library_headers = {
     "complex",
     "cmath",
-    "inttypes",
+    "cstdint",
     "iostream",
     "string",
+    "tuple",
 }
 
 
@@ -312,6 +330,48 @@ class CppCodePrinter(CodePrinter):
             return f"static_cast<{self._print(dtype)}>" + "({})"
         return "{}"
 
+    def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+
+        Parameters
+        ----------
+        Op : str
+            The C++ operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
+
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if Nil() in expr.args:
+            raise errors.report(
+                PYCCEL_RESTRICTION_TODO, symbol=expr, severity="fatal"
+            )
+
+        if a.dtype is PythonNativeBool() and b.dtype is PythonNativeBool():
+            return f"{lhs} {Op} {rhs}"
+        else:
+            raise errors.report(
+                PYCCEL_RESTRICTION_IS_ISNOT, symbol=expr, severity="fatal"
+            )
+
     # -----------------------------------------------------------------------
     #                              Print methods
     # -----------------------------------------------------------------------
@@ -434,7 +494,19 @@ class CppCodePrinter(CodePrinter):
 
         self.set_scope(expr.scope)
 
+        for a in expr.arguments:
+            self._declared_vars[-1].add(a.var)
+
+        local_vars = list(expr.local_vars)
+        if expr.results.var and not expr.results.var.is_temp:
+            local_vars.append(expr.results.var)
+
         body = self._print(expr.body)
+        decs = [
+            self._print(Declare(v))
+            for v in local_vars
+            if v not in self._declared_vars[-1]
+        ]
 
         self.exit_scope()
 
@@ -442,10 +514,14 @@ class CppCodePrinter(CodePrinter):
             (
                 self.function_signature(expr),
                 " {\n",
+                "".join(decs),
                 self._indent_codestring(body),
                 "}\n",
             )
         )
+
+    def _print_FunctionDefArgument(self, expr):
+        return self.get_declare_type(expr.var) + " " + expr.var.name
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
@@ -465,11 +541,70 @@ class CppCodePrinter(CodePrinter):
             body_code += code
         return body_code
 
+    def _print_Pass(self, expr):
+        return "// pass\n"
+
+    def _print_Return(self, expr):
+        if expr.stmt:
+            to_print = [
+                l
+                for l in expr.stmt.body
+                if not (
+                    (isinstance(l, Assign) and isinstance(l.lhs, Variable))
+                    or isinstance(l, UnpackManagedMemory)
+                )
+            ]
+            assigns = {
+                a.lhs: a.rhs
+                for a in expr.stmt.body
+                if (isinstance(a, Assign) and isinstance(a.lhs, Variable))
+            }
+            assigns.update(
+                {
+                    a.out_ptr: a.managed_object
+                    for a in expr.stmt.body
+                    if isinstance(a, UnpackManagedMemory)
+                }
+            )
+            prelude = "".join(self._print(l) for l in to_print)
+        else:
+            assigns = {}
+            prelude = ""
+
+        if expr.expr is None:
+            return "return;\n"
+
+        def get_return_code(return_var):
+            """Recursive method which replaces any variables in a return statement whose
+            definition is known (via the assigns dict) with the definition. A function is
+            required to handle the recursivity implied by an unknown depth of inhomogeneous
+            tuples.
+            """
+            if isinstance(return_var.class_type, InhomogeneousTupleType) and getattr(
+                return_var, "is_temp", True
+            ):
+                elem_code = [
+                    get_return_code(self.scope.collect_tuple_element(elem))
+                    for elem in return_var
+                ]
+                return_expr = ", ".join(elem_code)
+                return f"std::make_tuple({return_expr})"
+            else:
+                return_expr = assigns.get(return_var, return_var)
+                return self._print(return_expr)
+
+        return prelude + f"return {get_return_code(expr.expr)};\n"
+
     def _print_Assign(self, expr):
         lhs = expr.lhs
 
         prefix = ""
-        if lhs in self.scope.variables.values() and lhs not in self._declared_vars[-1]:
+        context = expr.get_user_nodes((FunctionDef, If, For, Module, While))
+        if (
+            lhs in self.scope.variables.values()
+            and lhs not in self._declared_vars[-1]
+            and not any(isinstance(c, If) for c in context)
+        ):
             prefix = self.get_declare_type(lhs) + " "
             self._declared_vars[-1].add(lhs)
 
@@ -641,6 +776,12 @@ class CppCodePrinter(CodePrinter):
         a, b = expr.args
         return f"{self._print(a)} <= {self._print(b)}"
 
+    def _print_PyccelIsNot(self, expr):
+        return self._handle_is_operator("!=", expr)
+
+    def _print_PyccelIs(self, expr):
+        return self._handle_is_operator("==", expr)
+
     # ------------------------------
     #  Bitwise operators
     # ------------------------------
@@ -680,10 +821,43 @@ class CppCodePrinter(CodePrinter):
     #  Casts
     # ------------------------------
 
+    def _print_PythonBool(self, expr):
+        value = self._print(expr.arg)
+        return f"static_cast<bool>({value})"
+
+    def _print_PythonInt(self, expr):
+        return (
+            f"static_cast<{self._print(expr.class_type)}>({self._print(expr.args[0])})"
+        )
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self._print(expr.dtype)
         return f"static_cast<{type_name}>({value})"
+
+    def _print_PythonComplex(self, expr):
+        if expr.is_cast:
+            value = self._print(expr.internal_var)
+            type_name = self._print(expr.dtype)
+            return f"static_cast<{type_name}>({value})"
+        else:
+            real = expr.real
+            imag = expr.imag
+            element_type = expr.dtype.element_type
+            if real.class_type != element_type:
+                real = DtypePrecisionToCastFunction[element_type](real)
+            if imag.class_type != element_type:
+                imag = DtypePrecisionToCastFunction[element_type](imag)
+            real_code = self._print(real)
+            imag_code = self._print(imag)
+            return f"({real_code} + ({imag_code}) * 1i)"
+
+    def _print_PythonStr(self, expr):
+        arg = expr.args[0]
+        if isinstance(arg.class_type, StringType):
+            return self._print(arg)
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO, severity="fatal", symbol=expr)
 
     # ------------------------------
     #  Types
@@ -712,6 +886,29 @@ class CppCodePrinter(CodePrinter):
 
     def _print_NumpyFloat64Type(self, expr):
         return "double"
+
+    def _print_NumpyComplex64Type(self, expr):
+        self.add_import(cpp_imports["complex"])
+        return "std::complex<float>"
+
+    def _print_NumpyComplex128Type(self, expr):
+        self.add_import(cpp_imports["complex"])
+        return "std::complex<double>"
+
+    def _print_InhomogeneousTupleType(self, expr):
+        self.add_import(cpp_imports["tuple"])
+        types = ", ".join(self._print(t) for t in expr)
+        return f"std::tuple<{types}>"
+
+    # ------------------------------
+    #  Built-in functions
+    # ------------------------------
+
+    def _print_PythonReal(self, expr):
+        return f"std::real({self._print(expr.internal_var)})"
+
+    def _print_PythonImag(self, expr):
+        return f"std::imag({self._print(expr.internal_var)})"
 
     # ------------------------------
     #  Mathematical functions
@@ -793,6 +990,10 @@ class CppCodePrinter(CodePrinter):
         )
         return f'"{escaped_str}"'
 
+    def _print_InhomogeneousTuple(self, expr):
+        args = ", ".join(self._print(a) for a in expr)
+        return f"std::make_tuple({args})"
+
     # ------------------------------
     #  Miscellaneous
     # ------------------------------
@@ -803,6 +1004,23 @@ class CppCodePrinter(CodePrinter):
             return f"(*{name})"
         else:
             return name
+
+    def _print_Constant(self, expr):
+        if expr == math_constants["inf"]:
+            self.add_import(cpp_imports["cmath"])
+            return "HUGE_VAL"
+        elif expr == math_constants["nan"]:
+            self.add_import(cpp_imports["cmath"])
+            return "NAN"
+        elif expr == math_constants["pi"]:
+            self.add_import(cpp_imports["cmath"])
+            return "M_PI"
+        elif expr == math_constants["e"]:
+            self.add_import(cpp_imports["cmath"])
+            return "M_E"
+        else:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
+            return self._print(cast_func(expr.value))
 
     def _print_Declare(self, expr):
         var = expr.variable
@@ -944,6 +1162,9 @@ class CppCodePrinter(CodePrinter):
         else:
             args_str += ";\n"
         return "std::cout << " + args_str
+
+    def _print_EmptyNode(self, expr):
+        return ""
 
     def _print_Allocate(self, expr):
         variable = expr.variable
