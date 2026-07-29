@@ -117,7 +117,7 @@ class Scope:
         scope_type,
         name_clash_checker,
         allow_loop_scoping=False,
-        parent_scope_symbol_prefix=None
+        parent_scope_symbol_prefix=None,
     ):
 
         assert (name is None) != (not is_loop)
