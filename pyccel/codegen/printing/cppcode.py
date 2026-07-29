@@ -588,8 +588,6 @@ class CppCodePrinter(CodePrinter):
                     for elem in return_var
                 ]
                 return_expr = ", ".join(elem_code)
-                if len(elem_code) == 1:
-                    return_expr += ","
                 return f"std::make_tuple({return_expr})"
             else:
                 return_expr = assigns.get(return_var, return_var)
