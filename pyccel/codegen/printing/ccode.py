@@ -3797,7 +3797,7 @@ class CCodePrinter(CodePrinter):
         if not isinstance(obj, ObjectAddress):
             obj = ObjectAddress(expr.obj)
         var_code = self._print(obj)
-        return f"(*({declare_type})({var_code}))"
+        return f"(*(({declare_type}){var_code}))"
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
