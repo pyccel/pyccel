@@ -976,6 +976,7 @@ def test_print_strings(experimental_language):
     (
         pytest.param("python", marks=pytest.mark.python),
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
