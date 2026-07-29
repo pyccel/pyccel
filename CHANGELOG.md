@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 -   #2309 : Add support for `dtype` and tuple `size` arguments of `np.random.randint`.
 -   #2525 : Add preliminary support for C++ translations.
+-   #2621 : Add support for module docstrings.
+-   #2611 : Add a plugin framework.
+-   #2611 : Add `pluggy` as an installation dependency.
+-   #2632 : Allow `\` to be used as a comment continuation character in OpenMP pragmas.
 -   #2537 : Add support for C++ functions.
 -   #2537 : Add C++ support for scalar casting.
 -   #2537 : Add C++ support for `is`/`is not` operator.
@@ -16,13 +20,25 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #2309 : Fix crash when using `np.random.randint` with `size` argument for Fortran.
+-   #2558 : Fix performance issue in C when iterating over contiguous 1D data.
+-   #2618 : Fix unnecessary stack memory allocation for variables storing temporary slices.
+-   #2618 : Fix unnecessary slicing returning the whole array.
+-   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
+-   #2629 : Fix race condition due to class variables in `Scope`.
 
 ### Changed
 
 -   #2595 : Make `#$` and `# $` interchangeable so OpenMP can be used in codes using black.
+-   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
+-   #2620 : Improve formatting of comment blocks in Fortran and C.
+-   #2606 : Make class methods non-final by default.
+-   #2631 : Always link `libgfortran` statically on Windows.
 -   \[DEVELOPER\] Require black formatting.
+-   \[DEVELOPER\] Reorganise tests by introducing `test_utils` folder to reduce code duplication.
 
 ### Deprecated
+
+-   #2632 : Deprecate the use of `&` as a comment continuation character in OpenMP pragmas.
 
 ### Removed
 
@@ -31,6 +47,7 @@ All notable changes to this project will be documented in this file.
 -   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 -   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
 -   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
+-   \[DEVELOPER\] Removed unhelpful class `pyccel.parser.extend_tree.CommentMultiLine`.
 
 ## \[2.2.3\] - 2026-03-20
 
@@ -199,6 +216,7 @@ All notable changes to this project will be documented in this file.
 -   #2412 : Remove unused, undocumented obsolete decorator `bypass`.
 -   #2412 : Remove unused, undocumented obsolete decorator `sympy`.
 -   #2474 : Drop support for Python 3.9, test with Python 3.14.
+-   #2474 : Drop support for NumPy < v2.1.
 -   Remaining references to `.pyh` header files are removed. Please use `.pyi` stub files.
 -   \[INTERNALS\] Remove unused properties in `pyccel.codegen.Codegen` (`imports`, `variables`, `body`, `routines`, `classes`, `interfaces`, `modules`, `language`).
 -   \[INTERNALS\] Remove undocumented and untested `stdlib.parallel` folder.

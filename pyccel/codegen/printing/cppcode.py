@@ -412,11 +412,17 @@ class CppCodePrinter(CodePrinter):
         # imports = self.sort_imports(imports)
         imports = "".join(self._print(i) for i in imports)
 
+        if expr.module.docstring:
+            docstring = self._print(expr.module.docstring)
+        else:
+            docstring = ""
+
         self.exit_scope()
         self._in_header = False
 
         sections = (
             "#pragma once\n",
+            docstring,
             imports,
             f"namespace {name} {{\n",
             global_variables,
@@ -442,11 +448,20 @@ class CppCodePrinter(CodePrinter):
         if "complex" in self._additional_imports:
             imports_code += "using namespace std::complex_literals;\n"
 
+        docstring = self._print(expr.docstring) if expr.docstring else ""
+
+        parts = [
+            docstring,
+            imports_code,
+            f"namespace {name} {{\n\n",
+            global_variables,
+            body,
+            "\n}\n",
+        ]
+
         self.exit_scope()
 
-        return "".join(
-            (imports_code, f"namespace {name} {{\n\n", global_variables, body, "\n}\n")
-        )
+        return "".join(p for p in parts if p)
 
     def _print_Program(self, expr):
         mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
@@ -1075,6 +1090,31 @@ class CppCodePrinter(CodePrinter):
         comments = self._print(expr.text)
 
         return f"//{comments}\n"
+
+    def _print_CommentBlock(self, expr):
+        txts = expr.comments
+        header = expr.header
+        header_size = len(expr.header)
+
+        ln = max(len(i) for i in txts)
+        if ln < max(20, header_size + 4):
+            ln = 20
+        if ln % 2 == 1:
+            ln += 1
+        top = (
+            "/*"
+            + "*" * int((ln - header_size) / 2)
+            + f" {header} "
+            + "*" * int((ln - header_size) / 2)
+            + "\n"
+        )
+        bottom = " *" + "*" * ln + "*/\n"
+
+        txts = [" * " + t + " " * (ln - len(t)) + "*\n" for t in txts]
+
+        body = "".join(i for i in txts)
+
+        return "".join([top, body, bottom])
 
     def _print_Import(self, expr):
         if expr.ignore:

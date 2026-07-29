@@ -10,7 +10,6 @@ www.fortran90.org as much as possible."""
 import ast
 import re
 import string
-import sys
 from collections import OrderedDict
 from itertools import chain
 
@@ -163,6 +162,7 @@ from pyccel.errors.messages import (
     PYCCEL_RESTRICTION_IS_ISNOT,
     PYCCEL_RESTRICTION_TODO,
 )
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 # TODO: add examples
@@ -658,7 +658,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -772,7 +776,11 @@ class FCodePrinter(CodePrinter):
                 mod_name,
                 (),
                 (),
-                scope=Scope(name=mod_name, scope_type="module"),
+                scope=Scope(
+                    name=mod_name,
+                    scope_type="module",
+                    name_clash_checker=name_clash_checkers["fortran"],
+                ),
                 imports=imports_and_macros,
                 is_external=True,
             )
@@ -936,7 +944,13 @@ class FCodePrinter(CodePrinter):
         imports = self.print_constant_imports() + imports
         implicit_none = "" if expr.is_external else "implicit none\n"
 
+        if expr.docstring:
+            docstring = self._print(expr.docstring)
+        else:
+            docstring = ""
+
         parts = [
+            docstring,
             f"module {name}\n",
             imports,
             implicit_none,
@@ -1338,31 +1352,33 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        return "!" + comments + "\n"
+        return "! " + comments + "\n"
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
         header = expr.header
         header_size = len(expr.header)
 
-        ln = max(len(i) for i in txts)
-        if ln < max(20, header_size + 2):
+        ln = max(len(i) for i in txts) + 2
+        if ln < max(20, header_size + 4):
             ln = 20
+        if ln % 2 == 1:
+            ln += 1
         top = (
-            "!"
+            "!_"
             + "_" * int((ln - header_size) / 2)
             + header
             + "_" * int((ln - header_size) / 2)
-            + "!"
+            + "_!"
         )
-        ln = len(top) - 2
-        bottom = "!" + "_" * ln + "!"
+        ln = len(top) - 3
+        bottom = "!" + "_" * (ln + 1) + "!"
 
-        txts = ["!" + txt + " " * (ln - len(txt)) + "!" for txt in txts]
+        txts = ["! " + txt + " " * (ln - len(txt)) + "!" for txt in txts]
 
         body = "\n".join(i for i in txts)
 
-        return ("{0}\n" "{1}\n" "{2}\n").format(top, body, bottom)
+        return f"{top}\n{body}\n{bottom}\n"
 
     def _print_EmptyNode(self, expr):
         return ""
@@ -3447,12 +3463,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Assert(self, expr):
         if isinstance(expr.test, LiteralTrue):
-            if sys.version_info < (3, 9):
-                return ""
-            else:
-                return (
-                    "!" + ast.unparse(expr.python_ast) + "\n"
-                )  # pylint: disable=no-member
+            return "!" + ast.unparse(expr.python_ast) + "\n"
         test_code = self._print(expr.test)
         return f"if ( .not. ({test_code})) then\n" "stop 1\n" "end if\n"
 

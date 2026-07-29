@@ -9,6 +9,12 @@ import argparse
 import pathlib
 import sys
 
+from pyccel.plugins.plugin_tools import (
+    get_plugin_cli_options,
+    get_plugin_manager,
+    handle_plugin_arguments,
+)
+
 from .argparse_helpers import (
     add_accelerator_selection,
     add_common_settings,
@@ -128,17 +134,21 @@ def setup_pyccel_compile_parser(parser):
     add_accelerator_selection(parser)
     # ...
 
+    # ... Plugin options
+    plugin_manager = get_plugin_manager()
+    get_plugin_cli_options(plugin_manager, parser, "compile")
+
     # ... Other options
     group = parser.add_argument_group("Other options")
     add_common_settings(group)
     # ...
 
 
-def pyccel_compile(*, filename, language, output, **kwargs):
+def pyccel_compile(*, filename, language, output, plugin_manager, **kwargs):
     """
     Call the pyccel pipeline.
 
-    Handle the deprecated --export-compiler-config command and call the pyccel pipeline.
+    Call the pyccel pipeline.
 
     Parameters
     ----------
@@ -146,8 +156,10 @@ def pyccel_compile(*, filename, language, output, **kwargs):
         Name of the Python file to be translated.
     language : str
         The target language Pyccel is translating to.
-    output : str
+    output : str or None
         Path to the working directory.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     **kwargs : dict
         See execute_pyccel.
     """
@@ -155,12 +167,14 @@ def pyccel_compile(*, filename, language, output, **kwargs):
     from pyccel.codegen.pipeline import execute_pyccel
     from pyccel.errors.errors import Errors
 
+    handle_plugin_arguments(plugin_manager, kwargs)
+
     errors = Errors()
     # ...
     if not filename.is_file():
         errors.report(f"File not found: {filename}", severity="error")
 
-    if language == "Python" and output == "":
+    if language == "Python" and output is None:
         errors.report(
             "Cannot output Python file to same folder as this would overwrite the original file. Please specify --output",
             severity="error",
@@ -174,5 +188,6 @@ def pyccel_compile(*, filename, language, output, **kwargs):
         str(filename),
         language=language.lower(),
         folder=output or filename.parent,
+        plugin_manager=plugin_manager,
         **kwargs,
     )

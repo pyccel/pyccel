@@ -10,6 +10,7 @@ which creates an interface exposing C++ code to Python using pybind11.
 
 from pyccel.ast.core import (
     Assign,
+    CommentBlock,
     FunctionAddress,
     FunctionCall,
     FunctionDefArgument,
@@ -32,6 +33,7 @@ from pyccel.ast.pybind import FunctionDeclaration
 from pyccel.ast.variable import IndexedElement, Variable
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.naming import name_clash_checkers
 from pyccel.parser.scope import Scope
 
 from .wrapper import Wrapper
@@ -200,6 +202,7 @@ class CppToPythonWrapper(Wrapper):
             used_symbols=scope.local_used_symbols.copy(),
             original_symbols=scope.python_names.copy(),
             scope_type="module",
+            name_clash_checker=name_clash_checkers["c++"],
         )
         self.scope = mod_scope
 
@@ -218,10 +221,18 @@ class CppToPythonWrapper(Wrapper):
 
         imports = [Import(mod_scope.get_python_name(expr.name), expr)]
         original_mod_name = expr.scope.get_python_name(name)
+
+        docstring = (
+            next(d for d in expr.docstring.body if isinstance(d, CommentBlock))
+            if expr.docstring
+            else None
+        )
+
         return PyModule(
             original_mod_name,
             (),
             funcs=funcs,
+            docstring=docstring,
             imports=imports,
             interfaces=(),
             classes=(),

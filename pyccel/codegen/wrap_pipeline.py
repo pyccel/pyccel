@@ -25,7 +25,6 @@ from pyccel.errors.errors import (
 )
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
-from pyccel.parser.scope import Scope
 from pyccel.utilities.stage import PyccelStage
 
 from .compiling.basic import CompileObj
@@ -55,6 +54,7 @@ def execute_pyccel_wrap(
     debug,
     accelerators,
     conda_warnings,
+    plugin_manager,
 ):
     """
     Run Pyccel on the provided code.
@@ -90,6 +90,8 @@ def execute_pyccel_wrap(
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     conda_warnings : str
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+    plugin_manager : pluggy.PluginManager
+        The plugin manager used to connect activated plugins.
     """
     start = time.time()
     timers = {}
@@ -140,12 +142,16 @@ def execute_pyccel_wrap(
     Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     compiler = Compiler(compiler_family, debug)
 
-    Scope.name_clash_checker = name_clash_checkers[language]
-
     start_syntax = time.time()
     timers["Initialisation"] = start_syntax - start
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=folder, context_dict={})
+    parser = Parser(
+        pymod_filepath,
+        output_folder=folder,
+        context_dict={},
+        name_clash_checker=name_clash_checkers[language],
+        plugin_manager=plugin_manager,
+    )
     parser.parse(verbose=verbose)
 
     if errors.has_errors():
@@ -166,10 +172,14 @@ def execute_pyccel_wrap(
 
     semantic_parser = parser.semantic_parser
 
-    codegen = Codegen(semantic_parser, module_name, language, verbose)
+    codegen = Codegen(
+        semantic_parser, module_name, language, verbose, plugin_manager=plugin_manager
+    )
 
     start_wrapper_creation = time.time()
-    wrappergen = Wrappergen(codegen, codegen.name, language, verbose)
+    wrappergen = Wrappergen(
+        codegen, codegen.name, language, verbose, plugin_manager=plugin_manager
+    )
     wrappergen.wrap(str(folder))
     timers["Wrapper creation"] = time.time() - start_wrapper_creation
 

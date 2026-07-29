@@ -5,9 +5,7 @@ from numpy.random import random
 
 from pyccel import epyccel
 
-# += tests
-RTOL = 1e-12
-ATOL = 1e-16
+from tolerances import ATOL, RTOL
 
 
 def test_augassign_add_1d(language):

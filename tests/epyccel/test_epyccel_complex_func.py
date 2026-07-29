@@ -6,8 +6,7 @@ from numpy.random import rand, randint
 
 from pyccel import epyccel
 
-ATOL = 1e-15
-RTOL = 2e-14
+from tolerances import ATOL, RTOL
 
 
 @pytest.mark.parametrize(

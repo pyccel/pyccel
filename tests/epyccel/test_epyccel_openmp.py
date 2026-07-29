@@ -725,6 +725,25 @@ def test_omp_long_line(language):
     assert f1(x1, x2, x3, x4, x5) == np.sum(x1 + x2 + x3 + x4 + x5)
 
 
+@pytest.mark.external
+def test_omp_long_multi_line(language):
+    flags = get_wall_flag(language)
+    f1 = epyccel(
+        openmp.omp_long_multi_line, flags=flags, openmp=True, language=language
+    )
+    set_num_threads = epyccel(
+        openmp.set_num_threads, flags=flags, openmp=True, language=language
+    )
+    set_num_threads(4)
+    x1 = np.array(random.randint(20, size=(5)), dtype=int)
+    x2 = np.array(random.randint(20, size=(5)), dtype=int)
+    x3 = np.array(random.randint(20, size=(5)), dtype=int)
+    x4 = np.array(random.randint(20, size=(5)), dtype=int)
+    x5 = np.array(random.randint(20, size=(5)), dtype=int)
+
+    assert f1(x1, x2, x3, x4, x5) == np.sum(x1 + x2 + x3 + x4 + x5)
+
+
 @pytest.mark.parametrize(
     "language",
     (
@@ -794,7 +813,11 @@ def test_omp_sections(language):
 
 def should_skip(language):
     executable, version = get_compiler_info(language)
-    return ("gcc" in executable and version.major >= 15) or "clang" in executable
+    return (
+        ("gcc" in executable and version.major >= 15)
+        or "clang" in executable
+        or "icx" in executable
+    )
 
 
 @pytest.mark.skipif(
@@ -803,7 +826,7 @@ def should_skip(language):
 @pytest.mark.skipif_by_language(
     should_skip("c"),
     language="c",
-    reason="Type mismatch is an error with GCC >= 15 and clang",
+    reason="Type mismatch is an error with GCC >= 15, clang and icx",
 )
 @pytest.mark.external
 def test_omp_get_set_schedule(language):

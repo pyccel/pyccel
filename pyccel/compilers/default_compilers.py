@@ -327,6 +327,7 @@ python_info = {
 }
 
 if sys.platform == "win32":
+    gfort_info["general_flags"].append("-static-libgfortran")
     expected_dir = config_vars["prefix"]
     version = config_vars["VERSION"]
     python_libs = glob.glob(f"{expected_dir}/python{version}.dll")

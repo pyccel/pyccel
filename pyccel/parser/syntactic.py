@@ -190,15 +190,20 @@ class SyntaxParser(BasicParser):
         A dictionary describing any variables in the context where the translated
         objected was defined.
 
+    name_clash_checker : LanguageNameClashChecker
+        The object which allows new names to be defined, preventing clashes with existing
+        names and language-specific keywords.
+
     **kwargs : dict
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, *, context_dict=None, **kwargs):
+    def __init__(self, inputs, *, context_dict=None, name_clash_checker, **kwargs):
         BasicParser.__init__(self, **kwargs)
 
         # check if inputs is a file
         code = inputs
+        scope_name = ""
         if os.path.isfile(inputs):
 
             self._filename = inputs
@@ -210,9 +215,11 @@ class SyntaxParser(BasicParser):
             with open(inputs, "r", encoding="utf-8") as file:
                 code = file.read()
 
-            self._scope = Scope(name=inputs.stem, scope_type="module")
-        else:
-            self._scope = Scope(name="", scope_type="module")
+            scope_name = inputs.stem
+
+        self._scope = Scope(
+            name=scope_name, scope_type="module", name_clash_checker=name_clash_checker
+        )
 
         self._code = code
         self._context = []
@@ -223,6 +230,8 @@ class SyntaxParser(BasicParser):
         tree = extend_tree(code)
         self._fst = tree
         self._in_lhs_assign = False
+
+        self._multiline_directive_in_progress = []
 
         self.parse()
 
@@ -312,18 +321,37 @@ class SyntaxParser(BasicParser):
         """
         txt = line[1:].lstrip()
         if txt.startswith("$"):
-            env = txt[1:].lstrip()
+            env = txt[1:].strip()
             if env.startswith("omp"):
-                expr = omp_parse(stmts=line)
-                try:
-                    expr = omp_parse(stmts=line)
-                except TextXSyntaxError as e:
-                    errors.report(
-                        f"Invalid OpenMP header. {e.message}",
-                        symbol=stmt,
-                        column=e.col,
-                        severity="fatal",
-                    )
+                if env.endswith("&") or env.endswith("\\"):
+                    if env.endswith("&"):
+                        errors.report(
+                            "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
+                            severity="warning",
+                            symbol=stmt,
+                        )
+                    if self._multiline_directive_in_progress:
+                        self._multiline_directive_in_progress.append(env[3:-1])
+                    else:
+                        self._multiline_directive_in_progress.append(env[:-1])
+                    return EmptyNode()
+                else:
+                    if self._multiline_directive_in_progress:
+                        to_parse = " ".join(
+                            ["#$", *self._multiline_directive_in_progress, env[3:]]
+                        )
+                        self._multiline_directive_in_progress = []
+                    else:
+                        to_parse = line
+                    try:
+                        expr = omp_parse(stmts=to_parse)
+                    except TextXSyntaxError as e:
+                        errors.report(
+                            f"Invalid OpenMP header. {e.message}",
+                            symbol=stmt,
+                            column=e.col,
+                            severity="fatal",
+                        )
             elif env.startswith("acc"):
                 try:
                     expr = acc_parse(stmts=line)
@@ -589,6 +617,19 @@ class SyntaxParser(BasicParser):
             if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
         ]
 
+        body = [l for b in body for l in (b.body if isinstance(b, CodeBlock) else [b])]
+
+        docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
+        docstring_idx = next(
+            (i for i, l in enumerate(docstring) if isinstance(l, CommentBlock)), None
+        )
+        if docstring_idx:
+            docstring_idx += 1
+            docstring = CodeBlock(docstring[:docstring_idx])
+            body = body[docstring_idx:]
+        else:
+            docstring = None
+
         functions = [self._visit(f) for f in ast_functions]
         classes = [self._visit(c) for c in ast_classes]
         imports = [i for i in body if isinstance(i, Import)]
@@ -618,6 +659,7 @@ class SyntaxParser(BasicParser):
             name,
             [],
             functions,
+            docstring=docstring,
             init_func=CodeBlock(body),
             scope=self.scope,
             classes=classes,
@@ -1651,15 +1693,6 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         return Assert(test)
 
-    def _visit_CommentMultiLine(self, stmt):
-
-        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split("\n")]
-
-        if len(exprs) == 1:
-            return exprs[0]
-        else:
-            return CodeBlock(exprs)
-
     def _visit_CommentLine(self, stmt):
         return self._treat_comment_line(stmt.s, stmt)
 
@@ -1757,18 +1790,3 @@ class SyntaxParser(BasicParser):
             VariableTypeAnnotation(FinalType.get_new(TypeAlias()))
         )
         return Assign(AnnotatedPyccelSymbol(name, annotation=type_annotation), rhs)
-
-
-# ==============================================================================
-
-
-if __name__ == "__main__":
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError("Expecting an argument for filename")
-
-    parser = SyntaxParser(filename)
-    print(parser.ast)

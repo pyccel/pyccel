@@ -4,8 +4,7 @@ from numpy.random import randint, uniform
 
 from pyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
+from tolerances import ATOL, RTOL
 
 # -------------------- simple division ---------------------- #
 

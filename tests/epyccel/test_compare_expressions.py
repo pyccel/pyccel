@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from utilities import epyccel_test
+from epyccel_utilities import epyccel_test
 
 
 # ==============================================================================

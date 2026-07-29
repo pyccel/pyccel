@@ -10,8 +10,7 @@ from numpy.random import rand, uniform
 
 from pyccel import epyccel
 
-RTOL = sys.float_info.epsilon * 1000
-ATOL = sys.float_info.epsilon * 100
+from tolerances import ATOL, RTOL
 
 max_float = 3.40282e5  # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float

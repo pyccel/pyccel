@@ -2,7 +2,8 @@
 
 
 from modules import base
-from utilities import epyccel_test
+
+from epyccel_utilities import epyccel_test
 
 
 def test_is_false(experimental_language):

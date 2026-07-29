@@ -1,14 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel import epyccel
 from pyccel.decorators import pure
 
-
-# ==============================================================================
-def compare_epyccel(f1, *args, language):
-    f2 = epyccel(f1, language=language)
-    out1 = f1(*args)
-    out2 = f2(*args)
-    assert all(r1 == r2 for r1, r2 in zip(out1, out2))
+from epyccel_utilities import compare_epyccel
 
 
 # ==============================================================================
@@ -38,4 +31,4 @@ def test_expr_float_int_bool(experimental_language):
     def expr_complex_int_bool(n: "int"):
         return 0.5 + n * 1j, 2 * n, n == 3
 
-    compare_epyccel(expr_complex_int_bool, 3, language=experimental_language)
+    compare_epyccel(expr_complex_int_bool, experimental_language, 3)
