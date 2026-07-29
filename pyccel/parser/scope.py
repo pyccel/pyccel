@@ -117,6 +117,7 @@ class Scope:
         scope_type,
         name_clash_checker,
         allow_loop_scoping=False,
+        parent_scope_symbol_prefix=None
     ):
 
         assert (name is None) != (not is_loop)
@@ -131,7 +132,9 @@ class Scope:
         self._locals = {k: {} for k in self.categories}
 
         prefix_set = ()
-        if parent_scope and parent_scope.symbol_prefix:
+        if parent_scope_symbol_prefix:
+            prefix_set += (parent_scope_symbol_prefix.removesuffix("__"),)
+        elif parent_scope and parent_scope.symbol_prefix:
             prefix_set += (parent_scope.symbol_prefix.removesuffix("__"),)
         if name:
             prefix_set += (name,)

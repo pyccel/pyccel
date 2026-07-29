@@ -1102,8 +1102,7 @@ class SyntaxParser(BasicParser):
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = PyccelSymbol(stmt.name)
-        self.scope.insert_symbol(name, "function")
-        new_name = self.scope.get_expected_name(name)
+        new_name = self.scope.insert_symbol(name, "function")
 
         scope = self.create_new_function_scope(
             name, used_symbols={name: new_name}, original_symbols={new_name: name}
@@ -1261,7 +1260,8 @@ class SyntaxParser(BasicParser):
 
         if parent:
             superclass = self.scope.find(parent[0], "classes", raise_if_missing=True)
-            scope = self.create_new_class_scope(name, base_scope=superclass.scope)
+            scope = self.create_new_class_scope(name, base_scope=superclass.scope,
+                                                parent_scope_symbol_prefix=parent_scope.symbol_prefix)
         else:
             scope = self.create_new_class_scope(name)
         methods = []
@@ -1310,11 +1310,14 @@ class SyntaxParser(BasicParser):
             self_arg.set_current_ast(stmt)
             self.scope.insert_symbol(self_arg.var)
             self.exit_function_scope()
+            body = CodeBlock(())
+            if superclass:
+                body.insert2body(superclass.get_method(syntactic_name="__init__")())
             methods.append(
                 FunctionDef(
                     init_name,
                     (self_arg,),
-                    CodeBlock(()),
+                    body,
                     FunctionDefResult(Nil()),
                     scope=init_scope,
                 )
