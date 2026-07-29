@@ -139,7 +139,6 @@ from pyccel.parser.scope import Scope
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.headers import types_meta
 from pyccel.parser.syntax.openacc import parse as acc_parse
-from pyccel.parser.syntax.openmp import parse as omp_parse
 from pyccel.parser.utilities import get_default_path
 from pyccel.utilities.stage import PyccelStage
 
@@ -231,8 +230,6 @@ class SyntaxParser(BasicParser):
         self._fst = tree
         self._in_lhs_assign = False
 
-        self._multiline_directive_in_progress = []
-
         self.parse()
 
     def parse(self):
@@ -321,38 +318,8 @@ class SyntaxParser(BasicParser):
         """
         txt = line[1:].lstrip()
         if txt.startswith("$"):
-            env = txt[1:].strip()
-            if env.startswith("omp"):
-                if env.endswith("&") or env.endswith("\\"):
-                    if env.endswith("&"):
-                        errors.report(
-                            "Using & as an OpenMP continuation character is deprecated and will be removed in v2.5.",
-                            severity="warning",
-                            symbol=stmt,
-                        )
-                    if self._multiline_directive_in_progress:
-                        self._multiline_directive_in_progress.append(env[3:-1])
-                    else:
-                        self._multiline_directive_in_progress.append(env[:-1])
-                    return EmptyNode()
-                else:
-                    if self._multiline_directive_in_progress:
-                        to_parse = " ".join(
-                            ["#$", *self._multiline_directive_in_progress, env[3:]]
-                        )
-                        self._multiline_directive_in_progress = []
-                    else:
-                        to_parse = line
-                    try:
-                        expr = omp_parse(stmts=to_parse)
-                    except TextXSyntaxError as e:
-                        errors.report(
-                            f"Invalid OpenMP header. {e.message}",
-                            symbol=stmt,
-                            column=e.col,
-                            severity="fatal",
-                        )
-            elif env.startswith("acc"):
+            env = txt[1:].lstrip()
+            if env.startswith("acc"):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -611,12 +578,11 @@ class SyntaxParser(BasicParser):
         for obj in chain(ast_functions, ast_classes):
             self.scope.insert_symbol(PyccelSymbol(obj.name))
 
-        body = [
-            self._visit(v)
-            for v in stmt.body
-            if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
+        body_elements_to_visit = [
+            v for v in stmt.body if not isinstance(v, (ast.FunctionDef, ast.ClassDef))
         ]
 
+        body = self._visit(body_elements_to_visit)
         body = [l for b in body for l in (b.body if isinstance(b, CodeBlock) else [b])]
 
         docstring = [b for b in body if isinstance(b, (Comment, CommentBlock))]
@@ -1633,7 +1599,7 @@ class SyntaxParser(BasicParser):
                 )
 
             scope = self.create_new_function_scope("__main__")
-            body = [self._visit(v) for v in stmt.body]
+            body = self._visit(stmt.body)
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]

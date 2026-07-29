@@ -1,6 +1,5 @@
-# Annotated comments must start with omp, acc or header
+# Annotated comments must start with acc or header
 # pylint: disable=missing-function-docstring, missing-module-docstring
-~a
 
 # $ this is invalid comment
 

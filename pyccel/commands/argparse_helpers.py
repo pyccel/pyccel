@@ -203,13 +203,6 @@ def add_accelerator_selection(parser):
         default=[],
         help="Use MPI.",
     )
-    group.add_argument(
-        "--openmp",
-        dest="accelerators",
-        action="append_const",
-        const="openmp",
-        help="Use OpenMP.",
-    )
 
 
 #    group.add_argument('--openacc', dest='accelerators', action='append_const', const='openacc',

@@ -206,24 +206,6 @@ def get_unique_name(prefix, path):
 # ==============================================================================
 def epyccel_seq(
     function_class_or_module,
-    *,
-    language="fortran",
-    compiler_family=None,
-    compiler_config=None,
-    flags=None,
-    wrapper_flags=None,
-    debug=None,
-    include=(),
-    libdir=(),
-    libs=(),
-    folder=None,
-    mpi=False,
-    openmp=False,
-    openacc=False,
-    verbose=0,
-    time_execution=False,
-    conda_warnings="basic",
-    context_dict=None,
     **kwargs,
 ):
     """
@@ -241,49 +223,9 @@ def epyccel_seq(
         If a string is passed then it is assumed to be the code from a module which
         should be accelerated. The module must be capable of running as a standalone
         file so it must include any necessary import statements.
-    language : {'fortran', 'c', 'c++', 'python'}
-        Language of generated code (default: 'fortran').
-    compiler_family : str, optional
-        Compiler family for which Pyccel uses a default configuration (default: 'GNU').
-    compiler_config : pathlib.Path | str, optional
-        Path to a JSON file containing a compiler configuration (overrides compiler_family).
-    flags : str, optional
-        Compiler flags.
-    wrapper_flags : str, optional
-        Flags to be passed to the wrapper code generator.
-    debug : bool, optional
-        Whether the file should be compiled in debug mode.
-        The default value is taken from the environment variable PYCCEL_DEBUG_MODE.
-        If no such environment variable exists then the default is False.
-    include : tuple, optional
-        Additional include directories for the compiler.
-    libdir : tuple, optional
-        Additional library directories for the compiler.
-    libs : tuple, optional
-        Additional libraries.
-    folder : str, optional
-        Output folder for the compiled code.
-    mpi : bool, default=False
-        If True, use MPI for parallel execution.
-    openmp : bool, default=False
-        If True, use OpenMP for parallel execution.
-    openacc : bool, default=False
-        If True, use OpenACC for parallel execution.
-    verbose : int, default=0
-        Set the level of verbosity to see additional information about the Pyccel process.
-    time_execution : bool
-        Time the execution of Pyccel's internal stages.
-    conda_warnings : {'off', 'basic', 'verbose'}
-        Specify the level of Conda warnings to display (default: 'basic').
-    context_dict : dict[str, Any], optional
-        A dictionary containing any Python objects from the calling scope which should
-        be made available to the translated code. By default any objects that are used
-        in the body of the function are made available, as well as any global objects.
-        If the argument is provided then these objects will be treated as additional
-        to the default arguments.
-    **kwargs : dict
-        Additional keyword arguments forwarded to the plugin system via
-        ``handle_plugin_arguments``.
+    **kwargs : Any
+        See epyccel for details. A general kwargs argument is used so all arguments
+        are passed to handle_plugin_arguments and can therefore be modified there.
 
     Returns
     -------
@@ -299,6 +241,8 @@ def epyccel_seq(
         raise TypeError("> Expecting a FunctionType, type, str, or a ModuleType")
 
     # Check if compiler_family and compiler_config are mutually exclusive
+    compiler_family = kwargs.pop("compiler_family")
+    compiler_config = kwargs.pop("compiler_config")
     if None not in (compiler_family, compiler_config):
         raise TypeError(
             "> Only one of the parameters `compiler_family` or `compiler_config` may be provided"
@@ -311,6 +255,7 @@ def epyccel_seq(
         dirpath = os.path.dirname(function_class_or_module.__file__)
 
     # Define working directory 'folder'
+    folder = kwargs.pop("folder")
     folder = dirpath if folder is None else os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
@@ -322,9 +267,8 @@ def epyccel_seq(
         code, collected_context_dict = get_source_code_and_context(
             function_class_or_module
         )
-        if context_dict:
-            collected_context_dict.update(context_dict)
-        context_dict = collected_context_dict
+        collected_context_dict.update(kwargs.get("context_dict", None) or {})
+        kwargs["context_dict"] = collected_context_dict
         module_name, module_lock = get_unique_name("mod", epyccel_dirpath)
 
     elif isinstance(function_class_or_module, str):
@@ -346,11 +290,9 @@ def epyccel_seq(
 
     # Store the accelerators options into a tuple of strings
     accelerators = []
-    if mpi:
+    if kwargs.pop("mpi"):
         accelerators.append("mpi")
-    if openmp:
-        accelerators.append("openmp")
-    if openacc:
+    if kwargs.pop("openacc"):
         accelerators.append("openacc")
     accelerators = tuple(accelerators)
 
@@ -372,22 +314,10 @@ def epyccel_seq(
             # Generate shared library
             execute_pyccel(
                 pymod_filename,
-                verbose=verbose,
-                time_execution=time_execution,
-                language=language,
                 compiler_family=compiler_family_or_config,
-                flags=flags,
-                wrapper_flags=wrapper_flags,
-                include=include,
-                libdir=libdir,
-                modules=(),
-                libs=libs,
-                debug=debug,
-                accelerators=accelerators,
                 output_name=module_name,
-                conda_warnings=conda_warnings,
-                context_dict=context_dict,
                 plugin_manager=plugin_manager,
+                **kwargs,
             )
         except PyccelError as err:
             raise err
@@ -405,7 +335,8 @@ def epyccel_seq(
         package = importlib.import_module(module_name)
         sys.path.remove(epyccel_dirpath)
 
-        if language and language.lower() != "python":
+        language = kwargs.pop("language", "fortran")
+        if language.lower() != "python":
             # Verify that we have imported the shared library, not the Python one
             loader = getattr(package, "__loader__", None)
             if not isinstance(loader, ExtensionFileLoader):
@@ -438,7 +369,6 @@ def epyccel(
     libs=(),
     folder=None,
     mpi=False,
-    openmp=False,
     #    openacc         = False,  # [YG, 17.06.2025] OpenACC is not supported yet
     verbose=0,
     time_execution=False,
@@ -448,6 +378,7 @@ def epyccel(
     comm=None,
     root=0,
     bcast=True,
+    **kwargs,
 ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
@@ -488,8 +419,6 @@ def epyccel(
         Output folder for the compiled code.
     mpi : bool, default=False
         If True, use MPI for parallel execution.
-    openmp : bool, default=False
-        If True, use OpenMP for parallel execution.
     verbose : int, default=0
         Set the level of verbosity to see additional information about the Pyccel process.
     time_execution : bool
@@ -518,6 +447,8 @@ def epyccel(
         MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True) (for parallel mode).
+    **kwargs : dict
+        Any additional arguments for plugins.
 
     See Also
     --------
@@ -570,13 +501,13 @@ def epyccel(
                     libs=libs,
                     folder=folder,
                     mpi=True,
-                    openmp=openmp,
                     openacc=False,  # [YG, 17.06.2025] OpenACC is not supported yet
                     verbose=verbose,
                     time_execution=time_execution,
                     debug=debug,
                     conda_warnings=conda_warnings,
                     context_dict=context_dict,
+                    **kwargs,
                 )
                 mod_path = os.path.abspath(mod.__file__)
                 mod_name = mod.__name__
@@ -634,13 +565,13 @@ def epyccel(
                 libs=libs,
                 folder=folder,
                 mpi=mpi,
-                openmp=openmp,
                 openacc=False,  # [YG, 17.06.2025] OpenACC is not supported yet
                 verbose=verbose,
                 time_execution=time_execution,
                 debug=debug,
                 conda_warnings=conda_warnings,
                 context_dict=context_dict,
+                **kwargs,
             )
         except PyccelError as e:
             raise type(e)(str(e)) from None

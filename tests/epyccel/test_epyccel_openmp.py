@@ -362,7 +362,7 @@ def test_modules_8(language):
     ),
 )
 @pytest.mark.external
-def test_modules_12(language):
+def test_modules_11(language):
     flags = get_wall_flag(language)
     set_num_threads = epyccel(
         openmp.set_num_threads, flags=flags, openmp=True, language=language
@@ -765,7 +765,7 @@ def test_omp_flush(language):
     f1 = epyccel(
         openmp.omp_flush, flags=get_wall_flag(language), openmp=True, language=language
     )
-    assert 2 == f1()
+    assert 3 == f1()
 
 
 @pytest.mark.external
@@ -847,6 +847,13 @@ def test_omp_get_set_schedule(language):
         assert result == 16 * 3
 
 
+@pytest.mark.external
+def test_omp_target_teams_distribute_parallel_for(language):
+    f1 = openmp.test_omp_target_teams_distribute_parallel_for
+    f2 = epyccel(f1, flags="-Wall", openmp=True, language=language)
+    assert f2(1.0) == f1(1.0)
+
+
 @pytest.mark.parametrize(
     "language",
     (
@@ -887,3 +894,51 @@ def test_nowait_schedule(language):
         assert m == i * n / nthreads
     for i, m in enumerate(max_vals):
         assert m == (i + 1) * n / nthreads - 1
+
+
+@pytest.mark.external
+def test_potential_internal_race_condition(language):
+    f1 = epyccel(
+        openmp.potential_internal_data_race_condition,
+        flags=get_wall_flag(language),
+        openmp=True,
+        language=language,
+    )
+    f2 = openmp.potential_internal_data_race_condition
+    assert (f1() == f2()).all()
+
+
+@pytest.mark.external
+def test_parallel_if(language):
+    f1 = epyccel(
+        openmp.parallel_if,
+        flags=get_wall_flag(language),
+        openmp=True,
+        language=language,
+        omp_version=5.0,
+    )
+    f2 = openmp.parallel_if
+    assert (f1(9) == f2(9)).all()
+    assert (f1(11) == f2(11)).all()
+
+
+@pytest.mark.skipif_by_language(
+    os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU") == "LLVM",
+    reason="flang error: not yet implemented: OMPD_ordered",
+    language="fortran",
+)
+@pytest.mark.external
+def test_omp_ordered(language):
+    f1 = epyccel(
+        openmp.stenc_2d,
+        flags=get_wall_flag(language),
+        openmp=True,
+        language=language,
+        debug=False,
+    )
+    f2 = openmp.stenc_2d
+    A = np.ones([3, 3], dtype=int)
+    B = np.ones([3, 3], dtype=int)
+    f1(A, 3, 3)
+    f2(B, 3, 3)
+    assert np.array_equal(A, B)

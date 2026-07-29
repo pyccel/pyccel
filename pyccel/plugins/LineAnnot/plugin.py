@@ -55,6 +55,21 @@ def read_cli_arguments(kwargs: dict):
 
 
 @hookimpl
+def remove_cli_arguments(kwargs: dict):
+    """
+    Remove any plugin-specific arguments from the kwargs dictionary.
+
+    The LineAnnot plugin adds no arguments, so this hook is a
+    no-op.
+
+    Parameters
+    ----------
+    kwargs : dict
+        The keyword arguments passed to the pipeline.
+    """
+
+
+@hookimpl
 def get_updated_semantic_methods():
     """
     Return the semantic parser methods provided or overridden by the LineAnnot plugin.

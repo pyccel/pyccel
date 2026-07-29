@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
+import numpy as np
+
 
 def set_num_threads(n: int):
-    import numpy as np
-
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
 
     omp_set_num_threads(np.int32(n))
@@ -108,8 +108,6 @@ def test_omp_get_thread_limit():
 
 
 def test_omp_get_set_max_active_levels(max_active_levels: "int"):
-    import numpy as np
-
     from pyccel.stdlib.internal.openmp import (
         omp_get_max_active_levels,
         omp_set_max_active_levels,
@@ -267,9 +265,14 @@ def test_omp_get_initial_device():
     return host_device
 
 
-def test_omp_get_set_schedule():
-    import numpy as np
+def test_omp_target_teams_distribute_parallel_for(x: "float"):
+    # $ omp target teams distribute parallel for reduction(+:x) map(always,tofrom:x)
+    for i in range(10):
+        x += i
+    return x
 
+
+def test_omp_get_set_schedule():
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
 
     func_result = np.int32(0)
@@ -284,8 +287,6 @@ def test_omp_get_set_schedule():
 
 
 def test_nowait_schedule(n: int):
-    import numpy as np
-
     from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
 
     a = np.zeros(n)
@@ -322,8 +323,6 @@ def test_nowait_schedule(n: int):
 
 
 def test_omp_get_max_task_priority():
-    import numpy as np
-
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
 
     max_task_priority_var = np.int32(0)
@@ -473,7 +472,7 @@ def omp_flush():
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
     flag = 0
-    # $ omp parallel num_threads(2)
+    # $ omp parallel num_threads(3)
     if omp_get_thread_num() == 0:
         # $ omp atomic update
         flag = flag + 1
@@ -482,8 +481,16 @@ def omp_flush():
         while flag < 1:
             pass
             # $ omp flush(flag)
-        # $ omp atomic update
+        # $ omp atomic seq_cst
         flag = flag + 1
+    elif omp_get_thread_num() == 2:
+        # $ omp flush(flag)
+        while flag < 1:
+            pass
+            # $ omp flush(flag)
+        # $ omp atomic seq_cst, update
+        flag = flag + 1
+
     # $ omp end parallel
     return flag
 
@@ -507,8 +514,6 @@ def omp_barrier():
 
 
 def combined_for_simd():
-    import numpy as np
-
     x = np.array([1, 2, 1, 2, 1, 2, 1, 2])
     y = np.array([2, 1, 2, 1, 2, 1, 2, 1])
     z = np.zeros(8, dtype=int)
@@ -631,3 +636,50 @@ def omp_long_multi_line(
 
     # $ omp end parallel
     return func_result
+
+
+def potential_internal_data_race_condition():
+    # most of runs will succeed even if there is a race condition, a synchronization point should be inside the generated
+    # loops to increase the chance of capture.
+    x = np.array([1, 2, 3, 4])
+    y = np.array([1, 2, 3, 4])
+    # $ omp parallel num_threads(4)
+    # $ omp single nowait
+    z = x + y
+    # $ omp end single
+    # $ omp single nowait
+    t = x + y
+    # $omp end single
+    # $ omp end parallel
+    return z + t
+
+
+def parallel_if(n: int):
+    from pyccel.stdlib.internal.openmp import omp_get_num_threads, omp_get_thread_num
+
+    a = np.zeros(n)
+
+    # $ omp parallel if(parallel:n > 10) private(th_id, nthrds, l_start, l_end) num_threads(4)
+    th_id = omp_get_thread_num()
+    nthrds = omp_get_num_threads()
+
+    l_start = int(th_id * n / nthrds)
+    l_end = int((th_id + 1) * n / nthrds)
+    for i in range(l_start, l_end):
+        a[i] = 2 * i
+    # $ omp end parallel
+    return a
+
+
+def stenc_2d(matrix: "int[:,:]", n: "int", m: "int"):
+    from pyccel.stdlib.internal.openmp import omp_set_num_threads
+
+    omp_set_num_threads(np.int32(4))
+    # $ omp parallel
+    # $ omp for ordered(2)
+    for i in range(1, n):
+        for j in range(1, m):
+            # $ omp ordered depend(sink: i, j-1) depend(sink: i-1, j)
+            matrix[i][j] = 2 * (matrix[i][j - 1] + matrix[i - 1][j])
+            # $ omp ordered depend(source)
+    # $ omp end parallel

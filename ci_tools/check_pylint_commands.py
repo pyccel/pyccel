@@ -28,6 +28,7 @@ accepted_pylint_commands = {
     ],  # ignore Codacy bad pylint call
     re.compile("tests/errors/syntax_errors/import_star.py"): ["wildcard-import"],
     re.compile("tests/stc_containers/leaks_check.py"): ["unused-variable"],
+    re.compile(r"pyccel/plugins/.*\.py"): ["protected-access"],
 }
 
 

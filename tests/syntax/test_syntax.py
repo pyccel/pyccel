@@ -3,12 +3,12 @@
 
 import os
 
-import pluggy
 import pytest
 
 from pyccel.errors.errors import Errors
 from pyccel.naming import name_clash_checkers
 from pyccel.parser.parser import Parser
+from pyccel.plugins.plugin_tools import get_plugin_manager, handle_plugin_arguments
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, "scripts")
@@ -24,7 +24,8 @@ def test_syntax(f):
     errors = Errors()
     errors.reset()
 
-    plugin_manager = pluggy.PluginManager("pyccel")
+    plugin_manager = get_plugin_manager()
+    handle_plugin_arguments(plugin_manager, {"openmp": True})
 
     pyccel = Parser(
         f,
