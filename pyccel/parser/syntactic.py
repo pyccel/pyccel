@@ -1260,8 +1260,11 @@ class SyntaxParser(BasicParser):
 
         if parent:
             superclass = self.scope.find(parent[0], "classes", raise_if_missing=True)
-            scope = self.create_new_class_scope(name, base_scope=superclass.scope,
-                                                parent_scope_symbol_prefix=parent_scope.symbol_prefix)
+            scope = self.create_new_class_scope(
+                name,
+                base_scope=superclass.scope,
+                parent_scope_symbol_prefix=parent_scope.symbol_prefix,
+            )
         else:
             scope = self.create_new_class_scope(name)
         methods = []
@@ -1289,9 +1292,7 @@ class SyntaxParser(BasicParser):
                     symbol=visited_i,
                 )
 
-        init_method = next(
-            (m for m in methods if m.name == "__init__"), None
-        )
+        init_method = next((m for m in methods if m.name == "__init__"), None)
         if init_method is None and not self.is_stub_file:
             init_name = PyccelSymbol("__init__")
             semantic_init_name = self.scope.insert_symbol(init_name, "function")
@@ -1309,10 +1310,15 @@ class SyntaxParser(BasicParser):
             )
             self_arg.set_current_ast(stmt)
             self.scope.insert_symbol(self_arg.var)
-            self.exit_function_scope()
             body = CodeBlock(())
-            if superclass:
-                body.insert2body(superclass.get_method(syntactic_name="__init__")())
+            if parent:
+                body.insert2body(
+                    DottedName(
+                        FunctionCall(PyccelSymbol("super"), ()),
+                        FunctionCall(PyccelSymbol("__init__"), ()),
+                    )
+                )
+            self.exit_function_scope()
             methods.append(
                 FunctionDef(
                     init_name,
