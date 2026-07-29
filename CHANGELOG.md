@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Use `cspan_submd<RANK>` instead of `cspan_slice` for improved performance.
 -   #2620 : Improve formatting of comment blocks in Fortran and C.
 -   #2606 : Make class methods non-final by default.
+-   #2631 : Always link `libgfortran` statically on Windows.
 -   \[DEVELOPER\] Require black formatting.
 -   \[DEVELOPER\] Reorganise tests by introducing `test_utils` folder to reduce code duplication.
 
