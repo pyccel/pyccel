@@ -19,9 +19,9 @@ __all__ = (
 def _print_OmpConstruct(self, expr):
     body = self._print(expr.body)
     if expr.end:
-        return f"{self._print(expr.start)}\n{{\n{body}\n}}\n{self._print(expr.end)}\n"
+        return f"{self._print(expr.start)}{{\n{body}}}\n{self._print(expr.end)}"
     else:
-        return f"{self._print(expr.start)}\n{body}\n"
+        return f"{self._print(expr.start)}{body}"
 
 
 def _print_OmpDirective(self, expr):
