@@ -682,6 +682,7 @@ def test_isfinite_call(experimental_language):  # isfinite
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -738,6 +739,7 @@ def test_isnan_call(experimental_language):  # isnan
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -772,6 +774,7 @@ def test_ldexp_call(experimental_language):  # ldexp
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -809,6 +812,7 @@ def test_ldexp_return_type(experimental_language):  # ldexp
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -841,6 +845,7 @@ def test_remainder_call(experimental_language):  # remainder
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -922,6 +927,7 @@ def test_trunc_return_type(experimental_language):  # trunc
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -947,6 +953,7 @@ def test_expm1_call(experimental_language):  # expm1
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -973,6 +980,7 @@ def test_expm1_call_special_case(experimental_language):  # expm1
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -1000,6 +1008,7 @@ def test_expm1_phrase(experimental_language):  # expm1
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -1030,6 +1039,7 @@ def test_expm1_return_type(experimental_language):  # expm1 # expm1
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -1056,6 +1066,7 @@ def test_log1p_call(experimental_language):
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -1084,6 +1095,7 @@ def test_log1p_phrase(experimental_language):
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
@@ -1112,6 +1124,7 @@ def test_log2_call(experimental_language):
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
