@@ -643,6 +643,7 @@ def test_copysign_return_type_4(experimental_language):  # copysign
     "experimental_language",
     (
         pytest.param("c", marks=pytest.mark.c),
+        pytest.param("c++", marks=pytest.mark.cpp),
         pytest.param(
             "fortran",
             marks=[
