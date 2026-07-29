@@ -361,16 +361,9 @@ class CppCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if Nil() in expr.args:
-            lhs = (
-                ObjectAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            raise errors.report(
+                PYCCEL_RESTRICTION_TODO, symbol=expr, severity="fatal"
             )
-            rhs = (
-                ObjectAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
-            )
-
-            lhs = self._print(lhs)
-            rhs = self._print(rhs)
-            return f"{lhs} {Op} {rhs}"
 
         if a.dtype is PythonNativeBool() and b.dtype is PythonNativeBool():
             return f"{lhs} {Op} {rhs}"
