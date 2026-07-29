@@ -66,10 +66,10 @@ def _helper_delay_clauses_printing(self, start, end, clauses):
     if clauses or end:
         if end:
             end = (
-                f"!$omp end {end.name} {' '.join(c.raw for c in end.clauses + clauses)}"
+                f"!$omp end {end.name} {' '.join(c.raw for c in end.clauses + clauses)}\n"
             )
         else:
-            end = f"!$omp end {start.name} {' '.join(c.raw for c in clauses)}"
+            end = f"!$omp end {start.name} {' '.join(c.raw for c in clauses)}\n"
     start = start.raw
     for c in clauses:
         start = start.replace(c.raw, "", 1)
