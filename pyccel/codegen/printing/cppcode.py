@@ -881,22 +881,6 @@ class CppCodePrinter(CodePrinter):
         self.add_import(cpp_imports["string"])
         return "std::string"
 
-    def _print_NumpyInt8Type(self, expr):
-        self.add_import(cpp_imports["cstdint"])
-        return "std::int8_t"
-
-    def _print_NumpyInt16Type(self, expr):
-        self.add_import(cpp_imports["cstdint"])
-        return "std::int16_t"
-
-    def _print_NumpyInt32Type(self, expr):
-        self.add_import(cpp_imports["cstdint"])
-        return "std::int32_t"
-
-    def _print_NumpyInt64Type(self, expr):
-        self.add_import(cpp_imports["cstdint"])
-        return "std::int64_t"
-
     def _print_NumpyFloat32Type(self, expr):
         return "float"
 
