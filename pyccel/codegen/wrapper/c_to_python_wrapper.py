@@ -66,7 +66,6 @@ from pyccel.ast.core import (
 )
 from pyccel.ast.cwrapper import (
     C_to_Python,
-    PyccelPyClassType,
     Py_DECREF,
     Py_INCREF,
     Py_None,
@@ -79,6 +78,7 @@ from pyccel.ast.cwrapper import (
     PyBuildValueNode,
     PyCapsule_Import,
     PyCapsule_New,
+    PyccelPyClassType,
     PyccelPyObject,
     PyccelPyTypeObject,
     PyClassDef,
