@@ -3094,7 +3094,17 @@ class FCodePrinter(CodePrinter):
             ]
             overrides = [m for m in overrides if m]
             arg_types = {
-                tuple(a.var.class_type for a in f.arguments[1:])
+                tuple(
+                    (
+                        (
+                            *(a_arg.var.class_type for a_arg in a.var.arguments),
+                            a.var.results.var.class_type,
+                        )
+                        if isinstance(a.var, FunctionAddress)
+                        else a.var.class_type
+                    )
+                    for a in f.arguments[1:]
+                )
                 for f in chain((method,), overrides)
             }
             if len(arg_types) == 1 and not method.is_virtual:
