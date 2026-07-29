@@ -1289,12 +1289,8 @@ class SyntaxParser(BasicParser):
                     symbol=visited_i,
                 )
 
-        default_init_method = (
-            superclass.get_method(syntactic_name="__init__") if parent else None
-        )
-
         init_method = next(
-            (m for m in methods if m.name == "__init__"), default_init_method
+            (m for m in methods if m.name == "__init__"), None
         )
         if init_method is None and not self.is_stub_file:
             init_name = PyccelSymbol("__init__")
