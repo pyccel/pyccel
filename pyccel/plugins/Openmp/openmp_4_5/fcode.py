@@ -85,7 +85,7 @@ def _print_OmpConstruct(self, expr):
     body = self._print(expr.body)
     start = self._print(expr.start)
     end = self._print(expr.end)
-    return f"{start}\n{body}\n{end}\n"
+    return f"{start}{body}{end}"
 
 
 def _print_for_construct(self, expr):
@@ -94,9 +94,9 @@ def _print_for_construct(self, expr):
     body = self._print(expr.body)
     if end:
         end = re.sub(r"\bfor\b", "do", end)
-        return f"{start}\n{body}\n{end}\n"
+        return f"{start}{body}{end}"
     else:
-        return f"{start}\n{body}\n"
+        return f"{start}{body}"
 
 
 def _print_single_construct(self, expr):
@@ -104,7 +104,7 @@ def _print_single_construct(self, expr):
         expr.start, expr.end, ["nowait", "copyprivate"]
     )
     body = self._print(expr.body)
-    return f"{start}\n{body}\n{end}\n"
+    return f"{start}{body}{end}"
 
 
 def _print_simd_construct(self, expr):
