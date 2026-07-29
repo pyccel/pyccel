@@ -1224,13 +1224,13 @@ class CCodePrinter(CodePrinter):
                         fp_sig = sig.replace(
                             f" {method.name}(", f" (*{method.cls_name})(", 1
                         )
-                        classes += f"    {fp_sig};\n"
+                        classes += f"{fp_sig};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     sig = self.function_signature(func)
                     func_blocks[-1] += f"{sig};\n"
                     fp_sig = sig.replace(f" {func.name}(", f" (*{func.cls_name})(", 1)
-                    classes += f"    {fp_sig};\n"
+                    classes += f"{fp_sig};\n"
             classes += "};\n"
         func_blocks.append(
             "".join(
@@ -3979,8 +3979,8 @@ class CCodePrinter(CodePrinter):
             init_lines = init_printed.split("\n")
             self_name = init_method.arguments[0].var.name
             virtual_methods.sort(key=lambda m: m.cls_name)
-            fp_assignments = "    // Save virtual function addresses\n" + "".join(
-                f"    {self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
+            fp_assignments = "// Save virtual function addresses\n" + "".join(
+                f"{self_name}->{m.cls_name} = {m.name};\n" for m in virtual_methods
             )
             insert_pos = init_lines.index("{") + 1
             init_lines.insert(insert_pos, fp_assignments)
