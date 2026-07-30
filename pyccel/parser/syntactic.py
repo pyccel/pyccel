@@ -1126,16 +1126,6 @@ class SyntaxParser(BasicParser):
             else:
                 decorators[tmp_var] = [d]
 
-        if "types" in decorators:
-            warnings.warn(
-                "The @types decorator will be removed in version 2.0 of Pyccel. "
-                + "Please use type hints. TypeVar from Python's typing module can "
-                + "be used to specify multiple types. See the documentation at "
-                + "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
-                "for examples.",
-                FutureWarning,
-            )
-
         if "stack_array" in decorators:
             decorators["stack_array"] = tuple(
                 str(b.value) for a in decorators["stack_array"] for b in a.args
