@@ -73,6 +73,12 @@ class Scope:
         Indicates whether variables are allowed to be defined local to a loop scope.
         This is forbidden in Python and Fortran, but can be useful for temporary
         variables added for other languages.
+
+    parent_scope_symbol_prefix : str, optional
+        The prefix that is used to designate the parent scope. By default this is
+        taken from the parent scope, however occasionally a difference is required
+        (e.g. for class member functions whose enclosing parent scope is the module
+        but whose name should be associated with the class).
     """
 
     __slots__ = (
